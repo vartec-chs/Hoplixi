@@ -127,23 +127,26 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   }) async {
     final result = await showDialog<bool>(
       context: context,
-      useRootNavigator: false,
+
       builder: (dialogContext) => AlertDialog(
         title: Text(title),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(content),
-            const SizedBox(height: 24),
-            SliderButton(
-              type: SliderButtonType.delete,
-              text: 'Удалить',
-              onSlideCompleteAsync: () async {
-                Navigator.of(dialogContext).pop(true);
-              },
-            ),
-          ],
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(content),
+              const SizedBox(height: 24),
+              SliderButton(
+                type: SliderButtonType.delete,
+                text: 'Удалить',
+                onSlideCompleteAsync: () async {
+                  Navigator.of(dialogContext).pop(true);
+                },
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
