@@ -14,11 +14,8 @@ class CloseSidebarButton extends StatelessWidget {
       icon: Icon(icon ?? Icons.close),
       tooltip: label ?? 'Закрыть',
       onPressed: () {
-        // Безопасно закрываем sidebar через глобальный ключ
-        final state = dashboardSidebarKey.currentState;
-        if (state != null && state is DashboardLayoutState) {
-          state.closeSidebar();
-        }
+        // Безопасно закрываем sidebar через статическую ссылку
+        DashboardLayout.currentState?.closeSidebar();
       },
     );
   }
@@ -34,10 +31,7 @@ class ToggleSidebarButton extends StatelessWidget {
       icon: const Icon(Icons.menu),
       tooltip: 'Переключить sidebar',
       onPressed: () {
-        final state = dashboardSidebarKey.currentState;
-        if (state != null && state is DashboardLayoutState) {
-          state.toggleSidebar();
-        }
+        DashboardLayout.currentState?.toggleSidebar();
       },
     );
   }
@@ -61,8 +55,8 @@ class _SidebarStatusIndicatorState extends State<SidebarStatusIndicator> {
   }
 
   void _checkSidebarStatus() {
-    final state = dashboardSidebarKey.currentState;
-    if (state != null && state is DashboardLayoutState) {
+    final state = DashboardLayout.currentState;
+    if (state != null) {
       setState(() {
         _isSidebarOpen = state.isSidebarOpen;
       });
@@ -85,7 +79,8 @@ class _SidebarStatusIndicatorState extends State<SidebarStatusIndicator> {
   }
 }
 
-/// Расширение для типа State, чтобы безопасно приводить к DashboardLayoutState
+/// @Deprecated Расширение для типа State, оставлено для обратной совместимости
+/// Используйте DashboardLayout.currentState вместо этого
 extension DashboardLayoutStateExtension on State<StatefulWidget> {
   /// Проверяет, является ли этот State экземпляром DashboardLayoutState
   bool get isDashboardLayoutState => this is DashboardLayoutState;
@@ -100,30 +95,26 @@ extension DashboardLayoutStateExtension on State<StatefulWidget> {
 class SidebarController {
   /// Закрывает sidebar, если он доступен
   static void close() {
-    final state = dashboardSidebarKey.currentState?.asDashboardLayoutState;
-    state?.closeSidebar();
+    DashboardLayout.currentState?.closeSidebar();
   }
 
   /// Открывает sidebar, если он доступен
   static void open() {
-    final state = dashboardSidebarKey.currentState?.asDashboardLayoutState;
-    state?.openSidebar();
+    DashboardLayout.currentState?.openSidebar();
   }
 
   /// Переключает состояние sidebar
   static void toggle() {
-    final state = dashboardSidebarKey.currentState?.asDashboardLayoutState;
-    state?.toggleSidebar();
+    DashboardLayout.currentState?.toggleSidebar();
   }
 
   /// Проверяет, открыт ли sidebar
   static bool get isOpen {
-    final state = dashboardSidebarKey.currentState?.asDashboardLayoutState;
-    return state?.isSidebarOpen ?? false;
+    return DashboardLayout.currentState?.isSidebarOpen ?? false;
   }
 
   /// Проверяет, доступен ли sidebar
   static bool get isAvailable {
-    return dashboardSidebarKey.currentState?.asDashboardLayoutState != null;
+    return DashboardLayout.currentState != null;
   }
 }

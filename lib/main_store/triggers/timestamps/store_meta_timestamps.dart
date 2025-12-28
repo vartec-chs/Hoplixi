@@ -13,8 +13,8 @@ const List<String> storeMetaInsertTimestampTriggers = [
     BEGIN
       UPDATE store_meta 
       SET 
-        created_at = COALESCE(NEW.created_at, strftime('%s','now') * 1000),
-        modified_at = COALESCE(NEW.modified_at, strftime('%s','now') * 1000)
+        created_at = COALESCE(NEW.created_at, strftime('%s','now')  ),
+        modified_at = COALESCE(NEW.modified_at, strftime('%s','now')  )
       WHERE id = NEW.id;
     END;
   ''',
@@ -29,7 +29,7 @@ const List<String> storeMetaModifiedAtTriggers = [
     WHEN NEW.modified_at = OLD.modified_at
     BEGIN
       UPDATE store_meta 
-      SET modified_at = strftime('%s', 'now') * 1000
+      SET modified_at = strftime('%s', 'now')  
       WHERE id = NEW.id;
     END;
   ''',

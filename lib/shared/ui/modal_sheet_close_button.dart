@@ -6,13 +6,9 @@ class ModalSheetCloseButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: IconButton(
-        icon: const Icon(Icons.close),
-        onPressed: onPressed ?? () => Navigator.of(context).pop(),
-      ),
+    return IconButton(
+      icon: const Icon(Icons.close),
+      onPressed: onPressed ?? () => Navigator.of(context).pop(),
     );
   }
 }
-

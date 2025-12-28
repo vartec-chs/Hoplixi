@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/archive_storage/ui/archive_screen.dart';
 import 'package:hoplixi/features/cloud_sync/auth/ui/auth_login_screen.dart';
 import 'package:hoplixi/features/cloud_sync/auth/ui/tokens_screen.dart';
@@ -91,8 +92,7 @@ final List<RouteBase> appRoutes = [
 
   // Dashboard с вложенными роутами через ShellRoute
   ShellRoute(
-    builder: (context, state, child) =>
-        DashboardLayout(key: dashboardSidebarKey, child: child),
+    builder: (context, state, child) => DashboardLayout(child: child),
     routes: [
       GoRoute(
         path: AppRoutesPaths.dashboardHome,
@@ -157,9 +157,9 @@ final List<RouteBase> appRoutes = [
       GoRoute(
         path: AppRoutesPaths.dashboardPasswordCreate,
         pageBuilder: (context, state) {
-          return MaterialPage(
-            key: state.pageKey,
-            child: const PasswordFormScreen(),
+          return const MaterialPage(
+            key: ValueKey('password_create'),
+            child: PasswordFormScreen(),
           );
         },
       ),
@@ -252,19 +252,38 @@ final List<RouteBase> appRoutes = [
       // History screen
       GoRoute(
         path: AppRoutesPaths.dashboardHistory,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final entityTypeStr = state.pathParameters['entityType'];
           final entityId = state.pathParameters['id'];
+
+          logTrace(
+            'Navigating to HistoryScreen with entityType: $entityTypeStr, entityId: $entityId',
+            tag: 'Routing',
+          );
 
           // Парсим тип сущности
           final entityType = EntityType.fromId(entityTypeStr ?? '');
 
+          logTrace('Parsed entityType: $entityType', tag: 'Routing');
+
           if (entityType == null || entityId == null) {
-            // Если параметры некорректны, возвращаем на главную
-            return const DashboardHomeScreen();
+            return const MaterialPage(
+              key: ValueKey('history_error'),
+              child: BaseScreen(title: 'Неверные параметры истории'),
+            );
           }
 
-          return HistoryScreen(entityType: entityType, entityId: entityId);
+          logTrace(
+            'Opening HistoryScreen for $entityType with ID $entityId',
+            tag: 'Routing',
+          );
+
+          // Используем уникальный ключ на основе параметров маршрута
+          // чтобы избежать конфликтов GlobalKey при push-навигации
+          return MaterialPage(
+            key: ValueKey('history_${entityTypeStr}_$entityId'),
+            child: HistoryScreen(entityType: entityType, entityId: entityId),
+          );
         },
       ),
     ],

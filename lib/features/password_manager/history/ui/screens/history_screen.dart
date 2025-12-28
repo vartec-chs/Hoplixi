@@ -9,6 +9,7 @@ import 'package:hoplixi/features/password_manager/history/ui/widgets/history_emp
 import 'package:hoplixi/features/password_manager/history/ui/widgets/history_item_card.dart';
 import 'package:hoplixi/features/password_manager/history/ui/widgets/history_search_bar.dart';
 import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/shared/ui/modal_sheet_close_button.dart';
 import 'package:hoplixi/shared/ui/slider_button.dart';
 
 /// Экран истории для любого типа сущности
@@ -45,6 +46,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       entityType: widget.entityType,
       entityId: widget.entityId,
     );
+
+    // Устанавливаем параметры для провайдера истории
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(historyParamsProvider.notifier).setParams(_params);
+    });
   }
 
   @override
@@ -58,14 +64,14 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      ref.read(historyListProvider(_params).notifier).loadMore();
+      ref.read(historyListProvider.notifier).loadMore();
     }
   }
 
   /// Удалить отдельную запись истории
   Future<void> _deleteHistoryItem(String historyItemId) async {
     final success = await ref
-        .read(historyListProvider(_params).notifier)
+        .read(historyListProvider.notifier)
         .deleteHistoryItem(historyItemId);
 
     if (mounted) {
@@ -94,7 +100,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
     if (confirmed && mounted) {
       final success = await ref
-          .read(historyListProvider(_params).notifier)
+          .read(historyListProvider.notifier)
           .deleteAllHistory();
 
       if (mounted) {
@@ -121,26 +127,30 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   }) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+
+      builder: (dialogContext) => AlertDialog(
         title: Text(title),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(content),
-            const SizedBox(height: 24),
-            SliderButton(
-              type: SliderButtonType.delete,
-              text: 'Удалить',
-              onSlideCompleteAsync: () async {
-                Navigator.of(context).pop(true);
-              },
-            ),
-          ],
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(content),
+              const SizedBox(height: 24),
+              SliderButton(
+                type: SliderButtonType.delete,
+                text: 'Удалить',
+                onSlideCompleteAsync: () async {
+                  Navigator.of(dialogContext).pop(true);
+                },
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
             child: const Text('Отмена'),
           ),
         ],
@@ -151,18 +161,18 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final historyAsync = ref.watch(historyListProvider(_params));
+    final historyAsync = ref.watch(historyListProvider);
     final searchState = ref.watch(historySearchProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: Text('История: ${widget.entityType.label}'),
+        leading: const ModalSheetCloseButton(),
         actions: [
           // Кнопка обновления
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () =>
-                ref.read(historyListProvider(_params).notifier).refresh(),
+            onPressed: () => ref.read(historyListProvider.notifier).refresh(),
             tooltip: 'Обновить',
           ),
           // Кнопка удаления всей истории
@@ -178,37 +188,41 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Поиск
-          HistorySearchBar(
-            initialQuery: searchState.query,
-            onSearchChanged: (query) {
-              ref.read(historySearchProvider.notifier).updateQuery(query);
-            },
-            onClear: () {
-              ref.read(historySearchProvider.notifier).clearSearch();
-            },
-          ),
+      body: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Поиск
+            HistorySearchBar(
+              initialQuery: searchState.query,
+              onSearchChanged: (query) {
+                ref.read(historySearchProvider.notifier).updateQuery(query);
+              },
+              onClear: () {
+                ref.read(historySearchProvider.notifier).clearSearch();
+              },
+            ),
 
-          // Контент
-          Expanded(
-            child: historyAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => _ErrorState(
-                error: error.toString(),
-                onRetry: () =>
-                    ref.read(historyListProvider(_params).notifier).refresh(),
-              ),
-              data: (state) => _HistoryContent(
-                state: state,
-                scrollController: _scrollController,
-                isSearchActive: searchState.hasActiveSearch,
-                onDeleteItem: _deleteHistoryItem,
+            // Контент
+            Expanded(
+              child: historyAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => _ErrorState(
+                  error: error.toString(),
+                  onRetry: () =>
+                      ref.read(historyListProvider.notifier).refresh(),
+                ),
+                data: (state) => _HistoryContent(
+                  state: state,
+                  scrollController: _scrollController,
+                  isSearchActive: searchState.hasActiveSearch,
+                  onDeleteItem: _deleteHistoryItem,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -252,14 +266,19 @@ class _HistoryContent extends StatelessWidget {
           ),
 
           // Список истории
-          SliverList(
-            delegate: SliverChildBuilderDelegate((context, index) {
+          SliverList.separated(
+            itemCount: state.items.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
               final item = state.items[index];
               return HistoryItemCard(
                 item: item,
+                onTap: () {
+                  // Действие при нажатии на запись истории
+                },
                 onDelete: () => onDeleteItem(item.id),
               );
-            }, childCount: state.items.length),
+            },
           ),
 
           // Индикатор загрузки следующей страницы

@@ -28,46 +28,79 @@ class HistoryParams {
   int get hashCode => entityType.hashCode ^ entityId.hashCode;
 }
 
+/// Провайдер параметров истории
+/// Устанавливается перед использованием historyListProvider
+final historyParamsProvider =
+    NotifierProvider.autoDispose<HistoryParamsNotifier, HistoryParams?>(
+      HistoryParamsNotifier.new,
+    );
+
+/// Нотификатор для управления параметрами истории
+class HistoryParamsNotifier extends Notifier<HistoryParams?> {
+  @override
+  HistoryParams? build() => null;
+
+  /// Установить параметры истории
+  void setParams(HistoryParams params) {
+    state = params;
+  }
+
+  /// Очистить параметры
+  void clear() {
+    state = null;
+  }
+}
+
 /// Провайдер для управления списком истории с пагинацией
 final historyListProvider =
-    AsyncNotifierProvider.family<
-      HistoryListNotifier,
-      HistoryListState,
-      HistoryParams
-    >(HistoryListNotifier.new);
+    AsyncNotifierProvider.autoDispose<HistoryListNotifier, HistoryListState>(
+      HistoryListNotifier.new,
+    );
 
 /// Нотификатор для управления списком истории
 class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
   static const String _logTag = 'HistoryListNotifier';
 
-  HistoryListNotifier(this._params);
-
-  final HistoryParams _params;
+  HistoryParams get _params {
+    final params = ref.read(historyParamsProvider);
+    if (params == null) {
+      throw StateError(
+        'HistoryParams не установлены. '
+        'Установите historyParamsProvider перед использованием historyListProvider.',
+      );
+    }
+    return params;
+  }
 
   int get pageSize => kHistoryPageSize;
 
   @override
   Future<HistoryListState> build() async {
-    // Слушаем изменения поиска
-    ref.listen(historySearchProvider, (prev, next) {
-      if (prev?.query != next.query) {
-        _resetAndLoad();
-      }
-    });
+    // Следим за изменениями параметров через watch
+    // При изменении params провайдер автоматически пересоздастся
+    final params = ref.watch(historyParamsProvider);
+    if (params == null) {
+      return const HistoryListState(
+        items: [],
+        isLoading: false,
+        hasMore: false,
+        totalCount: 0,
+      );
+    }
 
-    return _loadInitialData();
+    // Следим за изменениями поиска через watch
+    // При изменении query провайдер автоматически пересоздастся
+    final searchState = ref.watch(historySearchProvider);
+
+    return _loadInitialData(searchQuery: searchState.query);
   }
 
   /// Загрузить начальные данные
-  Future<HistoryListState> _loadInitialData() async {
+  Future<HistoryListState> _loadInitialData({String? searchQuery}) async {
     try {
-      final searchState = ref.read(historySearchProvider);
-      final items = await _fetchHistoryItems(
-        page: 1,
-        searchQuery: searchState.query,
-      );
+      final items = await _fetchHistoryItems(page: 1, searchQuery: searchQuery);
 
-      final totalCount = await _getTotalCount(searchQuery: searchState.query);
+      final totalCount = await _getTotalCount(searchQuery: searchQuery);
 
       return HistoryListState(
         items: items,
@@ -130,10 +163,12 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
   /// Обновить список истории
   Future<void> refresh() async {
     final current = state.value;
+    final searchState = ref.read(historySearchProvider);
+
     if (current != null) {
       state = AsyncValue.data(current.copyWith(isLoading: true, error: null));
       try {
-        final newState = await _loadInitialData();
+        final newState = await _loadInitialData(searchQuery: searchState.query);
         state = AsyncValue.data(newState);
       } catch (e) {
         state = AsyncValue.data(
@@ -142,7 +177,9 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
       }
     } else {
       state = const AsyncValue.loading();
-      state = await AsyncValue.guard(_loadInitialData);
+      state = await AsyncValue.guard(
+        () => _loadInitialData(searchQuery: searchState.query),
+      );
     }
   }
 
@@ -235,12 +272,6 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
     }
   }
 
-  /// Сбросить и перезагрузить список
-  void _resetAndLoad() {
-    state = const AsyncValue.loading();
-    ref.invalidateSelf();
-  }
-
   // ============================================
   // Приватные методы для работы с DAO
   // ============================================
@@ -277,6 +308,8 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
       pageSize,
       searchQuery,
     );
+
+    logTrace('Cards fetched: ${cards.toString()}', tag: _logTag);
 
     return cards
         .map(
