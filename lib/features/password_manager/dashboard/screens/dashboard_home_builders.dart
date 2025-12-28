@@ -430,7 +430,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
-          onOpenHistory: () => context.push(
+          onOpenHistory: () => context.go(
             AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
           ),
         );
@@ -444,7 +444,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
-          onOpenHistory: () => context.push(
+          onOpenHistory: () => context.go(
             AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
           ),
         );
@@ -458,7 +458,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
-          onOpenHistory: () => context.push(
+          onOpenHistory: () => context.go(
             AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
           ),
         );
@@ -473,7 +473,7 @@ class DashboardHomeBuilders {
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
           onDecrypt: () => showFileDecryptModal(context, item),
-          onOpenHistory: () => context.push(
+          onOpenHistory: () => context.go(
             AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
           ),
         );
@@ -487,7 +487,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
-          onOpenHistory: () => context.push(
+          onOpenHistory: () => context.go(
             AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
           ),
         );

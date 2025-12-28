@@ -4,8 +4,10 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/history/models/history_list_state.dart';
 import 'package:hoplixi/features/password_manager/history/providers/history_list_provider.dart';
+import 'package:hoplixi/features/password_manager/history/providers/history_search_provider.dart';
 import 'package:hoplixi/features/password_manager/history/ui/widgets/history_empty_state.dart';
 import 'package:hoplixi/features/password_manager/history/ui/widgets/history_item_card.dart';
+import 'package:hoplixi/features/password_manager/history/ui/widgets/history_search_bar.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/slider_button.dart';
 
@@ -43,6 +45,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       entityType: widget.entityType,
       entityId: widget.entityId,
     );
+
+    // Устанавливаем параметры для провайдера истории
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(historyParamsProvider.notifier).setParams(_params);
+    });
   }
 
   @override
@@ -56,14 +63,14 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      ref.read(historyListProvider(_params).notifier).loadMore();
+      ref.read(historyListProvider.notifier).loadMore();
     }
   }
 
   /// Удалить отдельную запись истории
   Future<void> _deleteHistoryItem(String historyItemId) async {
     final success = await ref
-        .read(historyListProvider(_params).notifier)
+        .read(historyListProvider.notifier)
         .deleteHistoryItem(historyItemId);
 
     if (mounted) {
@@ -92,7 +99,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
     if (confirmed && mounted) {
       final success = await ref
-          .read(historyListProvider(_params).notifier)
+          .read(historyListProvider.notifier)
           .deleteAllHistory();
 
       if (mounted) {
@@ -150,8 +157,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // final historyAsync = ref.watch(historyListProvider(_params));
-    // final searchState = ref.watch(historySearchProvider);
+    final historyAsync = ref.watch(historyListProvider);
+    final searchState = ref.watch(historySearchProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -160,53 +167,51 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           // Кнопка обновления
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () =>
-                ref.read(historyListProvider(_params).notifier).refresh(),
+            onPressed: () => ref.read(historyListProvider.notifier).refresh(),
             tooltip: 'Обновить',
           ),
           // Кнопка удаления всей истории
-          // historyAsync.maybeWhen(
-          //   data: (state) => state.items.isNotEmpty
-          //       ? IconButton(
-          //           icon: const Icon(Icons.delete_sweep),
-          //           onPressed: _showDeleteAllDialog,
-          //           tooltip: 'Удалить всю историю',
-          //         )
-          //       : const SizedBox.shrink(),
-          //   orElse: () => const SizedBox.shrink(),
-          // ),
+          historyAsync.maybeWhen(
+            data: (state) => state.items.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.delete_sweep),
+                    onPressed: _showDeleteAllDialog,
+                    tooltip: 'Удалить всю историю',
+                  )
+                : const SizedBox.shrink(),
+            orElse: () => const SizedBox.shrink(),
+          ),
         ],
       ),
       body: Column(
         children: [
           // Поиск
-          // HistorySearchBar(
-          //   initialQuery: searchState.query,
-          //   onSearchChanged: (query) {
-          //     ref.read(historySearchProvider.notifier).updateQuery(query);
-          //   },
-          //   onClear: () {
-          //     ref.read(historySearchProvider.notifier).clearSearch();
-          //   },
-          // ),
+          HistorySearchBar(
+            initialQuery: searchState.query,
+            onSearchChanged: (query) {
+              ref.read(historySearchProvider.notifier).updateQuery(query);
+            },
+            onClear: () {
+              ref.read(historySearchProvider.notifier).clearSearch();
+            },
+          ),
 
           // Контент
-          // Expanded(
-          //   child: historyAsync.when(
-          //     loading: () => const Center(child: CircularProgressIndicator()),
-          //     error: (error, stack) => _ErrorState(
-          //       error: error.toString(),
-          //       onRetry: () =>
-          //           ref.read(historyListProvider(_params).notifier).refresh(),
-          //     ),
-          //     data: (state) => _HistoryContent(
-          //       state: state,
-          //       scrollController: _scrollController,
-          //       isSearchActive: searchState.hasActiveSearch,
-          //       onDeleteItem: _deleteHistoryItem,
-          //     ),
-          //   ),
-          // ),
+          Expanded(
+            child: historyAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => _ErrorState(
+                error: error.toString(),
+                onRetry: () => ref.read(historyListProvider.notifier).refresh(),
+              ),
+              data: (state) => _HistoryContent(
+                state: state,
+                scrollController: _scrollController,
+                isSearchActive: searchState.hasActiveSearch,
+                onDeleteItem: _deleteHistoryItem,
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -28,26 +28,66 @@ class HistoryParams {
   int get hashCode => entityType.hashCode ^ entityId.hashCode;
 }
 
+/// Провайдер параметров истории
+/// Устанавливается перед использованием historyListProvider
+final historyParamsProvider =
+    NotifierProvider<HistoryParamsNotifier, HistoryParams?>(
+      HistoryParamsNotifier.new,
+    );
+
+/// Нотификатор для управления параметрами истории
+class HistoryParamsNotifier extends Notifier<HistoryParams?> {
+  @override
+  HistoryParams? build() => null;
+
+  /// Установить параметры истории
+  void setParams(HistoryParams params) {
+    state = params;
+  }
+
+  /// Очистить параметры
+  void clear() {
+    state = null;
+  }
+}
+
 /// Провайдер для управления списком истории с пагинацией
 final historyListProvider =
-    AsyncNotifierProvider.family<
-      HistoryListNotifier,
-      HistoryListState,
-      HistoryParams
-    >(HistoryListNotifier.new);
+    AsyncNotifierProvider<HistoryListNotifier, HistoryListState>(
+      HistoryListNotifier.new,
+    );
 
 /// Нотификатор для управления списком истории
 class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
   static const String _logTag = 'HistoryListNotifier';
 
-  HistoryListNotifier(this._params);
-
-  final HistoryParams _params;
+  HistoryParams get _params {
+    final params = ref.read(historyParamsProvider);
+    if (params == null) {
+      throw StateError(
+        'HistoryParams не установлены. '
+        'Установите historyParamsProvider перед использованием historyListProvider.',
+      );
+    }
+    return params;
+  }
 
   int get pageSize => kHistoryPageSize;
 
   @override
   Future<HistoryListState> build() async {
+    // Следим за изменениями параметров через watch
+    // При изменении params провайдер автоматически пересоздастся
+    final params = ref.watch(historyParamsProvider);
+    if (params == null) {
+      return const HistoryListState(
+        items: [],
+        isLoading: false,
+        hasMore: false,
+        totalCount: 0,
+      );
+    }
+
     // Следим за изменениями поиска через watch
     // При изменении query провайдер автоматически пересоздастся
     final searchState = ref.watch(historySearchProvider);

@@ -414,7 +414,8 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
                           ),
                           if (isEditMode && widget.noteId != null)
                             Divider(height: 1),
-                          NoteLinksSection(noteId: widget.noteId!),
+                          if (isEditMode && widget.noteId != null)
+                            NoteLinksSection(noteId: widget.noteId!),
                         ],
                       ),
                     ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/archive_storage/ui/archive_screen.dart';
 import 'package:hoplixi/features/cloud_sync/auth/ui/auth_login_screen.dart';
 import 'package:hoplixi/features/cloud_sync/auth/ui/tokens_screen.dart';
@@ -255,13 +256,27 @@ final List<RouteBase> appRoutes = [
           final entityTypeStr = state.pathParameters['entityType'];
           final entityId = state.pathParameters['id'];
 
+          logTrace(
+            'Navigating to HistoryScreen with entityType: $entityTypeStr, entityId: $entityId',
+            tag: 'Routing',
+          );
+
           // Парсим тип сущности
           final entityType = EntityType.fromId(entityTypeStr ?? '');
 
+          logTrace('Parsed entityType: $entityType', tag: 'Routing');
+
           if (entityType == null || entityId == null) {
-            // Если параметры некорректны, возвращаем на главную
-            return const MaterialPage(child: DashboardHomeScreen());
+            return const MaterialPage(
+              key: ValueKey('history_error'),
+              child: BaseScreen(title: 'Неверные параметры истории'),
+            );
           }
+
+          logTrace(
+            'Opening HistoryScreen for $entityType with ID $entityId',
+            tag: 'Routing',
+          );
 
           // Используем уникальный ключ на основе параметров маршрута
           // чтобы избежать конфликтов GlobalKey при push-навигации
