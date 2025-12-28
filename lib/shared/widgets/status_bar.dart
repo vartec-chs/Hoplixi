@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/lifecycle/auto_lock_provider.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 import 'package:hoplixi/shared/widgets/update_marker.dart';
@@ -28,7 +30,7 @@ class StatusBar extends ConsumerWidget {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -66,21 +68,19 @@ class StatusBar extends ConsumerWidget {
                       maxLines: 1,
                     ),
                   ),
+                  const _CurrentRouteWidget(),
                 ],
               ),
             ),
             // Правая часть - информация о БД и дополнительный контент
             Row(
               mainAxisSize: MainAxisSize.min,
+              spacing: 8,
               children: [
-                if (statusState.rightContent != null)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: statusState.rightContent!,
-                  ),
                 const _AutoLockTimerWidget(),
                 const _UpdateMarkerWidget(),
                 const _DatabaseStatusWidget(),
+                const _BuildModeWidget(),
               ],
             ),
           ],
@@ -288,6 +288,88 @@ class _UpdateMarkerWidget extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
       child: UpdateMarker(updateStream: stream),
+    );
+  }
+}
+
+/// Виджет для отображения режима сборки (только в debug)
+class _BuildModeWidget extends StatelessWidget {
+  const _BuildModeWidget();
+
+  @override
+  Widget build(BuildContext context) {
+    if (!kDebugMode) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.withOpacity(0.3), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.bug_report, size: 12, color: Colors.blue),
+          const SizedBox(width: 4),
+          Text(
+            'Debug',
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.blue,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Виджет для отображения текущего пути маршрута (только в debug)
+class _CurrentRouteWidget extends StatelessWidget {
+  const _CurrentRouteWidget();
+
+  @override
+  Widget build(BuildContext context) {
+    if (!kDebugMode) {
+      return const SizedBox.shrink();
+    }
+
+    final routePath = GoRouterState.of(context).uri.path;
+    if (routePath.isEmpty || routePath == '/') {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+        decoration: BoxDecoration(
+          color: Colors.purple.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.purple.withOpacity(0.3), width: 1),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.route, size: 12, color: Colors.purple),
+            const SizedBox(width: 4),
+            Text(
+              routePath,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.purple,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

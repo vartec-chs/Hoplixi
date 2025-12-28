@@ -67,6 +67,9 @@ class DashboardLayoutState extends ConsumerState<DashboardLayout>
   // Кэш предыдущего состояния для оптимизации анимаций
   DashboardRouteState? _previousRouteState;
 
+  // Запоминаем, был ли sidebar открыт перед переходом на full-screen
+  bool _sidebarWasOpenBeforeFullScreen = false;
+
   final GlobalKey<ExpandableFABState> _fabKey = GlobalKey();
   final GlobalKey<ExpandableFABState> _mobileFabKey = GlobalKey();
 
@@ -194,6 +197,33 @@ class DashboardLayoutState extends ConsumerState<DashboardLayout>
   /// Обновить состояние sidebar анимации на основе [DashboardRouteState]
   void _updateSidebarAnimation(DashboardRouteState routeState) {
     final previous = _previousRouteState;
+    final wasFullScreen = previous?.isFullScreen ?? false;
+
+    // Для full-screen маршрутов сбрасываем sidebar без анимации,
+    // но запоминаем было ли он открыт
+    if (routeState.isFullScreen) {
+      if (!wasFullScreen) {
+        // Запоминаем состояние перед переходом на full-screen
+        _sidebarWasOpenBeforeFullScreen = _animationController.value > 0.5;
+      }
+      if (_animationController.value != 0.0) {
+        _animationController.value = 0.0;
+      }
+      _previousRouteState = routeState;
+      return;
+    }
+
+    // Возврат с full-screen маршрута
+    if (wasFullScreen) {
+      // Если возвращаемся на маршрут с sidebar и он был открыт — восстанавливаем
+      if (routeState.shouldOpenSidebar || _sidebarWasOpenBeforeFullScreen) {
+        _animationController.forward();
+      }
+      _previousRouteState = routeState;
+      _sidebarWasOpenBeforeFullScreen = false;
+      return;
+    }
+
     final shouldOpen = routeState.shouldOpenSidebar;
 
     // Определяем, нужно ли обновить анимацию
@@ -303,7 +333,7 @@ class _DesktopLayout extends StatelessWidget {
                 : const DashboardHomeScreen(),
           ),
 
-          // Animated Sidebar
+          // Animated Sidebar (всегда в дереве, но скрыт для full-screen)
           _buildSidebar(context),
         ],
       ),
@@ -340,15 +370,20 @@ class _DesktopLayout extends StatelessWidget {
   }
 
   Widget _buildSidebar(BuildContext context) {
-    final showContent = routeState.shouldOpenSidebar;
+    // Для full-screen маршрутов скрываем sidebar мгновенно
+    final isHidden = routeState.isFullScreen;
+    final showContent = routeState.shouldOpenSidebar && !isHidden;
 
     return AnimatedBuilder(
       animation: sidebarAnimation,
       builder: (context, _) {
+        // При full-screen принудительно ширина = 0
+        final widthFactor = isHidden ? 0.0 : sidebarAnimation.value;
+
         return ClipRect(
           child: Align(
             alignment: Alignment.centerLeft,
-            widthFactor: sidebarAnimation.value,
+            widthFactor: widthFactor,
             child: SizedBox(
               width: constraints.maxWidth / 2.15,
               child: Container(
@@ -362,7 +397,7 @@ class _DesktopLayout extends StatelessWidget {
                   ),
                 ),
                 child: AnimatedOpacity(
-                  opacity: sidebarAnimation.value,
+                  opacity: widthFactor,
                   duration: const Duration(milliseconds: 150),
                   child: showContent ? child : const SizedBox.shrink(),
                 ),

@@ -52,20 +52,17 @@ class _HistorySearchBarState extends State<HistorySearchBar> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: PrimaryTextField(
-        controller: _controller,
-        hintText: 'Поиск в истории...',
-        prefixIcon: const Icon(Icons.search),
-        suffixIcon: _hasText
-            ? IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: _clearSearch,
-                tooltip: 'Очистить поиск',
-              )
-            : null,
-      ),
+    return PrimaryTextField(
+      controller: _controller,
+      hintText: 'Поиск в истории...',
+      prefixIcon: const Icon(Icons.search),
+      suffixIcon: _hasText
+          ? IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: _clearSearch,
+              tooltip: 'Очистить поиск',
+            )
+          : null,
     );
   }
 }

@@ -8,7 +8,7 @@ import 'package:hoplixi/features/password_manager/history/models/history_search_
 /// - Добавления фильтров по типу действия
 /// - Расширения логики поиска
 final historySearchProvider =
-    NotifierProvider<HistorySearchNotifier, HistorySearchState>(
+    NotifierProvider.autoDispose<HistorySearchNotifier, HistorySearchState>(
       HistorySearchNotifier.new,
     );
 

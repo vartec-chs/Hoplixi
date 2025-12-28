@@ -9,6 +9,7 @@ import 'package:hoplixi/features/password_manager/history/ui/widgets/history_emp
 import 'package:hoplixi/features/password_manager/history/ui/widgets/history_item_card.dart';
 import 'package:hoplixi/features/password_manager/history/ui/widgets/history_search_bar.dart';
 import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/shared/ui/modal_sheet_close_button.dart';
 import 'package:hoplixi/shared/ui/slider_button.dart';
 
 /// Экран истории для любого типа сущности
@@ -163,6 +164,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('История: ${widget.entityType.label}'),
+        leading: const ModalSheetCloseButton(),
         actions: [
           // Кнопка обновления
           IconButton(
@@ -183,36 +185,41 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Поиск
-          HistorySearchBar(
-            initialQuery: searchState.query,
-            onSearchChanged: (query) {
-              ref.read(historySearchProvider.notifier).updateQuery(query);
-            },
-            onClear: () {
-              ref.read(historySearchProvider.notifier).clearSearch();
-            },
-          ),
+      body: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Поиск
+            HistorySearchBar(
+              initialQuery: searchState.query,
+              onSearchChanged: (query) {
+                ref.read(historySearchProvider.notifier).updateQuery(query);
+              },
+              onClear: () {
+                ref.read(historySearchProvider.notifier).clearSearch();
+              },
+            ),
 
-          // Контент
-          Expanded(
-            child: historyAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => _ErrorState(
-                error: error.toString(),
-                onRetry: () => ref.read(historyListProvider.notifier).refresh(),
-              ),
-              data: (state) => _HistoryContent(
-                state: state,
-                scrollController: _scrollController,
-                isSearchActive: searchState.hasActiveSearch,
-                onDeleteItem: _deleteHistoryItem,
+            // Контент
+            Expanded(
+              child: historyAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => _ErrorState(
+                  error: error.toString(),
+                  onRetry: () =>
+                      ref.read(historyListProvider.notifier).refresh(),
+                ),
+                data: (state) => _HistoryContent(
+                  state: state,
+                  scrollController: _scrollController,
+                  isSearchActive: searchState.hasActiveSearch,
+                  onDeleteItem: _deleteHistoryItem,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -256,15 +263,19 @@ class _HistoryContent extends StatelessWidget {
           ),
 
           // Список истории
-          SliverList(
-            delegate: SliverChildBuilderDelegate((context, index) {
+          SliverList.separated(
+            itemCount: state.items.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
               final item = state.items[index];
               return HistoryItemCard(
-                key: ValueKey('history_item_${item.id}'),
                 item: item,
+                onTap: () {
+                  // Действие при нажатии на запись истории
+                },
                 onDelete: () => onDeleteItem(item.id),
               );
-            }, childCount: state.items.length),
+            },
           ),
 
           // Индикатор загрузки следующей страницы

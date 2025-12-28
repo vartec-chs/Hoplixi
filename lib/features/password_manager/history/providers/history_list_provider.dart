@@ -31,7 +31,7 @@ class HistoryParams {
 /// Провайдер параметров истории
 /// Устанавливается перед использованием historyListProvider
 final historyParamsProvider =
-    NotifierProvider<HistoryParamsNotifier, HistoryParams?>(
+    NotifierProvider.autoDispose<HistoryParamsNotifier, HistoryParams?>(
       HistoryParamsNotifier.new,
     );
 
@@ -53,7 +53,7 @@ class HistoryParamsNotifier extends Notifier<HistoryParams?> {
 
 /// Провайдер для управления списком истории с пагинацией
 final historyListProvider =
-    AsyncNotifierProvider<HistoryListNotifier, HistoryListState>(
+    AsyncNotifierProvider.autoDispose<HistoryListNotifier, HistoryListState>(
       HistoryListNotifier.new,
     );
 
@@ -308,6 +308,8 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
       pageSize,
       searchQuery,
     );
+
+    logTrace('Cards fetched: ${cards.toString()}', tag: _logTag);
 
     return cards
         .map(

@@ -419,6 +419,8 @@ class DashboardHomeBuilders {
       style: const TextStyle(color: Colors.red),
     );
 
+    final location = GoRouterState.of(context).uri.toString();
+
     Widget card;
     switch (type) {
       case EntityType.password:
@@ -430,9 +432,14 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
-          onOpenHistory: () => context.go(
-            AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
-          ),
+          onOpenHistory: () {
+            if (location !=
+                AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id)) {
+              context.push(
+                AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
+              );
+            }
+          },
         );
         break;
       case EntityType.note:
@@ -444,9 +451,14 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
-          onOpenHistory: () => context.go(
-            AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
-          ),
+          onOpenHistory: () {
+            if (location !=
+                AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id)) {
+              context.push(
+                AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
+              );
+            }
+          },
         );
         break;
       case EntityType.bankCard:
@@ -458,9 +470,15 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
-          onOpenHistory: () => context.go(
-            AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
-          ),
+          onOpenHistory: () => {
+            if (location !=
+                AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id))
+              {
+                context.push(
+                  AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
+                ),
+              },
+          },
         );
         break;
       case EntityType.file:
@@ -473,9 +491,15 @@ class DashboardHomeBuilders {
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
           onDecrypt: () => showFileDecryptModal(context, item),
-          onOpenHistory: () => context.go(
-            AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
-          ),
+          onOpenHistory: () => {
+            if (location !=
+                AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id))
+              {
+                context.push(
+                  AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
+                ),
+              },
+          },
         );
         break;
       case EntityType.otp:
@@ -487,9 +511,15 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
-          onOpenHistory: () => context.go(
-            AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
-          ),
+          onOpenHistory: () => {
+            if (location !=
+                AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id))
+              {
+                context.push(
+                  AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
+                ),
+              },
+          },
         );
         break;
     }

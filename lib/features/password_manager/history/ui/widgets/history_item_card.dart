@@ -21,11 +21,11 @@ class HistoryItemCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      margin: EdgeInsets.zero,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
+        // side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
       ),
       child: InkWell(
         onTap: onTap,

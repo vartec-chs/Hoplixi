@@ -37,8 +37,11 @@ class DashboardRouteState {
   /// Текущий путь маршрута
   final String location;
 
-  /// Является ли маршрут full-screen (скрывает navigation bar и FAB)
+  /// Является ли маршрут full-screen (использует child вместо DashboardHomeScreen)
   final bool isFullScreen;
+
+  /// Должен ли скрываться NavigationRail/BottomNavigationBar
+  final bool hideNavigation;
 
   /// Должен ли маршрут открывать sidebar
   final bool shouldOpenSidebar;
@@ -55,6 +58,7 @@ class DashboardRouteState {
   const DashboardRouteState._({
     required this.location,
     required this.isFullScreen,
+    required this.hideNavigation,
     required this.shouldOpenSidebar,
     required this.isFormRoute,
     required this.selectedIndex,
@@ -67,9 +71,8 @@ class DashboardRouteState {
 
   /// Точные пути full-screen маршрутов.
   ///
-  /// Маршруты в этом списке будут полностью скрывать:
-  /// - NavigationRail/BottomNavigationBar
-  /// - FAB
+  /// Маршруты в этом списке будут использовать child вместо DashboardHomeScreen.
+  /// По умолчанию также скрывают навигацию, если не указаны в _showNavigationRoutes.
   ///
   /// Добавляйте сюда статические пути без параметров.
   static const Set<String> _fullScreenRoutes = {
@@ -83,9 +86,44 @@ class DashboardRouteState {
   /// Все пути, начинающиеся с этих префиксов, будут full-screen.
   /// Используйте для динамических маршрутов с параметрами.
   static const Set<String> _fullScreenPrefixes = {
-    '/dashboard/history/',
+    // '/dashboard/history/',
     // Добавьте новые префиксы здесь:
     // '/dashboard/some-dynamic-screen/',
+  };
+
+  // ===========================================================================
+  // Hide Navigation Routes Configuration
+  // ===========================================================================
+
+  /// Точные пути маршрутов, которые скрывают NavigationRail/BottomNav.
+  ///
+  /// По умолчанию full-screen маршруты скрывают навигацию.
+  /// Добавьте маршрут сюда, если хотите скрыть навигацию для не-fullscreen маршрута.
+  static const Set<String> _hideNavigationRoutes = {
+    // Добавьте маршруты здесь:
+    // AppRoutesPaths.dashboardSomeRoute,
+  };
+
+  /// Префиксы путей маршрутов, которые скрывают навигацию.
+  static const Set<String> _hideNavigationPrefixes = {
+    // Добавьте префиксы здесь:
+    // '/dashboard/immersive/',
+  };
+
+  /// Точные пути full-screen маршрутов, которые ПОКАЗЫВАЮТ навигацию.
+  ///
+  /// Используйте для full-screen маршрутов, где нужен NavigationRail.
+  static const Set<String> _showNavigationRoutes = {
+    // '/dashboard/history/',
+    AppRoutesPaths.dashboardNotesGraph,
+    // Добавьте маршруты здесь:
+    // AppRoutesPaths.dashboardSomeFullScreenWithNav,
+  };
+
+  /// Префиксы full-screen маршрутов, которые ПОКАЗЫВАЮТ навигацию.
+  static const Set<String> _showNavigationPrefixes = {
+    '/dashboard/history/',
+    // Добавьте префиксы здесь:
   };
 
   // ===========================================================================
@@ -99,6 +137,7 @@ class DashboardRouteState {
   static const Set<String> _sidebarRoutes = {
     AppRoutesPaths.dashboardMigrateOtp,
     AppRoutesPaths.dashboardMigratePasswords,
+
     // Добавьте новые sidebar маршруты здесь:
     // AppRoutesPaths.dashboardSomeSidebarPage,
   };
@@ -108,6 +147,7 @@ class DashboardRouteState {
   /// Все пути, начинающиеся с этих префиксов, будут открывать sidebar.
   /// Используйте для динамических маршрутов с параметрами.
   static const Set<String> _sidebarPrefixes = {
+    '/dashboard/history/',
     // Добавьте новые префиксы здесь:
     // '/dashboard/detail/',
   };
@@ -127,6 +167,7 @@ class DashboardRouteState {
   /// Создать из строки пути.
   factory DashboardRouteState.fromLocation(String location) {
     final isFullScreen = _checkFullScreen(location);
+    final hideNavigation = _checkHideNavigation(location, isFullScreen);
     final isFormRoute = EntityTypeRouting.isAnyFormRoute(location);
     final isSidebarRoute = _checkSidebarRoute(location);
     final entityType = EntityTypeRouting.fromFormRoute(location);
@@ -147,6 +188,7 @@ class DashboardRouteState {
     return DashboardRouteState._(
       location: location,
       isFullScreen: isFullScreen,
+      hideNavigation: hideNavigation,
       shouldOpenSidebar: shouldOpenSidebar,
       isFormRoute: isFormRoute,
       selectedIndex: selectedIndex,
@@ -167,6 +209,36 @@ class DashboardRouteState {
 
     // Проверяем префиксы
     for (final prefix in _fullScreenPrefixes) {
+      if (location.startsWith(prefix)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /// Проверить, должна ли скрываться навигация
+  static bool _checkHideNavigation(String location, bool isFullScreen) {
+    // Сначала проверяем явные исключения для full-screen маршрутов
+    if (isFullScreen) {
+      // Проверяем, есть ли маршрут в списке показа навигации
+      if (_showNavigationRoutes.contains(location)) {
+        return false;
+      }
+      for (final prefix in _showNavigationPrefixes) {
+        if (location.startsWith(prefix)) {
+          return false;
+        }
+      }
+      // По умолчанию full-screen скрывает навигацию
+      return true;
+    }
+
+    // Для не-fullscreen проверяем явные указания скрыть
+    if (_hideNavigationRoutes.contains(location)) {
+      return true;
+    }
+    for (final prefix in _hideNavigationPrefixes) {
       if (location.startsWith(prefix)) {
         return true;
       }
@@ -261,10 +333,10 @@ class DashboardRouteState {
   // ===========================================================================
 
   /// Должен ли скрываться BottomNavigationBar
-  bool get hideBottomNavigation => isFullScreen || shouldOpenSidebar;
+  bool get hideBottomNavigation => hideNavigation || shouldOpenSidebar;
 
   /// Должен ли скрываться FAB
-  bool get hideFAB => isFullScreen || shouldOpenSidebar || selectedIndex != 0;
+  bool get hideFAB => hideNavigation || shouldOpenSidebar || selectedIndex != 0;
 
   /// Является ли это home screen без открытого sidebar
   bool get isHomeScreen => selectedIndex == 0 && !shouldOpenSidebar;
@@ -274,6 +346,7 @@ class DashboardRouteState {
     return 'DashboardRouteState('
         'location: $location, '
         'isFullScreen: $isFullScreen, '
+        'hideNavigation: $hideNavigation, '
         'shouldOpenSidebar: $shouldOpenSidebar, '
         'isFormRoute: $isFormRoute, '
         'selectedIndex: $selectedIndex, '
@@ -286,6 +359,7 @@ class DashboardRouteState {
     return other is DashboardRouteState &&
         other.location == location &&
         other.isFullScreen == isFullScreen &&
+        other.hideNavigation == hideNavigation &&
         other.shouldOpenSidebar == shouldOpenSidebar &&
         other.isFormRoute == isFormRoute &&
         other.selectedIndex == selectedIndex &&
@@ -297,6 +371,7 @@ class DashboardRouteState {
     return Object.hash(
       location,
       isFullScreen,
+      hideNavigation,
       shouldOpenSidebar,
       isFormRoute,
       selectedIndex,
