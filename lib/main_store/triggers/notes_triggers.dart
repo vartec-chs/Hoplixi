@@ -57,7 +57,7 @@ const List<String> notesHistoryCreateTriggers = [
         OLD.created_at,
         OLD.modified_at,
         OLD.last_accessed_at,
-        strftime('%s','now') * 1000
+        strftime('%s','now')  
       );
     END;
   ''',
@@ -104,7 +104,7 @@ const List<String> notesHistoryCreateTriggers = [
         OLD.created_at,
         OLD.modified_at,
         OLD.last_accessed_at,
-        strftime('%s','now') * 1000
+        strftime('%s','now')  
       );
     END;
   ''',

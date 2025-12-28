@@ -11,7 +11,7 @@ const List<String> passwordsMetaTouchTriggers = [
     AFTER INSERT ON passwords
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -20,7 +20,7 @@ const List<String> passwordsMetaTouchTriggers = [
     AFTER UPDATE ON passwords
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -29,7 +29,7 @@ const List<String> passwordsMetaTouchTriggers = [
     AFTER DELETE ON passwords
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -42,7 +42,7 @@ const List<String> otpsMetaTouchTriggers = [
     AFTER INSERT ON otps
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -51,7 +51,7 @@ const List<String> otpsMetaTouchTriggers = [
     AFTER UPDATE ON otps
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -60,7 +60,7 @@ const List<String> otpsMetaTouchTriggers = [
     AFTER DELETE ON otps
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -73,7 +73,7 @@ const List<String> notesMetaTouchTriggers = [
     AFTER INSERT ON notes
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -82,7 +82,7 @@ const List<String> notesMetaTouchTriggers = [
     AFTER UPDATE ON notes
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -91,7 +91,7 @@ const List<String> notesMetaTouchTriggers = [
     AFTER DELETE ON notes
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -104,7 +104,7 @@ const List<String> filesMetaTouchTriggers = [
     AFTER INSERT ON files
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -113,7 +113,7 @@ const List<String> filesMetaTouchTriggers = [
     AFTER UPDATE ON files
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -122,7 +122,7 @@ const List<String> filesMetaTouchTriggers = [
     AFTER DELETE ON files
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -135,7 +135,7 @@ const List<String> bankCardsMetaTouchTriggers = [
     AFTER INSERT ON bank_cards
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -144,7 +144,7 @@ const List<String> bankCardsMetaTouchTriggers = [
     AFTER UPDATE ON bank_cards
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -153,7 +153,7 @@ const List<String> bankCardsMetaTouchTriggers = [
     AFTER DELETE ON bank_cards
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -166,7 +166,7 @@ const List<String> categoriesMetaTouchTriggers = [
     AFTER INSERT ON categories
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -175,7 +175,7 @@ const List<String> categoriesMetaTouchTriggers = [
     AFTER UPDATE ON categories
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -184,7 +184,7 @@ const List<String> categoriesMetaTouchTriggers = [
     AFTER DELETE ON categories
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -197,7 +197,7 @@ const List<String> tagsMetaTouchTriggers = [
     AFTER INSERT ON tags
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -206,7 +206,7 @@ const List<String> tagsMetaTouchTriggers = [
     AFTER UPDATE ON tags
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -215,7 +215,7 @@ const List<String> tagsMetaTouchTriggers = [
     AFTER DELETE ON tags
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -228,7 +228,7 @@ const List<String> iconsMetaTouchTriggers = [
     AFTER INSERT ON icons
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -237,7 +237,7 @@ const List<String> iconsMetaTouchTriggers = [
     AFTER UPDATE ON icons
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -246,7 +246,7 @@ const List<String> iconsMetaTouchTriggers = [
     AFTER DELETE ON icons
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -259,7 +259,7 @@ const List<String> noteLinksMetaTouchTriggers = [
     AFTER INSERT ON note_links
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -268,7 +268,7 @@ const List<String> noteLinksMetaTouchTriggers = [
     AFTER UPDATE ON note_links
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -277,7 +277,7 @@ const List<String> noteLinksMetaTouchTriggers = [
     AFTER DELETE ON note_links
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -290,7 +290,7 @@ const List<String> passwordTagsMetaTouchTriggers = [
     AFTER INSERT ON password_tags
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -299,7 +299,7 @@ const List<String> passwordTagsMetaTouchTriggers = [
     AFTER DELETE ON password_tags
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -312,7 +312,7 @@ const List<String> otpTagsMetaTouchTriggers = [
     AFTER INSERT ON otp_tags
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -321,7 +321,7 @@ const List<String> otpTagsMetaTouchTriggers = [
     AFTER DELETE ON otp_tags
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -334,7 +334,7 @@ const List<String> noteTagsMetaTouchTriggers = [
     AFTER INSERT ON notes_tags
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -343,7 +343,7 @@ const List<String> noteTagsMetaTouchTriggers = [
     AFTER DELETE ON notes_tags
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -356,7 +356,7 @@ const List<String> fileTagsMetaTouchTriggers = [
     AFTER INSERT ON files_tags
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -365,7 +365,7 @@ const List<String> fileTagsMetaTouchTriggers = [
     AFTER DELETE ON files_tags
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -378,7 +378,7 @@ const List<String> bankCardsTagsMetaTouchTriggers = [
     AFTER INSERT ON bank_cards_tags
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -387,7 +387,7 @@ const List<String> bankCardsTagsMetaTouchTriggers = [
     AFTER DELETE ON bank_cards_tags
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now') * 1000
+      SET modified_at = strftime('%s','now')  
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',

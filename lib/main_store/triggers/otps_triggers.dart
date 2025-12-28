@@ -74,7 +74,7 @@ const List<String> otpsHistoryCreateTriggers = [
         OLD.created_at,
         OLD.modified_at,
         OLD.last_accessed_at,
-        strftime('%s','now') * 1000
+        strftime('%s','now')  
       );
     END;
   ''',
@@ -131,7 +131,7 @@ const List<String> otpsHistoryCreateTriggers = [
         OLD.created_at,
         OLD.modified_at,
         OLD.last_accessed_at,
-        strftime('%s','now') * 1000
+        strftime('%s','now')  
       );
     END;
   ''',

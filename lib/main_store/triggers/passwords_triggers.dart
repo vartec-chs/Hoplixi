@@ -70,7 +70,7 @@ const List<String> passwordsHistoryCreateTriggers = [
         OLD.last_accessed_at,
         OLD.created_at,
         OLD.modified_at,
-        strftime('%s','now') * 1000
+        strftime('%s','now')  
       );
     END;
   ''',
@@ -127,7 +127,7 @@ const List<String> passwordsHistoryCreateTriggers = [
         OLD.last_accessed_at,
         OLD.created_at,
         OLD.modified_at,
-        strftime('%s','now') * 1000
+        strftime('%s','now')  
       );
     END;
   ''',
