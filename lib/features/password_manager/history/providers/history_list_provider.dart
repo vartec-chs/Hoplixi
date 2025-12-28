@@ -48,26 +48,19 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
 
   @override
   Future<HistoryListState> build() async {
-    // Слушаем изменения поиска
-    ref.listen(historySearchProvider, (prev, next) {
-      if (prev?.query != next.query) {
-        _resetAndLoad();
-      }
-    });
+    // Следим за изменениями поиска через watch
+    // При изменении query провайдер автоматически пересоздастся
+    final searchState = ref.watch(historySearchProvider);
 
-    return _loadInitialData();
+    return _loadInitialData(searchQuery: searchState.query);
   }
 
   /// Загрузить начальные данные
-  Future<HistoryListState> _loadInitialData() async {
+  Future<HistoryListState> _loadInitialData({String? searchQuery}) async {
     try {
-      final searchState = ref.read(historySearchProvider);
-      final items = await _fetchHistoryItems(
-        page: 1,
-        searchQuery: searchState.query,
-      );
+      final items = await _fetchHistoryItems(page: 1, searchQuery: searchQuery);
 
-      final totalCount = await _getTotalCount(searchQuery: searchState.query);
+      final totalCount = await _getTotalCount(searchQuery: searchQuery);
 
       return HistoryListState(
         items: items,
@@ -130,10 +123,12 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
   /// Обновить список истории
   Future<void> refresh() async {
     final current = state.value;
+    final searchState = ref.read(historySearchProvider);
+
     if (current != null) {
       state = AsyncValue.data(current.copyWith(isLoading: true, error: null));
       try {
-        final newState = await _loadInitialData();
+        final newState = await _loadInitialData(searchQuery: searchState.query);
         state = AsyncValue.data(newState);
       } catch (e) {
         state = AsyncValue.data(
@@ -142,7 +137,9 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
       }
     } else {
       state = const AsyncValue.loading();
-      state = await AsyncValue.guard(_loadInitialData);
+      state = await AsyncValue.guard(
+        () => _loadInitialData(searchQuery: searchState.query),
+      );
     }
   }
 
@@ -233,12 +230,6 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
       state = AsyncValue.data(current);
       return false;
     }
-  }
-
-  /// Сбросить и перезагрузить список
-  void _resetAndLoad() {
-    state = const AsyncValue.loading();
-    ref.invalidateSelf();
   }
 
   // ============================================

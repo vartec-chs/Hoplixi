@@ -4,10 +4,8 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/history/models/history_list_state.dart';
 import 'package:hoplixi/features/password_manager/history/providers/history_list_provider.dart';
-import 'package:hoplixi/features/password_manager/history/providers/history_search_provider.dart';
 import 'package:hoplixi/features/password_manager/history/ui/widgets/history_empty_state.dart';
 import 'package:hoplixi/features/password_manager/history/ui/widgets/history_item_card.dart';
-import 'package:hoplixi/features/password_manager/history/ui/widgets/history_search_bar.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/slider_button.dart';
 
@@ -121,7 +119,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   }) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      useRootNavigator: false,
+      builder: (dialogContext) => AlertDialog(
         title: Text(title),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -133,14 +132,14 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               type: SliderButtonType.delete,
               text: 'Удалить',
               onSlideCompleteAsync: () async {
-                Navigator.of(context).pop(true);
+                Navigator.of(dialogContext).pop(true);
               },
             ),
           ],
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
             child: const Text('Отмена'),
           ),
         ],
@@ -151,8 +150,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final historyAsync = ref.watch(historyListProvider(_params));
-    final searchState = ref.watch(historySearchProvider);
+    // final historyAsync = ref.watch(historyListProvider(_params));
+    // final searchState = ref.watch(historySearchProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -166,48 +165,48 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             tooltip: 'Обновить',
           ),
           // Кнопка удаления всей истории
-          historyAsync.maybeWhen(
-            data: (state) => state.items.isNotEmpty
-                ? IconButton(
-                    icon: const Icon(Icons.delete_sweep),
-                    onPressed: _showDeleteAllDialog,
-                    tooltip: 'Удалить всю историю',
-                  )
-                : const SizedBox.shrink(),
-            orElse: () => const SizedBox.shrink(),
-          ),
+          // historyAsync.maybeWhen(
+          //   data: (state) => state.items.isNotEmpty
+          //       ? IconButton(
+          //           icon: const Icon(Icons.delete_sweep),
+          //           onPressed: _showDeleteAllDialog,
+          //           tooltip: 'Удалить всю историю',
+          //         )
+          //       : const SizedBox.shrink(),
+          //   orElse: () => const SizedBox.shrink(),
+          // ),
         ],
       ),
       body: Column(
         children: [
           // Поиск
-          HistorySearchBar(
-            initialQuery: searchState.query,
-            onSearchChanged: (query) {
-              ref.read(historySearchProvider.notifier).updateQuery(query);
-            },
-            onClear: () {
-              ref.read(historySearchProvider.notifier).clearSearch();
-            },
-          ),
+          // HistorySearchBar(
+          //   initialQuery: searchState.query,
+          //   onSearchChanged: (query) {
+          //     ref.read(historySearchProvider.notifier).updateQuery(query);
+          //   },
+          //   onClear: () {
+          //     ref.read(historySearchProvider.notifier).clearSearch();
+          //   },
+          // ),
 
           // Контент
-          Expanded(
-            child: historyAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => _ErrorState(
-                error: error.toString(),
-                onRetry: () =>
-                    ref.read(historyListProvider(_params).notifier).refresh(),
-              ),
-              data: (state) => _HistoryContent(
-                state: state,
-                scrollController: _scrollController,
-                isSearchActive: searchState.hasActiveSearch,
-                onDeleteItem: _deleteHistoryItem,
-              ),
-            ),
-          ),
+          // Expanded(
+          //   child: historyAsync.when(
+          //     loading: () => const Center(child: CircularProgressIndicator()),
+          //     error: (error, stack) => _ErrorState(
+          //       error: error.toString(),
+          //       onRetry: () =>
+          //           ref.read(historyListProvider(_params).notifier).refresh(),
+          //     ),
+          //     data: (state) => _HistoryContent(
+          //       state: state,
+          //       scrollController: _scrollController,
+          //       isSearchActive: searchState.hasActiveSearch,
+          //       onDeleteItem: _deleteHistoryItem,
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );
@@ -256,6 +255,7 @@ class _HistoryContent extends StatelessWidget {
             delegate: SliverChildBuilderDelegate((context, index) {
               final item = state.items[index];
               return HistoryItemCard(
+                key: ValueKey('history_item_${item.id}'),
                 item: item,
                 onDelete: () => onDeleteItem(item.id),
               );

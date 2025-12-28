@@ -14,37 +14,45 @@ import 'package:universal_platform/universal_platform.dart';
 
 import 'smooth_rounded_notched_rectangle.dart';
 
-// dashboard sidebar key - позволяет управлять sidebar из любого места приложения
-// Используйте dashboardSidebarKey.currentState для доступа к методам:
+// Статическая ссылка на текущее состояние DashboardLayout
+// Используйте DashboardLayout.currentState для доступа к методам:
 // - closeSidebar() - закрыть sidebar
 // - openSidebar() - открыть sidebar
 // - toggleSidebar() - переключить состояние sidebar
 // - isSidebarOpen - проверить, открыт ли sidebar
-final GlobalKey<State<StatefulWidget>> dashboardSidebarKey =
-    GlobalKey<State<StatefulWidget>>();
+DashboardLayoutState? _dashboardLayoutState;
+
+/// @Deprecated Используйте DashboardLayout.currentState вместо этого
+/// Оставлено для обратной совместимости
+final GlobalKey<DashboardLayoutState> dashboardSidebarKey =
+    GlobalKey<DashboardLayoutState>();
 
 /// Адаптивный layout для dashboard с использованием ShellRoute
 /// На больших экранах: NavigationRail слева + main content + sidebar справа (child)
 /// На маленьких экранах: BottomNavigationBar + main content, sidebar открывается по отдельным роутам
 ///
-/// Используйте dashboardSidebarKey для управления sidebar из любого места:
+/// Используйте DashboardLayout.currentState для управления sidebar из любого места:
 /// ```dart
 /// // Закрыть sidebar
-/// dashboardSidebarKey.currentState?.closeSidebar();
+/// DashboardLayout.currentState?.closeSidebar();
 ///
 /// // Открыть sidebar
-/// dashboardSidebarKey.currentState?.openSidebar();
+/// DashboardLayout.currentState?.openSidebar();
 ///
 /// // Переключить состояние sidebar
-/// dashboardSidebarKey.currentState?.toggleSidebar();
+/// DashboardLayout.currentState?.toggleSidebar();
 ///
 /// // Проверить, открыт ли sidebar
-/// final isOpen = dashboardSidebarKey.currentState?.isSidebarOpen ?? false;
+/// final isOpen = DashboardLayout.currentState?.isSidebarOpen ?? false;
 /// ```
 class DashboardLayout extends ConsumerStatefulWidget {
   final Widget child;
 
   const DashboardLayout({super.key, required this.child});
+
+  /// Текущее состояние DashboardLayout
+  /// Может быть null если DashboardLayout ещё не создан
+  static DashboardLayoutState? get currentState => _dashboardLayoutState;
 
   @override
   ConsumerState<DashboardLayout> createState() => DashboardLayoutState();
@@ -107,11 +115,14 @@ class DashboardLayoutState extends ConsumerState<DashboardLayout>
 
   @override
   void initState() {
+    super.initState();
+    // Регистрируем текущее состояние
+    _dashboardLayoutState = this;
+    
     if (UniversalPlatform.isMobile) {
       _preventScreenshotOn();
       _protectDataLeakageWithBlur();
     }
-    super.initState();
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -125,6 +136,11 @@ class DashboardLayoutState extends ConsumerState<DashboardLayout>
 
   @override
   void dispose() {
+    // Очищаем ссылку на состояние
+    if (_dashboardLayoutState == this) {
+      _dashboardLayoutState = null;
+    }
+    
     if (UniversalPlatform.isMobile) {
       _protectDataLeakageOff();
     }
@@ -269,6 +285,7 @@ class DashboardLayoutState extends ConsumerState<DashboardLayout>
     bool isSidebarRoute,
   ) {
     final location = GoRouterState.of(context).uri.toString();
+    logTrace('Current location: $location', tag: 'DashboardLayout');
     final isFullScreenRoute =
         location == AppRoutesPaths.dashboardNotesGraph ||
         location.startsWith('/dashboard/history/');

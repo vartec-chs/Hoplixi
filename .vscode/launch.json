@@ -1,0 +1,198 @@
+{
+	// Используйте IntelliSense, чтобы узнать о возможных атрибутах.
+	// Наведите указатель мыши, чтобы просмотреть описания существующих атрибутов.
+	// Для получения дополнительной информации посетите: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Flutter",
+			"type": "dart",
+			"request": "launch",
+			"program": "lib/main.dart",
+			"flutterMode": "profile"
+		},
+		{
+			"name": "hoplixi",
+			"request": "launch",
+			"type": "dart"
+		},
+		{
+			"name": "hoplixi (profile mode)",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "profile"
+		},
+		{
+			"name": "hoplixi (release mode)",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "release"
+		},
+		{
+			"name": "cloud_storage_sdk",
+			"cwd": "packages\\cloud_storage_sdk",
+			"request": "launch",
+			"type": "dart"
+		},
+		{
+			"name": "cloud_storage_sdk (profile mode)",
+			"cwd": "packages\\cloud_storage_sdk",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "profile"
+		},
+		{
+			"name": "cloud_storage_sdk (release mode)",
+			"cwd": "packages\\cloud_storage_sdk",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "release"
+		},
+		{
+			"name": "file_crypto",
+			"cwd": "packages\\file_crypto",
+			"request": "launch",
+			"type": "dart"
+		},
+		{
+			"name": "file_crypto (profile mode)",
+			"cwd": "packages\\file_crypto",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "profile"
+		},
+		{
+			"name": "file_crypto (release mode)",
+			"cwd": "packages\\file_crypto",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "release"
+		},
+		{
+			"name": "secure_clipboard_win",
+			"cwd": "packages\\secure_clipboard_win",
+			"request": "launch",
+			"type": "dart"
+		},
+		{
+			"name": "cloud_storage_all",
+			"cwd": "packages\\cloud_storage_sdk\\packages\\cloud_storage_all",
+			"request": "launch",
+			"type": "dart"
+		},
+		{
+			"name": "cloud_storage_all (profile mode)",
+			"cwd": "packages\\cloud_storage_sdk\\packages\\cloud_storage_all",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "profile"
+		},
+		{
+			"name": "cloud_storage_all (release mode)",
+			"cwd": "packages\\cloud_storage_sdk\\packages\\cloud_storage_all",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "release"
+		},
+		{
+			"name": "dropbox_api",
+			"cwd": "packages\\cloud_storage_sdk\\packages\\dropbox_api",
+			"request": "launch",
+			"type": "dart"
+		},
+		{
+			"name": "dropbox_api (profile mode)",
+			"cwd": "packages\\cloud_storage_sdk\\packages\\dropbox_api",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "profile"
+		},
+		{
+			"name": "dropbox_api (release mode)",
+			"cwd": "packages\\cloud_storage_sdk\\packages\\dropbox_api",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "release"
+		},
+		{
+			"name": "google_drive_api",
+			"cwd": "packages\\cloud_storage_sdk\\packages\\google_drive_api",
+			"request": "launch",
+			"type": "dart"
+		},
+		{
+			"name": "google_drive_api (profile mode)",
+			"cwd": "packages\\cloud_storage_sdk\\packages\\google_drive_api",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "profile"
+		},
+		{
+			"name": "google_drive_api (release mode)",
+			"cwd": "packages\\cloud_storage_sdk\\packages\\google_drive_api",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "release"
+		},
+		{
+			"name": "oauth2restclient",
+			"cwd": "packages\\cloud_storage_sdk\\packages\\oauth2restclient",
+			"request": "launch",
+			"type": "dart"
+		},
+		{
+			"name": "oauth2restclient (profile mode)",
+			"cwd": "packages\\cloud_storage_sdk\\packages\\oauth2restclient",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "profile"
+		},
+		{
+			"name": "oauth2restclient (release mode)",
+			"cwd": "packages\\cloud_storage_sdk\\packages\\oauth2restclient",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "release"
+		},
+		{
+			"name": "onedrive_api",
+			"cwd": "packages\\cloud_storage_sdk\\packages\\onedrive_api",
+			"request": "launch",
+			"type": "dart"
+		},
+		{
+			"name": "onedrive_api (profile mode)",
+			"cwd": "packages\\cloud_storage_sdk\\packages\\onedrive_api",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "profile"
+		},
+		{
+			"name": "onedrive_api (release mode)",
+			"cwd": "packages\\cloud_storage_sdk\\packages\\onedrive_api",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "release"
+		},
+		{
+			"name": "yandex_drive_api",
+			"cwd": "packages\\cloud_storage_sdk\\packages\\yandex_drive_api",
+			"request": "launch",
+			"type": "dart"
+		},
+		{
+			"name": "yandex_drive_api (profile mode)",
+			"cwd": "packages\\cloud_storage_sdk\\packages\\yandex_drive_api",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "profile"
+		},
+		{
+			"name": "yandex_drive_api (release mode)",
+			"cwd": "packages\\cloud_storage_sdk\\packages\\yandex_drive_api",
+			"request": "launch",
+			"type": "dart",
+			"flutterMode": "release"
+		}
+	]
+}

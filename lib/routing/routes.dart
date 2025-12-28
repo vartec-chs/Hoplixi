@@ -91,8 +91,7 @@ final List<RouteBase> appRoutes = [
 
   // Dashboard с вложенными роутами через ShellRoute
   ShellRoute(
-    builder: (context, state, child) =>
-        DashboardLayout(key: dashboardSidebarKey, child: child),
+    builder: (context, state, child) => DashboardLayout(child: child),
     routes: [
       GoRoute(
         path: AppRoutesPaths.dashboardHome,
@@ -157,9 +156,9 @@ final List<RouteBase> appRoutes = [
       GoRoute(
         path: AppRoutesPaths.dashboardPasswordCreate,
         pageBuilder: (context, state) {
-          return MaterialPage(
-            key: state.pageKey,
-            child: const PasswordFormScreen(),
+          return const MaterialPage(
+            key: ValueKey('password_create'),
+            child: PasswordFormScreen(),
           );
         },
       ),
@@ -252,7 +251,7 @@ final List<RouteBase> appRoutes = [
       // History screen
       GoRoute(
         path: AppRoutesPaths.dashboardHistory,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final entityTypeStr = state.pathParameters['entityType'];
           final entityId = state.pathParameters['id'];
 
@@ -261,10 +260,15 @@ final List<RouteBase> appRoutes = [
 
           if (entityType == null || entityId == null) {
             // Если параметры некорректны, возвращаем на главную
-            return const DashboardHomeScreen();
+            return const MaterialPage(child: DashboardHomeScreen());
           }
 
-          return HistoryScreen(entityType: entityType, entityId: entityId);
+          // Используем уникальный ключ на основе параметров маршрута
+          // чтобы избежать конфликтов GlobalKey при push-навигации
+          return MaterialPage(
+            key: ValueKey('history_${entityTypeStr}_$entityId'),
+            child: HistoryScreen(entityType: entityType, entityId: entityId),
+          );
         },
       ),
     ],
