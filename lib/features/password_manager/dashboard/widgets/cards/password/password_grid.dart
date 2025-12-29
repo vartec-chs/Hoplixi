@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -239,7 +240,8 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard>
                                   constraints: const BoxConstraints(),
                                   onPressed: () {
                                     context.push(
-                                      AppRoutesPaths.dashboardPasswordEditWithId(
+                                      AppRoutesPaths.dashboardEntityEdit(
+                                        EntityType.password,
                                         widget.password.id,
                                       ),
                                     );

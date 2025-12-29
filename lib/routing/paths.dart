@@ -1,3 +1,5 @@
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+
 class AppRoutesPaths {
   static const String splash = '/splash';
   static const String setup = '/setup';
@@ -15,64 +17,59 @@ class AppRoutesPaths {
   static const String oauthTokens = '/oauth-tokens';
   static const String oauthLogin = '/oauth-login';
 
-  // Dashboard related paths
+  /// Path для Dashboard
   static const String dashboard = '/dashboard';
-  static const String dashboardHome = '/dashboard/home';
-  static const String dashboardCategories = '/dashboard/categories';
-  static const String dashboardSearch = '/dashboard/search';
-  static const String dashboardSettings = '/dashboard/settings';
-  static const String dashboardIconManager = '/dashboard/icon-manager';
-  static const String dashboardCategoryManager = '/dashboard/category-manager';
-  static const String dashboardTagManager = '/dashboard/tag-manager';
-  static const String dashboardMigration = '/dashboard/migration';
-  static const String dashboardNotesGraph = '/dashboard/notes-graph';
+  static const String dashboardEntities = '/dashboard/:entity';
+  static const String dashboardEntitiesHistory =
+      '/dashboard/:entity/history/:id';
 
-  // Password forms
-  static const String dashboardPasswordCreate = '/dashboard/password/create';
-  static const String dashboardMigratePasswords =
-      '/dashboard/migrate/passwords';
-  static const String dashboardPasswordEdit = '/dashboard/password/edit/:id';
+  static String dashboardHistoryWithParams(EntityType entity, String id) =>
+      '/dashboard/${entity.id}/history/$id';
 
-  /// Генерирует путь для редактирования пароля с конкретным ID
-  static String dashboardPasswordEditWithId(String id) =>
-      '/dashboard/password/edit/$id';
+  /// Entity edit with params
+  static String dashboardEntityEdit(EntityType entity, String id) =>
+      '/dashboard/${entity.id}/edit/$id';
 
-  // Note forms
-  static const String dashboardNoteCreate = '/dashboard/note/create';
-  static const String dashboardNoteEdit = '/dashboard/note/edit/:id';
+  /// - notes
+  static const String notes = '/dashboard/notes';
+  static const String noteAdd = '/dashboard/notes/add';
+  static const String noteEdit = '/dashboard/notes/edit/:id';
+  static const String notesGraph = '/dashboard/notes/graph';
 
-  /// Генерирует путь для редактирования заметки с конкретным ID
-  static String dashboardNoteEditWithId(String id) =>
-      '/dashboard/note/edit/$id';
+  /// - passwords
+  static const String passwords = '/dashboard/passwords';
+  static const String passwordAdd = '/dashboard/passwords/add';
+  static const String passwordEdit = '/dashboard/passwords/edit/:id';
+  static String passwordMigrate = '/dashboard/passwords/migrate';
 
-  // Bank Card forms
-  static const String dashboardBankCardCreate = '/dashboard/bank-card/create';
-  static const String dashboardBankCardEdit = '/dashboard/bank-card/edit/:id';
+  /// otps
+  static const String otps = '/dashboard/otps';
+  static const String otpAdd = '/dashboard/otps/add';
+  static const String otpEdit = '/dashboard/otps/edit/:id';
 
-  /// Генерирует путь для редактирования банковской карты с конкретным ID
-  static String dashboardBankCardEditWithId(String id) =>
-      '/dashboard/bank-card/edit/$id';
+  /// - bank cards
+  static const String bankCards = '/dashboard/bank-cards';
+  static const String bankCardAdd = '/dashboard/bank-cards/add';
+  static const String bankCardEdit = '/dashboard/bank-cards/edit/:id';
 
-  // File forms
-  static const String dashboardFileCreate = '/dashboard/file/create';
-  static const String dashboardFileEdit = '/dashboard/file/edit/:id';
+  /// - files
+  static const String files = '/dashboard/files';
+  static const String fileAdd = '/dashboard/files/add';
+  static const String fileEdit = '/dashboard/files/edit/:id';
 
-  /// Генерирует путь для редактирования файла с конкретным ID
-  static String dashboardFileEditWithId(String id) =>
-      '/dashboard/file/edit/$id';
+  /// dashboard right panel
+  /// - categories
+  static const String categories = '/dashboard/categories';
+  static const String categoryAdd = '/dashboard/categories/add';
+  static const String categoryEdit = '/dashboard/categories/edit/:id';
 
-  // OTP forms
-  static const String dashboardOtpCreate = '/dashboard/otp/create';
-  static const String dashboardMigrateOtp = '/dashboard/migrate/otp';
-  static const String dashboardOtpEdit = '/dashboard/otp/edit/:id';
+  /// - tags
+  static const String tags = '/dashboard/tags';
+  static const String tagAdd = '/dashboard/tags/add';
+  static const String tagEdit = '/dashboard/tags/edit/:id';
 
-  /// Генерирует путь для редактирования OTP с конкретным ID
-  static String dashboardOtpEditWithId(String id) => '/dashboard/otp/edit/$id';
-
-  // History screen
-  static const String dashboardHistory = '/dashboard/history/:entityType/:id';
-
-  /// Генерирует путь для просмотра истории с конкретным типом сущности и ID
-  static String dashboardHistoryWithParams(String entityType, String id) =>
-      '/dashboard/history/$entityType/$id';
+  /// - icons
+  static const String icons = '/dashboard/icons';
+  static const String iconAdd = '/dashboard/icons/add';
+  static const String iconEdit = '/dashboard/icons/edit/:id';
 }

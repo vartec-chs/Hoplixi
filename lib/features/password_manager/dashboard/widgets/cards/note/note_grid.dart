@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
@@ -204,7 +205,8 @@ class _NoteGridCardState extends ConsumerState<NoteGridCard>
                                   constraints: const BoxConstraints(),
                                   onPressed: () {
                                     context.push(
-                                      AppRoutesPaths.dashboardNoteEditWithId(
+                                      AppRoutesPaths.dashboardEntityEdit(
+                                        EntityType.note,
                                         widget.note.id,
                                       ),
                                     );
@@ -332,7 +334,8 @@ class _NoteGridCardState extends ConsumerState<NoteGridCard>
                         label: 'Открыть',
                         onPressed: () {
                           context.push(
-                            AppRoutesPaths.dashboardNoteEditWithId(
+                            AppRoutesPaths.dashboardEntityEdit(
+                              EntityType.note,
                               widget.note.id,
                             ),
                           );

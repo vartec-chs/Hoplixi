@@ -6,9 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/index.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/forms/note_form/models/note_form_state.dart';
-import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 
 import '../providers/note_form_provider.dart';
@@ -234,7 +234,10 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
             onPressed: () {
               Navigator.pop(context);
               // Открываем заметку в новом окне (через навигацию)
-              context.push(AppRoutesPaths.dashboardNoteEditWithId(noteId));
+              context.pushNamed(
+                'entity_edit',
+                pathParameters: {'entity': EntityType.note.id, 'id': noteId},
+              );
             },
             label: 'Открыть',
             type: .filled,

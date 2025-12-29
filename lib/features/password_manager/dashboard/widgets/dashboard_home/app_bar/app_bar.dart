@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/main_store/models/filter/index.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
+
 import '../../../models/entity_type.dart';
-import '../../../providers/entity_type_provider.dart';
 import '../../../providers/filter_providers/base_filter_provider.dart';
 import '../entity_type_dropdown.dart';
 import 'app_bar_widgets.dart';
@@ -61,11 +62,17 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
   late final TextEditingController _searchController;
   late final FocusNode _searchFocusNode;
 
+  late EntityType currentType;
+
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
     _searchFocusNode = FocusNode();
+
+    final pathParams = GoRouterState.of(context).pathParameters;
+    final entityId = pathParams['entity'];
+    currentType = EntityType.fromId(entityId ?? '') ?? EntityType.password;
 
     // Инициализируем поисковое поле с текущим значением из фильтра
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -99,8 +106,8 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
 
     FilterModal.show(
       context: context,
+      entityType: currentType,
       onFilterApplied: () {
-       
         logInfo('DashboardSliverAppBar: Фильтры применены');
         widget.onFilterApplied?.call();
       },
@@ -125,23 +132,13 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currentEntityType = ref.watch(entityTypeProvider).currentType;
+    final currentEntityType = currentType;
     final baseFilter = ref.watch(baseFilterProvider);
 
     // Синхронизируем поисковое поле с провайдером
     if (_searchController.text != baseFilter.query) {
       _searchController.text = baseFilter.query;
     }
-
-    // Слушаем изменения типа сущности
-    ref.listen(entityTypeProvider, (previous, next) {
-      if (previous?.currentType != next.currentType) {
-        logDebug(
-          'DashboardSliverAppBar: Тип сущности изменен',
-          data: {'type': next.currentType.label},
-        );
-      }
-    });
 
     return SliverAppBar(
       expandedHeight: widget.expandedHeight,

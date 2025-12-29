@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
@@ -382,7 +383,10 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
                   icon: const Icon(Icons.edit_outlined, size: 18),
                   onPressed: () {
                     context.push(
-                      AppRoutesPaths.dashboardPasswordEditWithId(password.id),
+                      AppRoutesPaths.dashboardEntityEdit(
+                        EntityType.password,
+                        password.id,
+                      ),
                     );
                   },
                   tooltip: 'Редактировать',
