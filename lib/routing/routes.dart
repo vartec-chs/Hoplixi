@@ -11,7 +11,7 @@ import 'package:hoplixi/features/password_manager/category_manager/category_mana
 import 'package:hoplixi/features/password_manager/create_store/create_store_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/screens/notes_graph_screen.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_layout_v2.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_layout.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/entity_add_edit.dart';
 import 'package:hoplixi/features/password_manager/history/ui/screens/history_screen.dart';
 import 'package:hoplixi/features/password_manager/icon_manager/icon_manager_screen.dart';
@@ -87,7 +87,7 @@ final List<RouteBase> appRoutes = [
   ShellRoute(
     builder: (context, state, child) {
       // child — самый глубокий совпавший маршрут (если есть) — используем в DashboardLayout
-      return DashboardLayoutV2(state: state, panelChild: child);
+      return DashboardLayout(state: state, panelChild: child);
     },
     routes: [
       GoRoute(

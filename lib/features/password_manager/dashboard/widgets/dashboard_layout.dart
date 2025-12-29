@@ -1,550 +1,570 @@
-// import 'package:flutter/material.dart';
-// import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:go_router/go_router.dart';
-// import 'package:hoplixi/core/logger/app_logger.dart';
-// import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_destination.dart';
-// import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_fab_action.dart';
-// import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_route_state.dart';
-// import 'package:hoplixi/features/password_manager/dashboard/providers/entity_type_provider.dart';
-// import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_screen.dart';
-// import 'package:hoplixi/features/password_manager/dashboard/widgets/expandable_fab.dart';
-// import 'package:screen_protector/screen_protector.dart';
-// import 'package:universal_platform/universal_platform.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_screen.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/expandable_fab.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/smooth_rounded_notched_rectangle.dart';
+import 'package:hoplixi/routing/paths.dart';
 
-// import 'smooth_rounded_notched_rectangle.dart';
+// В теле класса _DashboardLayoutState добавьте:
+const List<String> _fullCenterPaths = [
+  AppRoutesPaths.notesGraph,
+]; // сюда можно добавить другие full-center имена
 
-// // Статическая ссылка на текущее состояние DashboardLayout
-// // Используйте DashboardLayout.currentState для доступа к методам:
-// // - closeSidebar() - закрыть sidebar
-// // - openSidebar() - открыть sidebar
-// // - toggleSidebar() - переключить состояние sidebar
-// // - isSidebarOpen - проверить, открыт ли sidebar
-// DashboardLayoutState? _dashboardLayoutState;
+/// Действия панели справа и нижнего меню
+const List<String> actions = ['categories', 'tags', 'icons'];
 
-// /// @Deprecated Используйте DashboardLayout.currentState вместо этого
-// /// Оставлено для обратной совместимости
-// final GlobalKey<DashboardLayoutState> dashboardSidebarKey =
-//     GlobalKey<DashboardLayoutState>();
+/// DashboardLayout — stateful, хранит navigatorKeys для каждой entity и анимацию панели
+class DashboardLayout extends StatefulWidget {
+  final GoRouterState state;
+  final Widget
+  panelChild; // deepest matched route (если это panel), иначе SizedBox
 
-// /// Адаптивный layout для dashboard с использованием ShellRoute.
-// ///
-// /// На больших экранах: NavigationRail слева + main content + sidebar справа (child)
-// /// На маленьких экранах: BottomNavigationBar + main content, sidebar открывается по отдельным роутам
-// ///
-// /// ## Управление sidebar
-// ///
-// /// Используйте `DashboardLayout.currentState` для управления sidebar из любого места:
-// /// ```dart
-// /// DashboardLayout.currentState?.closeSidebar();
-// /// DashboardLayout.currentState?.openSidebar();
-// /// DashboardLayout.currentState?.toggleSidebar();
-// /// final isOpen = DashboardLayout.currentState?.isSidebarOpen ?? false;
-// /// ```
-// ///
-// /// ## Конфигурация маршрутов
-// ///
-// /// Для добавления новых full-screen или sidebar маршрутов используйте
-// /// [DashboardRouteState] — централизованную конфигурацию в
-// /// `dashboard_route_state.dart`.
-// class DashboardLayout extends ConsumerStatefulWidget {
-//   final Widget child;
+  const DashboardLayout({
+    required this.state,
+    required this.panelChild,
+    super.key,
+  });
 
-//   const DashboardLayout({super.key, required this.child});
+  @override
+  State<DashboardLayout> createState() => _DashboardLayoutState();
+}
 
-//   /// Текущее состояние DashboardLayout
-//   /// Может быть null если DashboardLayout ещё не создан
-//   static DashboardLayoutState? get currentState => _dashboardLayoutState;
+class _DashboardLayoutState extends State<DashboardLayout>
+    with SingleTickerProviderStateMixin {
+  // navigatorKeys для внутреннего (центра) навигатора каждой entity
+  final Map<String, GlobalKey<NavigatorState>> _navigatorKeys = {
+    for (var e in EntityType.allTypesString) e: GlobalKey<NavigatorState>(),
+  };
 
-//   @override
-//   ConsumerState<DashboardLayout> createState() => DashboardLayoutState();
-// }
+  late final AnimationController _controller;
+  bool _wasPanelOpen = false;
 
-// class DashboardLayoutState extends ConsumerState<DashboardLayout>
-//     with SingleTickerProviderStateMixin {
-//   late AnimationController _animationController;
-//   late Animation<double> _sidebarAnimation;
+  // Кэшированные destinations для NavigationRail
+  static const List<NavigationRailDestination> _baseDestinations = [
+    NavigationRailDestination(icon: Icon(Icons.home), label: Text('Home')),
+    NavigationRailDestination(
+      icon: Icon(Icons.category),
+      label: Text('Categories'),
+    ),
+    NavigationRailDestination(icon: Icon(Icons.tag), label: Text('Tags')),
+    NavigationRailDestination(icon: Icon(Icons.image), label: Text('Icons')),
+  ];
 
-//   // Кэш предыдущего состояния для оптимизации анимаций
-//   DashboardRouteState? _previousRouteState;
+  static const NavigationRailDestination _graphDestination =
+      NavigationRailDestination(
+        icon: Icon(Icons.bubble_chart),
+        label: Text('Graph'),
+      );
 
-//   // Запоминаем, был ли sidebar открыт перед переходом на full-screen
-//   bool _sidebarWasOpenBeforeFullScreen = false;
+  // Кэшированный список children для IndexedStack
+  late final List<Widget> _indexedStackChildren;
 
-//   final GlobalKey<ExpandableFABState> _fabKey = GlobalKey();
-//   final GlobalKey<ExpandableFABState> _mobileFabKey = GlobalKey();
+  // Кешированные Navigator виджеты для избежания пересоздания
+  late final Map<String, Widget> _cachedNavigators;
 
-//   // ===========================================================================
-//   // Screen Protection (Mobile)
-//   // ===========================================================================
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+    );
 
-//   Future<void> _enableScreenProtection() async {
-//     if (UniversalPlatform.isMobile) {
-//       await ScreenProtector.protectDataLeakageOn();
-//       await ScreenProtector.protectDataLeakageWithBlur();
-//     }
-//   }
+    // Кешируем Navigator виджеты один раз
+    _cachedNavigators = {
+      for (var e in EntityType.allTypesString) e: _buildInnerNavigator(e),
+    };
 
-//   Future<void> _disableScreenProtection() async {
-//     if (UniversalPlatform.isMobile) {
-//       await ScreenProtector.protectDataLeakageOff();
-//     }
-//   }
+    // Кэшируем список children для IndexedStack
+    _indexedStackChildren = EntityType.allTypesString
+        .map((e) => _cachedNavigators[e]!)
+        .toList();
 
-//   // ===========================================================================
-//   // Lifecycle
-//   // ===========================================================================
+    final uri = widget.state.uri.toString();
+    final hasPanel = _hasPanel(uri);
+    final isFullCenter = _isFullCenter(uri);
+    if (hasPanel && !isFullCenter) _controller.value = 1.0;
+  }
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     _dashboardLayoutState = this;
-//     _enableScreenProtection();
+  @override
+  void didUpdateWidget(covariant DashboardLayout oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final uri = widget.state.uri.toString();
+    final hasPanel = _hasPanel(uri);
+    final isFullCenter = _isFullCenter(uri);
 
-//     _animationController = AnimationController(
-//       vsync: this,
-//       duration: const Duration(milliseconds: 300),
-//     );
+    // Если full-center — обязательно закрываем панель
+    if (isFullCenter) {
+      if (_controller.status == AnimationStatus.forward ||
+          _controller.value > 0.0) {
+        _controller.reverse();
+      }
+      _wasPanelOpen = false;
+      return;
+    }
 
-//     _sidebarAnimation = CurvedAnimation(
-//       parent: _animationController,
-//       curve: Curves.easeInOut,
-//     );
-//   }
+    // Обычная логика для панели
+    if (hasPanel && !_wasPanelOpen) {
+      _controller.forward();
+    } else if (!hasPanel && _wasPanelOpen) {
+      _controller.reverse();
+    }
+    _wasPanelOpen = hasPanel;
+  }
 
-//   @override
-//   void dispose() {
-//     if (_dashboardLayoutState == this) {
-//       _dashboardLayoutState = null;
-//     }
-//     _disableScreenProtection();
-//     _animationController.dispose();
-//     super.dispose();
-//   }
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
-//   // ===========================================================================
-//   // FAB Actions
-//   // ===========================================================================
+  // ===========================================================================
+  // FAB Actions (принцип из старого DashboardLayout)
+  // ===========================================================================
 
-//   void _onFabActionPressed(DashboardFabAction action) {
-//     final entityTypeState = ref.read(entityTypeProvider);
-//     final path = action.getPath(entityTypeState.currentType);
+  /// Построить список действий FAB для текущей entity
+  List<FABActionData> _buildFabActions(String entity) {
+    return [
+      FABActionData(
+        icon: Icons.add,
+        label: 'Добавить',
+        onPressed: () => _onFabActionPressed(entity, 'add'),
+      ),
+      FABActionData(
+        icon: Icons.category,
+        label: 'Категории',
+        onPressed: () => _onFabActionPressed(entity, 'categories'),
+      ),
+      FABActionData(
+        icon: Icons.tag,
+        label: 'Теги',
+        onPressed: () => _onFabActionPressed(entity, 'tags'),
+      ),
+      FABActionData(
+        icon: Icons.image,
+        label: 'Иконки',
+        onPressed: () => _onFabActionPressed(entity, 'icons'),
+      ),
+    ];
+  }
 
-//     if (path != null) {
-//       context.push(path);
-//     } else {
-//       logInfo('FAB action без пути: ${action.name}', tag: 'DashboardLayout');
-//     }
-//   }
+  /// Обработать нажатие на FAB action
+  void _onFabActionPressed(String entity, String action) {
+    final path = '/dashboard/$entity/$action';
+    if (context.mounted) {
+      context.go(path);
+    }
+  }
 
-//   List<FABActionData> _buildFabActions(BuildContext context) {
-//     final entityTypeState = ref.read(entityTypeProvider);
-//     return DashboardFabAction.buildActions(
-//       context: context,
-//       entityType: entityTypeState.currentType,
-//       onActionPressed: _onFabActionPressed,
-//     );
-//   }
+  // ===========================================================================
+  // Bottom Navigation Bar
+  // ===========================================================================
 
-//   // ===========================================================================
-//   // Sidebar Control (Public API)
-//   // ===========================================================================
+  /// Построить BottomNavigationBar для мобильных устройств
+  BottomAppBar _buildBottomNavigationBar(
+    String entity,
+    List<NavigationRailDestination> destinations,
+  ) {
+    final currentIndex = _selectedRailIndex() ?? 0;
+    final homeIndex = 0;
 
-//   /// Закрыть sidebar
-//   void closeSidebar() {
-//     if (_animationController.value != 0.0) {
-//       _animationController.reverse();
-//     }
-//   }
+    final leftDestinations = destinations
+        .where((d) => d == destinations[0] || d == destinations[1])
+        .toList();
+    final rightDestinations = destinations
+        .where((d) => destinations.indexOf(d) > 1)
+        .toList();
 
-//   /// Открыть sidebar
-//   void openSidebar() {
-//     if (_animationController.value != 1.0) {
-//       _animationController.forward();
-//     }
-//   }
+    return BottomAppBar(
+      shape: const SmoothRoundedNotchedRectangle(
+        guestCorner: Radius.circular(20),
+        notchMargin: 4.0,
+        s1: 18.0,
+        s2: 18.0,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      height: 70,
+      child: Row(
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          // Left side
+          ...leftDestinations.map(
+            (d) => _BottomNavIconButton(
+              destination: d,
+              isSelected: currentIndex == destinations.indexOf(d),
+              onTap: () =>
+                  _onBottomNavItemSelected(entity, destinations.indexOf(d)),
+            ),
+          ),
+          // FAB space
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            width: currentIndex == homeIndex ? 40 : 0,
+            child: const SizedBox(width: 40),
+          ),
+          // Right side
+          ...rightDestinations.map(
+            (d) => _BottomNavIconButton(
+              destination: d,
+              isSelected: currentIndex == destinations.indexOf(d),
+              onTap: () =>
+                  _onBottomNavItemSelected(entity, destinations.indexOf(d)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-//   /// Переключить состояние sidebar
-//   void toggleSidebar() {
-//     if (isSidebarOpen) {
-//       closeSidebar();
-//     } else {
-//       openSidebar();
-//     }
-//   }
+  /// Обработать нажатие на пункт BottomNavigationBar
+  void _onBottomNavItemSelected(String entity, int index) {
+    if (index == 0) {
+      // home: close panel
+      context.go('/dashboard/$entity');
+    } else if (index >= 1 && index <= 3) {
+      context.go('/dashboard/$entity/${actions[index - 1]}');
+    } else if (index == 4 && entity == EntityType.note.id) {
+      context.go(AppRoutesPaths.notesGraph);
+    }
+  }
 
-//   /// Проверить, открыт ли sidebar
-//   bool get isSidebarOpen => _animationController.value == 1.0;
+  // ===========================================================================
+  // Helpers
+  // ===========================================================================
+  String _currentEntity() {
+    final ent = widget.state.pathParameters['entity'];
+    return (ent != null && EntityType.allTypesString.contains(ent))
+        ? ent
+        : EntityType.allTypesString.first;
+  }
 
-//   // ===========================================================================
-//   // Navigation
-//   // ===========================================================================
+  bool _hasPanel(String location) {
+    // считаем, что панель открыта когда путь имеет третий сегмент:
+    // /dashboard/<entity>/<panel-or-action>
+    final segments = Uri.parse(location).pathSegments;
+    return segments.length >= 3;
+  }
 
-//   void _onDestinationSelected(BuildContext context, int index) {
-//     _mobileFabKey.currentState?.close();
+  bool _isFullCenter(String location) {
+    return _fullCenterPaths.contains(location);
+  }
 
-//     final destination = DashboardDestination.fromIndex(index);
-//     if (!destination.opensSidebar) {
-//       closeSidebar();
-//     }
+  int _indexForEntity(String entity) =>
+      EntityType.allTypesString.indexOf(entity);
 
-//     context.go(destination.path);
-//   }
+  // Проверяем, нужно ли показывать FAB (только на 2-сегментных путях)
+  bool _shouldShowFAB(String location) {
+    final segments = Uri.parse(location).pathSegments;
+    return segments.length == 2; // /dashboard/entity
+  }
 
-//   // ===========================================================================
-//   // Animation Management
-//   // ===========================================================================
+  int? _selectedRailIndex() {
+    final location = widget.state.uri.toString();
+    final segments = Uri.parse(location).pathSegments;
+    if (segments.length < 3) return 0; // home
+    final action = segments[2];
+    switch (action) {
+      case 'categories':
+        return 1;
+      case 'tags':
+        return 2;
+      case 'icons':
+        return 3;
+      case 'graph':
+        return 4;
+      default:
+        return 0;
+    }
+  }
 
-//   /// Обновить состояние sidebar анимации на основе [DashboardRouteState]
-//   void _updateSidebarAnimation(DashboardRouteState routeState) {
-//     final previous = _previousRouteState;
-//     final wasFullScreen = previous?.isFullScreen ?? false;
+  @override
+  Widget build(BuildContext context) {
+    final uri = widget.state.uri.toString();
+    final entity = _currentEntity();
+    final selectedIndex = _indexForEntity(entity);
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 700;
+    final panelOpenWidth = screenWidth * 0.46;
+    final hasPanel = _hasPanel(uri);
+    final panel = hasPanel ? widget.panelChild : const SizedBox.shrink();
+    final isFullCenter = _isFullCenter(uri);
 
-//     // Для full-screen маршрутов сбрасываем sidebar без анимации,
-//     // но запоминаем было ли он открыт
-//     if (routeState.isFullScreen) {
-//       if (!wasFullScreen) {
-//         // Запоминаем состояние перед переходом на full-screen
-//         _sidebarWasOpenBeforeFullScreen = _animationController.value > 0.5;
-//       }
-//       if (_animationController.value != 0.0) {
-//         _animationController.value = 0.0;
-//       }
-//       _previousRouteState = routeState;
-//       return;
-//     }
+    // Используем кэшированные destinations, добавляя Graph только для notes
+    final destinations = entity == EntityType.note.id
+        ? [..._baseDestinations, _graphDestination]
+        : _baseDestinations;
 
-//     // Возврат с full-screen маршрута
-//     if (wasFullScreen) {
-//       // Если возвращаемся на маршрут с sidebar и он был открыт — восстанавливаем
-//       if (routeState.shouldOpenSidebar || _sidebarWasOpenBeforeFullScreen) {
-//         _animationController.forward();
-//       }
-//       _previousRouteState = routeState;
-//       _sidebarWasOpenBeforeFullScreen = false;
-//       return;
-//     }
+    // Mobile: если есть панель — показываем её fullscreen БЕЗ BottomNavigationBar
+    if (isMobile && (hasPanel || isFullCenter)) {
+      return Scaffold(
+        body: widget.panelChild,
+        bottomNavigationBar: null,
+        floatingActionButton: _shouldShowFAB(uri)
+            ? _buildExpandableFAB(entity, isMobile)
+            : null,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      );
+    }
 
-//     final shouldOpen = routeState.shouldOpenSidebar;
+    // Mobile layout без панели: BottomNavigationBar для выбора actions, как NavigationRail
+    if (isMobile) {
+      return Scaffold(
+        // appBar: AppBar(title: const Text('Dashboard')),
+        body: RepaintBoundary(
+          child: IndexedStack(
+            index: selectedIndex,
+            children: _indexedStackChildren,
+          ),
+        ),
+        bottomNavigationBar: _buildBottomNavigationBar(entity, destinations),
+        floatingActionButton: _shouldShowFAB(uri)
+            ? _buildExpandableFAB(entity, isMobile)
+            : null,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      );
+    }
 
-//     // Определяем, нужно ли обновить анимацию
-//     final stateChanged =
-//         previous == null ||
-//         previous.selectedIndex != routeState.selectedIndex ||
-//         previous.shouldOpenSidebar != routeState.shouldOpenSidebar;
+    // Desktop/tablet: трёхколоночный layout с animated panel
+    return Scaffold(
+      // appBar: AppBar(title: Text('${GoRouter.of(context).state.uri}')),
+      body: Row(
+        children: [
+          // NavigationRail / left menu для categories, tags, icons
+          Container(
+            decoration: BoxDecoration(
+              border: Border(
+                right: BorderSide(
+                  color: Theme.of(context).dividerColor,
+                  width: 1,
+                ),
+              ),
+            ),
+            child: NavigationRail(
+              selectedIndex:
+                  _selectedRailIndex(), // highlight based on current panel
+              onDestinationSelected: (i) {
+                if (i == 0) {
+                  // home: close panel
+                  context.go('/dashboard/$entity');
+                } else if (i >= 1 && i <= 3) {
+                  context.go('/dashboard/$entity/${actions[i - 1]}');
+                } else if (i == 4 && entity == 'notes') {
+                  context.go(AppRoutesPaths.notesGraph);
+                }
+              },
+              labelType: NavigationRailLabelType.all,
+              destinations: destinations,
+              leading: Padding(
+                padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
+                child: _buildExpandableFAB(entity, isMobile),
+              ),
+            ),
+          ),
 
-//     // Проверяем закрытие sidebar route
-//     final sidebarClosed =
-//         previous != null &&
-//         previous.shouldOpenSidebar &&
-//         !routeState.shouldOpenSidebar &&
-//         routeState.selectedIndex == 0;
+          // Center: если isFullCenter — panelChild, иначе IndexedStack с inner Navigators
+          Expanded(
+            flex: 3,
+            child: RepaintBoundary(
+              child: isFullCenter
+                  ? widget.panelChild
+                  : IndexedStack(
+                      index: selectedIndex,
+                      children: _indexedStackChildren,
+                    ),
+            ),
+          ),
 
-//     if (stateChanged || sidebarClosed) {
-//       if (shouldOpen && _animationController.value != 1.0) {
-//         _animationController.forward();
-//       } else if (!shouldOpen && _animationController.value != 0.0) {
-//         _animationController.reverse();
-//       }
-//     }
+          // Анимированная правая панель — только если не isFullCenter
+          if (!isMobile && !isFullCenter)
+            RepaintBoundary(
+              child: AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  final widthFactor = isFullCenter ? 0.0 : _controller.value;
 
-//     _previousRouteState = routeState;
-//   }
+                  return ClipRect(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      widthFactor: widthFactor,
+                      child: SizedBox(
+                        width: panelOpenWidth,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surface,
+                            border: Border(
+                              left: BorderSide(
+                                color: Theme.of(context).dividerColor,
+                                width: 1,
+                              ),
+                            ),
+                          ),
+                          child: AnimatedOpacity(
+                            opacity: widthFactor,
+                            duration: const Duration(milliseconds: 150),
+                            child: hasPanel ? child : const SizedBox.shrink(),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                child: panel,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
-//   // ===========================================================================
-//   // Build
-//   // ===========================================================================
+  // Вспомогательный метод для создания ExpandableFAB
+  Widget _buildExpandableFAB(String entity, bool isMobile) {
+    return ExpandableFAB(
+      direction: isMobile
+          ? FABExpandDirection.up
+          : FABExpandDirection.rightDown,
+      isUseInNavigationRail: !isMobile, // true для десктопа
+      actions: _buildFabActions(entity),
+    );
+  }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     ref.watch(entityTypeProvider);
+  // inner Navigator для сущности — сохраняет стек и scroll
+  Widget _buildInnerNavigator(String entity) {
+    final key = _navigatorKeys[entity]!;
+    return Navigator(
+      key: key,
+      onGenerateRoute: (settings) {
+        // Роуты внутренние — здесь можно расширять локальные пути (например item/details),
+        // но в примере достаточно одного корневого экрана.
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (context) {
+            return DashboardHomeScreen(
+              entityType: EntityType.fromId(entity)!,
 
-//     return LayoutBuilder(
-//       builder: (context, constraints) {
-//         final routeState = context.dashboardRouteState;
-//         final isDesktop = constraints.maxWidth >= 900;
+              // локально открываем экран деталей внутри этого Navigator (сохраняет stack)
+              // openLocalDetails: (String itemId) {
+              //   // key.currentState!.push(
+              //   //   MaterialPageRoute(
+              //   //     builder: (_) => LocalDetailPage(entity: entity, id: itemId),
+              //   //   ),
+              //   // );
+              // },
+              // для открытия панели (categories/add/edit) — используем URL навигацию
+            );
+          },
+        );
+      },
+    );
+  }
+}
 
-//         logTrace('Route state: $routeState', tag: 'DashboardLayout');
+// =============================================================================
+// Bottom Nav Icon Button
+// =============================================================================
 
-//         // Обновляем анимацию sidebar
-//         WidgetsBinding.instance.addPostFrameCallback((_) {
-//           _updateSidebarAnimation(routeState);
-//         });
+class _BottomNavIconButton extends StatelessWidget {
+  final NavigationRailDestination destination;
+  final bool isSelected;
+  final VoidCallback onTap;
 
-//         if (isDesktop) {
-//           return _DesktopLayout(
-//             routeState: routeState,
-//             constraints: constraints,
-//             sidebarAnimation: _sidebarAnimation,
-//             fabKey: _fabKey,
-//             buildFabActions: _buildFabActions,
-//             onDestinationSelected: _onDestinationSelected,
-//             child: widget.child,
-//           );
-//         } else {
-//           return _MobileLayout(
-//             routeState: routeState,
-//             mobileFabKey: _mobileFabKey,
-//             buildFabActions: _buildFabActions,
-//             onDestinationSelected: _onDestinationSelected,
-//             child: widget.child,
-//           );
-//         }
-//       },
-//     );
-//   }
-// }
+  const _BottomNavIconButton({
+    required this.destination,
+    required this.isSelected,
+    required this.onTap,
+  });
 
-// // =============================================================================
-// // Desktop Layout
-// // =============================================================================
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
 
-// class _DesktopLayout extends StatelessWidget {
-//   final DashboardRouteState routeState;
-//   final BoxConstraints constraints;
-//   final Animation<double> sidebarAnimation;
-//   final GlobalKey<ExpandableFABState> fabKey;
-//   final List<FABActionData> Function(BuildContext) buildFabActions;
-//   final void Function(BuildContext, int) onDestinationSelected;
-//   final Widget child;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            destination.icon,
+            const SizedBox(height: 4),
+            Text(
+              (destination.label as Text).data ?? '',
+              style: TextStyle(
+                fontSize: 12,
+                color: isSelected
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-//   const _DesktopLayout({
-//     required this.routeState,
-//     required this.constraints,
-//     required this.sidebarAnimation,
-//     required this.fabKey,
-//     required this.buildFabActions,
-//     required this.onDestinationSelected,
-//     required this.child,
+/// Центр для entity (локальные навигации через openLocalDetails, панель — через openPanel)
+// class EntityCenterPage extends StatelessWidget {
+//   final String entity;
+//   final void Function(String itemId) openLocalDetails;
+//   final void Function(String pathSuffix) openPanel;
+
+//   const EntityCenterPage({
+//     required this.entity,
+//     required this.openLocalDetails,
+//     required this.openPanel,
+//     super.key,
 //   });
 
 //   @override
 //   Widget build(BuildContext context) {
+//     // простой плейсхолдер списка
 //     return Scaffold(
-//       body: Row(
-//         children: [
-//           // NavigationRail
-//           _buildNavigationRail(context),
-
-//           // Main content
-//           Expanded(
-//             flex: 1,
-//             child: routeState.isFullScreen
-//                 ? child
-//                 : const DashboardHomeScreen(),
-//           ),
-
-//           // Animated Sidebar (всегда в дереве, но скрыт для full-screen)
-//           _buildSidebar(context),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Widget _buildNavigationRail(BuildContext context) {
-//     return Container(
-//       decoration: BoxDecoration(
-//         border: Border(
-//           right: BorderSide(color: Theme.of(context).dividerColor, width: 1),
-//         ),
-//       ),
-//       child: NavigationRail(
-//         leadingAtTop: true,
-//         selectedIndex: routeState.selectedIndex,
-//         onDestinationSelected: (index) => onDestinationSelected(context, index),
-//         labelType: NavigationRailLabelType.selected,
-//         leading: Padding(
-//           padding: const EdgeInsets.symmetric(vertical: 8.0),
-//           child: ExpandableFAB(
-//             key: fabKey,
-//             direction: FABExpandDirection.rightDown,
-//             spacing: 56,
-//             isUseInNavigationRail: true,
-//             actions: buildFabActions(context),
-//           ),
-//         ),
-//         destinations: DashboardDestination.values
-//             .map((d) => d.toRailDestination())
-//             .toList(),
-//       ),
-//     );
-//   }
-
-//   Widget _buildSidebar(BuildContext context) {
-//     // Для full-screen маршрутов скрываем sidebar мгновенно
-//     final isHidden = routeState.isFullScreen;
-//     final showContent = routeState.shouldOpenSidebar && !isHidden;
-
-//     return AnimatedBuilder(
-//       animation: sidebarAnimation,
-//       builder: (context, _) {
-//         // При full-screen принудительно ширина = 0
-//         final widthFactor = isHidden ? 0.0 : sidebarAnimation.value;
-
-//         return ClipRect(
-//           child: Align(
-//             alignment: Alignment.centerLeft,
-//             widthFactor: widthFactor,
-//             child: SizedBox(
-//               width: constraints.maxWidth / 2.15,
-//               child: Container(
-//                 decoration: BoxDecoration(
-//                   color: Theme.of(context).colorScheme.surfaceContainerLow,
-//                   border: Border(
-//                     left: BorderSide(
-//                       color: Theme.of(context).dividerColor,
-//                       width: 1,
-//                     ),
-//                   ),
-//                 ),
-//                 child: AnimatedOpacity(
-//                   opacity: widthFactor,
-//                   duration: const Duration(milliseconds: 150),
-//                   child: showContent ? child : const SizedBox.shrink(),
-//                 ),
-//               ),
-//             ),
-//           ),
-//         );
-//       },
-//     );
-//   }
-// }
-
-// // =============================================================================
-// // Mobile Layout
-// // =============================================================================
-
-// class _MobileLayout extends StatelessWidget {
-//   final DashboardRouteState routeState;
-//   final GlobalKey<ExpandableFABState> mobileFabKey;
-//   final List<FABActionData> Function(BuildContext) buildFabActions;
-//   final void Function(BuildContext, int) onDestinationSelected;
-//   final Widget child;
-
-//   const _MobileLayout({
-//     required this.routeState,
-//     required this.mobileFabKey,
-//     required this.buildFabActions,
-//     required this.onDestinationSelected,
-//     required this.child,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     final showBottomNav = !routeState.hideBottomNavigation;
-//     final showFab = !routeState.hideFAB;
-
-//     return Scaffold(
-//       body: child,
-//       bottomNavigationBar: showBottomNav
-//           ? _buildBottomNavigationBar(context)
-//           : null,
-//       floatingActionButton: showFab
-//           ? ExpandableFAB(
-//               key: mobileFabKey,
-//               direction: FABExpandDirection.up,
-//               spacing: 56,
-//               actions: buildFabActions(context),
-//             )
-//           : null,
-//       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-//     );
-//   }
-
-//   Widget _buildBottomNavigationBar(BuildContext context) {
-//     final destinations = DashboardDestination.values;
-//     final homeIndex = DashboardDestination.home.index;
-//     final selectedIndex = routeState.selectedIndex;
-
-//     final leftDestinations = destinations.where((d) => d.index <= 1).toList();
-//     final rightDestinations = destinations.where((d) => d.index > 1).toList();
-
-//     return BottomAppBar(
-//       shape: const SmoothRoundedNotchedRectangle(
-//         guestCorner: Radius.circular(20),
-//         notchMargin: 4.0,
-//         s1: 18.0,
-//         s2: 18.0,
-//       ),
-//       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-//       height: 70,
-//       child: Row(
-//         mainAxisSize: MainAxisSize.max,
-//         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//         children: <Widget>[
-//           // Left side
-//           ...leftDestinations.map(
-//             (d) => _BottomNavIconButton(
-//               destination: d,
-//               isSelected: selectedIndex == d.index,
-//               onTap: () => onDestinationSelected(context, d.index),
-//             ),
-//           ),
-//           // FAB space
-//           AnimatedContainer(
-//             duration: const Duration(milliseconds: 300),
-//             curve: Curves.easeInOut,
-//             width: selectedIndex == homeIndex ? 40 : 0,
-//             child: const SizedBox(width: 40),
-//           ),
-//           // Right side
-//           ...rightDestinations.map(
-//             (d) => _BottomNavIconButton(
-//               destination: d,
-//               isSelected: selectedIndex == d.index,
-//               onTap: () => onDestinationSelected(context, d.index),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
-// // =============================================================================
-// // Bottom Nav Icon Button
-// // =============================================================================
-
-// class _BottomNavIconButton extends StatelessWidget {
-//   final DashboardDestination destination;
-//   final bool isSelected;
-//   final VoidCallback onTap;
-
-//   const _BottomNavIconButton({
-//     required this.destination,
-//     required this.isSelected,
-//     required this.onTap,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     final colorScheme = Theme.of(context).colorScheme;
-
-//     return InkWell(
-//       onTap: onTap,
-//       borderRadius: BorderRadius.circular(12),
-//       child: Padding(
-//         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+//       body: SafeArea(
 //         child: Column(
-//           mainAxisSize: MainAxisSize.min,
-//           mainAxisAlignment: MainAxisAlignment.center,
 //           children: [
-//             Icon(
-//               isSelected ? destination.selectedIcon : destination.icon,
-//               color: isSelected
-//                   ? colorScheme.primary
-//                   : colorScheme.onSurfaceVariant,
-//               size: 24,
+//             DropdownButton<String>(
+//               value: entity,
+//               onChanged: (newEntity) {
+//                 if (newEntity != null) {
+//                   context.go('/dashboard/$newEntity');
+//                 }
+//               },
+//               items: EntityType.allTypesString
+//                   .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+//                   .toList(),
 //             ),
-//             const SizedBox(height: 4),
-//             Text(
-//               destination.label,
-//               style: TextStyle(
-//                 fontSize: 12,
-//                 color: isSelected
-//                     ? colorScheme.primary
-//                     : colorScheme.onSurfaceVariant,
-//                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+//             Expanded(
+//               child: ListView.builder(
+//                 key: PageStorageKey(
+//                   'list_$entity',
+//                 ), // хранит позицию скролла в IndexedStack
+//                 itemCount: 30,
+//                 itemBuilder: (context, i) {
+//                   final id = 'item_$i';
+//                   return ListTile(
+//                     title: Text('$entity — item $i'),
+//                     onTap: () => openLocalDetails(id), // локальная навигация
+//                     trailing: PopupMenuButton<String>(
+//                       onSelected: (v) {
+//                         if (v == 'edit') openPanel('edit/$id');
+//                         if (v == 'history') openPanel('history/$id');
+//                       },
+//                       itemBuilder: (ctx) => [
+//                         const PopupMenuItem(value: 'edit', child: Text('Edit')),
+//                         const PopupMenuItem(
+//                           value: 'history',
+//                           child: Text('History'),
+//                         ),
+//                       ],
+//                     ),
+//                   );
+//                 },
 //               ),
 //             ),
 //           ],
