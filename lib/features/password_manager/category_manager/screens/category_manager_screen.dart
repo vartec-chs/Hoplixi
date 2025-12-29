@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/category_manager/features/category_picker/category_picker.dart';
-import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/main_store/models/dto/category_dto.dart';
-import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/models/filter/categories_filter.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
-import 'providers/category_filter_provider.dart';
-import 'providers/category_pagination_provider.dart';
-import 'widgets/category_form_modal.dart';
+import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
+
+import '../providers/category_filter_provider.dart';
+import '../providers/category_pagination_provider.dart';
 
 class CategoryManagerScreen extends ConsumerStatefulWidget {
   const CategoryManagerScreen({super.key});
@@ -129,32 +130,18 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
                   child: Center(child: Text('Категории не найдены')),
                 );
               }
-              return SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    if (index == state.items.length && state.hasMore) {
-                      // Загружаем следующую страницу при достижении конца
-                      Future.microtask(
-                        () =>
-                            ref.read(categoryListProvider.notifier).loadMore(),
-                      );
-                      return const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    }
-                    if (index >= state.items.length) {
-                      return null;
-                    }
-                    return _buildCategoryCard(
-                      context,
-                      state.items[index],
-                      () => ref.read(categoryListProvider.notifier).refresh(),
-                    );
+              return SliverPadding(
+                padding: const EdgeInsets.all(12),
+                sliver: SliverList.separated(
+                  itemCount: state.items.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final category = state.items[index];
+                    return _buildCategoryCard(context, category, () {
+                      ref.read(categoryListProvider.notifier).refresh();
+                    });
                   },
-                  childCount: state.hasMore
-                      ? state.items.length + 1
-                      : state.items.length,
                 ),
               );
             },
@@ -183,10 +170,16 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
       floatingActionButton: FloatingActionButton(
         heroTag: 'categoryManagerFab',
         onPressed: () {
-          showCategoryCreateModal(
-            context,
-            onSuccess: () => ref.read(categoryListProvider.notifier).refresh(),
-          );
+          final state = GoRouterState.of(context).pathParameters['entity'];
+          final entity = EntityType.fromId(state ?? '')!;
+
+          final result = context.push<bool>(AppRoutesPaths.categoryAdd(entity));
+
+          result.then((created) {
+            if (created == true) {
+              ref.read(categoryListProvider.notifier).refresh();
+            }
+          });
         },
         child: const Icon(Icons.add),
       ),
@@ -208,20 +201,22 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
           autofocus: true,
           decoration: primaryInputDecoration(
             context,
-            hintText: 'Введите название...',
+            labelText: 'Введите название...',
           ),
         ),
         actions: [
-          TextButton(
+          SmoothButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Отмена'),
+            label: 'Отмена',
+            variant: .error,
+            type: .text,
           ),
-          ElevatedButton(
+          SmoothButton(
             onPressed: () {
               onSearch(controller.text);
               Navigator.pop(context);
             },
-            child: const Text('Найти'),
+            label: 'Поиск',
           ),
         ],
       ),
@@ -239,7 +234,6 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
         : Theme.of(context).colorScheme.primary;
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
         leading: Container(
           width: 48,
@@ -272,14 +266,33 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
           ],
           onSelected: (value) async {
             if (value == 'edit') {
-              showCategoryEditModal(context, category, onSuccess: onRefresh);
+              final state = GoRouterState.of(context).pathParameters['entity'];
+              final entity = EntityType.fromId(state ?? '')!;
+              final result = await context.push<bool>(
+                AppRoutesPaths.categoryEditWithId(entity, category.id),
+              );
+
+              if (result == true) {
+                onRefresh();
+              }
             } else if (value == 'delete') {
               await _handleDeleteCategory(context, category, onRefresh);
             }
           },
         ),
         onTap: () {
-          showCategoryEditModal(context, category, onSuccess: onRefresh);
+          final state = GoRouterState.of(context).pathParameters['entity'];
+          final entity = EntityType.fromId(state ?? '')!;
+
+          context
+              .push<bool>(
+                AppRoutesPaths.categoryEditWithId(entity, category.id),
+              )
+              .then((updated) {
+                if (updated == true) {
+                  onRefresh();
+                }
+              });
         },
       ),
     );

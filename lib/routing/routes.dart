@@ -7,7 +7,8 @@ import 'package:hoplixi/features/cloud_sync/oauth_apps/ui/oauth_apps_screen.dart
 import 'package:hoplixi/features/component_showcase/component_showcase_screen.dart';
 import 'package:hoplixi/features/home/home_screen.dart';
 import 'package:hoplixi/features/logs_viewer/screens/logs_tabs_screen.dart';
-import 'package:hoplixi/features/password_manager/category_manager/category_manager_screen.dart';
+import 'package:hoplixi/features/password_manager/category_manager/screens/category_form_screen.dart';
+import 'package:hoplixi/features/password_manager/category_manager/screens/category_manager_screen.dart';
 import 'package:hoplixi/features/password_manager/create_store/create_store_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/screens/notes_graph_screen.dart';
@@ -19,6 +20,7 @@ import 'package:hoplixi/features/password_manager/lock_store/lock_store_screen.d
 import 'package:hoplixi/features/password_manager/open_store/open_store_screen.dart';
 import 'package:hoplixi/features/password_manager/tags_manager/tags_manager_screen.dart';
 import 'package:hoplixi/features/settings/screens/settings_screen.dart';
+import 'package:hoplixi/global_key.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 final List<RouteBase> appRoutes = [
@@ -85,6 +87,7 @@ final List<RouteBase> appRoutes = [
   ),
 
   ShellRoute(
+    navigatorKey: dashboardNavigatorKey,
     builder: (context, state, child) {
       // child — самый глубокий совпавший маршрут (если есть) — используем в DashboardLayout
       return DashboardLayout(state: state, panelChild: child);
@@ -97,29 +100,6 @@ final List<RouteBase> appRoutes = [
         // Этот GoRoute существует для сопоставления базовой сущности и для вложенных panel маршрутов.
         builder: (context, state) => const SizedBox.shrink(),
         routes: [
-          // add/edit для основной сущности
-          GoRoute(
-            path: 'add',
-            name: 'entity_add',
-            builder: (context, state) {
-              final entity = EntityType.fromId(
-                state.pathParameters['entity']!,
-              )!;
-              return EntityAddEdit(entity: entity, isEdit: false);
-            },
-          ),
-          GoRoute(
-            path: 'edit/:id',
-            name: 'entity_edit',
-            builder: (context, state) {
-              final entity = EntityType.fromId(
-                state.pathParameters['entity']!,
-              )!;
-              final id = state.pathParameters['id']!;
-              return EntityAddEdit(entity: entity, isEdit: true, id: id);
-            },
-          ),
-
           // categories + nested add/edit
           GoRoute(
             path: 'categories',
@@ -129,27 +109,27 @@ final List<RouteBase> appRoutes = [
               return const CategoryManagerScreen();
             },
             routes: [
-              // GoRoute(
-              //   path: 'add',
-              //   name: 'entity_categories_add',
-              //   builder: (context, state) {
-              //     final entity = state.pathParameters['entity']!;
-              //     return CategoryAddEditPanel(forEntity: entity, isEdit: false);
-              //   },
-              // ),
-              // GoRoute(
-              //   path: 'edit/:id',
-              //   name: 'entity_categories_edit',
-              //   builder: (context, state) {
-              //     final entity = state.pathParameters['entity']!;
-              //     final id = state.pathParameters['id']!;
-              //     return CategoryAddEditPanel(
-              //       forEntity: entity,
-              //       isEdit: true,
-              //       id: id,
-              //     );
-              //   },
-              // ),
+              GoRoute(
+                path: 'add',
+                name: 'entity_categories_add',
+                builder: (context, state) {
+                  final entity = EntityType.fromId(
+                    state.pathParameters['entity']!,
+                  )!;
+                  return CategoryFormScreen(forEntity: entity);
+                },
+              ),
+              GoRoute(
+                path: 'edit/:id',
+                name: 'entity_categories_edit',
+                builder: (context, state) {
+                  final entity = EntityType.fromId(
+                    state.pathParameters['entity']!,
+                  )!;
+                  final id = state.pathParameters['id']!;
+                  return CategoryFormScreen(forEntity: entity, categoryId: id);
+                },
+              ),
             ],
           ),
 
@@ -217,6 +197,29 @@ final List<RouteBase> appRoutes = [
               //   },
               // ),
             ],
+          ),
+
+          // add/edit для основной сущности
+          GoRoute(
+            path: 'add',
+            name: 'entity_add',
+            builder: (context, state) {
+              final entity = EntityType.fromId(
+                state.pathParameters['entity']!,
+              )!;
+              return EntityAddEdit(entity: entity, isEdit: false);
+            },
+          ),
+          GoRoute(
+            path: 'edit/:id',
+            name: 'entity_edit',
+            builder: (context, state) {
+              final entity = EntityType.fromId(
+                state.pathParameters['entity']!,
+              )!;
+              final id = state.pathParameters['id']!;
+              return EntityAddEdit(entity: entity, isEdit: true, id: id);
+            },
           ),
 
           GoRoute(

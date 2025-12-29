@@ -57,19 +57,23 @@ class AppRoutesPaths {
   static const String fileAdd = '/dashboard/files/add';
   static const String fileEdit = '/dashboard/files/edit/:id';
 
-  /// dashboard right panel
-  /// - categories
-  static const String categories = '/dashboard/categories';
-  static const String categoryAdd = '/dashboard/categories/add';
-  static const String categoryEdit = '/dashboard/categories/edit/:id';
+  static String categoryEditWithId(EntityType entity, String id) =>
+      '/dashboard/${entity.id}/categories/edit/$id';
+
+  static String categoryAdd(EntityType entity) =>
+      '/dashboard/${entity.id}/categories/add';
 
   /// - tags
   static const String tags = '/dashboard/tags';
   static const String tagAdd = '/dashboard/tags/add';
   static const String tagEdit = '/dashboard/tags/edit/:id';
 
+  static String tagEditWithId(String id) => '/dashboard/tags/edit/$id';
+
   /// - icons
   static const String icons = '/dashboard/icons';
   static const String iconAdd = '/dashboard/icons/add';
   static const String iconEdit = '/dashboard/icons/edit/:id';
+
+  static String iconEditWithId(String id) => '/dashboard/icons/edit/$id';
 }
