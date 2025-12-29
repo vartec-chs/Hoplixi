@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/expandable_fab.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/smooth_rounded_notched_rectangle.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 // В теле класса _DashboardLayoutState добавьте:
@@ -177,12 +176,8 @@ class _DashboardLayoutState extends State<DashboardLayout>
         .toList();
 
     return BottomAppBar(
-      shape: const SmoothRoundedNotchedRectangle(
-        guestCorner: Radius.circular(20),
-        notchMargin: 4.0,
-        s1: 18.0,
-        s2: 18.0,
-      ),
+      shape: const CircularNotchedRectangle(),
+      notchMargin: 8.0,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       height: 70,
       child: Row(
@@ -297,30 +292,48 @@ class _DashboardLayoutState extends State<DashboardLayout>
         ? [..._baseDestinations, _graphDestination]
         : _baseDestinations;
 
-    // Mobile: если есть панель — показываем её fullscreen БЕЗ BottomNavigationBar
-    if (isMobile && (hasPanel || isFullCenter)) {
-      return Scaffold(
-        body: widget.panelChild,
-        bottomNavigationBar: null,
-        floatingActionButton: _shouldShowFAB(uri)
-            ? _buildExpandableFAB(entity, isMobile)
-            : null,
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      );
-    }
-
-    // Mobile layout без панели: BottomNavigationBar для выбора actions, как NavigationRail
+    // Mobile: единый layout с Stack для избежания мигания
     if (isMobile) {
       return Scaffold(
-        // appBar: AppBar(title: const Text('Dashboard')),
-        body: RepaintBoundary(
-          child: IndexedStack(
-            index: selectedIndex,
-            children: _indexedStackChildren,
-          ),
+        body: Stack(
+          children: [
+            // Центр: IndexedStack с inner Navigators
+            RepaintBoundary(
+              child: IndexedStack(
+                index: selectedIndex,
+                children: _indexedStackChildren,
+              ),
+            ),
+            // Анимированная панель поверх центра
+            AnimatedOpacity(
+              opacity: (hasPanel || isFullCenter) ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              child: (hasPanel || isFullCenter)
+                  ? widget.panelChild
+                  : const SizedBox.shrink(),
+            ),
+            // Анимированная bottom navigation bar
+            // Positioned(
+            //   bottom: 0,
+            //   left: 0,
+            //   right: 0,
+            //   child: AnimatedSlide(
+            //     offset: (hasPanel || isFullCenter)
+            //         ? const Offset(0, 1)
+            //         : Offset.zero,
+            //     duration: const Duration(milliseconds: 300),
+            //     curve: Curves.easeInOut,
+            //     child: _buildBottomNavigationBar(entity, destinations),
+            //   ),
+            // ),
+          ],
         ),
-        bottomNavigationBar: _buildBottomNavigationBar(entity, destinations),
-        floatingActionButton: _shouldShowFAB(uri)
+        bottomNavigationBar: !(hasPanel || isFullCenter)
+            ? _buildBottomNavigationBar(entity, destinations)
+            : null,
+        floatingActionButton:
+            (_shouldShowFAB(uri) && !(hasPanel || isFullCenter))
             ? _buildExpandableFAB(entity, isMobile)
             : null,
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -426,6 +439,7 @@ class _DashboardLayoutState extends State<DashboardLayout>
           ? FABExpandDirection.up
           : FABExpandDirection.rightDown,
       isUseInNavigationRail: !isMobile, // true для десктопа
+      shape: isMobile ? FABShape.circle : FABShape.square,
       actions: _buildFabActions(entity),
     );
   }
@@ -441,19 +455,7 @@ class _DashboardLayoutState extends State<DashboardLayout>
         return MaterialPageRoute(
           settings: settings,
           builder: (context) {
-            return DashboardHomeScreen(
-              entityType: EntityType.fromId(entity)!,
-
-              // локально открываем экран деталей внутри этого Navigator (сохраняет stack)
-              // openLocalDetails: (String itemId) {
-              //   // key.currentState!.push(
-              //   //   MaterialPageRoute(
-              //   //     builder: (_) => LocalDetailPage(entity: entity, id: itemId),
-              //   //   ),
-              //   // );
-              // },
-              // для открытия панели (categories/add/edit) — используем URL навигацию
-            );
+            return DashboardHomeScreen(entityType: EntityType.fromId(entity)!);
           },
         );
       },

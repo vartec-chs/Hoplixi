@@ -437,14 +437,20 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
-          // onOpenHistory: () {
-          //   if (location !=
-          //       AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id)) {
-          //     context.push(
-          //       AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
-          //     );
-          //   }
-          // },
+          onOpenHistory: () {
+            if (location !=
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.password,
+                  item.id,
+                )) {
+              context.push(
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.password,
+                  item.id,
+                ),
+              );
+            }
+          },
         );
         break;
       case EntityType.note:
@@ -456,14 +462,20 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
-          // onOpenHistory: () {
-          //   if (location !=
-          //       AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id)) {
-          //     context.push(
-          //       AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
-          //     );
-          //   }
-          // },
+          onOpenHistory: () {
+            if (location !=
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.note,
+                  item.id,
+                )) {
+              context.push(
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.note,
+                  item.id,
+                ),
+              );
+            }
+          },
         );
         break;
       case EntityType.bankCard:
@@ -475,15 +487,21 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
-          // onOpenHistory: () => {
-          //   if (location !=
-          //       AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id))
-          //     {
-          //       context.push(
-          //         AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
-          //       ),
-          //     },
-          // },
+          onOpenHistory: () => {
+            if (location !=
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.bankCard,
+                  item.id,
+                ))
+              {
+                context.push(
+                  AppRoutesPaths.dashboardHistoryWithParams(
+                    EntityType.bankCard,
+                    item.id,
+                  ),
+                ),
+              },
+          },
         );
         break;
       case EntityType.file:
@@ -496,15 +514,21 @@ class DashboardHomeBuilders {
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
           onDecrypt: () => showFileDecryptModal(context, item),
-          // onOpenHistory: () => {
-          //   if (location !=
-          //       AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id))
-          //     {
-          //       context.push(
-          //         AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
-          //       ),
-          //     },
-          // },
+          onOpenHistory: () => {
+            if (location !=
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.file,
+                  item.id,
+                ))
+              {
+                context.push(
+                  AppRoutesPaths.dashboardHistoryWithParams(
+                    EntityType.file,
+                    item.id,
+                  ),
+                ),
+              },
+          },
         );
         break;
       case EntityType.otp:
@@ -516,15 +540,21 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
-          // onOpenHistory: () => {
-          //   if (location !=
-          //       AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id))
-          //     {
-          //       context.push(
-          //         AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
-          //       ),
-          //     },
-          // },
+          onOpenHistory: () => {
+            if (location !=
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.otp,
+                  item.id,
+                ))
+              {
+                context.push(
+                  AppRoutesPaths.dashboardHistoryWithParams(
+                    EntityType.otp,
+                    item.id,
+                  ),
+                ),
+              },
+          },
         );
         break;
     }
