@@ -256,6 +256,16 @@ class _DashboardLayoutState extends State<DashboardLayout>
     return segments.length == 2; // /dashboard/entity
   }
 
+  // Проверяем, нужно ли показывать BottomNavigationBar на мобильных устройствах
+  bool _shouldShowBottomNav(String location) {
+    final segments = Uri.parse(location).pathSegments;
+    if (segments.length < 2) return false;
+    if (segments.length == 2) return true; // /dashboard/:entity
+    if (segments.length == 3 && actions.contains(segments[2]))
+      return true; // /dashboard/:entity/action
+    return false;
+  }
+
   int? _selectedRailIndex() {
     final location = widget.state.uri.toString();
     final segments = Uri.parse(location).pathSegments;
@@ -329,7 +339,7 @@ class _DashboardLayoutState extends State<DashboardLayout>
             // ),
           ],
         ),
-        bottomNavigationBar: !(hasPanel || isFullCenter)
+        bottomNavigationBar: (_shouldShowBottomNav(uri) && !isFullCenter)
             ? _buildBottomNavigationBar(entity, destinations)
             : null,
         floatingActionButton:
