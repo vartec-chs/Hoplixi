@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/main_store/models/filter/index.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
+
 import '../../../models/entity_type.dart';
-import '../../../providers/entity_type_provider.dart';
 import '../../../providers/filter_providers/base_filter_provider.dart';
 import '../entity_type_dropdown.dart';
 import 'app_bar_widgets.dart';
@@ -14,6 +14,8 @@ import 'app_bar_widgets.dart';
 class DashboardSliverAppBar extends ConsumerStatefulWidget {
   /// Callback для открытия drawer
   final VoidCallback? onMenuPressed;
+
+  final EntityType? entityType;
 
   /// Высота расширенного состояния
   final double expandedHeight;
@@ -41,9 +43,11 @@ class DashboardSliverAppBar extends ConsumerStatefulWidget {
 
   const DashboardSliverAppBar({
     super.key,
+    required this.entityType,
     this.onMenuPressed,
     this.expandedHeight = 160.0,
     this.collapsedHeight = 60.0,
+
     this.pinned = true,
     this.floating = false,
     this.snap = false,
@@ -61,21 +65,31 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
   late final TextEditingController _searchController;
   late final FocusNode _searchFocusNode;
 
+  late EntityType currentType;
+
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
     _searchFocusNode = FocusNode();
 
-    // Инициализируем поисковое поле с текущим значением из фильтра
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final currentQuery = ref.read(baseFilterProvider).query;
-      if (currentQuery.isNotEmpty) {
-        _searchController.text = currentQuery;
-      }
-    });
+    // Инициализируем currentType из параметров виджета
+    currentType = widget.entityType ?? EntityType.password;
 
     logDebug('DashboardSliverAppBar: Инициализация');
+  }
+
+  @override
+  void didUpdateWidget(covariant DashboardSliverAppBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Обновляем currentType если изменился entityType
+    final newType = widget.entityType ?? EntityType.password;
+    if (newType != currentType) {
+      setState(() {
+        currentType = newType;
+      });
+    }
   }
 
   @override
@@ -99,8 +113,8 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
 
     FilterModal.show(
       context: context,
+      entityType: currentType,
       onFilterApplied: () {
-       
         logInfo('DashboardSliverAppBar: Фильтры применены');
         widget.onFilterApplied?.call();
       },
@@ -125,23 +139,8 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currentEntityType = ref.watch(entityTypeProvider).currentType;
     final baseFilter = ref.watch(baseFilterProvider);
-
-    // Синхронизируем поисковое поле с провайдером
-    if (_searchController.text != baseFilter.query) {
-      _searchController.text = baseFilter.query;
-    }
-
-    // Слушаем изменения типа сущности
-    ref.listen(entityTypeProvider, (previous, next) {
-      if (previous?.currentType != next.currentType) {
-        logDebug(
-          'DashboardSliverAppBar: Тип сущности изменен',
-          data: {'type': next.currentType.label},
-        );
-      }
-    });
+    final currentEntityType = currentType;
 
     return SliverAppBar(
       expandedHeight: widget.expandedHeight,

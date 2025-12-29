@@ -1,9 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/data_refresh_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/list_state.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/entity_type_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/index.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_tab_provider.dart';
 import 'package:hoplixi/main_store/dao/filters_dao/filter.dart';
@@ -13,39 +11,32 @@ import 'package:hoplixi/main_store/models/filter/base_filter.dart';
 import 'package:hoplixi/main_store/models/filter/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
-import 'filter_providers/password_filter_provider.dart';
-import 'data_refresh_trigger_provider.dart';
 import '../models/filter_tab.dart';
+import 'data_refresh_trigger_provider.dart';
 
 // Константа размера страницы можно переиспользовать или сделать мапу по типу
 const int kDefaultPageSize = 20;
 
 /// Провайдер family: для каждого EntityType — свой экземпляр Notifier
 final paginatedListProvider =
-    AsyncNotifierProvider<
+    AsyncNotifierProvider.family<
       PaginatedListNotifier,
-      DashboardListState<BaseCardDto>
+      DashboardListState<BaseCardDto>,
+      EntityType
     >(PaginatedListNotifier.new);
 
 class PaginatedListNotifier
     extends AsyncNotifier<DashboardListState<BaseCardDto>> {
+  PaginatedListNotifier(this.entityType);
+
+  final EntityType entityType;
+
   int get pageSize {
     // можно иметь разный pageSize для разных типов, если нужно
     return kDefaultPageSize;
   }
 
   final String _logTag = 'DashboardListProvider: ';
-
-  ProviderSubscription<PasswordsFilter>? _passwordFilterSubscription;
-  ProviderSubscription<NotesFilter>? _noteFilterSubscription;
-  ProviderSubscription<BankCardsFilter>? _bankCardFilterSubscription;
-  ProviderSubscription<FilesFilter>? _fileFilterSubscription;
-  ProviderSubscription<OtpsFilter>? _otpFilterSubscription;
-  ProviderSubscription<DataRefreshState>? _passwordRefreshSubscription;
-  ProviderSubscription<DataRefreshState>? _noteRefreshSubscription;
-  ProviderSubscription<DataRefreshState>? _bankCardRefreshSubscription;
-  ProviderSubscription<DataRefreshState>? _fileRefreshSubscription;
-  ProviderSubscription<DataRefreshState>? _otpRefreshSubscription;
 
   @override
   Future<DashboardListState<BaseCardDto>> build() async {
@@ -55,150 +46,12 @@ class PaginatedListNotifier
       }
     });
 
-    ref.listen(entityTypeProvider, (prev, next) {
-      if (prev?.currentType != next.currentType) {
-        _subscribeToTypeSpecificProviders();
-        _resetAndLoad();
-      }
-    });
-
-    // 3) условные слушатели фильтров / вкладок — в зависимости от типа
-    _subscribeToTypeSpecificProviders();
-
     return _loadInitialData();
-  }
-
-  void _subscribeToTypeSpecificProviders() {
-    _unsubscribeTypeSpecificProviders();
-    switch (ref.read(entityTypeProvider).currentType) {
-      case EntityType.password:
-        _passwordFilterSubscription = ref.listen(passwordsFilterProvider, (
-          prev,
-          next,
-        ) {
-          if (prev != next) {
-            _resetAndLoad();
-          }
-        });
-        _passwordRefreshSubscription = ref.listen<DataRefreshState>(
-          dataRefreshTriggerProvider,
-          (previous, next) {
-            if (_shouldHandleRefresh(next, EntityType.password)) {
-              logDebug(
-                'PaginatedListNotifier: Триггер обновления данных паролей',
-              );
-              _resetAndLoad();
-            }
-          },
-        );
-
-        break;
-      case EntityType.note:
-        _noteFilterSubscription = ref.listen(notesFilterProvider, (prev, next) {
-          if (prev != next) {
-            _resetAndLoad();
-          }
-        });
-        _noteRefreshSubscription = ref.listen<DataRefreshState>(
-          dataRefreshTriggerProvider,
-          (previous, next) {
-            if (_shouldHandleRefresh(next, EntityType.note)) {
-              logDebug(
-                'PaginatedListNotifier: Триггер обновления данных заметок',
-              );
-              _resetAndLoad();
-            }
-          },
-        );
-        break;
-      case EntityType.bankCard:
-        _bankCardFilterSubscription = ref.listen(bankCardsFilterProvider, (
-          prev,
-          next,
-        ) {
-          if (prev != next) {
-            _resetAndLoad();
-          }
-        });
-        _bankCardRefreshSubscription = ref.listen<DataRefreshState>(
-          dataRefreshTriggerProvider,
-          (previous, next) {
-            if (_shouldHandleRefresh(next, EntityType.bankCard)) {
-              logDebug(
-                'PaginatedListNotifier: Триггер обновления данных карточек',
-              );
-              _resetAndLoad();
-            }
-          },
-        );
-        break;
-      case EntityType.file:
-        _fileFilterSubscription = ref.listen(filesFilterProvider, (prev, next) {
-          if (prev != next) {
-            _resetAndLoad();
-          }
-        });
-        _fileRefreshSubscription = ref.listen<DataRefreshState>(
-          dataRefreshTriggerProvider,
-          (previous, next) {
-            if (_shouldHandleRefresh(next, EntityType.file)) {
-              logDebug(
-                'PaginatedListNotifier: Триггер обновления данных файлов',
-              );
-              _resetAndLoad();
-            }
-          },
-        );
-        break;
-      case EntityType.otp:
-        _otpFilterSubscription = ref.listen(otpsFilterProvider, (prev, next) {
-          if (prev != next) {
-            _resetAndLoad();
-          }
-        });
-        _otpRefreshSubscription = ref.listen<DataRefreshState>(
-          dataRefreshTriggerProvider,
-          (previous, next) {
-            if (_shouldHandleRefresh(next, EntityType.otp)) {
-              logDebug('PaginatedListNotifier: Триггер обновления данных OTP');
-              _resetAndLoad();
-            }
-          },
-        );
-        break;
-    }
-  }
-
-  void _unsubscribeTypeSpecificProviders() {
-    _passwordFilterSubscription?.close();
-    _passwordFilterSubscription = null;
-    _noteFilterSubscription?.close();
-    _noteFilterSubscription = null;
-    _bankCardFilterSubscription?.close();
-    _bankCardFilterSubscription = null;
-    _fileFilterSubscription?.close();
-    _fileFilterSubscription = null;
-    _otpFilterSubscription?.close();
-    _otpFilterSubscription = null;
-    _passwordRefreshSubscription?.close();
-    _passwordRefreshSubscription = null;
-    _noteRefreshSubscription?.close();
-    _noteRefreshSubscription = null;
-    _bankCardRefreshSubscription?.close();
-    _bankCardRefreshSubscription = null;
-    _fileRefreshSubscription?.close();
-    _fileRefreshSubscription = null;
-    _otpRefreshSubscription?.close();
-    _otpRefreshSubscription = null;
-  }
-
-  bool _shouldHandleRefresh(DataRefreshState state, EntityType type) {
-    return state.entityType == null || state.entityType == type;
   }
 
   /// Выбор DAO по type — вынеси в отдельную функцию/мапу
   Future<FilterDao<dynamic, BaseCardDto>> _daoForType() {
-    switch (ref.read(entityTypeProvider).currentType) {
+    switch (entityType) {
       case EntityType.password:
         return ref.read(passwordFilterDaoProvider.future);
       case EntityType.note:
@@ -214,7 +67,7 @@ class PaginatedListNotifier
 
   /// Выбор CRUD DAO по type для обновлений
   Future<BaseMainEntityDao> _crudDaoForType() {
-    switch (ref.read(entityTypeProvider).currentType) {
+    switch (entityType) {
       case EntityType.password:
         return ref.read(passwordDaoProvider.future);
       case EntityType.note:
@@ -236,7 +89,7 @@ class PaginatedListNotifier
     final currentTab = ref.read(filterTabProvider);
     final tabFilter = _getTabFilter(currentTab);
 
-    switch (ref.read(entityTypeProvider).currentType) {
+    switch (entityType) {
       case EntityType.password:
         final passwordFilter = ref.read(passwordsFilterProvider);
         final base = passwordFilter.base.copyWith(
@@ -466,10 +319,7 @@ class PaginatedListNotifier
       } else {
         ref
             .read(dataRefreshTriggerProvider.notifier)
-            .triggerEntityUpdate(
-              ref.read(entityTypeProvider).currentType,
-              entityId: id,
-            );
+            .triggerEntityUpdate(entityType, entityId: id);
       }
     } catch (e) {
       // откат
@@ -520,10 +370,7 @@ class PaginatedListNotifier
       } else {
         ref
             .read(dataRefreshTriggerProvider.notifier)
-            .triggerEntityUpdate(
-              ref.read(entityTypeProvider).currentType,
-              entityId: id,
-            );
+            .triggerEntityUpdate(entityType, entityId: id);
       }
     } catch (e) {
       // откат
@@ -567,10 +414,7 @@ class PaginatedListNotifier
         // Триггерим обновление данных
         ref
             .read(dataRefreshTriggerProvider.notifier)
-            .triggerEntityUpdate(
-              ref.read(entityTypeProvider).currentType,
-              entityId: id,
-            );
+            .triggerEntityUpdate(entityType, entityId: id);
       }
     } catch (e) {
       // откат
@@ -610,10 +454,7 @@ class PaginatedListNotifier
       } else {
         ref
             .read(dataRefreshTriggerProvider.notifier)
-            .triggerEntityUpdate(
-              ref.read(entityTypeProvider).currentType,
-              entityId: id,
-            );
+            .triggerEntityUpdate(entityType, entityId: id);
       }
     } catch (e) {
       // откат
@@ -653,10 +494,7 @@ class PaginatedListNotifier
       } else {
         ref
             .read(dataRefreshTriggerProvider.notifier)
-            .triggerEntityDelete(
-              ref.read(entityTypeProvider).currentType,
-              entityId: id,
-            );
+            .triggerEntityDelete(entityType, entityId: id);
       }
     } catch (e) {
       // откат

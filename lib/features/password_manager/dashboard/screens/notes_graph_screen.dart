@@ -3,9 +3,9 @@ import 'package:flutter_graph_view/flutter_graph_view.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/main_store/models/graph_data.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
-import 'package:hoplixi/routing/paths.dart';
 
 final _notesGraphDataProvider = FutureProvider.autoDispose<GraphData>((
   ref,
@@ -153,7 +153,10 @@ class _NotesGraphViewState extends State<_NotesGraphView> {
     _options.onVertexTapUp = (vertex, event) {
       final id = vertex.id?.toString() ?? '';
       if (id.isNotEmpty) {
-        context.push(AppRoutesPaths.dashboardNoteEditWithId(id));
+        context.pushNamed(
+          'entity_edit',
+          pathParameters: {'entity': EntityType.note.id, 'id': id},
+        );
       }
     };
     _options.edgeShape = EdgeLineShape();

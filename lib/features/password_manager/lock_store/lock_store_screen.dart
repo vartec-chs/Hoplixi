@@ -65,7 +65,7 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
 
       if (success) {
         if (mounted) {
-          context.go(AppRoutesPaths.dashboardHome);
+          context.go(AppRoutesPaths.dashboard);
         }
       } else {
         if (mounted) {

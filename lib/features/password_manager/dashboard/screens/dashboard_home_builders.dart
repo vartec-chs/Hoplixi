@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/list_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/current_view_mode_provider.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/entity_type_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/list_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/bank_card/bank_card_grid.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/bank_card/bank_card_list_card.dart';
@@ -46,24 +45,30 @@ class DashboardCardCallbacks {
   /// Создать коллбэки из WidgetRef с локальным удалением
   factory DashboardCardCallbacks.fromRefWithLocalRemove(
     WidgetRef ref,
+    EntityType entityType,
     void Function(String id) onLocalRemove,
   ) {
     return DashboardCardCallbacks(
-      onToggleFavorite: (id) =>
-          ref.read(paginatedListProvider.notifier).toggleFavorite(id),
+      onToggleFavorite: (id) => ref
+          .read(paginatedListProvider(entityType).notifier)
+          .toggleFavorite(id),
       onTogglePin: (id) =>
-          ref.read(paginatedListProvider.notifier).togglePin(id),
-      onToggleArchive: (id) =>
-          ref.read(paginatedListProvider.notifier).toggleArchive(id),
+          ref.read(paginatedListProvider(entityType).notifier).togglePin(id),
+      onToggleArchive: (id) => ref
+          .read(paginatedListProvider(entityType).notifier)
+          .toggleArchive(id),
       onDelete: (id, isDeleted) {
         if (isDeleted == true) {
-          ref.read(paginatedListProvider.notifier).permanentDelete(id);
+          ref
+              .read(paginatedListProvider(entityType).notifier)
+              .permanentDelete(id);
         } else {
-          ref.read(paginatedListProvider.notifier).delete(id);
+          ref.read(paginatedListProvider(entityType).notifier).delete(id);
         }
       },
-      onRestore: (id) =>
-          ref.read(paginatedListProvider.notifier).restoreFromDeleted(id),
+      onRestore: (id) => ref
+          .read(paginatedListProvider(entityType).notifier)
+          .restoreFromDeleted(id),
       onLocalRemove: onLocalRemove,
     );
   }
@@ -285,14 +290,14 @@ class DashboardHomeBuilders {
   /// Построение удаленного элемента (для анимации удаления)
   static Widget buildRemovedItem({
     required BuildContext context,
+
     required WidgetRef ref,
     required BaseCardDto item,
     required Animation<double> animation,
     required ViewMode viewMode,
     required DashboardCardCallbacks callbacks,
+    required EntityType entityType,
   }) {
-    final entityType = ref.read(entityTypeProvider).currentType;
-
     return FadeTransition(
       opacity: animation,
       child: SizeTransition(
@@ -434,9 +439,15 @@ class DashboardHomeBuilders {
           onRestore: () => callbacks.onRestore(item.id),
           onOpenHistory: () {
             if (location !=
-                AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id)) {
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.password,
+                  item.id,
+                )) {
               context.push(
-                AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.password,
+                  item.id,
+                ),
               );
             }
           },
@@ -453,9 +464,15 @@ class DashboardHomeBuilders {
           onRestore: () => callbacks.onRestore(item.id),
           onOpenHistory: () {
             if (location !=
-                AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id)) {
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.note,
+                  item.id,
+                )) {
               context.push(
-                AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.note,
+                  item.id,
+                ),
               );
             }
           },
@@ -472,10 +489,16 @@ class DashboardHomeBuilders {
           onRestore: () => callbacks.onRestore(item.id),
           onOpenHistory: () => {
             if (location !=
-                AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id))
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.bankCard,
+                  item.id,
+                ))
               {
                 context.push(
-                  AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
+                  AppRoutesPaths.dashboardHistoryWithParams(
+                    EntityType.bankCard,
+                    item.id,
+                  ),
                 ),
               },
           },
@@ -493,10 +516,16 @@ class DashboardHomeBuilders {
           onDecrypt: () => showFileDecryptModal(context, item),
           onOpenHistory: () => {
             if (location !=
-                AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id))
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.file,
+                  item.id,
+                ))
               {
                 context.push(
-                  AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
+                  AppRoutesPaths.dashboardHistoryWithParams(
+                    EntityType.file,
+                    item.id,
+                  ),
                 ),
               },
           },
@@ -513,10 +542,16 @@ class DashboardHomeBuilders {
           onRestore: () => callbacks.onRestore(item.id),
           onOpenHistory: () => {
             if (location !=
-                AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id))
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.otp,
+                  item.id,
+                ))
               {
                 context.push(
-                  AppRoutesPaths.dashboardHistoryWithParams(type.id, item.id),
+                  AppRoutesPaths.dashboardHistoryWithParams(
+                    EntityType.otp,
+                    item.id,
+                  ),
                 ),
               },
           },
@@ -568,27 +603,42 @@ class DashboardHomeBuilders {
         if (direction == DismissDirection.startToEnd) {
           // Вправо → редактирование
           if (item is PasswordCardDto) {
-            final path = AppRoutesPaths.dashboardPasswordEditWithId(item.id);
+            final path = AppRoutesPaths.dashboardEntityEdit(
+              EntityType.password,
+              item.id,
+            );
             if (GoRouter.of(context).state.matchedLocation != path) {
               context.push(path);
             }
           } else if (item is BankCardCardDto) {
-            final path = AppRoutesPaths.dashboardBankCardEditWithId(item.id);
+            final path = AppRoutesPaths.dashboardEntityEdit(
+              EntityType.bankCard,
+              item.id,
+            );
             if (GoRouter.of(context).state.matchedLocation != path) {
               context.push(path);
             }
           } else if (item is NoteCardDto) {
-            final path = AppRoutesPaths.dashboardNoteEditWithId(item.id);
+            final path = AppRoutesPaths.dashboardEntityEdit(
+              EntityType.note,
+              item.id,
+            );
             if (GoRouter.of(context).state.matchedLocation != path) {
               context.push(path);
             }
           } else if (item is OtpCardDto) {
-            final path = AppRoutesPaths.dashboardOtpEditWithId(item.id);
+            final path = AppRoutesPaths.dashboardEntityEdit(
+              EntityType.otp,
+              item.id,
+            );
             if (GoRouter.of(context).state.matchedLocation != path) {
               context.push(path);
             }
           } else if (item is FileCardDto) {
-            final path = AppRoutesPaths.dashboardFileEditWithId(item.id);
+            final path = AppRoutesPaths.dashboardEntityEdit(
+              EntityType.file,
+              item.id,
+            );
             if (GoRouter.of(context).state.matchedLocation != path) {
               context.push(path);
             }

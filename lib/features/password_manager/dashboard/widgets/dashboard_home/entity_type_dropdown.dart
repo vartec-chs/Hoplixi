@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 
 import '../../models/entity_type.dart';
-import '../../providers/entity_type_provider.dart';
 
 /// Компактный выпадающий список для выбора типа сущности
 /// Используется в AppBar для переключения между типами
-class EntityTypeCompactDropdown extends ConsumerWidget {
+class EntityTypeCompactDropdown extends StatelessWidget {
   /// Callback при изменении типа сущности
   final ValueChanged<EntityType>? onEntityTypeChanged;
 
@@ -25,16 +24,17 @@ class EntityTypeCompactDropdown extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final entityTypeState = ref.watch(entityTypeProvider);
-    final currentType = entityTypeState.currentType;
 
-    // Получаем только доступные типы
-    final availableTypes = entityTypeState.availableTypes.entries
-        .where((entry) => entry.value)
-        .map((entry) => entry.key)
-        .toList();
+    // Получаем текущий тип из пути
+    final pathParams = GoRouterState.of(context).pathParameters;
+    final entityId = pathParams['entity'];
+    final currentType =
+        EntityType.fromId(entityId ?? '') ?? EntityType.password;
+
+    // Получаем все доступные типы
+    final availableTypes = EntityType.allTypes;
 
     if (availableTypes.isEmpty) {
       return const SizedBox.shrink();
@@ -78,8 +78,8 @@ class EntityTypeCompactDropdown extends ConsumerWidget {
               data: {'from': currentType.id, 'to': newType.id},
             );
 
-            // Обновляем провайдер
-            ref.read(entityTypeProvider.notifier).selectType(newType);
+            // Навигация с помощью Go Router
+            context.go('/dashboard/${newType.id}');
 
             // Вызываем callback
             onEntityTypeChanged?.call(newType);
@@ -92,7 +92,7 @@ class EntityTypeCompactDropdown extends ConsumerWidget {
 
 /// Расширенный выпадающий список для выбора типа сущности
 /// Используется на главном экране или в настройках
-class EntityTypeFullDropdown extends ConsumerWidget {
+class EntityTypeFullDropdown extends StatelessWidget {
   /// Callback при изменении типа сущности
   final ValueChanged<EntityType>? onEntityTypeChanged;
 
@@ -125,16 +125,17 @@ class EntityTypeFullDropdown extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final entityTypeState = ref.watch(entityTypeProvider);
-    final currentType = entityTypeState.currentType;
 
-    // Получаем только доступные типы
-    final availableTypes = entityTypeState.availableTypes.entries
-        .where((entry) => entry.value)
-        .map((entry) => entry.key)
-        .toList();
+    // Получаем текущий тип из пути
+    final pathParams = GoRouterState.of(context).pathParameters;
+    final entityId = pathParams['entity'];
+    final currentType =
+        EntityType.fromId(entityId ?? '') ?? EntityType.password;
+
+    // Получаем все доступные типы
+    final availableTypes = EntityType.allTypes;
 
     if (availableTypes.isEmpty) {
       return const SizedBox.shrink();
@@ -219,8 +220,8 @@ class EntityTypeFullDropdown extends ConsumerWidget {
                   data: {'from': currentType.id, 'to': newType.id},
                 );
 
-                // Обновляем провайдер
-                ref.read(entityTypeProvider.notifier).selectType(newType);
+                // Навигация с помощью Go Router
+                context.go('/dashboard/${newType.id}');
 
                 // Вызываем callback
                 onEntityTypeChanged?.call(newType);

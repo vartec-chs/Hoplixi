@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -119,7 +120,9 @@ class _NoteListCardState extends ConsumerState<NoteListCard>
       CardActionItem(
         label: 'Открыть',
         onPressed: () {
-          context.push(AppRoutesPaths.dashboardNoteEditWithId(widget.note.id));
+          context.push(
+            AppRoutesPaths.dashboardEntityEdit(EntityType.note, widget.note.id),
+          );
         },
         icon: Icons.open_in_new,
       ),
@@ -304,7 +307,10 @@ class _NoteListCardState extends ConsumerState<NoteListCard>
                   icon: const Icon(Icons.edit_outlined, size: 18),
                   onPressed: () {
                     context.push(
-                      AppRoutesPaths.dashboardNoteEditWithId(note.id),
+                      AppRoutesPaths.dashboardEntityEdit(
+                        EntityType.note,
+                        widget.note.id,
+                      ),
                     );
                   },
                   tooltip: 'Редактировать',

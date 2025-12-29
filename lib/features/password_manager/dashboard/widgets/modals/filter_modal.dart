@@ -11,7 +11,6 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 // Модели и провайдеры
 import '../../models/entity_type.dart';
-import '../../providers/entity_type_provider.dart';
 import '../../providers/filter_providers/bank_cards_filter_provider.dart';
 import '../../providers/filter_providers/base_filter_provider.dart';
 import '../../providers/filter_providers/files_filter_provider.dart';
@@ -48,6 +47,7 @@ class FilterModal {
   /// Показать модальное окно фильтра
   static Future<void> show({
     required BuildContext context,
+    required EntityType entityType,
     VoidCallback? onFilterApplied,
   }) async {
     logDebug('FilterModal: Открытие модального окна фильтра');
@@ -57,7 +57,9 @@ class FilterModal {
       useRootNavigator: true,
 
       pageListBuilder: (modalSheetContext) {
-        return [_buildMainFilterPage(modalSheetContext, onFilterApplied)];
+        return [
+          _buildMainFilterPage(modalSheetContext, entityType, onFilterApplied),
+        ];
       },
       onModalDismissedWithBarrierTap: () {
         logDebug('FilterModal: Закрытие по тапу на барьер');
@@ -69,6 +71,7 @@ class FilterModal {
   /// Построить главную страницу фильтра
   static WoltModalSheetPage _buildMainFilterPage(
     BuildContext context,
+    EntityType entityType,
     VoidCallback? onFilterApplied,
   ) {
     return WoltModalSheetPage(
@@ -78,7 +81,6 @@ class FilterModal {
       isTopBarLayerAlwaysVisible: true,
       topBarTitle: Consumer(
         builder: (context, ref, _) {
-          final entityType = ref.watch(entityTypeProvider).currentType;
           return Text(
             'Фильтры: ${entityType.label}',
             style: Theme.of(
@@ -89,15 +91,19 @@ class FilterModal {
       ),
       trailingNavBarWidget: const ModalSheetCloseButton(),
 
-      child: _FilterModalContent(onFilterApplied: onFilterApplied),
+      child: _FilterModalContent(
+        entityType: entityType,
+        onFilterApplied: onFilterApplied,
+      ),
     );
   }
 }
 
 /// Основное содержимое модального окна фильтра
 class _FilterModalContent extends ConsumerStatefulWidget {
-  const _FilterModalContent({this.onFilterApplied});
+  const _FilterModalContent({required this.entityType, this.onFilterApplied});
 
+  final EntityType entityType;
   final VoidCallback? onFilterApplied;
 
   @override
@@ -133,7 +139,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
   }
 
   void _initializeLocalFilters() {
-    final entityType = ref.read(entityTypeProvider).currentType;
+    final entityType = widget.entityType;
     _localBaseFilter = ref.read(baseFilterProvider);
 
     // Инициализируем категории и теги из базового фильтра
@@ -167,7 +173,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
   }
 
   void _saveInitialValues() {
-    final entityType = ref.read(entityTypeProvider).currentType;
+    final entityType = widget.entityType;
     final baseFilter = ref.read(baseFilterProvider);
 
     // Сохраняем специфичные для типа значения
@@ -224,7 +230,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
 
   @override
   Widget build(BuildContext context) {
-    final entityType = ref.watch(entityTypeProvider).currentType;
+    final entityType = widget.entityType;
     final windowHeight = MediaQuery.of(context).size.height;
 
     return Container(
@@ -558,7 +564,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
     logDebug('FilterModal: Сброс всех локальных фильтров');
 
     try {
-      final entityType = ref.read(entityTypeProvider).currentType;
+      final entityType = widget.entityType;
       final emptyBaseFilter = const BaseFilter();
 
       // Сброс локальных фильтров
@@ -609,7 +615,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
     logDebug('FilterModal: Восстановление начальных значений фильтров');
 
     try {
-      final entityType = ref.read(entityTypeProvider).currentType;
+      final entityType = widget.entityType;
 
       // Восстановление базового фильтра через методы notifier
       final baseNotifier = ref.read(baseFilterProvider.notifier);
@@ -675,7 +681,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
     logDebug('FilterModal: Применение локальных фильтров к провайдерам');
 
     try {
-      final entityType = ref.read(entityTypeProvider).currentType;
+      final entityType = widget.entityType;
 
       // Применяем базовый фильтр через отдельные setter'ы для каждого поля
       final baseNotifier = ref.read(baseFilterProvider.notifier);

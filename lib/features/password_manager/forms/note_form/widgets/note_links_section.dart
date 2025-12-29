@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/forms/note_form/providers/note_form_provider.dart';
 import 'package:hoplixi/main_store/models/dto/note_dto.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
-import 'package:hoplixi/routing/paths.dart';
 
 /// Секция для отображения связей между заметками
 class NoteLinksSection extends ConsumerWidget {
@@ -193,7 +193,11 @@ class _NoteLinkTile extends StatelessWidget {
         ],
       ),
       onTap: () {
-        context.push(AppRoutesPaths.dashboardNoteEditWithId(note.id));
+        context.pushNamed(
+          'entity_edit',
+          pathParameters: {'entity': EntityType.note.id, 'id': note.id},
+        );
+        //TODO: ПОД ВОПРОСОМ
       },
     );
   }

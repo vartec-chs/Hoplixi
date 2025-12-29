@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/list_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/current_view_mode_provider.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/entity_type_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/list_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_builders.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/app_bar/app_bar_widgets.dart';
@@ -12,7 +12,9 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_ho
 import 'package:hoplixi/main_store/models/dto/index.dart';
 
 class DashboardHomeScreen extends ConsumerStatefulWidget {
-  const DashboardHomeScreen({super.key});
+  const DashboardHomeScreen({super.key, required this.entityType});
+
+  final EntityType entityType;
 
   @override
   ConsumerState<DashboardHomeScreen> createState() =>
@@ -50,7 +52,7 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
       // и готов к анимации вставки элементов
       Future.delayed(const Duration(milliseconds: 100), () {
         if (!mounted) return;
-        final state = ref.read(paginatedListProvider).value;
+        final state = ref.read(paginatedListProvider(widget.entityType)).value;
         if (state != null && state.items.isNotEmpty) {
           _updateList(state.items);
         }
@@ -77,12 +79,12 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
     // Дебаунс для предотвращения частых вызовов
     if (_debounceTimer?.isActive ?? false) return;
     _debounceTimer = Timer(const Duration(milliseconds: 100), () {
-      final state = ref.read(paginatedListProvider).value;
+      final state = ref.read(paginatedListProvider(widget.entityType)).value;
       if (state != null &&
           !state.isLoadingMore &&
           state.hasMore &&
           !state.isLoading) {
-        ref.read(paginatedListProvider.notifier).loadMore();
+        ref.read(paginatedListProvider(widget.entityType).notifier).loadMore();
       }
     });
   }
@@ -312,22 +314,15 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
   Widget build(BuildContext context) {
     final callbacks = DashboardCardCallbacks.fromRefWithLocalRemove(
       ref,
+
+      widget.entityType,
       _removeItemLocally,
     );
-
-    // При смене типа сущности мгновенно очищаем старые данные.
-    ref.listen(entityTypeProvider, (prev, next) {
-      final prevType = prev?.currentType;
-      final nextType = next.currentType;
-      if (prevType == null || prevType == nextType) return;
-
-      _resetDisplayedItemsInstantly();
-    });
 
     // Слушаем изменения провайдера списка
     ref.listen<
       AsyncValue<DashboardListState<BaseCardDto>>
-    >(paginatedListProvider, (prev, next) {
+    >(paginatedListProvider(widget.entityType), (prev, next) {
       next.whenData((state) {
         // Обновляем список после построения кадра, чтобы избежать мутации во время layout
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -346,19 +341,21 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
       });
     });
 
-    final entityType = ref.watch(entityTypeProvider).currentType;
     final viewMode = ref.watch(currentViewModeProvider);
-    final asyncValue = ref.watch(paginatedListProvider);
+    final asyncValue = ref.watch(paginatedListProvider(widget.entityType));
 
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async {
-          await ref.read(paginatedListProvider.notifier).refresh();
+          await ref
+              .read(paginatedListProvider(widget.entityType).notifier)
+              .refresh();
         },
         child: CustomScrollView(
           controller: _scrollController,
           slivers: [
             DashboardSliverAppBar(
+              entityType: widget.entityType,
               expandedHeight: 178.0,
               collapsedHeight: 60.0,
               pinned: true,
@@ -368,7 +365,7 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
             ),
             SliverToBoxAdapter(
               child: DashboardListToolBar(
-                entityType: entityType,
+                entityType: widget.entityType,
                 viewMode: viewMode,
                 listState: asyncValue,
               ),
@@ -376,7 +373,7 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
             DashboardHomeBuilders.buildContentSliver(
               context: context,
               ref: ref,
-              entityType: entityType,
+              entityType: widget.entityType,
               viewMode: viewMode,
               asyncValue: asyncValue,
               displayedItems: _displayedItems,
@@ -401,11 +398,13 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
     return DashboardHomeBuilders.buildRemovedItem(
       context: context,
       ref: ref,
+      entityType: widget.entityType,
       item: item,
       animation: animation,
       viewMode: viewMode,
       callbacks: DashboardCardCallbacks.fromRefWithLocalRemove(
         ref,
+        widget.entityType,
         _removeItemLocally,
       ),
     );

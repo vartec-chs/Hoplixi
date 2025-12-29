@@ -57,7 +57,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 currentPath == AppRoutesPaths.lockStore)) {
           WindowManager.instance.setSize(MainConstants.defaultDashboardSize);
           WindowManager.instance.center();
-          return AppRoutesPaths.dashboardHome;
+          return AppRoutesPaths.dashboard;
         } else if ((dbState.isClosed || dbState.isIdle) &&
             (currentPath.startsWith(AppRoutesPaths.dashboard) ||
                 currentPath == AppRoutesPaths.lockStore)) {
@@ -65,11 +65,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           WindowManager.instance.center();
           return AppRoutesPaths.home;
         }
-      }
-
-      // // Редирект с /dashboard на /dashboard/home
-      if (state.matchedLocation == AppRoutesPaths.dashboard) {
-        return AppRoutesPaths.dashboardHome;
       }
       return null;
     },

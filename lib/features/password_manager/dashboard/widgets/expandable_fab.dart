@@ -9,6 +9,18 @@ enum FABExpandDirection {
 
   /// Горизонтально вправо с раскладкой вниз
   rightDown,
+
+  /// Горизонтально влево с раскладкой вверх
+  leftUp,
+}
+
+/// Форма FAB кнопки
+enum FABShape {
+  /// Квадратная с анимацией к кругу при открытии
+  square,
+
+  /// Всегда круглая
+  circle,
 }
 
 /// Callback для уведомления об изменении состояния открытия/закрытия
@@ -50,6 +62,7 @@ class ExpandableFAB extends StatefulWidget {
     this.mainIcon = Icons.add,
     this.closeIcon = Icons.close,
     this.direction = FABExpandDirection.up,
+    this.shape = FABShape.square,
     this.spacing = 56.0,
     this.duration = const Duration(milliseconds: 300),
     this.curve = Curves.easeOutCubic,
@@ -71,6 +84,9 @@ class ExpandableFAB extends StatefulWidget {
 
   /// Направление раскрытия
   final FABExpandDirection direction;
+
+  /// Форма FAB кнопки
+  final FABShape shape;
 
   /// Флаг использования внутри NavigationRail
   final bool isUseInNavigationRail;
@@ -138,8 +154,10 @@ class ExpandableFABState extends State<ExpandableFAB>
     if (widget.duration != oldWidget.duration) {
       _controller.duration = widget.duration;
     }
-    // Закрываем и переоткрываем при смене направления
-    if (widget.direction != oldWidget.direction && _isOpen) {
+    // Закрываем и переоткрываем при смене направления или формы
+    if ((widget.direction != oldWidget.direction ||
+            widget.shape != oldWidget.shape) &&
+        _isOpen) {
       _closeImmediate();
     }
   }
@@ -248,8 +266,10 @@ class ExpandableFABState extends State<ExpandableFAB>
       builder: (context, child) {
         // Масштаб: 1.0 -> 0.75 при открытии
         final scale = 1.0 - (_controller.value * 0.25);
-        // Скругление: 16 -> 28 (полностью круглая) при открытии
-        final borderRadius = 16.0 + (_controller.value * 12.0);
+        // Скругление: зависит от формы
+        final borderRadius = widget.shape == FABShape.circle
+            ? 28.0
+            : 16.0 + (_controller.value * 12.0);
 
         return SizedBox(
           key: _fabKey,
@@ -524,6 +544,14 @@ class _AnimatedActionButton extends StatelessWidget {
         final currentX = fabCenter.dx + (targetX - fabCenter.dx) * progress;
         final currentY = fabCenter.dy + (targetY - fabCenter.dy) * progress;
         return Offset(currentX, currentY);
+
+      case FABExpandDirection.leftUp:
+        // Влево от FAB, затем вниз
+        final targetX = fabCenter.dx - 48; // Сдвиг влево
+        final targetY = fabCenter.dy - 24 + (index * spacing);
+        final currentX = fabCenter.dx + (targetX - fabCenter.dx) * progress;
+        final currentY = fabCenter.dy + (targetY - fabCenter.dy) * progress;
+        return Offset(currentX, currentY);
     }
   }
 
@@ -533,6 +561,8 @@ class _AnimatedActionButton extends StatelessWidget {
         return Alignment.center;
       case FABExpandDirection.rightDown:
         return Alignment.centerLeft;
+      case FABExpandDirection.leftUp:
+        return Alignment.centerRight;
     }
   }
 }

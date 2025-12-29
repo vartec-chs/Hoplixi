@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 
-import '../../../models/entity_type_state.dart';
 import '../../../models/filter_tab.dart';
-import '../../../providers/entity_type_provider.dart';
 import '../../../providers/filter_tab_provider.dart';
 
 /// Виджет для отображения вкладок фильтров
@@ -54,8 +54,11 @@ class _FilterTabsState extends ConsumerState<FilterTabs>
   }
 
   void _updateTabController() {
-    final currentEntityType = ref.read(entityTypeProvider).currentType;
-    final newTabs = FilterTab.getAvailableTabsForEntity(currentEntityType);
+    final pathParams = GoRouterState.of(context).pathParameters;
+    final entityId = pathParams['entity'];
+    final currentType =
+        EntityType.fromId(entityId ?? '') ?? EntityType.password;
+    final newTabs = FilterTab.getAvailableTabsForEntity(currentType);
     final currentTab = ref.read(filterTabProvider);
 
     // Если вкладки изменились, обновляем контроллер
@@ -88,7 +91,7 @@ class _FilterTabsState extends ConsumerState<FilterTabs>
       logDebug(
         'FilterTabs: Обновлены вкладки',
         data: {
-          'entityType': currentEntityType.id,
+          'entityType': currentType.id,
           'tabsCount': _currentTabs.length,
           'currentTabIndex': _tabController.index,
         },
@@ -139,12 +142,6 @@ class _FilterTabsState extends ConsumerState<FilterTabs>
     final currentTab = ref.watch(filterTabProvider);
 
     // Слушаем изменения типа сущности
-    ref.listen<EntityTypeState>(entityTypeProvider, (previous, next) {
-      if (previous?.currentType != next.currentType) {
-        _updateTabController();
-        setState(() {}); // Перестраиваем UI
-      }
-    });
 
     // Слушаем изменения активной вкладки извне
     ref.listen<FilterTab>(filterTabProvider, (previous, next) {
