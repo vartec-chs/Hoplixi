@@ -83,6 +83,9 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   late final MainStoreManager _manager;
   Timer? _errorResetTimer;
 
+  /// Completer для блокировки параллельных операций (защита от race condition)
+  Completer<void>? _operationLock;
+
   /// Получить текущее значение состояния или дефолтное
   DatabaseState get _currentState {
     return state.value ?? const DatabaseState(status: DatabaseStatus.idle);
@@ -117,6 +120,25 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     _errorResetTimer = null;
   }
 
+  /// Получить блокировку для операции (защита от race condition)
+  ///
+  /// Ожидает завершения предыдущей операции, если она выполняется
+  Future<void> _acquireLock() async {
+    // Ожидаем завершения предыдущей операции
+    while (_operationLock != null) {
+      logInfo('Ожидание завершения предыдущей операции...', tag: _logTag);
+      await _operationLock!.future;
+    }
+    // Создаём новую блокировку
+    _operationLock = Completer<void>();
+  }
+
+  /// Освободить блокировку операции
+  void _releaseLock() {
+    _operationLock?.complete();
+    _operationLock = null;
+  }
+
   @override
   Future<DatabaseState> build() async {
     // Инициализация с idle состоянием
@@ -131,6 +153,9 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   /// [dto] - данные для создания (имя, описание, пароль)
   /// Возвращает true если успешно, false если ошибка
   Future<bool> createStore(CreateStoreDto dto) async {
+    // Защита от race condition
+    await _acquireLock();
+
     try {
       logInfo('Creating store: ${dto.name}', tag: _logTag);
 
@@ -140,7 +165,6 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       );
 
       // Вызываем создание хранилища
-
       final result = await _manager.createStore(dto);
 
       return result.fold(
@@ -190,6 +214,9 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       );
 
       return false;
+    } finally {
+      // Освобождаем блокировку в любом случае
+      _releaseLock();
     }
   }
 
@@ -198,6 +225,9 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   /// [dto] - данные для открытия (путь, пароль)
   /// Возвращает true если успешно, false если ошибка
   Future<bool> openStore(OpenStoreDto dto) async {
+    // Защита от race condition
+    await _acquireLock();
+
     try {
       logInfo('Opening store at: ${dto.path}', tag: _logTag);
 
@@ -207,7 +237,6 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       );
 
       // Вызываем открытие хранилища
-
       final result = await _manager.openStore(dto);
 
       return result.fold(
@@ -254,6 +283,9 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       );
 
       return false;
+    } finally {
+      // Освобождаем блокировку в любом случае
+      _releaseLock();
     }
   }
 
@@ -261,6 +293,9 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   ///
   /// Возвращает true если успешно, false если ошибка
   Future<bool> closeStore() async {
+    // Защита от race condition
+    await _acquireLock();
+
     try {
       logInfo('Closing store', tag: _logTag);
 
@@ -281,7 +316,6 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         (_) {
           // Успех - переводим в idle состояние
           _setState(const DatabaseState(status: DatabaseStatus.closed));
-
           _setState(const DatabaseState(status: DatabaseStatus.idle));
 
           logInfo('Store closed successfully', tag: _logTag);
@@ -316,6 +350,9 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       );
 
       return false;
+    } finally {
+      // Освобождаем блокировку в любом случае
+      _releaseLock();
     }
   }
 

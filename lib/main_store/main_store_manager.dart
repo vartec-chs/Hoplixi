@@ -15,8 +15,8 @@ import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_store/services/db_history_services.dart';
 import 'package:path/path.dart' as p;
 import 'package:result_dart/result_dart.dart';
-import 'package:sqlite3/open.dart';
 import 'package:sqlcipher_flutter_libs/sqlcipher_flutter_libs.dart';
+import 'package:sqlite3/open.dart';
 import 'package:uuid/uuid.dart';
 
 Future<void> setupSqlCipher() async {
@@ -202,13 +202,16 @@ class MainStoreManager {
 
       // Проверка, открыто ли уже хранилище
       if (isStoreOpen) {
-        return Failure(
-          DatabaseError.alreadyInitialized(
-            message:
-                'Хранилище уже открыто. Закройте текущее перед открытием нового.',
-            timestamp: DateTime.now(),
-          ),
-        );
+        await _currentStore?.close();
+        _currentStore = null;
+        _currentStorePath = null;
+        // return Failure(
+        //   DatabaseError.alreadyInitialized(
+        //     message:
+        //         'Хранилище уже открыто. Закройте текущее перед открытием нового.',
+        //     timestamp: DateTime.now(),
+        //   ),
+        // );
       }
 
       // Проверка существования директории или файла БД
