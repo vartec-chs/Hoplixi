@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_store/models/filter/index.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
@@ -15,6 +14,8 @@ import 'app_bar_widgets.dart';
 class DashboardSliverAppBar extends ConsumerStatefulWidget {
   /// Callback для открытия drawer
   final VoidCallback? onMenuPressed;
+
+  final EntityType? entityType;
 
   /// Высота расширенного состояния
   final double expandedHeight;
@@ -42,9 +43,11 @@ class DashboardSliverAppBar extends ConsumerStatefulWidget {
 
   const DashboardSliverAppBar({
     super.key,
+    required this.entityType,
     this.onMenuPressed,
     this.expandedHeight = 160.0,
     this.collapsedHeight = 60.0,
+
     this.pinned = true,
     this.floating = false,
     this.snap = false,
@@ -70,19 +73,23 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
     _searchController = TextEditingController();
     _searchFocusNode = FocusNode();
 
-    final pathParams = GoRouterState.of(context).pathParameters;
-    final entityId = pathParams['entity'];
-    currentType = EntityType.fromId(entityId ?? '') ?? EntityType.password;
-
-    // Инициализируем поисковое поле с текущим значением из фильтра
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final currentQuery = ref.read(baseFilterProvider).query;
-      if (currentQuery.isNotEmpty) {
-        _searchController.text = currentQuery;
-      }
-    });
+    // Инициализируем currentType из параметров виджета
+    currentType = widget.entityType ?? EntityType.password;
 
     logDebug('DashboardSliverAppBar: Инициализация');
+  }
+
+  @override
+  void didUpdateWidget(covariant DashboardSliverAppBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Обновляем currentType если изменился entityType
+    final newType = widget.entityType ?? EntityType.password;
+    if (newType != currentType) {
+      setState(() {
+        currentType = newType;
+      });
+    }
   }
 
   @override
@@ -132,13 +139,8 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currentEntityType = currentType;
     final baseFilter = ref.watch(baseFilterProvider);
-
-    // Синхронизируем поисковое поле с провайдером
-    if (_searchController.text != baseFilter.query) {
-      _searchController.text = baseFilter.query;
-    }
+    final currentEntityType = currentType;
 
     return SliverAppBar(
       expandedHeight: widget.expandedHeight,

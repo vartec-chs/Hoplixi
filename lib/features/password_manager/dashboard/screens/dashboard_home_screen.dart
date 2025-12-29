@@ -355,6 +355,7 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
           controller: _scrollController,
           slivers: [
             DashboardSliverAppBar(
+              entityType: widget.entityType,
               expandedHeight: 178.0,
               collapsedHeight: 60.0,
               pinned: true,

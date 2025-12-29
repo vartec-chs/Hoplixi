@@ -3,10 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/expandable_fab.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/smooth_rounded_notched_rectangle.dart';
+import 'package:hoplixi/routing/paths.dart';
 
 // В теле класса _DashboardLayoutState добавьте:
 const List<String> _fullCenterPaths = [
-  // Paths.notesGraph,
+  AppRoutesPaths.notesGraph,
 ]; // сюда можно добавить другие full-center имена
 
 /// Действия панели справа и нижнего меню
@@ -36,8 +38,6 @@ class _DashboardLayoutState extends State<DashboardLayoutV2>
   };
 
   late final AnimationController _controller;
-  // ширина правой панели, когда открыта
-  double _panelOpenWidth = 0.0;
   bool _wasPanelOpen = false;
 
   // Кэшированные destinations для NavigationRail
@@ -119,7 +119,121 @@ class _DashboardLayoutState extends State<DashboardLayoutV2>
     super.dispose();
   }
 
-  // helper: извлечь entity из params
+  // ===========================================================================
+  // FAB Actions (принцип из старого DashboardLayout)
+  // ===========================================================================
+
+  /// Построить список действий FAB для текущей entity
+  List<FABActionData> _buildFabActions(String entity) {
+    return [
+      FABActionData(
+        icon: Icons.add,
+        label: 'Добавить',
+        onPressed: () => _onFabActionPressed(entity, 'add'),
+      ),
+      FABActionData(
+        icon: Icons.category,
+        label: 'Категории',
+        onPressed: () => _onFabActionPressed(entity, 'categories'),
+      ),
+      FABActionData(
+        icon: Icons.tag,
+        label: 'Теги',
+        onPressed: () => _onFabActionPressed(entity, 'tags'),
+      ),
+      FABActionData(
+        icon: Icons.image,
+        label: 'Иконки',
+        onPressed: () => _onFabActionPressed(entity, 'icons'),
+      ),
+    ];
+  }
+
+  /// Обработать нажатие на FAB action
+  void _onFabActionPressed(String entity, String action) {
+    final path = '/dashboard/$entity/$action';
+    if (context.mounted) {
+      context.go(path);
+    }
+  }
+
+  // ===========================================================================
+  // Bottom Navigation Bar
+  // ===========================================================================
+
+  /// Построить BottomNavigationBar для мобильных устройств
+  BottomAppBar _buildBottomNavigationBar(
+    String entity,
+    List<NavigationRailDestination> destinations,
+  ) {
+    final currentIndex = _selectedRailIndex() ?? 0;
+    final homeIndex = 0;
+
+    final leftDestinations = destinations
+        .where((d) => d == destinations[0] || d == destinations[1])
+        .toList();
+    final rightDestinations = destinations
+        .where((d) => destinations.indexOf(d) > 1)
+        .toList();
+
+    return BottomAppBar(
+      shape: const SmoothRoundedNotchedRectangle(
+        guestCorner: Radius.circular(20),
+        notchMargin: 4.0,
+        s1: 18.0,
+        s2: 18.0,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      height: 70,
+      child: Row(
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          // Left side
+          ...leftDestinations.map(
+            (d) => _BottomNavIconButton(
+              destination: d,
+              isSelected: currentIndex == destinations.indexOf(d),
+              onTap: () =>
+                  _onBottomNavItemSelected(entity, destinations.indexOf(d)),
+            ),
+          ),
+          // FAB space
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            width: currentIndex == homeIndex ? 40 : 0,
+            child: const SizedBox(width: 40),
+          ),
+          // Right side
+          ...rightDestinations.map(
+            (d) => _BottomNavIconButton(
+              destination: d,
+              isSelected: currentIndex == destinations.indexOf(d),
+              onTap: () =>
+                  _onBottomNavItemSelected(entity, destinations.indexOf(d)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Обработать нажатие на пункт BottomNavigationBar
+  void _onBottomNavItemSelected(String entity, int index) {
+    if (index == 0) {
+      // home: close panel
+      context.go('/dashboard/$entity');
+    } else if (index >= 1 && index <= 3) {
+      context.go('/dashboard/$entity/${actions[index - 1]}');
+    } else if (index == 4 && entity == EntityType.note.id) {
+      context.go(AppRoutesPaths.notesGraph);
+    }
+  }
+
+  // ===========================================================================
+  // Helpers
+  // ===========================================================================
   String _currentEntity() {
     final ent = widget.state.pathParameters['entity'];
     return (ent != null && EntityType.allTypesString.contains(ent))
@@ -173,7 +287,7 @@ class _DashboardLayoutState extends State<DashboardLayoutV2>
     final selectedIndex = _indexForEntity(entity);
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isMobile = screenWidth < 700;
-    _panelOpenWidth = screenWidth * 0.46;
+    final panelOpenWidth = screenWidth * 0.46;
     final hasPanel = _hasPanel(uri);
     final panel = hasPanel ? widget.panelChild : const SizedBox.shrink();
     final isFullCenter = _isFullCenter(uri);
@@ -183,31 +297,11 @@ class _DashboardLayoutState extends State<DashboardLayoutV2>
         ? [..._baseDestinations, _graphDestination]
         : _baseDestinations;
 
-    // Mobile: если есть панель — показываем её fullscreen с BottomNavigationBar
+    // Mobile: если есть панель — показываем её fullscreen БЕЗ BottomNavigationBar
     if (isMobile && (hasPanel || isFullCenter)) {
       return Scaffold(
         body: widget.panelChild,
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _selectedRailIndex() ?? 0,
-          onTap: (i) {
-            if (i == 0) {
-              // home: close panel
-              context.go('/dashboard/$entity');
-            } else if (i >= 1 && i <= 3) {
-              context.go('/dashboard/$entity/${actions[i - 1]}');
-            } else if (i == 4 && entity == EntityType.note.id) {
-              // context.go(Paths.notesGraph);
-            }
-          },
-          items: destinations
-              .map(
-                (d) => BottomNavigationBarItem(
-                  icon: d.icon,
-                  label: (d.label as Text).data,
-                ),
-              )
-              .toList(),
-        ),
+        bottomNavigationBar: null,
         floatingActionButton: _shouldShowFAB(uri)
             ? _buildExpandableFAB(entity, isMobile)
             : null,
@@ -225,27 +319,7 @@ class _DashboardLayoutState extends State<DashboardLayoutV2>
             children: _indexedStackChildren,
           ),
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _selectedRailIndex() ?? 0,
-          onTap: (i) {
-            if (i == 0) {
-              // home: close panel
-              context.go('/dashboard/$entity');
-            } else if (i >= 1 && i <= 3) {
-              context.go('/dashboard/$entity/${actions[i - 1]}');
-            } else if (i == 4 && entity == EntityType.note.id) {
-              // context.go(Paths.notesGraph);
-            }
-          },
-          items: destinations
-              .map(
-                (d) => BottomNavigationBarItem(
-                  icon: d.icon,
-                  label: (d.label as Text).data,
-                ),
-              )
-              .toList(),
-        ),
+        bottomNavigationBar: _buildBottomNavigationBar(entity, destinations),
         floatingActionButton: _shouldShowFAB(uri)
             ? _buildExpandableFAB(entity, isMobile)
             : null,
@@ -259,24 +333,34 @@ class _DashboardLayoutState extends State<DashboardLayoutV2>
       body: Row(
         children: [
           // NavigationRail / left menu для categories, tags, icons
-          NavigationRail(
-            selectedIndex:
-                _selectedRailIndex(), // highlight based on current panel
-            onDestinationSelected: (i) {
-              if (i == 0) {
-                // home: close panel
-                context.go('/dashboard/$entity');
-              } else if (i >= 1 && i <= 3) {
-                context.go('/dashboard/$entity/${actions[i - 1]}');
-              } else if (i == 4 && entity == 'notes') {
-                // context.go(Paths.notesGraph);
-              }
-            },
-            labelType: NavigationRailLabelType.all,
-            destinations: destinations,
-            leading: Padding(
-              padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
-              child: _buildExpandableFAB(entity, isMobile),
+          Container(
+            decoration: BoxDecoration(
+              border: Border(
+                right: BorderSide(
+                  color: Theme.of(context).dividerColor,
+                  width: 1,
+                ),
+              ),
+            ),
+            child: NavigationRail(
+              selectedIndex:
+                  _selectedRailIndex(), // highlight based on current panel
+              onDestinationSelected: (i) {
+                if (i == 0) {
+                  // home: close panel
+                  context.go('/dashboard/$entity');
+                } else if (i >= 1 && i <= 3) {
+                  context.go('/dashboard/$entity/${actions[i - 1]}');
+                } else if (i == 4 && entity == 'notes') {
+                  context.go(AppRoutesPaths.notesGraph);
+                }
+              },
+              labelType: NavigationRailLabelType.all,
+              destinations: destinations,
+              leading: Padding(
+                padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
+                child: _buildExpandableFAB(entity, isMobile),
+              ),
             ),
           ),
 
@@ -299,37 +383,35 @@ class _DashboardLayoutState extends State<DashboardLayoutV2>
               child: AnimatedBuilder(
                 animation: _controller,
                 builder: (context, child) {
-                  final width = _panelOpenWidth * _controller.value;
-                  return SizedBox(
-                    width: width,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border(
-                          left: BorderSide(
-                            color: Theme.of(context).dividerColor,
+                  final widthFactor = isFullCenter ? 0.0 : _controller.value;
+
+                  return ClipRect(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      widthFactor: widthFactor,
+                      child: SizedBox(
+                        width: panelOpenWidth,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surface,
+                            border: Border(
+                              left: BorderSide(
+                                color: Theme.of(context).dividerColor,
+                                width: 1,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      child: ClipRect(
-                        child: Align(
-                          alignment: Alignment.topCenter,
-                          widthFactor: _controller.value.clamp(0.01, 1.0),
-                          child: child,
+                          child: AnimatedOpacity(
+                            opacity: widthFactor,
+                            duration: const Duration(milliseconds: 150),
+                            child: hasPanel ? child : const SizedBox.shrink(),
+                          ),
                         ),
                       ),
                     ),
                   );
                 },
-                // child вынесен из builder для оптимизации — не пересоздаётся при анимации
-                child: SizedBox(
-                  width: _panelOpenWidth,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor,
-                    ),
-                    child: hasPanel ? panel : const SizedBox.shrink(),
-                  ),
-                ),
+                child: panel,
               ),
             ),
         ],
@@ -344,28 +426,7 @@ class _DashboardLayoutState extends State<DashboardLayoutV2>
           ? FABExpandDirection.up
           : FABExpandDirection.rightDown,
       isUseInNavigationRail: !isMobile, // true для десктопа
-      actions: [
-        FABActionData(
-          icon: Icons.add,
-          label: 'Добавить',
-          onPressed: () => context.go('/dashboard/$entity/add'),
-        ),
-        FABActionData(
-          icon: Icons.category,
-          label: 'Категории',
-          onPressed: () => context.go('/dashboard/$entity/categories'),
-        ),
-        FABActionData(
-          icon: Icons.tag,
-          label: 'Теги',
-          onPressed: () => context.go('/dashboard/$entity/tags'),
-        ),
-        FABActionData(
-          icon: Icons.image,
-          label: 'Иконки',
-          onPressed: () => context.go('/dashboard/$entity/icons'),
-        ),
-      ],
+      actions: _buildFabActions(entity),
     );
   }
 
@@ -400,7 +461,53 @@ class _DashboardLayoutState extends State<DashboardLayoutV2>
   }
 }
 
-/// --- Примеры виджетов ---
+// =============================================================================
+// Bottom Nav Icon Button
+// =============================================================================
+
+class _BottomNavIconButton extends StatelessWidget {
+  final NavigationRailDestination destination;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _BottomNavIconButton({
+    required this.destination,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            destination.icon,
+            const SizedBox(height: 4),
+            Text(
+              (destination.label as Text).data ?? '',
+              style: TextStyle(
+                fontSize: 12,
+                color: isSelected
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Центр для entity (локальные навигации через openLocalDetails, панель — через openPanel)
 // class EntityCenterPage extends StatelessWidget {
 //   final String entity;
