@@ -314,15 +314,46 @@ class _DashboardLayoutState extends State<DashboardLayout>
                 children: _indexedStackChildren,
               ),
             ),
-            // Анимированная панель поверх центра
-            AnimatedOpacity(
-              opacity: (hasPanel || isFullCenter) ? 1.0 : 0.0,
+            // Анимированная панель поверх центра (ZoomPageTransitionsBuilder стиль)
+            AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (child, animation) {
+                // Zoom in/out анимация как в ZoomPageTransitionsBuilder
+                final scaleAnimation = Tween<double>(begin: 0.85, end: 1.0)
+                    .animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: const Interval(0.0, 1.0, curve: Curves.easeOut),
+                      ),
+                    );
+
+                final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0)
+                    .animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: const Interval(
+                          0.125,
+                          0.250,
+                          curve: Curves.easeOut,
+                        ),
+                      ),
+                    );
+
+                return ScaleTransition(
+                  scale: scaleAnimation,
+                  child: FadeTransition(opacity: fadeAnimation, child: child),
+                );
+              },
               child: (hasPanel || isFullCenter)
-                  ? widget.panelChild
-                  : const SizedBox.shrink(),
+                  ? Container(
+                      key: const ValueKey('panel'),
+                      child: widget.panelChild,
+                    )
+                  : const SizedBox.shrink(key: ValueKey('empty')),
             ),
+
             // Анимированная bottom navigation bar
             // Positioned(
             //   bottom: 0,

@@ -1,4 +1,8 @@
+import 'package:animated_theme_switcher/animated_theme_switcher.dart'
+    as animated_theme;
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/lifecycle/app_lifecycle_observer.dart';
@@ -9,10 +13,6 @@ import 'package:hoplixi/routing/router.dart';
 import 'package:hoplixi/setup_tray.dart';
 import 'package:hoplixi/shared/widgets/desktop_shell.dart';
 import 'package:tray_manager/tray_manager.dart';
-import 'package:animated_theme_switcher/animated_theme_switcher.dart'
-    as animated_theme;
-import 'package:flutter_quill/flutter_quill.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
 class App extends ConsumerStatefulWidget {
   const App({super.key});
