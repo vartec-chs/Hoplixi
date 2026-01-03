@@ -37,25 +37,26 @@ class AppRoutesPaths {
   static const String notesGraph = '/dashboard/notes/graph';
 
   /// - passwords
-  static const String passwords = '/dashboard/passwords';
-  static const String passwordAdd = '/dashboard/passwords/add';
-  static const String passwordEdit = '/dashboard/passwords/edit/:id';
-  static String passwordMigrate = '/dashboard/passwords/migrate';
+  static String passwords = '/dashboard/${EntityType.password.id}';
+  static String passwordAdd = '/dashboard/${EntityType.password.id}/add';
+  static String passwordEdit = '/dashboard/${EntityType.password.id}/edit/:id';
+  static String passwordMigrate =
+      '/dashboard/${EntityType.password.id}/migrate';
 
   /// otps
-  static const String otps = '/dashboard/otps';
-  static const String otpAdd = '/dashboard/otps/add';
-  static const String otpEdit = '/dashboard/otps/edit/:id';
+  static String otps = '/dashboard/${EntityType.otp.id}';
+  static String otpAdd = '/dashboard/${EntityType.otp.id}/add';
+  static String otpEdit = '/dashboard/${EntityType.otp.id}/edit/:id';
 
   /// - bank cards
-  static const String bankCards = '/dashboard/bank-cards';
-  static const String bankCardAdd = '/dashboard/bank-cards/add';
-  static const String bankCardEdit = '/dashboard/bank-cards/edit/:id';
+  static String bankCards = '/dashboard/${EntityType.bankCard.id}';
+  static String bankCardAdd = '/dashboard/${EntityType.bankCard.id}/add';
+  static String bankCardEdit = '/dashboard/${EntityType.bankCard.id}/edit/:id';
 
   /// - files
-  static const String files = '/dashboard/files';
-  static const String fileAdd = '/dashboard/files/add';
-  static const String fileEdit = '/dashboard/files/edit/:id';
+  static String files = '/dashboard/${EntityType.file.id}';
+  static String fileAdd = '/dashboard/${EntityType.file.id}/add';
+  static String fileEdit = '/dashboard/${EntityType.file.id}/edit/:id';
 
   static String categoryEditWithId(EntityType entity, String id) =>
       '/dashboard/${entity.id}/categories/edit/$id';

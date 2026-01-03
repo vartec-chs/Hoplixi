@@ -11,6 +11,13 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_ho
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_list_toolbar.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 
+/// Длительность анимации для элементов списка.
+const kAnimationDuration = Duration(milliseconds: 180);
+
+/// Экран дашборда со списком карточек.
+///
+/// Использует [SliverAnimatedList]/[SliverAnimatedGrid] для анимированного
+/// отображения элементов с поддержкой diff-обновлений.
 class DashboardHomeScreen extends ConsumerStatefulWidget {
   const DashboardHomeScreen({super.key, required this.entityType});
 
@@ -22,50 +29,41 @@ class DashboardHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
+  static const _kScrollThreshold = 200.0;
+
+  late final ScrollController _scrollController;
+  Timer? _loadMoreDebounce;
+
+  /// Ключи для анимированных списков — пересоздаются при сбросе.
   GlobalKey<SliverAnimatedListState> _listKey = GlobalKey();
   GlobalKey<SliverAnimatedGridState> _gridKey = GlobalKey();
-  late final ScrollController _scrollController;
 
-  // Локальный список для отображения и вычисления разницы (Diff)
+  /// Локальный список для отображения (синхронизируется с провайдером).
   List<BaseCardDto> _displayedItems = [];
+
+  /// Флаг очистки списка (для анимации пустого состояния).
   bool _isClearing = false;
 
-  // Очередь обновлений
-  List<BaseCardDto>? _pendingNewItems;
-  int? _pendingRevision;
-  bool _isUpdating = false;
-
-  int _dataRevision = 0;
-
-  static const _kScrollThreshold = 200.0;
-  Timer? _debounceTimer;
+  // ─────────────────────────────────────────────────────────────────────────
+  // Lifecycle
+  // ─────────────────────────────────────────────────────────────────────────
 
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
-    _scrollController.addListener(_onScroll);
-
-    // Инициализация начальными данными после построения кадра
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Небольшая задержка, чтобы убедиться, что SliverAnimatedList смонтирован
-      // и готов к анимации вставки элементов
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (!mounted) return;
-        final state = ref.read(paginatedListProvider(widget.entityType)).value;
-        if (state != null && state.items.isNotEmpty) {
-          _updateList(state.items);
-        }
-      });
-    });
+    _scrollController = ScrollController()..addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    _debounceTimer?.cancel();
+    _loadMoreDebounce?.cancel();
     _scrollController.dispose();
     super.dispose();
   }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Scroll & Pagination
+  // ─────────────────────────────────────────────────────────────────────────
 
   void _onScroll() {
     if (!_scrollController.hasClients) return;
@@ -76,9 +74,8 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
   }
 
   void _tryLoadMore() {
-    // Дебаунс для предотвращения частых вызовов
-    if (_debounceTimer?.isActive ?? false) return;
-    _debounceTimer = Timer(const Duration(milliseconds: 100), () {
+    if (_loadMoreDebounce?.isActive ?? false) return;
+    _loadMoreDebounce = Timer(const Duration(milliseconds: 100), () {
       final state = ref.read(paginatedListProvider(widget.entityType)).value;
       if (state != null &&
           !state.isLoadingMore &&
@@ -89,268 +86,220 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
     });
   }
 
-  /// Основной метод обновления списка с анимациями
-  void _updateList(List<BaseCardDto> newItems, {bool animate = true}) {
-    _pendingNewItems = newItems;
-    _pendingRevision = _dataRevision;
-    if (_isUpdating) return;
-    _processUpdateQueue(animate: animate);
-  }
+  // ─────────────────────────────────────────────────────────────────────────
+  // List synchronization
+  // ─────────────────────────────────────────────────────────────────────────
 
-  Future<void> _processUpdateQueue({bool animate = true}) async {
-    _isUpdating = true;
-    while (_pendingNewItems != null) {
-      final items = _pendingNewItems!;
-      final revision = _pendingRevision;
-      _pendingNewItems = null;
-      _pendingRevision = null;
-
-      // Если за время ожидания сменился тип/ревизия — пропускаем устаревшее.
-      if (revision != null && revision != _dataRevision) {
-        continue;
-      }
-
-      // Выполняем обновление
-      _performDiffAndUpdate(items, animate: animate);
-
-      // Даем UI обновиться, если есть еще задачи
-      if (_pendingNewItems != null) {
-        await Future.delayed(Duration.zero);
-      }
-    }
-    _isUpdating = false;
-  }
-
-  void _resetDisplayedItemsInstantly() {
-    _dataRevision++;
-    _pendingNewItems = null;
-    _pendingRevision = null;
-    // Важно: в момент смены сущности скролл может быть уже "подключен",
-    // но ещё без рассчитанных размеров (min/maxScrollExtent == null).
-    // В этом случае jumpTo вызывает ballistic simulation и падает.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scrollController.hasClients) return;
-      final position = _scrollController.position;
-      if (!position.hasContentDimensions) return;
-      if (position.pixels != 0.0) {
-        _scrollController.jumpTo(0.0);
-      }
-    });
-
-    setState(() {
-      _displayedItems = <BaseCardDto>[];
-      _isClearing = false;
-
-      // Важно: SliverAnimatedList/Grid хранит внутреннее состояние количества
-      // элементов. Чтобы мгновенно убрать "старые" элементы без removeItem,
-      // пересоздаем ключи, тем самым пересоздавая sliver.
-      _listKey = GlobalKey<SliverAnimatedListState>();
-      _gridKey = GlobalKey<SliverAnimatedGridState>();
-    });
-  }
-
-  void _performDiffAndUpdate(
-    List<BaseCardDto> newItems, {
-    bool animate = true,
-  }) {
-    if (_displayedItems.isEmpty && newItems.isEmpty) return;
+  /// Синхронизирует [_displayedItems] с новым списком из провайдера.
+  void _syncItems(List<BaseCardDto> newItems) {
+    if (!mounted) return;
 
     final viewMode = ref.read(currentViewModeProvider);
     final listState = _listKey.currentState;
     final gridState = _gridKey.currentState;
 
-    // Если ключи не готовы или анимация отключена, просто обновляем список
-    if (!animate ||
-        (viewMode == ViewMode.list && listState == null) ||
-        (viewMode == ViewMode.grid && gridState == null)) {
-      setState(() {
-        _displayedItems = List.from(newItems);
-      });
+    // Если анимированный список ещё не готов — просто копируем данные
+    final animationReady = viewMode == ViewMode.list
+        ? listState != null
+        : gridState != null;
+
+    if (!animationReady) {
+      setState(() => _displayedItems = List.of(newItems));
       return;
     }
 
-    // Оптимизация: Set для быстрого поиска удаляемых элементов O(1)
-    final newItemIds = newItems.map((e) => e.id).toSet();
+    _performDiff(newItems, viewMode, listState, gridState);
+  }
 
-    // 1. Удаление элементов (идем с конца, чтобы не сбить индексы)
-    bool itemsRemoved = false;
-    for (int i = _displayedItems.length - 1; i >= 0; i--) {
+  /// Выполняет diff между [_displayedItems] и [newItems] с анимациями.
+  void _performDiff(
+    List<BaseCardDto> newItems,
+    ViewMode viewMode,
+    SliverAnimatedListState? listState,
+    SliverAnimatedGridState? gridState,
+  ) {
+    final newIds = newItems.map((e) => e.id).toSet();
+    var didMutate = false;
+
+    // 1. Удаление (с конца, чтобы не сбивать индексы)
+    for (var i = _displayedItems.length - 1; i >= 0; i--) {
       final item = _displayedItems[i];
-      if (!newItemIds.contains(item.id)) {
-        final removedItem = _displayedItems.removeAt(i);
-        itemsRemoved = true;
-
-        if (viewMode == ViewMode.list) {
-          listState?.removeItem(
-            i,
-            (context, animation) =>
-                _buildRemovedItem(removedItem, context, animation, viewMode),
-            duration: kStatusSwitchDuration,
-          );
-        } else {
-          gridState?.removeItem(
-            i,
-            (context, animation) =>
-                _buildRemovedItem(removedItem, context, animation, viewMode),
-            duration: kStatusSwitchDuration,
-          );
-        }
+      if (!newIds.contains(item.id)) {
+        _displayedItems.removeAt(i);
+        didMutate = true;
+        _animateRemove(i, item, viewMode, listState, gridState);
       }
     }
 
-    if (itemsRemoved && newItems.isEmpty) {
+    // Если после удаления список опустел — показываем состояние «очистка»
+    if (didMutate && newItems.isEmpty) {
       _isClearing = true;
-      Timer(kStatusSwitchDuration, () {
-        if (mounted) {
-          setState(() {
-            _isClearing = false;
-          });
-        }
+      Timer(kAnimationDuration, () {
+        if (mounted) setState(() => _isClearing = false);
       });
     }
 
-    // Оптимизация: Set для проверки существования элементов O(1)
-    // Используем карту индексов: она может "устаревать" из-за сдвигов,
-    // но мы валидируем кандидата перед использованием.
+    // 2. Вставка / обновление
     final indexById = <String, int>{
-      for (int i = 0; i < _displayedItems.length; i++) _displayedItems[i].id: i,
+      for (var i = 0; i < _displayedItems.length; i++) _displayedItems[i].id: i,
     };
 
-    int findIndexAfter(int startIndex, String id) {
-      final candidate = indexById[id];
-      if (candidate != null) {
-        // Не трогаем элементы до startIndex (они уже обработаны).
-        if (candidate >= startIndex &&
-            candidate < _displayedItems.length &&
-            _displayedItems[candidate].id == id) {
-          return candidate;
-        }
-      }
-
-      final idx = _displayedItems.indexWhere((e) => e.id == id, startIndex);
-      if (idx != -1) indexById[id] = idx;
-      return idx;
-    }
-
-    // 2. Вставка новых элементов
-    bool didMutate = itemsRemoved;
-    for (int i = 0; i < newItems.length; i++) {
+    for (var i = 0; i < newItems.length; i++) {
       final newItem = newItems[i];
-      final newId = newItem.id;
+      final id = newItem.id;
 
-      // Проверяем, совпадает ли элемент на текущей позиции
-      if (i < _displayedItems.length && _displayedItems[i].id == newId) {
-        // Элемент на своем месте - проверяем, изменились ли данные
-        final oldItem = _displayedItems[i];
-        if (oldItem != newItem) {
-          // Данные изменились - обновляем и помечаем для перерисовки
+      if (i < _displayedItems.length && _displayedItems[i].id == id) {
+        // Элемент на месте — проверяем, изменились ли данные
+        if (_displayedItems[i] != newItem) {
           _displayedItems[i] = newItem;
           didMutate = true;
         }
-        indexById[newId] = i;
+        indexById[id] = i;
         continue;
       }
 
-      // Если элемента нет на текущей позиции, проверяем, есть ли он вообще в списке
-      if (indexById.containsKey(newId)) {
-        // Элемент есть, но смещен (reordering). Ищем его реальную позицию.
-        // Поиск начинается с i, так как все до i уже обработаны и совпадают
-        final currentIndex = findIndexAfter(i, newId);
-
-        if (currentIndex != -1) {
-          final item = _displayedItems.removeAt(currentIndex);
-          didMutate = true;
-          indexById.remove(newId);
-
-          // Симулируем перемещение: удаляем со старой позиции с анимацией
-          if (viewMode == ViewMode.list) {
-            listState?.removeItem(
-              currentIndex,
-              (context, animation) =>
-                  _buildRemovedItem(item, context, animation, viewMode),
-              duration: kStatusSwitchDuration,
-            );
-          } else {
-            gridState?.removeItem(
-              currentIndex,
-              (context, animation) =>
-                  _buildRemovedItem(item, context, animation, viewMode),
-              duration: kStatusSwitchDuration,
-            );
-          }
-
-          _displayedItems.insert(i, item);
-          // Обновляем данные
-          _displayedItems[i] = newItem;
-          indexById[newId] = i;
-
-          // Симулируем перемещение: вставляем на новую позицию с анимацией
-          if (viewMode == ViewMode.list) {
-            listState?.insertItem(i, duration: kStatusSwitchDuration);
-          } else {
-            gridState?.insertItem(i, duration: kStatusSwitchDuration);
-          }
-        }
-      } else {
-        // Элемента нет в списке - вставляем
+      final existingIndex = indexById[id];
+      if (existingIndex != null && existingIndex >= i) {
+        // Перемещение: убираем со старого места и вставляем на новое
+        final moved = _displayedItems.removeAt(existingIndex);
+        _animateRemove(existingIndex, moved, viewMode, listState, gridState);
         _displayedItems.insert(i, newItem);
-        didMutate = true;
-        indexById[newId] = i;
-        if (viewMode == ViewMode.list) {
-          listState?.insertItem(i, duration: kStatusSwitchDuration);
-        } else {
-          gridState?.insertItem(i, duration: kStatusSwitchDuration);
+        _animateInsert(i, viewMode, listState, gridState);
+        // Пересчитываем карту после сдвига
+        for (var j = i; j < _displayedItems.length; j++) {
+          indexById[_displayedItems[j].id] = j;
         }
+        didMutate = true;
+      } else if (existingIndex == null) {
+        // Новый элемент
+        _displayedItems.insert(i, newItem);
+        _animateInsert(i, viewMode, listState, gridState);
+        // Сдвигаем индексы
+        for (var j = i; j < _displayedItems.length; j++) {
+          indexById[_displayedItems[j].id] = j;
+        }
+        didMutate = true;
       }
     }
 
-    // Обновляем UI для отображения изменений внутри элементов
-    if (didMutate) {
-      setState(() {});
+    if (didMutate) setState(() {});
+  }
+
+  void _animateInsert(
+    int index,
+    ViewMode viewMode,
+    SliverAnimatedListState? listState,
+    SliverAnimatedGridState? gridState,
+  ) {
+    if (viewMode == ViewMode.list) {
+      listState?.insertItem(index, duration: kAnimationDuration);
+    } else {
+      gridState?.insertItem(index, duration: kAnimationDuration);
     }
   }
 
+  void _animateRemove(
+    int index,
+    BaseCardDto item,
+    ViewMode viewMode,
+    SliverAnimatedListState? listState,
+    SliverAnimatedGridState? gridState,
+  ) {
+    Widget builder(BuildContext ctx, Animation<double> anim) {
+      return DashboardHomeBuilders.buildRemovedItem(
+        context: ctx,
+        ref: ref,
+        entityType: widget.entityType,
+        item: item,
+        animation: anim,
+        viewMode: viewMode,
+        callbacks: _callbacks,
+      );
+    }
+
+    if (viewMode == ViewMode.list) {
+      listState?.removeItem(index, builder, duration: kAnimationDuration);
+    } else {
+      gridState?.removeItem(index, builder, duration: kAnimationDuration);
+    }
+  }
+
+  /// Локальное удаление элемента (для Dismissible — без анимации sliver).
+  void _removeItemLocally(String id) {
+    setState(() => _displayedItems.removeWhere((e) => e.id == id));
+  }
+
+  /// Сброс списка при смене entityType / viewMode.
+  void _resetList() {
+    _scrollToTopSafe();
+    setState(() {
+      _displayedItems = [];
+      _isClearing = false;
+      _listKey = GlobalKey<SliverAnimatedListState>();
+      _gridKey = GlobalKey<SliverAnimatedGridState>();
+    });
+  }
+
+  void _scrollToTopSafe() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      final pos = _scrollController.position;
+      if (pos.hasContentDimensions && pos.pixels != 0) {
+        _scrollController.jumpTo(0);
+      }
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Callbacks
+  // ─────────────────────────────────────────────────────────────────────────
+
+  DashboardCardCallbacks get _callbacks =>
+      DashboardCardCallbacks.fromRefWithLocalRemove(
+        ref,
+        widget.entityType,
+        _removeItemLocally,
+      );
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Build
+  // ─────────────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
-    final callbacks = DashboardCardCallbacks.fromRefWithLocalRemove(
-      ref,
-
-      widget.entityType,
-      _removeItemLocally,
-    );
-
-    // Слушаем изменения провайдера списка
-    ref.listen<
-      AsyncValue<DashboardListState<BaseCardDto>>
-    >(paginatedListProvider(widget.entityType), (prev, next) {
-      next.whenData((state) {
-        // Обновляем список после построения кадра, чтобы избежать мутации во время layout
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-
-          // Обновляем список при изменении данных
-          // Если это первая загрузка (список был пуст), даем время на построение SliverAnimatedList
-          if (_displayedItems.isEmpty && state.items.isNotEmpty) {
-            Future.delayed(const Duration(milliseconds: 50), () {
-              if (mounted) _updateList(state.items);
-            });
-          } else {
-            _updateList(state.items);
-          }
-        });
-      });
-    });
-
     final viewMode = ref.watch(currentViewModeProvider);
     final asyncValue = ref.watch(paginatedListProvider(widget.entityType));
 
+    // ref.listen должен быть в build — согласно документации Riverpod
+    ref.listen<AsyncValue<DashboardListState<BaseCardDto>>>(
+      paginatedListProvider(widget.entityType),
+      (prev, next) {
+        next.whenData((state) {
+          // Синхронизация после построения кадра
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _syncItems(state.items);
+          });
+        });
+      },
+    );
+
+    // Сброс при смене viewMode (ключи list/grid несовместимы)
+    ref.listen<ViewMode>(currentViewModeProvider, (prev, next) {
+      if (prev != null && prev != next) {
+        _resetList();
+        // После сброса подгружаем текущие данные
+        final items = asyncValue.value?.items ?? [];
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _syncItems(items);
+        });
+      }
+    });
+
     return Scaffold(
       body: RefreshIndicator(
-        onRefresh: () async {
-          await ref
-              .read(paginatedListProvider(widget.entityType).notifier)
-              .refresh();
-        },
+        onRefresh: () => ref
+            .read(paginatedListProvider(widget.entityType).notifier)
+            .refresh(),
         child: CustomScrollView(
           controller: _scrollController,
           slivers: [
@@ -370,50 +319,30 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
                 listState: asyncValue,
               ),
             ),
-            DashboardHomeBuilders.buildContentSliver(
-              context: context,
-              ref: ref,
-              entityType: widget.entityType,
-              viewMode: viewMode,
-              asyncValue: asyncValue,
-              displayedItems: _displayedItems,
-              isClearing: _isClearing,
-              listKey: _listKey,
-              gridKey: _gridKey,
-              callbacks: callbacks,
-              onInvalidate: () => ref.invalidate(paginatedListProvider),
-            ),
+            _buildContentSliver(asyncValue, viewMode),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildRemovedItem(
-    BaseCardDto item,
-    BuildContext context,
-    Animation<double> animation,
+  Widget _buildContentSliver(
+    AsyncValue<DashboardListState<BaseCardDto>> asyncValue,
     ViewMode viewMode,
   ) {
-    return DashboardHomeBuilders.buildRemovedItem(
+    return DashboardHomeBuilders.buildContentSliver(
       context: context,
       ref: ref,
       entityType: widget.entityType,
-      item: item,
-      animation: animation,
       viewMode: viewMode,
-      callbacks: DashboardCardCallbacks.fromRefWithLocalRemove(
-        ref,
-        widget.entityType,
-        _removeItemLocally,
-      ),
+      asyncValue: asyncValue,
+      displayedItems: _displayedItems,
+      isClearing: _isClearing,
+      listKey: _listKey,
+      gridKey: _gridKey,
+      callbacks: _callbacks,
+      onInvalidate: () =>
+          ref.invalidate(paginatedListProvider(widget.entityType)),
     );
-  }
-
-  /// Локальное удаление элемента без анимации (для Dismissible)
-  void _removeItemLocally(String id) {
-    setState(() {
-      _displayedItems.removeWhere((item) => item.id == id);
-    });
   }
 }

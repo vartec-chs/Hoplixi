@@ -83,7 +83,7 @@ final List<RouteBase> appRoutes = [
 
   GoRoute(
     path: '/dashboard',
-    redirect: (context, state) => '/dashboard/passwords',
+    redirect: (context, state) => '/dashboard/${EntityType.password.id}',
   ),
 
   ShellRoute(
@@ -96,7 +96,6 @@ final List<RouteBase> appRoutes = [
       GoRoute(
         path: '/dashboard/:entity',
         name: 'entity',
-        // Здесь не возвращаем содержимое центра — оно рендерится в DashboardLayout (IndexedStack + inner Navigators).
         // Этот GoRoute существует для сопоставления базовой сущности и для вложенных panel маршрутов.
         builder: (context, state) => const SizedBox.shrink(),
         routes: [
@@ -142,27 +141,7 @@ final List<RouteBase> appRoutes = [
               return const TagsManagerScreen();
             },
             routes: [
-              // GoRoute(
-              //   path: 'add',
-              //   name: 'entity_tags_add',
-              //   builder: (context, state) {
-              //     final entity = state.pathParameters['entity']!;
-              //     return TagAddEditPanel(forEntity: entity, isEdit: false);
-              //   },
-              // ),
-              // GoRoute(
-              //   path: 'edit/:id',
-              //   name: 'entity_tags_edit',
-              //   builder: (context, state) {
-              //     final entity = state.pathParameters['entity']!;
-              //     final id = state.pathParameters['id']!;
-              //     return TagAddEditPanel(
-              //       forEntity: entity,
-              //       isEdit: true,
-              //       id: id,
-              //     );
-              //   },
-              // ),
+           
             ],
           ),
 
@@ -175,27 +154,7 @@ final List<RouteBase> appRoutes = [
               return const IconManagerScreen();
             },
             routes: [
-              // GoRoute(
-              //   path: 'add',
-              //   name: 'entity_icons_add',
-              //   builder: (context, state) {
-              //     final entity = state.pathParameters['entity']!;
-              //     return IconAddEditPanel(forEntity: entity, isEdit: false);
-              //   },
-              // ),
-              // GoRoute(
-              //   path: 'edit/:id',
-              //   name: 'entity_icons_edit',
-              //   builder: (context, state) {
-              //     final entity = state.pathParameters['entity']!;
-              //     final id = state.pathParameters['id']!;
-              //     return IconAddEditPanel(
-              //       forEntity: entity,
-              //       isEdit: true,
-              //       id: id,
-              //     );
-              //   },
-              // ),
+            
             ],
           ),
 

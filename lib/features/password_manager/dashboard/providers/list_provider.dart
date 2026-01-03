@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/data_refresh_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/list_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/index.dart';
@@ -7,7 +8,6 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/filter_tab
 import 'package:hoplixi/main_store/dao/filters_dao/filter.dart';
 import 'package:hoplixi/main_store/models/base_main_entity_dao.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
-import 'package:hoplixi/main_store/models/filter/base_filter.dart';
 import 'package:hoplixi/main_store/models/filter/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -31,6 +31,17 @@ class PaginatedListNotifier
 
   final EntityType entityType;
 
+  ProviderSubscription<PasswordsFilter>? _passwordFilterSubscription;
+  ProviderSubscription<NotesFilter>? _noteFilterSubscription;
+  ProviderSubscription<BankCardsFilter>? _bankCardFilterSubscription;
+  ProviderSubscription<FilesFilter>? _fileFilterSubscription;
+  ProviderSubscription<OtpsFilter>? _otpFilterSubscription;
+  ProviderSubscription<DataRefreshState>? _passwordRefreshSubscription;
+  ProviderSubscription<DataRefreshState>? _noteRefreshSubscription;
+  ProviderSubscription<DataRefreshState>? _bankCardRefreshSubscription;
+  ProviderSubscription<DataRefreshState>? _fileRefreshSubscription;
+  ProviderSubscription<DataRefreshState>? _otpRefreshSubscription;
+
   int get pageSize {
     // можно иметь разный pageSize для разных типов, если нужно
     return kDefaultPageSize;
@@ -46,7 +57,137 @@ class PaginatedListNotifier
       }
     });
 
+    _subscribeToTypeSpecificProviders();
+
     return _loadInitialData();
+  }
+
+  void _subscribeToTypeSpecificProviders() {
+    _unsubscribeTypeSpecificProviders();
+    switch (entityType) {
+      case EntityType.password:
+        _passwordFilterSubscription = ref.listen(passwordsFilterProvider, (
+          prev,
+          next,
+        ) {
+          if (prev != next) {
+            _resetAndLoad();
+          }
+        });
+        _passwordRefreshSubscription = ref.listen<DataRefreshState>(
+          dataRefreshTriggerProvider,
+          (previous, next) {
+            if (_shouldHandleRefresh(next, EntityType.password)) {
+              logDebug(
+                'PaginatedListNotifier: Триггер обновления данных паролей',
+              );
+              _resetAndLoad();
+            }
+          },
+        );
+
+        break;
+      case EntityType.note:
+        _noteFilterSubscription = ref.listen(notesFilterProvider, (prev, next) {
+          if (prev != next) {
+            _resetAndLoad();
+          }
+        });
+        _noteRefreshSubscription = ref.listen<DataRefreshState>(
+          dataRefreshTriggerProvider,
+          (previous, next) {
+            if (_shouldHandleRefresh(next, EntityType.note)) {
+              logDebug(
+                'PaginatedListNotifier: Триггер обновления данных заметок',
+              );
+              _resetAndLoad();
+            }
+          },
+        );
+        break;
+      case EntityType.bankCard:
+        _bankCardFilterSubscription = ref.listen(bankCardsFilterProvider, (
+          prev,
+          next,
+        ) {
+          if (prev != next) {
+            _resetAndLoad();
+          }
+        });
+        _bankCardRefreshSubscription = ref.listen<DataRefreshState>(
+          dataRefreshTriggerProvider,
+          (previous, next) {
+            if (_shouldHandleRefresh(next, EntityType.bankCard)) {
+              logDebug(
+                'PaginatedListNotifier: Триггер обновления данных карточек',
+              );
+              _resetAndLoad();
+            }
+          },
+        );
+        break;
+      case EntityType.file:
+        _fileFilterSubscription = ref.listen(filesFilterProvider, (prev, next) {
+          if (prev != next) {
+            _resetAndLoad();
+          }
+        });
+        _fileRefreshSubscription = ref.listen<DataRefreshState>(
+          dataRefreshTriggerProvider,
+          (previous, next) {
+            if (_shouldHandleRefresh(next, EntityType.file)) {
+              logDebug(
+                'PaginatedListNotifier: Триггер обновления данных файлов',
+              );
+              _resetAndLoad();
+            }
+          },
+        );
+        break;
+      case EntityType.otp:
+        _otpFilterSubscription = ref.listen(otpsFilterProvider, (prev, next) {
+          if (prev != next) {
+            _resetAndLoad();
+          }
+        });
+        _otpRefreshSubscription = ref.listen<DataRefreshState>(
+          dataRefreshTriggerProvider,
+          (previous, next) {
+            if (_shouldHandleRefresh(next, EntityType.otp)) {
+              logDebug('PaginatedListNotifier: Триггер обновления данных OTP');
+              _resetAndLoad();
+            }
+          },
+        );
+        break;
+    }
+  }
+
+  bool _shouldHandleRefresh(DataRefreshState state, EntityType type) {
+    return state.entityType == null || state.entityType == type;
+  }
+
+  void _unsubscribeTypeSpecificProviders() {
+    _passwordFilterSubscription?.close();
+    _passwordFilterSubscription = null;
+    _noteFilterSubscription?.close();
+    _noteFilterSubscription = null;
+    _bankCardFilterSubscription?.close();
+    _bankCardFilterSubscription = null;
+    _fileFilterSubscription?.close();
+    _fileFilterSubscription = null;
+    _otpFilterSubscription?.close();
+    _otpFilterSubscription = null;
+    _passwordRefreshSubscription?.close();
+    _passwordRefreshSubscription = null;
+    _noteRefreshSubscription?.close();
+    _noteRefreshSubscription = null;
+    _bankCardRefreshSubscription?.close();
+    _bankCardRefreshSubscription = null;
+    _fileRefreshSubscription?.close();
+    _fileRefreshSubscription = null;
+    _otpRefreshSubscription?.close();
+    _otpRefreshSubscription = null;
   }
 
   /// Выбор DAO по type — вынеси в отдельную функцию/мапу

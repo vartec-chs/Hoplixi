@@ -22,9 +22,14 @@ import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
+/// Длительность анимации переключения состояний.
 const kStatusSwitchDuration = Duration(milliseconds: 180);
 
-/// Коллбэки для действий с элементами списка
+// ─────────────────────────────────────────────────────────────────────────────
+// Callbacks
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Коллбэки для действий с элементами списка.
 class DashboardCardCallbacks {
   const DashboardCardCallbacks({
     required this.onToggleFavorite,
@@ -42,43 +47,43 @@ class DashboardCardCallbacks {
   final void Function(String id) onRestore;
   final void Function(String id) onLocalRemove;
 
-  /// Создать коллбэки из WidgetRef с локальным удалением
+  /// Создаёт коллбэки из [WidgetRef] с локальным удалением.
   factory DashboardCardCallbacks.fromRefWithLocalRemove(
     WidgetRef ref,
     EntityType entityType,
     void Function(String id) onLocalRemove,
   ) {
+    final notifier = ref.read(paginatedListProvider(entityType).notifier);
     return DashboardCardCallbacks(
-      onToggleFavorite: (id) => ref
-          .read(paginatedListProvider(entityType).notifier)
-          .toggleFavorite(id),
-      onTogglePin: (id) =>
-          ref.read(paginatedListProvider(entityType).notifier).togglePin(id),
-      onToggleArchive: (id) => ref
-          .read(paginatedListProvider(entityType).notifier)
-          .toggleArchive(id),
+      onToggleFavorite: notifier.toggleFavorite,
+      onTogglePin: notifier.togglePin,
+      onToggleArchive: notifier.toggleArchive,
       onDelete: (id, isDeleted) {
         if (isDeleted == true) {
-          ref
-              .read(paginatedListProvider(entityType).notifier)
-              .permanentDelete(id);
+          notifier.permanentDelete(id);
         } else {
-          ref.read(paginatedListProvider(entityType).notifier).delete(id);
+          notifier.delete(id);
         }
       },
-      onRestore: (id) => ref
-          .read(paginatedListProvider(entityType).notifier)
-          .restoreFromDeleted(id),
+      onRestore: notifier.restoreFromDeleted,
       onLocalRemove: onLocalRemove,
     );
   }
 }
 
-/// Класс-помощник для построения виджетов дашборда
+// ─────────────────────────────────────────────────────────────────────────────
+// Builders
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Класс-помощник для построения виджетов дашборда.
 class DashboardHomeBuilders {
   const DashboardHomeBuilders._();
 
-  /// Построение основного контентного слайвера
+  // ───────────────────────────────────────────────────────────────────────────
+  // Content Sliver
+  // ───────────────────────────────────────────────────────────────────────────
+
+  /// Построение основного контентного слайвера.
   static Widget buildContentSliver({
     required BuildContext context,
     required WidgetRef ref,
@@ -92,10 +97,11 @@ class DashboardHomeBuilders {
     required DashboardCardCallbacks callbacks,
     required VoidCallback onInvalidate,
   }) {
-    final hasItems = displayedItems.isNotEmpty;
+    final hasDisplayedItems = displayedItems.isNotEmpty;
 
-    if (hasItems) {
-      return buildAnimatedListOrGrid(
+    // Если есть элементы — показываем только список
+    if (hasDisplayedItems) {
+      return _buildAnimatedListOrGrid(
         context: context,
         ref: ref,
         entityType: entityType,
@@ -108,47 +114,19 @@ class DashboardHomeBuilders {
       );
     }
 
-    final providerHasItems = asyncValue.value?.items.isNotEmpty ?? false;
-    final isInitialLoading = asyncValue.isLoading && !hasItems;
-    final isError = asyncValue.hasError && !hasItems;
-    final showStatus = !hasItems && !isClearing;
-
-    Widget? statusSliver;
-    if (showStatus) {
-      if (isInitialLoading) {
-        statusSliver = const SliverFillRemaining(
-          key: ValueKey('loading'),
-          child: Center(child: CircularProgressIndicator()),
-        );
-      } else if (isError) {
-        statusSliver = buildErrorSliver(
-          context: context,
-          error: asyncValue.error!,
-          onRetry: onInvalidate,
-          key: const ValueKey('error'),
-        );
-      } else if (!providerHasItems) {
-        statusSliver = buildEmptyState(
-          context: context,
-          entityType: entityType,
-          key: const ValueKey('empty'),
-        );
-      } else {
-        statusSliver = const SliverFillRemaining(
-          key: ValueKey('loading'),
-          child: Center(child: CircularProgressIndicator()),
-        );
-      }
-    } else {
-      statusSliver = const SliverToBoxAdapter(
-        key: ValueKey('none'),
-        child: SizedBox.shrink(),
-      );
-    }
+    // Определяем, какой статусный слайвер показывать
+    final statusSliver = _resolveStatusSliver(
+      context: context,
+      asyncValue: asyncValue,
+      entityType: entityType,
+      isClearing: isClearing,
+      onRetry: onInvalidate,
+    );
 
     return SliverMainAxisGroup(
       slivers: [
-        buildAnimatedListOrGrid(
+        // Пустой анимированный список (для согласованности ключей)
+        _buildAnimatedListOrGrid(
           context: context,
           ref: ref,
           entityType: entityType,
@@ -167,8 +145,59 @@ class DashboardHomeBuilders {
     );
   }
 
-  /// Построение анимированного списка или сетки
-  static Widget buildAnimatedListOrGrid({
+  /// Определяет какой статусный слайвер показать.
+  static Widget _resolveStatusSliver({
+    required BuildContext context,
+    required AsyncValue<DashboardListState<BaseCardDto>> asyncValue,
+    required EntityType entityType,
+    required bool isClearing,
+    required VoidCallback onRetry,
+  }) {
+    if (isClearing) {
+      return const SliverToBoxAdapter(
+        key: ValueKey('clearing'),
+        child: SizedBox.shrink(),
+      );
+    }
+
+    if (asyncValue.isLoading) {
+      return const SliverFillRemaining(
+        key: ValueKey('loading'),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (asyncValue.hasError) {
+      return _buildErrorSliver(
+        context: context,
+        error: asyncValue.error!,
+        onRetry: onRetry,
+        key: const ValueKey('error'),
+      );
+    }
+
+    final providerItems = asyncValue.value?.items ?? [];
+    if (providerItems.isEmpty) {
+      return _buildEmptyState(
+        context: context,
+        entityType: entityType,
+        key: const ValueKey('empty'),
+      );
+    }
+
+    // Данные есть в провайдере, но ещё не синхронизированы
+    return const SliverFillRemaining(
+      key: ValueKey('syncing'),
+      child: Center(child: CircularProgressIndicator()),
+    );
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Animated List / Grid
+  // ───────────────────────────────────────────────────────────────────────────
+
+  /// Построение анимированного списка или сетки.
+  static Widget _buildAnimatedListOrGrid({
     required BuildContext context,
     required WidgetRef ref,
     required EntityType entityType,
@@ -183,60 +212,31 @@ class DashboardHomeBuilders {
     final hasMore = state?.hasMore ?? false;
     final isLoadingMore = state?.isLoadingMore ?? false;
 
-    Widget listSliver;
-    if (viewMode == ViewMode.list) {
-      listSliver = SliverPadding(
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-        sliver: SliverAnimatedList(
-          key: listKey,
-          initialItemCount: displayedItems.length,
-          itemBuilder: (context, index, animation) {
-            if (index >= displayedItems.length) return const SizedBox.shrink();
-            return buildItemTransition(
-              context: context,
-              ref: ref,
-              item: displayedItems[index],
-              animation: animation,
-              viewMode: viewMode,
-              entityType: entityType,
-              callbacks: callbacks,
-            );
-          },
-        ),
-      );
-    } else {
-      listSliver = SliverPadding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-        sliver: SliverAnimatedGrid(
-          key: gridKey,
-          initialItemCount: displayedItems.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 1.6,
-          ),
-          itemBuilder: (context, index, animation) {
-            if (index >= displayedItems.length) return const SizedBox.shrink();
-            return buildItemTransition(
-              context: context,
-              ref: ref,
-              item: displayedItems[index],
-              animation: animation,
-              viewMode: viewMode,
-              entityType: entityType,
-              callbacks: callbacks,
-            );
-          },
-        ),
-      );
-    }
+    final listSliver = viewMode == ViewMode.list
+        ? _buildSliverAnimatedList(
+            listKey: listKey,
+            displayedItems: displayedItems,
+            context: context,
+            ref: ref,
+            entityType: entityType,
+            viewMode: viewMode,
+            callbacks: callbacks,
+          )
+        : _buildSliverAnimatedGrid(
+            gridKey: gridKey,
+            displayedItems: displayedItems,
+            context: context,
+            ref: ref,
+            entityType: entityType,
+            viewMode: viewMode,
+            callbacks: callbacks,
+          );
 
     return SliverMainAxisGroup(
       key: key,
       slivers: [
         listSliver,
-        buildFooter(
+        _buildFooter(
           hasMore: hasMore,
           isLoadingMore: isLoadingMore,
           hasDisplayedItems: displayedItems.isNotEmpty,
@@ -245,8 +245,78 @@ class DashboardHomeBuilders {
     );
   }
 
-  /// Построение перехода для элемента
-  static Widget buildItemTransition({
+  static Widget _buildSliverAnimatedList({
+    required GlobalKey<SliverAnimatedListState> listKey,
+    required List<BaseCardDto> displayedItems,
+    required BuildContext context,
+    required WidgetRef ref,
+    required EntityType entityType,
+    required ViewMode viewMode,
+    required DashboardCardCallbacks callbacks,
+  }) {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      sliver: SliverAnimatedList(
+        key: listKey,
+        initialItemCount: displayedItems.length,
+        itemBuilder: (ctx, index, animation) {
+          if (index >= displayedItems.length) return const SizedBox.shrink();
+          return _buildItemTransition(
+            context: ctx,
+            ref: ref,
+            item: displayedItems[index],
+            animation: animation,
+            viewMode: viewMode,
+            entityType: entityType,
+            callbacks: callbacks,
+          );
+        },
+      ),
+    );
+  }
+
+  static Widget _buildSliverAnimatedGrid({
+    required GlobalKey<SliverAnimatedGridState> gridKey,
+    required List<BaseCardDto> displayedItems,
+    required BuildContext context,
+    required WidgetRef ref,
+    required EntityType entityType,
+    required ViewMode viewMode,
+    required DashboardCardCallbacks callbacks,
+  }) {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      sliver: SliverAnimatedGrid(
+        key: gridKey,
+        initialItemCount: displayedItems.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.6,
+        ),
+        itemBuilder: (ctx, index, animation) {
+          if (index >= displayedItems.length) return const SizedBox.shrink();
+          return _buildItemTransition(
+            context: ctx,
+            ref: ref,
+            item: displayedItems[index],
+            animation: animation,
+            viewMode: viewMode,
+            entityType: entityType,
+            callbacks: callbacks,
+          );
+        },
+      ),
+    );
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Item Transitions
+  // ───────────────────────────────────────────────────────────────────────────
+
+  /// Построение перехода для элемента (вставка).
+  static Widget _buildItemTransition({
     required BuildContext context,
     required WidgetRef ref,
     required BaseCardDto item,
@@ -255,6 +325,22 @@ class DashboardHomeBuilders {
     required EntityType entityType,
     required DashboardCardCallbacks callbacks,
   }) {
+    final card = viewMode == ViewMode.list
+        ? buildListCardFor(
+            context: context,
+            ref: ref,
+            type: entityType,
+            item: item,
+            callbacks: callbacks,
+          )
+        : buildGridCardFor(
+            context: context,
+            ref: ref,
+            type: entityType,
+            item: item,
+            callbacks: callbacks,
+          );
+
     return FadeScaleTransition(
       animation: animation,
       child: SlideTransition(
@@ -262,68 +348,53 @@ class DashboardHomeBuilders {
             .animate(
               CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
             ),
-        child: viewMode == ViewMode.list
-            ? Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
-                child: buildListCardFor(
-                  context: context,
-                  ref: ref,
-                  type: entityType,
-                  item: item,
-                  callbacks: callbacks,
-                ),
-              )
-            : Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
-                child: buildGridCardFor(
-                  context: context,
-                  ref: ref,
-                  type: entityType,
-                  item: item,
-                  callbacks: callbacks,
-                ),
-              ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: card,
+        ),
       ),
     );
   }
 
-  /// Построение удаленного элемента (для анимации удаления)
+  /// Построение удалённого элемента (для анимации удаления).
   static Widget buildRemovedItem({
     required BuildContext context,
-
     required WidgetRef ref,
+    required EntityType entityType,
     required BaseCardDto item,
     required Animation<double> animation,
     required ViewMode viewMode,
     required DashboardCardCallbacks callbacks,
-    required EntityType entityType,
   }) {
+    final card = viewMode == ViewMode.list
+        ? buildListCardFor(
+            context: context,
+            ref: ref,
+            type: entityType,
+            item: item,
+            callbacks: callbacks,
+            isDismissible: false,
+          )
+        : buildGridCardFor(
+            context: context,
+            ref: ref,
+            type: entityType,
+            item: item,
+            callbacks: callbacks,
+          );
+
     return FadeTransition(
       opacity: animation,
-      child: SizeTransition(
-        sizeFactor: animation,
-        child: viewMode == ViewMode.list
-            ? buildListCardFor(
-                context: context,
-                ref: ref,
-                type: entityType,
-                item: item,
-                callbacks: callbacks,
-                isDismissible: false,
-              )
-            : buildGridCardFor(
-                context: context,
-                ref: ref,
-                type: entityType,
-                item: item,
-                callbacks: callbacks,
-              ),
-      ),
+      child: SizeTransition(sizeFactor: animation, child: card),
     );
   }
 
-  /// Построение футера списка
-  static Widget buildFooter({
+  // ───────────────────────────────────────────────────────────────────────────
+  // Footer & Status States
+  // ───────────────────────────────────────────────────────────────────────────
+
+  /// Построение футера списка.
+  static Widget _buildFooter({
     required bool hasMore,
     required bool isLoadingMore,
     required bool hasDisplayedItems,
@@ -342,6 +413,7 @@ class DashboardHomeBuilders {
         ),
       );
     }
+
     if (!hasMore && hasDisplayedItems) {
       return const SliverToBoxAdapter(
         child: Padding(
@@ -355,11 +427,12 @@ class DashboardHomeBuilders {
         ),
       );
     }
+
     return const SliverToBoxAdapter(child: SizedBox(height: 8));
   }
 
-  /// Построение пустого состояния
-  static Widget buildEmptyState({
+  /// Построение пустого состояния.
+  static Widget _buildEmptyState({
     required BuildContext context,
     required EntityType entityType,
     Key? key,
@@ -386,8 +459,8 @@ class DashboardHomeBuilders {
     );
   }
 
-  /// Построение слайвера с ошибкой
-  static Widget buildErrorSliver({
+  /// Построение слайвера с ошибкой.
+  static Widget _buildErrorSliver({
     required BuildContext context,
     required Object error,
     required VoidCallback onRetry,
@@ -410,7 +483,11 @@ class DashboardHomeBuilders {
     );
   }
 
-  /// Построение карточки для списка
+  // ───────────────────────────────────────────────────────────────────────────
+  // Card Builders
+  // ───────────────────────────────────────────────────────────────────────────
+
+  /// Построение карточки для списка.
   static Widget buildListCardFor({
     required BuildContext context,
     required WidgetRef ref,
