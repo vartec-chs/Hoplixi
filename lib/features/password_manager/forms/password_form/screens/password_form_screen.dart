@@ -6,7 +6,6 @@ import 'package:hoplixi/features/password_manager/category_manager/features/cate
 import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_button.dart';
 import 'package:hoplixi/features/password_manager/tags_manager/features/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
-import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 import '../providers/password_form_provider.dart';
@@ -119,13 +118,15 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
         actions: [
           if (state.isSaving)
             const Padding(
-              padding: EdgeInsets.all(12.0),
+              padding: EdgeInsets.all(16.0),
               child: SizedBox(
-                width: 24,
-                height: 24,
+                width: 20,
+                height: 20,
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
-            ),
+            )
+          else
+            IconButton(icon: const Icon(Icons.save), onPressed: _handleSave),
         ],
         leading: FormCloseButton(),
       ),
@@ -311,45 +312,6 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                                 .read(passwordFormProvider.notifier)
                                 .setNotes(value);
                           },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Закрепленные кнопки снизу
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    border: Border(
-                      top: BorderSide(color: theme.dividerColor, width: 1),
-                    ),
-                  ),
-                  child: SafeArea(
-                    top: false,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: SmoothButton(
-                            label: 'Отмена',
-                            onPressed: state.isSaving
-                                ? null
-                                : () => context.pop(false),
-                            type: SmoothButtonType.outlined,
-                            variant: SmoothButtonVariant.normal,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: SmoothButton(
-                            label: widget.passwordId != null
-                                ? 'Сохранить'
-                                : 'Создать',
-                            onPressed: state.isSaving ? null : _handleSave,
-                            type: SmoothButtonType.filled,
-                            variant: SmoothButtonVariant.normal,
-                          ),
                         ),
                       ],
                     ),

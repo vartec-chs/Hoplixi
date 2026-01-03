@@ -8,7 +8,6 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_b
 import 'package:hoplixi/features/password_manager/tags_manager/features/tags_picker/tags_picker.dart';
 import 'package:hoplixi/features/qr_scanner/widgets/qr_scanner_widget.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
-import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 import '../models/otp_form_state.dart';
@@ -167,7 +166,6 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final state = ref.watch(otpFormProvider);
 
     // Синхронизация контроллеров с состоянием при загрузке данных
@@ -192,13 +190,15 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
             ),
           if (state.isSaving)
             const Padding(
-              padding: EdgeInsets.all(12.0),
+              padding: EdgeInsets.all(16.0),
               child: SizedBox(
-                width: 24,
-                height: 24,
+                width: 20,
+                height: 20,
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
-            ),
+            )
+          else
+            IconButton(icon: const Icon(Icons.save), onPressed: _handleSave),
         ],
         leading: FormCloseButton(),
         bottom: TabBar(
@@ -223,48 +223,6 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
                       // HOTP форма (заглушка)
                       _buildHotpPlaceholder(context),
                     ],
-                  ),
-                ),
-
-                // Закрепленные кнопки снизу
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    border: Border(
-                      top: BorderSide(color: theme.dividerColor, width: 1),
-                    ),
-                  ),
-                  child: SafeArea(
-                    top: false,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: SmoothButton(
-                            label: 'Отмена',
-                            onPressed: state.isSaving
-                                ? null
-                                : () => context.pop(false),
-                            type: SmoothButtonType.outlined,
-                            variant: SmoothButtonVariant.normal,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: SmoothButton(
-                            label: widget.otpId != null
-                                ? 'Сохранить'
-                                : 'Создать',
-                            onPressed:
-                                state.isSaving || state.otpType == OtpType.hotp
-                                ? null
-                                : _handleSave,
-                            type: SmoothButtonType.filled,
-                            variant: SmoothButtonVariant.normal,
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ],

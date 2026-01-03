@@ -8,6 +8,7 @@ import 'package:hoplixi/features/password_manager/tags_manager/features/tags_pic
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+
 import '../models/file_form_state.dart';
 import '../providers/file_form_provider.dart';
 
@@ -107,13 +108,15 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
         actions: [
           if (state.isSaving)
             const Padding(
-              padding: EdgeInsets.all(12.0),
+              padding: EdgeInsets.all(16.0),
               child: SizedBox(
-                width: 24,
-                height: 24,
+                width: 20,
+                height: 20,
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
-            ),
+            )
+          else
+            IconButton(icon: const Icon(Icons.save), onPressed: _handleSave),
         ],
         leading: FormCloseButton(),
       ),

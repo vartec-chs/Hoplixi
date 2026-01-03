@@ -102,12 +102,15 @@ class _DashboardLayoutState extends State<DashboardLayout>
   // ===========================================================================
 
   /// Построить список действий FAB для текущей entity
-  List<FABActionData> _buildFabActions(String entity) {
+  List<FABActionData> _buildFabActions(String entity, BuildContext context) {
+    final theme = Theme.of(context);
     return [
       FABActionData(
         icon: Icons.add,
         label: 'Добавить',
         onPressed: () => _onFabActionPressed(entity, 'add'),
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
       ),
       FABActionData(
         icon: Icons.category,
@@ -447,12 +450,13 @@ class _DashboardLayoutState extends State<DashboardLayout>
   // Вспомогательный метод для создания ExpandableFAB
   Widget _buildExpandableFAB(String entity, bool isMobile) {
     return ExpandableFAB(
+      executeFirstActionDirectly: true,
       direction: isMobile
           ? FABExpandDirection.up
           : FABExpandDirection.rightDown,
       isUseInNavigationRail: !isMobile, // true для десктопа
       shape: isMobile ? FABShape.circle : FABShape.square,
-      actions: _buildFabActions(entity),
+      actions: _buildFabActions(entity, context),
     );
   }
 }
@@ -503,4 +507,3 @@ class _BottomNavIconButton extends StatelessWidget {
     );
   }
 }
-

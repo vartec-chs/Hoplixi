@@ -10,6 +10,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/forms/note_form/models/note_form_state.dart';
 import 'package:hoplixi/shared/ui/button.dart';
+import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 import '../providers/note_form_provider.dart';
 import '../widgets/note_links_section.dart';
@@ -284,6 +285,24 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
     return result ?? false;
   }
 
+  /// Показать модальное окно со связями заметки
+  void _showLinksModal() {
+    if (!isEditMode || widget.noteId == null) return;
+
+    WoltModalSheet.show(
+      useRootNavigator: true,
+      context: context,
+      pageListBuilder: (modalSheetContext) => [
+        SliverWoltModalSheetPage(
+          topBarTitle: const Text('Связи заметки'),
+          mainContentSliversBuilder: (context) => [
+            SliverToBoxAdapter(child: NoteLinksSection(noteId: widget.noteId!)),
+          ],
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -312,6 +331,12 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
             },
           ),
           actions: [
+            if (isEditMode)
+              IconButton(
+                icon: const Icon(Icons.link),
+                tooltip: 'Связи заметки',
+                onPressed: _showLinksModal,
+              ),
             if (state.isSaving)
               const Padding(
                 padding: EdgeInsets.all(12.0),
@@ -323,7 +348,7 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
               )
             else
               IconButton(
-                icon: const Icon(Icons.check),
+                icon: const Icon(Icons.save),
                 tooltip: 'Сохранить',
                 onPressed: _handleSave,
               ),
@@ -375,94 +400,35 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
 
                   // Редактор Quill
                   Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          // Секция связей (если это режим редактирования)
+                    child: QuillEditor(
+                      focusNode: _editorFocusNode,
+                      scrollController: _editorScrollController,
+                      controller: _quillController,
+                      config: QuillEditorConfig(
+                        placeholder: 'Начните писать заметку...',
+                        padding: const EdgeInsets.all(16),
+                        expands: true,
+                        onLaunchUrl: (url) async {
+                          logInfo('QuillEditor onLaunchUrl: $url');
+                          // Перехватываем ссылки на заметки, чтобы не открывать в браузере
+                          // Quill может добавить https:// перед note://
 
-                          // Редактор
-                          SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.7,
-                            child: QuillEditor(
-                              focusNode: _editorFocusNode,
-                              scrollController: _editorScrollController,
-                              controller: _quillController,
-                              config: QuillEditorConfig(
-                                placeholder: 'Начните писать заметку...',
-                                padding: const EdgeInsets.all(16),
-                                expands: true,
-                                onLaunchUrl: (url) async {
-                                  logInfo('QuillEditor onLaunchUrl: $url');
-                                  // Перехватываем ссылки на заметки, чтобы не открывать в браузере
-                                  // Quill может добавить https:// перед note://
-
-                                  if (url.contains('note://')) {
-                                    final noteId = url.split('//').last;
-                                    _handleNoteLinkClick(noteId);
-                                  }
-                                  // Для обычных URL можно добавить url_launcher
-                                },
-                                onTapDown: (details, p1) {
-                                  // Обработка тапов
-                                  return false;
-                                },
-                                customStyles: DefaultStyles(
-                                  link: TextStyle(
-                                    color: theme.colorScheme.primary,
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                ),
-                              ),
-                            ),
+                          if (url.contains('note://')) {
+                            final noteId = url.split('//').last;
+                            _handleNoteLinkClick(noteId);
+                          }
+                          // Для обычных URL можно добавить url_launcher
+                        },
+                        onTapDown: (details, p1) {
+                          // Обработка тапов
+                          return false;
+                        },
+                        customStyles: DefaultStyles(
+                          link: TextStyle(
+                            color: theme.colorScheme.primary,
+                            decoration: TextDecoration.underline,
                           ),
-                          if (isEditMode && widget.noteId != null)
-                            Divider(height: 1),
-                          if (isEditMode && widget.noteId != null)
-                            NoteLinksSection(noteId: widget.noteId!),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Закрепленная панель снизу с кнопками
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      border: Border(
-                        top: BorderSide(color: theme.dividerColor, width: 1),
-                      ),
-                    ),
-                    child: SafeArea(
-                      top: false,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: SmoothButton(
-                              label: 'Отмена',
-                              onPressed: state.isSaving
-                                  ? null
-                                  : () async {
-                                      final canClose =
-                                          await _checkUnsavedChanges();
-                                      if (canClose && context.mounted) {
-                                        context.pop(false);
-                                      }
-                                    },
-                              type: SmoothButtonType.outlined,
-                              variant: SmoothButtonVariant.normal,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: SmoothButton(
-                              label: isEditMode ? 'Сохранить' : 'Создать',
-                              onPressed: state.isSaving ? null : _handleSave,
-                              type: SmoothButtonType.filled,
-                              variant: SmoothButtonVariant.normal,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),

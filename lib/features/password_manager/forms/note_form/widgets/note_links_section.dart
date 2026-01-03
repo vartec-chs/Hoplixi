@@ -42,7 +42,15 @@ class NoteLinksSection extends ConsumerWidget {
                 currentLinksCount > 0;
 
             if (!hasLinks) {
-              return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Center(
+                  child: Text(
+                    'Нет связей с другими заметками',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ),
+              );
             }
 
             return Card(
@@ -117,8 +125,8 @@ class NoteLinksSection extends ConsumerWidget {
           },
         );
       },
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => const Center(child: Text('Ошибка загрузки ссылок')),
     );
   }
 

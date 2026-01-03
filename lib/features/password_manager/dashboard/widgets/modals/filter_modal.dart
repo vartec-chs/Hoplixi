@@ -63,7 +63,7 @@ class FilterModal {
       },
       onModalDismissedWithBarrierTap: () {
         logDebug('FilterModal: Закрытие по тапу на барьер');
-        Navigator.of(context).pop();
+        // Просто закрываем без применения изменений
       },
     );
   }
@@ -89,7 +89,10 @@ class FilterModal {
           );
         },
       ),
-      trailingNavBarWidget: const ModalSheetCloseButton(),
+      leadingNavBarWidget: const Padding(
+        padding: EdgeInsets.only(left: 8.0),
+        child: ModalSheetCloseButton(),
+      ),
 
       child: _FilterModalContent(
         entityType: entityType,
@@ -173,6 +176,8 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
   }
 
   void _saveInitialValues() {
+    if (!mounted) return; // Дополнительная проверка
+
     final entityType = widget.entityType;
     final baseFilter = ref.read(baseFilterProvider);
 

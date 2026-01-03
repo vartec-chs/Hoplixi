@@ -71,6 +71,7 @@ class ExpandableFAB extends StatefulWidget {
     this.showBackdrop = true,
     this.backdropOpacity = 0.4,
     this.isUseInNavigationRail = false,
+    this.executeFirstActionDirectly = false,
   });
 
   /// Список действий для отображения
@@ -90,6 +91,9 @@ class ExpandableFAB extends StatefulWidget {
 
   /// Флаг использования внутри NavigationRail
   final bool isUseInNavigationRail;
+
+  /// Если true, при нажатии сразу выполняется первый экшен без раскрытия меню
+  final bool executeFirstActionDirectly;
 
   /// Расстояние между элементами
   final double spacing;
@@ -170,6 +174,14 @@ class ExpandableFABState extends State<ExpandableFAB>
   }
 
   void _toggle() {
+    // Если включен режим прямого выполнения, выполняем первое действие
+    if (widget.executeFirstActionDirectly) {
+      if (widget.actions.isNotEmpty) {
+        widget.actions.first.onPressed();
+      }
+      return;
+    }
+
     if (_isOpen) {
       _close();
     } else {
