@@ -185,10 +185,12 @@ class DashboardHomeBuilders {
       );
     }
 
-    // Данные есть в провайдере, но ещё не синхронизированы
-    return const SliverFillRemaining(
+    // Данные есть в провайдере, но ещё не синхронизированы —
+    // не показываем индикатор загрузки, а просто ждём следующий frame.
+    // Это состояние мгновенное и не должно показывать спиннер.
+    return const SliverToBoxAdapter(
       key: ValueKey('syncing'),
-      child: Center(child: CircularProgressIndicator()),
+      child: SizedBox.shrink(),
     );
   }
 

@@ -44,6 +44,9 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
   /// Флаг очистки списка (для анимации пустого состояния).
   bool _isClearing = false;
 
+  /// Флаг первого построения — для начальной синхронизации.
+  bool _isFirstBuild = true;
+
   // ─────────────────────────────────────────────────────────────────────────
   // Lifecycle
   // ─────────────────────────────────────────────────────────────────────────
@@ -59,6 +62,22 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
     _loadMoreDebounce?.cancel();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant DashboardHomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // При смене entityType — сбрасываем список и синхронизируем
+    if (oldWidget.entityType != widget.entityType) {
+      _resetList();
+      // Отложенная синхронизация с новым провайдером
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final items =
+            ref.read(paginatedListProvider(widget.entityType)).value?.items ??
+            [];
+        _syncItems(items);
+      });
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -269,6 +288,19 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
   Widget build(BuildContext context) {
     final viewMode = ref.watch(currentViewModeProvider);
     final asyncValue = ref.watch(paginatedListProvider(widget.entityType));
+
+    // Начальная синхронизация при первом построении
+    if (_isFirstBuild) {
+      _isFirstBuild = false;
+      asyncValue.whenData((state) {
+        // Синхронизируем сразу после первого build frame
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _displayedItems.isEmpty && state.items.isNotEmpty) {
+            _syncItems(state.items);
+          }
+        });
+      });
+    }
 
     // ref.listen должен быть в build — согласно документации Riverpod
     ref.listen<AsyncValue<DashboardListState<BaseCardDto>>>(

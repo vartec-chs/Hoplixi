@@ -31,11 +31,6 @@ class DashboardLayout extends StatefulWidget {
 
 class _DashboardLayoutState extends State<DashboardLayout>
     with SingleTickerProviderStateMixin {
-  // navigatorKeys для внутреннего (центра) навигатора каждой entity
-  final Map<String, GlobalKey<NavigatorState>> _navigatorKeys = {
-    for (var e in EntityType.allTypesString) e: GlobalKey<NavigatorState>(),
-  };
-
   late final AnimationController _controller;
   bool _wasPanelOpen = false;
 
@@ -56,12 +51,6 @@ class _DashboardLayoutState extends State<DashboardLayout>
         label: Text('Graph'),
       );
 
-  // Кэшированный список children для IndexedStack
-  late final List<Widget> _indexedStackChildren;
-
-  // Кешированные Navigator виджеты для избежания пересоздания
-  late final Map<String, Widget> _cachedNavigators;
-
   @override
   void initState() {
     super.initState();
@@ -69,16 +58,6 @@ class _DashboardLayoutState extends State<DashboardLayout>
       vsync: this,
       duration: const Duration(milliseconds: 280),
     );
-
-    // Кешируем Navigator виджеты один раз
-    _cachedNavigators = {
-      for (var e in EntityType.allTypesString) e: _buildInnerNavigator(e),
-    };
-
-    // Кэшируем список children для IndexedStack
-    _indexedStackChildren = EntityType.allTypesString
-        .map((e) => _cachedNavigators[e]!)
-        .toList();
 
     final uri = widget.state.uri.toString();
     final hasPanel = _hasPanel(uri);
@@ -247,9 +226,6 @@ class _DashboardLayoutState extends State<DashboardLayout>
     return _fullCenterPaths.contains(location);
   }
 
-  int _indexForEntity(String entity) =>
-      EntityType.allTypesString.indexOf(entity);
-
   // Проверяем, нужно ли показывать FAB (только на 2-сегментных путях)
   bool _shouldShowFAB(String location) {
     final segments = Uri.parse(location).pathSegments;
@@ -289,7 +265,6 @@ class _DashboardLayoutState extends State<DashboardLayout>
   Widget build(BuildContext context) {
     final uri = widget.state.uri.toString();
     final entity = _currentEntity();
-    final selectedIndex = _indexForEntity(entity);
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isMobile = screenWidth < 700;
     final panelOpenWidth = screenWidth * 0.46;
@@ -307,11 +282,10 @@ class _DashboardLayoutState extends State<DashboardLayout>
       return Scaffold(
         body: Stack(
           children: [
-            // Центр: IndexedStack с inner Navigators
+            // Центр: DashboardHomeScreen для текущей entity
             RepaintBoundary(
-              child: IndexedStack(
-                index: selectedIndex,
-                children: _indexedStackChildren,
+              child: DashboardHomeScreen(
+                entityType: EntityType.fromId(entity)!,
               ),
             ),
             // Анимированная панель поверх центра (ZoomPageTransitionsBuilder стиль)
@@ -418,16 +392,13 @@ class _DashboardLayoutState extends State<DashboardLayout>
             ),
           ),
 
-          // Center: если isFullCenter — panelChild, иначе IndexedStack с inner Navigators
+          // Center: если isFullCenter — panelChild, иначе DashboardHomeScreen
           Expanded(
             flex: 3,
             child: RepaintBoundary(
               child: isFullCenter
                   ? widget.panelChild
-                  : IndexedStack(
-                      index: selectedIndex,
-                      children: _indexedStackChildren,
-                    ),
+                  : DashboardHomeScreen(entityType: EntityType.fromId(entity)!),
             ),
           ),
 
@@ -484,24 +455,6 @@ class _DashboardLayoutState extends State<DashboardLayout>
       actions: _buildFabActions(entity),
     );
   }
-
-  // inner Navigator для сущности — сохраняет стек и scroll
-  Widget _buildInnerNavigator(String entity) {
-    final key = _navigatorKeys[entity]!;
-    return Navigator(
-      key: key,
-      onGenerateRoute: (settings) {
-        // Роуты внутренние — здесь можно расширять локальные пути (например item/details),
-        // но в примере достаточно одного корневого экрана.
-        return MaterialPageRoute(
-          settings: settings,
-          builder: (context) {
-            return DashboardHomeScreen(entityType: EntityType.fromId(entity)!);
-          },
-        );
-      },
-    );
-  }
 }
 
 // =============================================================================
@@ -551,68 +504,3 @@ class _BottomNavIconButton extends StatelessWidget {
   }
 }
 
-/// Центр для entity (локальные навигации через openLocalDetails, панель — через openPanel)
-// class EntityCenterPage extends StatelessWidget {
-//   final String entity;
-//   final void Function(String itemId) openLocalDetails;
-//   final void Function(String pathSuffix) openPanel;
-
-//   const EntityCenterPage({
-//     required this.entity,
-//     required this.openLocalDetails,
-//     required this.openPanel,
-//     super.key,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     // простой плейсхолдер списка
-//     return Scaffold(
-//       body: SafeArea(
-//         child: Column(
-//           children: [
-//             DropdownButton<String>(
-//               value: entity,
-//               onChanged: (newEntity) {
-//                 if (newEntity != null) {
-//                   context.go('/dashboard/$newEntity');
-//                 }
-//               },
-//               items: EntityType.allTypesString
-//                   .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-//                   .toList(),
-//             ),
-//             Expanded(
-//               child: ListView.builder(
-//                 key: PageStorageKey(
-//                   'list_$entity',
-//                 ), // хранит позицию скролла в IndexedStack
-//                 itemCount: 30,
-//                 itemBuilder: (context, i) {
-//                   final id = 'item_$i';
-//                   return ListTile(
-//                     title: Text('$entity — item $i'),
-//                     onTap: () => openLocalDetails(id), // локальная навигация
-//                     trailing: PopupMenuButton<String>(
-//                       onSelected: (v) {
-//                         if (v == 'edit') openPanel('edit/$id');
-//                         if (v == 'history') openPanel('history/$id');
-//                       },
-//                       itemBuilder: (ctx) => [
-//                         const PopupMenuItem(value: 'edit', child: Text('Edit')),
-//                         const PopupMenuItem(
-//                           value: 'history',
-//                           child: Text('History'),
-//                         ),
-//                       ],
-//                     ),
-//                   );
-//                 },
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
