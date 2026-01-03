@@ -63,10 +63,11 @@ class FilterModal {
           _buildMainFilterPage(modalSheetContext, entityType, onFilterApplied),
         ];
       },
-      onModalDismissedWithBarrierTap: () {
-        logDebug('FilterModal: Закрытие по тапу на барьер');
-        // Просто закрываем без применения изменений
-      },
+      // onModalDismissedWithBarrierTap: () {
+      //   logDebug('FilterModal: Закрытие по тапу на барьер');
+      //   WoltModalSheet.of(context).popPage();
+      //   // Просто закрываем без применения изменений
+      // },
     );
   }
 
@@ -207,6 +208,8 @@ class _FilterModalActions extends ConsumerWidget {
               .updateFilter(FilesFilter(base: emptyBaseFilter));
           break;
       }
+
+      contentState.clearFields();
 
       logInfo('FilterModal: Фильтры сброшены через панель действий');
     } catch (e) {
@@ -889,5 +892,39 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         error: e,
       );
     }
+  }
+
+  /// Очистить локальные поля фильтров
+  void clearFields() {
+    logDebug('FilterModal: Очистка локальных полей фильтров');
+
+    setState(() {
+      _selectedCategoryIds = [];
+      _selectedCategoryNames = [];
+      _selectedTagIds = [];
+      _selectedTagNames = [];
+
+      _localBaseFilter = const BaseFilter();
+
+      switch (widget.entityType) {
+        case EntityType.password:
+          _localPasswordsFilter = PasswordsFilter(base: _localBaseFilter);
+          break;
+        case EntityType.note:
+          _localNotesFilter = NotesFilter(base: _localBaseFilter);
+          break;
+        case EntityType.otp:
+          _localOtpsFilter = OtpsFilter(base: _localBaseFilter);
+          break;
+        case EntityType.bankCard:
+          _localBankCardsFilter = BankCardsFilter(base: _localBaseFilter);
+          break;
+        case EntityType.file:
+          _localFilesFilter = FilesFilter(base: _localBaseFilter);
+          break;
+      }
+    });
+
+    logInfo('FilterModal: Локальные поля фильтров очищены');
   }
 }
