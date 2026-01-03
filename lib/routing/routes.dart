@@ -15,6 +15,7 @@ import 'package:hoplixi/features/password_manager/dashboard/screens/notes_graph_
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_layout.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/entity_add_edit.dart';
 import 'package:hoplixi/features/password_manager/history/ui/screens/history_screen.dart';
+import 'package:hoplixi/features/password_manager/icon_manager/icon_form_screen.dart';
 import 'package:hoplixi/features/password_manager/icon_manager/icon_manager_screen.dart';
 import 'package:hoplixi/features/password_manager/lock_store/lock_store_screen.dart';
 import 'package:hoplixi/features/password_manager/open_store/open_store_screen.dart';
@@ -105,8 +106,10 @@ final List<RouteBase> appRoutes = [
             path: 'categories',
             name: 'entity_categories',
             builder: (context, state) {
-              // final entity = state.pathParameters['entity']!;
-              return const CategoryManagerScreen();
+              final entity = EntityType.fromId(
+                state.pathParameters['entity']!,
+              )!;
+              return CategoryManagerScreen(entity: entity);
             },
             routes: [
               GoRoute(
@@ -170,10 +173,28 @@ final List<RouteBase> appRoutes = [
             path: 'icons',
             name: 'entity_icons',
             builder: (context, state) {
-              // final entity = state.pathParameters['entity']!;
-              return const IconManagerScreen();
+              final entity = EntityType.fromId(
+                state.pathParameters['entity']!,
+              )!;
+              return IconManagerScreen(entity: entity);
             },
-            routes: [],
+            routes: [
+              GoRoute(
+                path: 'add',
+                name: 'entity_icons_add',
+                builder: (context, state) {
+                  return const IconFormScreen();
+                },
+              ),
+              GoRoute(
+                path: 'edit/:id',
+                name: 'entity_icons_edit',
+                builder: (context, state) {
+                  final id = state.pathParameters['id']!;
+                  return IconFormScreen(iconId: id);
+                },
+              ),
+            ],
           ),
 
           // add/edit для основной сущности

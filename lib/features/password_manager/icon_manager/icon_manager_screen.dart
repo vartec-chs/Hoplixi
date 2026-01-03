@@ -1,20 +1,26 @@
 import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:hoplixi/main_store/models/enums/entity_types.dart';
-import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/dto/icon_dto.dart';
+import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/routing/paths.dart';
+import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
+
 import 'provider/icon_list_provider.dart';
-import 'widgets/icon_manager_app_bar.dart';
-import 'widgets/icon_form_modal.dart';
 import 'widgets/icon_list_view.dart';
+import 'widgets/icon_manager_app_bar.dart';
 
 /// Экран управления иконками с фильтрацией и пагинацией
 class IconManagerScreen extends ConsumerStatefulWidget {
-  const IconManagerScreen({super.key});
+  const IconManagerScreen({super.key, required this.entity});
+
+   final EntityType entity;
 
   @override
   ConsumerState<IconManagerScreen> createState() => _IconManagerScreenState();
@@ -51,7 +57,16 @@ class _IconManagerScreenState extends ConsumerState<IconManagerScreen> {
       floatingActionButton: FloatingActionButton(
         heroTag: 'iconManagerFab',
         onPressed: () {
-          showIconCreateModal(context, ref, onSuccess: _refresh);
+   
+          final result = context.push<bool>(
+            AppRoutesPaths.iconAddForEntity(widget.entity),
+          );
+
+          result.then((added) {
+            if (added == true) {
+              _refresh();
+            }
+          });
         },
         child: const Icon(Icons.add),
       ),
@@ -102,12 +117,19 @@ class _IconManagerScreenState extends ConsumerState<IconManagerScreen> {
                   icon: const Icon(Icons.edit),
                   onPressed: () {
                     Navigator.of(modalContext).pop();
-                    showIconEditModal(
+                    final state = GoRouterState.of(
                       context,
-                      ref,
-                      iconDto,
-                      onSuccess: _refresh,
+                    ).pathParameters['entity'];
+                    final entity = EntityType.fromId(state ?? '')!;
+                    final result = context.push<bool>(
+                      AppRoutesPaths.iconEditForEntity(entity, icon.id),
                     );
+
+                    result.then((edited) {
+                      if (edited == true) {
+                        _refresh();
+                      }
+                    });
                   },
                   tooltip: 'Редактировать',
                 ),

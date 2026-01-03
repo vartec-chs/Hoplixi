@@ -13,7 +13,9 @@ import '../providers/category_filter_provider.dart';
 import '../providers/category_pagination_provider.dart';
 
 class CategoryManagerScreen extends ConsumerStatefulWidget {
-  const CategoryManagerScreen({super.key});
+  const CategoryManagerScreen({super.key, required this.entity});
+
+  final EntityType entity;
 
   @override
   ConsumerState<CategoryManagerScreen> createState() =>
@@ -186,10 +188,9 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
       floatingActionButton: FloatingActionButton(
         heroTag: 'categoryManagerFab',
         onPressed: () {
-          final state = GoRouterState.of(context).pathParameters['entity'];
-          final entity = EntityType.fromId(state ?? '')!;
-
-          final result = context.push<bool>(AppRoutesPaths.categoryAdd(entity));
+          final result = context.push<bool>(
+            AppRoutesPaths.categoryAdd(widget.entity),
+          );
 
           result.then((created) {
             if (created == true) {
@@ -282,10 +283,9 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
           ],
           onSelected: (value) async {
             if (value == 'edit') {
-              final state = GoRouterState.of(context).pathParameters['entity'];
-              final entity = EntityType.fromId(state ?? '')!;
+   
               final result = await context.push<bool>(
-                AppRoutesPaths.categoryEditWithId(entity, category.id),
+                AppRoutesPaths.categoryEditWithId(widget.entity, category.id),
               );
 
               if (result == true) {
@@ -297,12 +297,11 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
           },
         ),
         onTap: () {
-          final state = GoRouterState.of(context).pathParameters['entity'];
-          final entity = EntityType.fromId(state ?? '')!;
+    
 
           context
               .push<bool>(
-                AppRoutesPaths.categoryEditWithId(entity, category.id),
+                AppRoutesPaths.categoryEditWithId(widget.entity, category.id),
               )
               .then((updated) {
                 if (updated == true) {

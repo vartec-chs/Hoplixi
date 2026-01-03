@@ -187,7 +187,7 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
         heroTag: 'tagsManagerFab',
         onPressed: () {
           final result = context.push<bool>(
-            AppRoutesPaths.tagsAdd(widget.entity.id),
+            AppRoutesPaths.tagsAdd(widget.entity),
           );
           if (result != null) {
             result.then((added) {
@@ -272,7 +272,7 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
           onSelected: (value) async {
             if (value == 'edit') {
               final result = context.push<bool>(
-                AppRoutesPaths.tagsEdit(widget.entity.id, tag.id),
+                AppRoutesPaths.tagsEdit(widget.entity, tag.id),
               );
               if (result != null) {
                 result.then((edited) {
@@ -288,7 +288,7 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
         ),
         onTap: () {
           final result = context.push<bool>(
-            AppRoutesPaths.tagsEdit(widget.entity.id, tag.id),
+            AppRoutesPaths.tagsEdit(widget.entity, tag.id),
           );
 
           if (result != null) {
