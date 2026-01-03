@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -118,8 +119,7 @@ class IconCard extends ConsumerWidget {
     );
 
     // Определяем тип иконки по расширению
-    if (icon.type.toLowerCase() == 'svg' ||
-        icon.type.toLowerCase() == 'image/svg+xml') {
+    if (icon.type == 'svg') {
       // SVG иконка
       return SvgPicture.memory(
         iconDataBytes,

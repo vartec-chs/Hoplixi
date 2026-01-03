@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -96,10 +97,7 @@ class _IconPreviewAsync extends StatelessWidget {
   }
 
   static Widget _buildIconPreview(Uint8List data, String type) {
-    final isSvg =
-        type.toLowerCase() == 'svg' ||
-        type.toLowerCase() == 'image/svg+xml' ||
-        type.toLowerCase().contains('svg');
+    final isSvg = type == 'svg';
 
     if (isSvg) {
       return SvgPicture.memory(

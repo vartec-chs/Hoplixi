@@ -1,8 +1,10 @@
 import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+
 import 'widgets/icon_picker_modal.dart';
 
 /// Виджет для выбора иконки с превью и возможностью удаления
@@ -192,10 +194,7 @@ class _IconPickerButtonState extends ConsumerState<IconPickerButton> {
   }
 
   Widget _buildIconPreview() {
-    final isSvg =
-        _iconType!.toLowerCase() == 'svg' ||
-        _iconType!.toLowerCase() == 'image/svg+xml' ||
-        _iconType!.toLowerCase().contains('svg');
+    final isSvg = _iconType == 'svg';
 
     if (isSvg) {
       return SvgPicture.memory(

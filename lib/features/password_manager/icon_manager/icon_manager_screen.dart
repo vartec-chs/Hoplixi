@@ -20,7 +20,7 @@ import 'widgets/icon_manager_app_bar.dart';
 class IconManagerScreen extends ConsumerStatefulWidget {
   const IconManagerScreen({super.key, required this.entity});
 
-   final EntityType entity;
+  final EntityType entity;
 
   @override
   ConsumerState<IconManagerScreen> createState() => _IconManagerScreenState();
@@ -57,7 +57,6 @@ class _IconManagerScreenState extends ConsumerState<IconManagerScreen> {
       floatingActionButton: FloatingActionButton(
         heroTag: 'iconManagerFab',
         onPressed: () {
-   
           final result = context.push<bool>(
             AppRoutesPaths.iconAddForEntity(widget.entity),
           );
@@ -284,9 +283,7 @@ class _IconPreviewAsync extends StatelessWidget {
   }
 
   static Widget _buildIconPreview(Uint8List data, String type) {
-    final isSvg =
-        type.toLowerCase() == 'icontype.svg' ||
-        type.toLowerCase().contains('svg');
+    final isSvg = type == 'svg';
 
     if (isSvg) {
       return SvgPicture.memory(

@@ -1,13 +1,13 @@
 import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/main_store/models/dto/icon_dto.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
-import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:image/image.dart' as img;
 
@@ -109,10 +109,7 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
 
   /// Виджет для предпросмотра иконки
   Widget _buildIconPreview(Uint8List data, String type) {
-    final isSvg =
-        type.toLowerCase() == 'svg' ||
-        type.toLowerCase() == 'image/svg+xml' ||
-        type.toLowerCase().contains('svg');
+    final isSvg = type == 'svg';
 
     if (isSvg) {
       return SvgPicture.memory(
@@ -153,7 +150,10 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
         final data = file.bytes;
 
         if (data == null) {
-          Toaster.error(title: 'Ошибка', description: 'Не удалось прочитать файл');
+          Toaster.error(
+            title: 'Ошибка',
+            description: 'Не удалось прочитать файл',
+          );
           return;
         }
 
@@ -172,7 +172,7 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
         if (processedType == 'png') {
           try {
             processedData = await _resizeImage(data);
-            processedType = 'image/png';
+            processedType = 'png';
           } catch (e) {
             Toaster.error(
               title: 'Ошибка обработки изображения',
@@ -181,7 +181,7 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
             return;
           }
         } else if (processedType == 'svg') {
-          processedType = 'image/svg+xml';
+          processedType = 'svg';
         }
 
         setState(() {
@@ -240,7 +240,8 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
                     children: [
                       // Текущая иконка (только для режима редактирования)
                       if (_isEditMode) ...[
-                        if (_currentIconData != null && _currentIconData!.isNotEmpty)
+                        if (_currentIconData != null &&
+                            _currentIconData!.isNotEmpty)
                           Container(
                             height: 100,
                             decoration: BoxDecoration(
@@ -249,7 +250,12 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
                               ),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Center(child: _buildIconPreview(_currentIconData!, _type)),
+                            child: Center(
+                              child: _buildIconPreview(
+                                _currentIconData!,
+                                _type,
+                              ),
+                            ),
                           )
                         else
                           Container(
@@ -295,7 +301,9 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
                         icon: const Icon(Icons.upload_file),
                         label: Text(
                           _fileName ??
-                              (_isEditMode ? 'Изменить файл (опционально)' : 'Выбрать файл'),
+                              (_isEditMode
+                                  ? 'Изменить файл (опционально)'
+                                  : 'Выбрать файл'),
                         ),
                       ),
 
@@ -307,23 +315,32 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
                         ),
                         Text(
                           'Поддерживаемые форматы: SVG, PNG (макс. 500 КБ)',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
                         ),
                       ] else ...[
                         const SizedBox(height: 8),
                         Text(
                           'Поддерживаемые форматы: SVG, PNG (макс. 500 КБ)',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
                         ),
                         Text(
                           'PNG будет автоматически обрезан до 256x256 px',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
                         ),
                       ],
 
@@ -337,7 +354,9 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
                             ),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Center(child: _buildIconPreview(_iconData!, _type)),
+                          child: Center(
+                            child: _buildIconPreview(_iconData!, _type),
+                          ),
                         ),
                       ],
 
@@ -358,7 +377,10 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
 
     // Проверяем, что файл выбран (обязательно для создания, опционально для редактирования)
     if (!_isEditMode && _iconData == null) {
-      Toaster.error(title: 'Ошибка', description: 'Пожалуйста, выберите файл иконки');
+      Toaster.error(
+        title: 'Ошибка',
+        description: 'Пожалуйста, выберите файл иконки',
+      );
       return;
     }
 
@@ -371,7 +393,9 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
         // Режим редактирования
         final dto = UpdateIconDto(
           name: _name.trim(),
-          type: _iconData != null ? _type : null, // Обновляем тип только если файл изменен
+          type: _iconData != null
+              ? _type
+              : null, // Обновляем тип только если файл изменен
           data: _iconData,
         );
 
