@@ -47,11 +47,11 @@ class IconDao extends DatabaseAccessor<MainStore> with _$IconDaoMixin {
     if (icon == null) return null;
 
     return IconCardDto(
-      id: icon.rawData.read(icons.id.name),
-      name: icon.rawData.read(icons.name.name),
-      type: icon.rawData.read(icons.type.name),
-      createdAt: icon.rawData.read(icons.createdAt.name),
-      modifiedAt: icon.rawData.read(icons.modifiedAt.name),
+      id: icon.read(icons.id)!,
+      name: icon.read(icons.name)!,
+      type: icon.read(icons.type)!,
+      createdAt: icon.read(icons.createdAt)!,
+      modifiedAt: icon.read(icons.modifiedAt)!,
     );
   }
 
@@ -116,7 +116,7 @@ class IconDao extends DatabaseAccessor<MainStore> with _$IconDaoMixin {
     final companion = IconsCompanion.insert(
       id: Value(id),
       name: dto.name,
-      type: IconTypeX.fromString(dto.type),
+      type: dto.type,
       data: Uint8List.fromList(dto.data),
     );
     await into(icons).insert(companion);

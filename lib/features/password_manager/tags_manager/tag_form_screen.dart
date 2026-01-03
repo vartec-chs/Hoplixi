@@ -146,12 +146,13 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Expanded(
-              child: SingleChildScrollView(
+            Center(
+              child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Form(
                   key: _formKey,
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Название тега
@@ -248,18 +249,17 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
               ),
             ),
-
-            // Кнопки действий внизу
           ],
         ),
       ),
     );
+
+    // Кнопки действий внизу
   }
 
   Future<void> _handleSubmit() async {

@@ -1,12 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+
 import '../models/tag_pagination_state.dart';
 import 'tag_filter_provider.dart';
 
 /// Провайдер для получения отфильтрованного списка тегов с пагинацией
 final tagListProvider =
-    AsyncNotifierProvider<TagListNotifier, TagPaginationState>(() {
+    AsyncNotifierProvider.autoDispose<TagListNotifier, TagPaginationState>(() {
       return TagListNotifier();
     });
 

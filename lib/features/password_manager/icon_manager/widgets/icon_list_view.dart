@@ -10,7 +10,7 @@ import 'icon_card.dart';
 class IconListView extends ConsumerStatefulWidget {
   final ScrollController scrollController;
   final VoidCallback onRefresh;
-  final Function(BuildContext, IconsData) onIconTap;
+  final Function(IconsData) onIconTap;
 
   const IconListView({
     super.key,
@@ -112,7 +112,7 @@ class _IconListViewState extends ConsumerState<IconListView> {
                       ),
                       // iconData не передаем - IconCard загрузит асинхронно
                       onTap: () {
-                        widget.onIconTap(context, item);
+                        widget.onIconTap(item);
                       },
                     );
                   },

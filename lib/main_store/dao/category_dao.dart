@@ -12,6 +12,56 @@ part 'category_dao.g.dart';
 class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
   CategoryDao(super.db);
 
+  /// Подсчитать количество элементов в категории
+  Future<int> countItemsInCategory(String categoryId) async {
+    // Подсчитываем элементы во всех таблицах, которые используют categoryId
+    final passwordsCount =
+        await (selectOnly(db.passwords)
+              ..addColumns([db.passwords.id.count()])
+              ..where(db.passwords.categoryId.equals(categoryId))
+              ..where(db.passwords.isDeleted.equals(false)))
+            .getSingle()
+            .then((row) => row.read(db.passwords.id.count()) ?? 0);
+
+    final notesCount =
+        await (selectOnly(db.notes)
+              ..addColumns([db.notes.id.count()])
+              ..where(db.notes.categoryId.equals(categoryId))
+              ..where(db.notes.isDeleted.equals(false)))
+            .getSingle()
+            .then((row) => row.read(db.notes.id.count()) ?? 0);
+
+    final filesCount =
+        await (selectOnly(db.files)
+              ..addColumns([db.files.id.count()])
+              ..where(db.files.categoryId.equals(categoryId))
+              ..where(db.files.isDeleted.equals(false)))
+            .getSingle()
+            .then((row) => row.read(db.files.id.count()) ?? 0);
+
+    final bankCardsCount =
+        await (selectOnly(db.bankCards)
+              ..addColumns([db.bankCards.id.count()])
+              ..where(db.bankCards.categoryId.equals(categoryId))
+              ..where(db.bankCards.isDeleted.equals(false)))
+            .getSingle()
+            .then((row) => row.read(db.bankCards.id.count()) ?? 0);
+
+    final otpsCount =
+        await (selectOnly(db.otps)
+              ..addColumns([db.otps.id.count()])
+              ..where(db.otps.categoryId.equals(categoryId))
+              ..where(db.otps.isDeleted.equals(false)))
+            .getSingle()
+            .then((row) => row.read(db.otps.id.count()) ?? 0);
+
+    return passwordsCount +
+        notesCount +
+        filesCount +
+        bankCardsCount +
+        otpsCount;
+  }
+
   /// Получить все категории
   Future<List<CategoriesData>> getAllCategories() {
     return select(categories).get();
@@ -25,19 +75,26 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
   }
 
   /// Получить категории в виде карточек
-  Future<List<CategoryCardDto>> getAllCategoryCards() {
-    return (select(categories)..orderBy([(c) => OrderingTerm.asc(c.name)]))
-        .map(
-          (c) => CategoryCardDto(
-            id: c.id,
-            name: c.name,
-            type: c.type.value,
-            color: c.color,
-            iconId: c.iconId,
-            itemsCount: 0, // TODO: count items in category
-          ),
-        )
-        .get();
+  Future<List<CategoryCardDto>> getAllCategoryCards() async {
+    final categoriesList = await (select(
+      categories,
+    )..orderBy([(c) => OrderingTerm.asc(c.name)])).get();
+
+    final result = <CategoryCardDto>[];
+    for (final category in categoriesList) {
+      final itemsCount = await countItemsInCategory(category.id);
+      result.add(
+        CategoryCardDto(
+          id: category.id,
+          name: category.name,
+          type: category.type.value,
+          color: category.color,
+          iconId: category.iconId,
+          itemsCount: itemsCount,
+        ),
+      );
+    }
+    return result;
   }
 
   /// Смотреть все категории с автообновлением
@@ -49,22 +106,25 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
 
   /// Смотреть категории карточки с автообновлением
   Stream<List<CategoryCardDto>> watchCategoryCards() {
-    return (select(
-      categories,
-    )..orderBy([(c) => OrderingTerm.asc(c.name)])).watch().map(
-      (categories) => categories
-          .map(
-            (c) => CategoryCardDto(
-              id: c.id,
-              name: c.name,
-              type: c.type.value,
-              color: c.color,
-              iconId: c.iconId,
-              itemsCount: 0, // TODO: count items in category
-            ),
-          )
-          .toList(),
-    );
+    return (select(categories)..orderBy([(c) => OrderingTerm.asc(c.name)]))
+        .watch()
+        .asyncMap((categoriesList) async {
+          final result = <CategoryCardDto>[];
+          for (final category in categoriesList) {
+            final itemsCount = await countItemsInCategory(category.id);
+            result.add(
+              CategoryCardDto(
+                id: category.id,
+                name: category.name,
+                type: category.type.value,
+                color: category.color,
+                iconId: category.iconId,
+                itemsCount: itemsCount,
+              ),
+            );
+          }
+          return result;
+        });
   }
 
   /// Создать новую категорию
@@ -105,41 +165,51 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
           ..where((c) => c.type.equals(type))
           ..orderBy([(c) => OrderingTerm.asc(c.name)]))
         .watch()
-        .map(
-          (categories) => categories
-              .map(
-                (c) => CategoryCardDto(
-                  id: c.id,
-                  name: c.name,
-                  type: c.type.value,
-                  color: c.color,
-                  iconId: c.iconId,
-                  itemsCount: 0, // TODO: count items in category
-                ),
-              )
-              .toList(),
-        );
+        .asyncMap((categoriesList) async {
+          final result = <CategoryCardDto>[];
+          for (final category in categoriesList) {
+            final itemsCount = await countItemsInCategory(category.id);
+            result.add(
+              CategoryCardDto(
+                id: category.id,
+                name: category.name,
+                type: category.type.value,
+                color: category.color,
+                iconId: category.iconId,
+                itemsCount: itemsCount,
+              ),
+            );
+          }
+          return result;
+        });
   }
 
   /// Получить категории с пагинацией
   Future<List<CategoryCardDto>> getCategoryCardsPaginated({
     required int limit,
     required int offset,
-  }) {
-    return (select(categories)
-          ..orderBy([(c) => OrderingTerm.asc(c.name)])
-          ..limit(limit, offset: offset))
-        .map(
-          (c) => CategoryCardDto(
-            id: c.id,
-            name: c.name,
-            type: c.type.value,
-            color: c.color,
-            iconId: c.iconId,
-            itemsCount: 0, // TODO: count items in category
-          ),
-        )
-        .get();
+  }) async {
+    final categoriesList =
+        await (select(categories)
+              ..orderBy([(c) => OrderingTerm.asc(c.name)])
+              ..limit(limit, offset: offset))
+            .get();
+
+    final result = <CategoryCardDto>[];
+    for (final category in categoriesList) {
+      final itemsCount = await countItemsInCategory(category.id);
+      result.add(
+        CategoryCardDto(
+          id: category.id,
+          name: category.name,
+          type: category.type.value,
+          color: category.color,
+          iconId: category.iconId,
+          itemsCount: itemsCount,
+        ),
+      );
+    }
+    return result;
   }
 
   /// Удалить категорию
@@ -292,39 +362,45 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
   Future<List<CategoryCardDto>> getCategoryCardsFiltered(
     CategoriesFilter filter,
   ) async {
-    final categories = await getCategoriesFiltered(filter);
-    return categories
-        .map(
-          (c) => CategoryCardDto(
-            id: c.id,
-            name: c.name,
-            type: c.type.value,
-            color: c.color,
-            iconId: c.iconId,
-            itemsCount: 0, // TODO: count items in category
-          ),
-        )
-        .toList();
+    final categoriesList = await getCategoriesFiltered(filter);
+    final result = <CategoryCardDto>[];
+    for (final category in categoriesList) {
+      final itemsCount = await countItemsInCategory(category.id);
+      result.add(
+        CategoryCardDto(
+          id: category.id,
+          name: category.name,
+          type: category.type.value,
+          color: category.color,
+          iconId: category.iconId,
+          itemsCount: itemsCount,
+        ),
+      );
+    }
+    return result;
   }
 
   /// Смотреть отфильтрованные категории карточки с автообновлением
   Stream<List<CategoryCardDto>> watchCategoryCardsFiltered(
     CategoriesFilter filter,
   ) {
-    return watchCategoriesFiltered(filter).map(
-      (categories) => categories
-          .map(
-            (c) => CategoryCardDto(
-              id: c.id,
-              name: c.name,
-              type: c.type.value,
-              color: c.color,
-              iconId: c.iconId,
-              itemsCount: 0, // TODO: count items in category
-            ),
-          )
-          .toList(),
-    );
+    return watchCategoriesFiltered(filter).asyncMap((categoriesList) async {
+      final result = <CategoryCardDto>[];
+      for (final category in categoriesList) {
+        final itemsCount = await countItemsInCategory(category.id);
+        result.add(
+          CategoryCardDto(
+            id: category.id,
+            name: category.name,
+            type: category.type.value,
+            color: category.color,
+            iconId: category.iconId,
+            itemsCount: itemsCount,
+          ),
+        );
+      }
+      return result;
+    });
   }
 
   /// Получить тип сортировки для Drift

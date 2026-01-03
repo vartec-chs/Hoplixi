@@ -1,12 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/main_store/models/dto/category_dto.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+
 import '../models/category_pagination_state.dart';
 import 'category_filter_provider.dart';
 
 /// Провайдер для получения отфильтрованного списка категорий с пагинацией
 final categoryListProvider =
-    AsyncNotifierProvider<CategoryListNotifier, CategoryPaginationState>(() {
+    AsyncNotifierProvider.autoDispose<
+      CategoryListNotifier,
+      CategoryPaginationState
+    >(() {
       return CategoryListNotifier();
     });
 

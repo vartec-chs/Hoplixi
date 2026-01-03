@@ -162,150 +162,141 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
         ],
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(12.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Выбор иконки
-                      Center(
-                        child: IconPickerButton(
-                          selectedIconId: _iconId,
-                          onIconSelected: (id) {
-                            setState(() {
-                              _iconId = id;
-                            });
-                          },
-                          size: 120,
-                          hintText: 'Выбрать иконку\n(необязательно)',
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Название категории
-                      TextFormField(
-                        initialValue: _name,
-                        decoration: primaryInputDecoration(
-                          context,
-                          labelText: 'Название',
-                          hintText: 'Введите название категории',
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Пожалуйста, введите название';
-                          }
-                          return null;
-                        },
-                        onChanged: (value) => _name = value,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Тип категории
-                      if (_isEditMode)
-                        // В режиме редактирования - только для чтения
-                        TextFormField(
-                          initialValue: _getCategoryTypeLabel(_selectedType),
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'Тип категории',
-                          ),
-                          enabled: false,
-                        )
-                      else
-                        // В режиме создания - dropdown
-                        DropdownButtonFormField<CategoryType>(
-                          value: _selectedType,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'Тип категории',
-                          ),
-                          items: CategoryType.values.map((type) {
-                            return DropdownMenuItem(
-                              value: type,
-                              child: Text(_getCategoryTypeLabel(type)),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            if (value != null) {
-                              setState(() {
-                                _selectedType = value;
-                              });
-                            }
-                          },
-                        ),
-                      const SizedBox(height: 16),
-
-                      // Описание
-                      TextFormField(
-                        initialValue: _description,
-                        decoration: primaryInputDecoration(
-                          context,
-                          labelText: 'Описание',
-                          hintText:
-                              'Введите описание категории (необязательно)',
-                        ),
-                        maxLines: 3,
-                        onChanged: (value) {
-                          _description = value.isEmpty ? null : value;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Выбор цвета
-                      InputDecorator(
-                        decoration: primaryInputDecoration(
-                          context,
-                          labelText: 'Цвет категории',
-                          hintText: 'Нажмите для выбора цвета',
-                        ),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: _showColorPicker,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  _selectedColor != null
-                                      ? 'Цвет выбран'
-                                      : 'Выберите цвет',
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                                Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    color:
-                                        _selectedColor ?? Colors.grey.shade300,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.outline,
-                                      width: 1,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Выбор иконки
+                  Center(
+                    child: IconPickerButton(
+                      selectedIconId: _iconId,
+                      onIconSelected: (id) {
+                        setState(() {
+                          _iconId = id;
+                        });
+                      },
+                      size: 120,
+                      hintText: 'Выбрать иконку\n(необязательно)',
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 24),
+
+                  // Название категории
+                  TextFormField(
+                    initialValue: _name,
+                    decoration: primaryInputDecoration(
+                      context,
+                      labelText: 'Название',
+                      hintText: 'Введите название категории',
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Пожалуйста, введите название';
+                      }
+                      return null;
+                    },
+                    onChanged: (value) => _name = value,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Тип категории
+                  if (_isEditMode)
+                    // В режиме редактирования - только для чтения
+                    TextFormField(
+                      initialValue: _getCategoryTypeLabel(_selectedType),
+                      decoration: primaryInputDecoration(
+                        context,
+                        labelText: 'Тип категории',
+                      ),
+                      enabled: false,
+                    )
+                  else
+                    // В режиме создания - dropdown
+                    DropdownButtonFormField<CategoryType>(
+                      value: _selectedType,
+                      decoration: primaryInputDecoration(
+                        context,
+                        labelText: 'Тип категории',
+                      ),
+                      items: CategoryType.values.map((type) {
+                        return DropdownMenuItem(
+                          value: type,
+                          child: Text(_getCategoryTypeLabel(type)),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _selectedType = value;
+                          });
+                        }
+                      },
+                    ),
+                  const SizedBox(height: 16),
+
+                  // Описание
+                  TextFormField(
+                    initialValue: _description,
+                    decoration: primaryInputDecoration(
+                      context,
+                      labelText: 'Описание',
+                      hintText: 'Введите описание категории (необязательно)',
+                    ),
+                    maxLines: 3,
+                    onChanged: (value) {
+                      _description = value.isEmpty ? null : value;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Выбор цвета
+                  InputDecorator(
+                    decoration: primaryInputDecoration(
+                      context,
+                      labelText: 'Цвет категории',
+                      hintText: 'Нажмите для выбора цвета',
+                    ),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: _showColorPicker,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _selectedColor != null
+                                  ? 'Цвет выбран'
+                                  : 'Выберите цвет',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: _selectedColor ?? Colors.grey.shade300,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Theme.of(context).colorScheme.outline,
+                                  width: 1,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
               ),
             ),
-
-            // Кнопки действий внизу
-          ],
+          ),
         ),
       ),
     );

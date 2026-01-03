@@ -12,6 +12,86 @@ part 'tag_dao.g.dart';
 class TagDao extends DatabaseAccessor<MainStore> with _$TagDaoMixin {
   TagDao(super.db);
 
+  /// Подсчитать количество элементов с данным тегом
+  Future<int> countItemsInTag(String tagId) async {
+    // Подсчитываем элементы через таблицы связей many-to-many
+    final passwordsCount =
+        await (selectOnly(db.passwordsTags)
+              ..addColumns([db.passwordsTags.passwordId.count()])
+              ..where(db.passwordsTags.tagId.equals(tagId))
+              ..join([
+                innerJoin(
+                  db.passwords,
+                  db.passwords.id.equalsExp(db.passwordsTags.passwordId) &
+                      db.passwords.isDeleted.equals(false),
+                ),
+              ]))
+            .getSingle()
+            .then((row) => row.read(db.passwordsTags.passwordId.count()) ?? 0);
+
+    final notesCount =
+        await (selectOnly(db.notesTags)
+              ..addColumns([db.notesTags.noteId.count()])
+              ..where(db.notesTags.tagId.equals(tagId))
+              ..join([
+                innerJoin(
+                  db.notes,
+                  db.notes.id.equalsExp(db.notesTags.noteId) &
+                      db.notes.isDeleted.equals(false),
+                ),
+              ]))
+            .getSingle()
+            .then((row) => row.read(db.notesTags.noteId.count()) ?? 0);
+
+    final filesCount =
+        await (selectOnly(db.filesTags)
+              ..addColumns([db.filesTags.fileId.count()])
+              ..where(db.filesTags.tagId.equals(tagId))
+              ..join([
+                innerJoin(
+                  db.files,
+                  db.files.id.equalsExp(db.filesTags.fileId) &
+                      db.files.isDeleted.equals(false),
+                ),
+              ]))
+            .getSingle()
+            .then((row) => row.read(db.filesTags.fileId.count()) ?? 0);
+
+    final bankCardsCount =
+        await (selectOnly(db.bankCardsTags)
+              ..addColumns([db.bankCardsTags.cardId.count()])
+              ..where(db.bankCardsTags.tagId.equals(tagId))
+              ..join([
+                innerJoin(
+                  db.bankCards,
+                  db.bankCards.id.equalsExp(db.bankCardsTags.cardId) &
+                      db.bankCards.isDeleted.equals(false),
+                ),
+              ]))
+            .getSingle()
+            .then((row) => row.read(db.bankCardsTags.cardId.count()) ?? 0);
+
+    final otpsCount =
+        await (selectOnly(db.otpsTags)
+              ..addColumns([db.otpsTags.otpId.count()])
+              ..where(db.otpsTags.tagId.equals(tagId))
+              ..join([
+                innerJoin(
+                  db.otps,
+                  db.otps.id.equalsExp(db.otpsTags.otpId) &
+                      db.otps.isDeleted.equals(false),
+                ),
+              ]))
+            .getSingle()
+            .then((row) => row.read(db.otpsTags.otpId.count()) ?? 0);
+
+    return passwordsCount +
+        notesCount +
+        filesCount +
+        bankCardsCount +
+        otpsCount;
+  }
+
   /// Получить все теги
   Future<List<TagsData>> getAllTags() {
     return select(tags).get();
@@ -23,18 +103,25 @@ class TagDao extends DatabaseAccessor<MainStore> with _$TagDaoMixin {
   }
 
   /// Получить теги в виде карточек
-  Future<List<TagCardDto>> getAllTagCards() {
-    return (select(tags)..orderBy([(t) => OrderingTerm.asc(t.name)]))
-        .map(
-          (t) => TagCardDto(
-            id: t.id,
-            name: t.name,
-            type: t.type.value,
-            color: t.color,
-            itemsCount: 0, // TODO: count items with tag
-          ),
-        )
-        .get();
+  Future<List<TagCardDto>> getAllTagCards() async {
+    final tagsList = await (select(
+      tags,
+    )..orderBy([(t) => OrderingTerm.asc(t.name)])).get();
+
+    final result = <TagCardDto>[];
+    for (final tag in tagsList) {
+      final itemsCount = await countItemsInTag(tag.id);
+      result.add(
+        TagCardDto(
+          id: tag.id,
+          name: tag.name,
+          type: tag.type.value,
+          color: tag.color,
+          itemsCount: itemsCount,
+        ),
+      );
+    }
+    return result;
   }
 
   /// Смотреть все теги с автообновлением
@@ -44,21 +131,24 @@ class TagDao extends DatabaseAccessor<MainStore> with _$TagDaoMixin {
 
   /// Смотреть теги карточки с автообновлением
   Stream<List<TagCardDto>> watchTagCards() {
-    return (select(
-      tags,
-    )..orderBy([(t) => OrderingTerm.asc(t.name)])).watch().map(
-      (tags) => tags
-          .map(
-            (t) => TagCardDto(
-              id: t.id,
-              name: t.name,
-              type: t.type.value,
-              color: t.color,
-              itemsCount: 0, // TODO: count items with tag
-            ),
-          )
-          .toList(),
-    );
+    return (select(tags)..orderBy([(t) => OrderingTerm.asc(t.name)]))
+        .watch()
+        .asyncMap((tagsList) async {
+          final result = <TagCardDto>[];
+          for (final tag in tagsList) {
+            final itemsCount = await countItemsInTag(tag.id);
+            result.add(
+              TagCardDto(
+                id: tag.id,
+                name: tag.name,
+                type: tag.type.value,
+                color: tag.color,
+                itemsCount: itemsCount,
+              ),
+            );
+          }
+          return result;
+        });
   }
 
   /// Создать новый тег
@@ -92,39 +182,49 @@ class TagDao extends DatabaseAccessor<MainStore> with _$TagDaoMixin {
           ..where((t) => t.type.equals(type))
           ..orderBy([(t) => OrderingTerm.asc(t.name)]))
         .watch()
-        .map(
-          (tags) => tags
-              .map(
-                (t) => TagCardDto(
-                  id: t.id,
-                  name: t.name,
-                  type: t.type.value,
-                  color: t.color,
-                  itemsCount: 0, // TODO: count items with tag
-                ),
-              )
-              .toList(),
-        );
+        .asyncMap((tagsList) async {
+          final result = <TagCardDto>[];
+          for (final tag in tagsList) {
+            final itemsCount = await countItemsInTag(tag.id);
+            result.add(
+              TagCardDto(
+                id: tag.id,
+                name: tag.name,
+                type: tag.type.value,
+                color: tag.color,
+                itemsCount: itemsCount,
+              ),
+            );
+          }
+          return result;
+        });
   }
 
   /// Получить теги с пагинацией
   Future<List<TagCardDto>> getTagCardsPaginated({
     required int limit,
     required int offset,
-  }) {
-    return (select(tags)
-          ..orderBy([(t) => OrderingTerm.asc(t.name)])
-          ..limit(limit, offset: offset))
-        .map(
-          (t) => TagCardDto(
-            id: t.id,
-            name: t.name,
-            type: t.type.value,
-            color: t.color,
-            itemsCount: 0, // TODO: count items with tag
-          ),
-        )
-        .get();
+  }) async {
+    final tagsList =
+        await (select(tags)
+              ..orderBy([(t) => OrderingTerm.asc(t.name)])
+              ..limit(limit, offset: offset))
+            .get();
+
+    final result = <TagCardDto>[];
+    for (final tag in tagsList) {
+      final itemsCount = await countItemsInTag(tag.id);
+      result.add(
+        TagCardDto(
+          id: tag.id,
+          name: tag.name,
+          type: tag.type.value,
+          color: tag.color,
+          itemsCount: itemsCount,
+        ),
+      );
+    }
+    return result;
   }
 
   /// Удалить тег
@@ -243,35 +343,41 @@ class TagDao extends DatabaseAccessor<MainStore> with _$TagDaoMixin {
 
   /// Получить отфильтрованные теги в виде карточек
   Future<List<TagCardDto>> getTagCardsFiltered(TagsFilter filter) async {
-    final tags = await getTagsFiltered(filter);
-    return tags
-        .map(
-          (t) => TagCardDto(
-            id: t.id,
-            name: t.name,
-            type: t.type.value,
-            color: t.color,
-            itemsCount: 0, // TODO: count items with tag
-          ),
-        )
-        .toList();
+    final tagsList = await getTagsFiltered(filter);
+    final result = <TagCardDto>[];
+    for (final tag in tagsList) {
+      final itemsCount = await countItemsInTag(tag.id);
+      result.add(
+        TagCardDto(
+          id: tag.id,
+          name: tag.name,
+          type: tag.type.value,
+          color: tag.color,
+          itemsCount: itemsCount,
+        ),
+      );
+    }
+    return result;
   }
 
   /// Смотреть отфильтрованные теги карточки с автообновлением
   Stream<List<TagCardDto>> watchTagCardsFiltered(TagsFilter filter) {
-    return watchTagsFiltered(filter).map(
-      (tags) => tags
-          .map(
-            (t) => TagCardDto(
-              id: t.id,
-              name: t.name,
-              type: t.type.value,
-              color: t.color,
-              itemsCount: 0, // TODO: count items with tag
-            ),
-          )
-          .toList(),
-    );
+    return watchTagsFiltered(filter).asyncMap((tagsList) async {
+      final result = <TagCardDto>[];
+      for (final tag in tagsList) {
+        final itemsCount = await countItemsInTag(tag.id);
+        result.add(
+          TagCardDto(
+            id: tag.id,
+            name: tag.name,
+            type: tag.type.value,
+            color: tag.color,
+            itemsCount: itemsCount,
+          ),
+        );
+      }
+      return result;
+    });
   }
 
   /// Получить тип сортировки для Drift

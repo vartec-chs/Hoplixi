@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/main_store/models/dto/category_dto.dart';
 import 'package:hoplixi/main_store/models/filter/categories_filter.dart';
@@ -253,8 +254,8 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
     return Card(
       child: ListTile(
         leading: Container(
-          width: 48,
-          height: 48,
+          width: 40,
+          height: 40,
           decoration: BoxDecoration(
             color: color.withOpacity(0.2),
             borderRadius: BorderRadius.circular(8),
@@ -283,7 +284,6 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
           ],
           onSelected: (value) async {
             if (value == 'edit') {
-   
               final result = await context.push<bool>(
                 AppRoutesPaths.categoryEditWithId(widget.entity, category.id),
               );
@@ -297,8 +297,6 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
           },
         ),
         onTap: () {
-    
-
           context
               .push<bool>(
                 AppRoutesPaths.categoryEditWithId(widget.entity, category.id),
@@ -326,14 +324,16 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
           'Вы уверены, что хотите удалить категорию "${category.name}"?',
         ),
         actions: [
-          TextButton(
+          SmoothButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Отмена'),
+            label: 'Отмена',
+            variant: .normal,
+            type: .text,
           ),
-          FilledButton(
+          SmoothButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Удалить'),
+            variant: .error,
+            label: 'Удалить',
           ),
         ],
       ),
@@ -345,20 +345,18 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
         await categoryDao.deleteCategory(category.id);
 
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Категория "${category.name}" успешно удалена'),
-            ),
+          Toaster.success(
+            title: 'Категория удалена',
+            description: 'Категория "${category.name}" успешно удалена.',
           );
           onRefresh();
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Ошибка удаления: $e'),
-              backgroundColor: Colors.red,
-            ),
+          Toaster.error(
+            title: 'Ошибка удаления',
+            description:
+                'Не удалось удалить категорию "${category.name}". Попробуйте еще раз.',
           );
         }
       }

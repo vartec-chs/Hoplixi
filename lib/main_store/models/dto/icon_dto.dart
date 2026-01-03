@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 
 part 'icon_dto.freezed.dart';
 part 'icon_dto.g.dart';
@@ -24,7 +25,7 @@ sealed class IconCardDto with _$IconCardDto {
 sealed class CreateIconDto with _$CreateIconDto {
   const factory CreateIconDto({
     required String name,
-    required String type,
+    required IconType type,
     required List<int> data,
   }) = _CreateIconDto;
 

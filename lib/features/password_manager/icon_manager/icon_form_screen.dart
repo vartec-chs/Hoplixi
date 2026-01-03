@@ -7,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/main_store/models/dto/icon_dto.dart';
+import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:image/image.dart' as img;
@@ -27,7 +28,6 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
   late String _name;
   late String _type;
   Uint8List? _iconData;
-  Uint8List? _currentIconData;
   String? _fileName;
   bool _isLoading = false;
   bool _isDataLoading = true;
@@ -41,6 +41,9 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
   @override
   void initState() {
     super.initState();
+    // Инициализируем значения по умолчанию
+    _name = '';
+    _type = '';
     _loadData();
   }
 
@@ -49,17 +52,32 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
       try {
         final iconDao = await ref.read(iconDaoProvider.future);
         final icon = await iconDao.getIconByIdNotData(widget.iconId!);
+        logDebug('Loaded icon metadata: $icon');
         if (icon != null) {
-          setState(() {
-            _name = icon.name;
-            _type = icon.type;
-          });
-          // Загружаем данные для предпросмотра
+          // Загружаем данные иконки
           final data = await iconDao.getIconData(widget.iconId!);
-          if (mounted) {
+
+          if (data == null || data.isEmpty) {
+            if (mounted) {
+              Toaster.error(
+                title: 'Ошибка загрузки данных иконки',
+                description: 'Не удалось загрузить данные иконки',
+              );
+            }
+          } else {
             setState(() {
-              _currentIconData = data;
+              _name = icon.name;
+              _type = icon.type;
+              _iconData = data;
+            
             });
+          }
+        } else {
+          if (mounted) {
+            Toaster.error(
+              title: 'Ошибка загрузки иконки',
+              description: 'Иконка не найдена',
+            );
           }
         }
       } catch (e) {
@@ -70,13 +88,6 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
           );
         }
       }
-    } else {
-      // Режим создания - значения по умолчанию
-      _name = '';
-      _type = '';
-      _iconData = null;
-      _currentIconData = null;
-      _fileName = null;
     }
     setState(() {
       _isDataLoading = false;
@@ -230,53 +241,15 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Expanded(
-              child: SingleChildScrollView(
+            Center(
+              child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Form(
                   key: _formKey,
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Текущая иконка (только для режима редактирования)
-                      if (_isEditMode) ...[
-                        if (_currentIconData != null &&
-                            _currentIconData!.isNotEmpty)
-                          Container(
-                            height: 100,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Theme.of(context).colorScheme.outline,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: _buildIconPreview(
-                                _currentIconData!,
-                                _type,
-                              ),
-                            ),
-                          )
-                        else
-                          Container(
-                            height: 100,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Theme.of(context).colorScheme.outline,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Center(
-                              child: SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(),
-                              ),
-                            ),
-                          ),
-                        const SizedBox(height: 16),
-                      ],
-
                       // Название иконки
                       TextFormField(
                         initialValue: _name,
@@ -410,7 +383,7 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
         // Режим создания
         final dto = CreateIconDto(
           name: _name.trim(),
-          type: _type,
+          type: IconTypeX.fromString(_type),
           data: _iconData!,
         );
 
