@@ -5,6 +5,8 @@ import 'package:hoplixi/features/password_manager/category_manager/features/cate
 import 'package:hoplixi/features/password_manager/tags_manager/features/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:hoplixi/main_store/models/filter/index.dart';
+import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/modal_sheet_close_button.dart';
 import 'package:universal_platform/universal_platform.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
@@ -74,6 +76,9 @@ class FilterModal {
     EntityType entityType,
     VoidCallback? onFilterApplied,
   ) {
+    // Глобальный ключ для доступа к состоянию _FilterModalContent
+    final GlobalKey<_FilterModalContentState> contentKey = GlobalKey();
+
     return WoltModalSheetPage(
       hasTopBarLayer: true,
       forceMaxHeight: true,
@@ -89,12 +94,25 @@ class FilterModal {
           );
         },
       ),
-      leadingNavBarWidget: const Padding(
-        padding: EdgeInsets.only(left: 8.0),
-        child: ModalSheetCloseButton(),
+      leadingNavBarWidget: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: const ModalSheetCloseButton(),
+      ),
+      trailingNavBarWidget: Consumer(
+        builder: (context, ref, _) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: _FilterModalActions(
+              contentKey: contentKey,
+              entityType: entityType,
+              onFilterApplied: onFilterApplied,
+            ),
+          );
+        },
       ),
 
       child: _FilterModalContent(
+        key: contentKey,
         entityType: entityType,
         onFilterApplied: onFilterApplied,
       ),
@@ -102,9 +120,150 @@ class FilterModal {
   }
 }
 
+/// Кнопки действий в навигационной панели модального окна фильтра
+class _FilterModalActions extends ConsumerWidget {
+  const _FilterModalActions({
+    required this.contentKey,
+    required this.entityType,
+    this.onFilterApplied,
+  });
+
+  final GlobalKey<_FilterModalContentState> contentKey;
+  final EntityType entityType;
+  final VoidCallback? onFilterApplied;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Получаем базовый фильтр для проверки активных ограничений
+    final baseFilter = ref.watch(baseFilterProvider);
+    final hasActiveFilters = baseFilter.hasActiveConstraints;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Кнопка сброса
+        if (hasActiveFilters) ...[
+          SmoothButton(
+            onPressed: () => _resetFilters(ref, entityType),
+            icon: const Icon(Icons.clear_all, size: 18),
+            label: 'Сбросить',
+            type: SmoothButtonType.outlined,
+            size: SmoothButtonSize.small,
+          ),
+          const SizedBox(width: 8),
+        ],
+
+        // Кнопка применения
+        IconButton(
+          onPressed: () => _applyAndClose(context, onFilterApplied),
+          icon: const Icon(Icons.check, size: 24),
+          tooltip: 'Применить фильтры',
+        ),
+      ],
+    );
+  }
+
+  void _resetFilters(WidgetRef ref, EntityType entityType) {
+    logDebug('FilterModal: Сброс всех фильтров через действие в панели');
+
+    try {
+      // Проверяем состояние контента
+      final contentState = contentKey.currentState;
+      if (contentState == null || !contentState.mounted) {
+        logWarning('FilterModal: Контент не доступен для сброса');
+        return;
+      }
+
+      final emptyBaseFilter = const BaseFilter();
+
+      // Сброс базового фильтра
+      ref.read(baseFilterProvider.notifier).updateFilter(emptyBaseFilter);
+
+      // Сброс специфичных фильтров
+      switch (entityType) {
+        case EntityType.password:
+          ref
+              .read(passwordsFilterProvider.notifier)
+              .updateFilter(PasswordsFilter(base: emptyBaseFilter));
+          break;
+        case EntityType.note:
+          ref
+              .read(notesFilterProvider.notifier)
+              .updateFilter(NotesFilter(base: emptyBaseFilter));
+          break;
+        case EntityType.otp:
+          ref
+              .read(otpsFilterProvider.notifier)
+              .updateFilter(OtpsFilter(base: emptyBaseFilter));
+          break;
+        case EntityType.bankCard:
+          ref
+              .read(bankCardsFilterProvider.notifier)
+              .updateFilter(BankCardsFilter(base: emptyBaseFilter));
+          break;
+        case EntityType.file:
+          ref
+              .read(filesFilterProvider.notifier)
+              .updateFilter(FilesFilter(base: emptyBaseFilter));
+          break;
+      }
+
+      logInfo('FilterModal: Фильтры сброшены через панель действий');
+    } catch (e) {
+      logError('FilterModal: Ошибка при сбросе фильтров', error: e);
+    }
+  }
+
+  void _applyAndClose(BuildContext context, VoidCallback? onFilterApplied) {
+    logDebug('FilterModal: Применение фильтров и закрытие модального окна');
+
+    try {
+      // Получаем состояние контента для доступа к локальным фильтрам
+      final contentState = contentKey.currentState;
+      if (contentState == null || !contentState.mounted) {
+        logError(
+          'FilterModal: Не удалось получить состояние контента или виджет не mounted',
+        );
+        if (context.mounted) {
+          Navigator.of(context).pop();
+        }
+        return;
+      }
+
+      // Применяем локальные фильтры
+      contentState.applyLocalFiltersToProviders();
+
+      // Вызываем callback перед закрытием
+      onFilterApplied?.call();
+
+      // Закрываем модалку с небольшой задержкой чтобы избежать конфликтов
+      if (context.mounted) {
+        Future.microtask(() {
+          if (context.mounted) {
+            Navigator.of(context).pop();
+          }
+        });
+      }
+    } catch (e, stackTrace) {
+      logError(
+        'FilterModal: Ошибка при применении и закрытии',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+    }
+  }
+}
+
 /// Основное содержимое модального окна фильтра
 class _FilterModalContent extends ConsumerStatefulWidget {
-  const _FilterModalContent({required this.entityType, this.onFilterApplied});
+  const _FilterModalContent({
+    super.key,
+    required this.entityType,
+    this.onFilterApplied,
+  });
 
   final EntityType entityType;
   final VoidCallback? onFilterApplied;
@@ -166,6 +325,12 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         _localFilesFilter = ref.read(filesFilterProvider);
         break;
     }
+
+    // Загружаем имена категорий и тегов в postFrameCallback
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _loadCategoryAndTagNames();
+    });
   }
 
   void _loadInitialValues() {
@@ -240,14 +405,14 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
 
     return Container(
       constraints: BoxConstraints(
-        minHeight: UniversalPlatform.isDesktop ? windowHeight * 0.88 : 0,
+        minHeight: UniversalPlatform.isDesktop ? windowHeight * 0.90 : 0,
         maxHeight: UniversalPlatform.isDesktop
-            ? windowHeight * 0.88
+            ? windowHeight * 0.90
             : double.infinity,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+
         children: [
           // Прокручиваемый контент
           Expanded(
@@ -255,7 +420,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
               padding: const EdgeInsets.all(12),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+
                 children: [
                   // Секция категорий
                   _buildCategoriesSection(entityType),
@@ -277,20 +442,8 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
             ),
           ),
 
-          // Закрепленные кнопки внизу
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              border: Border(
-                top: BorderSide(
-                  color: Theme.of(context).dividerColor.withOpacity(0.1),
-                  width: 1,
-                ),
-              ),
-            ),
-            child: _buildActionButtons(context),
-          ),
+          // Кнопки перенесены в trailingNavBarWidget
+          const SizedBox(height: 16),
         ],
       ),
     );
@@ -501,40 +654,6 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
     }
   }
 
-  Widget _buildActionButtons(BuildContext context) {
-    final hasActiveFilters = _localBaseFilter.hasActiveConstraints;
-
-    return Row(
-      children: [
-        // Кнопка сброса
-        if (hasActiveFilters)
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: _resetFilters,
-              icon: const Icon(Icons.clear_all),
-              label: const Text('Сбросить'),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-            ),
-          ),
-        if (hasActiveFilters) const SizedBox(width: 12),
-
-        // Кнопка применения
-        Expanded(
-          child: FilledButton.icon(
-            onPressed: () => _applyFilters(context),
-            icon: const Icon(Icons.check),
-            label: const Text('Применить'),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   CategoryType _getCategoryType(EntityType entityType) {
     switch (entityType) {
       case EntityType.password:
@@ -565,44 +684,134 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
     }
   }
 
-  void _resetFilters() {
-    logDebug('FilterModal: Сброс всех локальных фильтров');
+  /// Загрузить имена категорий и тегов по их ID
+  Future<void> _loadCategoryAndTagNames() async {
+    if (!mounted) return;
+
+    try {
+      // Загружаем имена категорий через DAO
+      if (_selectedCategoryIds.isNotEmpty) {
+        final categoryDao = await ref.read(categoryDaoProvider.future);
+        final categoryNames = <String>[];
+
+        for (final id in _selectedCategoryIds) {
+          final category = await categoryDao.getCategoryById(id);
+          if (category != null) {
+            categoryNames.add(category.name);
+          }
+        }
+
+        if (mounted) {
+          setState(() {
+            _selectedCategoryNames = categoryNames;
+          });
+        }
+      }
+
+      // Загружаем имена тегов через DAO
+      if (_selectedTagIds.isNotEmpty) {
+        final tagDao = await ref.read(tagDaoProvider.future);
+        final tagNames = <String>[];
+
+        for (final id in _selectedTagIds) {
+          final tag = await tagDao.getTagById(id);
+          if (tag != null) {
+            tagNames.add(tag.name);
+          }
+        }
+
+        if (mounted) {
+          setState(() {
+            _selectedTagNames = tagNames;
+          });
+        }
+      }
+
+      logDebug(
+        'FilterModal: Загружены имена категорий и тегов',
+        data: {
+          'categories': _selectedCategoryNames.length,
+          'tags': _selectedTagNames.length,
+        },
+      );
+    } catch (e) {
+      logError(
+        'ФильтрModal: Ошибка при загрузке имён категорий/тегов',
+        error: e,
+      );
+    }
+  }
+
+  /// Применить локальные фильтры к провайдерам
+  void applyLocalFiltersToProviders() {
+    if (!mounted) {
+      logWarning(
+        'FilterModal: Попытка применить фильтры к размонтированному виджету',
+      );
+      return;
+    }
+
+    logDebug('FilterModal: Применение локальных фильтров к провайдерам');
 
     try {
       final entityType = widget.entityType;
-      final emptyBaseFilter = const BaseFilter();
 
-      // Сброс локальных фильтров
-      setState(() {
-        _localBaseFilter = emptyBaseFilter;
-        _selectedCategoryIds = [];
-        _selectedCategoryNames = [];
-        _selectedTagIds = [];
-        _selectedTagNames = [];
+      // Применяем базовый фильтр
+      final baseNotifier = ref.read(baseFilterProvider.notifier);
+      baseNotifier.updateFilter(_localBaseFilter);
 
-        // Сброс специфичных фильтров
-        switch (entityType) {
-          case EntityType.password:
-            _localPasswordsFilter = PasswordsFilter(base: emptyBaseFilter);
-            break;
-          case EntityType.note:
-            _localNotesFilter = NotesFilter(base: emptyBaseFilter);
-            break;
-          case EntityType.otp:
-            _localOtpsFilter = OtpsFilter(base: emptyBaseFilter);
-            break;
-          case EntityType.bankCard:
-            _localBankCardsFilter = BankCardsFilter(base: emptyBaseFilter);
-            break;
-          case EntityType.file:
-            _localFilesFilter = FilesFilter(base: emptyBaseFilter);
-            break;
-        }
-      });
+      // Синхронизируем base в специфичных фильтрах перед применением
+      // чтобы категории и теги были актуальными
+      switch (entityType) {
+        case EntityType.password:
+          if (_localPasswordsFilter != null) {
+            final syncedFilter = _localPasswordsFilter!.copyWith(
+              base: _localBaseFilter,
+            );
+            ref
+                .read(passwordsFilterProvider.notifier)
+                .updateFilter(syncedFilter);
+          }
+          break;
+        case EntityType.note:
+          if (_localNotesFilter != null) {
+            final syncedFilter = _localNotesFilter!.copyWith(
+              base: _localBaseFilter,
+            );
+            ref.read(notesFilterProvider.notifier).updateFilter(syncedFilter);
+          }
+          break;
+        case EntityType.otp:
+          if (_localOtpsFilter != null) {
+            final syncedFilter = _localOtpsFilter!.copyWith(
+              base: _localBaseFilter,
+            );
+            ref.read(otpsFilterProvider.notifier).updateFilter(syncedFilter);
+          }
+          break;
+        case EntityType.bankCard:
+          if (_localBankCardsFilter != null) {
+            final syncedFilter = _localBankCardsFilter!.copyWith(
+              base: _localBaseFilter,
+            );
+            ref
+                .read(bankCardsFilterProvider.notifier)
+                .updateFilter(syncedFilter);
+          }
+          break;
+        case EntityType.file:
+          if (_localFilesFilter != null) {
+            final syncedFilter = _localFilesFilter!.copyWith(
+              base: _localBaseFilter,
+            );
+            ref.read(filesFilterProvider.notifier).updateFilter(syncedFilter);
+          }
+          break;
+      }
 
-      logInfo('FilterModal: Локальные фильтры сброшены');
+      logInfo('FilterModal: Локальные фильтры успешно применены к провайдерам');
     } catch (e) {
-      logError('FilterModal: Ошибка при сбросе фильтров', error: e);
+      logError('FilterModal: Ошибка при применении фильтров', error: e);
     }
   }
 
@@ -679,63 +888,6 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         'FilterModal: Ошибка при восстановлении начальных значений',
         error: e,
       );
-    }
-  }
-
-  void _applyFilters(BuildContext context) {
-    logDebug('FilterModal: Применение локальных фильтров к провайдерам');
-
-    try {
-      final entityType = widget.entityType;
-
-      // Применяем базовый фильтр через отдельные setter'ы для каждого поля
-      final baseNotifier = ref.read(baseFilterProvider.notifier);
-      baseNotifier.updateFilter(_localBaseFilter);
-
-      // Применяем специфичный для типа фильтр
-      switch (entityType) {
-        case EntityType.password:
-          if (_localPasswordsFilter != null) {
-            ref
-                .read(passwordsFilterProvider.notifier)
-                .updateFilter(_localPasswordsFilter!);
-          }
-          break;
-        case EntityType.note:
-          if (_localNotesFilter != null) {
-            ref
-                .read(notesFilterProvider.notifier)
-                .updateFilter(_localNotesFilter!);
-          }
-          break;
-        case EntityType.otp:
-          if (_localOtpsFilter != null) {
-            ref
-                .read(otpsFilterProvider.notifier)
-                .updateFilter(_localOtpsFilter!);
-          }
-          break;
-        case EntityType.bankCard:
-          if (_localBankCardsFilter != null) {
-            ref
-                .read(bankCardsFilterProvider.notifier)
-                .updateFilter(_localBankCardsFilter!);
-          }
-          break;
-        case EntityType.file:
-          if (_localFilesFilter != null) {
-            ref
-                .read(filesFilterProvider.notifier)
-                .updateFilter(_localFilesFilter!);
-          }
-          break;
-      }
-
-      widget.onFilterApplied?.call();
-      Navigator.of(context).pop();
-      logInfo('FilterModal: Фильтры успешно применены');
-    } catch (e) {
-      logError('FilterModal: Ошибка при применении фильтров', error: e);
     }
   }
 }
