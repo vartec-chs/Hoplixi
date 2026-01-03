@@ -2,42 +2,32 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/icon_manager/features/icon_picker/icon_picker_button.dart';
-import 'package:hoplixi/main_store/models/dto/category_dto.dart';
+import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
-/// Экран для создания/редактирования категории
-class CategoryFormScreen extends ConsumerStatefulWidget {
-  final String? categoryId;
+/// Экран для создания/редактирования тега
+class TagFormScreen extends ConsumerStatefulWidget {
+  final String? tagId;
   final VoidCallback? onSuccess;
-  final EntityType forEntity;
 
-  const CategoryFormScreen({
-    super.key,
-    this.categoryId,
-    this.onSuccess,
-    required this.forEntity,
-  });
+  const TagFormScreen({super.key, this.tagId, this.onSuccess});
 
   @override
-  ConsumerState<CategoryFormScreen> createState() => _CategoryFormScreenState();
+  ConsumerState<TagFormScreen> createState() => _TagFormScreenState();
 }
 
-class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
+class _TagFormScreenState extends ConsumerState<TagFormScreen> {
   final _formKey = GlobalKey<FormState>();
   late String _name;
-  String? _description;
   Color? _selectedColor;
-  String? _iconId;
-  late CategoryType _selectedType;
+  late TagType _selectedType;
   bool _isLoading = false;
   bool _isDataLoading = true;
 
-  bool get _isEditMode => widget.categoryId != null;
+  bool get _isEditMode => widget.tagId != null;
 
   @override
   void initState() {
@@ -48,19 +38,17 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
   Future<void> _loadData() async {
     if (_isEditMode) {
       try {
-        final categoryDao = await ref.read(categoryDaoProvider.future);
-        final category = await categoryDao.getCategoryById(widget.categoryId!);
-        if (category != null) {
+        final tagDao = await ref.read(tagDaoProvider.future);
+        final tag = await tagDao.getTagById(widget.tagId!);
+        if (tag != null) {
           setState(() {
-            _name = category.name;
-            _description = category.description;
-            _iconId = category.iconId;
-            _selectedType = category.type;
+            _name = tag.name;
+            _selectedType = tag.type;
 
             // Конвертируем HEX строку в Color если есть
-            if (category.color.isNotEmpty) {
+            if (tag.color.isNotEmpty) {
               try {
-                final hexColor = category.color.replaceAll('#', '');
+                final hexColor = tag.color.replaceAll('#', '');
                 _selectedColor = Color(int.parse('FF$hexColor', radix: 16));
               } catch (e) {
                 _selectedColor = null;
@@ -71,7 +59,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
       } catch (e) {
         if (mounted) {
           Toaster.error(
-            title: 'Ошибка загрузки категории',
+            title: 'Ошибка загрузки тега',
             description: e.toString(),
           );
         }
@@ -79,10 +67,8 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
     } else {
       // Режим создания - значения по умолчанию
       _name = '';
-      _description = null;
-      _iconId = null;
       _selectedColor = null;
-      _selectedType = CategoryType.mixed;
+      _selectedType = TagType.mixed;
     }
     setState(() {
       _isDataLoading = false;
@@ -134,9 +120,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
     if (_isDataLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(
-            _isEditMode ? 'Редактировать категорию' : 'Создать категорию',
-          ),
+          title: Text(_isEditMode ? 'Редактировать тег' : 'Создать тег'),
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -144,9 +128,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          _isEditMode ? 'Редактировать категорию' : 'Создать категорию',
-        ),
+        title: Text(_isEditMode ? 'Редактировать тег' : 'Создать тег'),
         actions: [
           if (_isLoading)
             const Padding(
@@ -172,28 +154,13 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Выбор иконки
-                      Center(
-                        child: IconPickerButton(
-                          selectedIconId: _iconId,
-                          onIconSelected: (id) {
-                            setState(() {
-                              _iconId = id;
-                            });
-                          },
-                          size: 120,
-                          hintText: 'Выбрать иконку\n(необязательно)',
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Название категории
+                      // Название тега
                       TextFormField(
                         initialValue: _name,
                         decoration: primaryInputDecoration(
                           context,
                           labelText: 'Название',
-                          hintText: 'Введите название категории',
+                          hintText: 'Введите название тега',
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -205,29 +172,29 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Тип категории
+                      // Тип тега
                       if (_isEditMode)
                         // В режиме редактирования - только для чтения
                         TextFormField(
-                          initialValue: _getCategoryTypeLabel(_selectedType),
+                          initialValue: _getTagTypeLabel(_selectedType),
                           decoration: primaryInputDecoration(
                             context,
-                            labelText: 'Тип категории',
+                            labelText: 'Тип тега',
                           ),
                           enabled: false,
                         )
                       else
                         // В режиме создания - dropdown
-                        DropdownButtonFormField<CategoryType>(
+                        DropdownButtonFormField<TagType>(
                           value: _selectedType,
                           decoration: primaryInputDecoration(
                             context,
-                            labelText: 'Тип категории',
+                            labelText: 'Тип тега',
                           ),
-                          items: CategoryType.values.map((type) {
+                          items: TagType.values.map((type) {
                             return DropdownMenuItem(
                               value: type,
-                              child: Text(_getCategoryTypeLabel(type)),
+                              child: Text(_getTagTypeLabel(type)),
                             );
                           }).toList(),
                           onChanged: (value) {
@@ -240,27 +207,11 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                         ),
                       const SizedBox(height: 16),
 
-                      // Описание
-                      TextFormField(
-                        initialValue: _description,
-                        decoration: primaryInputDecoration(
-                          context,
-                          labelText: 'Описание',
-                          hintText:
-                              'Введите описание категории (необязательно)',
-                        ),
-                        maxLines: 3,
-                        onChanged: (value) {
-                          _description = value.isEmpty ? null : value;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
                       // Выбор цвета
                       InputDecorator(
                         decoration: primaryInputDecoration(
                           context,
-                          labelText: 'Цвет категории',
+                          labelText: 'Цвет тега',
                           hintText: 'Нажмите для выбора цвета',
                         ),
                         child: InkWell(
@@ -317,7 +268,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final categoryDao = await ref.read(categoryDaoProvider.future);
+      final tagDao = await ref.read(tagDaoProvider.future);
 
       // Конвертируем Color в HEX строку без альфа-канала
       String? colorHex;
@@ -331,34 +282,27 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
 
       if (_isEditMode) {
         // Режим редактирования
-        final dto = UpdateCategoryDto(
-          name: _name.trim(),
-          description: _description,
-          color: colorHex,
-          iconId: _iconId,
-        );
+        final dto = UpdateTagDto(name: _name.trim(), color: colorHex);
 
-        await categoryDao.updateCategory(widget.categoryId!, dto);
+        await tagDao.updateTag(widget.tagId!, dto);
 
         if (mounted) {
-          Toaster.success(title: 'Категория успешно обновлена');
+          Toaster.success(title: 'Тег успешно обновлен');
           widget.onSuccess?.call();
           Navigator.of(context).pop(true);
         }
       } else {
         // Режим создания
-        final dto = CreateCategoryDto(
+        final dto = CreateTagDto(
           name: _name.trim(),
           type: _selectedType.value,
-          description: _description,
           color: colorHex,
-          iconId: _iconId,
         );
 
-        await categoryDao.createCategory(dto);
+        await tagDao.createTag(dto);
 
         if (mounted) {
-          Toaster.success(title: 'Категория успешно создана');
+          Toaster.success(title: 'Тег успешно создан');
           widget.onSuccess?.call();
           Navigator.of(context).pop(true);
         }
@@ -372,20 +316,20 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
   }
 }
 
-/// Получить человекочитаемое название типа категории
-String _getCategoryTypeLabel(CategoryType type) {
+/// Получить человекочитаемое название типа тега
+String _getTagTypeLabel(TagType type) {
   switch (type) {
-    case CategoryType.notes:
+    case TagType.notes:
       return 'Заметки';
-    case CategoryType.password:
+    case TagType.password:
       return 'Пароли';
-    case CategoryType.totp:
+    case TagType.totp:
       return 'TOTP коды';
-    case CategoryType.bankCard:
+    case TagType.bankCard:
       return 'Банковские карты';
-    case CategoryType.files:
+    case TagType.files:
       return 'Файлы';
-    case CategoryType.mixed:
+    case TagType.mixed:
       return 'Смешанная';
   }
 }

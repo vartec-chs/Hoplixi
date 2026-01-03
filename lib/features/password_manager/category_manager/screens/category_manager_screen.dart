@@ -133,15 +133,31 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
               return SliverPadding(
                 padding: const EdgeInsets.all(12),
                 sliver: SliverList.separated(
-                  itemCount: state.items.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 8),
                   itemBuilder: (context, index) {
+                    if (index == state.items.length && state.hasMore) {
+                      // Загружаем следующую страницу при достижении конца
+                      Future.microtask(
+                        () =>
+                            ref.read(categoryListProvider.notifier).loadMore(),
+                      );
+                      return const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    if (index >= state.items.length) {
+                      return null;
+                    }
                     final category = state.items[index];
                     return _buildCategoryCard(context, category, () {
                       ref.read(categoryListProvider.notifier).refresh();
                     });
                   },
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 8),
+                  itemCount: state.hasMore
+                      ? state.items.length + 1
+                      : state.items.length,
                 ),
               );
             },

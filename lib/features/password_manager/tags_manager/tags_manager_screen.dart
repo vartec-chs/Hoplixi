@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/features/password_manager/tags_manager/features/tags_picker/tags_picker.dart';
-import 'package:hoplixi/shared/ui/text_field.dart';
-
+import 'package:go_router/go_router.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_store/models/filter/tags_filter.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
+
 import 'providers/tag_filter_provider.dart';
 import 'providers/tag_pagination_provider.dart';
-import 'widgets/tag_form_modal.dart';
 
 class TagsManagerScreen extends ConsumerStatefulWidget {
-  const TagsManagerScreen({super.key});
+  final EntityType entity;
+
+  const TagsManagerScreen({super.key, required this.entity});
 
   @override
   ConsumerState<TagsManagerScreen> createState() => _TagsManagerScreenState();
@@ -125,9 +129,10 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
                   child: Center(child: Text('Теги не найдены')),
                 );
               }
-              return SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
+              return SliverPadding(
+                padding: const EdgeInsets.all(12.0),
+                sliver: SliverList.separated(
+                  itemBuilder: (context, index) {
                     if (index == state.items.length && state.hasMore) {
                       // Загружаем следующую страницу при достижении конца
                       Future.microtask(
@@ -148,7 +153,9 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
                       () => ref.read(tagListProvider.notifier).refresh(),
                     );
                   },
-                  childCount: state.hasMore
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 8),
+                  itemCount: state.hasMore
                       ? state.items.length + 1
                       : state.items.length,
                 ),
@@ -179,10 +186,16 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
       floatingActionButton: FloatingActionButton(
         heroTag: 'tagsManagerFab',
         onPressed: () {
-          showTagCreateModal(
-            context,
-            onSuccess: () => ref.read(tagListProvider.notifier).refresh(),
+          final result = context.push<bool>(
+            AppRoutesPaths.tagsAdd(widget.entity.id),
           );
+          if (result != null) {
+            result.then((added) {
+              if (added == true) {
+                ref.read(tagListProvider.notifier).refresh();
+              }
+            });
+          }
         },
         child: const Icon(Icons.add),
       ),
@@ -204,20 +217,22 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
           autofocus: true,
           decoration: primaryInputDecoration(
             context,
-            hintText: 'Введите название...',
+            labelText: 'Введите название...',
           ),
         ),
         actions: [
-          TextButton(
+          SmoothButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Отмена'),
+            label: 'Отмена',
+            variant: .error,
+            type: .text,
           ),
-          ElevatedButton(
+          SmoothButton(
             onPressed: () {
               onSearch(controller.text);
               Navigator.pop(context);
             },
-            child: const Text('Найти'),
+            label: 'Найти',
           ),
         ],
       ),
@@ -236,7 +251,7 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
         : Theme.of(context).colorScheme.primary;
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.zero,
       child: ListTile(
         leading: Container(
           width: 48,
@@ -256,14 +271,33 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
           ],
           onSelected: (value) async {
             if (value == 'edit') {
-              showTagEditModal(context, tag, onSuccess: onRefresh);
+              final result = context.push<bool>(
+                AppRoutesPaths.tagsEdit(widget.entity.id, tag.id),
+              );
+              if (result != null) {
+                result.then((edited) {
+                  if (edited == true) {
+                    onRefresh();
+                  }
+                });
+              }
             } else if (value == 'delete') {
-              await _handleDeleteTag(context, ref, tag, onRefresh);
+              await _handleDeleteTag(context, ref, tag);
             }
           },
         ),
         onTap: () {
-          showTagEditModal(context, tag, onSuccess: onRefresh);
+          final result = context.push<bool>(
+            AppRoutesPaths.tagsEdit(widget.entity.id, tag.id),
+          );
+
+          if (result != null) {
+            result.then((edited) {
+              if (edited == true) {
+                onRefresh();
+              }
+            });
+          }
         },
       ),
     );
@@ -273,7 +307,6 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
     BuildContext context,
     WidgetRef ref,
     TagCardDto tag,
-    VoidCallback onRefresh,
   ) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -303,7 +336,6 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Тег "${tag.name}" успешно удален')),
           );
-          onRefresh();
         }
       } catch (e) {
         if (context.mounted) {

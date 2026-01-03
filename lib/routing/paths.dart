@@ -69,7 +69,9 @@ class AppRoutesPaths {
   static const String tagAdd = '/dashboard/tags/add';
   static const String tagEdit = '/dashboard/tags/edit/:id';
 
-  static String tagEditWithId(String id) => '/dashboard/tags/edit/$id';
+  static String tagsAdd(String entityId) => '/dashboard/$entityId/tags/add';
+  static String tagsEdit(String entityId, String id) =>
+      '/dashboard/$entityId/tags/edit/$id';
 
   /// - icons
   static const String icons = '/dashboard/icons';

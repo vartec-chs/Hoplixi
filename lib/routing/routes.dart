@@ -18,6 +18,7 @@ import 'package:hoplixi/features/password_manager/history/ui/screens/history_scr
 import 'package:hoplixi/features/password_manager/icon_manager/icon_manager_screen.dart';
 import 'package:hoplixi/features/password_manager/lock_store/lock_store_screen.dart';
 import 'package:hoplixi/features/password_manager/open_store/open_store_screen.dart';
+import 'package:hoplixi/features/password_manager/tags_manager/tag_form_screen.dart';
 import 'package:hoplixi/features/password_manager/tags_manager/tags_manager_screen.dart';
 import 'package:hoplixi/features/settings/screens/settings_screen.dart';
 import 'package:hoplixi/global_key.dart';
@@ -137,11 +138,30 @@ final List<RouteBase> appRoutes = [
             path: 'tags',
             name: 'entity_tags',
             builder: (context, state) {
-              // final entity = state.pathParameters['entity']!;
-              return const TagsManagerScreen();
+              final entity = EntityType.fromId(
+                state.pathParameters['entity']!,
+              )!;
+              return TagsManagerScreen(entity: entity);
             },
             routes: [
-           
+              GoRoute(
+                path: 'add',
+                name: 'entity_tags_add',
+                builder: (context, state) {
+                  // final entity = EntityType.fromId(
+                  //   state.pathParameters['entity']!,
+                  // )!;
+                  return TagFormScreen();
+                },
+              ),
+              GoRoute(
+                path: 'edit/:id',
+                name: 'entity_tags_edit',
+                builder: (context, state) {
+                  final id = state.pathParameters['id']!;
+                  return TagFormScreen(tagId: id);
+                },
+              ),
             ],
           ),
 
@@ -153,9 +173,7 @@ final List<RouteBase> appRoutes = [
               // final entity = state.pathParameters['entity']!;
               return const IconManagerScreen();
             },
-            routes: [
-            
-            ],
+            routes: [],
           ),
 
           // add/edit для основной сущности
