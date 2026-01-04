@@ -289,13 +289,13 @@ class _NotePickerContentState extends ConsumerState<_NotePickerContent> {
   Widget build(BuildContext context) {
     final data = ref.watch(notePickerDataProvider);
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Поле поиска
-          TextField(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Поле поиска
+        Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: TextField(
             controller: _searchController,
             decoration: primaryInputDecoration(
               context,
@@ -305,10 +305,13 @@ class _NotePickerContentState extends ConsumerState<_NotePickerContent> {
             ),
             onChanged: _onSearchChanged,
           ),
-          const SizedBox(height: 16),
+        ),
+        const Divider(height: 1),
 
-          // Список заметок
-          ConstrainedBox(
+        // Список заметок
+        Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: ConstrainedBox(
             constraints: BoxConstraints(
               maxHeight: MediaQuery.of(context).size.height * 0.5,
             ),
@@ -341,8 +344,8 @@ class _NotePickerContentState extends ConsumerState<_NotePickerContent> {
                     },
                   ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

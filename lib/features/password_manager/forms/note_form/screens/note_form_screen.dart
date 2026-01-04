@@ -292,9 +292,20 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
     WoltModalSheet.show(
       useRootNavigator: true,
       context: context,
+
       pageListBuilder: (modalSheetContext) => [
         SliverWoltModalSheetPage(
-          topBarTitle: const Text('Связи заметки'),
+          hasTopBarLayer: true,
+          isTopBarLayerAlwaysVisible: true,
+
+          topBarTitle: Builder(
+            builder: (context) {
+              return Text(
+                'Связи заметки',
+                style: Theme.of(context).textTheme.titleMedium,
+              );
+            },
+          ),
           mainContentSliversBuilder: (context) => [
             SliverToBoxAdapter(child: NoteLinksSection(noteId: widget.noteId!)),
           ],
