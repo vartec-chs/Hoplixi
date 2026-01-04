@@ -126,16 +126,16 @@ class TagPickerFilters extends ConsumerWidget {
                         const SizedBox(width: 8),
                         TypeChip(
                           label: 'Заметки',
-                          isSelected: filter.type == TagType.notes.value,
+                          isSelected: filter.type == TagType.note.value,
                           onTap: () =>
-                              filterNotifier.updateType(TagType.notes.value),
+                              filterNotifier.updateType(TagType.note.value),
                         ),
                         const SizedBox(width: 8),
                         TypeChip(
                           label: 'Файлы',
-                          isSelected: filter.type == TagType.files.value,
+                          isSelected: filter.type == TagType.file.value,
                           onTap: () =>
-                              filterNotifier.updateType(TagType.files.value),
+                              filterNotifier.updateType(TagType.file.value),
                         ),
                         const SizedBox(width: 8),
                         TypeChip(

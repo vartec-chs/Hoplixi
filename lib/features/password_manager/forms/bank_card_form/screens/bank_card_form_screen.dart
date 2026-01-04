@@ -457,7 +457,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                           selectedCategoryName: state.categoryName,
                           label: 'Категория',
                           hintText: 'Выберите категорию',
-                          filterByType: CategoryType.bankCard,
+                          filterByType: [CategoryType.bankCard],
                           onCategorySelected: (categoryId, categoryName) {
                             ref
                                 .read(bankCardFormProvider.notifier)

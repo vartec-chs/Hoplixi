@@ -122,17 +122,17 @@ class CategoryPickerFilters extends ConsumerWidget {
                         const SizedBox(width: 8),
                         TypeChip(
                           label: 'Заметки',
-                          isSelected: filter.type == CategoryType.notes.value,
+                          isSelected: filter.type == CategoryType.note.value,
                           onTap: () => filterNotifier.updateType(
-                            CategoryType.notes.value,
+                            CategoryType.note.value,
                           ),
                         ),
                         const SizedBox(width: 8),
                         TypeChip(
                           label: 'Файлы',
-                          isSelected: filter.type == CategoryType.files.value,
+                          isSelected: filter.type == CategoryType.file.value,
                           onTap: () => filterNotifier.updateType(
-                            CategoryType.files.value,
+                            CategoryType.file.value,
                           ),
                         ),
                         const SizedBox(width: 8),

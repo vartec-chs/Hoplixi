@@ -366,7 +366,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
 /// Получить человекочитаемое название типа категории
 String _getCategoryTypeLabel(CategoryType type) {
   switch (type) {
-    case CategoryType.notes:
+    case CategoryType.note:
       return 'Заметки';
     case CategoryType.password:
       return 'Пароли';
@@ -374,7 +374,7 @@ String _getCategoryTypeLabel(CategoryType type) {
       return 'TOTP коды';
     case CategoryType.bankCard:
       return 'Банковские карты';
-    case CategoryType.files:
+    case CategoryType.file:
       return 'Файлы';
     case CategoryType.mixed:
       return 'Смешанная';

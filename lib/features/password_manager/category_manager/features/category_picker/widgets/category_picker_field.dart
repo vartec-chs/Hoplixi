@@ -62,8 +62,8 @@ class CategoryPickerField extends ConsumerStatefulWidget {
   /// Режим фильтра (множественный выбор)
   final bool isFilter;
 
-  /// Тип категорий для фильтрации (только в режиме фильтра)
-  final CategoryType? filterByType;
+  /// Типы категорий для фильтрации (только в режиме фильтра)
+  final List<CategoryType>? filterByType;
 
   @override
   ConsumerState<CategoryPickerField> createState() =>
@@ -156,7 +156,7 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
       await CategoryPickerModal.showMultiple(
         context: context,
         currentCategoryIds: widget.selectedCategoryIds,
-        filterByType: widget.filterByType?.value,
+        filterByType: widget.filterByType?.map((e) => e.value).toList(),
         onCategoriesSelected: (categoryIds, categoryNames) {
           widget.onCategoriesSelected?.call(categoryIds, categoryNames);
         },
@@ -165,7 +165,7 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
       // Обычный режим - одиночный выбор
       await CategoryPickerModal.show(
         context: context,
-        filterByType: widget.filterByType?.value,
+        filterByType: widget.filterByType?.map((e) => e.value).toList(),
         currentCategoryId: widget.selectedCategoryId,
         onCategorySelected: (categoryId, categoryName) {
           widget.onCategorySelected?.call(categoryId, categoryName);

@@ -1,6 +1,6 @@
-enum CategoryType { notes, password, totp, bankCard, files, mixed }
+enum CategoryType { note, password, totp, bankCard, file, mixed }
 
-enum TagType { notes, password, totp, bankCard, files, mixed }
+enum TagType { note, password, totp, bankCard, file, mixed }
 
 enum OtpType { totp, hotp }
 
@@ -50,16 +50,16 @@ extension ActionInHistoryX on ActionInHistory {
 extension CategoryTypeX on CategoryType {
   String get value {
     switch (this) {
-      case CategoryType.notes:
-        return 'notes';
+      case CategoryType.note:
+        return 'note';
       case CategoryType.password:
         return 'password';
       case CategoryType.totp:
         return 'totp';
       case CategoryType.bankCard:
         return 'bankCard';
-      case CategoryType.files:
-        return 'files';
+      case CategoryType.file:
+        return 'file';
       case CategoryType.mixed:
         return 'mixed';
     }
@@ -67,16 +67,16 @@ extension CategoryTypeX on CategoryType {
 
   static CategoryType fromString(String value) {
     switch (value) {
-      case 'notes':
-        return CategoryType.notes;
+      case 'note':
+        return CategoryType.note;
       case 'password':
         return CategoryType.password;
       case 'totp':
         return CategoryType.totp;
       case 'bankCard':
         return CategoryType.bankCard;
-      case 'files':
-        return CategoryType.files;
+      case 'file':
+        return CategoryType.file;
       case 'mixed':
         return CategoryType.mixed;
       default:
@@ -88,16 +88,16 @@ extension CategoryTypeX on CategoryType {
 extension TagTypeX on TagType {
   String get value {
     switch (this) {
-      case TagType.notes:
-        return 'notes';
+      case TagType.note:
+        return 'note';
       case TagType.password:
         return 'password';
       case TagType.totp:
         return 'totp';
       case TagType.bankCard:
         return 'bankCard';
-      case TagType.files:
-        return 'files';
+      case TagType.file:
+        return 'file';
       case TagType.mixed:
         return 'mixed';
     }
@@ -105,16 +105,16 @@ extension TagTypeX on TagType {
 
   static TagType fromString(String value) {
     switch (value) {
-      case 'notes':
-        return TagType.notes;
+      case 'note':
+        return TagType.note;
       case 'password':
         return TagType.password;
       case 'totp':
         return TagType.totp;
       case 'bankCard':
         return TagType.bankCard;
-      case 'files':
-        return TagType.files;
+      case 'file':
+        return TagType.file;
       case 'mixed':
         return TagType.mixed;
       default:

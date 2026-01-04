@@ -257,7 +257,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                           selectedCategoryName: state.categoryName,
                           label: 'Категория',
                           hintText: 'Выберите категорию',
-                          filterByType: CategoryType.password,
+                          filterByType: [CategoryType.password],
                           onCategorySelected: (categoryId, categoryName) {
                             ref
                                 .read(passwordFormProvider.notifier)

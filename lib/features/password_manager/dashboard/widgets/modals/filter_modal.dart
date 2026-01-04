@@ -63,11 +63,6 @@ class FilterModal {
           _buildMainFilterPage(modalSheetContext, entityType, onFilterApplied),
         ];
       },
-      // onModalDismissedWithBarrierTap: () {
-      //   logDebug('FilterModal: Закрытие по тапу на барьер');
-      //   WoltModalSheet.of(context).popPage();
-      //   // Просто закрываем без применения изменений
-      // },
     );
   }
 
@@ -467,7 +462,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           isFilter: true,
           selectedCategoryIds: _selectedCategoryIds,
           selectedCategoryNames: _selectedCategoryNames,
-          filterByType: _getCategoryType(entityType),
+          filterByType: [_getCategoryType(entityType)],
           onCategoriesSelected: (ids, names) {
             setState(() {
               _selectedCategoryIds = ids;
@@ -662,11 +657,11 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
       case EntityType.password:
         return CategoryType.password;
       case EntityType.note:
-        return CategoryType.notes;
+        return CategoryType.note;
       case EntityType.bankCard:
         return CategoryType.bankCard;
       case EntityType.file:
-        return CategoryType.files;
+        return CategoryType.file;
       case EntityType.otp:
         return CategoryType.totp;
     }
@@ -677,11 +672,11 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
       case EntityType.password:
         return TagType.password;
       case EntityType.note:
-        return TagType.notes;
+        return TagType.note;
       case EntityType.bankCard:
         return TagType.bankCard;
       case EntityType.file:
-        return TagType.files;
+        return TagType.file;
       case EntityType.otp:
         return TagType.totp;
     }

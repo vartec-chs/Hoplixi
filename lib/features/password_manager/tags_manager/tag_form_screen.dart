@@ -319,7 +319,7 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
 /// Получить человекочитаемое название типа тега
 String _getTagTypeLabel(TagType type) {
   switch (type) {
-    case TagType.notes:
+    case TagType.note:
       return 'Заметки';
     case TagType.password:
       return 'Пароли';
@@ -327,7 +327,7 @@ String _getTagTypeLabel(TagType type) {
       return 'TOTP коды';
     case TagType.bankCard:
       return 'Банковские карты';
-    case TagType.files:
+    case TagType.file:
       return 'Файлы';
     case TagType.mixed:
       return 'Смешанная';

@@ -417,7 +417,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
             selectedCategoryName: state.categoryName,
             label: 'Категория',
             hintText: 'Выберите категорию',
-            filterByType: CategoryType.totp,
+            filterByType: [CategoryType.totp],
             onCategorySelected: (categoryId, categoryName) {
               ref
                   .read(otpFormProvider.notifier)
