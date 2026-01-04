@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
-import 'categories.dart';
 import 'package:uuid/uuid.dart';
+
+import 'categories.dart';
 
 @DataClassName('PasswordsData')
 class Passwords extends Table {
