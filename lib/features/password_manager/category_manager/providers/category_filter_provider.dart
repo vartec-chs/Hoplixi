@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:hoplixi/main_store/models/filter/categories_filter.dart';
 
 /// Провайдер для управления состоянием фильтра категорий
@@ -35,8 +37,8 @@ class CategoryFilterNotifier extends Notifier<CategoriesFilter> {
   }
 
   /// Обновить тип категории
-  Future<void> updateType(String? type) async {
-    state = state.copyWith(type: type);
+  Future<void> updateType(List<CategoryType?> types) async {
+    state = state.copyWith(types: types);
     await Future.microtask(() {});
   }
 

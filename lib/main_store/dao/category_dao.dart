@@ -230,8 +230,9 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
     }
 
     // Фильтр по типу
-    if (filter.type != null) {
-      query = query..where((c) => c.type.equals(filter.type!));
+    if (filter.types.isNotEmpty) {
+      query = query
+        ..where((c) => c.type.isIn(filter.types.map((t) => t!.value).toList()));
     }
 
     // Фильтр по цвету
@@ -300,8 +301,9 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
     }
 
     // Фильтр по типу
-    if (filter.type != null) {
-      query = query..where((c) => c.type.equals(filter.type!));
+    if (filter.types.isNotEmpty) {
+      query = query
+        ..where((c) => c.type.isIn(filter.types.map((t) => t!.value).toList()));
     }
 
     // Фильтр по цвету

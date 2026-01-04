@@ -26,11 +26,9 @@ class CategoryPickerFilters extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: theme.dividerColor, width: 1)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -84,13 +82,6 @@ class CategoryPickerFilters extends ConsumerWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                // Text(
-                //   'Тип:',
-                //   style: theme.textTheme.bodyMedium?.copyWith(
-                //     fontWeight: FontWeight.w500,
-                //   ),
-                // ),
-                // const SizedBox(width: 12),
                 Expanded(
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -98,50 +89,49 @@ class CategoryPickerFilters extends ConsumerWidget {
                       children: [
                         TypeChip(
                           label: 'Все',
-                          isSelected: filter.type == null,
-                          onTap: () => filterNotifier.updateType(null),
+                          isSelected: filter.types.isEmpty,
+                          onTap: () => filterNotifier.updateType([]),
                         ),
                         const SizedBox(width: 8),
                         TypeChip(
                           label: 'Пароли',
-                          isSelected:
-                              filter.type == CategoryType.password.value,
-                          onTap: () => filterNotifier.updateType(
-                            CategoryType.password.value,
+                          isSelected: filter.types.contains(
+                            CategoryType.password,
                           ),
+                          onTap: () => filterNotifier.updateType([
+                            CategoryType.password,
+                          ]),
                         ),
                         const SizedBox(width: 8),
                         TypeChip(
                           label: 'Банковские карты',
-                          isSelected:
-                              filter.type == CategoryType.bankCard.value,
-                          onTap: () => filterNotifier.updateType(
-                            CategoryType.bankCard.value,
+                          isSelected: filter.types.contains(
+                            CategoryType.bankCard,
                           ),
+                          onTap: () => filterNotifier.updateType([
+                            CategoryType.bankCard,
+                          ]),
                         ),
                         const SizedBox(width: 8),
                         TypeChip(
                           label: 'Заметки',
-                          isSelected: filter.type == CategoryType.note.value,
-                          onTap: () => filterNotifier.updateType(
-                            CategoryType.note.value,
-                          ),
+                          isSelected: filter.types.contains(CategoryType.note),
+                          onTap: () =>
+                              filterNotifier.updateType([CategoryType.note]),
                         ),
                         const SizedBox(width: 8),
                         TypeChip(
                           label: 'Файлы',
-                          isSelected: filter.type == CategoryType.file.value,
-                          onTap: () => filterNotifier.updateType(
-                            CategoryType.file.value,
-                          ),
+                          isSelected: filter.types.contains(CategoryType.file),
+                          onTap: () =>
+                              filterNotifier.updateType([CategoryType.file]),
                         ),
                         const SizedBox(width: 8),
                         TypeChip(
                           label: 'Mixed',
-                          isSelected: filter.type == CategoryType.mixed.value,
-                          onTap: () => filterNotifier.updateType(
-                            CategoryType.mixed.value,
-                          ),
+                          isSelected: filter.types.contains(CategoryType.mixed),
+                          onTap: () =>
+                              filterNotifier.updateType([CategoryType.mixed]),
                         ),
                       ],
                     ),

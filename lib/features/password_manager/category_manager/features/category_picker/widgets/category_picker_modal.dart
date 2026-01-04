@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
+import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/password_manager/category_manager/features/category_picker/providers/category_picker_provider.dart';
-import 'package:hoplixi/features/password_manager/category_manager/features/category_picker/providers/category_filter_provider.dart';
 import 'package:hoplixi/features/password_manager/category_manager/features/category_picker/widgets/category_picker_filters.dart';
 import 'package:hoplixi/features/password_manager/category_manager/features/category_picker/widgets/category_picker_item.dart';
+import 'package:hoplixi/main_store/models/enums/index.dart';
+import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 /// Модальное окно выбора категории
 class CategoryPickerModal {
@@ -71,9 +72,10 @@ class CategoryPickerModal {
       isTopBarLayerAlwaysVisible: true,
 
       mainContentSliversBuilder: (context) => [
-        // Фильтры (скрываем если типы заданы извне)
-        if (filterByType == null)
-          SliverToBoxAdapter(child: const CategoryPickerFilters()),
+        // Фильтры (поле поиска всегда видно, типы только если не заданы извне)
+        SliverToBoxAdapter(
+          child: CategoryPickerFilters(hideTypeFilter: filterByType != null),
+        ),
 
         // Список категорий
         _CategoryListView(
@@ -100,6 +102,10 @@ class CategoryPickerModal {
       topBarTitle: const Text('Выберите категории'),
       isTopBarLayerAlwaysVisible: true,
       mainContentSliversBuilder: (context) => [
+        // Фильтры (только поле поиска для множественного выбора)
+        SliverToBoxAdapter(
+          child: const CategoryPickerFilters(hideTypeFilter: true),
+        ),
         // Контент с состоянием
         _MultipleCategoryPickerContent(
           onCategoriesSelected: onCategoriesSelected,
@@ -132,9 +138,19 @@ class _CategoryListViewState extends ConsumerState<_CategoryListView> {
   List<dynamic> _items = [];
   bool _showLoadingIndicator = false;
 
+  /// Кэшированный список типов для провайдера
+  late final List<CategoryType?> _cachedTypes;
+
   @override
   void initState() {
     super.initState();
+    // Преобразуем типы один раз при инициализации
+    _cachedTypes =
+        widget.filterByType != null && widget.filterByType!.isNotEmpty
+        ? widget.filterByType!
+              .map((type) => CategoryTypeX.fromString(type))
+              .toList()
+        : <CategoryType?>[];
   }
 
   void _updateItems(List<dynamic> newItems) {
@@ -210,17 +226,8 @@ class _CategoryListViewState extends ConsumerState<_CategoryListView> {
 
   @override
   Widget build(BuildContext context) {
-    final categoriesState = ref.watch(categoryPickerListProvider);
-
-    if (widget.filterByType != null && widget.filterByType!.isNotEmpty) {
-      Future.microtask(() {
-        final notifier = ref.read(categoryPickerFilterProvider.notifier);
-        // Применяем фильтр для каждого типа из списка
-        for (final type in widget.filterByType!) {
-          notifier.updateType(type);
-        }
-      });
-    }
+    // Используем кэшированные типы
+    final categoriesState = ref.watch(categoryPickerListProvider(_cachedTypes));
 
     return categoriesState.when(
       data: (state) {
@@ -235,6 +242,10 @@ class _CategoryListViewState extends ConsumerState<_CategoryListView> {
         }
 
         if (state.items.isEmpty && !state.isLoading) {
+          logDebug(
+            'No categories found to display',
+            tag: '_CategoryListViewState',
+          );
           return SliverFillRemaining(
             child: Center(
               child: Column(
@@ -245,7 +256,7 @@ class _CategoryListViewState extends ConsumerState<_CategoryListView> {
                     size: 64,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.3),
+                    ).colorScheme.onSurface.withValues(alpha: 0.3),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -339,10 +350,20 @@ class _MultipleCategoryPickerContentState
       GlobalKey<SliverAnimatedListState>();
   List<dynamic> _items = [];
 
+  /// Кэшированный список типов для провайдера
+  late final List<CategoryType?> _cachedTypes;
+
   @override
   void initState() {
     super.initState();
     _selectedCategoryIds = List<String>.from(widget.initialCategoryIds);
+    // Преобразуем типы один раз при инициализации
+    _cachedTypes =
+        widget.filterByType != null && widget.filterByType!.isNotEmpty
+        ? widget.filterByType!
+              .map((type) => CategoryTypeX.fromString(type))
+              .toList()
+        : <CategoryType?>[];
   }
 
   void _updateItems(List<dynamic> newItems) {
@@ -447,18 +468,8 @@ class _MultipleCategoryPickerContentState
 
   @override
   Widget build(BuildContext context) {
-    final categoriesState = ref.watch(categoryPickerListProvider);
-
-    // Применяем фильтр по типу, если задан
-    if (widget.filterByType != null && widget.filterByType!.isNotEmpty) {
-      Future.microtask(() {
-        final notifier = ref.read(categoryPickerFilterProvider.notifier);
-        // Применяем фильтр для каждого типа из списка
-        for (final type in widget.filterByType!) {
-          notifier.updateType(type);
-        }
-      });
-    }
+    // Используем кэшированные типы
+    final categoriesState = ref.watch(categoryPickerListProvider(_cachedTypes));
 
     return categoriesState.when(
       data: (state) {
@@ -491,7 +502,7 @@ class _MultipleCategoryPickerContentState
                         size: 64,
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.3),
+                        ).colorScheme.onSurface.withValues(alpha: 0.3),
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -538,7 +549,11 @@ class _MultipleCategoryPickerContentState
                           child: TextButton(
                             onPressed: () {
                               ref
-                                  .read(categoryPickerListProvider.notifier)
+                                  .read(
+                                    categoryPickerListProvider(
+                                      _cachedTypes,
+                                    ).notifier,
+                                  )
                                   .loadMore();
                             },
                             child: const Text('Загрузить еще'),

@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/main_store/models/enums/index.dart';
 
 part 'categories_filter.freezed.dart';
 part 'categories_filter.g.dart';
@@ -10,7 +11,7 @@ enum CategoriesSortField { name, type, createdAt, modifiedAt }
 abstract class CategoriesFilter with _$CategoriesFilter {
   const factory CategoriesFilter({
     @Default('') String query,
-    String? type,
+    @Default([]) List<CategoryType?> types,
     String? color,
     bool? hasIcon,
     bool? hasDescription,
@@ -25,7 +26,7 @@ abstract class CategoriesFilter with _$CategoriesFilter {
 
   factory CategoriesFilter.create({
     String? query,
-    String? type,
+    List<CategoryType?>? types,
     String? color,
     bool? hasIcon,
     bool? hasDescription,
@@ -38,12 +39,12 @@ abstract class CategoriesFilter with _$CategoriesFilter {
     int? offset,
   }) {
     final normalizedQuery = (query ?? '').trim();
-    final normalizedType = type?.trim();
+    
     final normalizedColor = color?.trim();
 
     return CategoriesFilter(
       query: normalizedQuery,
-      type: normalizedType?.isEmpty == true ? null : normalizedType,
+      types: types ?? [],
       color: normalizedColor?.isEmpty == true ? null : normalizedColor,
       hasIcon: hasIcon,
       hasDescription: hasDescription,
@@ -65,7 +66,7 @@ extension CategoriesFilterHelpers on CategoriesFilter {
   /// Проверяет наличие активных ограничений фильтра
   bool get hasActiveConstraints {
     if (query.isNotEmpty) return true;
-    if (type != null) return true;
+    if (types.isNotEmpty) return true;
     if (color != null) return true;
     if (hasIcon != null) return true;
     if (hasDescription != null) return true;
