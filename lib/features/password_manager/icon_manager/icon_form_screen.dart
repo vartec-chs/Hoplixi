@@ -69,7 +69,6 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
               _name = icon.name;
               _type = icon.type;
               _iconData = data;
-            
             });
           }
         } else {
@@ -323,7 +322,7 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
                           height: 100,
                           decoration: BoxDecoration(
                             border: Border.all(
-                              color: Theme.of(context).colorScheme.outline,
+                              color: Theme.of(context).dividerColor,
                             ),
                             borderRadius: BorderRadius.circular(8),
                           ),
