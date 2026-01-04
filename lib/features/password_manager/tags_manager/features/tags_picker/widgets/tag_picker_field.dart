@@ -52,7 +52,7 @@ class TagPickerField extends StatefulWidget {
   final int? maxTagPicks;
 
   /// Тип тегов для фильтрации (только в режиме фильтра)
-  final TagType? filterByType;
+  final List<TagType?>? filterByType;
 
   @override
   State<TagPickerField> createState() => _TagPickerFieldState();
@@ -106,7 +106,7 @@ class _TagPickerFieldState extends State<TagPickerField> {
       context: context,
       currentTagIds: widget.selectedTagIds,
       maxTagPicks: widget.maxTagPicks,
-      filterByType: widget.filterByType?.value,
+      filterByType: widget.filterByType,
       onTagsSelected: (tagIds, tagNames) {
         widget.onTagsSelected?.call(tagIds, tagNames);
       },

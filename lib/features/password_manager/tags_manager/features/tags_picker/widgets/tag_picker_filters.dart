@@ -15,7 +15,7 @@ class TagPickerFilters extends ConsumerWidget {
   });
 
   /// Фиксированный тип для фильтрации (если задан, выбор типа скрыт)
-  final String? filterByType;
+  final List<TagType?>? filterByType;
 
   /// Количество выбранных тегов
   final int selectedCount;
@@ -33,7 +33,7 @@ class TagPickerFilters extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
+          bottom: BorderSide(color: theme.dividerColor, width: 1),
         ),
       ),
       child: Column(
@@ -90,13 +90,6 @@ class TagPickerFilters extends ConsumerWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                // Text(
-                //   'Тип:',
-                //   style: theme.textTheme.bodyMedium?.copyWith(
-                //     fontWeight: FontWeight.w500,
-                //   ),
-                // ),
-                // const SizedBox(width: 12),
                 Expanded(
                   child: SingleChildScrollView(
                     keyboardDismissBehavior:
@@ -106,43 +99,43 @@ class TagPickerFilters extends ConsumerWidget {
                       children: [
                         TypeChip(
                           label: 'Все',
-                          isSelected: filter.type == null,
-                          onTap: () => filterNotifier.updateType(null),
+                          isSelected: filter.types.isEmpty,
+                          onTap: () => filterNotifier.updateType([]),
                         ),
                         const SizedBox(width: 8),
                         TypeChip(
                           label: 'Пароли',
-                          isSelected: filter.type == TagType.password.value,
+                          isSelected: filter.types.contains(TagType.password),
                           onTap: () =>
-                              filterNotifier.updateType(TagType.password.value),
+                              filterNotifier.updateType([TagType.password]),
                         ),
                         const SizedBox(width: 8),
                         TypeChip(
                           label: 'Банковские карты',
-                          isSelected: filter.type == TagType.bankCard.value,
+                          isSelected: filter.types.contains(TagType.bankCard),
                           onTap: () =>
-                              filterNotifier.updateType(TagType.bankCard.value),
+                              filterNotifier.updateType([TagType.bankCard]),
                         ),
                         const SizedBox(width: 8),
                         TypeChip(
                           label: 'Заметки',
-                          isSelected: filter.type == TagType.note.value,
+                          isSelected: filter.types.contains(TagType.note),
                           onTap: () =>
-                              filterNotifier.updateType(TagType.note.value),
+                              filterNotifier.updateType([TagType.note]),
                         ),
                         const SizedBox(width: 8),
                         TypeChip(
                           label: 'Файлы',
-                          isSelected: filter.type == TagType.file.value,
+                          isSelected: filter.types.contains(TagType.file),
                           onTap: () =>
-                              filterNotifier.updateType(TagType.file.value),
+                              filterNotifier.updateType([TagType.file]),
                         ),
                         const SizedBox(width: 8),
                         TypeChip(
                           label: 'Mixed',
-                          isSelected: filter.type == TagType.mixed.value,
+                          isSelected: filter.types.contains(TagType.mixed),
                           onTap: () =>
-                              filterNotifier.updateType(TagType.mixed.value),
+                              filterNotifier.updateType([TagType.mixed]),
                         ),
                       ],
                     ),

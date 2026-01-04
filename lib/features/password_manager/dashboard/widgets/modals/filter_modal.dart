@@ -494,7 +494,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           isFilter: true,
           selectedTagIds: _selectedTagIds,
           selectedTagNames: _selectedTagNames,
-          filterByType: _getTagType(entityType),
+          filterByType: [_getTagType(entityType)],
           onTagsSelected: (ids, names) {
             setState(() {
               _selectedTagIds = ids;

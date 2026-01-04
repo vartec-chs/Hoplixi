@@ -168,7 +168,7 @@ class _NoteMetadataFormState extends ConsumerState<_NoteMetadataForm> {
             selectedCategoryName: state.categoryName,
             label: 'Категория',
             hintText: 'Выберите категорию',
-            filterByType: [CategoryType.note],
+            filterByType: [CategoryType.note, CategoryType.mixed],
             onCategorySelected: (categoryId, categoryName) {
               ref
                   .read(noteFormProvider.notifier)
@@ -183,7 +183,7 @@ class _NoteMetadataFormState extends ConsumerState<_NoteMetadataForm> {
             selectedTagNames: state.tagNames,
             label: 'Теги',
             hintText: 'Выберите теги',
-            filterByType: TagType.note,
+            filterByType: [TagType.note, TagType.mixed],
             onTagsSelected: (tagIds, tagNames) {
               ref.read(noteFormProvider.notifier).setTags(tagIds, tagNames);
             },

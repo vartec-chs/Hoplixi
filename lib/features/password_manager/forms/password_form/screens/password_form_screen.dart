@@ -275,7 +275,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                           selectedTagNames: state.tagNames,
                           label: 'Теги',
                           hintText: 'Выберите теги',
-                          filterByType: TagType.password,
+                          filterByType: [TagType.password, TagType.mixed],
                           onTagsSelected: (tagIds, tagNames) {
                             ref
                                 .read(passwordFormProvider.notifier)

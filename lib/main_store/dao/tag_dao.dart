@@ -245,8 +245,9 @@ class TagDao extends DatabaseAccessor<MainStore> with _$TagDaoMixin {
     }
 
     // Фильтр по типу
-    if (filter.type != null) {
-      query = query..where((t) => t.type.equals(filter.type!));
+    if (filter.types.isNotEmpty) {
+      query = query
+        ..where((t) => t.type.isIn(filter.types.map((e) => e!.value).toList()));
     }
 
     // Фильтр по цвету
@@ -301,8 +302,9 @@ class TagDao extends DatabaseAccessor<MainStore> with _$TagDaoMixin {
     }
 
     // Фильтр по типу
-    if (filter.type != null) {
-      query = query..where((t) => t.type.equals(filter.type!));
+    if (filter.types.isNotEmpty) {
+      query = query
+        ..where((t) => t.type.isIn(filter.types.map((e) => e!.value).toList()));
     }
 
     // Фильтр по цвету

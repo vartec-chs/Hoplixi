@@ -417,7 +417,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
             selectedCategoryName: state.categoryName,
             label: 'Категория',
             hintText: 'Выберите категорию',
-            filterByType: [CategoryType.totp],
+            filterByType: [CategoryType.totp, CategoryType.mixed],
             onCategorySelected: (categoryId, categoryName) {
               ref
                   .read(otpFormProvider.notifier)
@@ -432,7 +432,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
             selectedTagNames: state.tagNames,
             label: 'Теги',
             hintText: 'Выберите теги',
-            filterByType: TagType.totp,
+            filterByType: [TagType.totp, TagType.mixed],
             onTagsSelected: (tagIds, tagNames) {
               ref.read(otpFormProvider.notifier).setTags(tagIds, tagNames);
             },

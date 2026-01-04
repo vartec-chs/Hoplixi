@@ -190,7 +190,7 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                           selectedCategoryName: state.categoryName,
                           label: 'Категория',
                           hintText: 'Выберите категорию',
-                          filterByType: [CategoryType.file],
+                          filterByType: [CategoryType.file, CategoryType.mixed],
                           onCategorySelected: (categoryId, categoryName) {
                             ref
                                 .read(fileFormProvider.notifier)
@@ -205,7 +205,7 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                           selectedTagNames: state.tagNames,
                           label: 'Теги',
                           hintText: 'Выберите теги',
-                          filterByType: TagType.file,
+                          filterByType: [TagType.file, TagType.mixed],
                           onTagsSelected: (tagIds, tagNames) {
                             ref
                                 .read(fileFormProvider.notifier)

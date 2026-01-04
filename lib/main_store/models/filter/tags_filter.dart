@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/main_store/models/enums/index.dart';
 
 part 'tags_filter.freezed.dart';
 part 'tags_filter.g.dart';
@@ -9,7 +10,7 @@ enum TagsSortField { name, type, createdAt, modifiedAt }
 abstract class TagsFilter with _$TagsFilter {
   const factory TagsFilter({
     @Default('') String query,
-    String? type,
+    @Default([])  List<TagType?> types,
     String? color,
     DateTime? createdAfter,
     DateTime? createdBefore,
@@ -22,7 +23,7 @@ abstract class TagsFilter with _$TagsFilter {
 
   factory TagsFilter.create({
     String? query,
-    String? type,
+    List<TagType?>? types,
     String? color,
     DateTime? createdAfter,
     DateTime? createdBefore,
@@ -33,12 +34,12 @@ abstract class TagsFilter with _$TagsFilter {
     int? offset,
   }) {
     final normalizedQuery = (query ?? '').trim();
-    final normalizedType = type?.trim();
+  
     final normalizedColor = color?.trim();
 
     return TagsFilter(
       query: normalizedQuery,
-      type: normalizedType?.isEmpty == true ? null : normalizedType,
+      types: types ?? [],
       color: normalizedColor?.isEmpty == true ? null : normalizedColor,
       createdAfter: createdAfter,
       createdBefore: createdBefore,
@@ -58,7 +59,7 @@ extension TagsFilterHelpers on TagsFilter {
   /// Проверяет наличие активных ограничений фильтра
   bool get hasActiveConstraints {
     if (query.isNotEmpty) return true;
-    if (type != null) return true;
+    if (types.isNotEmpty) return true;
     if (color != null) return true;
     if (createdAfter != null || createdBefore != null) return true;
     if (modifiedAfter != null || modifiedBefore != null) return true;

@@ -457,7 +457,10 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                           selectedCategoryName: state.categoryName,
                           label: 'Категория',
                           hintText: 'Выберите категорию',
-                          filterByType: [CategoryType.bankCard],
+                          filterByType: [
+                            CategoryType.bankCard,
+                            CategoryType.mixed,
+                          ],
                           onCategorySelected: (categoryId, categoryName) {
                             ref
                                 .read(bankCardFormProvider.notifier)
@@ -472,7 +475,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                           selectedTagNames: state.tagNames,
                           label: 'Теги',
                           hintText: 'Выберите теги',
-                          filterByType: TagType.bankCard,
+                          filterByType: [TagType.bankCard, TagType.mixed],
                           onTagsSelected: (tagIds, tagNames) {
                             ref
                                 .read(bankCardFormProvider.notifier)

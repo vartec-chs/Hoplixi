@@ -1,18 +1,24 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
+import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+
 import '../models/tag_pagination_state.dart';
 import 'tag_filter_provider.dart';
 
 /// Провайдер для получения отфильтрованного списка тегов с пагинацией
-final tagPickerListProvider =
-    AsyncNotifierProvider.autoDispose<TagListNotifier, TagPaginationState>(() {
-      return TagListNotifier();
-    });
+final tagPickerListProvider = AsyncNotifierProvider.autoDispose
+    .family<TagListNotifier, TagPaginationState, List<TagType?>>(
+      TagListNotifier.new,
+    );
 
 /// AsyncNotifier для управления списком тегов с пагинацией
 class TagListNotifier extends AsyncNotifier<TagPaginationState> {
   static const int _pageSize = 20;
+
+  TagListNotifier(this.initialTypes);
+
+  final List<TagType?> initialTypes;
 
   @override
   Future<TagPaginationState> build() async {
@@ -40,6 +46,7 @@ class TagListNotifier extends AsyncNotifier<TagPaginationState> {
       final paginatedFilter = filter.copyWith(
         offset: page * _pageSize,
         limit: _pageSize,
+        types: initialTypes.isNotEmpty ? initialTypes : filter.types,
       );
 
       final newItems = await tagDao.getTagCardsFiltered(paginatedFilter);
