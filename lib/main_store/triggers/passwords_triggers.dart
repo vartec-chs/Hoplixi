@@ -20,7 +20,9 @@ const List<String> passwordsHistoryCreateTriggers = [
       OLD.is_favorite != NEW.is_favorite OR
       OLD.is_deleted != NEW.is_deleted OR
       OLD.is_archived != NEW.is_archived OR
-      OLD.is_pinned != NEW.is_pinned
+      OLD.is_pinned != NEW.is_pinned OR
+      OLD.recent_score != NEW.recent_score OR
+      OLD.last_used_at != NEW.last_used_at
     )
     BEGIN
       INSERT INTO passwords_history (
@@ -66,8 +68,10 @@ const List<String> passwordsHistoryCreateTriggers = [
         OLD.is_archived,
         OLD.is_pinned,
         OLD.is_favorite,
+        OLD.recent_score,
+        OLD.last_used_at,
         OLD.is_deleted,
-        OLD.last_accessed_at,
+        OLD.last_used_at,
         OLD.created_at,
         OLD.modified_at,
         strftime('%s','now')  
@@ -123,8 +127,10 @@ const List<String> passwordsHistoryCreateTriggers = [
         OLD.is_archived,
         OLD.is_pinned,
         OLD.is_favorite,
+        OLD.recent_score,
+        OLD.last_used_at,
         OLD.is_deleted,
-        OLD.last_accessed_at,
+        OLD.last_used_at,
         OLD.created_at,
         OLD.modified_at,
         strftime('%s','now')  

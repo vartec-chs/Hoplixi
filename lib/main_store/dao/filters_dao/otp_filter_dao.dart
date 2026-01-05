@@ -228,16 +228,16 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
     }
 
     // Диапазоны дат последнего доступа
-    if (base.lastAccessedAfter != null) {
+    if (base.lastUsedAfter != null) {
       expression =
           expression &
-          otps.lastAccessedAt.isBiggerOrEqualValue(base.lastAccessedAfter!);
+          otps.lastUsedAt.isBiggerOrEqualValue(base.lastUsedAfter!);
     }
 
-    if (base.lastAccessedBefore != null) {
+    if (base.lastUsedBefore != null) {
       expression =
           expression &
-          otps.lastAccessedAt.isSmallerOrEqualValue(base.lastAccessedBefore!);
+          otps.lastUsedAt.isSmallerOrEqualValue(base.lastUsedBefore!);
     }
 
     // Диапазоны счетчика использований
@@ -377,7 +377,7 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
           break;
         case OtpsSortField.lastAccessed:
           orderingTerms.add(
-            OrderingTerm(expression: otps.lastAccessedAt, mode: mode),
+            OrderingTerm(expression: otps.lastUsedAt, mode: mode),
           );
           break;
       }

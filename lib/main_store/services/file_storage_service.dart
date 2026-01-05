@@ -1,5 +1,7 @@
 import 'dart:io';
+
 import 'package:crypto/crypto.dart';
+import 'package:drift/drift.dart';
 import 'package:file_crypto/file_crypto.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_store/main_store.dart';
@@ -9,8 +11,6 @@ import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
-
-import 'package:drift/drift.dart';
 
 class FileStorageService {
   final MainStore _db;
@@ -187,7 +187,7 @@ class FileStorageService {
       isDeleted: currentFile.isDeleted,
       originalCreatedAt: currentFile.createdAt,
       originalModifiedAt: currentFile.modifiedAt,
-      originalLastAccessedAt: currentFile.lastAccessedAt,
+      originalLastAccessedAt: currentFile.lastUsedAt,
     );
     await _db.fileHistoryDao.createFileHistory(historyDto);
 

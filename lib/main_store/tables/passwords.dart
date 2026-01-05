@@ -32,7 +32,9 @@ class Passwords extends Table {
       dateTime().clientDefault(() => DateTime.now())();
   DateTimeColumn get modifiedAt =>
       dateTime().clientDefault(() => DateTime.now())();
-  DateTimeColumn get lastAccessedAt => dateTime().nullable()();
+  RealColumn get recentScore => real().nullable()(); // EWMA for sorting
+  DateTimeColumn get lastUsedAt =>
+      dateTime().nullable()(); // For filters and UX
 
   @override
   Set<Column> get primaryKey => {id};

@@ -216,20 +216,16 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
     }
 
     // Диапазоны дат последнего доступа
-    if (base.lastAccessedAfter != null) {
+    if (base.lastUsedAfter != null) {
       expression =
           expression &
-          passwords.lastAccessedAt.isBiggerOrEqualValue(
-            base.lastAccessedAfter!,
-          );
+          passwords.lastUsedAt.isBiggerOrEqualValue(base.lastUsedAfter!);
     }
 
-    if (base.lastAccessedBefore != null) {
+    if (base.lastUsedBefore != null) {
       expression =
           expression &
-          passwords.lastAccessedAt.isSmallerOrEqualValue(
-            base.lastAccessedBefore!,
-          );
+          passwords.lastUsedAt.isSmallerOrEqualValue(base.lastUsedBefore!);
     }
 
     // Диапазоны счетчика использований
@@ -374,7 +370,7 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
           break;
         case PasswordsSortField.lastAccessed:
           orderingTerms.add(
-            OrderingTerm(expression: passwords.lastAccessedAt, mode: mode),
+            OrderingTerm(expression: passwords.lastUsedAt, mode: mode),
           );
           break;
       }

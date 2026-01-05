@@ -200,16 +200,16 @@ class NoteFilterDao extends DatabaseAccessor<MainStore>
     }
 
     // Диапазоны дат последнего доступа
-    if (base.lastAccessedAfter != null) {
+    if (base.lastUsedAfter != null) {
       expression =
           expression &
-          notes.lastAccessedAt.isBiggerOrEqualValue(base.lastAccessedAfter!);
+          notes.lastUsedAt.isBiggerOrEqualValue(base.lastUsedAfter!);
     }
 
-    if (base.lastAccessedBefore != null) {
+    if (base.lastUsedBefore != null) {
       expression =
           expression &
-          notes.lastAccessedAt.isSmallerOrEqualValue(base.lastAccessedBefore!);
+          notes.lastUsedAt.isSmallerOrEqualValue(base.lastUsedBefore!);
     }
 
     // Диапазоны счетчика использований
@@ -321,7 +321,7 @@ class NoteFilterDao extends DatabaseAccessor<MainStore>
           break;
         case NotesSortField.lastAccessed:
           orderingTerms.add(
-            OrderingTerm(expression: notes.lastAccessedAt, mode: mode),
+            OrderingTerm(expression: notes.lastUsedAt, mode: mode),
           );
           break;
       }

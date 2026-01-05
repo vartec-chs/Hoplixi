@@ -5,6 +5,8 @@ part 'base_filter.g.dart';
 
 enum SortDirection { asc, desc }
 
+enum SortBy { createdAt, modifiedAt, lastUsedAt, recentScore }
+
 @freezed
 sealed class BaseFilter with _$BaseFilter {
   const factory BaseFilter({
@@ -15,17 +17,20 @@ sealed class BaseFilter with _$BaseFilter {
     bool? isArchived,
     bool? isDeleted,
     bool? isFrequentlyUsed,
+    int? frequencyWindowDays,
     bool? isPinned,
     bool? hasNotes,
     DateTime? createdAfter,
     DateTime? createdBefore,
     DateTime? modifiedAfter,
     DateTime? modifiedBefore,
-    DateTime? lastAccessedAfter,
-    DateTime? lastAccessedBefore,
     @Default(SortDirection.desc) SortDirection sortDirection,
+    @Default(SortBy.createdAt) SortBy sortBy,
     int? minUsedCount,
     int? maxUsedCount,
+    DateTime? lastUsedAfter,
+    DateTime? lastUsedBefore,
+
     @Default(0) int? limit,
     @Default(0) int? offset,
   }) = _BaseFilter;
@@ -38,19 +43,21 @@ sealed class BaseFilter with _$BaseFilter {
     bool? isArchived,
     bool? isDeleted,
     bool? isFrequentlyUsed,
+    int? frequencyWindowDays,
     bool? isPinned,
     bool? hasNotes,
     DateTime? createdAfter,
     DateTime? createdBefore,
     DateTime? modifiedAfter,
     DateTime? modifiedBefore,
-    DateTime? lastAccessedAfter,
-    DateTime? lastAccessedBefore,
+    DateTime? lastUsedAfter,
+    DateTime? lastUsedBefore,
     int? minUsedCount,
     int? maxUsedCount,
     int? limit,
     int? offset,
     SortDirection? sortDirection,
+    SortBy? sortBy,
   }) {
     final normalizedQuery = (query ?? '').trim();
     final normalizedCategoryIds = (categoryIds ?? <String>[])
@@ -71,18 +78,20 @@ sealed class BaseFilter with _$BaseFilter {
       isDeleted: isDeleted,
       isPinned: isPinned,
       isFrequentlyUsed: isFrequentlyUsed,
+      frequencyWindowDays: frequencyWindowDays,
       hasNotes: hasNotes,
       createdAfter: createdAfter,
       createdBefore: createdBefore,
       modifiedAfter: modifiedAfter,
       modifiedBefore: modifiedBefore,
-      lastAccessedAfter: lastAccessedAfter,
-      lastAccessedBefore: lastAccessedBefore,
+      lastUsedAfter: lastUsedAfter,
+      lastUsedBefore: lastUsedBefore,
       minUsedCount: minUsedCount,
       maxUsedCount: maxUsedCount,
       limit: limit,
       offset: offset,
       sortDirection: sortDirection ?? SortDirection.desc,
+      sortBy: sortBy ?? SortBy.createdAt,
     );
   }
 
@@ -98,12 +107,13 @@ extension BaseFilterHelpers on BaseFilter {
     if (isFavorite != null) return true;
     if (isArchived != null) return true;
     if (isFrequentlyUsed != null) return true;
+    if (frequencyWindowDays != null) return true;
     if (isDeleted != null) return true;
     if (isPinned != null) return true;
     if (hasNotes != null) return true;
     if (createdAfter != null || createdBefore != null) return true;
     if (modifiedAfter != null || modifiedBefore != null) return true;
-    if (lastAccessedAfter != null || lastAccessedBefore != null) return true;
+    if (lastUsedAfter != null || lastUsedBefore != null) return true;
     if (minUsedCount != null || maxUsedCount != null) return true;
     return false;
   }

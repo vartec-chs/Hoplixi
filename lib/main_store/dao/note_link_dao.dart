@@ -427,7 +427,7 @@ class NoteLinkDao extends DatabaseAccessor<MainStore> with _$NoteLinkDaoMixin {
       await (update(notes)..where((n) => n.id.equals(noteId))).write(
         NotesCompanion(
           usedCount: Value(note.usedCount + 1),
-          lastAccessedAt: Value(DateTime.now()),
+          lastUsedAt: Value(DateTime.now()),
         ),
       );
     }

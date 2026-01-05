@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
-import 'categories.dart';
 import 'package:uuid/uuid.dart';
+
+import 'categories.dart';
 
 @DataClassName('FilesData')
 class Files extends Table {
@@ -35,7 +36,9 @@ class Files extends Table {
       dateTime().clientDefault(() => DateTime.now())();
   DateTimeColumn get modifiedAt =>
       dateTime().clientDefault(() => DateTime.now())();
-  DateTimeColumn get lastAccessedAt => dateTime().nullable()();
+  RealColumn get recentScore => real().nullable()(); // EWMA for sorting
+  DateTimeColumn get lastUsedAt =>
+      dateTime().nullable()(); // For filters and UX
 
   @override
   Set<Column> get primaryKey => {id};

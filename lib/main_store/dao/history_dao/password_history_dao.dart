@@ -129,7 +129,7 @@ class PasswordHistoryDao extends DatabaseAccessor<MainStore>
       isArchived: Value(dto.isArchived ?? false),
       isPinned: Value(dto.isPinned ?? false),
       isFavorite: Value(dto.isFavorite ?? false),
-      lastAccessedAt: Value(dto.lastAccessedAt),
+      lastUsedAt: Value(dto.lastAccessedAt),
       isDeleted: Value(dto.isDeleted ?? false),
       originalCreatedAt: Value(dto.originalCreatedAt),
       originalModifiedAt: Value(dto.originalModifiedAt),

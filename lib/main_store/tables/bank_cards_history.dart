@@ -44,13 +44,16 @@ class BankCardsHistory extends Table {
       boolean().withDefault(const Constant(false))(); // Archived flag
   BoolColumn get isPinned =>
       boolean().withDefault(const Constant(false))(); // Pinned to top flag
+  RealColumn get recentScore => real().nullable()(); // EWMA snapshot
+  DateTimeColumn get lastUsedAt =>
+      dateTime().nullable()(); // Last used snapshot
   BoolColumn get isDeleted =>
       boolean().withDefault(const Constant(false))(); // Soft delete flag
 
   // Timestamps
   DateTimeColumn get originalCreatedAt => dateTime().nullable()();
   DateTimeColumn get originalModifiedAt => dateTime().nullable()();
-  DateTimeColumn get originalLastAccessedAt => dateTime().nullable()();
+  DateTimeColumn get originalLastUsedAt => dateTime().nullable()();
   DateTimeColumn get actionAt => dateTime().clientDefault(
     () => DateTime.now(),
   )(); // When action was performed

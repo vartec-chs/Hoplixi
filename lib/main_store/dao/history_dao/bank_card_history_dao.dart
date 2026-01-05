@@ -154,7 +154,7 @@ class BankCardHistoryDao extends DatabaseAccessor<MainStore>
       isDeleted: Value(dto.isDeleted),
       originalCreatedAt: Value(dto.originalCreatedAt),
       originalModifiedAt: Value(dto.originalModifiedAt),
-      originalLastAccessedAt: Value(dto.originalLastAccessedAt),
+      originalLastUsedAt: Value(dto.originalLastAccessedAt),
     );
     return into(bankCardsHistory).insert(companion).then((id) {
       return (select(bankCardsHistory)

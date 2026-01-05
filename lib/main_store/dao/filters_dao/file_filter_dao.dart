@@ -158,16 +158,16 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
     }
 
     // Фильтр по дате последнего доступа
-    if (base.lastAccessedAfter != null) {
+    if (base.lastUsedAfter != null) {
       expressions.add(
-        files.lastAccessedAt.isBiggerOrEqualValue(base.lastAccessedAfter!) |
-            files.lastAccessedAt.isNull(),
+        files.lastUsedAt.isBiggerOrEqualValue(base.lastUsedAfter!) |
+            files.lastUsedAt.isNull(),
       );
     }
-    if (base.lastAccessedBefore != null) {
+    if (base.lastUsedBefore != null) {
       expressions.add(
-        files.lastAccessedAt.isSmallerOrEqualValue(base.lastAccessedBefore!) |
-            files.lastAccessedAt.isNull(),
+        files.lastUsedAt.isSmallerOrEqualValue(base.lastUsedBefore!) |
+            files.lastUsedAt.isNull(),
       );
     }
 
@@ -354,7 +354,7 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
       case FilesSortField.lastAccessed:
         orderTerms.add(
           OrderingTerm(
-            expression: files.lastAccessedAt,
+            expression: files.lastUsedAt,
             mode: sortDirection == SortDirection.asc
                 ? OrderingMode.asc
                 : OrderingMode.desc,

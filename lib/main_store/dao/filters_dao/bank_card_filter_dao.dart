@@ -164,18 +164,18 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
     }
 
     // Фильтр по дате последнего доступа
-    if (base.lastAccessedAfter != null) {
+    if (base.lastUsedAfter != null) {
       expressions.add(
-        bankCards.lastAccessedAt.isBiggerOrEqualValue(base.lastAccessedAfter!) |
-            bankCards.lastAccessedAt.isNull(),
+        bankCards.lastUsedAt.isBiggerOrEqualValue(base.lastUsedAfter!) |
+            bankCards.lastUsedAt.isNull(),
       );
     }
-    if (base.lastAccessedBefore != null) {
+    if (base.lastUsedBefore != null) {
       expressions.add(
-        bankCards.lastAccessedAt.isSmallerOrEqualValue(
-              base.lastAccessedBefore!,
+        bankCards.lastUsedAt.isSmallerOrEqualValue(
+              base.lastUsedBefore!,
             ) |
-            bankCards.lastAccessedAt.isNull(),
+            bankCards.lastUsedAt.isNull(),
       );
     }
 
@@ -400,7 +400,7 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
       case BankCardsSortField.lastAccessed:
         orderTerms.add(
           OrderingTerm(
-            expression: bankCards.lastAccessedAt,
+            expression: bankCards.lastUsedAt,
             mode: sortDirection == SortDirection.asc
                 ? OrderingMode.asc
                 : OrderingMode.desc,

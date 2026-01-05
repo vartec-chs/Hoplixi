@@ -1,8 +1,9 @@
 import 'package:drift/drift.dart';
-import 'passwords.dart';
-import 'categories.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:uuid/uuid.dart';
+
+import 'categories.dart';
+import 'passwords.dart';
 
 @DataClassName('OtpsData')
 class Otps extends Table {
@@ -67,7 +68,9 @@ class Otps extends Table {
       dateTime().clientDefault(() => DateTime.now())();
   DateTimeColumn get modifiedAt =>
       dateTime().clientDefault(() => DateTime.now())();
-  DateTimeColumn get lastAccessedAt => dateTime().nullable()();
+  RealColumn get recentScore => real().nullable()(); // EWMA for sorting
+  DateTimeColumn get lastUsedAt =>
+      dateTime().nullable()(); // For filters and UX
 
   @override
   Set<Column> get primaryKey => {id};
