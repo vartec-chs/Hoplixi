@@ -43,10 +43,12 @@ const List<String> passwordsHistoryCreateTriggers = [
         is_archived,
         is_pinned,
         is_favorite,
+        recent_score,
+        last_used_at,
         is_deleted,
-        last_accessed_at,
         original_created_at,
         original_modified_at,
+        original_last_used_at,
         action_at
       ) VALUES (
         lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
@@ -71,9 +73,9 @@ const List<String> passwordsHistoryCreateTriggers = [
         OLD.recent_score,
         OLD.last_used_at,
         OLD.is_deleted,
-        OLD.last_used_at,
         OLD.created_at,
         OLD.modified_at,
+        OLD.last_used_at,
         strftime('%s','now')  
       );
     END;
@@ -102,10 +104,12 @@ const List<String> passwordsHistoryCreateTriggers = [
         is_archived,
         is_pinned,
         is_favorite,
+        recent_score,
+        last_used_at,
         is_deleted,
-        last_accessed_at,
         original_created_at,
         original_modified_at,
+        original_last_used_at,
         action_at
       ) VALUES (
         lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
@@ -130,9 +134,9 @@ const List<String> passwordsHistoryCreateTriggers = [
         OLD.recent_score,
         OLD.last_used_at,
         OLD.is_deleted,
-        OLD.last_used_at,
         OLD.created_at,
         OLD.modified_at,
+        OLD.last_used_at,
         strftime('%s','now')  
       );
     END;

@@ -7,6 +7,7 @@ import 'package:hoplixi/features/password_manager/open_store/models/open_store_s
 import 'package:hoplixi/features/password_manager/open_store/providers/open_store_form_provider.dart';
 import 'package:hoplixi/features/password_manager/open_store/widgets/index.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/widgets/titlebar.dart';
 
 class OpenStoreScreen extends ConsumerStatefulWidget {
@@ -162,10 +163,10 @@ class _OpenStoreScreenState extends ConsumerState<OpenStoreScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              FilledButton.icon(
+              SmoothButton(
                 onPressed: () => ref.invalidate(openStoreFormProvider),
                 icon: const Icon(Icons.refresh),
-                label: const Text('Повторить'),
+                label: "Повторить",
               ),
             ],
           ),
@@ -222,10 +223,10 @@ class _OpenStoreScreenState extends ConsumerState<OpenStoreScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            FilledButton.icon(
+            SmoothButton(
               onPressed: () => notifier.loadStorages(),
               icon: const Icon(Icons.refresh),
-              label: const Text('Повторить'),
+              label: "Повторить",
             ),
           ],
         ),

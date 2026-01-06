@@ -49,9 +49,11 @@ const List<String> otpsHistoryCreateTriggers = [
         used_count,
         is_favorite,
         is_pinned,
+        recent_score,
+        last_used_at,
         original_created_at,
         original_modified_at,
-        original_last_accessed_at,
+        original_last_used_at,
         action_at
       ) VALUES (
         lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
@@ -108,9 +110,11 @@ const List<String> otpsHistoryCreateTriggers = [
         used_count,
         is_favorite,
         is_pinned,
+        recent_score,
+        last_used_at,
         original_created_at,
         original_modified_at,
-        original_last_accessed_at,
+        original_last_used_at,
         action_at
       ) VALUES (
         lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),

@@ -24,6 +24,7 @@ class _BaseFilterSectionState extends State<BaseFilterSection> {
   late TextEditingController _queryController;
   late TextEditingController _minUsedCountController;
   late TextEditingController _maxUsedCountController;
+  late TextEditingController _frequencyWindowDaysController;
 
   final DateFormat _dateFormat = DateFormat('dd.MM.yyyy');
 
@@ -36,6 +37,9 @@ class _BaseFilterSectionState extends State<BaseFilterSection> {
     );
     _maxUsedCountController = TextEditingController(
       text: widget.filter.maxUsedCount?.toString() ?? '',
+    );
+    _frequencyWindowDaysController = TextEditingController(
+      text: widget.filter.frequencyWindowDays?.toString() ?? '',
     );
   }
 
@@ -53,6 +57,11 @@ class _BaseFilterSectionState extends State<BaseFilterSection> {
       _maxUsedCountController.text =
           widget.filter.maxUsedCount?.toString() ?? '';
     }
+    if (oldWidget.filter.frequencyWindowDays !=
+        widget.filter.frequencyWindowDays) {
+      _frequencyWindowDaysController.text =
+          widget.filter.frequencyWindowDays?.toString() ?? '';
+    }
   }
 
   @override
@@ -60,6 +69,7 @@ class _BaseFilterSectionState extends State<BaseFilterSection> {
     _queryController.dispose();
     _minUsedCountController.dispose();
     _maxUsedCountController.dispose();
+    _frequencyWindowDaysController.dispose();
     super.dispose();
   }
 
@@ -118,6 +128,11 @@ class _BaseFilterSectionState extends State<BaseFilterSection> {
 
         // Фильтр по количеству использований
         _buildUsageCountFilters(),
+
+        const Divider(height: 1),
+
+        // Тип сортировки
+        _buildSortByFilter(),
 
         const Divider(height: 1),
 
@@ -500,40 +515,75 @@ class _BaseFilterSectionState extends State<BaseFilterSection> {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: TextField(
-                  controller: _minUsedCountController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: 'Минимум',
-                    prefixIcon: const Icon(Icons.arrow_upward),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _minUsedCountController,
+                      decoration: primaryInputDecoration(
+                        context,
+                        labelText: 'Минимум',
+                        prefixIcon: const Icon(Icons.arrow_upward),
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      onChanged: (value) {
+                        final intValue = int.tryParse(value);
+                        _updateFilter(
+                          (f) => f.copyWith(minUsedCount: intValue),
+                        );
+                      },
+                    ),
                   ),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  onChanged: (value) {
-                    final intValue = int.tryParse(value);
-                    _updateFilter((f) => f.copyWith(minUsedCount: intValue));
-                  },
-                ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: _maxUsedCountController,
+                      decoration: primaryInputDecoration(
+                        context,
+                        labelText: 'Максимум',
+                        prefixIcon: const Icon(Icons.arrow_downward),
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      onChanged: (value) {
+                        final intValue = int.tryParse(value);
+                        _updateFilter(
+                          (f) => f.copyWith(maxUsedCount: intValue),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: _maxUsedCountController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: 'Максимум',
-                    prefixIcon: const Icon(Icons.arrow_downward),
-                  ),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  onChanged: (value) {
-                    final intValue = int.tryParse(value);
-                    _updateFilter((f) => f.copyWith(maxUsedCount: intValue));
-                  },
+              const SizedBox(height: 16),
+              Text(
+                'Окно активности (дней)',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _frequencyWindowDaysController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Количество дней',
+                  hintText: '7',
+                  prefixIcon: const Icon(Icons.calendar_view_week),
+                  helperText: 'Для сортировки по активности (по умолчанию 7)',
                 ),
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                onChanged: (value) {
+                  final intValue = int.tryParse(value);
+                  _updateFilter(
+                    (f) => f.copyWith(frequencyWindowDays: intValue),
+                  );
+                },
               ),
             ],
           ),
@@ -566,7 +616,73 @@ class _BaseFilterSectionState extends State<BaseFilterSection> {
 
   bool _hasActiveUsageCountFilters() {
     return widget.filter.minUsedCount != null ||
-        widget.filter.maxUsedCount != null;
+        widget.filter.maxUsedCount != null ||
+        widget.filter.frequencyWindowDays != null;
+  }
+
+  // ============================================================================
+  // Тип сортировки
+  // ============================================================================
+
+  Widget _buildSortByFilter() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Тип сортировки',
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8.0,
+            runSpacing: 8.0,
+            children: SortBy.values.map((sortBy) {
+              final isSelected = widget.filter.sortBy == sortBy;
+              return ChoiceChip(
+                label: Text(_getSortByLabel(sortBy)),
+                selected: isSelected,
+                onSelected: (selected) {
+                  if (selected) {
+                    _updateFilter((f) => f.copyWith(sortBy: sortBy));
+                  }
+                },
+                avatar: Icon(_getSortByIcon(sortBy), size: 18),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getSortByLabel(SortBy sortBy) {
+    switch (sortBy) {
+      case SortBy.createdAt:
+        return 'Дата создания';
+      case SortBy.modifiedAt:
+        return 'Дата изменения';
+      case SortBy.lastUsedAt:
+        return 'Последнее использование';
+      case SortBy.recentScore:
+        return 'По активности';
+    }
+  }
+
+  IconData _getSortByIcon(SortBy sortBy) {
+    switch (sortBy) {
+      case SortBy.createdAt:
+        return Icons.add_circle_outline;
+      case SortBy.modifiedAt:
+        return Icons.edit;
+      case SortBy.lastUsedAt:
+        return Icons.access_time;
+      case SortBy.recentScore:
+        return Icons.trending_up;
+    }
   }
 
   // ============================================================================
