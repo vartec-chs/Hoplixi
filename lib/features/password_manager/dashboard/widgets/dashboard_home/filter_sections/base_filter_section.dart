@@ -395,7 +395,7 @@ class _BaseFilterSectionState extends State<BaseFilterSection> {
 
               // Дата последнего доступа
               Text(
-                'Дата последнего доступа',
+                'Дата последнего использования',
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
@@ -406,11 +406,9 @@ class _BaseFilterSectionState extends State<BaseFilterSection> {
                   Expanded(
                     child: _buildDateField(
                       label: 'С',
-                      date: widget.filter.lastAccessedAfter,
+                      date: widget.filter.lastUsedAfter,
                       onChanged: (date) {
-                        _updateFilter(
-                          (f) => f.copyWith(lastAccessedAfter: date),
-                        );
+                        _updateFilter((f) => f.copyWith(lastUsedAfter: date));
                       },
                     ),
                   ),
@@ -418,11 +416,9 @@ class _BaseFilterSectionState extends State<BaseFilterSection> {
                   Expanded(
                     child: _buildDateField(
                       label: 'По',
-                      date: widget.filter.lastAccessedBefore,
+                      date: widget.filter.lastUsedBefore,
                       onChanged: (date) {
-                        _updateFilter(
-                          (f) => f.copyWith(lastAccessedBefore: date),
-                        );
+                        _updateFilter((f) => f.copyWith(lastUsedBefore: date));
                       },
                     ),
                   ),
@@ -488,8 +484,8 @@ class _BaseFilterSectionState extends State<BaseFilterSection> {
         widget.filter.createdBefore != null ||
         widget.filter.modifiedAfter != null ||
         widget.filter.modifiedBefore != null ||
-        widget.filter.lastAccessedAfter != null ||
-        widget.filter.lastAccessedBefore != null;
+        widget.filter.lastUsedAfter != null ||
+        widget.filter.lastUsedBefore != null;
   }
 
   // ============================================================================

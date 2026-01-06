@@ -181,21 +181,21 @@ class BaseFilterNotifier extends Notifier<BaseFilter> {
   /// Установить фильтр по дате последнего доступа (с)
   void setLastAccessedAfter(DateTime? date) {
     logDebug('Последний доступ от: $date', tag: _logTag);
-    state = state.copyWith(lastAccessedAfter: date);
+    state = state.copyWith(lastUsedAfter: date);
   }
 
   /// Установить фильтр по дате последнего доступа (по)
   void setLastAccessedBefore(DateTime? date) {
     logDebug('Последний доступ по: $date', tag: _logTag);
-    state = state.copyWith(lastAccessedBefore: date);
+    state = state.copyWith(lastUsedBefore: date);
   }
 
   /// Установить диапазон дат последнего доступа
   void setLastAccessedDateRange(DateTime? after, DateTime? before) {
     logDebug('Диапазон последнего доступа: $after - $before', tag: _logTag);
     state = state.copyWith(
-      lastAccessedAfter: after,
-      lastAccessedBefore: before,
+      lastUsedAfter: after,
+      lastUsedBefore: before,
     );
   }
 
@@ -285,8 +285,8 @@ class BaseFilterNotifier extends Notifier<BaseFilter> {
     DateTime? createdBefore,
     DateTime? modifiedAfter,
     DateTime? modifiedBefore,
-    DateTime? lastAccessedAfter,
-    DateTime? lastAccessedBefore,
+    DateTime? lastUsedAfter,
+    DateTime? lastUsedBefore,
     SortDirection? sortDirection,
     int? minUsedCount,
     int? maxUsedCount,
@@ -306,8 +306,8 @@ class BaseFilterNotifier extends Notifier<BaseFilter> {
       createdBefore: createdBefore ?? state.createdBefore,
       modifiedAfter: modifiedAfter ?? state.modifiedAfter,
       modifiedBefore: modifiedBefore ?? state.modifiedBefore,
-      lastAccessedAfter: lastAccessedAfter ?? state.lastAccessedAfter,
-      lastAccessedBefore: lastAccessedBefore ?? state.lastAccessedBefore,
+      lastUsedAfter: lastUsedAfter ?? state.lastUsedAfter,
+      lastUsedBefore: lastUsedBefore ?? state.lastUsedBefore,
       sortDirection: sortDirection ?? state.sortDirection,
       minUsedCount: minUsedCount ?? state.minUsedCount,
       maxUsedCount: maxUsedCount ?? state.maxUsedCount,
@@ -374,8 +374,8 @@ class BaseFilterNotifier extends Notifier<BaseFilter> {
       createdBefore: null,
       modifiedAfter: null,
       modifiedBefore: null,
-      lastAccessedAfter: null,
-      lastAccessedBefore: null,
+      lastUsedAfter: null,
+      lastUsedBefore: null,
     );
   }
 }

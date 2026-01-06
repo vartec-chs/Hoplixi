@@ -172,9 +172,7 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
     }
     if (base.lastUsedBefore != null) {
       expressions.add(
-        bankCards.lastUsedAt.isSmallerOrEqualValue(
-              base.lastUsedBefore!,
-            ) |
+        bankCards.lastUsedAt.isSmallerOrEqualValue(base.lastUsedBefore!) |
             bankCards.lastUsedAt.isNull(),
       );
     }
@@ -314,6 +312,24 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
     }
   }
 
+  /// Вычисляет динамический score для сортировки по активности
+  /// Формула: recent_score * exp(-(current_time - last_used_at) / window_days)
+  Expression<double> _calculateDynamicScore(int windowDays) {
+    final now = DateTime.now();
+    final nowMillis = now.millisecondsSinceEpoch / 1000.0; // в секундах
+    final windowSeconds = windowDays * 24 * 60 * 60;
+
+    // recent_score * exp(-(now - last_used_at) / window_seconds)
+    final timeDiff =
+        Variable<double>(nowMillis) -
+        bankCards.lastUsedAt.unixepoch.cast<double>();
+    final expDecay = CustomExpression<double>(
+      'EXP(-($timeDiff) / $windowSeconds)',
+    );
+
+    return bankCards.recentScore.cast<double>() * expDecay;
+  }
+
   /// Построить ORDER BY выражение
   List<OrderingTerm> _buildOrderBy(BankCardsFilter filter) {
     final orderTerms = <OrderingTerm>[];
@@ -323,90 +339,76 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
       OrderingTerm(expression: bankCards.isPinned, mode: OrderingMode.desc),
     );
 
-    // Сортировка по указанному полю
-    final sortField = filter.sortField ?? BankCardsSortField.modifiedAt;
+    // Сортировка
     final sortDirection = filter.base.sortDirection;
+    final mode = sortDirection == SortDirection.asc
+        ? OrderingMode.asc
+        : OrderingMode.desc;
 
-    switch (sortField) {
-      case BankCardsSortField.name:
-        orderTerms.add(
-          OrderingTerm(
-            expression: bankCards.name,
-            mode: sortDirection == SortDirection.asc
-                ? OrderingMode.asc
-                : OrderingMode.desc,
-          ),
-        );
-        break;
-      case BankCardsSortField.cardholderName:
-        orderTerms.add(
-          OrderingTerm(
-            expression: bankCards.cardholderName,
-            mode: sortDirection == SortDirection.asc
-                ? OrderingMode.asc
-                : OrderingMode.desc,
-          ),
-        );
-        break;
-      case BankCardsSortField.bankName:
-        orderTerms.add(
-          OrderingTerm(
-            expression: bankCards.bankName,
-            mode: sortDirection == SortDirection.asc
-                ? OrderingMode.asc
-                : OrderingMode.desc,
-          ),
-        );
-        break;
-      case BankCardsSortField.expiryDate:
-        // Сортировка по дате истечения (год, затем месяц)
-        orderTerms.add(
-          OrderingTerm(
-            expression: bankCards.expiryYear,
-            mode: sortDirection == SortDirection.asc
-                ? OrderingMode.asc
-                : OrderingMode.desc,
-          ),
-        );
-        orderTerms.add(
-          OrderingTerm(
-            expression: bankCards.expiryMonth,
-            mode: sortDirection == SortDirection.asc
-                ? OrderingMode.asc
-                : OrderingMode.desc,
-          ),
-        );
-        break;
-      case BankCardsSortField.createdAt:
-        orderTerms.add(
-          OrderingTerm(
-            expression: bankCards.createdAt,
-            mode: sortDirection == SortDirection.asc
-                ? OrderingMode.asc
-                : OrderingMode.desc,
-          ),
-        );
-        break;
-      case BankCardsSortField.modifiedAt:
-        orderTerms.add(
-          OrderingTerm(
-            expression: bankCards.modifiedAt,
-            mode: sortDirection == SortDirection.asc
-                ? OrderingMode.asc
-                : OrderingMode.desc,
-          ),
-        );
-        break;
-      case BankCardsSortField.lastAccessed:
-        orderTerms.add(
-          OrderingTerm(
-            expression: bankCards.lastUsedAt,
-            mode: sortDirection == SortDirection.asc
-                ? OrderingMode.asc
-                : OrderingMode.desc,
-          ),
-        );
-        break;
+    if (filter.sortField != null) {
+      // Используем специфичное поле для банковских карт
+      switch (filter.sortField!) {
+        case BankCardsSortField.name:
+          orderTerms.add(OrderingTerm(expression: bankCards.name, mode: mode));
+          break;
+        case BankCardsSortField.cardholderName:
+          orderTerms.add(
+            OrderingTerm(expression: bankCards.cardholderName, mode: mode),
+          );
+          break;
+        case BankCardsSortField.bankName:
+          orderTerms.add(
+            OrderingTerm(expression: bankCards.bankName, mode: mode),
+          );
+          break;
+        case BankCardsSortField.expiryDate:
+          orderTerms.add(
+            OrderingTerm(expression: bankCards.expiryYear, mode: mode),
+          );
+          orderTerms.add(
+            OrderingTerm(expression: bankCards.expiryMonth, mode: mode),
+          );
+          break;
+        case BankCardsSortField.createdAt:
+          orderTerms.add(
+            OrderingTerm(expression: bankCards.createdAt, mode: mode),
+          );
+          break;
+        case BankCardsSortField.modifiedAt:
+          orderTerms.add(
+            OrderingTerm(expression: bankCards.modifiedAt, mode: mode),
+          );
+          break;
+        case BankCardsSortField.lastAccessed:
+          orderTerms.add(
+            OrderingTerm(expression: bankCards.lastUsedAt, mode: mode),
+          );
+          break;
+      }
+    } else {
+      // Используем базовый sortBy из BaseFilter
+      switch (filter.base.sortBy) {
+        case SortBy.createdAt:
+          orderTerms.add(
+            OrderingTerm(expression: bankCards.createdAt, mode: mode),
+          );
+          break;
+        case SortBy.modifiedAt:
+          orderTerms.add(
+            OrderingTerm(expression: bankCards.modifiedAt, mode: mode),
+          );
+          break;
+        case SortBy.lastUsedAt:
+          orderTerms.add(
+            OrderingTerm(expression: bankCards.lastUsedAt, mode: mode),
+          );
+          break;
+        case SortBy.recentScore:
+          final windowDays = filter.base.frequencyWindowDays ?? 7;
+          final scoreExpr = _calculateDynamicScore(windowDays);
+          orderTerms.add(OrderingTerm(expression: scoreExpr, mode: mode));
+          break;
+      }
     }
 
     return orderTerms;

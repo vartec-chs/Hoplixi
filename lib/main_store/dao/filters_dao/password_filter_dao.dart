@@ -322,6 +322,25 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
     return expression;
   }
 
+  /// Вычисляет динамический score для сортировки по активности
+  /// Формула: recent_score * exp(-(current_time - last_used_at) / window_days)
+  Expression<double> _calculateDynamicScore(int windowDays) {
+    final now = DateTime.now();
+    final nowMillis = now.millisecondsSinceEpoch / 1000.0; // в секундах
+    final windowSeconds = windowDays * 24 * 60 * 60;
+
+    // recent_score * exp(-(now - last_used_at) / window_seconds)
+    // Если last_used_at == null, используем 0 для score
+    final timeDiff =
+        Variable<double>(nowMillis) -
+        passwords.lastUsedAt.unixepoch.cast<double>();
+    final expDecay = CustomExpression<double>(
+      'EXP(-($timeDiff) / $windowSeconds)',
+    );
+
+    return passwords.recentScore.cast<double>() * expDecay;
+  }
+
   /// Строит список OrderingTerm для сортировки
   List<OrderingTerm> _buildOrderBy(PasswordsFilter filter) {
     final orderingTerms = <OrderingTerm>[];
@@ -331,12 +350,13 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
       OrderingTerm(expression: passwords.isPinned, mode: OrderingMode.desc),
     );
 
-    // Основная сортировка по указанному полю
-    if (filter.sortField != null) {
-      final mode = filter.base.sortDirection == SortDirection.asc
-          ? OrderingMode.asc
-          : OrderingMode.desc;
+    // Основная сортировка
+    final mode = filter.base.sortDirection == SortDirection.asc
+        ? OrderingMode.asc
+        : OrderingMode.desc;
 
+    // Используем sortBy из BaseFilter, если sortField не указан
+    if (filter.sortField != null) {
       switch (filter.sortField!) {
         case PasswordsSortField.name:
           orderingTerms.add(
@@ -375,15 +395,30 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
           break;
       }
     } else {
-      // Сортировка по умолчанию - по дате модификации
-      orderingTerms.add(
-        OrderingTerm(
-          expression: passwords.modifiedAt,
-          mode: filter.base.sortDirection == SortDirection.asc
-              ? OrderingMode.asc
-              : OrderingMode.desc,
-        ),
-      );
+      // Используем sortBy из BaseFilter
+      switch (filter.base.sortBy) {
+        case SortBy.createdAt:
+          orderingTerms.add(
+            OrderingTerm(expression: passwords.createdAt, mode: mode),
+          );
+          break;
+        case SortBy.modifiedAt:
+          orderingTerms.add(
+            OrderingTerm(expression: passwords.modifiedAt, mode: mode),
+          );
+          break;
+        case SortBy.lastUsedAt:
+          orderingTerms.add(
+            OrderingTerm(expression: passwords.lastUsedAt, mode: mode),
+          );
+          break;
+        case SortBy.recentScore:
+          // Динамическая сортировка по активности
+          final windowDays = filter.base.frequencyWindowDays ?? 7;
+          final scoreExpr = _calculateDynamicScore(windowDays);
+          orderingTerms.add(OrderingTerm(expression: scoreExpr, mode: mode));
+          break;
+      }
     }
 
     return orderingTerms;

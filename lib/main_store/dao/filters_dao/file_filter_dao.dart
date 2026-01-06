@@ -267,6 +267,23 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
     }
   }
 
+  /// Вычисляет динамический score для сортировки по активности
+  /// Формула: recent_score * exp(-(current_time - last_used_at) / window_days)
+  Expression<double> _calculateDynamicScore(int windowDays) {
+    final now = DateTime.now();
+    final nowMillis = now.millisecondsSinceEpoch / 1000.0; // в секундах
+    final windowSeconds = windowDays * 24 * 60 * 60;
+
+    // recent_score * exp(-(now - last_used_at) / window_seconds)
+    final timeDiff =
+        Variable<double>(nowMillis) - files.lastUsedAt.unixepoch.cast<double>();
+    final expDecay = CustomExpression<double>(
+      'EXP(-($timeDiff) / $windowSeconds)',
+    );
+
+    return files.recentScore.cast<double>() * expDecay;
+  }
+
   /// Построить ORDER BY выражение
   List<OrderingTerm> _buildOrderBy(FilesFilter filter) {
     final orderTerms = <OrderingTerm>[];
@@ -276,91 +293,68 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
       OrderingTerm(expression: files.isPinned, mode: OrderingMode.desc),
     );
 
-    // Сортировка по указанному полю
-    final sortField = filter.sortField ?? FilesSortField.modifiedAt;
+    // Сортировка
     final sortDirection = filter.base.sortDirection;
+    final mode = sortDirection == SortDirection.asc
+        ? OrderingMode.asc
+        : OrderingMode.desc;
 
-    switch (sortField) {
-      case FilesSortField.name:
-        orderTerms.add(
-          OrderingTerm(
-            expression: files.name,
-            mode: sortDirection == SortDirection.asc
-                ? OrderingMode.asc
-                : OrderingMode.desc,
-          ),
-        );
-        break;
-      case FilesSortField.fileName:
-        orderTerms.add(
-          OrderingTerm(
-            expression: files.fileName,
-            mode: sortDirection == SortDirection.asc
-                ? OrderingMode.asc
-                : OrderingMode.desc,
-          ),
-        );
-        break;
-      case FilesSortField.fileSize:
-        orderTerms.add(
-          OrderingTerm(
-            expression: files.fileSize,
-            mode: sortDirection == SortDirection.asc
-                ? OrderingMode.asc
-                : OrderingMode.desc,
-          ),
-        );
-        break;
-      case FilesSortField.fileExtension:
-        orderTerms.add(
-          OrderingTerm(
-            expression: files.fileExtension,
-            mode: sortDirection == SortDirection.asc
-                ? OrderingMode.asc
-                : OrderingMode.desc,
-          ),
-        );
-        break;
-      case FilesSortField.mimeType:
-        orderTerms.add(
-          OrderingTerm(
-            expression: files.mimeType,
-            mode: sortDirection == SortDirection.asc
-                ? OrderingMode.asc
-                : OrderingMode.desc,
-          ),
-        );
-        break;
-      case FilesSortField.createdAt:
-        orderTerms.add(
-          OrderingTerm(
-            expression: files.createdAt,
-            mode: sortDirection == SortDirection.asc
-                ? OrderingMode.asc
-                : OrderingMode.desc,
-          ),
-        );
-        break;
-      case FilesSortField.modifiedAt:
-        orderTerms.add(
-          OrderingTerm(
-            expression: files.modifiedAt,
-            mode: sortDirection == SortDirection.asc
-                ? OrderingMode.asc
-                : OrderingMode.desc,
-          ),
-        );
-        break;
-      case FilesSortField.lastAccessed:
-        orderTerms.add(
-          OrderingTerm(
-            expression: files.lastUsedAt,
-            mode: sortDirection == SortDirection.asc
-                ? OrderingMode.asc
-                : OrderingMode.desc,
-          ),
-        );
-        break;
+    if (filter.sortField != null) {
+      // Используем специфичное поле для файлов
+      switch (filter.sortField!) {
+        case FilesSortField.name:
+          orderTerms.add(OrderingTerm(expression: files.name, mode: mode));
+          break;
+        case FilesSortField.fileName:
+          orderTerms.add(OrderingTerm(expression: files.fileName, mode: mode));
+          break;
+        case FilesSortField.fileSize:
+          orderTerms.add(OrderingTerm(expression: files.fileSize, mode: mode));
+          break;
+        case FilesSortField.fileExtension:
+          orderTerms.add(
+            OrderingTerm(expression: files.fileExtension, mode: mode),
+          );
+          break;
+        case FilesSortField.mimeType:
+          orderTerms.add(OrderingTerm(expression: files.mimeType, mode: mode));
+          break;
+        case FilesSortField.createdAt:
+          orderTerms.add(OrderingTerm(expression: files.createdAt, mode: mode));
+          break;
+        case FilesSortField.modifiedAt:
+          orderTerms.add(
+            OrderingTerm(expression: files.modifiedAt, mode: mode),
+          );
+          break;
+        case FilesSortField.lastAccessed:
+          orderTerms.add(
+            OrderingTerm(expression: files.lastUsedAt, mode: mode),
+          );
+          break;
+      }
+    } else {
+      // Используем базовый sortBy из BaseFilter
+      switch (filter.base.sortBy) {
+        case SortBy.createdAt:
+          orderTerms.add(OrderingTerm(expression: files.createdAt, mode: mode));
+          break;
+        case SortBy.modifiedAt:
+          orderTerms.add(
+            OrderingTerm(expression: files.modifiedAt, mode: mode),
+          );
+          break;
+        case SortBy.lastUsedAt:
+          orderTerms.add(
+            OrderingTerm(expression: files.lastUsedAt, mode: mode),
+          );
+          break;
+        case SortBy.recentScore:
+          final windowDays = filter.base.frequencyWindowDays ?? 7;
+          final scoreExpr = _calculateDynamicScore(windowDays);
+          orderTerms.add(OrderingTerm(expression: scoreExpr, mode: mode));
+          break;
+      }
     }
 
     return orderTerms;
