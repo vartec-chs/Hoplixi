@@ -1,3 +1,5 @@
+import 'dart:math' show exp;
+
 import 'package:drift/drift.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/base_main_entity_dao.dart';
@@ -183,6 +185,33 @@ class PasswordDao extends DatabaseAccessor<MainStore>
       ..where(passwords.id.equals(id));
     final result = await query.getSingleOrNull();
     return result?.read(passwords.password);
+  }
+
+  /// Увеличить счетчик использования и обновить метрики
+  Future<bool> incrementUsage(String id) async {
+    final password = await getPasswordById(id);
+    if (password == null) return false;
+
+    final now = DateTime.now();
+    final currentUsedCount = password.usedCount + 1;
+    
+    // Вычисляем новый recentScore по формуле EWMA: score = score * exp(-Δt / τ) + 1
+    double newScore = 1.0;
+    if (password.lastUsedAt != null && password.recentScore != null) {
+      final deltaSeconds = now.difference(password.lastUsedAt!).inSeconds.toDouble();
+      final tau = Duration(days: 7).inSeconds.toDouble(); // 7 дней в секундах
+      final decayFactor = exp(-deltaSeconds / tau);
+      newScore = password.recentScore! * decayFactor + 1.0;
+    }
+
+    final result = await (update(passwords)..where((p) => p.id.equals(id)))
+        .write(PasswordsCompanion(
+          usedCount: Value(currentUsedCount),
+          recentScore: Value(newScore),
+          lastUsedAt: Value(now),
+        ));
+
+    return result > 0;
   }
 
   /// Удалить пароль (мягкое удаление)

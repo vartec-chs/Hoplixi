@@ -1,3 +1,5 @@
+import 'dart:math' show exp;
+
 import 'package:drift/drift.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/base_main_entity_dao.dart';
@@ -122,6 +124,37 @@ class NoteDao extends DatabaseAccessor<MainStore>
             .insert(NotesTagsCompanion.insert(noteId: noteId, tagId: tagId));
       }
     });
+  }
+
+  /// Увеличить счетчик использования и обновить метрики
+  Future<bool> incrementUsage(String id) async {
+    final note = await getNoteById(id);
+    if (note == null) return false;
+
+    final now = DateTime.now();
+    final currentUsedCount = note.usedCount + 1;
+
+    // Вычисляем новый recentScore по формуле EWMA: score = score * exp(-Δt / τ) + 1
+    double newScore = 1.0;
+    if (note.lastUsedAt != null && note.recentScore != null) {
+      final deltaSeconds = now
+          .difference(note.lastUsedAt!)
+          .inSeconds
+          .toDouble();
+      final tau = Duration(days: 7).inSeconds.toDouble(); // 7 дней в секундах
+      final decayFactor = exp(-deltaSeconds / tau);
+      newScore = note.recentScore! * decayFactor + 1.0;
+    }
+
+    final result = await (update(notes)..where((n) => n.id.equals(id))).write(
+      NotesCompanion(
+        usedCount: Value(currentUsedCount),
+        recentScore: Value(newScore),
+        lastUsedAt: Value(now),
+      ),
+    );
+
+    return result > 0;
   }
 
   /// Обновить заметку

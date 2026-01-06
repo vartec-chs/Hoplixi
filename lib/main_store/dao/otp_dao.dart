@@ -1,10 +1,12 @@
+import 'dart:math' show exp;
+
 import 'package:drift/drift.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/base_main_entity_dao.dart';
 import 'package:hoplixi/main_store/models/dto/otp_dto.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
-import 'package:hoplixi/main_store/tables/otps.dart';
 import 'package:hoplixi/main_store/tables/otp_tags.dart';
+import 'package:hoplixi/main_store/tables/otps.dart';
 import 'package:uuid/uuid.dart';
 
 part 'otp_dao.g.dart';
@@ -167,6 +169,34 @@ class OtpDao extends DatabaseAccessor<MainStore>
 
     final result = await qwery.getSingleOrNull();
     return result?.read(otps.secret);
+  }
+
+  /// Увеличить счетчик использования и обновить метрики
+  Future<bool> incrementUsage(String id) async {
+    final otp = await getOtpById(id);
+    if (otp == null) return false;
+
+    final now = DateTime.now();
+    final currentUsedCount = otp.usedCount + 1;
+
+    // Вычисляем новый recentScore по формуле EWMA: score = score * exp(-Δt / τ) + 1
+    double newScore = 1.0;
+    if (otp.lastUsedAt != null && otp.recentScore != null) {
+      final deltaSeconds = now.difference(otp.lastUsedAt!).inSeconds.toDouble();
+      final tau = Duration(days: 7).inSeconds.toDouble(); // 7 дней в секундах
+      final decayFactor = exp(-deltaSeconds / tau);
+      newScore = otp.recentScore! * decayFactor + 1.0;
+    }
+
+    final result = await (update(otps)..where((o) => o.id.equals(id))).write(
+      OtpsCompanion(
+        usedCount: Value(currentUsedCount),
+        recentScore: Value(newScore),
+        lastUsedAt: Value(now),
+      ),
+    );
+
+    return result > 0;
   }
 
   /// Синхронизировать теги OTP
