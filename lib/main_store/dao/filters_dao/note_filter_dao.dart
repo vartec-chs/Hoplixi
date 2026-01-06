@@ -161,18 +161,7 @@ class NoteFilterDao extends DatabaseAccessor<MainStore>
       // Но оставляем для совместимости с BaseFilter
     }
 
-    // Фильтр по частоте использования
-    if (base.isFrequentlyUsed != null) {
-      expression =
-          expression &
-          (base.isFrequentlyUsed!
-              ? notes.usedCount.isBiggerOrEqualValue(
-                  MainConstants.frequentlyUsedThreshold,
-                )
-              : notes.usedCount.isSmallerThanValue(
-                  MainConstants.frequentlyUsedThreshold,
-                ));
-    }
+  
 
     // Диапазоны дат создания
     if (base.createdAfter != null) {

@@ -175,19 +175,6 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
               : passwords.notes.isNull());
     }
 
-    // Фильтр по частоте использования
-    // if (base.isFrequentlyUsed != null) {
-    //   expression =
-    //       expression &
-    //       (base.isFrequentlyUsed!
-    //           ? passwords.usedCount.isBiggerOrEqualValue(
-    //               MainConstants.frequentlyUsedThreshold,
-    //             )
-    //           : passwords.usedCount.isSmallerThanValue(
-    //               MainConstants.frequentlyUsedThreshold,
-    //             ));
-    // }
-
     // Диапазоны дат создания
     if (base.createdAfter != null) {
       expression =

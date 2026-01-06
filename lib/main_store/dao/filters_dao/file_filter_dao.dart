@@ -189,22 +189,7 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
       expressions.add(files.isArchived.equals(false));
     }
 
-    // Фильтр по часто используемым
-    if (base.isFrequentlyUsed != null) {
-      if (base.isFrequentlyUsed!) {
-        expressions.add(
-          files.usedCount.isBiggerOrEqualValue(
-            MainConstants.frequentlyUsedThreshold,
-          ),
-        );
-      } else {
-        expressions.add(
-          files.usedCount.isSmallerThanValue(
-            MainConstants.frequentlyUsedThreshold,
-          ),
-        );
-      }
-    }
+    
 
     // Фильтр по удаленным
     if (base.isDeleted != null) {

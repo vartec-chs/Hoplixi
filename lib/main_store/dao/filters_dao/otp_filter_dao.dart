@@ -189,18 +189,7 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
           (base.hasNotes! ? otps.notes.isNotNull() : otps.notes.isNull());
     }
 
-    // Фильтр по частоте использования
-    if (base.isFrequentlyUsed != null) {
-      expression =
-          expression &
-          (base.isFrequentlyUsed!
-              ? otps.usedCount.isBiggerOrEqualValue(
-                  MainConstants.frequentlyUsedThreshold,
-                )
-              : otps.usedCount.isSmallerThanValue(
-                  MainConstants.frequentlyUsedThreshold,
-                ));
-    }
+   
 
     // Диапазоны дат создания
     if (base.createdAfter != null) {

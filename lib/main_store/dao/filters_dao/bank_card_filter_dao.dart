@@ -195,22 +195,7 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
       expressions.add(bankCards.isArchived.equals(false));
     }
 
-    // Фильтр по часто используемым
-    if (base.isFrequentlyUsed != null) {
-      if (base.isFrequentlyUsed!) {
-        expressions.add(
-          bankCards.usedCount.isBiggerOrEqualValue(
-            MainConstants.frequentlyUsedThreshold,
-          ),
-        );
-      } else {
-        expressions.add(
-          bankCards.usedCount.isSmallerThanValue(
-            MainConstants.frequentlyUsedThreshold,
-          ),
-        );
-      }
-    }
+   
 
     // Фильтр по удаленным
     if (base.isDeleted != null) {

@@ -785,7 +785,7 @@ class MainStoreManager {
                   );
                   return 1.0;
                 }
-                logInfo('exp($value) = $result', tag: _logTag);
+                debugPrint('exp($value) = $result');
                 return result;
               } catch (e) {
                 debugPrint('Error in exp function: $e');
