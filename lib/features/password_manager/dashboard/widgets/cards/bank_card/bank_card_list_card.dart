@@ -7,6 +7,7 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
+import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 /// Карточка банковской карты для режима списка (переписана с shared компонентами)
@@ -177,6 +178,9 @@ class _BankCardListCardState extends ConsumerState<BankCardListCard>
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _cardNumberCopied = false);
     });
+
+    final bankCardDao = await ref.read(bankCardDaoProvider.future);
+    await bankCardDao.incrementUsage(widget.bankCard.id);
   }
 
   Future<void> _copyHolderName() async {
@@ -189,6 +193,9 @@ class _BankCardListCardState extends ConsumerState<BankCardListCard>
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _holderNameCopied = false);
     });
+
+    final bankCardDao = await ref.read(bankCardDaoProvider.future);
+    await bankCardDao.incrementUsage(widget.bankCard.id);
   }
 
   Future<void> _copyExpiry() async {
@@ -201,6 +208,9 @@ class _BankCardListCardState extends ConsumerState<BankCardListCard>
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _expiryCopied = false);
     });
+
+    final bankCardDao = await ref.read(bankCardDaoProvider.future);
+    await bankCardDao.incrementUsage(widget.bankCard.id);
   }
 
   List<CardActionItem> _buildCopyActions() {

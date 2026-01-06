@@ -7,6 +7,7 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
+import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 /// Карточка заметки для режима списка (переписана с shared компонентами)
@@ -106,6 +107,9 @@ class _NoteListCardState extends ConsumerState<NoteListCard>
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _titleCopied = false);
     });
+
+    final noteDao = await ref.read(noteDaoProvider.future);
+    await noteDao.incrementUsage(widget.note.id);
   }
 
   List<CardActionItem> _buildCopyActions(BuildContext context) {
