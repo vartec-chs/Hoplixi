@@ -330,10 +330,11 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
     final windowSeconds = windowDays * 24 * 60 * 60;
 
     // recent_score * exp(-(now - last_used_at) / window_seconds)
-    // Если last_used_at == null, используем 0 для score
-    final timeDiff =
-        Variable<double>(nowMillis) -
-        passwords.lastUsedAt.unixepoch.cast<double>();
+    // Если last_used_at == null, используем created_at
+    final lastUsedOrCreated = CustomExpression<double>(
+      'COALESCE(unixepoch("last_used_at"), unixepoch("created_at"))',
+    );
+    final timeDiff = Variable<double>(nowMillis) - lastUsedOrCreated;
     final expDecay = CustomExpression<double>(
       'EXP(-($timeDiff) / $windowSeconds)',
     );
@@ -354,6 +355,14 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
     final mode = filter.base.sortDirection == SortDirection.asc
         ? OrderingMode.asc
         : OrderingMode.desc;
+
+    // Если установлен фильтр по часто используемым, применяем динамическую сортировку
+    if (filter.base.isFrequentlyUsed == true) {
+      final windowDays = filter.base.frequencyWindowDays ?? 7;
+      final scoreExpr = _calculateDynamicScore(windowDays);
+      orderingTerms.add(OrderingTerm(expression: scoreExpr, mode: mode));
+      return orderingTerms;
+    }
 
     // Используем sortBy из BaseFilter, если sortField не указан
     if (filter.sortField != null) {
@@ -413,7 +422,6 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
           );
           break;
         case SortBy.recentScore:
-          // Динамическая сортировка по активности
           final windowDays = filter.base.frequencyWindowDays ?? 7;
           final scoreExpr = _calculateDynamicScore(windowDays);
           orderingTerms.add(OrderingTerm(expression: scoreExpr, mode: mode));

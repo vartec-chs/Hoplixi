@@ -275,8 +275,11 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
     final windowSeconds = windowDays * 24 * 60 * 60;
 
     // recent_score * exp(-(now - last_used_at) / window_seconds)
-    final timeDiff =
-        Variable<double>(nowMillis) - files.lastUsedAt.unixepoch.cast<double>();
+    // Если last_used_at == null, используем created_at
+    final lastUsedOrCreated = CustomExpression<double>(
+      'COALESCE(unixepoch("last_used_at"), unixepoch("created_at"))',
+    );
+    final timeDiff = Variable<double>(nowMillis) - lastUsedOrCreated;
     final expDecay = CustomExpression<double>(
       'EXP(-($timeDiff) / $windowSeconds)',
     );
@@ -298,6 +301,14 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
     final mode = sortDirection == SortDirection.asc
         ? OrderingMode.asc
         : OrderingMode.desc;
+
+    // Если установлен фильтр по часто используемым, применяем динамическую сортировку
+    if (filter.base.isFrequentlyUsed == true) {
+      final windowDays = filter.base.frequencyWindowDays ?? 7;
+      final scoreExpr = _calculateDynamicScore(windowDays);
+      orderTerms.add(OrderingTerm(expression: scoreExpr, mode: mode));
+      return orderTerms;
+    }
 
     if (filter.sortField != null) {
       // Используем специфичное поле для файлов

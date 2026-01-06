@@ -238,8 +238,8 @@ class PaginatedListNotifier
           isArchived: passwordFilter.base.isArchived ?? tabFilter.isArchived,
           isDeleted: passwordFilter.base.isDeleted ?? tabFilter.isDeleted,
           isFrequentlyUsed:
-              passwordFilter.base.isFrequentlyUsed ??
-              tabFilter.isFrequentlyUsed,
+              tabFilter.isFrequentlyUsed ??
+              passwordFilter.base.isFrequentlyUsed,
           limit: limit,
           offset: offset,
         );
@@ -251,7 +251,7 @@ class PaginatedListNotifier
           isArchived: notesFilter.base.isArchived ?? tabFilter.isArchived,
           isDeleted: notesFilter.base.isDeleted ?? tabFilter.isDeleted,
           isFrequentlyUsed:
-              notesFilter.base.isFrequentlyUsed ?? tabFilter.isFrequentlyUsed,
+              tabFilter.isFrequentlyUsed ?? notesFilter.base.isFrequentlyUsed,
           limit: limit,
           offset: offset,
         );
@@ -263,8 +263,8 @@ class PaginatedListNotifier
           isArchived: bankCardsFilter.base.isArchived ?? tabFilter.isArchived,
           isDeleted: bankCardsFilter.base.isDeleted ?? tabFilter.isDeleted,
           isFrequentlyUsed:
-              bankCardsFilter.base.isFrequentlyUsed ??
-              tabFilter.isFrequentlyUsed,
+              tabFilter.isFrequentlyUsed ??
+              bankCardsFilter.base.isFrequentlyUsed,
           limit: limit,
           offset: offset,
         );
@@ -276,7 +276,7 @@ class PaginatedListNotifier
           isArchived: filesFilter.base.isArchived ?? tabFilter.isArchived,
           isDeleted: filesFilter.base.isDeleted ?? tabFilter.isDeleted,
           isFrequentlyUsed:
-              filesFilter.base.isFrequentlyUsed ?? tabFilter.isFrequentlyUsed,
+              tabFilter.isFrequentlyUsed ?? filesFilter.base.isFrequentlyUsed,
           limit: limit,
           offset: offset,
         );
@@ -288,7 +288,7 @@ class PaginatedListNotifier
           isArchived: otpsFilter.base.isArchived ?? tabFilter.isArchived,
           isDeleted: otpsFilter.base.isDeleted ?? tabFilter.isDeleted,
           isFrequentlyUsed:
-              otpsFilter.base.isFrequentlyUsed ?? tabFilter.isFrequentlyUsed,
+              tabFilter.isFrequentlyUsed ?? otpsFilter.base.isFrequentlyUsed,
           limit: limit,
           offset: offset,
         );
