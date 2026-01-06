@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
@@ -17,6 +18,7 @@ import 'package:path/path.dart' as p;
 import 'package:result_dart/result_dart.dart';
 import 'package:sqlcipher_flutter_libs/sqlcipher_flutter_libs.dart';
 import 'package:sqlite3/open.dart';
+import 'package:sqlite3/sqlite3.dart';
 import 'package:uuid/uuid.dart';
 
 Future<void> setupSqlCipher() async {
@@ -748,13 +750,17 @@ class MainStoreManager {
           await setupSqlCipher();
         },
         setup: (rawDb) {
+          // Регистрация функции exp для SQLite для сортировки по времени
+          rawDb.createFunction(
+            functionName: 'exp',
+            argumentCount: const AllowedArgumentCount(1),
+            deterministic: true,
+            directOnly: true,
+            function: (args) => math.exp((args[0] as num).toDouble()),
+          );
+
           // Установка ключа шифрования SQLCipher
           rawDb.execute("PRAGMA key = '$password'");
-          // Дополнительные настройки SQLCipher
-          rawDb.execute('PRAGMA cipher_page_size = 4096');
-          rawDb.execute('PRAGMA kdf_iter = 256000');
-          rawDb.execute('PRAGMA cipher_hmac_algorithm = HMAC_SHA512');
-          rawDb.execute('PRAGMA cipher_kdf_algorithm = PBKDF2_HMAC_SHA512');
         },
       );
 

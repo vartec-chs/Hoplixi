@@ -108,6 +108,7 @@ dependencies:
 
   cloud_storage_all:
     path: ./packages/cloud_storage_sdk/packages/cloud_storage_all
+  build_config: ^1.2.0
 
 dev_dependencies:
   flutter_test:

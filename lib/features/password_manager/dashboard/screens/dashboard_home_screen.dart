@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/list_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/current_view_mode_provider.dart';
@@ -10,6 +12,7 @@ import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_ho
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/app_bar/app_bar_widgets.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_list_toolbar.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
+import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 
 /// Длительность анимации для элементов списка.
 const kAnimationDuration = Duration(milliseconds: 180);
@@ -280,6 +283,47 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
         _removeItemLocally,
       );
 
+  /// Тестовый метод для проверки SQL функции EXP
+  Future<void> _testExpFunction() async {
+    try {
+      logInfo('Testing EXP(1) SQL function...', tag: 'DashboardTest');
+
+      final notifier = ref.read(mainStoreProvider.notifier);
+      final db = notifier.currentDatabase;
+
+      // Выполняем тестовый запрос
+      final result = await db
+          .customSelect('SELECT EXP(1) as result', readsFrom: {})
+          .getSingle();
+
+      final expValue = result.read<double>('result');
+
+      logInfo(
+        'EXP(1) result: $expValue (expected ~2.718)',
+        tag: 'DashboardTest',
+      );
+
+      if (mounted) {
+        Toaster.success(
+          title: 'SQL Test Success',
+          description:
+              'EXP(1) = ${expValue.toStringAsFixed(6)}\n'
+              'Expected: ~2.718282',
+        );
+      }
+    } catch (e, stackTrace) {
+      logError(
+        'Error testing EXP function: $e',
+        stackTrace: stackTrace,
+        tag: 'DashboardTest',
+      );
+
+      if (mounted) {
+        Toaster.error(title: 'SQL Test Failed', description: 'Error: $e');
+      }
+    }
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
   // Build
   // ─────────────────────────────────────────────────────────────────────────
@@ -355,6 +399,11 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
           ],
         ),
       ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: _testExpFunction,
+      //   tooltip: 'Test EXP(1) SQL',
+      //   child: const Icon(Icons.bug_report),
+      // ),
     );
   }
 
