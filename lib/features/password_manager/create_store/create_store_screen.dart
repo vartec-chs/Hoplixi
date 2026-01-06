@@ -215,7 +215,9 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen>
         );
         formNotifier.reset();
         ref.read(titlebarStateProvider.notifier).setBackgroundTransparent(true);
-        context.pop();
+
+        // Редирект на dashboard произойдёт автоматически через router.dart
+        // когда состояние БД изменится на isOpen
       } else {
         final storeState = await ref.read(mainStoreProvider.future);
         final errorMessage =

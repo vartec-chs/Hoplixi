@@ -283,20 +283,17 @@ class NoteFilterDao extends DatabaseAccessor<MainStore>
   /// Формула: recent_score * exp(-(current_time - last_used_at) / window_days)
   Expression<double> _calculateDynamicScore(int windowDays) {
     final now = DateTime.now();
-    final nowMillis = now.millisecondsSinceEpoch / 1000.0; // в секундах
+    final nowSeconds = now.millisecondsSinceEpoch ~/ 1000; // в секундах
     final windowSeconds = windowDays * 24 * 60 * 60;
 
+    // Строим всё выражение как единый CustomExpression
     // recent_score * exp(-(now - last_used_at) / window_seconds)
+    // Drift хранит DateTime как Unix timestamp в секундах
     // Если last_used_at == null, используем created_at
-    final lastUsedOrCreated = CustomExpression<double>(
-      'COALESCE(unixepoch("last_used_at"), unixepoch("created_at"))',
+    return CustomExpression<double>(
+      'CAST(COALESCE("notes"."recent_score", 1) AS REAL) * '
+      'exp(-($nowSeconds - COALESCE("notes"."last_used_at", "notes"."created_at")) / $windowSeconds.0)',
     );
-    final timeDiff = Variable<double>(nowMillis) - lastUsedOrCreated;
-    final expDecay = CustomExpression<double>(
-      'EXP(-($timeDiff) / $windowSeconds)',
-    );
-
-    return notes.recentScore.cast<double>() * expDecay;
   }
 
   /// Строит список OrderingTerm для сортировки

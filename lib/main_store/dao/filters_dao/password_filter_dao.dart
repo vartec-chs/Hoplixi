@@ -1,5 +1,4 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/main_store/dao/filters_dao/filter.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/dto/category_dto.dart';
@@ -177,17 +176,17 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
     }
 
     // Фильтр по частоте использования
-    if (base.isFrequentlyUsed != null) {
-      expression =
-          expression &
-          (base.isFrequentlyUsed!
-              ? passwords.usedCount.isBiggerOrEqualValue(
-                  MainConstants.frequentlyUsedThreshold,
-                )
-              : passwords.usedCount.isSmallerThanValue(
-                  MainConstants.frequentlyUsedThreshold,
-                ));
-    }
+    // if (base.isFrequentlyUsed != null) {
+    //   expression =
+    //       expression &
+    //       (base.isFrequentlyUsed!
+    //           ? passwords.usedCount.isBiggerOrEqualValue(
+    //               MainConstants.frequentlyUsedThreshold,
+    //             )
+    //           : passwords.usedCount.isSmallerThanValue(
+    //               MainConstants.frequentlyUsedThreshold,
+    //             ));
+    // }
 
     // Диапазоны дат создания
     if (base.createdAfter != null) {
@@ -326,20 +325,17 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
   /// Формула: recent_score * exp(-(current_time - last_used_at) / window_days)
   Expression<double> _calculateDynamicScore(int windowDays) {
     final now = DateTime.now();
-    final nowMillis = now.millisecondsSinceEpoch / 1000.0; // в секундах
+    final nowSeconds = now.millisecondsSinceEpoch ~/ 1000; // в секундах
     final windowSeconds = windowDays * 24 * 60 * 60;
 
+    // Строим всё выражение как единый CustomExpression
     // recent_score * exp(-(now - last_used_at) / window_seconds)
+    // Drift хранит DateTime как Unix timestamp в секундах
     // Если last_used_at == null, используем created_at
-    final lastUsedOrCreated = CustomExpression<double>(
-      'COALESCE(unixepoch("last_used_at"), unixepoch("created_at"))',
+    return CustomExpression<double>(
+      'CAST(COALESCE("passwords"."recent_score", 1) AS REAL) * '
+      'exp(-($nowSeconds - COALESCE("passwords"."last_used_at", "passwords"."created_at")) / $windowSeconds.0)',
     );
-    final timeDiff = Variable<double>(nowMillis) - lastUsedOrCreated;
-    final expDecay = CustomExpression<double>(
-      'EXP(-($timeDiff) / $windowSeconds)',
-    );
-
-    return passwords.recentScore.cast<double>() * expDecay;
   }
 
   /// Строит список OrderingTerm для сортировки
