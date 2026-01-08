@@ -17,12 +17,21 @@ class CrashReportsScreen extends ConsumerWidget {
     final selectedReport = ref.watch(selectedCrashReportProvider);
     final reportContent = ref.watch(crashReportContentProvider);
     final theme = Theme.of(context);
+    final isDesktop = MediaQuery.of(context).size.width >= 600;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Отчеты о падениях'),
         elevation: 0,
-        scrolledUnderElevation: 2,
+        leading: ref.watch(selectedCrashReportProvider) != null && !isDesktop
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  ref.read(selectedCrashReportProvider.notifier).setFile(null);
+                },
+              )
+            : null,
+
         backgroundColor: theme.colorScheme.surface,
         actions: [
           if (selectedReport != null) ...[
@@ -84,12 +93,28 @@ class CrashReportsScreen extends ConsumerWidget {
             );
           }
 
+          if (!isDesktop) {
+            return _buildMobileLayout(
+              context,
+              ref,
+              reports,
+              selectedReport,
+              reportContent,
+              theme,
+            );
+          }
+
           return Row(
             children: [
               // Список отчетов
               Container(
                 width: 280,
-                color: theme.colorScheme.surface,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  // border: Border(
+                  //   right: BorderSide(color: theme.dividerColor, width: 1),
+                  // ),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -303,6 +328,188 @@ class CrashReportsScreen extends ConsumerWidget {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildMobileLayout(
+    BuildContext context,
+    WidgetRef ref,
+    List<File> reports,
+    File? selectedReport,
+    AsyncValue reportContent,
+    ThemeData theme,
+  ) {
+    return Scaffold(
+      appBar: selectedReport == null
+          ? null
+          : AppBar(
+              title: Text(
+                selectedReport.path.split(Platform.pathSeparator).last,
+                style: const TextStyle(fontSize: 14),
+              ),
+              leading: const SizedBox.shrink(),
+              backgroundColor: theme.colorScheme.surface,
+              centerTitle: true,
+            ),
+      body: selectedReport == null
+          ? Container(
+              decoration: BoxDecoration(color: theme.colorScheme.surface),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: Text(
+                      'Отчеты о падениях (${reports.length})',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      itemCount: reports.length,
+                      itemBuilder: (context, index) {
+                        final report = reports[index];
+                        final fileName = report.path
+                            .split(Platform.pathSeparator)
+                            .last;
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: ListTile(
+                            title: Text(
+                              fileName,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                            trailing: const Icon(Icons.chevron_right),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            onTap: () {
+                              ref
+                                  .read(selectedCrashReportProvider.notifier)
+                                  .setFile(report);
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : reportContent.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stackTrace) => Center(
+                child: Text(
+                  'Ошибка загрузки отчета: $error',
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+              ),
+              data: (data) {
+                if (data == null) {
+                  return Center(
+                    child: Text(
+                      'Выберите отчет',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.secondary,
+                      ),
+                    ),
+                  );
+                }
+
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (data['timestamp'] != null) ...[
+                        Text(
+                          'Время падения',
+                          style: theme.textTheme.labelLarge,
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerHighest
+                                .withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: theme.dividerColor),
+                          ),
+                          child: SelectableText(
+                            data['timestamp'],
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                      if (data['error'] != null) ...[
+                        Text('Ошибка', style: theme.textTheme.labelLarge),
+                        const SizedBox(height: 4),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.errorContainer.withOpacity(
+                              0.3,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: theme.colorScheme.error.withOpacity(0.5),
+                            ),
+                          ),
+                          child: SelectableText(
+                            data['error'],
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontFamily: 'monospace',
+                              color: theme.colorScheme.onErrorContainer,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                      if (data['stackTrace'] != null) ...[
+                        Text('Stack Trace', style: theme.textTheme.labelLarge),
+                        const SizedBox(height: 4),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerHighest
+                                .withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: theme.dividerColor),
+                          ),
+                          child: SelectableText(
+                            data['stackTrace'],
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontFamily: 'monospace',
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                      if (data['session'] != null) ...[
+                        Text(
+                          'Информация о сессии',
+                          style: theme.textTheme.labelLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        _buildSessionInfo(context, data['session']),
+                      ],
+                    ],
+                  ),
+                );
+              },
+            ),
     );
   }
 

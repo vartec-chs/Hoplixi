@@ -6,7 +6,6 @@ import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:file_crypto/file_crypto.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
@@ -759,36 +758,25 @@ class MainStoreManager {
             directOnly: true,
             function: (args) {
               if (args.isEmpty || args[0] == null) {
-                debugPrint('exp function called with null or no arguments');
                 return 1.0;
               }
               try {
                 final value = (args[0] as num).toDouble();
                 // Ограничиваем значение, чтобы избежать overflow
                 if (value > 100) {
-                  debugPrint(
-                    'exp function input too large: $value, returning infinity',
-                  );
                   return double.infinity;
                 }
                 if (value < -100) {
-                  debugPrint(
-                    'exp function input too small: $value, returning 0.0',
-                  );
                   return 0.0;
                 }
                 final result = math.exp(value);
                 // Проверка на infinity и NaN
                 if (result.isInfinite || result.isNaN) {
-                  debugPrint(
-                    'exp function returned invalid result for input $value',
-                  );
                   return 1.0;
                 }
-                debugPrint('exp($value) = $result');
+
                 return result;
               } catch (e) {
-                debugPrint('Error in exp function: $e');
                 return 1.0;
               }
             },

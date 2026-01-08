@@ -19,12 +19,21 @@ class LogsViewerScreen extends ConsumerWidget {
     final selectedFile = ref.watch(selectedLogFileProvider);
     final paginatedLogs = ref.watch(paginatedLogsProvider);
     final theme = Theme.of(context);
+    final isDesktop = MediaQuery.of(context).size.width >= 600;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Просмотр логов'),
         elevation: 0,
-        scrolledUnderElevation: 2,
+        leading: ref.watch(selectedLogFileProvider) != null && !isDesktop
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  ref.read(selectedLogFileProvider.notifier).setFile(null);
+                },
+              )
+            : null,
+
         backgroundColor: theme.colorScheme.surface,
         actions: [
           if (selectedFile != null) ...[
@@ -86,12 +95,28 @@ class LogsViewerScreen extends ConsumerWidget {
             );
           }
 
+          if (!isDesktop) {
+            return _buildMobileLayout(
+              context,
+              ref,
+              files,
+              selectedFile,
+              paginatedLogs,
+              theme,
+            );
+          }
+
           return Row(
             children: [
               // Список файлов логов (Sidebar)
               Container(
                 width: 280,
-                color: theme.colorScheme.surface,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  // border: Border(
+                  //   right: BorderSide(color: theme.dividerColor, width: 1),
+                  // ),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -241,21 +266,28 @@ class LogsViewerScreen extends ConsumerWidget {
                               }
                               return false;
                             },
-                            child: ListView.builder(
-                              padding: const EdgeInsets.all(8),
-                              itemCount: logs.length + (state.hasMore ? 1 : 0),
-                              itemBuilder: (context, index) {
-                                if (index == logs.length) {
-                                  return const Padding(
-                                    padding: EdgeInsets.all(16.0),
-                                    child: Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                  );
-                                }
-                                final log = logs[index];
-                                return LogEntryTile(entry: log);
-                              },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surface,
+                              ),
+
+                              child: ListView.builder(
+                                padding: const EdgeInsets.all(8),
+                                itemCount:
+                                    logs.length + (state.hasMore ? 1 : 0),
+                                itemBuilder: (context, index) {
+                                  if (index == logs.length) {
+                                    return const Padding(
+                                      padding: EdgeInsets.all(16.0),
+                                      child: Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    );
+                                  }
+                                  final log = logs[index];
+                                  return LogEntryTile(entry: log);
+                                },
+                              ),
                             ),
                           );
                         },
@@ -268,6 +300,153 @@ class LogsViewerScreen extends ConsumerWidget {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildMobileLayout(
+    BuildContext context,
+    WidgetRef ref,
+    List<File> files,
+    File? selectedFile,
+    AsyncValue paginatedLogs,
+    ThemeData theme,
+  ) {
+    return Scaffold(
+      appBar: selectedFile == null
+          ? null
+          : AppBar(
+              centerTitle: true,
+              title: Text(
+                selectedFile.path.split(Platform.pathSeparator).last,
+                style: const TextStyle(fontSize: 14),
+              ),
+              leading: const SizedBox.shrink(),
+              backgroundColor: theme.colorScheme.surface,
+            ),
+      body: selectedFile == null
+          ? Container(
+              decoration: BoxDecoration(color: theme.colorScheme.surface),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: Text(
+                      'Файлы логов (${files.length})',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      itemCount: files.length,
+                      itemBuilder: (context, index) {
+                        final file = files[index];
+                        final fileName = file.path
+                            .split(Platform.pathSeparator)
+                            .last;
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: ListTile(
+                            title: Text(
+                              fileName,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                            trailing: const Icon(Icons.chevron_right),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            onTap: () {
+                              ref
+                                  .read(selectedLogFileProvider.notifier)
+                                  .setFile(file);
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : Column(
+              children: [
+                const LogsFilterBar(),
+                Expanded(
+                  child: paginatedLogs.when(
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (error, stackTrace) => Center(
+                      child: Text(
+                        'Ошибка: $error',
+                        style: TextStyle(color: theme.colorScheme.error),
+                      ),
+                    ),
+                    data: (state) {
+                      final logs = state.logs;
+                      if (logs.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.filter_alt_off,
+                                size: 48,
+                                color: theme.colorScheme.secondary,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Логи не найдены',
+                                style: theme.textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Измените фильтры',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return NotificationListener<ScrollNotification>(
+                        onNotification: (scrollInfo) {
+                          if (scrollInfo.metrics.pixels >=
+                                  scrollInfo.metrics.maxScrollExtent - 200 &&
+                              state.hasMore &&
+                              !state.isLoadingMore) {
+                            ref.read(paginatedLogsProvider.notifier).loadMore();
+                          }
+                          return false;
+                        },
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(8),
+                          itemCount: logs.length + (state.hasMore ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (index == logs.length) {
+                              return const Padding(
+                                padding: EdgeInsets.all(16.0),
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              );
+                            }
+                            final log = logs[index];
+                            return LogEntryTile(entry: log);
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
     );
   }
 
