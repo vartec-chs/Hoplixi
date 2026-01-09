@@ -11,12 +11,14 @@ class StorageList extends StatelessWidget {
   final List<StorageInfo> storages;
   final StorageInfo? selectedStorage;
   final void Function(StorageInfo) onStorageSelected;
+  final void Function(StorageInfo)? onStorageDelete;
 
   const StorageList({
     super.key,
     required this.storages,
     required this.selectedStorage,
     required this.onStorageSelected,
+    this.onStorageDelete,
   });
 
   @override
@@ -72,6 +74,9 @@ class StorageList extends StatelessWidget {
                 storage: storage,
                 isSelected: isSelected,
                 onTap: () => onStorageSelected(storage),
+                onDelete: onStorageDelete != null
+                    ? () => onStorageDelete!(storage)
+                    : null,
               ),
               const SizedBox(height: 24),
               _buildAddStorageButton(context),
@@ -83,6 +88,9 @@ class StorageList extends StatelessWidget {
           storage: storage,
           isSelected: isSelected,
           onTap: () => onStorageSelected(storage),
+          onDelete: onStorageDelete != null
+              ? () => onStorageDelete!(storage)
+              : null,
         );
       },
     );

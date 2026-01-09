@@ -574,6 +574,85 @@ class MainStoreManager {
     }
   }
 
+  /// Удалить хранилище только из истории
+  ///
+  /// Файлы хранилища на диске остаются нетронутыми
+  /// [path] - путь к директории хранилища
+  AsyncResultDart<Unit, DatabaseError> deleteStoreFromHistory(
+    String path,
+  ) async {
+    try {
+      logInfo('Deleting store from history: $path', tag: _logTag);
+
+      // Удаление из истории
+      await _dbHistoryService.deleteByPath(path);
+
+      logInfo('Store removed from history successfully', tag: _logTag);
+
+      return const Success(unit);
+    } catch (e, stackTrace) {
+      logError(
+        'Failed to delete store from history: $e',
+        stackTrace: stackTrace,
+        tag: _logTag,
+      );
+      return Failure(
+        DatabaseError.deleteFailed(
+          message: 'Не удалось удалить хранилище из истории: $e',
+          timestamp: DateTime.now(),
+          stackTrace: stackTrace,
+        ),
+      );
+    }
+  }
+
+  /// Удалить файлы хранилища с диска
+  ///
+  /// Запись в истории остается нетронутой
+  /// [path] - путь к директории хранилища
+  AsyncResultDart<Unit, DatabaseError> deleteStoreFromDisk(String path) async {
+    try {
+      logInfo('Deleting store files from disk: $path', tag: _logTag);
+
+      // Закрыть, если это текущее хранилище
+      if (_currentStorePath == path && isStoreOpen) {
+        await closeStore();
+      }
+
+      // Удаление с диска
+      final storageDir = Directory(path);
+      if (await storageDir.exists()) {
+        await storageDir.delete(recursive: true);
+        logInfo('Store files deleted from disk', tag: _logTag);
+      } else {
+        return Failure(
+          DatabaseError.recordNotFound(
+            message: 'Директория хранилища не найдена',
+            data: {'path': path},
+            timestamp: DateTime.now(),
+          ),
+        );
+      }
+
+      logInfo('Store files deleted successfully', tag: _logTag);
+
+      return const Success(unit);
+    } catch (e, stackTrace) {
+      logError(
+        'Failed to delete store files from disk: $e',
+        stackTrace: stackTrace,
+        tag: _logTag,
+      );
+      return Failure(
+        DatabaseError.deleteFailed(
+          message: 'Не удалось удалить файлы хранилища с диска: $e',
+          timestamp: DateTime.now(),
+          stackTrace: stackTrace,
+        ),
+      );
+    }
+  }
+
   /// Создать подпапку в текущем хранилище
   ///
   /// [folderName] - имя подпапки

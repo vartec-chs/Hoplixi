@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hoplixi/features/password_manager/open_store/models/open_store_state.dart';
 
@@ -6,12 +7,14 @@ class StorageCard extends StatelessWidget {
   final StorageInfo storage;
   final bool isSelected;
   final VoidCallback onTap;
+  final VoidCallback? onDelete;
 
   const StorageCard({
     super.key,
     required this.storage,
     required this.isSelected,
     required this.onTap,
+    this.onDelete,
   });
 
   @override
@@ -87,6 +90,16 @@ class StorageCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                  if (onDelete != null) ...[
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(CupertinoIcons.delete),
+                      tooltip: 'Удалить с диска',
+                      onPressed: onDelete,
+                      color: colorScheme.error,
+                      iconSize: 20,
+                    ),
+                  ],
                 ],
               ),
               const SizedBox(height: 12),

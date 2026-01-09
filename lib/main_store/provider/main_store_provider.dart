@@ -605,6 +605,65 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     }
   }
 
+  /// Удалить хранилище только с диска (запись в истории остается)
+  ///
+  /// [path] - путь к хранилищу
+  /// Возвращает true если успешно, false если ошибка
+  Future<bool> deleteStoreFromDisk(String path) async {
+    try {
+      logInfo('Deleting store from disk at: $path', tag: _logTag);
+
+      // Устанавливаем состояние загрузки
+      _setState(
+        _currentState.copyWith(status: DatabaseStatus.loading, error: null),
+      );
+
+      // Вызываем удаление хранилища с диска
+      final result = await _manager.deleteStoreFromDisk(path);
+
+      return result.fold(
+        (_) {
+          // Успех - переводим в idle состояние
+          _setState(const DatabaseState(status: DatabaseStatus.idle));
+
+          logInfo('Store deleted from disk successfully', tag: _logTag);
+          return true;
+        },
+        (error) {
+          // Ошибка - сохраняем в состоянии с автосбросом
+          _setErrorState(
+            DatabaseState(status: DatabaseStatus.error, error: error),
+          );
+
+          logError(
+            'Failed to delete store from disk: ${error.message}',
+            tag: _logTag,
+          );
+          return false;
+        },
+      );
+    } catch (e, stackTrace) {
+      logError(
+        'Unexpected error deleting store from disk: $e',
+        stackTrace: stackTrace,
+        tag: _logTag,
+      );
+
+      _setErrorState(
+        DatabaseState(
+          status: DatabaseStatus.error,
+          error: DatabaseError.unknown(
+            message: 'Неожиданная ошибка при удалении хранилища с диска: $e',
+            timestamp: DateTime.now(),
+            stackTrace: stackTrace,
+          ),
+        ),
+      );
+
+      return false;
+    }
+  }
+
   /// Получить путь к папке вложений
   ///
   /// Возвращает null если хранилище не открыто или ошибка

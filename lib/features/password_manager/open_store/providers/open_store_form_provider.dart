@@ -314,6 +314,38 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
     }
   }
 
+  /// Удалить хранилище с диска
+  Future<bool> deleteStorage(String path) async {
+    try {
+      logInfo('Deleting storage at: $path', tag: 'OpenStoreForm');
+
+      final storeNotifier = ref.read(mainStoreProvider.notifier);
+
+      // Получаем путь к директории из пути к файлу
+      final dir = Directory(path).parent;
+      final success = await storeNotifier.deleteStoreFromDisk(dir.path);
+
+      if (success) {
+        logInfo('Storage deleted successfully', tag: 'OpenStoreForm');
+
+        // Перезагрузить список хранилищ
+        await loadStorages();
+
+        return true;
+      } else {
+        logWarning('Failed to delete storage', tag: 'OpenStoreForm');
+        return false;
+      }
+    } catch (e, stackTrace) {
+      logError(
+        'Error deleting storage: $e',
+        stackTrace: stackTrace,
+        tag: 'OpenStoreForm',
+      );
+      return false;
+    }
+  }
+
   /// Сбросить состояние
   void reset() {
     _setState(const OpenStoreState());

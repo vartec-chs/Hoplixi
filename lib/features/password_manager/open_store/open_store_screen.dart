@@ -273,10 +273,58 @@ class _OpenStoreScreenState extends ConsumerState<OpenStoreScreen> {
             storages: state.storages,
             selectedStorage: state.selectedStorage,
             onStorageSelected: notifier.selectStorage,
+            onStorageDelete: (storage) => _handleDeleteStorage(storage, ref),
           ),
         ),
       ],
     );
+  }
+
+  Future<void> _handleDeleteStorage(StorageInfo storage, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Удалить хранилище'),
+        content: Text(
+          'Удалить хранилище "${storage.name}" с диска?\n\n'
+          'Это действие необратимо! Все данные будут удалены безвозвратно.',
+        ),
+        actions: [
+          SmoothButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            label: 'Отмена',
+            variant: SmoothButtonVariant.normal,
+            type: SmoothButtonType.text,
+          ),
+          SmoothButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            label: 'Удалить',
+            variant: SmoothButtonVariant.error,
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final notifier = ref.read(openStoreFormProvider.notifier);
+    final success = await notifier.deleteStorage(storage.path);
+
+    if (!mounted) return;
+
+    if (success) {
+      Toaster.success(
+        context: context,
+        title: 'Успех',
+        description: 'Хранилище удалено с диска',
+      );
+    } else {
+      Toaster.error(
+        context: context,
+        title: 'Ошибка',
+        description: 'Не удалось удалить хранилище',
+      );
+    }
   }
 
   void _handleOpenSuccess(BuildContext dialogContext) {
