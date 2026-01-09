@@ -15,7 +15,7 @@ sealed class CreatePasswordDto with _$CreatePasswordDto {
     String? email,
     String? url,
     String? description,
-    String? notes,
+    String? noteId,
     String? categoryId,
     List<String>? tagsIds,
   }) = _CreatePasswordDto;
@@ -35,7 +35,7 @@ sealed class GetPasswordDto with _$GetPasswordDto {
     String? email,
     String? url,
     String? description,
-    String? notes,
+    String? noteId,
     String? categoryId,
     String? categoryName,
     required int usedCount,
@@ -89,12 +89,12 @@ sealed class UpdatePasswordDto with _$UpdatePasswordDto {
     String? email,
     String? url,
     String? description,
-    String? notes,
+    String? noteId,
     String? categoryId,
     bool? isFavorite,
     bool? isArchived,
     bool? isPinned,
-     List<String>? tagsIds,
+    List<String>? tagsIds,
   }) = _UpdatePasswordDto;
 
   factory UpdatePasswordDto.fromJson(Map<String, dynamic> json) =>

@@ -15,7 +15,7 @@ sealed class CreateOtpDto with _$CreateOtpDto {
     required String secretEncoding, // 'BASE32', 'HEX', 'BINARY'
     String? issuer,
     String? accountName,
-    String? notes,
+    String? noteId,
     String? algorithm, // 'SHA1', 'SHA256', 'SHA512'
     int? digits,
     int? period,
@@ -39,7 +39,7 @@ sealed class GetOtpDto with _$GetOtpDto {
     required String secretEncoding,
     String? issuer,
     String? accountName,
-    String? notes,
+    String? noteId,
     required String algorithm,
     required int digits,
     required int period,
@@ -90,7 +90,7 @@ sealed class UpdateOtpDto with _$UpdateOtpDto {
   const factory UpdateOtpDto({
     String? issuer,
     String? accountName,
-    String? notes,
+    String? noteId,
     String? algorithm,
     int? digits,
     int? period,
@@ -99,7 +99,7 @@ sealed class UpdateOtpDto with _$UpdateOtpDto {
     String? passwordId,
     bool? isFavorite,
     bool? isPinned,
-     List<String>? tagsIds,
+    List<String>? tagsIds,
   }) = _UpdateOtpDto;
 
   factory UpdateOtpDto.fromJson(Map<String, dynamic> json) =>

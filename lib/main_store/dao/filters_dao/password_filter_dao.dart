@@ -19,13 +19,14 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
   /// Основной метод для получения отфильтрованных паролей
   @override
   Future<List<PasswordCardDto>> getFiltered(PasswordsFilter filter) async {
-    // Создаем базовый запрос с join к категориям
+    // Создаем базовый запрос с join к категориям и заметкам
     final query = select(passwords).join([
       leftOuterJoin(categories, categories.id.equalsExp(passwords.categoryId)),
+      leftOuterJoin(notes, notes.id.equalsExp(passwords.noteId)),
     ]);
 
     // Применяем все фильтры
-    query.where(_buildWhereExpression(filter));
+    query.where(_buildWhereExpression(filter, hasNotesJoin: true));
 
     // Применяем сортировку
     query.orderBy(_buildOrderBy(filter));
@@ -84,23 +85,30 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
   /// Подсчитывает количество отфильтрованных паролей
   @override
   Future<int> countFiltered(PasswordsFilter filter) async {
-    // Создаем запрос для подсчета
-    final query = selectOnly(passwords)..addColumns([passwords.id.count()]);
+    // Создаем запрос для подсчета с join
+    final query = select(passwords).join([
+      leftOuterJoin(categories, categories.id.equalsExp(passwords.categoryId)),
+      leftOuterJoin(notes, notes.id.equalsExp(passwords.noteId)),
+    ]);
 
     // Применяем те же фильтры
-    query.where(_buildWhereExpression(filter));
+    query.where(_buildWhereExpression(filter, hasNotesJoin: true));
 
-    // Выполняем запрос
-    final result = await query.getSingle();
-    return result.read(passwords.id.count()) ?? 0;
+    // Выполняем запрос и считаем
+    final results = await query.get();
+    return results.length;
   }
 
   /// Строит WHERE выражение на основе всех фильтров
-  Expression<bool> _buildWhereExpression(PasswordsFilter filter) {
+  Expression<bool> _buildWhereExpression(
+    PasswordsFilter filter, {
+    bool hasNotesJoin = false,
+  }) {
     Expression<bool> expression = const Constant(true);
 
     // Применяем базовые фильтры
-    expression = expression & _applyBaseFilters(filter.base);
+    expression =
+        expression & _applyBaseFilters(filter.base, hasNotesJoin: hasNotesJoin);
 
     // Применяем специфичные фильтры для паролей
     expression = expression & _applyPasswordSpecificFilters(filter);
@@ -109,7 +117,10 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
   }
 
   /// Применяет базовые фильтры из BaseFilter
-  Expression<bool> _applyBaseFilters(BaseFilter base) {
+  Expression<bool> _applyBaseFilters(
+    BaseFilter base, {
+    bool hasNotesJoin = false,
+  }) {
     Expression<bool> expression = const Constant(true);
 
     // Если не указан явный фильтр по isDeleted, исключаем удалённые
@@ -120,14 +131,17 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
     // Поисковый запрос по нескольким полям
     if (base.query.isNotEmpty) {
       final query = base.query.toLowerCase();
-      expression =
-          expression &
-          (passwords.name.lower().like('%$query%') |
-              passwords.login.lower().like('%$query%') |
-              passwords.email.lower().like('%$query%') |
-              passwords.url.lower().like('%$query%') |
-              passwords.description.lower().like('%$query%') |
-              passwords.notes.lower().like('%$query%'));
+      Expression<bool> searchExpression =
+          passwords.name.lower().like('%$query%') |
+          passwords.login.lower().like('%$query%') |
+          passwords.email.lower().like('%$query%') |
+          passwords.url.lower().like('%$query%') |
+          passwords.description.lower().like('%$query%');
+      if (hasNotesJoin) {
+        searchExpression =
+            searchExpression | notes.content.lower().like('%$query%');
+      }
+      expression = expression & searchExpression;
     }
 
     // Фильтр по категориям
@@ -171,8 +185,13 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
       expression =
           expression &
           (base.hasNotes!
-              ? passwords.notes.isNotNull()
-              : passwords.notes.isNull());
+              ? passwords.noteId.isNotNull()
+              : passwords.noteId.isNull());
+    }
+
+    // Фильтр по заметкам
+    if (base.noteIds.isNotEmpty) {
+      expression = expression & passwords.noteId.isIn(base.noteIds);
     }
 
     // Диапазоны дат создания
@@ -276,8 +295,8 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
       expression =
           expression &
           (filter.hasNotes!
-              ? passwords.notes.isNotNull()
-              : passwords.notes.isNull());
+              ? passwords.noteId.isNotNull()
+              : passwords.noteId.isNull());
     }
 
     // Наличие URL

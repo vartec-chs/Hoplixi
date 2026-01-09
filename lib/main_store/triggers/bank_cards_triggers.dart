@@ -21,7 +21,7 @@ const List<String> bankCardsHistoryCreateTriggers = [
       OLD.account_number != NEW.account_number OR
       OLD.routing_number != NEW.routing_number OR
       OLD.description != NEW.description OR
-      OLD.notes != NEW.notes OR
+      OLD.note_id != NEW.note_id OR
       OLD.category_id != NEW.category_id OR
       OLD.is_favorite != NEW.is_favorite OR
       OLD.is_deleted != NEW.is_deleted OR
@@ -47,7 +47,7 @@ const List<String> bankCardsHistoryCreateTriggers = [
         account_number,
         routing_number,
         description,
-        notes,
+        note_id,
         category_id,
         category_name,
         used_count,
@@ -77,7 +77,7 @@ const List<String> bankCardsHistoryCreateTriggers = [
         OLD.account_number,
         OLD.routing_number,
         OLD.description,
-        OLD.notes,
+        OLD.note_id,
         OLD.category_id,
         (SELECT name FROM categories WHERE id = OLD.category_id),
         OLD.used_count,
@@ -116,7 +116,7 @@ const List<String> bankCardsHistoryCreateTriggers = [
         account_number,
         routing_number,
         description,
-        notes,
+        note_id,
         category_id,
         category_name,
         used_count,
@@ -146,7 +146,7 @@ const List<String> bankCardsHistoryCreateTriggers = [
         OLD.account_number,
         OLD.routing_number,
         OLD.description,
-        OLD.notes,
+        OLD.note_id,
         OLD.category_id,
         (SELECT name FROM categories WHERE id = OLD.category_id),
         OLD.used_count,

@@ -21,6 +21,7 @@ class FilesHistory extends Table {
   IntColumn get fileSize => integer()(); // File size in bytes
   TextColumn get fileHash =>
       text().nullable()(); // SHA256 hash for integrity check
+  TextColumn get noteId => text().nullable()(); // Foreign key to notes
 
   // Relations
   TextColumn get categoryId => text().nullable()();

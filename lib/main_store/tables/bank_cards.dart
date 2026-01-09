@@ -3,6 +3,7 @@ import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:uuid/uuid.dart';
 
 import 'categories.dart';
+import 'notes.dart';
 
 @DataClassName('BankCardsData')
 class BankCards extends Table {
@@ -23,7 +24,11 @@ class BankCards extends Table {
   TextColumn get accountNumber => text().nullable()(); // Account number
   TextColumn get routingNumber => text().nullable()(); // Routing number
   TextColumn get description => text().nullable()();
-  TextColumn get notes => text().nullable()();
+  TextColumn get noteId => text().nullable().references(
+    Notes,
+    #id,
+    onDelete: KeyAction.setNull,
+  )(); // Foreign key to notes
   TextColumn get categoryId => text().nullable().references(
     Categories,
     #id,

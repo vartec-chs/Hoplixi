@@ -13,7 +13,7 @@ const List<String> passwordsHistoryCreateTriggers = [
       OLD.description != NEW.description OR
       OLD.password != NEW.password OR
       OLD.url != NEW.url OR
-      OLD.notes != NEW.notes OR
+      OLD.note_id != NEW.note_id OR
       OLD.login != NEW.login OR
       OLD.email != NEW.email OR
       OLD.category_id != NEW.category_id OR
@@ -33,7 +33,7 @@ const List<String> passwordsHistoryCreateTriggers = [
         description,
         password,
         url,
-        notes,
+        note_id,
         login,
         email,
         category_id,
@@ -58,7 +58,7 @@ const List<String> passwordsHistoryCreateTriggers = [
         OLD.description,
         OLD.password,
         OLD.url,
-        OLD.notes,
+        OLD.note_id,
         OLD.login,
         OLD.email,
         OLD.category_id,
@@ -94,7 +94,7 @@ const List<String> passwordsHistoryCreateTriggers = [
         description,
         password,
         url,
-        notes,
+        note_id,
         login,
         email,
         category_id,
@@ -119,7 +119,7 @@ const List<String> passwordsHistoryCreateTriggers = [
         OLD.description,
         OLD.password,
         OLD.url,
-        OLD.notes,
+        OLD.note_id,
         OLD.login,
         OLD.email,
         OLD.category_id,

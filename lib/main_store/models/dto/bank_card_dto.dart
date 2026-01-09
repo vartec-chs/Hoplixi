@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hoplixi/main_store/models/dto/base_card_dto.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
 
@@ -22,7 +21,7 @@ sealed class CreateBankCardDto with _$CreateBankCardDto {
     String? accountNumber,
     String? routingNumber,
     String? description,
-    String? notes,
+    String? noteId,
     String? categoryId,
     required List<String> tagsIds,
   }) = _CreateBankCardDto;
@@ -48,7 +47,7 @@ sealed class GetBankCardDto with _$GetBankCardDto {
     String? accountNumber,
     String? routingNumber,
     String? description,
-    String? notes,
+    String? noteId,
     String? categoryId,
     String? categoryName,
     required int usedCount,
@@ -109,7 +108,7 @@ sealed class UpdateBankCardDto with _$UpdateBankCardDto {
     String? accountNumber,
     String? routingNumber,
     String? description,
-    String? notes,
+    String? noteId,
     String? categoryId,
     bool? isFavorite,
     bool? isArchived,

@@ -131,6 +131,7 @@ class FileHistoryDao extends DatabaseAccessor<MainStore>
       fileSize: dto.fileSize,
       fileHash: Value(dto.fileHash),
       description: Value(dto.description),
+      noteId: Value(dto.noteId),
       categoryName: Value(dto.categoryName),
       usedCount: Value(dto.usedCount),
       isFavorite: Value(dto.isFavorite),

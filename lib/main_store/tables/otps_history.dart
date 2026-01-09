@@ -21,7 +21,7 @@ class OtpsHistory extends Table {
   TextColumn get secretEncoding => textEnum<SecretEncoding>().withDefault(
     const Constant('BASE32'),
   )(); // Encoding of the secret
-  TextColumn get notes => text().nullable()();
+  TextColumn get noteId => text().nullable()(); // Foreign key to notes
 
   // OTP configuration snapshot
   TextColumn get algorithm => textEnum<AlgorithmOtp>().withDefault(

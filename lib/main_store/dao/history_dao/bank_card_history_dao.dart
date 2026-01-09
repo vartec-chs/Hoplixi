@@ -144,7 +144,7 @@ class BankCardHistoryDao extends DatabaseAccessor<MainStore>
       accountNumber: Value(dto.accountNumber),
       routingNumber: Value(dto.routingNumber),
       description: Value(dto.description),
-      notes: Value(dto.notes),
+      noteId: Value(dto.noteId),
       categoryId: Value(dto.categoryId),
       categoryName: Value(dto.categoryName),
       usedCount: Value(dto.usedCount),

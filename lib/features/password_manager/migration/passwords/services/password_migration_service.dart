@@ -23,7 +23,6 @@ class PasswordMigrationService {
           'email': '',
           'url': '',
           'description': '',
-          'notes': '',
         },
       );
 
@@ -82,7 +81,6 @@ class PasswordMigrationService {
             email: email?.trim().isNotEmpty == true ? email!.trim() : null,
             url: item['url'] as String?,
             description: item['description'] as String?,
-            notes: item['notes'] as String?,
           );
           passwords.add(dto);
         }

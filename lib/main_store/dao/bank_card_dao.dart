@@ -85,7 +85,7 @@ class BankCardDao extends DatabaseAccessor<MainStore>
         accountNumber: Value(dto.accountNumber),
         routingNumber: Value(dto.routingNumber),
         description: Value(dto.description),
-        notes: Value(dto.notes),
+        noteId: Value(dto.noteId),
         categoryId: Value(dto.categoryId),
       );
       await into(bankCards).insert(companion);
@@ -170,7 +170,7 @@ class BankCardDao extends DatabaseAccessor<MainStore>
         accountNumber: Value(dto.accountNumber),
         routingNumber: Value(dto.routingNumber),
         description: Value(dto.description),
-        notes: Value(dto.notes),
+        noteId: Value(dto.noteId),
         categoryId: Value(dto.categoryId),
         // Bool флаги - пропускаем если null
         isFavorite: dto.isFavorite != null

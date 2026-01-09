@@ -1,5 +1,4 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/main_store/dao/filters_dao/filter.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/dto/category_dto.dart';
@@ -24,7 +23,7 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
       leftOuterJoin(categories, categories.id.equalsExp(files.categoryId)),
     ]);
 
-    final whereExpression = _buildWhereExpression(filter);
+    final whereExpression = _buildWhereExpression(filter, hasNotesJoin: true);
     if (whereExpression != null) {
       query.where(whereExpression);
     }
@@ -76,29 +75,35 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
     }).toList();
   }
 
-  /// Подсчитывает количество отфильтрованных заметок
   /// Подсчитывает количество отфильтрованных файлов
   @override
   Future<int> countFiltered(FilesFilter filter) async {
-    // Создаем запрос для подсчета
-    final query = selectOnly(files)..addColumns([files.id.count()]);
+    // Создаем запрос для подсчета с join
+    final query = select(files).join([
+      leftOuterJoin(categories, categories.id.equalsExp(files.categoryId)),
+      leftOuterJoin(notes, notes.id.equalsExp(files.noteId)),
+    ]);
 
     // Применяем те же фильтры
-    if (_buildWhereExpression(filter) != null) {
-      query.where(_buildWhereExpression(filter)!);
+    final whereExpression = _buildWhereExpression(filter, hasNotesJoin: true);
+    if (whereExpression != null) {
+      query.where(whereExpression);
     }
 
-    // Выполняем запрос
-    final result = await query.getSingle();
-    return result.read(files.id.count()) ?? 0;
+    // Выполняем запрос и считаем
+    final results = await query.get();
+    return results.length;
   }
 
   /// Построить WHERE выражение на основе фильтра
-  Expression<bool>? _buildWhereExpression(FilesFilter filter) {
+  Expression<bool>? _buildWhereExpression(
+    FilesFilter filter, {
+    bool hasNotesJoin = false,
+  }) {
     final expressions = <Expression<bool>>[];
 
     // Применяем базовые фильтры
-    _applyBaseFilters(filter.base, expressions);
+    _applyBaseFilters(filter.base, expressions, hasNotesJoin: hasNotesJoin);
 
     // Применяем специфичные для файлов фильтры
     _applyFileSpecificFilters(filter, expressions);
@@ -109,15 +114,23 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
   }
 
   /// Применить базовые фильтры из BaseFilter
-  void _applyBaseFilters(BaseFilter base, List<Expression<bool>> expressions) {
+  void _applyBaseFilters(
+    BaseFilter base,
+    List<Expression<bool>> expressions, {
+    bool hasNotesJoin = false,
+  }) {
     // Фильтр по поисковому запросу
     if (base.query.isNotEmpty) {
       final queryLower = base.query.toLowerCase();
-      expressions.add(
-        files.name.lower().like('%$queryLower%') |
-            files.fileName.lower().like('%$queryLower%') |
-            files.description.lower().like('%$queryLower%'),
-      );
+      Expression<bool> searchExpression =
+          files.name.lower().like('%$queryLower%') |
+          files.fileName.lower().like('%$queryLower%') |
+          files.description.lower().like('%$queryLower%');
+      if (hasNotesJoin) {
+        searchExpression =
+            searchExpression | notes.content.lower().like('%$queryLower%');
+      }
+      expressions.add(searchExpression);
     }
 
     // Фильтр по категориям
@@ -189,14 +202,25 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
       expressions.add(files.isArchived.equals(false));
     }
 
-    
-
     // Фильтр по удаленным
     if (base.isDeleted != null) {
       expressions.add(files.isDeleted.equals(base.isDeleted!));
     } else {
       // По умолчанию исключаем удаленные
       expressions.add(files.isDeleted.equals(false));
+    }
+
+    // Фильтр по заметкам
+    if (base.noteIds.isNotEmpty) {
+      expressions.add(files.noteId.isIn(base.noteIds));
+    }
+
+    if (base.hasNotes != null) {
+      if (base.hasNotes!) {
+        expressions.add(files.noteId.isNotNull());
+      } else {
+        expressions.add(files.noteId.isNull());
+      }
     }
   }
 

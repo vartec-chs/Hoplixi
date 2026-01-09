@@ -126,7 +126,7 @@ class OtpHistoryDao extends DatabaseAccessor<MainStore>
       algorithm: Value(AlgorithmOtpX.fromString(dto.algorithm)),
       issuer: Value(dto.issuer),
       accountName: Value(dto.accountName),
-      notes: Value(dto.notes),
+      noteId: Value(dto.noteId),
       digits: Value(dto.digits),
       period: Value(dto.period),
       counter: Value(dto.counter),
@@ -182,7 +182,7 @@ class OtpHistoryDao extends DatabaseAccessor<MainStore>
           (oh) =>
               oh.issuer.like(search) |
               oh.accountName.like(search) |
-              oh.notes.like(search),
+              oh.noteId.like(search),
         );
     }
 
@@ -217,7 +217,7 @@ class OtpHistoryDao extends DatabaseAccessor<MainStore>
         ..where(
           otpsHistory.issuer.like(search) |
               otpsHistory.accountName.like(search) |
-              otpsHistory.notes.like(search),
+              otpsHistory.noteId.like(search),
         );
     }
 

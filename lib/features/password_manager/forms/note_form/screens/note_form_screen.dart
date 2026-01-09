@@ -9,13 +9,13 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/forms/note_form/models/note_form_state.dart';
+import 'package:hoplixi/features/password_manager/note_picker/note_picker_modal.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 import '../providers/note_form_provider.dart';
 import '../widgets/note_links_section.dart';
 import '../widgets/note_metadata_modal.dart';
-import '../widgets/note_picker_modal.dart';
 
 /// Экран формы создания/редактирования заметки
 /// Основной интерфейс - QuillEditor для редактирования контента

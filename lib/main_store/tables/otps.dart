@@ -3,6 +3,7 @@ import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:uuid/uuid.dart';
 
 import 'categories.dart';
+import 'notes.dart';
 import 'passwords.dart';
 
 @DataClassName('OtpsData')
@@ -38,7 +39,11 @@ class Otps extends Table {
     const Constant('BASE32'),
   )(); // Encoding of the secret (BASE32, HEX, BINARY)
 
-  TextColumn get notes => text().nullable()();
+  TextColumn get noteId => text().nullable().references(
+    Notes,
+    #id,
+    onDelete: KeyAction.setNull,
+  )(); // Foreign key to notes
 
   // OTP configuration
   TextColumn get algorithm => textEnum<AlgorithmOtp>().withDefault(

@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import 'categories.dart';
+import 'notes.dart';
 
 @DataClassName('FilesData')
 class Files extends Table {
@@ -16,6 +17,11 @@ class Files extends Table {
   IntColumn get fileSize => integer()(); // File size in bytes
   TextColumn get fileHash =>
       text().nullable()(); // SHA256 hash for integrity check
+  TextColumn get noteId => text().nullable().references(
+    Notes,
+    #id,
+    onDelete: KeyAction.setNull,
+  )(); // Foreign key to notes
   TextColumn get categoryId => text().nullable().references(
     Categories,
     #id,

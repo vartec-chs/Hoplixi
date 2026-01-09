@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hoplixi/main_store/models/dto/base_card_dto.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
 
@@ -18,6 +17,7 @@ sealed class CreateFileDto with _$CreateFileDto {
     required int fileSize,
     required String fileHash,
     String? description,
+    String? noteId,
     String? categoryId,
     required List<String> tagsIds,
   }) = _CreateFileDto;
@@ -39,6 +39,7 @@ sealed class GetFileDto with _$GetFileDto {
     required int fileSize,
     required String fileHash,
     String? description,
+    String? noteId,
     String? categoryId,
     String? categoryName,
     required int usedCount,
@@ -85,6 +86,7 @@ sealed class UpdateFileDto with _$UpdateFileDto {
   const factory UpdateFileDto({
     String? name,
     String? description,
+    String? noteId,
     String? categoryId,
     bool? isFavorite,
     bool? isArchived,

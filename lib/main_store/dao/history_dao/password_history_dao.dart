@@ -122,7 +122,7 @@ class PasswordHistoryDao extends DatabaseAccessor<MainStore>
       email: Value(dto.email),
       url: Value(dto.url),
       description: Value(dto.description),
-      notes: Value(dto.notes),
+      noteId: Value(dto.noteId),
       categoryName: Value(dto.categoryName),
       tags: Value(dto.tags),
       usedCount: Value(dto.usedCount ?? 0),

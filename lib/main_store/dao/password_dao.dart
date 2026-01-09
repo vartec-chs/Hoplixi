@@ -30,7 +30,6 @@ class PasswordDao extends DatabaseAccessor<MainStore>
   // toggle favorite
   @override
   Future<bool> toggleFavorite(String id, bool isFavorite) async {
- 
     final result = await (update(passwords)..where((p) => p.id.equals(id)))
         .write(PasswordsCompanion(isFavorite: Value(isFavorite)));
 
@@ -75,7 +74,7 @@ class PasswordDao extends DatabaseAccessor<MainStore>
         email: Value(dto.email),
         url: Value(dto.url),
         description: Value(dto.description),
-        notes: Value(dto.notes),
+        noteId: Value(dto.noteId),
         categoryId: Value(dto.categoryId),
       );
 
@@ -114,7 +113,7 @@ class PasswordDao extends DatabaseAccessor<MainStore>
         email: Value(dto.email),
         url: Value(dto.url),
         description: Value(dto.description),
-        notes: Value(dto.notes),
+        noteId: Value(dto.noteId),
         categoryId: Value(dto.categoryId),
         // Bool флаги - пропускаем если null
         isFavorite: dto.isFavorite != null
@@ -194,22 +193,27 @@ class PasswordDao extends DatabaseAccessor<MainStore>
 
     final now = DateTime.now();
     final currentUsedCount = password.usedCount + 1;
-    
+
     // Вычисляем новый recentScore по формуле EWMA: score = score * exp(-Δt / τ) + 1
     double newScore = 1.0;
     if (password.lastUsedAt != null && password.recentScore != null) {
-      final deltaSeconds = now.difference(password.lastUsedAt!).inSeconds.toDouble();
+      final deltaSeconds = now
+          .difference(password.lastUsedAt!)
+          .inSeconds
+          .toDouble();
       final tau = Duration(days: 7).inSeconds.toDouble(); // 7 дней в секундах
       final decayFactor = exp(-deltaSeconds / tau);
       newScore = password.recentScore! * decayFactor + 1.0;
     }
 
     final result = await (update(passwords)..where((p) => p.id.equals(id)))
-        .write(PasswordsCompanion(
-          usedCount: Value(currentUsedCount),
-          recentScore: Value(newScore),
-          lastUsedAt: Value(now),
-        ));
+        .write(
+          PasswordsCompanion(
+            usedCount: Value(currentUsedCount),
+            recentScore: Value(newScore),
+            lastUsedAt: Value(now),
+          ),
+        );
 
     return result > 0;
   }

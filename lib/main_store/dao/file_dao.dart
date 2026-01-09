@@ -85,6 +85,7 @@ class FileDao extends DatabaseAccessor<MainStore>
         fileSize: dto.fileSize,
         fileHash: Value(dto.fileHash),
         description: Value(dto.description),
+        noteId: Value(dto.noteId),
         categoryId: Value(dto.categoryId),
       );
       await into(files).insert(companion);
@@ -166,6 +167,7 @@ class FileDao extends DatabaseAccessor<MainStore>
         description: dto.description != null
             ? Value(dto.description)
             : const Value.absent(),
+        noteId: dto.noteId != null ? Value(dto.noteId) : const Value.absent(),
         categoryId: dto.categoryId != null
             ? Value(dto.categoryId)
             : const Value.absent(),

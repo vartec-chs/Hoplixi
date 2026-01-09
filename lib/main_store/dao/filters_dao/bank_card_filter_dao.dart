@@ -1,5 +1,4 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/main_store/dao/filters_dao/filter.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/dto/bank_card_dto.dart';
@@ -23,9 +22,10 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
   Future<List<BankCardCardDto>> getFiltered(BankCardsFilter filter) async {
     final query = select(bankCards).join([
       leftOuterJoin(categories, categories.id.equalsExp(bankCards.categoryId)),
+      leftOuterJoin(notes, notes.id.equalsExp(bankCards.noteId)),
     ]);
 
-    final whereExpression = _buildWhereExpression(filter);
+    final whereExpression = _buildWhereExpression(filter, hasNotesJoin: true);
     if (whereExpression != null) {
       query.where(whereExpression);
     }
@@ -84,23 +84,29 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
   /// Подсчитать количество отфильтрованных банковских карт
   @override
   Future<int> countFiltered(BankCardsFilter filter) async {
-    final query = selectOnly(bankCards)..addColumns([bankCards.id.count()]);
+    final query = select(bankCards).join([
+      leftOuterJoin(categories, categories.id.equalsExp(bankCards.categoryId)),
+      leftOuterJoin(notes, notes.id.equalsExp(bankCards.noteId)),
+    ]);
 
-    final whereExpression = _buildWhereExpression(filter);
+    final whereExpression = _buildWhereExpression(filter, hasNotesJoin: true);
     if (whereExpression != null) {
       query.where(whereExpression);
     }
 
-    final result = await query.getSingle();
-    return result.read(bankCards.id.count()) ?? 0;
+    final results = await query.get();
+    return results.length;
   }
 
   /// Построить WHERE выражение на основе фильтра
-  Expression<bool>? _buildWhereExpression(BankCardsFilter filter) {
+  Expression<bool>? _buildWhereExpression(
+    BankCardsFilter filter, {
+    bool hasNotesJoin = false,
+  }) {
     final expressions = <Expression<bool>>[];
 
     // Применяем базовые фильтры
-    _applyBaseFilters(filter.base, expressions);
+    _applyBaseFilters(filter.base, expressions, hasNotesJoin: hasNotesJoin);
 
     // Применяем специфичные для банковских карт фильтры
     _applyBankCardSpecificFilters(filter, expressions);
@@ -111,17 +117,24 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
   }
 
   /// Применить базовые фильтры из BaseFilter
-  void _applyBaseFilters(BaseFilter base, List<Expression<bool>> expressions) {
+  void _applyBaseFilters(
+    BaseFilter base,
+    List<Expression<bool>> expressions, {
+    bool hasNotesJoin = false,
+  }) {
     // Фильтр по поисковому запросу
     if (base.query.isNotEmpty) {
       final queryLower = base.query.toLowerCase();
-      expressions.add(
-        bankCards.name.lower().like('%$queryLower%') |
-            bankCards.cardholderName.lower().like('%$queryLower%') |
-            bankCards.bankName.lower().like('%$queryLower%') |
-            bankCards.description.lower().like('%$queryLower%') |
-            bankCards.notes.lower().like('%$queryLower%'),
-      );
+      Expression<bool> searchExpression =
+          bankCards.name.lower().like('%$queryLower%') |
+          bankCards.cardholderName.lower().like('%$queryLower%') |
+          bankCards.bankName.lower().like('%$queryLower%') |
+          bankCards.description.lower().like('%$queryLower%');
+      if (hasNotesJoin) {
+        searchExpression =
+            searchExpression | notes.content.lower().like('%$queryLower%');
+      }
+      expressions.add(searchExpression);
     }
 
     // Фильтр по категориям
@@ -195,14 +208,25 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
       expressions.add(bankCards.isArchived.equals(false));
     }
 
-   
-
     // Фильтр по удаленным
     if (base.isDeleted != null) {
       expressions.add(bankCards.isDeleted.equals(base.isDeleted!));
     } else {
       // По умолчанию исключаем удаленные
       expressions.add(bankCards.isDeleted.equals(false));
+    }
+
+    // Фильтр по заметкам
+    if (base.noteIds.isNotEmpty) {
+      expressions.add(bankCards.noteId.isIn(base.noteIds));
+    }
+
+    if (base.hasNotes != null) {
+      if (base.hasNotes!) {
+        expressions.add(bankCards.noteId.isNotNull());
+      } else {
+        expressions.add(bankCards.noteId.isNull());
+      }
     }
   }
 

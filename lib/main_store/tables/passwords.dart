@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import 'categories.dart';
+import 'notes.dart';
 
 @DataClassName('PasswordsData')
 class Passwords extends Table {
@@ -10,7 +11,11 @@ class Passwords extends Table {
   TextColumn get description => text().nullable()();
   TextColumn get password => text()(); // Encrypted password
   TextColumn get url => text().nullable()();
-  TextColumn get notes => text().nullable()();
+  TextColumn get noteId => text().nullable().references(
+    Notes,
+    #id,
+    onDelete: KeyAction.setNull,
+  )(); // Foreign key to notes
   TextColumn get login => text().nullable()(); // Username
   TextColumn get email => text().nullable()(); // Email
   TextColumn get categoryId => text().nullable().references(

@@ -1,5 +1,4 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/main_store/dao/filters_dao/filter.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/dto/category_dto.dart';
@@ -20,13 +19,14 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
   /// Основной метод для получения отфильтрованных OTP записей
   @override
   Future<List<OtpCardDto>> getFiltered(OtpsFilter filter) async {
-    // Создаем базовый запрос с join к категориям
+    // Создаем базовый запрос с join к категориям и заметкам
     final query = select(otps).join([
       leftOuterJoin(categories, categories.id.equalsExp(otps.categoryId)),
+      leftOuterJoin(notes, notes.id.equalsExp(otps.noteId)),
     ]);
 
     // Применяем все фильтры
-    query.where(_buildWhereExpression(filter));
+    query.where(_buildWhereExpression(filter, hasNotesJoin: true));
 
     // Применяем сортировку
     query.orderBy(_buildOrderBy(filter));
@@ -105,23 +105,30 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
   /// Подсчитывает количество отфильтрованных паролей
   @override
   Future<int> countFiltered(OtpsFilter filter) async {
-    // Создаем запрос для подсчета
-    final query = selectOnly(otps)..addColumns([otps.id.count()]);
+    // Создаем запрос для подсчета с join
+    final query = select(otps).join([
+      leftOuterJoin(categories, categories.id.equalsExp(otps.categoryId)),
+      leftOuterJoin(notes, notes.id.equalsExp(otps.noteId)),
+    ]);
 
     // Применяем те же фильтры
-    query.where(_buildWhereExpression(filter));
+    query.where(_buildWhereExpression(filter, hasNotesJoin: true));
 
-    // Выполняем запрос
-    final result = await query.getSingle();
-    return result.read(otps.id.count()) ?? 0;
+    // Выполняем запрос и считаем
+    final results = await query.get();
+    return results.length;
   }
 
   /// Строит WHERE выражение на основе всех фильтров
-  Expression<bool> _buildWhereExpression(OtpsFilter filter) {
+  Expression<bool> _buildWhereExpression(
+    OtpsFilter filter, {
+    bool hasNotesJoin = false,
+  }) {
     Expression<bool> expression = const Constant(true);
 
     // Применяем базовые фильтры
-    expression = expression & _applyBaseFilters(filter.base);
+    expression =
+        expression & _applyBaseFilters(filter.base, hasNotesJoin: hasNotesJoin);
 
     // Применяем специфичные фильтры для OTP
     expression = expression & _applyOtpSpecificFilters(filter);
@@ -130,17 +137,23 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
   }
 
   /// Применяет базовые фильтры из BaseFilter
-  Expression<bool> _applyBaseFilters(BaseFilter base) {
+  Expression<bool> _applyBaseFilters(
+    BaseFilter base, {
+    bool hasNotesJoin = false,
+  }) {
     Expression<bool> expression = const Constant(true);
 
     // Поисковый запрос по нескольким полям
     if (base.query.isNotEmpty) {
       final query = base.query.toLowerCase();
-      expression =
-          expression &
-          (otps.issuer.lower().like('%$query%') |
-              otps.accountName.lower().like('%$query%') |
-              otps.notes.lower().like('%$query%'));
+      Expression<bool> searchExpression =
+          otps.issuer.lower().like('%$query%') |
+          otps.accountName.lower().like('%$query%');
+      if (hasNotesJoin) {
+        searchExpression =
+            searchExpression | notes.content.lower().like('%$query%');
+      }
+      expression = expression & searchExpression;
     }
 
     // Фильтр по категориям
@@ -186,10 +199,13 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
     if (base.hasNotes != null) {
       expression =
           expression &
-          (base.hasNotes! ? otps.notes.isNotNull() : otps.notes.isNull());
+          (base.hasNotes! ? otps.noteId.isNotNull() : otps.noteId.isNull());
     }
 
-   
+    // Фильтр по заметкам
+    if (base.noteIds.isNotEmpty) {
+      expression = expression & otps.noteId.isIn(base.noteIds);
+    }
 
     // Диапазоны дат создания
     if (base.createdAfter != null) {
@@ -310,7 +326,7 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
     if (filter.hasNotes != null) {
       expression =
           expression &
-          (filter.hasNotes! ? otps.notes.isNotNull() : otps.notes.isNull());
+          (filter.hasNotes! ? otps.noteId.isNotNull() : otps.noteId.isNull());
     }
 
     return expression;

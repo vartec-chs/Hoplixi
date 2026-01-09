@@ -28,7 +28,7 @@ class BankCardsHistory extends Table {
   TextColumn get accountNumber => text().nullable()();
   TextColumn get routingNumber => text().nullable()();
   TextColumn get description => text().nullable()();
-  TextColumn get notes => text().nullable()();
+  TextColumn get noteId => text().nullable()(); // Foreign key to notes
 
   // Relations
   TextColumn get categoryId => text().nullable()();

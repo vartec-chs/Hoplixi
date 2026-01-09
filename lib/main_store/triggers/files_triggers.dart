@@ -17,6 +17,7 @@ const List<String> filesHistoryCreateTriggers = [
       OLD.mime_type != NEW.mime_type OR
       OLD.file_size != NEW.file_size OR
       OLD.file_hash != NEW.file_hash OR
+      OLD.note_id != NEW.note_id OR
       OLD.category_id != NEW.category_id OR
       OLD.is_favorite != NEW.is_favorite OR
       OLD.is_deleted != NEW.is_deleted OR
@@ -38,6 +39,7 @@ const List<String> filesHistoryCreateTriggers = [
         mime_type,
         file_size,
         file_hash,
+        note_id,
         category_id,
         category_name,
         used_count,
@@ -63,6 +65,7 @@ const List<String> filesHistoryCreateTriggers = [
         OLD.mime_type,
         OLD.file_size,
         OLD.file_hash,
+        OLD.note_id,
         OLD.category_id,
         (SELECT name FROM categories WHERE id = OLD.category_id),
         OLD.used_count,
@@ -97,6 +100,7 @@ const List<String> filesHistoryCreateTriggers = [
         mime_type,
         file_size,
         file_hash,
+        note_id,
         category_id,
         category_name,
         used_count,
@@ -122,6 +126,7 @@ const List<String> filesHistoryCreateTriggers = [
         OLD.mime_type,
         OLD.file_size,
         OLD.file_hash,
+        OLD.note_id,
         OLD.category_id,
         (SELECT name FROM categories WHERE id = OLD.category_id),
         OLD.used_count,

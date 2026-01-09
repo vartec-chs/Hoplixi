@@ -14,7 +14,7 @@ const List<String> otpsHistoryCreateTriggers = [
       OLD.account_name != NEW.account_name OR
       OLD.secret != NEW.secret OR
       OLD.secret_encoding != NEW.secret_encoding OR
-      OLD.notes != NEW.notes OR
+      OLD.note_id != NEW.note_id OR
       OLD.algorithm != NEW.algorithm OR
       OLD.digits != NEW.digits OR
       OLD.period != NEW.period OR
@@ -38,7 +38,7 @@ const List<String> otpsHistoryCreateTriggers = [
         account_name,
         secret,
         secret_encoding,
-        notes,
+        note_id,
         algorithm,
         digits,
         period,
@@ -64,7 +64,7 @@ const List<String> otpsHistoryCreateTriggers = [
         OLD.account_name,
         OLD.secret,
         OLD.secret_encoding,
-        OLD.notes,
+        OLD.note_id,
         OLD.algorithm,
         OLD.digits,
         OLD.period,
@@ -99,7 +99,7 @@ const List<String> otpsHistoryCreateTriggers = [
         account_name,
         secret,
         secret_encoding,
-        notes,
+        note_id,
         algorithm,
         digits,
         period,
@@ -125,7 +125,7 @@ const List<String> otpsHistoryCreateTriggers = [
         OLD.account_name,
         OLD.secret,
         OLD.secret_encoding,
-        OLD.notes,
+        OLD.note_id,
         OLD.algorithm,
         OLD.digits,
         OLD.period,

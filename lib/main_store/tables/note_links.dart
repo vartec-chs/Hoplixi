@@ -11,10 +11,12 @@ class NoteLinks extends Table {
   TextColumn get id => text().clientDefault(() => const Uuid().v4())();
 
   /// ID исходной заметки (откуда ссылка)
+  @ReferenceName('sourceNote')
   TextColumn get sourceNoteId =>
       text().references(Notes, #id, onDelete: KeyAction.cascade)();
 
   /// ID целевой заметки (куда ссылка)
+  @ReferenceName('targetNote')
   TextColumn get targetNoteId =>
       text().references(Notes, #id, onDelete: KeyAction.cascade)();
 

@@ -15,7 +15,7 @@ class PasswordsHistory extends Table {
   TextColumn get password =>
       text().nullable()(); // Encrypted password (nullable for privacy)
   TextColumn get url => text().nullable()();
-  TextColumn get notes => text().nullable()();
+  TextColumn get noteId => text().nullable()(); // Foreign key to notes
   TextColumn get login => text().nullable()();
   TextColumn get email => text().nullable()();
   TextColumn get categoryId => text().nullable()();

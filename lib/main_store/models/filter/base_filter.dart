@@ -12,6 +12,7 @@ sealed class BaseFilter with _$BaseFilter {
   const factory BaseFilter({
     @Default('') String query,
     @Default(<String>[]) List<String> categoryIds,
+    @Default(<String>[]) List<String> noteIds,
     @Default(<String>[]) List<String> tagIds,
     bool? isFavorite,
     bool? isArchived,
@@ -38,6 +39,7 @@ sealed class BaseFilter with _$BaseFilter {
   factory BaseFilter.create({
     String? query,
     List<String>? categoryIds,
+    List<String>? noteIds,
     List<String>? tagIds,
     bool? isFavorite,
     bool? isArchived,
@@ -68,11 +70,16 @@ sealed class BaseFilter with _$BaseFilter {
         .where((s) => s.trim().isNotEmpty)
         .toSet()
         .toList();
+    final normalizedNoteIds = (noteIds ?? <String>[])
+        .where((s) => s.trim().isNotEmpty)
+        .toSet()
+        .toList();
 
     return BaseFilter(
       query: normalizedQuery,
       categoryIds: normalizedCategoryIds,
       tagIds: normalizedTagIds,
+      noteIds: normalizedNoteIds,
       isFavorite: isFavorite,
       isArchived: isArchived,
       isDeleted: isDeleted,
@@ -104,6 +111,7 @@ extension BaseFilterHelpers on BaseFilter {
     if (query.isNotEmpty) return true;
     if (categoryIds.isNotEmpty) return true;
     if (tagIds.isNotEmpty) return true;
+    if (noteIds.isNotEmpty) return true;
     if (isFavorite != null) return true;
     if (isArchived != null) return true;
     if (isFrequentlyUsed != null) return true;
