@@ -524,16 +524,12 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
 
                         // Заметки
                         NotePickerField(
-                          noteName: _noteName,
-                          onNoteSelected: (noteId) {
+                          selectedNoteId: state.noteId,
+                          selectedNoteName: _noteName,
+                          onNoteSelected: (noteId, noteName) {
                             ref
                                 .read(bankCardFormProvider.notifier)
                                 .setNoteId(noteId);
-                          },
-                          onNoteClear: () {
-                            ref
-                                .read(bankCardFormProvider.notifier)
-                                .setNoteId(null);
                           },
                         ),
                       ],

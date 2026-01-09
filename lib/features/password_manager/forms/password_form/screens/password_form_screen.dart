@@ -319,16 +319,12 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
 
                         // Заметка
                         NotePickerField(
-                          noteName: _noteName,
-                          onNoteSelected: (noteId) {
+                          selectedNoteId: state.noteId,
+                          selectedNoteName: _noteName,
+                          onNoteSelected: (noteId, noteName) {
                             ref
                                 .read(passwordFormProvider.notifier)
                                 .setNoteId(noteId);
-                          },
-                          onNoteClear: () {
-                            ref
-                                .read(passwordFormProvider.notifier)
-                                .setNoteId(null);
                           },
                         ),
                       ],

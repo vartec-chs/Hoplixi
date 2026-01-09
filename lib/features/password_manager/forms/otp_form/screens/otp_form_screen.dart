@@ -453,12 +453,10 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
 
           // Заметки
           NotePickerField(
-            noteName: _noteName,
-            onNoteSelected: (noteId) {
+            selectedNoteId: state.noteId,
+            selectedNoteName: _noteName,
+            onNoteSelected: (noteId, noteName) {
               ref.read(otpFormProvider.notifier).setNoteId(noteId);
-            },
-            onNoteClear: () {
-              ref.read(otpFormProvider.notifier).setNoteId(null);
             },
           ),
           const SizedBox(height: 24),

@@ -260,14 +260,12 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
 
                         // Заметки
                         NotePickerField(
-                          noteName: _noteName,
-                          onNoteSelected: (noteId) {
+                          selectedNoteId: state.noteId,
+                          selectedNoteName: _noteName,
+                          onNoteSelected: (noteId, noteName) {
                             ref
                                 .read(fileFormProvider.notifier)
                                 .setNoteId(noteId);
-                          },
-                          onNoteClear: () {
-                            ref.read(fileFormProvider.notifier).setNoteId(null);
                           },
                         ),
                       ],
