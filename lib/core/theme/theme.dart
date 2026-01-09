@@ -29,37 +29,21 @@ WoltModalType buildModalType(BuildContext context) {
 abstract final class AppTheme {
   // LIGHT THEME
   static ThemeData light(BuildContext context) {
-    final bs =
-        FlexThemeData.light(
-          colors: AppColors.lightColors,
-          useMaterial3ErrorColors: false,
-          swapLegacyOnMaterial3: true,
-          subThemesData: ComponentThemes.lightSubThemes,
-          visualDensity: visualDensity,
-          appBarStyle: FlexAppBarStyle.surface,
-          transparentStatusBar: false,
-          splashFactory: InkRipple.splashFactory,
-          useMaterial3: true,
-          fontFamily: GoogleFonts.nunito().fontFamily,
-          error: AppColors.lightColors.error,
-          cupertinoOverrideTheme: const CupertinoThemeData(
-            applyThemeToAll: true,
-          ),
+    final bs = FlexThemeData.light(
+      colors: AppColors.lightColors,
+      useMaterial3ErrorColors: false,
+      swapLegacyOnMaterial3: true,
+      subThemesData: ComponentThemes.lightSubThemes,
+      visualDensity: visualDensity,
+      appBarStyle: FlexAppBarStyle.surface,
+      transparentStatusBar: false,
+      splashFactory: InkRipple.splashFactory,
+      useMaterial3: true,
+      error: AppColors.lightColors.error,
+      cupertinoOverrideTheme: const CupertinoThemeData(applyThemeToAll: true),
 
-          errorContainer: AppColors.lightColors.errorContainer,
-        ).copyWith(
-          extensions: <ThemeExtension>[
-            WoltModalSheetThemeData(
-              backgroundColor: Color(0xFFF5F5F5),
-              surfaceTintColor: Colors.transparent,
-              useSafeArea: true,
-              enableDrag: true,
-              modalTypeBuilder: buildModalType,
-
-              mainContentScrollPhysics: ClampingScrollPhysics(),
-            ),
-          ],
-        );
+      errorContainer: AppColors.lightColors.errorContainer,
+    );
 
     final base = bs.copyWith(
       cardTheme: bs.cardTheme.copyWith(margin: EdgeInsets.zero),
@@ -75,6 +59,17 @@ abstract final class AppTheme {
       textButtonTheme: ButtonThemes.adaptiveTextButtonTheme(context, bs),
       listTileTheme: ComponentThemes.adaptiveListTileTheme(),
       textTheme: GoogleFonts.nunitoTextTheme(bs.textTheme),
+      extensions: <ThemeExtension>[
+        WoltModalSheetThemeData(
+          backgroundColor: Color(0xFFF5F5F5),
+          surfaceTintColor: Colors.transparent,
+          useSafeArea: true,
+          enableDrag: true,
+          modalTypeBuilder: buildModalType,
+
+          mainContentScrollPhysics: ClampingScrollPhysics(),
+        ),
+      ],
     );
 
     return base;
@@ -82,37 +77,21 @@ abstract final class AppTheme {
 
   // DARK THEME
   static ThemeData dark(BuildContext context) {
-    final bs =
-        FlexThemeData.dark(
-          colors: AppColors.darkColors,
-          useMaterial3ErrorColors: false,
-          swapLegacyOnMaterial3: true,
-          subThemesData: ComponentThemes.darkSubThemes,
-          visualDensity: visualDensity,
-          cupertinoOverrideTheme: const CupertinoThemeData(
-            applyThemeToAll: true,
-          ),
-          surfaceTint: const Color(0xFF2E2E2E),
-          appBarStyle: FlexAppBarStyle.scaffoldBackground,
-          transparentStatusBar: false,
-          useMaterial3: true,
-          splashFactory: InkRipple.splashFactory,
-          fontFamily: GoogleFonts.nunito().fontFamily,
-          error: AppColors.darkColors.error,
-          errorContainer: AppColors.darkColors.errorContainer,
-        ).copyWith(
-          extensions: <ThemeExtension>[
-            WoltModalSheetThemeData(
-              backgroundColor: AppColors.darkSurface,
-              surfaceTintColor: Colors.transparent,
-              useSafeArea: true,
-              enableDrag: true,
-              modalTypeBuilder: buildModalType,
-              mainContentScrollPhysics: ClampingScrollPhysics(),
-              // dragHandleColor: Colors.white54,
-            ),
-          ],
-        );
+    final bs = FlexThemeData.dark(
+      colors: AppColors.darkColors,
+      useMaterial3ErrorColors: false,
+      swapLegacyOnMaterial3: true,
+      subThemesData: ComponentThemes.darkSubThemes,
+      visualDensity: visualDensity,
+      cupertinoOverrideTheme: const CupertinoThemeData(applyThemeToAll: true),
+      surfaceTint: const Color(0xFF2E2E2E),
+      appBarStyle: FlexAppBarStyle.scaffoldBackground,
+      transparentStatusBar: false,
+      useMaterial3: true,
+      splashFactory: InkRipple.splashFactory,
+      error: AppColors.darkColors.error,
+      errorContainer: AppColors.darkColors.errorContainer,
+    );
 
     final base = bs.copyWith(
       cardTheme: bs.cardTheme.copyWith(margin: EdgeInsets.zero),
@@ -128,8 +107,18 @@ abstract final class AppTheme {
       textButtonTheme: ButtonThemes.adaptiveTextButtonTheme(context, bs),
       listTileTheme: ComponentThemes.adaptiveListTileTheme(),
       textTheme: GoogleFonts.nunitoTextTheme(bs.textTheme),
+      extensions: <ThemeExtension>[
+        WoltModalSheetThemeData(
+          backgroundColor: AppColors.darkSurface,
+          surfaceTintColor: Colors.transparent,
+          useSafeArea: true,
+          enableDrag: true,
+          modalTypeBuilder: buildModalType,
+          mainContentScrollPhysics: ClampingScrollPhysics(),
+          // dragHandleColor: Colors.white54,
+        ),
+      ],
     );
-
     return base;
   }
 }
