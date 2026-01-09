@@ -26,9 +26,6 @@ Future<NotePickerResult?> showNotePickerModal(
     useRootNavigator: true,
     context: context,
     pageListBuilder: (context) => [_buildNotePickerPage(context, ref)],
-    onModalDismissedWithBarrierTap: () {
-      Navigator.of(context).pop();
-    },
   );
 }
 

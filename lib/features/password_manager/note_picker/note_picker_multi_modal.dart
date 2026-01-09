@@ -34,9 +34,6 @@ Future<NotePickerMultiResult?> showNotePickerMultiModal(
         initialSelectedIds: initialSelectedIds,
       ),
     ],
-    onModalDismissedWithBarrierTap: () {
-      Navigator.of(context).pop();
-    },
   );
 }
 
