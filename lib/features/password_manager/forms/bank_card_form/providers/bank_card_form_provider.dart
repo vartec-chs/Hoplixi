@@ -5,6 +5,7 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/data_refre
 import 'package:hoplixi/main_store/models/dto/bank_card_dto.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+
 import '../models/bank_card_form_state.dart';
 
 const _logTag = 'BankCardFormProvider';
@@ -58,7 +59,7 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
         accountNumber: bankCard.accountNumber ?? '',
         routingNumber: bankCard.routingNumber ?? '',
         description: bankCard.description ?? '',
-        notes: bankCard.notes ?? '',
+        noteId: bankCard.noteId,
         cardType: bankCard.cardType?.value,
         cardNetwork: bankCard.cardNetwork?.value,
         categoryId: bankCard.categoryId,
@@ -139,9 +140,9 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     state = state.copyWith(description: value);
   }
 
-  /// Обновить поле notes
-  void setNotes(String value) {
-    state = state.copyWith(notes: value);
+  /// Обновить поле noteId
+  void setNoteId(String? value) {
+    state = state.copyWith(noteId: value);
   }
 
   /// Обновить тип карты
@@ -298,7 +299,7 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
           description: state.description.trim().isEmpty
               ? null
               : state.description.trim(),
-          notes: state.notes.trim().isEmpty ? null : state.notes.trim(),
+          noteId: state.noteId,
           cardType: state.cardType,
           cardNetwork: state.cardNetwork,
           categoryId: state.categoryId,
@@ -353,7 +354,7 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
           description: state.description.trim().isEmpty
               ? null
               : state.description.trim(),
-          notes: state.notes.trim().isEmpty ? null : state.notes.trim(),
+          noteId: state.noteId,
           cardType: state.cardType,
           cardNetwork: state.cardNetwork,
           categoryId: state.categoryId,

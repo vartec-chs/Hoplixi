@@ -17,7 +17,7 @@ sealed class PasswordFormState with _$PasswordFormState {
     @Default('') String email,
     @Default('') String url,
     @Default('') String description,
-    @Default('') String notes,
+    String? noteId,
 
     // Связи
     String? categoryId,

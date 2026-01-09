@@ -15,6 +15,7 @@ sealed class FileFormState with _$FileFormState {
     // Поля формы
     @Default('') String name,
     @Default('') String description,
+    String? noteId,
 
     // Информация о файле (для создания)
     File? selectedFile,

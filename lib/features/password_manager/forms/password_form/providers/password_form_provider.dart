@@ -4,6 +4,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/dto/password_dto.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+
 import '../models/password_form_state.dart';
 
 const _logTag = 'PasswordFormProvider';
@@ -53,7 +54,7 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
         email: password.email ?? '',
         url: password.url ?? '',
         description: password.description ?? '',
-        notes: password.notes ?? '',
+        noteId: password.noteId,
         categoryId: password.categoryId,
 
         // categoryName: ..., // TODO: Получить имя категории
@@ -111,9 +112,9 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     state = state.copyWith(description: value);
   }
 
-  /// Обновить поле notes
-  void setNotes(String value) {
-    state = state.copyWith(notes: value);
+  /// Обновить поле noteId
+  void setNoteId(String? value) {
+    state = state.copyWith(noteId: value);
   }
 
   /// Обновить категорию
@@ -243,7 +244,7 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
           description: state.description.trim().isEmpty
               ? null
               : state.description.trim(),
-          notes: state.notes.trim().isEmpty ? null : state.notes.trim(),
+          noteId: state.noteId,
           categoryId: state.categoryId,
         );
 
@@ -283,7 +284,7 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
           description: state.description.trim().isEmpty
               ? null
               : state.description.trim(),
-          notes: state.notes.trim().isEmpty ? null : state.notes.trim(),
+          noteId: state.noteId,
           categoryId: state.categoryId,
           tagsIds: state.tagIds.isEmpty ? null : state.tagIds,
         );

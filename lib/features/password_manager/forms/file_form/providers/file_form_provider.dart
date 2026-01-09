@@ -61,6 +61,7 @@ class FileFormNotifier extends Notifier<FileFormState> {
         existingFileSize: file.fileSize,
         existingFileExtension: file.fileExtension,
         categoryId: file.categoryId,
+        noteId: file.noteId,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
         isLoading: false,
@@ -146,6 +147,11 @@ class FileFormNotifier extends Notifier<FileFormState> {
     state = state.copyWith(description: value);
   }
 
+  /// Обновить поле noteId
+  void setNoteId(String? value) {
+    state = state.copyWith(noteId: value);
+  }
+
   /// Обновить категорию
   void setCategory(String? categoryId, String? categoryName) {
     state = state.copyWith(categoryId: categoryId, categoryName: categoryName);
@@ -205,6 +211,7 @@ class FileFormNotifier extends Notifier<FileFormState> {
           description: state.description.trim().isEmpty
               ? null
               : state.description.trim(),
+          noteId: state.noteId,
           categoryId: state.categoryId,
           tagsIds: state.tagIds,
         );

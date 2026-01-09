@@ -23,7 +23,7 @@ sealed class BankCardFormState with _$BankCardFormState {
     @Default('') String accountNumber,
     @Default('') String routingNumber,
     @Default('') String description,
-    @Default('') String notes,
+    String? noteId,
 
     // Тип карты и сеть
     String? cardType,

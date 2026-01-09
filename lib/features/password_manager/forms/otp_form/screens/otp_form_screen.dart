@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/category_manager/features/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_button.dart';
+import 'package:hoplixi/features/password_manager/forms/_shared/widgets/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/tags_manager/features/tags_picker/tags_picker.dart';
 import 'package:hoplixi/features/qr_scanner/widgets/qr_scanner_widget.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
+import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 import '../models/otp_form_state.dart';
@@ -31,12 +33,12 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
   late final TextEditingController _issuerController;
   late final TextEditingController _accountNameController;
   late final TextEditingController _secretController;
-  late final TextEditingController _notesController;
   late final TextEditingController _periodController;
   late final TextEditingController _counterController;
 
   bool _obscureSecret = true;
   bool _controllersInitialized = false;
+  String? _noteName;
 
   @override
   void initState() {
@@ -46,7 +48,6 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
     _issuerController = TextEditingController();
     _accountNameController = TextEditingController();
     _secretController = TextEditingController();
-    _notesController = TextEditingController();
     _periodController = TextEditingController(text: '30');
     _counterController = TextEditingController(text: '0');
 
@@ -82,7 +83,6 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
     _issuerController.dispose();
     _accountNameController.dispose();
     _secretController.dispose();
-    _notesController.dispose();
     _periodController.dispose();
     _counterController.dispose();
     super.dispose();
@@ -123,9 +123,6 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
     if (_secretController.text != state.secret) {
       _secretController.text = state.secret;
     }
-    if (_notesController.text != state.notes) {
-      _notesController.text = state.notes;
-    }
     if (_periodController.text != state.period.toString()) {
       _periodController.text = state.period.toString();
     }
@@ -142,6 +139,21 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
     }
 
     _controllersInitialized = true;
+  }
+
+  Future<void> _loadNoteName(String noteId) async {
+    final noteDao = ref.read(noteDaoProvider);
+    final asyncValue = noteDao;
+
+    // Ждём данные из AsyncValue
+    if (!asyncValue.hasValue) return;
+
+    final note = await asyncValue.value!.getNoteById(noteId);
+    if (mounted) {
+      setState(() {
+        _noteName = note?.title;
+      });
+    }
   }
 
   void _handleSave() async {
@@ -440,16 +452,13 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
           const SizedBox(height: 16),
 
           // Заметки
-          TextField(
-            controller: _notesController,
-            decoration: primaryInputDecoration(
-              context,
-              labelText: 'Заметки',
-              hintText: 'Дополнительные заметки',
-            ),
-            maxLines: 3,
-            onChanged: (value) {
-              ref.read(otpFormProvider.notifier).setNotes(value);
+          NotePickerField(
+            noteName: _noteName,
+            onNoteSelected: (noteId) {
+              ref.read(otpFormProvider.notifier).setNoteId(noteId);
+            },
+            onNoteClear: () {
+              ref.read(otpFormProvider.notifier).setNoteId(null);
             },
           ),
           const SizedBox(height: 24),

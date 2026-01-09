@@ -6,8 +6,10 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/category_manager/features/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_button.dart';
+import 'package:hoplixi/features/password_manager/forms/_shared/widgets/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/tags_manager/features/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
+import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 import '../providers/bank_card_form_provider.dart';
@@ -36,9 +38,9 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
   late final TextEditingController _accountNumberController;
   late final TextEditingController _routingNumberController;
   late final TextEditingController _descriptionController;
-  late final TextEditingController _notesController;
 
   late final FocusNode _cvvFocusNode;
+  String? _noteName;
 
   @override
   void initState() {
@@ -54,7 +56,6 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
     _accountNumberController = TextEditingController();
     _routingNumberController = TextEditingController();
     _descriptionController = TextEditingController();
-    _notesController = TextEditingController();
 
     _cvvFocusNode = FocusNode();
     _cvvFocusNode.addListener(_onCvvFocusChange);
@@ -88,7 +89,6 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
     _accountNumberController.dispose();
     _routingNumberController.dispose();
     _descriptionController.dispose();
-    _notesController.dispose();
 
     _cvvFocusNode.removeListener(_onCvvFocusChange);
     _cvvFocusNode.dispose();
@@ -127,11 +127,35 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
     return buffer.toString();
   }
 
+  Future<void> _loadNoteName(String noteId) async {
+    final noteDao = ref.read(noteDaoProvider);
+    final asyncValue = noteDao;
+
+    // Ждём данные из AsyncValue
+    if (!asyncValue.hasValue) return;
+
+    final note = await asyncValue.value!.getNoteById(noteId);
+    if (mounted) {
+      setState(() {
+        _noteName = note?.title;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final state = ref.watch(bankCardFormProvider);
+
+    // Загрузка имени заметки
+    ref.listen(bankCardFormProvider, (prev, next) {
+      if (next.noteId != null && next.noteId != prev?.noteId) {
+        _loadNoteName(next.noteId!);
+      } else if (next.noteId == null) {
+        setState(() => _noteName = null);
+      }
+    });
 
     // Синхронизация контроллеров с состоянием при загрузке данных
     if (state.isEditMode && !state.isLoading) {
@@ -164,9 +188,6 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
       }
       if (_descriptionController.text != state.description) {
         _descriptionController.text = state.description;
-      }
-      if (_notesController.text != state.notes) {
-        _notesController.text = state.notes;
       }
     }
 
@@ -502,18 +523,17 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                         const SizedBox(height: 8),
 
                         // Заметки
-                        TextField(
-                          controller: _notesController,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'Заметки',
-                            hintText: 'Дополнительные заметки',
-                          ),
-                          maxLines: 4,
-                          onChanged: (value) {
+                        NotePickerField(
+                          noteName: _noteName,
+                          onNoteSelected: (noteId) {
                             ref
                                 .read(bankCardFormProvider.notifier)
-                                .setNotes(value);
+                                .setNoteId(noteId);
+                          },
+                          onNoteClear: () {
+                            ref
+                                .read(bankCardFormProvider.notifier)
+                                .setNoteId(null);
                           },
                         ),
                       ],

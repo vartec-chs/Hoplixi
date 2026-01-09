@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/category_manager/features/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_button.dart';
+import 'package:hoplixi/features/password_manager/forms/_shared/widgets/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/tags_manager/features/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
+import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 import '../providers/password_form_provider.dart';
@@ -30,7 +32,8 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
   late final TextEditingController _emailController;
   late final TextEditingController _urlController;
   late final TextEditingController _descriptionController;
-  late final TextEditingController _notesController;
+
+  String? _noteName;
 
   bool _obscurePassword = true;
 
@@ -44,7 +47,6 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
     _emailController = TextEditingController();
     _urlController = TextEditingController();
     _descriptionController = TextEditingController();
-    _notesController = TextEditingController();
 
     // Инициализация формы
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -65,8 +67,15 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
     _emailController.dispose();
     _urlController.dispose();
     _descriptionController.dispose();
-    _notesController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadNoteName(String noteId) async {
+    final dao = await ref.read(noteDaoProvider.future);
+    final note = await dao.getNoteById(noteId);
+    if (mounted) {
+      setState(() => _noteName = note?.title);
+    }
   }
 
   void _handleSave() async {
@@ -106,9 +115,16 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
       if (_urlController.text != state.url) _urlController.text = state.url;
       if (_descriptionController.text != state.description)
         _descriptionController.text = state.description;
-      if (_notesController.text != state.notes)
-        _notesController.text = state.notes;
     }
+
+    // Загрузка имени заметки
+    ref.listen(passwordFormProvider, (prev, next) {
+      if (next.noteId != null && next.noteId != prev?.noteId) {
+        _loadNoteName(next.noteId!);
+      } else if (next.noteId == null) {
+        setState(() => _noteName = null);
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -301,19 +317,18 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Заметки
-                        TextField(
-                          controller: _notesController,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'Заметки',
-                            hintText: 'Дополнительные заметки',
-                          ),
-                          maxLines: 4,
-                          onChanged: (value) {
+                        // Заметка
+                        NotePickerField(
+                          noteName: _noteName,
+                          onNoteSelected: (noteId) {
                             ref
                                 .read(passwordFormProvider.notifier)
-                                .setNotes(value);
+                                .setNoteId(noteId);
+                          },
+                          onNoteClear: () {
+                            ref
+                                .read(passwordFormProvider.notifier)
+                                .setNoteId(null);
                           },
                         ),
                       ],

@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/category_manager/features/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_button.dart';
+import 'package:hoplixi/features/password_manager/forms/_shared/widgets/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/tags_manager/features/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
+import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
@@ -28,6 +30,7 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
 
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
+  String? _noteName;
 
   @override
   void initState() {
@@ -78,10 +81,34 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
     await ref.read(fileFormProvider.notifier).pickFile();
   }
 
+  Future<void> _loadNoteName(String noteId) async {
+    final noteDao = ref.read(noteDaoProvider);
+    final asyncValue = noteDao;
+
+    // Ждём данные из AsyncValue
+    if (!asyncValue.hasValue) return;
+
+    final note = await asyncValue.value!.getNoteById(noteId);
+    if (mounted) {
+      setState(() {
+        _noteName = note?.title;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final state = ref.watch(fileFormProvider);
+
+    // Загрузка имени заметки
+    ref.listen(fileFormProvider, (prev, next) {
+      if (next.noteId != null && next.noteId != prev?.noteId) {
+        _loadNoteName(next.noteId!);
+      } else if (next.noteId == null) {
+        setState(() => _noteName = null);
+      }
+    });
 
     // Синхронизация контроллеров с состоянием при загрузке данных
     if (state.isEditMode && !state.isLoading) {
@@ -227,6 +254,20 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                             ref
                                 .read(fileFormProvider.notifier)
                                 .setDescription(value);
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Заметки
+                        NotePickerField(
+                          noteName: _noteName,
+                          onNoteSelected: (noteId) {
+                            ref
+                                .read(fileFormProvider.notifier)
+                                .setNoteId(noteId);
+                          },
+                          onNoteClear: () {
+                            ref.read(fileFormProvider.notifier).setNoteId(null);
                           },
                         ),
                       ],

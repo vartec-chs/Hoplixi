@@ -18,7 +18,7 @@ sealed class OtpFormState with _$OtpFormState {
     @Default('') String issuer,
     @Default('') String accountName,
     @Default('') String secret,
-    @Default('') String notes,
+    String? noteId,
 
     // Настройки OTP
     @Default(AlgorithmOtp.SHA1) AlgorithmOtp algorithm,

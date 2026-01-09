@@ -1,12 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/smart_converter_base.dart';
-import 'package:hoplixi/features/password_manager/forms/otp_form/utils/otp_uri_parser.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
+import 'package:hoplixi/features/password_manager/forms/otp_form/utils/otp_uri_parser.dart';
 import 'package:hoplixi/main_store/models/dto/otp_dto.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+
 import '../models/otp_form_state.dart';
 
 const _logTag = 'OtpFormProvider';
@@ -64,7 +65,7 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
         issuer: otp.issuer ?? '',
         accountName: otp.accountName ?? '',
         secret: secretBase32,
-        notes: otp.notes ?? '',
+        noteId: otp.noteId,
         algorithm: AlgorithmOtpX.fromString(otp.algorithm.name),
         digits: otp.digits,
         period: otp.period,
@@ -137,9 +138,9 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
     state = state.copyWith(secret: value, secretError: _validateSecret(value));
   }
 
-  /// Обновить поле notes
-  void setNotes(String value) {
-    state = state.copyWith(notes: value);
+  /// Обновить поле noteId
+  void setNoteId(String? value) {
+    state = state.copyWith(noteId: value);
   }
 
   /// Обновить алгоритм
@@ -265,7 +266,7 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
           accountName: state.accountName.trim().isEmpty
               ? null
               : state.accountName.trim(),
-          notes: state.notes.trim().isEmpty ? null : state.notes.trim(),
+          noteId: state.noteId,
           algorithm: state.algorithm.name,
           digits: state.digits,
           period: state.period,
@@ -309,7 +310,7 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
           accountName: state.accountName.trim().isEmpty
               ? null
               : state.accountName.trim(),
-          notes: state.notes.trim().isEmpty ? null : state.notes.trim(),
+          noteId: state.noteId,
           algorithm: state.algorithm.name,
           digits: state.digits,
           period: state.period,
