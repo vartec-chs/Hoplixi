@@ -27,27 +27,19 @@ WoltModalType buildModalType(BuildContext context) {
 }
 
 abstract final class AppTheme {
-  static ThemeData _withNunito(ThemeData theme) {
-    return theme.copyWith(
-      textTheme: GoogleFonts.nunitoTextTheme(theme.textTheme),
-    );
-  }
-
   // LIGHT THEME
   static ThemeData light(BuildContext context) {
     final bs =
         FlexThemeData.light(
           colors: AppColors.lightColors,
-          useMaterial3ErrorColors: true,
+          useMaterial3ErrorColors: false,
           swapLegacyOnMaterial3: true,
           subThemesData: ComponentThemes.lightSubThemes,
           visualDensity: visualDensity,
-
           appBarStyle: FlexAppBarStyle.surface,
           transparentStatusBar: false,
           splashFactory: InkRipple.splashFactory,
           useMaterial3: true,
-
           fontFamily: GoogleFonts.nunito().fontFamily,
           error: AppColors.lightColors.error,
           cupertinoOverrideTheme: const CupertinoThemeData(
@@ -71,26 +63,21 @@ abstract final class AppTheme {
 
     final base = bs.copyWith(
       cardTheme: bs.cardTheme.copyWith(margin: EdgeInsets.zero),
+      elevatedButtonTheme: ButtonThemes.adaptiveElevatedButtonTheme(
+        context,
+        bs,
+      ),
+      filledButtonTheme: ButtonThemes.adaptiveFilledButtonTheme(context, bs),
+      outlinedButtonTheme: ButtonThemes.adaptiveOutlinedButtonTheme(
+        context,
+        bs,
+      ),
+      textButtonTheme: ButtonThemes.adaptiveTextButtonTheme(context, bs),
+      listTileTheme: ComponentThemes.adaptiveListTileTheme(),
+      textTheme: GoogleFonts.nunitoTextTheme(bs.textTheme),
     );
 
-    return _withNunito(
-      base.copyWith(
-        elevatedButtonTheme: ButtonThemes.adaptiveElevatedButtonTheme(
-          context,
-          base,
-        ),
-        filledButtonTheme: ButtonThemes.adaptiveFilledButtonTheme(
-          context,
-          base,
-        ),
-        outlinedButtonTheme: ButtonThemes.adaptiveOutlinedButtonTheme(
-          context,
-          base,
-        ),
-        textButtonTheme: ButtonThemes.adaptiveTextButtonTheme(context, base),
-        listTileTheme: ComponentThemes.adaptiveListTileTheme(),
-      ),
-    );
+    return base;
   }
 
   // DARK THEME
@@ -98,7 +85,7 @@ abstract final class AppTheme {
     final bs =
         FlexThemeData.dark(
           colors: AppColors.darkColors,
-          useMaterial3ErrorColors: true,
+          useMaterial3ErrorColors: false,
           swapLegacyOnMaterial3: true,
           subThemesData: ComponentThemes.darkSubThemes,
           visualDensity: visualDensity,
@@ -106,7 +93,6 @@ abstract final class AppTheme {
             applyThemeToAll: true,
           ),
           surfaceTint: const Color(0xFF2E2E2E),
-          // Convenience direct styling properties.
           appBarStyle: FlexAppBarStyle.scaffoldBackground,
           transparentStatusBar: false,
           useMaterial3: true,
@@ -130,25 +116,20 @@ abstract final class AppTheme {
 
     final base = bs.copyWith(
       cardTheme: bs.cardTheme.copyWith(margin: EdgeInsets.zero),
+      elevatedButtonTheme: ButtonThemes.adaptiveElevatedButtonTheme(
+        context,
+        bs,
+      ),
+      filledButtonTheme: ButtonThemes.adaptiveFilledButtonTheme(context, bs),
+      outlinedButtonTheme: ButtonThemes.adaptiveOutlinedButtonTheme(
+        context,
+        bs,
+      ),
+      textButtonTheme: ButtonThemes.adaptiveTextButtonTheme(context, bs),
+      listTileTheme: ComponentThemes.adaptiveListTileTheme(),
+      textTheme: GoogleFonts.nunitoTextTheme(bs.textTheme),
     );
 
-    return _withNunito(
-      base.copyWith(
-        elevatedButtonTheme: ButtonThemes.adaptiveElevatedButtonTheme(
-          context,
-          base,
-        ),
-        filledButtonTheme: ButtonThemes.adaptiveFilledButtonTheme(
-          context,
-          base,
-        ),
-        outlinedButtonTheme: ButtonThemes.adaptiveOutlinedButtonTheme(
-          context,
-          base,
-        ),
-        textButtonTheme: ButtonThemes.adaptiveTextButtonTheme(context, base),
-        listTileTheme: ComponentThemes.adaptiveListTileTheme(),
-      ),
-    );
+    return base;
   }
 }
