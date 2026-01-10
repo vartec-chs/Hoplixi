@@ -58,7 +58,7 @@ dependencies:
   tray_manager: ^0.5.2
   shared_preferences: ^2.5.4
   hive_ce: ^2.16.0
-  hive_ce_flutter: ^2.3.3
+  hive_ce_flutter: ^2.3.4
   permission_handler: ^12.0.1
   animations: ^2.1.1
   local_auth: ^3.0.0
