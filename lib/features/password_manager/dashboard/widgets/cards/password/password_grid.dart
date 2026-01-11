@@ -151,7 +151,7 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard>
                               color: theme.colorScheme.onPrimaryContainer,
                             ),
                           ),
-                          if (isMobile) ...[
+                       
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -164,7 +164,7 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard>
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                          ],
+                          
                           if (!isMobile) const Spacer(),
                           // Статусные иконки (архив, популярное)
                           if (!password.isDeleted)
@@ -208,16 +208,7 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard>
                         SizedBox(height: isMobile ? 4 : 6),
                       ],
 
-                      // Название (только на desktop)
-                      if (!isMobile)
-                        Text(
-                          password.name,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+               
 
                       if (displayLogin != null || hostUrl.isNotEmpty) ...[
                         const SizedBox(height: 4),

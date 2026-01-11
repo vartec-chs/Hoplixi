@@ -252,20 +252,19 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard>
                               color: theme.colorScheme.onPrimaryContainer,
                             ),
                           ),
-                          if (isMobile) ...[
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                otp.issuer ?? 'Без названия',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              otp.issuer ?? 'Без названия',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ],
+                          ),
                           if (!isMobile) const Spacer(),
                           if (!otp.isDeleted)
                             FadeTransition(
@@ -306,16 +305,6 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard>
                         ),
                         SizedBox(height: isMobile ? 4 : 6),
                       ],
-
-                      if (!isMobile)
-                        Text(
-                          otp.issuer ?? 'Без названия',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
 
                       if (otp.issuer != null && otp.issuer!.isNotEmpty) ...[
                         const SizedBox(height: 4),

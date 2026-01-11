@@ -200,20 +200,20 @@ class _BankCardGridCardState extends ConsumerState<BankCardGridCard>
                               color: _getCardTypeColor(bankCard.cardType),
                             ),
                           ),
-                          if (isMobile) ...[
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                bankCard.name,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              bankCard.name,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ],
+                          ),
+
                           if (!isMobile) const Spacer(),
                           if (!bankCard.isDeleted)
                             FadeTransition(
@@ -254,16 +254,6 @@ class _BankCardGridCardState extends ConsumerState<BankCardGridCard>
                         ),
                         SizedBox(height: isMobile ? 4 : 6),
                       ],
-
-                      if (!isMobile)
-                        Text(
-                          bankCard.name,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
 
                       const SizedBox(height: 4),
                       Text(

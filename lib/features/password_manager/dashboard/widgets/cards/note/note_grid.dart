@@ -124,20 +124,20 @@ class _NoteGridCardState extends ConsumerState<NoteGridCard>
                               color: theme.colorScheme.onPrimaryContainer,
                             ),
                           ),
-                          if (isMobile) ...[
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                note.title,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              note.title,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ],
+                          ),
+
                           if (!isMobile) const Spacer(),
                           if (!note.isDeleted)
                             FadeTransition(
@@ -178,16 +178,6 @@ class _NoteGridCardState extends ConsumerState<NoteGridCard>
                         ),
                         SizedBox(height: isMobile ? 4 : 6),
                       ],
-
-                      if (!isMobile)
-                        Text(
-                          note.title,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
 
                       if (note.description != null &&
                           note.description!.isNotEmpty) ...[
