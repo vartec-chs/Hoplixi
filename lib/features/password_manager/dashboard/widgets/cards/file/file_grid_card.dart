@@ -163,14 +163,14 @@ class _FileGridCardState extends ConsumerState<FileGridCard>
                             ),
                         ],
                       ),
-                      SizedBox(height: isMobile ? 6 : 8),
+                      SizedBox(height: isMobile ? 4 : 6),
 
                       if (file.category != null) ...[
                         CardCategoryBadge(
                           name: file.category!.name,
                           color: file.category!.color,
                         ),
-                        SizedBox(height: isMobile ? 4 : 6),
+                        SizedBox(height: isMobile ? 3 : 4),
                       ],
 
                       const SizedBox(height: 4),
@@ -242,7 +242,7 @@ class _FileGridCardState extends ConsumerState<FileGridCard>
                             ],
                           ),
                         ),
-                        SizedBox(height: isMobile ? 4 : 6),
+                        SizedBox(height: isMobile ? 3 : 4),
                         FadeTransition(
                           opacity: _iconsAnimation,
                           child: Row(

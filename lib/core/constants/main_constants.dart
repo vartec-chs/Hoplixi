@@ -7,7 +7,7 @@ class MainConstants {
 
   static const Size defaultWindowSize = Size(650, 720);
   static const Size minWindowSize = Size(400, 500);
-  static const Size maxWindowSize = Size(1200, 1000);
+  static const Size maxWindowSize = Size(1920, 1080);
 
   // dashboard size
   static const Size defaultDashboardSize = Size(1080, 750);

@@ -296,14 +296,14 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard>
                             ),
                         ],
                       ),
-                      SizedBox(height: isMobile ? 6 : 8),
+                      SizedBox(height: isMobile ? 4 : 6),
 
                       if (otp.category != null) ...[
                         CardCategoryBadge(
                           name: otp.category!.name,
                           color: otp.category!.color,
                         ),
-                        SizedBox(height: isMobile ? 4 : 6),
+                        SizedBox(height: isMobile ? 3 : 4),
                       ],
 
                       if (otp.issuer != null && otp.issuer!.isNotEmpty) ...[
@@ -318,11 +318,11 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard>
                         ),
                       ],
 
-                      SizedBox(height: isMobile ? 6 : 8),
+                      SizedBox(height: isMobile ? 4 : 6),
 
                       if (otp.tags != null && otp.tags!.isNotEmpty) ...[
                         CardTagsList(tags: otp.tags!, showTitle: false),
-                        SizedBox(height: isMobile ? 4 : 6),
+                        SizedBox(height: isMobile ? 3 : 4),
                       ],
 
                       // TOTP код

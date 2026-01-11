@@ -169,14 +169,14 @@ class _NoteGridCardState extends ConsumerState<NoteGridCard>
                             ),
                         ],
                       ),
-                      SizedBox(height: isMobile ? 6 : 8),
+                      SizedBox(height: isMobile ? 4 : 6),
 
                       if (note.category != null) ...[
                         CardCategoryBadge(
                           name: note.category!.name,
                           color: note.category!.color,
                         ),
-                        SizedBox(height: isMobile ? 4 : 6),
+                        SizedBox(height: isMobile ? 3 : 4),
                       ],
 
                       if (note.description != null &&
@@ -192,15 +192,15 @@ class _NoteGridCardState extends ConsumerState<NoteGridCard>
                         ),
                       ],
 
-                      SizedBox(height: isMobile ? 6 : 8),
+                      SizedBox(height: isMobile ? 4 : 6),
 
                       if (note.tags != null && note.tags!.isNotEmpty) ...[
                         CardTagsList(tags: note.tags!, showTitle: false),
-                        SizedBox(height: isMobile ? 4 : 6),
+                        SizedBox(height: isMobile ? 3 : 4),
                       ],
 
                       if (!note.isDeleted) ...[
-                        const SizedBox(height: 8),
+                        SizedBox(height: isMobile ? 4 : 6),
                         FadeTransition(
                           opacity: _iconsAnimation,
                           child: Row(
@@ -253,7 +253,7 @@ class _NoteGridCardState extends ConsumerState<NoteGridCard>
                             ],
                           ),
                         ),
-                        SizedBox(height: isMobile ? 4 : 6),
+                        SizedBox(height: isMobile ? 3 : 4),
                         FadeTransition(
                           opacity: _iconsAnimation,
                           child: Row(

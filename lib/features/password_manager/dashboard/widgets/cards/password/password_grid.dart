@@ -151,20 +151,20 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard>
                               color: theme.colorScheme.onPrimaryContainer,
                             ),
                           ),
-                       
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                password.name,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              password.name,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          
+                          ),
+
                           if (!isMobile) const Spacer(),
                           // Статусные иконки (архив, популярное)
                           if (!password.isDeleted)
@@ -197,7 +197,7 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard>
                             ),
                         ],
                       ),
-                      SizedBox(height: isMobile ? 6 : 8),
+                      SizedBox(height: isMobile ? 4 : 6),
 
                       // Категория
                       if (password.category != null) ...[
@@ -205,10 +205,8 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard>
                           name: password.category!.name,
                           color: password.category!.color,
                         ),
-                        SizedBox(height: isMobile ? 4 : 6),
+                        SizedBox(height: isMobile ? 3 : 4),
                       ],
-
-               
 
                       if (displayLogin != null || hostUrl.isNotEmpty) ...[
                         const SizedBox(height: 4),
@@ -222,18 +220,18 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard>
                         ),
                       ],
 
-                      SizedBox(height: isMobile ? 6 : 8),
+                      SizedBox(height: isMobile ? 4 : 6),
 
                       // Теги
                       if (password.tags != null &&
                           password.tags!.isNotEmpty) ...[
                         CardTagsList(tags: password.tags!, showTitle: false),
-                        SizedBox(height: isMobile ? 4 : 6),
+                        SizedBox(height: isMobile ? 3 : 4),
                       ],
 
                       // Кнопки копирования
                       if (!password.isDeleted) ...[
-                        const SizedBox(height: 8),
+                        SizedBox(height: isMobile ? 4 : 6),
                         FadeTransition(
                           opacity: _iconsAnimation,
                           child: Row(
@@ -284,7 +282,7 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard>
                             ],
                           ),
                         ),
-                        SizedBox(height: isMobile ? 4 : 6),
+                        SizedBox(height: isMobile ? 3 : 4),
                         // Кнопки управления
                         FadeTransition(
                           opacity: _iconsAnimation,

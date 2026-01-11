@@ -245,14 +245,14 @@ class _BankCardGridCardState extends ConsumerState<BankCardGridCard>
                             ),
                         ],
                       ),
-                      SizedBox(height: isMobile ? 6 : 8),
+                      SizedBox(height: isMobile ? 4 : 6),
 
                       if (bankCard.category != null) ...[
                         CardCategoryBadge(
                           name: bankCard.category!.name,
                           color: bankCard.category!.color,
                         ),
-                        SizedBox(height: isMobile ? 4 : 6),
+                        SizedBox(height: isMobile ? 3 : 4),
                       ],
 
                       const SizedBox(height: 4),
@@ -320,7 +320,7 @@ class _BankCardGridCardState extends ConsumerState<BankCardGridCard>
                             ),
                           ),
                         ),
-                        SizedBox(height: isMobile ? 4 : 6),
+                        SizedBox(height: isMobile ? 3 : 4),
                         FadeTransition(
                           opacity: _iconsAnimation,
                           child: Row(
