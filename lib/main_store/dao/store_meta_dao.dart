@@ -115,7 +115,10 @@ class StoreMetaDao extends DatabaseAccessor<MainStore>
 
   /// Изменить пароль базы данных (SQLCipher PRAGMA rekey)
   Future<void> changePassword(String newPassword) async {
-    await db.customStatement("PRAGMA rekey = ?;", [newPassword]);
+    // PRAGMA не поддерживает параметры, нужна прямая подстановка
+    // Экранируем одинарные кавычки в пароле
+    final escapedPassword = newPassword.replaceAll("'", "''");
+    await db.customStatement("PRAGMA rekey = '$escapedPassword';");
   }
 
   /// Обновить ключ для вложений
