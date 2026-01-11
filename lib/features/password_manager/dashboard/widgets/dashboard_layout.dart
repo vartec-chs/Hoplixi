@@ -280,17 +280,33 @@ class _DashboardLayoutState extends State<DashboardLayout>
         ? [..._baseDestinations, _graphDestination]
         : _baseDestinations;
 
-    // Mobile: единый layout с Stack для избежания мигания
+    // Mobile: единый layout с Stack и взаимной анимацией центра и панели
     if (isMobile) {
+      final showPanel = hasPanel || isFullCenter;
+
       return Scaffold(
         body: Stack(
           children: [
-            // Центр: DashboardHomeScreen для текущей entity
-            RepaintBoundary(
-              child: DashboardHomeScreen(
-                entityType: EntityType.fromId(entity)!,
+            // Центр: DashboardHomeScreen с обратной анимацией (fade + scale down)
+            AnimatedOpacity(
+              opacity: showPanel ? 0.0 : 1.0,
+              duration: const Duration(milliseconds: 250),
+              curve: showPanel ? Curves.easeOut : Curves.easeIn,
+              child: AnimatedScale(
+                scale: showPanel ? 0.92 : 1.0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                child: IgnorePointer(
+                  ignoring: showPanel, // отключаем взаимодействие когда скрыт
+                  child: RepaintBoundary(
+                    child: DashboardHomeScreen(
+                      entityType: EntityType.fromId(entity)!,
+                    ),
+                  ),
+                ),
               ),
             ),
+
             // Анимированная панель поверх центра (ZoomPageTransitionsBuilder стиль)
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
@@ -310,11 +326,7 @@ class _DashboardLayoutState extends State<DashboardLayout>
                     .animate(
                       CurvedAnimation(
                         parent: animation,
-                        curve: const Interval(
-                          0.125,
-                          0.250,
-                          curve: Curves.easeOut,
-                        ),
+                        curve: const Interval(0.1, 0.4, curve: Curves.easeOut),
                       ),
                     );
 
@@ -323,35 +335,19 @@ class _DashboardLayoutState extends State<DashboardLayout>
                   child: FadeTransition(opacity: fadeAnimation, child: child),
                 );
               },
-              child: (hasPanel || isFullCenter)
+              child: showPanel
                   ? Container(
                       key: const ValueKey('panel'),
                       child: widget.panelChild,
                     )
                   : const SizedBox.shrink(key: ValueKey('empty')),
             ),
-
-            // Анимированная bottom navigation bar
-            // Positioned(
-            //   bottom: 0,
-            //   left: 0,
-            //   right: 0,
-            //   child: AnimatedSlide(
-            //     offset: (hasPanel || isFullCenter)
-            //         ? const Offset(0, 1)
-            //         : Offset.zero,
-            //     duration: const Duration(milliseconds: 300),
-            //     curve: Curves.easeInOut,
-            //     child: _buildBottomNavigationBar(entity, destinations),
-            //   ),
-            // ),
           ],
         ),
         bottomNavigationBar: (_shouldShowBottomNav(uri) && !isFullCenter)
             ? _buildBottomNavigationBar(entity, destinations)
             : null,
-        floatingActionButton:
-            (_shouldShowFAB(uri) && !(hasPanel || isFullCenter))
+        floatingActionButton: (_shouldShowFAB(uri) && !showPanel)
             ? _buildExpandableFAB(entity, isMobile)
             : null,
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
