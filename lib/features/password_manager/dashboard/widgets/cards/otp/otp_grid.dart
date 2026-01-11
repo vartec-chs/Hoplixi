@@ -1,19 +1,20 @@
-// ---------- Карточки для OTP (TOTP) ----------
-
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
-import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/routing/paths.dart';
 import 'package:otp/otp.dart';
 
-/// Карточка TOTP для режима сетки (Grid)
+/// Карточка TOTP для режима сетки
+/// Минимальная ширина: 240px для предотвращения чрезмерного сжатия
 class TotpGridCard extends ConsumerStatefulWidget {
   final OtpCardDto otp;
   final VoidCallback? onTap;
@@ -73,7 +74,6 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard>
     super.dispose();
   }
 
-  /// Очищает секрет из памяти
   void _clearSecret() {
     if (_secret != null) {
       for (int i = 0; i < _secret!.length; i++) {
@@ -92,7 +92,6 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard>
     }
   }
 
-  /// Переключает видимость кода
   void _toggleCodeVisibility() {
     if (_isCodeVisible) {
       _stopTimerAndClearSecret();
@@ -103,7 +102,6 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard>
     }
   }
 
-  /// Загружает секрет из БД и запускает таймер генерации кода
   Future<void> _loadSecretAndStartTimer() async {
     if (_secret != null) {
       _generateCode();
@@ -138,7 +136,6 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard>
     }
   }
 
-  /// Останавливает таймер и очищает секрет
   void _stopTimerAndClearSecret() {
     _totpTimer?.cancel();
     _totpTimer = null;
@@ -148,7 +145,6 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard>
     });
   }
 
-  /// Запускает таймер обновления кода
   void _startTimer() {
     _totpTimer?.cancel();
     _updateRemainingSeconds();
@@ -167,7 +163,6 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard>
     });
   }
 
-  /// Обновляет оставшееся время до смены кода
   void _updateRemainingSeconds() {
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     final period = widget.otp.period;
@@ -176,13 +171,10 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard>
     });
   }
 
-  /// Генерирует TOTP код
   void _generateCode() {
     if (_secret == null) return;
 
     try {
-      // Секрет в БД хранится как ASCII коды Base32 строки (codeUnits),
-      // поэтому просто конвертируем байты обратно в строку
       final secretBase32 = String.fromCharCodes(_secret!);
 
       final code = OTP.generateTOTPCodeString(
@@ -191,7 +183,7 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard>
         length: widget.otp.digits,
         interval: widget.otp.period,
         algorithm: Algorithm.SHA1,
-        isGoogle: true, // true = секрет передаётся как Base32 строка
+        isGoogle: true,
       );
 
       setState(() {
@@ -203,434 +195,307 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard>
   }
 
   Future<void> _copyCode() async {
-    if (_currentCode == null) return;
+    if (_currentCode != null) {
+      await Clipboard.setData(ClipboardData(text: _currentCode!));
+      setState(() => _codeCopied = true);
+      Toaster.success(title: 'Код скопирован');
 
-    await Clipboard.setData(ClipboardData(text: _currentCode!));
-    setState(() => _codeCopied = true);
-    Toaster.success(title: 'Код скопирован');
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) setState(() => _codeCopied = false);
+      });
 
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) setState(() => _codeCopied = false);
-    });
-  }
-
-  Color _parseColor(String? colorHex) {
-    if (colorHex == null || colorHex.isEmpty) return Colors.grey;
-    try {
-      final hex = colorHex.replaceAll('#', '');
-      return Color(int.parse('FF$hex', radix: 16));
-    } catch (e) {
-      return Colors.grey;
+      final otpDao = await ref.read(otpDaoProvider.future);
+      await otpDao.incrementUsage(widget.otp.id);
     }
-  }
-
-  /// Форматирует код с разделением (например: "123 456")
-  String _formatCode(String code) {
-    if (code.length <= 3) return code;
-
-    final buffer = StringBuffer();
-    for (int i = 0; i < code.length; i++) {
-      if (i > 0 && i % 3 == 0) {
-        buffer.write(' ');
-      }
-      buffer.write(code[i]);
-    }
-    return buffer.toString();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final displayName = widget.otp.issuer ?? widget.otp.accountName ?? 'OTP';
-    final subtitle = widget.otp.issuer != null ? widget.otp.accountName : null;
-    final progress = _remainingSeconds / widget.otp.period;
-    final isLowTime = _remainingSeconds <= 5;
+    final otp = widget.otp;
 
-    return Stack(
-      children: [
-        Card(
-          margin: EdgeInsets.zero,
-          child: MouseRegion(
-            onEnter: (_) => _onHoverChanged(true),
-            onExit: (_) => _onHoverChanged(false),
-            child: InkWell(
-              onTap: widget.onTap,
-              borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Заголовок с иконкой и кнопками
-                    Row(
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(8),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 240),
+      child: Stack(
+        children: [
+          Card(
+            margin: EdgeInsets.zero,
+            child: MouseRegion(
+              onEnter: (_) => _onHoverChanged(true),
+              onExit: (_) => _onHoverChanged(false),
+              child: InkWell(
+                onTap: widget.onTap,
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Заголовок
+                      Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.lock_clock,
+                              size: 20,
+                              color: theme.colorScheme.onPrimaryContainer,
+                            ),
                           ),
-                          child: Icon(
-                            Icons.security,
-                            size: 18,
-                            color: theme.colorScheme.onPrimaryContainer,
-                          ),
-                        ),
-                        const Spacer(),
-                        if (!widget.otp.isDeleted) ...[
-                          // Иконки состояния с анимацией
-                          AnimatedBuilder(
-                            animation: _iconsAnimation,
-                            builder: (context, child) {
-                              return Opacity(
-                                opacity: _iconsAnimation.value,
-                                child: Transform.scale(
-                                  scale: 0.8 + (_iconsAnimation.value * 0.2),
-                                  alignment: Alignment.centerRight,
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (widget.otp.isArchived)
-                                  const Padding(
-                                    padding: EdgeInsets.only(right: 2),
-                                    child: Icon(
-                                      Icons.archive,
-                                      size: 12,
-                                      color: Colors.blueGrey,
+                          const Spacer(),
+                          if (!otp.isDeleted)
+                            FadeTransition(
+                              opacity: _iconsAnimation,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (otp.isArchived)
+                                    const Padding(
+                                      padding: EdgeInsets.only(right: 4),
+                                      child: Icon(
+                                        Icons.archive,
+                                        size: 16,
+                                        color: Colors.blueGrey,
+                                      ),
                                     ),
-                                  ),
-                                if (widget.otp.usedCount >=
-                                    MainConstants.popularItemThreshold)
-                                  const Padding(
-                                    padding: EdgeInsets.only(right: 2),
-                                    child: Icon(
-                                      Icons.local_fire_department,
-                                      size: 12,
-                                      color: Colors.deepOrange,
+                                  if (otp.usedCount >=
+                                      MainConstants.popularItemThreshold)
+                                    const Padding(
+                                      padding: EdgeInsets.only(right: 4),
+                                      child: Icon(
+                                        Icons.local_fire_department,
+                                        size: 16,
+                                        color: Colors.deepOrange,
+                                      ),
                                     ),
-                                  ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          // Кнопки действия с анимацией
-                          AnimatedBuilder(
-                            animation: _iconsAnimation,
-                            builder: (context, child) {
-                              return Opacity(
-                                opacity: _iconsAnimation.value,
-                                child: Transform.scale(
-                                  scale: 0.8 + (_iconsAnimation.value * 0.2),
-                                  alignment: Alignment.centerRight,
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(
-                                    widget.otp.isPinned
-                                        ? Icons.push_pin
-                                        : Icons.push_pin_outlined,
-                                    size: 14,
-                                    color: widget.otp.isPinned
-                                        ? Colors.orange
-                                        : null,
-                                  ),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                  onPressed: widget.onTogglePin,
-                                ),
-                                IconButton(
-                                  icon: Icon(
-                                    widget.otp.isFavorite
-                                        ? Icons.star
-                                        : Icons.star_border,
-                                    color: widget.otp.isFavorite
-                                        ? Colors.amber
-                                        : null,
-                                    size: 14,
-                                  ),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                  onPressed: widget.onToggleFavorite,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ] else ...[
-                          // Для удалённых записей показываем кнопки восстановления и удаления
-                          IconButton(
-                            icon: const Icon(Icons.restore, size: 12),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            onPressed: widget.onRestore,
-                            tooltip: 'Восстановить',
-                          ),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.delete_forever,
-                              size: 12,
-                              color: Colors.red,
-                            ),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            onPressed: widget.onDelete,
-                            tooltip: 'Удалить навсегда',
-                          ),
                         ],
-                      ],
-                    ),
-                    const SizedBox(height: 8),
+                      ),
+                      const SizedBox(height: 12),
 
-                    // Категория
-                    if (widget.otp.category != null) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
+                      if (otp.category != null) ...[
+                        CardCategoryBadge(
+                          name: otp.category!.name,
+                          color: otp.category!.color,
                         ),
-                        decoration: BoxDecoration(
-                          color: _parseColor(
-                            widget.otp.category!.color,
-                          ).withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(4),
+                        const SizedBox(height: 8),
+                      ],
+
+                      Text(
+                        otp.issuer ?? 'Без названия',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
                         ),
-                        child: Text(
-                          widget.otp.category!.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+
+                      if (otp.issuer != null && otp.issuer!.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          otp.issuer!,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: _parseColor(widget.otp.category!.color),
-                            fontSize: 9,
-                            fontWeight: FontWeight.w500,
+                            color: Colors.grey,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                    ],
+                      ],
 
-                    // Название (issuer)
-                    Text(
-                      displayName,
-                      style: theme.textTheme.titleSmall,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
+                      const SizedBox(height: 12),
 
-                    // Подзаголовок (accountName)
-                    if (subtitle != null)
-                      Text(
-                        subtitle,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.grey,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      if (otp.tags != null && otp.tags!.isNotEmpty)
+                        CardTagsList(tags: otp.tags!, showTitle: false),
 
-                    const Spacer(),
-
-                    // Теги (горизонтальная прокрутка)
-                    if (widget.otp.tags != null &&
-                        widget.otp.tags!.isNotEmpty) ...[
-                      SizedBox(
-                        height: 20,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: widget.otp.tags!.length,
-                          separatorBuilder: (_, __) => const SizedBox(width: 4),
-                          itemBuilder: (context, index) {
-                            final tag = widget.otp.tags![index];
-                            final tagColor = _parseColor(tag.color);
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: tagColor.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                tag.name,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: tagColor,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-
-                    // Секция кода или кнопка показа
-                    if (_isCodeVisible) ...[
-                      // Код TOTP
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest
-                              .withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: isLowTime
-                                ? Colors.red.withOpacity(0.5)
-                                : theme.colorScheme.outline.withOpacity(0.2),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            if (_isLoadingSecret)
-                              const SizedBox(
-                                height: 24,
-                                child: Center(
-                                  child: SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
+                      // TOTP код
+                      if (!otp.isDeleted) ...[
+                        if (_isCodeVisible) ...[
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceVariant,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Column(
+                              children: [
+                                if (_isLoadingSecret)
+                                  const CircularProgressIndicator()
+                                else if (_currentCode != null) ...[
+                                  Text(
+                                    _currentCode!,
+                                    style: theme.textTheme.headlineMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 4,
+                                        ),
                                   ),
-                                ),
-                              )
-                            else if (_currentCode != null)
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      _formatCode(_currentCode!),
-                                      style: theme.textTheme.titleMedium
-                                          ?.copyWith(
-                                            fontFamily: 'monospace',
-                                            fontWeight: FontWeight.bold,
-                                            letterSpacing: 2,
-                                            color: isLowTime
-                                                ? Colors.red
-                                                : null,
-                                          ),
-                                      textAlign: TextAlign.center,
-                                    ),
+                                  const SizedBox(height: 8),
+                                  LinearProgressIndicator(
+                                    value: _remainingSeconds / otp.period,
                                   ),
-                                  IconButton(
-                                    icon: Icon(
-                                      _codeCopied ? Icons.check : Icons.copy,
-                                      size: 16,
-                                      color: _codeCopied ? Colors.green : null,
-                                    ),
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                    onPressed: _copyCode,
-                                    tooltip: 'Копировать',
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Обновление через $_remainingSeconds сек',
+                                    style: theme.textTheme.bodySmall,
                                   ),
                                 ],
-                              ),
-                            const SizedBox(height: 4),
-                            // Прогресс-бар
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(2),
-                                    child: LinearProgressIndicator(
-                                      value: progress,
-                                      minHeight: 3,
-                                      backgroundColor: theme
-                                          .colorScheme
-                                          .surfaceContainerHighest,
-                                      valueColor: AlwaysStoppedAnimation(
-                                        isLowTime
-                                            ? Colors.red
-                                            : theme.colorScheme.primary,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  '${_remainingSeconds}с',
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 10,
-                                    color: isLowTime
-                                        ? Colors.red
-                                        : theme.colorScheme.primary,
-                                  ),
-                                ),
                               ],
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 8),
+                        FadeTransition(
+                          opacity: _iconsAnimation,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: _isCodeVisible ? _copyCode : null,
+                                  icon: Icon(
+                                    _codeCopied ? Icons.check : Icons.copy,
+                                    size: 16,
+                                  ),
+                                  label: const Text(
+                                    'Копировать',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 8,
+                                    ),
+                                    minimumSize: Size.zero,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: _toggleCodeVisibility,
+                                  icon: Icon(
+                                    _isCodeVisible
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                    size: 16,
+                                  ),
+                                  label: Text(
+                                    _isCodeVisible ? 'Скрыть' : 'Показать',
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 8,
+                                    ),
+                                    minimumSize: Size.zero,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        FadeTransition(
+                          opacity: _iconsAnimation,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  otp.isPinned
+                                      ? Icons.push_pin
+                                      : Icons.push_pin_outlined,
+                                  size: 18,
+                                  color: otp.isPinned ? Colors.orange : null,
+                                ),
+                                onPressed: widget.onTogglePin,
+                                tooltip: 'Закрепить',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                              IconButton(
+                                icon: Icon(
+                                  otp.isFavorite
+                                      ? Icons.star
+                                      : Icons.star_border,
+                                  size: 18,
+                                  color: otp.isFavorite ? Colors.amber : null,
+                                ),
+                                onPressed: widget.onToggleFavorite,
+                                tooltip: 'Избранное',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined, size: 18),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                onPressed: () {
+                                  context.push(
+                                    AppRoutesPaths.dashboardEntityEdit(
+                                      EntityType.otp,
+                                      otp.id,
+                                    ),
+                                  );
+                                },
+                                tooltip: 'Редактировать',
+                              ),
+                            ],
+                          ),
+                        ),
+                      ] else ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            TextButton.icon(
+                              onPressed: widget.onRestore,
+                              icon: const Icon(Icons.restore, size: 18),
+                              label: const Text('Восстановить'),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                              ),
+                            ),
+                            TextButton.icon(
+                              onPressed: widget.onDelete,
+                              icon: const Icon(
+                                Icons.delete_forever,
+                                size: 18,
+                                color: Colors.red,
+                              ),
+                              label: const Text(
+                                'Удалить',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                              ),
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      // Кнопка скрытия
-                      SizedBox(
-                        width: double.infinity,
-                        child: SmoothButton(
-                          label: 'Скрыть',
-                          onPressed: _toggleCodeVisibility,
-                          type: SmoothButtonType.text,
-                          variant: SmoothButtonVariant.normal,
-                          icon: const Icon(Icons.visibility_off, size: 14),
-                          iconPosition: SmoothButtonIconPosition.start,
-                          size: SmoothButtonSize.small,
-                        ),
-                      ),
-                    ] else ...[
-                      // Кнопка показа кода
-                      SizedBox(
-                        width: double.infinity,
-                        child: SmoothButton(
-                          label: 'Показать код',
-                          onPressed: _toggleCodeVisibility,
-                          type: SmoothButtonType.outlined,
-                          variant: SmoothButtonVariant.normal,
-                          icon: const Icon(Icons.visibility, size: 14),
-                          iconPosition: SmoothButtonIconPosition.start,
-                          size: SmoothButtonSize.small,
-                        ),
-                      ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        if (widget.otp.isPinned)
-          Positioned(
-            top: 6,
-            left: 8,
-            child: Transform.rotate(
-              angle: -0.52,
-              child: const Icon(Icons.push_pin, size: 16, color: Colors.orange),
-            ),
-          ),
-        if (widget.otp.isFavorite)
-          Positioned(
-            top: 6,
-            left: widget.otp.isPinned ? 30 : 8,
-            child: Transform.rotate(
-              angle: -0.52,
-              child: const Icon(Icons.star, size: 14, color: Colors.amber),
-            ),
-          ),
-      ],
+          ...CardStatusIndicators(
+            isPinned: otp.isPinned,
+            isFavorite: otp.isFavorite,
+            isArchived: otp.isArchived,
+          ).buildPositionedWidgets(),
+        ],
+      ),
     );
   }
 }

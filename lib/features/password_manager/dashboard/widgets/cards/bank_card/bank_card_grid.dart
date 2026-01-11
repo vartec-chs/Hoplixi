@@ -1,5 +1,3 @@
-// ---------- Карточки для банковских карт ----------
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,11 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
+import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
-import 'package:hoplixi/shared/ui/button.dart';
 
 /// Карточка банковской карты для режима сетки
+/// Минимальная ширина: 240px для предотвращения чрезмерного сжатия
 class BankCardGridCard extends ConsumerStatefulWidget {
   final BankCardCardDto bankCard;
   final VoidCallback? onTap;
@@ -39,7 +39,6 @@ class BankCardGridCard extends ConsumerStatefulWidget {
 class _BankCardGridCardState extends ConsumerState<BankCardGridCard>
     with TickerProviderStateMixin {
   bool _cardNumberCopied = false;
-  bool _isHovered = false;
   late AnimationController _iconsController;
   late Animation<double> _iconsAnimation;
 
@@ -62,21 +61,10 @@ class _BankCardGridCardState extends ConsumerState<BankCardGridCard>
   }
 
   void _onHoverChanged(bool isHovered) {
-    setState(() => _isHovered = isHovered);
     if (isHovered) {
       _iconsController.forward();
     } else {
       _iconsController.reverse();
-    }
-  }
-
-  Color _parseColor(String? colorHex) {
-    if (colorHex == null || colorHex.isEmpty) return Colors.grey;
-    try {
-      final hex = colorHex.replaceAll('#', '');
-      return Color(int.parse('FF$hex', radix: 16));
-    } catch (e) {
-      return Colors.grey;
     }
   }
 
@@ -152,342 +140,271 @@ class _BankCardGridCardState extends ConsumerState<BankCardGridCard>
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _cardNumberCopied = false);
     });
+
+    final bankCardDao = await ref.read(bankCardDaoProvider.future);
+    await bankCardDao.incrementUsage(widget.bankCard.id);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final maskedNumber = _maskCardNumber(widget.bankCard.cardNumber);
+    final bankCard = widget.bankCard;
+    final maskedNumber = _maskCardNumber(bankCard.cardNumber);
     final isExpired = _isExpired();
     final isExpiringSoon = _isExpiringSoon();
 
-    return Stack(
-      children: [
-        Card(
-          margin: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: isExpired
-                ? const BorderSide(color: Colors.red, width: 1.5)
-                : isExpiringSoon
-                ? const BorderSide(color: Colors.orange, width: 1.5)
-                : BorderSide.none,
-          ),
-          child: MouseRegion(
-            onEnter: (_) => _onHoverChanged(true),
-            onExit: (_) => _onHoverChanged(false),
-            child: InkWell(
-              onTap: widget.onTap,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 240),
+      child: Stack(
+        children: [
+          Card(
+            margin: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Заголовок
-                    Row(
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: _getCardTypeColor(
-                              widget.bankCard.cardType,
-                            ).withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.credit_card,
-                            size: 18,
-                            color: _getCardTypeColor(widget.bankCard.cardType),
-                          ),
-                        ),
-                        const Spacer(),
-                        if (!widget.bankCard.isDeleted) ...[
-                          // Иконки состояния с анимацией
-                          AnimatedBuilder(
-                            animation: _iconsAnimation,
-                            builder: (context, child) {
-                              return Opacity(
-                                opacity: _iconsAnimation.value,
-                                child: Transform.scale(
-                                  scale: 0.8 + (_iconsAnimation.value * 0.2),
-                                  alignment: Alignment.centerRight,
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (isExpired)
-                                  const Padding(
-                                    padding: EdgeInsets.only(right: 2),
-                                    child: Icon(
-                                      Icons.warning,
-                                      size: 12,
-                                      color: Colors.red,
-                                    ),
-                                  ),
-                                if (isExpiringSoon && !isExpired)
-                                  const Padding(
-                                    padding: EdgeInsets.only(right: 2),
-                                    child: Icon(
-                                      Icons.schedule,
-                                      size: 12,
-                                      color: Colors.orange,
-                                    ),
-                                  ),
-                                if (widget.bankCard.isArchived)
-                                  const Padding(
-                                    padding: EdgeInsets.only(right: 2),
-                                    child: Icon(
-                                      Icons.archive,
-                                      size: 12,
-                                      color: Colors.blueGrey,
-                                    ),
-                                  ),
-                                if (widget.bankCard.usedCount >=
-                                    MainConstants.popularItemThreshold)
-                                  const Padding(
-                                    padding: EdgeInsets.only(right: 2),
-                                    child: Icon(
-                                      Icons.local_fire_department,
-                                      size: 12,
-                                      color: Colors.deepOrange,
-                                    ),
-                                  ),
-                              ],
+              side: isExpired
+                  ? const BorderSide(color: Colors.red, width: 1.5)
+                  : isExpiringSoon
+                  ? const BorderSide(color: Colors.orange, width: 1.5)
+                  : BorderSide.none,
+            ),
+            child: MouseRegion(
+              onEnter: (_) => _onHoverChanged(true),
+              onExit: (_) => _onHoverChanged(false),
+              child: InkWell(
+                onTap: widget.onTap,
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: _getCardTypeColor(
+                                bankCard.cardType,
+                              ).withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.credit_card,
+                              size: 20,
+                              color: _getCardTypeColor(bankCard.cardType),
                             ),
                           ),
-                          // Кнопки действия с анимацией
-                          AnimatedBuilder(
-                            animation: _iconsAnimation,
-                            builder: (context, child) {
-                              return Opacity(
-                                opacity: _iconsAnimation.value,
-                                child: Transform.scale(
-                                  scale: 0.8 + (_iconsAnimation.value * 0.2),
-                                  alignment: Alignment.centerRight,
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(
-                                    widget.bankCard.isPinned
-                                        ? Icons.push_pin
-                                        : Icons.push_pin_outlined,
-                                    size: 14,
-                                    color: widget.bankCard.isPinned
-                                        ? Colors.orange
-                                        : null,
-                                  ),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                  onPressed: widget.onTogglePin,
-                                ),
-                                IconButton(
-                                  icon: Icon(
-                                    widget.bankCard.isFavorite
-                                        ? Icons.star
-                                        : Icons.star_border,
-                                    color: widget.bankCard.isFavorite
-                                        ? Colors.amber
-                                        : null,
-                                    size: 14,
-                                  ),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                  onPressed: widget.onToggleFavorite,
-                                ),
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.edit_outlined,
-                                    size: 14,
-                                  ),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                  onPressed: () {
-                                    context.push(
-                                      AppRoutesPaths.dashboardEntityEdit(
-                                        EntityType.bankCard,
-                                        widget.bankCard.id,
+                          const Spacer(),
+                          if (!bankCard.isDeleted)
+                            FadeTransition(
+                              opacity: _iconsAnimation,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (bankCard.isArchived)
+                                    const Padding(
+                                      padding: EdgeInsets.only(right: 4),
+                                      child: Icon(
+                                        Icons.archive,
+                                        size: 16,
+                                        color: Colors.blueGrey,
                                       ),
-                                    );
-                                  },
-                                ),
-                              ],
+                                    ),
+                                  if (bankCard.usedCount >=
+                                      MainConstants.popularItemThreshold)
+                                    const Padding(
+                                      padding: EdgeInsets.only(right: 4),
+                                      child: Icon(
+                                        Icons.local_fire_department,
+                                        size: 16,
+                                        color: Colors.deepOrange,
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ] else ...[
-                          IconButton(
-                            icon: const Icon(Icons.restore, size: 12),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            onPressed: widget.onRestore,
-                            tooltip: 'Восстановить',
-                          ),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.delete_forever,
-                              size: 12,
-                              color: Colors.red,
-                            ),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            onPressed: widget.onDelete,
-                            tooltip: 'Удалить навсегда',
-                          ),
                         ],
-                      ],
-                    ),
-                    const SizedBox(height: 8),
+                      ),
+                      const SizedBox(height: 12),
 
-                    // Тип карты
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
+                      if (bankCard.category != null) ...[
+                        CardCategoryBadge(
+                          name: bankCard.category!.name,
+                          color: bankCard.category!.color,
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+
+                      Text(
+                        bankCard.name,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      decoration: BoxDecoration(
-                        color: _getCardTypeColor(
-                          widget.bankCard.cardType,
-                        ).withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        _getCardTypeLabel(widget.bankCard.cardType),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: _getCardTypeColor(widget.bankCard.cardType),
-                          fontSize: 9,
-                          fontWeight: FontWeight.w500,
+
+                      const SizedBox(height: 4),
+                      Text(
+                        maskedNumber,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontFamily: 'Courier',
+                          fontWeight: FontWeight.bold,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    const SizedBox(height: 6),
 
-                    // Название
-                    Text(
-                      widget.bankCard.name,
-                      style: theme.textTheme.titleSmall,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-
-                    // Маскированный номер
-                    Text(
-                      maskedNumber,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.grey,
-                        fontFamily: 'monospace',
+                      const SizedBox(height: 4),
+                      Text(
+                        '${_getCardTypeLabel(bankCard.cardType)} • ${bankCard.expiryMonth}/${bankCard.expiryYear}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: isExpired
+                              ? Colors.red
+                              : isExpiringSoon
+                              ? Colors.orange
+                              : Colors.grey,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
 
-                    // Срок действия
-                    Text(
-                      '${widget.bankCard.expiryMonth}/${widget.bankCard.expiryYear.substring(2)}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: isExpired
-                            ? Colors.red
-                            : isExpiringSoon
-                            ? Colors.orange
-                            : Colors.grey.shade600,
-                        fontSize: 10,
-                        fontWeight: isExpired || isExpiringSoon
-                            ? FontWeight.bold
-                            : null,
-                      ),
-                    ),
+                      if (isExpired)
+                        Text(
+                          'Срок истёк',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
 
-                    const Spacer(),
+                      const SizedBox(height: 12),
 
-                    // Теги
-                    if (widget.bankCard.tags != null &&
-                        widget.bankCard.tags!.isNotEmpty) ...[
-                      SizedBox(
-                        height: 20,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: widget.bankCard.tags!.length,
-                          separatorBuilder: (_, __) => const SizedBox(width: 4),
-                          itemBuilder: (context, index) {
-                            final tag = widget.bankCard.tags![index];
-                            final tagColor = _parseColor(tag.color);
-                            return Container(
+                      if (bankCard.tags != null && bankCard.tags!.isNotEmpty)
+                        CardTagsList(tags: bankCard.tags!, showTitle: false),
+
+                      if (!bankCard.isDeleted) ...[
+                        const SizedBox(height: 8),
+                        FadeTransition(
+                          opacity: _iconsAnimation,
+                          child: OutlinedButton.icon(
+                            onPressed: _copyCardNumber,
+                            icon: Icon(
+                              _cardNumberCopied ? Icons.check : Icons.copy,
+                              size: 16,
+                            ),
+                            label: const Text(
+                              'Номер карты',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                            style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
+                                horizontal: 8,
+                                vertical: 8,
                               ),
-                              decoration: BoxDecoration(
-                                color: tagColor.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                tag.name,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: tagColor,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w500,
+                              minimumSize: const Size.fromHeight(36),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        FadeTransition(
+                          opacity: _iconsAnimation,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  bankCard.isPinned
+                                      ? Icons.push_pin
+                                      : Icons.push_pin_outlined,
+                                  size: 18,
+                                  color: bankCard.isPinned
+                                      ? Colors.orange
+                                      : null,
                                 ),
+                                onPressed: widget.onTogglePin,
+                                tooltip: 'Закрепить',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
                               ),
-                            );
-                          },
+                              IconButton(
+                                icon: Icon(
+                                  bankCard.isFavorite
+                                      ? Icons.star
+                                      : Icons.star_border,
+                                  size: 18,
+                                  color: bankCard.isFavorite
+                                      ? Colors.amber
+                                      : null,
+                                ),
+                                onPressed: widget.onToggleFavorite,
+                                tooltip: 'Избранное',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined, size: 18),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                onPressed: () {
+                                  context.push(
+                                    AppRoutesPaths.dashboardEntityEdit(
+                                      EntityType.bankCard,
+                                      bankCard.id,
+                                    ),
+                                  );
+                                },
+                                tooltip: 'Редактировать',
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
+                      ] else ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            TextButton.icon(
+                              onPressed: widget.onRestore,
+                              icon: const Icon(Icons.restore, size: 18),
+                              label: const Text('Восстановить'),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                              ),
+                            ),
+                            TextButton.icon(
+                              onPressed: widget.onDelete,
+                              icon: const Icon(
+                                Icons.delete_forever,
+                                size: 18,
+                                color: Colors.red,
+                              ),
+                              label: const Text(
+                                'Удалить',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
-
-                    // Кнопка копирования номера карты
-                    SizedBox(
-                      width: double.infinity,
-                      child: SmoothButton(
-                        label: _cardNumberCopied ? 'Скопировано' : 'Копировать',
-                        onPressed: _copyCardNumber,
-                        type: SmoothButtonType.outlined,
-                        variant: SmoothButtonVariant.normal,
-                        icon: Icon(
-                          _cardNumberCopied ? Icons.check : Icons.copy,
-                          size: 14,
-                        ),
-                        iconPosition: SmoothButtonIconPosition.start,
-                        size: SmoothButtonSize.small,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        if (widget.bankCard.isPinned)
-          Positioned(
-            top: 6,
-            left: 8,
-            child: Transform.rotate(
-              angle: -0.52,
-              child: const Icon(Icons.push_pin, size: 16, color: Colors.orange),
-            ),
-          ),
-        if (widget.bankCard.isFavorite)
-          Positioned(
-            top: 6,
-            left: widget.bankCard.isPinned ? 30 : 8,
-            child: Transform.rotate(
-              angle: -0.52,
-              child: const Icon(Icons.star, size: 14, color: Colors.amber),
-            ),
-          ),
-      ],
+          ...CardStatusIndicators(
+            isPinned: bankCard.isPinned,
+            isFavorite: bankCard.isFavorite,
+            isArchived: bankCard.isArchived,
+          ).buildPositionedWidgets(),
+        ],
+      ),
     );
   }
 }

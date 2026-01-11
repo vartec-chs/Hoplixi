@@ -1,5 +1,3 @@
-// ---------- Карточки для паролей ----------
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,12 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
-import 'package:hoplixi/shared/ui/button.dart';
 
 /// Карточка пароля для режима сетки
+/// Минимальная ширина: 240px для предотвращения чрезмерного сжатия
 class PasswordGridCard extends ConsumerStatefulWidget {
   final PasswordCardDto password;
   final VoidCallback? onTap;
@@ -40,6 +39,7 @@ class PasswordGridCard extends ConsumerStatefulWidget {
 class _PasswordGridCardState extends ConsumerState<PasswordGridCard>
     with TickerProviderStateMixin {
   bool _passwordCopied = false;
+  bool _loginCopied = false;
   bool _isHovered = false;
   late AnimationController _iconsController;
   late Animation<double> _iconsAnimation;
@@ -71,26 +71,6 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard>
     }
   }
 
-  Color _parseColor(String? colorHex) {
-    if (colorHex == null || colorHex.isEmpty) return Colors.grey;
-    try {
-      final hex = colorHex.replaceAll('#', '');
-      return Color(int.parse('FF$hex', radix: 16));
-    } catch (e) {
-      return Colors.grey;
-    }
-  }
-
-  String _extractHost(String? url) {
-    if (url == null || url.isEmpty) return '';
-    try {
-      final uri = Uri.parse(url);
-      return uri.host.isNotEmpty ? uri.host : url;
-    } catch (e) {
-      return url;
-    }
-  }
-
   Future<void> _copyPassword() async {
     final passwordDao = await ref.read(passwordDaoProvider.future);
     final passwordText = await passwordDao.getPasswordFieldById(
@@ -108,314 +88,289 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard>
     } else {
       Toaster.error(title: 'Не удалось получить пароль');
     }
+    await passwordDao.incrementUsage(widget.password.id);
+  }
+
+  Future<void> _copyLogin() async {
+    final text = widget.password.email ?? widget.password.login;
+    if (text != null && text.isNotEmpty) {
+      await Clipboard.setData(ClipboardData(text: text));
+      setState(() => _loginCopied = true);
+      Toaster.success(title: 'Логин скопирован');
+
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) setState(() => _loginCopied = false);
+      });
+    }
+    final passwordDao = await ref.read(passwordDaoProvider.future);
+    await passwordDao.incrementUsage(widget.password.id);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final displayLogin = widget.password.email ?? widget.password.login;
-    final hostUrl = _extractHost(widget.password.url);
+    final password = widget.password;
+    final displayLogin = password.email ?? password.login;
+    final hostUrl = CardUtils.extractHost(password.url);
 
-    return Stack(
-      children: [
-        Card(
-          margin: EdgeInsets.zero,
-          child: MouseRegion(
-            onEnter: (_) => _onHoverChanged(true),
-            onExit: (_) => _onHoverChanged(false),
-            child: InkWell(
-              onTap: widget.onTap,
-              borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Заголовок
-                    Row(
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.lock,
-                            size: 18,
-                            color: theme.colorScheme.onPrimaryContainer,
-                          ),
-                        ),
-                        const Spacer(),
-                        if (!widget.password.isDeleted) ...[
-                          // Иконки состояния с анимацией
-                          AnimatedBuilder(
-                            animation: _iconsAnimation,
-                            builder: (context, child) {
-                              return Opacity(
-                                opacity: _iconsAnimation.value,
-                                child: Transform.scale(
-                                  scale: 0.8 + (_iconsAnimation.value * 0.2),
-                                  alignment: Alignment.centerRight,
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (widget.password.isArchived)
-                                  const Padding(
-                                    padding: EdgeInsets.only(right: 2),
-                                    child: Icon(
-                                      Icons.archive,
-                                      size: 12,
-                                      color: Colors.blueGrey,
-                                    ),
-                                  ),
-                                if (widget.password.usedCount >=
-                                    MainConstants.popularItemThreshold)
-                                  const Padding(
-                                    padding: EdgeInsets.only(right: 2),
-                                    child: Icon(
-                                      Icons.local_fire_department,
-                                      size: 12,
-                                      color: Colors.deepOrange,
-                                    ),
-                                  ),
-                              ],
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 240),
+      child: Stack(
+        children: [
+          Card(
+            margin: EdgeInsets.zero,
+            child: MouseRegion(
+              onEnter: (_) => _onHoverChanged(true),
+              onExit: (_) => _onHoverChanged(false),
+              child: InkWell(
+                onTap: widget.onTap,
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Заголовок с иконкой и статусами
+                      Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.lock,
+                              size: 20,
+                              color: theme.colorScheme.onPrimaryContainer,
                             ),
                           ),
-                          // Кнопки действия с анимацией
-                          AnimatedBuilder(
-                            animation: _iconsAnimation,
-                            builder: (context, child) {
-                              return Opacity(
-                                opacity: _iconsAnimation.value,
-                                child: Transform.scale(
-                                  scale: 0.8 + (_iconsAnimation.value * 0.2),
-                                  alignment: Alignment.centerRight,
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(
-                                    widget.password.isPinned
-                                        ? Icons.push_pin
-                                        : Icons.push_pin_outlined,
-                                    size: 14,
-                                    color: widget.password.isPinned
-                                        ? Colors.orange
-                                        : null,
-                                  ),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                  onPressed: widget.onTogglePin,
-                                ),
-                                IconButton(
-                                  icon: Icon(
-                                    widget.password.isFavorite
-                                        ? Icons.star
-                                        : Icons.star_border,
-                                    color: widget.password.isFavorite
-                                        ? Colors.amber
-                                        : null,
-                                    size: 14,
-                                  ),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                  onPressed: widget.onToggleFavorite,
-                                ),
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.edit_outlined,
-                                    size: 14,
-                                  ),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                  onPressed: () {
-                                    context.push(
-                                      AppRoutesPaths.dashboardEntityEdit(
-                                        EntityType.password,
-                                        widget.password.id,
+                          const Spacer(),
+                          // Статусные иконки (архив, популярное)
+                          if (!password.isDeleted)
+                            FadeTransition(
+                              opacity: _iconsAnimation,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (password.isArchived)
+                                    const Padding(
+                                      padding: EdgeInsets.only(right: 4),
+                                      child: Icon(
+                                        Icons.archive,
+                                        size: 16,
+                                        color: Colors.blueGrey,
                                       ),
-                                    );
-                                  },
-                                ),
-                              ],
+                                    ),
+                                  if (password.usedCount >=
+                                      MainConstants.popularItemThreshold)
+                                    const Padding(
+                                      padding: EdgeInsets.only(right: 4),
+                                      child: Icon(
+                                        Icons.local_fire_department,
+                                        size: 16,
+                                        color: Colors.deepOrange,
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ] else ...[
-                          // Для удалённых записей показываем кнопки восстановления и удаления
-                          IconButton(
-                            icon: const Icon(Icons.restore, size: 12),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            onPressed: widget.onRestore,
-                            tooltip: 'Восстановить',
-                          ),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.delete_forever,
-                              size: 12,
-                              color: Colors.red,
-                            ),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            onPressed: widget.onDelete,
-                            tooltip: 'Удалить навсегда',
-                          ),
                         ],
-                      ],
-                    ),
-                    const SizedBox(height: 8),
+                      ),
+                      const SizedBox(height: 12),
 
-                    // Категория
-                    if (widget.password.category != null) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
+                      // Категория
+                      if (password.category != null) ...[
+                        CardCategoryBadge(
+                          name: password.category!.name,
+                          color: password.category!.color,
                         ),
-                        decoration: BoxDecoration(
-                          color: _parseColor(
-                            widget.password.category!.color,
-                          ).withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(4),
+                        const SizedBox(height: 8),
+                      ],
+
+                      // Название
+                      Text(
+                        password.name,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
                         ),
-                        child: Text(
-                          widget.password.category!.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+
+                      if (displayLogin != null || hostUrl.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          displayLogin ?? hostUrl,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: _parseColor(widget.password.category!.color),
-                            fontSize: 9,
-                            fontWeight: FontWeight.w500,
+                            color: Colors.grey,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                    ],
+                      ],
 
-                    // Название
-                    Text(
-                      widget.password.name,
-                      style: theme.textTheme.titleSmall,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
+                      const SizedBox(height: 12),
 
-                    // Логин/email
-                    if (displayLogin != null)
-                      Text(
-                        displayLogin,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.grey,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      // Теги
+                      if (password.tags != null && password.tags!.isNotEmpty)
+                        CardTagsList(tags: password.tags!, showTitle: false),
 
-                    // URL
-                    if (hostUrl.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        hostUrl,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.grey.shade600,
-                          fontSize: 10,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-
-                    const Spacer(),
-
-                    // Теги (горизонтальная прокрутка)
-                    if (widget.password.tags != null &&
-                        widget.password.tags!.isNotEmpty) ...[
-                      SizedBox(
-                        height: 20,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: widget.password.tags!.length,
-                          separatorBuilder: (_, __) => const SizedBox(width: 4),
-                          itemBuilder: (context, index) {
-                            final tag = widget.password.tags![index];
-                            final tagColor = _parseColor(tag.color);
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: tagColor.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                tag.name,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: tagColor,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w500,
+                      // Кнопки копирования
+                      if (!password.isDeleted) ...[
+                        const SizedBox(height: 8),
+                        FadeTransition(
+                          opacity: _iconsAnimation,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: _copyPassword,
+                                  icon: Icon(
+                                    _passwordCopied ? Icons.check : Icons.lock,
+                                    size: 16,
+                                  ),
+                                  label: const Text(
+                                    'Пароль',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 8,
+                                    ),
+                                    minimumSize: Size.zero,
+                                  ),
                                 ),
                               ),
-                            );
-                          },
+                              if (displayLogin != null) ...[
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: _copyLogin,
+                                    icon: Icon(
+                                      _loginCopied ? Icons.check : Icons.person,
+                                      size: 16,
+                                    ),
+                                    label: const Text(
+                                      'Логин',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 8,
+                                      ),
+                                      minimumSize: Size.zero,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
+                        const SizedBox(height: 8),
+                        // Кнопки управления
+                        FadeTransition(
+                          opacity: _iconsAnimation,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  password.isPinned
+                                      ? Icons.push_pin
+                                      : Icons.push_pin_outlined,
+                                  size: 18,
+                                  color: password.isPinned
+                                      ? Colors.orange
+                                      : null,
+                                ),
+                                onPressed: widget.onTogglePin,
+                                tooltip: 'Закрепить',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                              IconButton(
+                                icon: Icon(
+                                  password.isFavorite
+                                      ? Icons.star
+                                      : Icons.star_border,
+                                  size: 18,
+                                  color: password.isFavorite
+                                      ? Colors.amber
+                                      : null,
+                                ),
+                                onPressed: widget.onToggleFavorite,
+                                tooltip: 'Избранное',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined, size: 18),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                onPressed: () {
+                                  context.push(
+                                    AppRoutesPaths.dashboardEntityEdit(
+                                      EntityType.password,
+                                      password.id,
+                                    ),
+                                  );
+                                },
+                                tooltip: 'Редактировать',
+                              ),
+                            ],
+                          ),
+                        ),
+                      ] else ...[
+                        // Для удалённых записей
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            TextButton.icon(
+                              onPressed: widget.onRestore,
+                              icon: const Icon(Icons.restore, size: 18),
+                              label: const Text('Восстановить'),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                              ),
+                            ),
+                            TextButton.icon(
+                              onPressed: widget.onDelete,
+                              icon: const Icon(
+                                Icons.delete_forever,
+                                size: 18,
+                                color: Colors.red,
+                              ),
+                              label: const Text(
+                                'Удалить',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
-
-                    // Кнопка копирования пароля
-                    SizedBox(
-                      width: double.infinity,
-                      child: SmoothButton(
-                        label: _passwordCopied ? 'Скопировано' : 'Копировать',
-                        onPressed: _copyPassword,
-                        type: SmoothButtonType.outlined,
-                        variant: SmoothButtonVariant.normal,
-                        icon: Icon(
-                          _passwordCopied ? Icons.check : Icons.copy,
-                          size: 14,
-                        ),
-                        iconPosition: SmoothButtonIconPosition.start,
-                        size: SmoothButtonSize.small,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        if (widget.password.isPinned)
-          Positioned(
-            top: 6,
-            left: 8,
-            child: Transform.rotate(
-              angle: -0.52,
-              child: const Icon(Icons.push_pin, size: 16, color: Colors.orange),
-            ),
-          ),
-        if (widget.password.isFavorite)
-          Positioned(
-            top: 6,
-            left: widget.password.isPinned ? 30 : 8,
-            child: Transform.rotate(
-              angle: -0.52,
-              child: const Icon(Icons.star, size: 14, color: Colors.amber),
-            ),
-          ),
-      ],
+          // Индикаторы статуса
+          ...CardStatusIndicators(
+            isPinned: password.isPinned,
+            isFavorite: password.isFavorite,
+            isArchived: password.isArchived,
+          ).buildPositionedWidgets(),
+        ],
+      ),
     );
   }
 }

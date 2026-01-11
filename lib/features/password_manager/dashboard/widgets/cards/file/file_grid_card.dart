@@ -2,10 +2,15 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hoplixi/core/constants/main_constants.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/main_store/models/dto/file_dto.dart';
-import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/routing/paths.dart';
 
+/// Карточка файла для режима сетки
+/// Минимальная ширина: 240px для предотвращения чрезмерного сжатия
 class FileGridCard extends ConsumerStatefulWidget {
   final FileCardDto file;
   final VoidCallback? onTap;
@@ -75,189 +80,252 @@ class _FileGridCardState extends ConsumerState<FileGridCard>
     final theme = Theme.of(context);
     final file = widget.file;
 
-    return Stack(
-      children: [
-        Card(
-          margin: EdgeInsets.zero,
-          child: MouseRegion(
-            onEnter: (_) => _onHoverChanged(true),
-            onExit: (_) => _onHoverChanged(false),
-            child: InkWell(
-              onTap: widget.onTap,
-              borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Заголовок (Иконка + Меню)
-                    Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(8),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 240),
+      child: Stack(
+        children: [
+          Card(
+            margin: EdgeInsets.zero,
+            child: MouseRegion(
+              onEnter: (_) => _onHoverChanged(true),
+              onExit: (_) => _onHoverChanged(false),
+              child: InkWell(
+                onTap: widget.onTap,
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Заголовок
+                      Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.insert_drive_file,
+                              size: 20,
+                              color: theme.colorScheme.onPrimaryContainer,
+                            ),
                           ),
-                          child: Icon(
-                            Icons
-                                .insert_drive_file, // TODO: Icon based on extension
-                            color: theme.colorScheme.onPrimaryContainer,
+                          const Spacer(),
+                          if (!file.isDeleted)
+                            FadeTransition(
+                              opacity: _iconsAnimation,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (file.isArchived)
+                                    const Padding(
+                                      padding: EdgeInsets.only(right: 4),
+                                      child: Icon(
+                                        Icons.archive,
+                                        size: 16,
+                                        color: Colors.blueGrey,
+                                      ),
+                                    ),
+                                  if (file.usedCount >=
+                                      MainConstants.popularItemThreshold)
+                                    const Padding(
+                                      padding: EdgeInsets.only(right: 4),
+                                      child: Icon(
+                                        Icons.local_fire_department,
+                                        size: 16,
+                                        color: Colors.deepOrange,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      if (file.category != null) ...[
+                        CardCategoryBadge(
+                          name: file.category!.name,
+                          color: file.category!.color,
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+
+                      Text(
+                        file.name,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+
+                      const SizedBox(height: 4),
+                      Text(
+                        '${file.fileName} • ${_formatFileSize(file.fileSize)}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.grey,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      if (file.tags != null && file.tags!.isNotEmpty)
+                        CardTagsList(tags: file.tags!, showTitle: false),
+
+                      if (!file.isDeleted) ...[
+                        const SizedBox(height: 8),
+                        FadeTransition(
+                          opacity: _iconsAnimation,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: widget.onDecrypt,
+                                  icon: const Icon(
+                                    Icons.file_download,
+                                    size: 16,
+                                  ),
+                                  label: const Text(
+                                    'Скачать',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 8,
+                                    ),
+                                    minimumSize: Size.zero,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    context.push(
+                                      AppRoutesPaths.dashboardEntityEdit(
+                                        EntityType.file,
+                                        file.id,
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.open_in_new, size: 16),
+                                  label: const Text(
+                                    'Открыть',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 8,
+                                    ),
+                                    minimumSize: Size.zero,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const Spacer(),
-                        if (!file.isDeleted) ...[
-                          // Анимированные действия
-                          FadeTransition(
-                            opacity: _iconsAnimation,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(
-                                    file.isFavorite
-                                        ? Icons.star
-                                        : Icons.star_border,
-                                    size: 20,
-                                    color: file.isFavorite
-                                        ? Colors.amber
-                                        : null,
-                                  ),
-                                  onPressed: widget.onToggleFavorite,
-                                  tooltip: file.isFavorite
-                                      ? 'Убрать из избранного'
-                                      : 'В избранное',
+                        const SizedBox(height: 8),
+                        FadeTransition(
+                          opacity: _iconsAnimation,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  file.isPinned
+                                      ? Icons.push_pin
+                                      : Icons.push_pin_outlined,
+                                  size: 18,
+                                  color: file.isPinned ? Colors.orange : null,
                                 ),
-                                IconButton(
-                                  icon: Icon(
-                                    file.isPinned
-                                        ? Icons.push_pin
-                                        : Icons.push_pin_outlined,
-                                    size: 20,
-                                    color: file.isPinned ? Colors.orange : null,
-                                  ),
-                                  onPressed: widget.onTogglePin,
-                                  tooltip: file.isPinned
-                                      ? 'Открепить'
-                                      : 'Закрепить',
+                                onPressed: widget.onTogglePin,
+                                tooltip: 'Закрепить',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                              IconButton(
+                                icon: Icon(
+                                  file.isFavorite
+                                      ? Icons.star
+                                      : Icons.star_border,
+                                  size: 18,
+                                  color: file.isFavorite ? Colors.amber : null,
                                 ),
-                                IconButton(
-                                  icon: Icon(
-                                    file.isArchived
-                                        ? Icons.unarchive
-                                        : Icons.archive,
-                                    size: 20,
-                                  ),
-                                  onPressed: widget.onToggleArchive,
-                                  tooltip: file.isArchived
-                                      ? 'Разархивировать'
-                                      : 'Архивировать',
-                                ),
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.delete_outline,
-                                    size: 20,
-                                  ),
-                                  onPressed: widget.onDelete,
-                                  tooltip: 'Удалить',
-                                ),
-                              ],
-                            ),
+                                onPressed: widget.onToggleFavorite,
+                                tooltip: 'Избранное',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined, size: 18),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                onPressed: () {
+                                  context.push(
+                                    AppRoutesPaths.dashboardEntityEdit(
+                                      EntityType.file,
+                                      file.id,
+                                    ),
+                                  );
+                                },
+                                tooltip: 'Редактировать',
+                              ),
+                            ],
                           ),
-                        ] else ...[
-                          IconButton(
-                            icon: const Icon(
-                              Icons.restore_from_trash,
-                              size: 20,
+                        ),
+                      ] else ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            TextButton.icon(
+                              onPressed: widget.onRestore,
+                              icon: const Icon(Icons.restore, size: 18),
+                              label: const Text('Восстановить'),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                              ),
                             ),
-                            onPressed: widget.onRestore,
-                            tooltip: 'Восстановить',
-                          ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.delete_forever,
-                              size: 20,
-                              color: Colors.red,
+                            TextButton.icon(
+                              onPressed: widget.onDelete,
+                              icon: const Icon(
+                                Icons.delete_forever,
+                                size: 18,
+                                color: Colors.red,
+                              ),
+                              label: const Text(
+                                'Удалить',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                              ),
                             ),
-                            onPressed: widget.onDelete,
-                            tooltip: 'Удалить навсегда',
-                          ),
-                        ],
+                          ],
+                        ),
                       ],
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Категория
-                    if (file.category != null) ...[
-                      CardCategoryBadge(
-                        name: file.category!.name,
-                        color: file.category!.color,
-                      ),
-                      const SizedBox(height: 6),
                     ],
-
-                    // Название
-                    Text(
-                      file.name,
-                      style: theme.textTheme.titleSmall,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-
-                    // Имя файла
-                    Text(
-                      file.fileName,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.grey,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-
-                    // Размер и расширение
-                    const SizedBox(height: 2),
-                    Text(
-                      '${file.fileExtension.toUpperCase()} • ${_formatFileSize(file.fileSize)}',
-                      style: theme.textTheme.bodySmall?.copyWith(fontSize: 10),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-
-                    const Spacer(),
-
-                    // Теги
-                    if (file.tags != null && file.tags!.isNotEmpty) ...[
-                      CardTagsList(tags: file.tags!),
-                      const SizedBox(height: 8),
-                    ],
-
-                    // Кнопка расшифровки
-                    SizedBox(
-                      width: double.infinity,
-                      child: SmoothButton(
-                        label: 'Расшифровать',
-                        onPressed: widget.onDecrypt,
-                        icon: const Icon(Icons.lock_open, size: 16),
-                        type: SmoothButtonType.outlined,
-                        variant: SmoothButtonVariant.normal,
-                        size: SmoothButtonSize.small,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        // Индикаторы
-        ...CardStatusIndicators(
-          isPinned: file.isPinned,
-          isFavorite: file.isFavorite,
-          isArchived: file.isArchived,
-        ).buildPositionedWidgets(),
-      ],
+          ...CardStatusIndicators(
+            isPinned: file.isPinned,
+            isFavorite: file.isFavorite,
+            isArchived: file.isArchived,
+          ).buildPositionedWidgets(),
+        ],
+      ),
     );
   }
 }
