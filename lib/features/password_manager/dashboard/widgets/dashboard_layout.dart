@@ -410,13 +410,51 @@ class _DashboardLayoutState extends State<DashboardLayout>
             ),
           ),
 
-          // Center: если isFullCenter — panelChild, иначе DashboardHomeScreen
+          // Center: если isFullCenter — panelChild, иначе DashboardHomeScreen с анимацией
           Expanded(
             flex: 3,
-            child: RepaintBoundary(
-              child: isFullCenter
-                  ? widget.panelChild
-                  : DashboardHomeScreen(entityType: EntityType.fromId(entity)!),
+            child: Stack(
+              children: [
+                // DashboardHomeScreen — всегда видим, скрывается только при isFullCenter
+                AnimatedOpacity(
+                  opacity: isFullCenter ? 0.0 : 1.0,
+                  duration: const Duration(milliseconds: 250),
+                  curve: isFullCenter ? Curves.easeOut : Curves.easeIn,
+                  child: AnimatedScale(
+                    scale: isFullCenter ? 0.96 : 1.0,
+                    duration: const Duration(milliseconds: 280),
+                    curve: Curves.easeInOut,
+                    child: IgnorePointer(
+                      ignoring: isFullCenter,
+                      child: RepaintBoundary(
+                        child: DashboardHomeScreen(
+                          entityType: EntityType.fromId(entity)!,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // Full-center content с анимацией появления,
+                // но panelChild рендерится напрямую без AnimatedSwitcher
+                if (isFullCenter)
+                  TweenAnimationBuilder<double>(
+                    key: ValueKey('fullCenter-$uri'),
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    duration: const Duration(milliseconds: 280),
+                    curve: Curves.easeOut,
+                    builder: (context, value, child) {
+                      return Opacity(
+                        opacity: value,
+                        child: Transform.scale(
+                          scale: 0.92 + (0.08 * value), // 0.92 -> 1.0
+                          child: child,
+                        ),
+                      );
+                    },
+                    // panelChild рендерится как child — без пересоздания
+                    child: widget.panelChild,
+                  ),
+              ],
             ),
           ),
 
