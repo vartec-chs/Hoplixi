@@ -360,55 +360,50 @@ class _DashboardLayoutState extends State<DashboardLayout>
       body: Row(
         children: [
           // NavigationRail / left menu для categories, tags, icons
-          Container(
-            decoration: BoxDecoration(
-              border: Border(
-                right: BorderSide(
-                  color: Theme.of(context).dividerColor,
-                  width: 1,
-                ),
-              ),
+          NavigationRail(
+            unselectedIconTheme: IconThemeData(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
-            child: NavigationRail(
-              unselectedIconTheme: IconThemeData(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              unselectedLabelTextStyle: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w400,
-              ),
-              selectedIconTheme: IconThemeData(
-                color: Theme.of(context).colorScheme.onPrimary,
-              ),
-              selectedLabelTextStyle: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.w400,
-              ),
-              indicatorColor: Theme.of(context).colorScheme.primaryContainer,
-              indicatorShape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              selectedIndex:
-                  _selectedRailIndex(), // highlight based on current panel
-              onDestinationSelected: (i) {
-                if (i == 0) {
-                  // home: close panel
-                  context.go('/dashboard/$entity');
-                } else if (i >= 1 && i <= 3) {
-                  context.go('/dashboard/$entity/${actions[i - 1]}');
-                } else if (i == 4 && entity == EntityType.note.id) {
-                  context.go(AppRoutesPaths.notesGraph);
-                }
-              },
-              labelType: NavigationRailLabelType.all,
-              destinations: destinations,
-              leading: Padding(
-                padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                child: _buildExpandableFAB(entity, isMobile),
-              ),
+            unselectedLabelTextStyle: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w400,
+            ),
+            selectedIconTheme: IconThemeData(
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+            selectedLabelTextStyle: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w400,
+            ),
+            indicatorColor: Theme.of(context).colorScheme.primaryContainer,
+            indicatorShape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerLowest,
+
+            selectedIndex:
+                _selectedRailIndex(), // highlight based on current panel
+            onDestinationSelected: (i) {
+              if (i == 0) {
+                // home: close panel
+                context.go('/dashboard/$entity');
+              } else if (i >= 1 && i <= 3) {
+                context.go('/dashboard/$entity/${actions[i - 1]}');
+              } else if (i == 4 && entity == EntityType.note.id) {
+                context.go(AppRoutesPaths.notesGraph);
+              }
+            },
+            labelType: NavigationRailLabelType.all,
+            destinations: destinations,
+            leading: Padding(
+              padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+              child: _buildExpandableFAB(entity, isMobile),
             ),
           ),
+          const VerticalDivider(width: 1, thickness: 1),
 
           // Center: если isFullCenter — panelChild, иначе DashboardHomeScreen с анимацией
           Expanded(

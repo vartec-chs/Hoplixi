@@ -149,8 +149,6 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
       floating: widget.floating,
       snap: widget.snap,
       elevation: 0,
-      backgroundColor: theme.colorScheme.surface,
-      surfaceTintColor: theme.colorScheme.surface,
 
       // Кнопка открытия drawer слева
       leading: widget.onMenuPressed != null
@@ -222,7 +220,7 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
             color: Colors.transparent,
             border: Border(
               bottom: BorderSide(
-                color: theme.colorScheme.outline.withOpacity(0.3),
+                color: Theme.of(context).dividerColor,
                 width: 1,
               ),
             ),

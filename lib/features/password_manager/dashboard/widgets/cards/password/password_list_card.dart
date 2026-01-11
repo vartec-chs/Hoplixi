@@ -201,6 +201,7 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
         Card(
           clipBehavior: Clip.hardEdge,
           margin: EdgeInsets.zero,
+          elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),

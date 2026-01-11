@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 
 import '../../../models/filter_tab.dart';
@@ -160,16 +161,18 @@ class _FilterTabsState extends ConsumerState<FilterTabs>
     // Определяем цвет индикатора в зависимости от текущей вкладки
     final indicatorColor = currentTab == FilterTab.delete
         ? theme.colorScheme.errorContainer
-        : theme.colorScheme.surfaceContainerHigh;
+        : theme.colorScheme.surfaceContainerHighest;
 
     final labelColor = currentTab == FilterTab.delete
         ? theme.colorScheme.onErrorContainer
         : theme.colorScheme.onSecondary;
 
+    final fillColor = AppColors.getInputFieldBackgroundColor(context);
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(widget.borderRadius),
-        color: theme.colorScheme.surfaceContainerHighest,
+        color: fillColor,
       ),
       child: TabBar(
         controller: _tabController,

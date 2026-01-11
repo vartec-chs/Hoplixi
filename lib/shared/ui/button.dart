@@ -80,7 +80,7 @@ class SmoothButton extends StatelessWidget {
       case SmoothButtonVariant.normal:
         return colorScheme.primary;
       case SmoothButtonVariant.error:
-        return getErrorColor(context); // Яркий красный
+        return AppColors.getErrorColor(context); // Яркий красный
       case SmoothButtonVariant.warning:
         return Colors.orangeAccent.shade700; // Яркий оранжевый
       case SmoothButtonVariant.info:

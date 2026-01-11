@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hoplixi/core/theme/colors.dart';
 
 class CustomOutlineInputBorder extends UnderlineInputBorder {
   const CustomOutlineInputBorder({super.borderRadius, super.borderSide});
@@ -92,6 +93,8 @@ InputDecoration primaryInputDecoration(
   BorderRadius? borderRadius,
 }) {
   final theme = Theme.of(context);
+  final fillColor = AppColors.getInputFieldBackgroundColor(context);
+
   final effectiveBorderRadius = borderRadius ?? defaultBorderRadiusValue;
   return InputDecoration(
     labelText: labelText,
@@ -166,17 +169,14 @@ InputDecoration primaryInputDecoration(
             fontWeight: FontWeight.bold,
             color: Theme.of(context).colorScheme.onSurface,
           ),
-    fillColor: theme.colorScheme.secondary,
+    fillColor: fillColor,
     enabledBorder: CustomOutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide(color: theme.colorScheme.tertiary, width: 1),
+      borderSide: BorderSide(color: fillColor.withOpacity(0.6), width: 1),
     ),
     disabledBorder: CustomOutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide(
-        color: theme.colorScheme.secondary.withValues(alpha: 0.5),
-        width: 1,
-      ),
+      borderSide: BorderSide(color: fillColor.withValues(alpha: 0.5), width: 1),
     ),
 
     focusedBorder: CustomOutlineInputBorder(
@@ -191,10 +191,10 @@ InputDecoration primaryInputDecoration(
   ).copyWith(
     // Apply disabled styles when enabled is false
     fillColor: !enabled
-        ? theme.colorScheme.secondary.withValues(alpha: 0.6)
+        ? fillColor.withValues(alpha: 0.5)
         : isFocused
-        ? theme.colorScheme.secondary.withValues(alpha: 0.9)
-        : theme.colorScheme.secondary,
+        ? fillColor.withValues(alpha: 0.9)
+        : fillColor,
     labelStyle: !enabled
         ? TextStyle(
             color: theme.colorScheme.onSurface.withValues(alpha: 0.5),

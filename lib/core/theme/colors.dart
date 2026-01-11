@@ -40,13 +40,25 @@ abstract final class AppColors {
 
   //primary: Color(0xFF005BFF),
 
-  static const Color primary = Color(0xFF1E6DFB);
-}
+  /// Основной цвет полей ввода
+  static const Color inputFieldBackgroundDark = Color(0xFF171717);
+  static const Color inputFieldBackgroundLight = Color(0xFFF5F5F5);
 
-Color getErrorColor(BuildContext context) {
-  if (Theme.of(context).brightness == Brightness.dark) {
-    return AppColors.darkColors.error as Color;
-  } else {
-    return AppColors.lightColors.error as Color;
+  static const Color primary = Color(0xFF1E6DFB);
+
+  static Color getErrorColor(BuildContext context) {
+    if (Theme.of(context).brightness == Brightness.dark) {
+      return AppColors.darkColors.error as Color;
+    } else {
+      return AppColors.lightColors.error as Color;
+    }
+  }
+
+  static Color getInputFieldBackgroundColor(BuildContext context) {
+    if (Theme.of(context).brightness == Brightness.dark) {
+      return AppColors.inputFieldBackgroundDark;
+    } else {
+      return AppColors.inputFieldBackgroundLight;
+    }
   }
 }

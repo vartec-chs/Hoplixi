@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/core/theme/index.dart';
 
 import '../../models/entity_type.dart';
 
@@ -40,10 +41,12 @@ class EntityTypeCompactDropdown extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    final fillColor = AppColors.getInputFieldBackgroundColor(context);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
+        color: fillColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: DropdownButton<EntityType>(
@@ -55,7 +58,7 @@ class EntityTypeCompactDropdown extends StatelessWidget {
             textStyle ??
             theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
         borderRadius: BorderRadius.circular(12),
-        dropdownColor: theme.colorScheme.surfaceContainerHighest,
+        dropdownColor: fillColor,
         items: availableTypes.map((type) {
           return DropdownMenuItem<EntityType>(
             value: type,
