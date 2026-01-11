@@ -36,19 +36,19 @@ class _DashboardLayoutState extends State<DashboardLayout>
 
   // Кэшированные destinations для NavigationRail
   static const List<NavigationRailDestination> _baseDestinations = [
-    NavigationRailDestination(icon: Icon(Icons.home), label: Text('Home')),
+    NavigationRailDestination(icon: Icon(Icons.home), label: Text('Главная')),
     NavigationRailDestination(
       icon: Icon(Icons.category),
-      label: Text('Categories'),
+      label: Text('Категории'),
     ),
-    NavigationRailDestination(icon: Icon(Icons.tag), label: Text('Tags')),
-    NavigationRailDestination(icon: Icon(Icons.image), label: Text('Icons')),
+    NavigationRailDestination(icon: Icon(Icons.tag), label: Text('Теги')),
+    NavigationRailDestination(icon: Icon(Icons.image), label: Text('Иконки')),
   ];
 
   static const NavigationRailDestination _graphDestination =
       NavigationRailDestination(
         icon: Icon(Icons.bubble_chart),
-        label: Text('Graph'),
+        label: Text('Граф'),
       );
 
   @override
@@ -374,6 +374,25 @@ class _DashboardLayoutState extends State<DashboardLayout>
               ),
             ),
             child: NavigationRail(
+              unselectedIconTheme: IconThemeData(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              unselectedLabelTextStyle: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w400,
+              ),
+              selectedIconTheme: IconThemeData(
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+              selectedLabelTextStyle: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w400,
+              ),
+              indicatorColor: Theme.of(context).colorScheme.primaryContainer,
+              indicatorShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              backgroundColor: Theme.of(context).colorScheme.surface,
               selectedIndex:
                   _selectedRailIndex(), // highlight based on current panel
               onDestinationSelected: (i) {
@@ -382,14 +401,14 @@ class _DashboardLayoutState extends State<DashboardLayout>
                   context.go('/dashboard/$entity');
                 } else if (i >= 1 && i <= 3) {
                   context.go('/dashboard/$entity/${actions[i - 1]}');
-                } else if (i == 4 && entity == 'notes') {
+                } else if (i == 4 && entity == EntityType.note.id) {
                   context.go(AppRoutesPaths.notesGraph);
                 }
               },
               labelType: NavigationRailLabelType.all,
               destinations: destinations,
               leading: Padding(
-                padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
+                padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
                 child: _buildExpandableFAB(entity, isMobile),
               ),
             ),

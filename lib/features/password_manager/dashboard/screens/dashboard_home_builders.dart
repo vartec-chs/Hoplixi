@@ -657,17 +657,22 @@ class DashboardHomeBuilders {
     required BaseCardDto item,
     required DashboardCardCallbacks callbacks,
   }) {
+    final isDeleted = item.isDeleted;
+
     return Dismissible(
       key: ValueKey(item.id),
       direction: DismissDirection.horizontal,
       background: Container(
         decoration: BoxDecoration(
-          color: Colors.blueAccent,
+          color: isDeleted ? Colors.greenAccent : Colors.blueAccent,
           borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 24),
         alignment: Alignment.centerLeft,
-        child: const Icon(Icons.edit, color: Colors.white),
+        child: Icon(
+          isDeleted ? Icons.restore : Icons.edit,
+          color: Colors.white,
+        ),
       ),
       secondaryBackground: Container(
         decoration: BoxDecoration(
@@ -680,7 +685,14 @@ class DashboardHomeBuilders {
       ),
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
-          // Вправо → редактирование
+          // Вправо → редактирование или восстановление
+          if (isDeleted) {
+            // Восстанавливаем удаленный элемент
+            callbacks.onRestore(item.id);
+            return false;
+          }
+
+          // Открываем экран редактирования для не удаленных элементов
           if (item is PasswordCardDto) {
             final path = AppRoutesPaths.dashboardEntityEdit(
               EntityType.password,
