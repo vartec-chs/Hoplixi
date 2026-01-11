@@ -228,46 +228,49 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
           child: SafeArea(
             child: Column(
               children: [
-                const SizedBox(height: 50),
+                const SizedBox(height: 58),
 
                 // Нижняя часть с поиском и вкладками
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8.0,
-                      vertical: 8.0,
+                      // vertical: 8.0,
                     ),
                     child: Column(
                       children: [
                         // Поле поиска
                         Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
-                          child: PrimaryTextField(
-                            controller: _searchController,
-                            focusNode: _searchFocusNode,
-                            hintText: _getSearchHint(currentEntityType),
-                            prefixIcon: const Icon(Icons.search),
-                            suffixIcon: _searchController.text.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(Icons.clear),
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      _onSearchChanged('');
-                                    },
-                                  )
-                                : null,
-                            onChanged: _onSearchChanged,
-                            textInputAction: TextInputAction.search,
-                            decoration:
-                                primaryInputDecoration(
-                                  context,
-                                  hintText: _getSearchHint(currentEntityType),
-                                ).copyWith(
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
+                          child: SizedBox(
+                            height: 50,
+                            child: PrimaryTextField(
+                              controller: _searchController,
+                              focusNode: _searchFocusNode,
+                              hintText: _getSearchHint(currentEntityType),
+                              prefixIcon: const Icon(Icons.search),
+                              suffixIcon: _searchController.text.isNotEmpty
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        _onSearchChanged('');
+                                      },
+                                    )
+                                  : null,
+                              onChanged: _onSearchChanged,
+                              textInputAction: TextInputAction.search,
+                              decoration:
+                                  primaryInputDecoration(
+                                    context,
+                                    hintText: _getSearchHint(currentEntityType),
+                                  ).copyWith(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
                                   ),
-                                ),
+                            ),
                           ),
                         ),
 

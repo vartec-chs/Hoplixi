@@ -170,6 +170,7 @@ class _FilterTabsState extends ConsumerState<FilterTabs>
     final fillColor = AppColors.getInputFieldBackgroundColor(context);
 
     return Container(
+      height: widget.height + 10,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(widget.borderRadius),
         color: fillColor,
@@ -196,7 +197,7 @@ class _FilterTabsState extends ConsumerState<FilterTabs>
         }),
         physics: const BouncingScrollPhysics(),
         labelStyle: theme.textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w500,
         ),
         indicatorPadding: const EdgeInsets.all(2),
         unselectedLabelStyle: theme.textTheme.bodyMedium,
@@ -205,7 +206,7 @@ class _FilterTabsState extends ConsumerState<FilterTabs>
         splashBorderRadius: BorderRadius.circular(widget.borderRadius),
         tabs: _currentTabs.map((tab) {
           return Tab(
-            icon: Icon(tab.icon, size: 18),
+            icon: Icon(tab.icon, size: 16),
             text: tab.label,
             height: widget.height,
           );
