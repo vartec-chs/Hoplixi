@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/store_settings/providers/store_settings_provider.dart';
-import 'package:hoplixi/features/password_manager/store_settings/widgets/change_password_section.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/notification_card.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
@@ -69,7 +68,6 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(storeSettingsProvider);
-    final theme = Theme.of(context);
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -164,9 +162,6 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
               ),
             ],
           ),
-
-          // Секция смены пароля
-          const ChangePasswordSection(),
         ],
       ),
     );

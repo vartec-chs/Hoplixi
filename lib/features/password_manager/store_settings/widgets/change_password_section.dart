@@ -15,17 +15,14 @@ class ChangePasswordSection extends ConsumerStatefulWidget {
 }
 
 class _ChangePasswordSectionState extends ConsumerState<ChangePasswordSection> {
-  final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  bool _obscureCurrentPassword = true;
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
-    _currentPasswordController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -52,7 +49,6 @@ class _ChangePasswordSectionState extends ConsumerState<ChangePasswordSection> {
   }
 
   void _clearFields() {
-    _currentPasswordController.clear();
     _newPasswordController.clear();
     _confirmPasswordController.clear();
     ref.read(storeSettingsProvider.notifier).resetPasswordFields();
@@ -61,55 +57,10 @@ class _ChangePasswordSectionState extends ConsumerState<ChangePasswordSection> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(storeSettingsProvider);
-    final theme = Theme.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Divider(height: 32),
-
-        // Заголовок секции
-        Text(
-          'Смена пароля',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-
-        const SizedBox(height: 16),
-
-        // Текущий пароль
-        TextField(
-          controller: _currentPasswordController,
-          enabled: !state.isChangingPassword,
-          obscureText: _obscureCurrentPassword,
-          decoration: primaryInputDecoration(
-            context,
-            labelText: 'Текущий пароль',
-            hintText: 'Введите текущий пароль',
-            errorText: state.currentPasswordError,
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscureCurrentPassword
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
-              ),
-              onPressed: () {
-                setState(() {
-                  _obscureCurrentPassword = !_obscureCurrentPassword;
-                });
-              },
-            ),
-          ),
-          onChanged: (value) {
-            ref
-                .read(storeSettingsProvider.notifier)
-                .updateCurrentPassword(value);
-          },
-        ),
-
-        const SizedBox(height: 16),
-
         // Новый пароль
         TextField(
           controller: _newPasswordController,

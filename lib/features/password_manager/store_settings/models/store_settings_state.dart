@@ -21,17 +21,11 @@ sealed class StoreSettingsState with _$StoreSettingsState {
     /// Ошибка валидации имени
     String? nameError,
 
-    /// Текущий пароль (для смены)
-    @Default('') String currentPassword,
-
     /// Новый пароль
     @Default('') String newPassword,
 
     /// Подтверждение нового пароля
     @Default('') String newPasswordConfirmation,
-
-    /// Ошибка валидации текущего пароля
-    String? currentPasswordError,
 
     /// Ошибка валидации нового пароля
     String? newPasswordError,
@@ -64,10 +58,8 @@ sealed class StoreSettingsState with _$StoreSettingsState {
   /// Проверка возможности смены пароля
   bool get canChangePassword =>
       !isChangingPassword &&
-      currentPassword.isNotEmpty &&
       newPassword.isNotEmpty &&
       newPasswordConfirmation.isNotEmpty &&
-      currentPasswordError == null &&
       newPasswordError == null &&
       newPasswordConfirmationError == null;
 }

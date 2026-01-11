@@ -1,8 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/password_manager/store_settings/models/store_settings_state.dart';
-import 'package:hoplixi/main_store/main_store_manager.dart';
-import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/main_store/provider/db_history_provider.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
@@ -153,16 +151,6 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
     state = state.copyWith(saveError: null, successMessage: null);
   }
 
-  /// Обновить текущий пароль
-  void updateCurrentPassword(String password) {
-    state = state.copyWith(
-      currentPassword: password,
-      currentPasswordError: _validateCurrentPassword(password),
-      saveError: null,
-      successMessage: null,
-    );
-  }
-
   /// Обновить новый пароль
   void updateNewPassword(String password) {
     state = state.copyWith(
@@ -215,36 +203,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         return const Failure('Не удалось определить текущее хранилище');
       }
 
-      // Проверяем текущий пароль, пытаясь открыть базу
-      // Для этого используем временное подключение
-      try {
-        final tempManager = MainStoreManager(
-          await ref.read(dbHistoryProvider.future),
-        );
-        final openDto = OpenStoreDto(
-          path: currentPath,
-          password: state.currentPassword,
-        );
-        final verifyResult = await tempManager.openStore(openDto);
-
-        if (verifyResult.isError()) {
-          state = state.copyWith(
-            isChangingPassword: false,
-            currentPasswordError: 'Неверный текущий пароль',
-          );
-          return const Failure('Неверный текущий пароль');
-        }
-
-        // Закрываем временное подключение
-        await tempManager.closeStore();
-      } catch (e) {
-        state = state.copyWith(
-          isChangingPassword: false,
-          currentPasswordError: 'Ошибка проверки пароля',
-        );
-        return const Failure('Ошибка проверки пароля');
-      }
-
+      // База уже открыта с текущим паролем, поэтому проверка не требуется
       // Меняем пароль через SQLCipher PRAGMA rekey
       await daoResult.changePassword(state.newPassword);
 
@@ -262,10 +221,8 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       // Очищаем поля паролей
       state = state.copyWith(
         isChangingPassword: false,
-        currentPassword: '',
         newPassword: '',
         newPasswordConfirmation: '',
-        currentPasswordError: null,
         newPasswordError: null,
         newPasswordConfirmationError: null,
         successMessage: 'Пароль успешно изменен',
@@ -286,10 +243,8 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
   /// Сбросить поля смены пароля
   void resetPasswordFields() {
     state = state.copyWith(
-      currentPassword: '',
       newPassword: '',
       newPasswordConfirmation: '',
-      currentPasswordError: null,
       newPasswordError: null,
       newPasswordConfirmationError: null,
     );
@@ -362,13 +317,6 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
     final invalidChars = RegExp(r'[<>:"/\\|?*]');
     if (invalidChars.hasMatch(name)) {
       return 'Имя содержит недопустимые символы';
-    }
-    return null;
-  }
-
-  String? _validateCurrentPassword(String password) {
-    if (password.isEmpty) {
-      return 'Введите текущий пароль';
     }
     return null;
   }
