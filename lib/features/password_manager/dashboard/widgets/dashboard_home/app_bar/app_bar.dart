@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/features/password_manager/store_settings/index.dart';
 import 'package:hoplixi/main_store/models/filter/index.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
@@ -121,6 +122,14 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
     );
   }
 
+  void _openStoreSettingsModal() {
+    logInfo(
+      'DashboardSliverAppBar: Открытие модального окна настроек хранилища',
+    );
+
+    showStoreSettingsModal(context, ref);
+  }
+
   String _getSearchHint(EntityType entityType) {
     switch (entityType) {
       case EntityType.password:
@@ -197,6 +206,13 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
           ),
           onPressed: _openFilterModal,
           tooltip: 'Открыть фильтры',
+        ),
+
+        // Кнопка настроек хранилища
+        IconButton(
+          icon: const Icon(Icons.settings),
+          onPressed: _openStoreSettingsModal,
+          tooltip: 'Настройки хранилища',
         ),
 
         // Дополнительные actions
