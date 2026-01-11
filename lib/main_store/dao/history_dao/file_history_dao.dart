@@ -93,6 +93,14 @@ class FileHistoryDao extends DatabaseAccessor<MainStore>
         );
   }
 
+  /// Получить все записи истории для файла (с полными данными включая filePath)
+  Future<List<FilesHistoryData>> getFileHistoryByOriginalId(String fileId) {
+    return (select(filesHistory)
+          ..where((fh) => fh.originalFileId.equals(fileId))
+          ..orderBy([(fh) => OrderingTerm.desc(fh.actionAt)]))
+        .get();
+  }
+
   /// Получить историю по действию
   Stream<List<FileHistoryCardDto>> watchFileHistoryByAction(String action) {
     return (select(filesHistory)

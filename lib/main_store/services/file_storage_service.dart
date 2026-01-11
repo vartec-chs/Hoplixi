@@ -231,9 +231,9 @@ class FileStorageService {
   }
 
   /// Удалить файл с диска (используется при удалении из БД)
-  Future<void> deleteFileFromDisk(String fileId) async {
+  Future<bool> deleteFileFromDisk(String fileId) async {
     final fileData = await _db.fileDao.getFileById(fileId);
-    if (fileData == null) return;
+    if (fileData == null) return false;
 
     final attachmentsPath = await _getAttachmentsPath();
     final encryptedFilePath = p.join(attachmentsPath, fileData.filePath);
@@ -241,6 +241,23 @@ class FileStorageService {
 
     if (await file.exists()) {
       await file.delete();
+      return true;
     }
+    return false;
+  }
+
+  /// Удалить файл истории с диска по пути
+  Future<bool> deleteHistoryFileFromDisk(String filePath) async {
+    final attachmentsPath = await _getAttachmentsPath();
+    final encryptedFilePath = p.join(attachmentsPath, filePath);
+    final file = File(encryptedFilePath);
+
+    if (await file.exists()) {
+      await file.delete();
+      logDebug('Deleted history file: $encryptedFilePath');
+      return true;
+    }
+    logDebug('History file not found: $encryptedFilePath');
+    return false;
   }
 }

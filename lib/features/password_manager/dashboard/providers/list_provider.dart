@@ -9,7 +9,7 @@ import 'package:hoplixi/main_store/dao/filters_dao/filter.dart';
 import 'package:hoplixi/main_store/models/base_main_entity_dao.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/models/filter/index.dart';
-import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/main_store/provider/index.dart';
 
 import '../models/filter_tab.dart';
 import 'data_refresh_trigger_provider.dart';
@@ -624,13 +624,45 @@ class PaginatedListNotifier
     try {
       final dao = await _crudDaoForType();
       bool success = false;
-      success = await dao.permanentDelete(id);
+      if (entityType == EntityType.file) {
+        // Для файлов сначала удаляем все файлы истории, затем основной файл
+        final fileService = await ref.read(fileStorageServiceProvider.future);
+        final fileHistoryDao = await ref.read(fileHistoryDaoProvider.future);
+
+        // Получаем все записи истории для файла
+        final historyRecords = await fileHistoryDao.getFileHistoryByOriginalId(
+          id,
+        );
+
+        // Удаляем файлы истории с диска
+        for (final record in historyRecords) {
+          await fileService.deleteHistoryFileFromDisk(record.filePath);
+        }
+
+        // Удаляем записи истории из БД
+        await fileHistoryDao.deleteFileHistoryByFileId(id);
+
+        // Удаляем основной файл
+        final fileDeleted = await fileService.deleteFileFromDisk(id);
+        if (!fileDeleted) {
+          logWarning(
+            'Не удалось удалить основной файл с диска. Возможно файл уже был удалён ранее.',
+            tag: '${_logTag}permanentDelete',
+          );
+        }
+
+        // Удаляем запись из БД
+        success = await dao.permanentDelete(id);
+      } else {
+        // Для остальных типов используем permanentDelete
+        success = await dao.permanentDelete(id);
+      }
 
       if (!success) {
         // откат
         updated.insert(index, item);
         state = AsyncValue.data(
-          cur.copyWith(items: updated, totalCount: cur.totalCount + 1),
+          cur.copyWith(items: updated, totalCount: cur.totalCount),
         );
       } else {
         ref

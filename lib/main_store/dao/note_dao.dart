@@ -127,6 +127,7 @@ class NoteDao extends DatabaseAccessor<MainStore>
   }
 
   /// Увеличить счетчик использования и обновить метрики
+  @override
   Future<bool> incrementUsage(String id) async {
     final note = await getNoteById(id);
     if (note == null) return false;

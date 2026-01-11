@@ -109,6 +109,7 @@ class BankCardDao extends DatabaseAccessor<MainStore>
   }
 
   /// Увеличить счетчик использования и обновить метрики
+  @override
   Future<bool> incrementUsage(String id) async {
     final card = await getBankCardById(id);
     if (card == null) return false;

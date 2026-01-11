@@ -187,6 +187,7 @@ class PasswordDao extends DatabaseAccessor<MainStore>
   }
 
   /// Увеличить счетчик использования и обновить метрики
+  @override
   Future<bool> incrementUsage(String id) async {
     final password = await getPasswordById(id);
     if (password == null) return false;

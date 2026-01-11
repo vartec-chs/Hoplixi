@@ -8,7 +8,6 @@ import 'package:hoplixi/features/password_manager/note_picker/note_picker_field.
 import 'package:hoplixi/features/password_manager/tags_manager/features/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
-import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 import '../models/file_form_state.dart';
@@ -163,6 +162,23 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                           const SizedBox(height: 16),
                         ],
 
+                        if (state.isSaving && state.uploadProgress > 0)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Column(
+                              children: [
+                                LinearProgressIndicator(
+                                  value: state.uploadProgress,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Шифрование: ${(state.uploadProgress * 100).toStringAsFixed(0)}%',
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
+                          ),
+
                         // Информация о файле (режим редактирования)
                         if (state.isEditMode) ...[
                           Text(
@@ -274,59 +290,6 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                 ),
 
                 // Прогресс загрузки
-                if (state.isSaving && state.uploadProgress > 0)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Column(
-                      children: [
-                        LinearProgressIndicator(value: state.uploadProgress),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Шифрование: ${(state.uploadProgress * 100).toStringAsFixed(0)}%',
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                // Закрепленные кнопки снизу
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    border: Border(
-                      top: BorderSide(color: theme.dividerColor, width: 1),
-                    ),
-                  ),
-                  child: SafeArea(
-                    top: false,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: SmoothButton(
-                            label: 'Отмена',
-                            onPressed: state.isSaving
-                                ? null
-                                : () => context.pop(false),
-                            type: SmoothButtonType.outlined,
-                            variant: SmoothButtonVariant.normal,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: SmoothButton(
-                            label: widget.fileId != null
-                                ? 'Сохранить'
-                                : 'Загрузить',
-                            onPressed: state.isSaving ? null : _handleSave,
-                            type: SmoothButtonType.filled,
-                            variant: SmoothButtonVariant.normal,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               ],
             ),
     );

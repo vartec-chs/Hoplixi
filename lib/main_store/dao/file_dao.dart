@@ -129,6 +129,7 @@ class FileDao extends DatabaseAccessor<MainStore>
   }
 
   /// Увеличить счетчик использования и обновить метрики
+  @override
   Future<bool> incrementUsage(String id) async {
     final file = await getFileById(id);
     if (file == null) return false;

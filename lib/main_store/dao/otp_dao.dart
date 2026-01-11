@@ -172,6 +172,7 @@ class OtpDao extends DatabaseAccessor<MainStore>
   }
 
   /// Увеличить счетчик использования и обновить метрики
+  @override
   Future<bool> incrementUsage(String id) async {
     final otp = await getOtpById(id);
     if (otp == null) return false;
