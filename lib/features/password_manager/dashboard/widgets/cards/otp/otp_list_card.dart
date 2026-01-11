@@ -5,7 +5,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
@@ -359,58 +358,39 @@ class _TotpListCardState extends ConsumerState<TotpListCard>
 
   /// Строит кнопки действий в заголовке
   Widget _buildHeaderActions(ThemeData theme) {
+    final otp = widget.otp;
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (!widget.otp.isDeleted) ...[
-          // Иконки состояния с анимацией
+        if (!otp.isDeleted) ...[
           AnimatedBuilder(
             animation: _iconsAnimation,
             builder: (context, child) {
-              return Opacity(
-                opacity: _iconsAnimation.value,
-                child: Transform.scale(
-                  scale: 0.8 + (_iconsAnimation.value * 0.2),
-                  alignment: Alignment.centerRight,
-                  child: child,
-                ),
-              );
+              return Opacity(opacity: _iconsAnimation.value, child: child);
             },
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                if (widget.otp.isArchived)
-                  const Padding(
-                    padding: EdgeInsets.only(right: 4),
-                    child: Icon(
-                      Icons.archive,
-                      size: 16,
-                      color: Colors.blueGrey,
-                    ),
+                IconButton(
+                  icon: Icon(
+                    otp.isFavorite ? Icons.star : Icons.star_border,
+                    color: otp.isFavorite ? Colors.amber : null,
                   ),
-                if (widget.otp.usedCount >= MainConstants.popularItemThreshold)
-                  const Padding(
-                    padding: EdgeInsets.only(right: 4),
-                    child: Icon(
-                      Icons.local_fire_department,
-                      size: 16,
-                      color: Colors.deepOrange,
-                    ),
-                  ),
+                  onPressed: widget.onToggleFavorite,
+                  tooltip: otp.isFavorite
+                      ? 'Убрать из избранного'
+                      : 'В избранное',
+                ),
               ],
             ),
           ),
-          // Кнопки действия с анимацией
           AnimatedBuilder(
             animation: _iconsAnimation,
             builder: (context, child) {
-              return Opacity(
-                opacity: _iconsAnimation.value,
-                child: Transform.scale(
-                  scale: 0.8 + (_iconsAnimation.value * 0.2),
-                  alignment: Alignment.centerRight,
-                  child: child,
-                ),
+              return SizeTransition(
+                sizeFactor: _iconsAnimation,
+                axis: Axis.horizontal,
+                child: child,
               );
             },
             child: Row(
@@ -418,22 +398,11 @@ class _TotpListCardState extends ConsumerState<TotpListCard>
               children: [
                 IconButton(
                   icon: Icon(
-                    widget.otp.isPinned
-                        ? Icons.push_pin
-                        : Icons.push_pin_outlined,
-                    size: 18,
-                    color: widget.otp.isPinned ? Colors.orange : null,
+                    otp.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                    color: otp.isPinned ? Colors.orange : null,
                   ),
                   onPressed: widget.onTogglePin,
-                  tooltip: widget.otp.isPinned ? 'Открепить' : 'Закрепить',
-                ),
-                IconButton(
-                  icon: Icon(
-                    widget.otp.isFavorite ? Icons.star : Icons.star_border,
-                    color: widget.otp.isFavorite ? Colors.amber : null,
-                  ),
-                  onPressed: widget.onToggleFavorite,
-                  tooltip: 'Избранное',
+                  tooltip: otp.isPinned ? 'Открепить' : 'Закрепить',
                 ),
                 if (widget.onOpenHistory != null)
                   IconButton(
@@ -443,6 +412,17 @@ class _TotpListCardState extends ConsumerState<TotpListCard>
                   ),
               ],
             ),
+          ),
+        ] else ...[
+          IconButton(
+            icon: const Icon(Icons.restore_from_trash),
+            onPressed: widget.onRestore,
+            tooltip: 'Восстановить',
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_forever, color: Colors.red),
+            onPressed: widget.onDelete,
+            tooltip: 'Удалить навсегда',
           ),
         ],
         IconButton(

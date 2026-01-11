@@ -241,37 +241,18 @@ class _FileListCardState extends ConsumerState<FileListCard>
                   onPressed: widget.onTogglePin,
                   tooltip: file.isPinned ? 'Открепить' : 'Закрепить',
                 ),
-                IconButton(
-                  icon: Icon(file.isArchived ? Icons.unarchive : Icons.archive),
-                  onPressed: widget.onToggleArchive,
-                  tooltip: file.isArchived ? 'Разархивировать' : 'Архивировать',
-                ),
+
                 if (widget.onOpenHistory != null)
                   IconButton(
                     icon: const Icon(Icons.history, size: 18),
                     onPressed: widget.onOpenHistory,
                     tooltip: 'История',
                   ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: widget.onDelete,
-                  tooltip: 'Удалить',
-                ),
               ],
             ),
           ),
-        ] else ...[
-          IconButton(
-            icon: const Icon(Icons.restore_from_trash),
-            onPressed: widget.onRestore,
-            tooltip: 'Восстановить',
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_forever, color: Colors.red),
-            onPressed: widget.onDelete,
-            tooltip: 'Удалить навсегда',
-          ),
-        ],
+        ] else
+          const SizedBox.shrink(),
         IconButton(
           icon: Icon(
             _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
@@ -341,13 +322,24 @@ class _FileListCardState extends ConsumerState<FileListCard>
               ],
             ),
             const SizedBox(height: 8),
-            SmoothButton(
-              isFullWidth: true,
-              size: SmoothButtonSize.small,
-              label: 'Расшифровать',
-              onPressed: widget.onDecrypt,
-              variant: SmoothButtonVariant.normal,
-              type: SmoothButtonType.outlined,
+            if (!file.isDeleted) ...[
+              SmoothButton(
+                isFullWidth: true,
+                size: SmoothButtonSize.small,
+                label: 'Расшифровать',
+                onPressed: widget.onDecrypt,
+                variant: SmoothButtonVariant.normal,
+                type: SmoothButtonType.outlined,
+              ),
+              const SizedBox(height: 8),
+            ],
+
+            CardActionButtons(
+              isDeleted: file.isDeleted,
+              isArchived: file.isArchived,
+              onRestore: widget.onRestore,
+              onDelete: widget.onDelete,
+              onToggleArchive: widget.onToggleArchive,
             ),
           ],
         ),

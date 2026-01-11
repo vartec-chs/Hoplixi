@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
@@ -237,54 +236,33 @@ class _NoteListCardState extends ConsumerState<NoteListCard>
       mainAxisSize: MainAxisSize.min,
       children: [
         if (!note.isDeleted) ...[
-          // Иконки состояния с анимацией
           AnimatedBuilder(
             animation: _iconsAnimation,
             builder: (context, child) {
-              return Opacity(
-                opacity: _iconsAnimation.value,
-                child: Transform.scale(
-                  scale: 0.8 + (_iconsAnimation.value * 0.2),
-                  alignment: Alignment.centerRight,
-                  child: child,
-                ),
-              );
+              return Opacity(opacity: _iconsAnimation.value, child: child);
             },
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                if (note.isArchived)
-                  const Padding(
-                    padding: EdgeInsets.only(right: 4),
-                    child: Icon(
-                      Icons.archive,
-                      size: 16,
-                      color: Colors.blueGrey,
-                    ),
+                IconButton(
+                  icon: Icon(
+                    note.isFavorite ? Icons.star : Icons.star_border,
+                    color: note.isFavorite ? Colors.amber : null,
                   ),
-                if (note.usedCount >= MainConstants.popularItemThreshold)
-                  const Padding(
-                    padding: EdgeInsets.only(right: 4),
-                    child: Icon(
-                      Icons.local_fire_department,
-                      size: 16,
-                      color: Colors.deepOrange,
-                    ),
-                  ),
+                  onPressed: widget.onToggleFavorite,
+                  tooltip: note.isFavorite
+                      ? 'Убрать из избранного'
+                      : 'В избранное',
+                ),
               ],
             ),
           ),
-          // Кнопки действия с анимацией
           AnimatedBuilder(
             animation: _iconsAnimation,
             builder: (context, child) {
-              return Opacity(
-                opacity: _iconsAnimation.value,
-                child: Transform.scale(
-                  scale: 0.8 + (_iconsAnimation.value * 0.2),
-                  alignment: Alignment.centerRight,
-                  child: child,
-                ),
+              return SizeTransition(
+                sizeFactor: _iconsAnimation,
+                axis: Axis.horizontal,
+                child: child,
               );
             },
             child: Row(
@@ -293,31 +271,10 @@ class _NoteListCardState extends ConsumerState<NoteListCard>
                 IconButton(
                   icon: Icon(
                     note.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-                    size: 18,
                     color: note.isPinned ? Colors.orange : null,
                   ),
                   onPressed: widget.onTogglePin,
                   tooltip: note.isPinned ? 'Открепить' : 'Закрепить',
-                ),
-                IconButton(
-                  icon: Icon(
-                    note.isFavorite ? Icons.star : Icons.star_border,
-                    color: note.isFavorite ? Colors.amber : null,
-                  ),
-                  onPressed: widget.onToggleFavorite,
-                  tooltip: 'Избранное',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 18),
-                  onPressed: () {
-                    context.push(
-                      AppRoutesPaths.dashboardEntityEdit(
-                        EntityType.note,
-                        widget.note.id,
-                      ),
-                    );
-                  },
-                  tooltip: 'Редактировать',
                 ),
                 if (widget.onOpenHistory != null)
                   IconButton(
@@ -327,6 +284,17 @@ class _NoteListCardState extends ConsumerState<NoteListCard>
                   ),
               ],
             ),
+          ),
+        ] else ...[
+          IconButton(
+            icon: const Icon(Icons.restore_from_trash),
+            onPressed: widget.onRestore,
+            tooltip: 'Восстановить',
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_forever, color: Colors.red),
+            onPressed: widget.onDelete,
+            tooltip: 'Удалить навсегда',
           ),
         ],
         IconButton(

@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
-import 'package:hoplixi/routing/paths.dart';
 
 /// Карточка пароля для режима списка (переписана с shared компонентами)
 class PasswordListCard extends ConsumerStatefulWidget {
@@ -315,54 +311,33 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
       mainAxisSize: MainAxisSize.min,
       children: [
         if (!password.isDeleted) ...[
-          // Иконки состояния с анимацией
           AnimatedBuilder(
             animation: _iconsAnimation,
             builder: (context, child) {
-              return Opacity(
-                opacity: _iconsAnimation.value,
-                child: Transform.scale(
-                  scale: 0.8 + (_iconsAnimation.value * 0.2),
-                  alignment: Alignment.centerRight,
-                  child: child,
-                ),
-              );
+              return Opacity(opacity: _iconsAnimation.value, child: child);
             },
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                if (password.isArchived)
-                  const Padding(
-                    padding: EdgeInsets.only(right: 4),
-                    child: Icon(
-                      Icons.archive,
-                      size: 16,
-                      color: Colors.blueGrey,
-                    ),
+                IconButton(
+                  icon: Icon(
+                    password.isFavorite ? Icons.star : Icons.star_border,
+                    color: password.isFavorite ? Colors.amber : null,
                   ),
-                if (password.usedCount >= MainConstants.popularItemThreshold)
-                  const Padding(
-                    padding: EdgeInsets.only(right: 4),
-                    child: Icon(
-                      Icons.local_fire_department,
-                      size: 16,
-                      color: Colors.deepOrange,
-                    ),
-                  ),
+                  onPressed: widget.onToggleFavorite,
+                  tooltip: password.isFavorite
+                      ? 'Убрать из избранного'
+                      : 'В избранное',
+                ),
               ],
             ),
           ),
-          // Кнопки действия с анимацией
           AnimatedBuilder(
             animation: _iconsAnimation,
             builder: (context, child) {
-              return Opacity(
-                opacity: _iconsAnimation.value,
-                child: Transform.scale(
-                  scale: 0.8 + (_iconsAnimation.value * 0.2),
-                  alignment: Alignment.centerRight,
-                  child: child,
-                ),
+              return SizeTransition(
+                sizeFactor: _iconsAnimation,
+                axis: Axis.horizontal,
+                child: child,
               );
             },
             child: Row(
@@ -373,31 +348,10 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
                     password.isPinned
                         ? Icons.push_pin
                         : Icons.push_pin_outlined,
-                    size: 18,
                     color: password.isPinned ? Colors.orange : null,
                   ),
                   onPressed: widget.onTogglePin,
                   tooltip: password.isPinned ? 'Открепить' : 'Закрепить',
-                ),
-                IconButton(
-                  icon: Icon(
-                    password.isFavorite ? Icons.star : Icons.star_border,
-                    color: password.isFavorite ? Colors.amber : null,
-                  ),
-                  onPressed: widget.onToggleFavorite,
-                  tooltip: 'Избранное',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 18),
-                  onPressed: () {
-                    context.push(
-                      AppRoutesPaths.dashboardEntityEdit(
-                        EntityType.password,
-                        password.id,
-                      ),
-                    );
-                  },
-                  tooltip: 'Редактировать',
                 ),
                 if (widget.onOpenHistory != null)
                   IconButton(
@@ -407,6 +361,17 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
                   ),
               ],
             ),
+          ),
+        ] else ...[
+          IconButton(
+            icon: const Icon(Icons.restore_from_trash),
+            onPressed: widget.onRestore,
+            tooltip: 'Восстановить',
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_forever, color: Colors.red),
+            onPressed: widget.onDelete,
+            tooltip: 'Удалить навсегда',
           ),
         ],
         IconButton(
