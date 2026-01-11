@@ -152,9 +152,13 @@ class _BankCardGridCardState extends ConsumerState<BankCardGridCard>
     final maskedNumber = _maskCardNumber(bankCard.cardNumber);
     final isExpired = _isExpired();
     final isExpiringSoon = _isExpiringSoon();
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final cardPadding = isMobile ? 8.0 : 12.0;
+    final minCardWidth = isMobile ? 160.0 : 240.0;
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 240),
+      constraints: BoxConstraints(minWidth: minCardWidth),
       child: Stack(
         children: [
           Card(
@@ -174,7 +178,7 @@ class _BankCardGridCardState extends ConsumerState<BankCardGridCard>
                 onTap: widget.onTap,
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(cardPadding),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
@@ -196,7 +200,21 @@ class _BankCardGridCardState extends ConsumerState<BankCardGridCard>
                               color: _getCardTypeColor(bankCard.cardType),
                             ),
                           ),
-                          const Spacer(),
+                          if (isMobile) ...[
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                bankCard.name,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                          if (!isMobile) const Spacer(),
                           if (!bankCard.isDeleted)
                             FadeTransition(
                               opacity: _iconsAnimation,
@@ -204,21 +222,21 @@ class _BankCardGridCardState extends ConsumerState<BankCardGridCard>
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   if (bankCard.isArchived)
-                                    const Padding(
-                                      padding: EdgeInsets.only(right: 4),
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 4),
                                       child: Icon(
                                         Icons.archive,
-                                        size: 16,
+                                        size: isMobile ? 14 : 16,
                                         color: Colors.blueGrey,
                                       ),
                                     ),
                                   if (bankCard.usedCount >=
                                       MainConstants.popularItemThreshold)
-                                    const Padding(
-                                      padding: EdgeInsets.only(right: 4),
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 4),
                                       child: Icon(
                                         Icons.local_fire_department,
-                                        size: 16,
+                                        size: isMobile ? 14 : 16,
                                         color: Colors.deepOrange,
                                       ),
                                     ),
@@ -227,24 +245,25 @@ class _BankCardGridCardState extends ConsumerState<BankCardGridCard>
                             ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: isMobile ? 6 : 8),
 
                       if (bankCard.category != null) ...[
                         CardCategoryBadge(
                           name: bankCard.category!.name,
                           color: bankCard.category!.color,
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: isMobile ? 4 : 6),
                       ],
 
-                      Text(
-                        bankCard.name,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                      if (!isMobile)
+                        Text(
+                          bankCard.name,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
 
                       const SizedBox(height: 4),
                       Text(
@@ -280,10 +299,13 @@ class _BankCardGridCardState extends ConsumerState<BankCardGridCard>
                           ),
                         ),
 
-                      const SizedBox(height: 12),
+                      SizedBox(height: isMobile ? 6 : 8),
 
-                      if (bankCard.tags != null && bankCard.tags!.isNotEmpty)
+                      if (bankCard.tags != null &&
+                          bankCard.tags!.isNotEmpty) ...[
                         CardTagsList(tags: bankCard.tags!, showTitle: false),
+                        SizedBox(height: isMobile ? 4 : 6),
+                      ],
 
                       if (!bankCard.isDeleted) ...[
                         const SizedBox(height: 8),
@@ -308,7 +330,7 @@ class _BankCardGridCardState extends ConsumerState<BankCardGridCard>
                             ),
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: isMobile ? 4 : 6),
                         FadeTransition(
                           opacity: _iconsAnimation,
                           child: Row(

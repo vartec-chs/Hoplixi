@@ -85,9 +85,13 @@ class _NoteGridCardState extends ConsumerState<NoteGridCard>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final note = widget.note;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final cardPadding = isMobile ? 8.0 : 12.0;
+    final minCardWidth = isMobile ? 160.0 : 240.0;
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 240),
+      constraints: BoxConstraints(minWidth: minCardWidth),
       child: Stack(
         children: [
           Card(
@@ -99,7 +103,7 @@ class _NoteGridCardState extends ConsumerState<NoteGridCard>
                 onTap: widget.onTap,
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(cardPadding),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
@@ -108,19 +112,33 @@ class _NoteGridCardState extends ConsumerState<NoteGridCard>
                       Row(
                         children: [
                           Container(
-                            width: 40,
-                            height: 40,
+                            width: isMobile ? 32 : 40,
+                            height: isMobile ? 32 : 40,
                             decoration: BoxDecoration(
                               color: theme.colorScheme.primaryContainer,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
                               Icons.note,
-                              size: 20,
+                              size: isMobile ? 16 : 20,
                               color: theme.colorScheme.onPrimaryContainer,
                             ),
                           ),
-                          const Spacer(),
+                          if (isMobile) ...[
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                note.title,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                          if (!isMobile) const Spacer(),
                           if (!note.isDeleted)
                             FadeTransition(
                               opacity: _iconsAnimation,
@@ -128,21 +146,21 @@ class _NoteGridCardState extends ConsumerState<NoteGridCard>
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   if (note.isArchived)
-                                    const Padding(
-                                      padding: EdgeInsets.only(right: 4),
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 4),
                                       child: Icon(
                                         Icons.archive,
-                                        size: 16,
+                                        size: isMobile ? 14 : 16,
                                         color: Colors.blueGrey,
                                       ),
                                     ),
                                   if (note.usedCount >=
                                       MainConstants.popularItemThreshold)
-                                    const Padding(
-                                      padding: EdgeInsets.only(right: 4),
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 4),
                                       child: Icon(
                                         Icons.local_fire_department,
-                                        size: 16,
+                                        size: isMobile ? 14 : 16,
                                         color: Colors.deepOrange,
                                       ),
                                     ),
@@ -151,24 +169,25 @@ class _NoteGridCardState extends ConsumerState<NoteGridCard>
                             ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: isMobile ? 6 : 8),
 
                       if (note.category != null) ...[
                         CardCategoryBadge(
                           name: note.category!.name,
                           color: note.category!.color,
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: isMobile ? 4 : 6),
                       ],
 
-                      Text(
-                        note.title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                      if (!isMobile)
+                        Text(
+                          note.title,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
 
                       if (note.description != null &&
                           note.description!.isNotEmpty) ...[
@@ -183,10 +202,12 @@ class _NoteGridCardState extends ConsumerState<NoteGridCard>
                         ),
                       ],
 
-                      const SizedBox(height: 12),
+                      SizedBox(height: isMobile ? 6 : 8),
 
-                      if (note.tags != null && note.tags!.isNotEmpty)
+                      if (note.tags != null && note.tags!.isNotEmpty) ...[
                         CardTagsList(tags: note.tags!, showTitle: false),
+                        SizedBox(height: isMobile ? 4 : 6),
+                      ],
 
                       if (!note.isDeleted) ...[
                         const SizedBox(height: 8),
@@ -242,7 +263,7 @@ class _NoteGridCardState extends ConsumerState<NoteGridCard>
                             ],
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: isMobile ? 4 : 6),
                         FadeTransition(
                           opacity: _iconsAnimation,
                           child: Row(

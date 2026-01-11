@@ -213,9 +213,13 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final otp = widget.otp;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final cardPadding = isMobile ? 8.0 : 12.0;
+    final minCardWidth = isMobile ? 160.0 : 240.0;
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 240),
+      constraints: BoxConstraints(minWidth: minCardWidth),
       child: Stack(
         children: [
           Card(
@@ -227,7 +231,7 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard>
                 onTap: widget.onTap,
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(cardPadding),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
@@ -236,19 +240,33 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard>
                       Row(
                         children: [
                           Container(
-                            width: 40,
-                            height: 40,
+                            width: isMobile ? 32 : 40,
+                            height: isMobile ? 32 : 40,
                             decoration: BoxDecoration(
                               color: theme.colorScheme.primaryContainer,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
-                              Icons.lock_clock,
-                              size: 20,
+                              Icons.vpn_key,
+                              size: isMobile ? 16 : 20,
                               color: theme.colorScheme.onPrimaryContainer,
                             ),
                           ),
-                          const Spacer(),
+                          if (isMobile) ...[
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                otp.issuer ?? 'Без названия',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                          if (!isMobile) const Spacer(),
                           if (!otp.isDeleted)
                             FadeTransition(
                               opacity: _iconsAnimation,
@@ -256,21 +274,21 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard>
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   if (otp.isArchived)
-                                    const Padding(
-                                      padding: EdgeInsets.only(right: 4),
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 4),
                                       child: Icon(
                                         Icons.archive,
-                                        size: 16,
+                                        size: isMobile ? 14 : 16,
                                         color: Colors.blueGrey,
                                       ),
                                     ),
                                   if (otp.usedCount >=
                                       MainConstants.popularItemThreshold)
-                                    const Padding(
-                                      padding: EdgeInsets.only(right: 4),
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 4),
                                       child: Icon(
                                         Icons.local_fire_department,
-                                        size: 16,
+                                        size: isMobile ? 14 : 16,
                                         color: Colors.deepOrange,
                                       ),
                                     ),
@@ -279,24 +297,25 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard>
                             ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: isMobile ? 6 : 8),
 
                       if (otp.category != null) ...[
                         CardCategoryBadge(
                           name: otp.category!.name,
                           color: otp.category!.color,
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: isMobile ? 4 : 6),
                       ],
 
-                      Text(
-                        otp.issuer ?? 'Без названия',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                      if (!isMobile)
+                        Text(
+                          otp.issuer ?? 'Без названия',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
 
                       if (otp.issuer != null && otp.issuer!.isNotEmpty) ...[
                         const SizedBox(height: 4),
@@ -310,10 +329,12 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard>
                         ),
                       ],
 
-                      const SizedBox(height: 12),
+                      SizedBox(height: isMobile ? 6 : 8),
 
-                      if (otp.tags != null && otp.tags!.isNotEmpty)
+                      if (otp.tags != null && otp.tags!.isNotEmpty) ...[
                         CardTagsList(tags: otp.tags!, showTitle: false),
+                        SizedBox(height: isMobile ? 4 : 6),
+                      ],
 
                       // TOTP код
                       if (!otp.isDeleted) ...[
