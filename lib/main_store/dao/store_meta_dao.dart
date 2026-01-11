@@ -114,11 +114,18 @@ class StoreMetaDao extends DatabaseAccessor<MainStore>
   }
 
   /// Изменить пароль базы данных (SQLCipher PRAGMA rekey)
+  /// не работает
   Future<void> changePassword(String newPassword) async {
     // PRAGMA не поддерживает параметры, нужна прямая подстановка
     // Экранируем одинарные кавычки в пароле
     final escapedPassword = newPassword.replaceAll("'", "''");
-    await db.customStatement("PRAGMA rekey = '$escapedPassword';");
+    await db.customStatement("PRAGMA cipher_page_size = 4096;");
+    await db.customStatement("PRAGMA kdf_iter = 256000;");
+    await db.customStatement("PRAGMA cipher_hmac_algorithm = HMAC_SHA512;");
+    await db.customStatement(
+      "PRAGMA cipher_kdf_algorithm = PBKDF2_HMAC_SHA512;",
+    );
+    await db.customStatement("PRAGMA key = '$escapedPassword';");
   }
 
   /// Обновить ключ для вложений

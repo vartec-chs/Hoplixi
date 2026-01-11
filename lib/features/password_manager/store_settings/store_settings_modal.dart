@@ -40,16 +40,17 @@ Future<bool?> showStoreSettingsModal(
               tooltip: 'Закрыть',
             ),
           ),
-          trailingNavBarWidget: Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: IconButton(
-              icon: const Icon(Icons.lock_outline),
-              onPressed: () {
-                pageIndexNotifier.value = 1;
-              },
-              tooltip: 'Сменить пароль',
-            ),
-          ),
+          // trailingNavBarWidget: Padding(
+          //   padding: const EdgeInsets.only(right: 8.0),
+          //   child: IconButton(
+          //     icon: const Icon(Icons.lock_outline),
+          //     onPressed: () {
+          //       pageIndexNotifier.value = 1;
+          //     },
+          //     tooltip: 'Сменить пароль',
+          //   ),
+          // ),
+          // TODO: Починить смену пароля
           child: const StoreSettingsForm(),
         ),
 

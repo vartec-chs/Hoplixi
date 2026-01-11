@@ -862,7 +862,12 @@ class MainStoreManager {
           );
 
           // Установка ключа шифрования SQLCipher
-          rawDb.execute("PRAGMA key = '$password'");
+          rawDb.execute("PRAGMA cipher_page_size = 4096;");
+          rawDb.execute("PRAGMA kdf_iter = 256000;");
+          rawDb.execute("PRAGMA cipher_hmac_algorithm = HMAC_SHA512;");
+          rawDb.execute("PRAGMA cipher_kdf_algorithm = PBKDF2_HMAC_SHA512;");
+          final escapedPassword = password.replaceAll("'", "''");
+          rawDb.execute("PRAGMA key = '$escapedPassword'");
         },
       );
 

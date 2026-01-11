@@ -98,8 +98,7 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen>
         }
 
         // Стрелка влево или клавиша 'A' - переход назад
-        if (event.logicalKey == LogicalKeyboardKey.arrowLeft ||
-            event.logicalKey == LogicalKeyboardKey.keyA) {
+        if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
           if (!isFirstStep && !formState.isCreating) {
             formNotifier.previousStep();
             return KeyEventResult.handled;
