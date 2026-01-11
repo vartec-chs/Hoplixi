@@ -1,7 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/core/app_preferences/app_storage_service.dart';
+import 'package:hoplixi/core/services/local_auth_failure.dart';
+import 'package:hoplixi/core/services/local_auth_service.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/di_init.dart';
 import 'package:hoplixi/features/home/providers/recent_database_provider.dart';
 import 'package:hoplixi/main_store/models/db_history_model.dart';
 import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
@@ -116,7 +120,66 @@ class RecentDatabaseCard extends ConsumerWidget {
     String? password = entry.password;
     bool shouldSavePassword = false;
 
-    if (!entry.savePassword || password == null) {
+    // Если пароль сохранен, проверяем биометрию
+    if (entry.savePassword && password != null) {
+      final storageService = getIt<AppStorageService>();
+      final isBiometricEnabled = await storageService.isBiometricEnabled;
+
+      if (isBiometricEnabled) {
+        final localAuthService = getIt<LocalAuthService>();
+        final authResult = await localAuthService.authenticate(
+          localizedReason: 'Подтвердите открытие базы данных "${entry.name}"',
+        );
+
+        final authSuccess = authResult.fold((success) => success, (failure) {
+          failure.map(
+            notAvailable: (_) {
+              Toaster.warning(
+                title: 'Биометрия недоступна',
+                description:
+                    'На устройстве не настроена биометрическая аутентификация',
+              );
+            },
+            notEnrolled: (_) {
+              Toaster.warning(
+                title: 'Биометрия не настроена',
+                description: 'Настройте биометрию в системных настройках',
+              );
+            },
+            canceled: (_) {
+              Toaster.info(
+                title: 'Отменено',
+                description: 'Аутентификация отменена пользователем',
+              );
+            },
+            lockedOut: (_) {
+              Toaster.error(
+                title: 'Временная блокировка',
+                description: 'Слишком много неудачных попыток',
+              );
+            },
+            permanentlyLockedOut: (_) {
+              Toaster.error(
+                title: 'Блокировка',
+                description: 'Биометрия заблокирована',
+              );
+            },
+            other: (error) {
+              Toaster.error(
+                title: 'Ошибка аутентификации',
+                description: error.message,
+              );
+            },
+          );
+          return false;
+        });
+
+        if (!authSuccess) {
+          return; // Не открываем базу, если биометрия не пройдена
+        }
+      }
+    } else if (!entry.savePassword || password == null) {
+      // Пароль не сохранен, показываем диалог
       final result = await showDialog<(String, bool)>(
         context: context,
         builder: (context) => _PasswordDialog(dbName: entry.name),
