@@ -227,6 +227,9 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         newSalt: newSalt,
       );
 
+      // Обновляем пароль в истории, если он был сохранён
+      await _updatePasswordInHistory(currentPath, state.newPassword);
+
       // Очищаем поля паролей
       state = state.copyWith(
         isChangingPassword: false,
@@ -307,6 +310,46 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         tag: _logTag,
       );
       // Не прерываем операцию сохранения, если обновление истории не удалось
+    }
+  }
+
+  /// Обновить пароль в истории баз данных (если он был сохранён)
+  Future<void> _updatePasswordInHistory(
+    String currentPath,
+    String newPassword,
+  ) async {
+    try {
+      final historyService = await ref.read(dbHistoryProvider.future);
+      final existingEntry = await historyService.getByPath(currentPath);
+
+      if (existingEntry == null) {
+        logWarning(
+          'Cannot update password in history: entry not found for path $currentPath',
+          tag: _logTag,
+        );
+        return;
+      }
+
+      // Обновляем пароль только если пользователь сохранял его ранее
+      if (existingEntry.savePassword && existingEntry.password != null) {
+        final updatedEntry = existingEntry.copyWith(password: newPassword);
+
+        await historyService.update(updatedEntry);
+
+        logInfo(
+          'Password updated in database history for path: $currentPath',
+          tag: _logTag,
+        );
+      } else {
+        logInfo('Password not saved in history, skipping update', tag: _logTag);
+      }
+    } catch (e, s) {
+      logError(
+        'Failed to update password in database history: $e',
+        stackTrace: s,
+        tag: _logTag,
+      );
+      // Не прерываем операцию смены пароля, если обновление истории не удалось
     }
   }
 
