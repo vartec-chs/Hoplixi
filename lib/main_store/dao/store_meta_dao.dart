@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/tables/store_meta_table.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
 part 'store_meta_dao.g.dart';
@@ -115,17 +116,20 @@ class StoreMetaDao extends DatabaseAccessor<MainStore>
 
   /// Изменить пароль базы данных (SQLCipher PRAGMA rekey)
   /// не работает
-  Future<void> changePassword(String newPassword) async {
+  AsyncResultDart<bool, String> changePassword(String newPassword) async {
     // PRAGMA не поддерживает параметры, нужна прямая подстановка
     // Экранируем одинарные кавычки в пароле
-    final escapedPassword = newPassword.replaceAll("'", "''");
-    await db.customStatement("PRAGMA cipher_page_size = 4096;");
-    await db.customStatement("PRAGMA kdf_iter = 256000;");
-    await db.customStatement("PRAGMA cipher_hmac_algorithm = HMAC_SHA512;");
-    await db.customStatement(
-      "PRAGMA cipher_kdf_algorithm = PBKDF2_HMAC_SHA512;",
-    );
-    await db.customStatement("PRAGMA key = '$escapedPassword';");
+    try {
+      final escapedPassword = newPassword.replaceAll("'", "''");
+      await db.customStatement("PRAGMA wal_checkpoint(FULL);");
+      await db.customStatement("PRAGMA journal_mode = DELETE;");
+      await db.customStatement("PRAGMA rekey = '$escapedPassword';");
+      await db.customSelect('SELECT 1').getSingle();
+
+      return const Success(true);
+    } catch (e) {
+      return Failure(e.toString());
+    }
   }
 
   /// Обновить ключ для вложений

@@ -324,6 +324,7 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
       // Получаем путь к директории из пути к файлу
       final dir = Directory(path).parent;
       final success = await storeNotifier.deleteStoreFromDisk(dir.path);
+      
 
       if (success) {
         logInfo('Storage deleted successfully', tag: 'OpenStoreForm');

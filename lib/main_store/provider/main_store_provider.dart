@@ -620,8 +620,9 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
 
       // Вызываем удаление хранилища с диска
       final result = await _manager.deleteStoreFromDisk(path);
+      final historyResult = await _manager.deleteStoreFromHistory(path);
 
-      return result.fold(
+      final resultDeleteFromDisk = result.fold(
         (_) {
           // Успех - переводим в idle состояние
           _setState(const DatabaseState(status: DatabaseStatus.idle));
@@ -642,6 +643,20 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
           return false;
         },
       );
+
+      historyResult.fold(
+        (_) {
+          logInfo('Store history entry deleted successfully', tag: _logTag);
+        },
+        (error) {
+          logError(
+            'Failed to delete store history entry: ${error.message}',
+            tag: _logTag,
+          );
+        },
+      );
+
+      return resultDeleteFromDisk;
     } catch (e, stackTrace) {
       logError(
         'Unexpected error deleting store from disk: $e',

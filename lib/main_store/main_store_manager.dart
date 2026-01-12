@@ -207,13 +207,6 @@ class MainStoreManager {
         await _currentStore?.close();
         _currentStore = null;
         _currentStorePath = null;
-        // return Failure(
-        //   DatabaseError.alreadyInitialized(
-        //     message:
-        //         'Хранилище уже открыто. Закройте текущее перед открытием нового.',
-        //     timestamp: DateTime.now(),
-        //   ),
-        // );
       }
 
       // Проверка существования директории или файла БД
@@ -826,9 +819,19 @@ class MainStoreManager {
         File(dbFilePath),
         isolateSetup: () async {
           BackgroundIsolateBinaryMessenger.ensureInitialized(token);
-          await setupSqlCipher();
+          if (Platform.isAndroid) {
+            await setupSqlCipher(); //code from docs
+          }
         },
         setup: (rawDb) {
+          final result = rawDb.select('pragma cipher_version');
+          if (result.isEmpty) {
+            throw UnsupportedError(
+              'This database needs to run with SQLCipher, but that library is '
+              'not available!',
+            );
+          }
+
           // Регистрация функции exp для SQLite для сортировки по времени
           rawDb.createFunction(
             functionName: 'exp',
@@ -860,14 +863,8 @@ class MainStoreManager {
               }
             },
           );
-
-          // Установка ключа шифрования SQLCipher
-          rawDb.execute("PRAGMA cipher_page_size = 4096;");
-          rawDb.execute("PRAGMA kdf_iter = 256000;");
-          rawDb.execute("PRAGMA cipher_hmac_algorithm = HMAC_SHA512;");
-          rawDb.execute("PRAGMA cipher_kdf_algorithm = PBKDF2_HMAC_SHA512;");
           final escapedPassword = password.replaceAll("'", "''");
-          rawDb.execute("PRAGMA key = '$escapedPassword'");
+          rawDb.execute("PRAGMA key = '$escapedPassword';");
         },
       );
 

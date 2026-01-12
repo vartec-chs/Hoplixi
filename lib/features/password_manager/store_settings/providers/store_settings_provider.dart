@@ -205,11 +205,19 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
 
       // База уже открыта с текущим паролем, поэтому проверка не требуется
       // Меняем пароль через SQLCipher PRAGMA rekey
-      await daoResult.changePassword(state.newPassword);
+
+      final result = await daoResult.changePassword(state.newPassword);
 
       // Обновляем хеш и соль в мета-таблице
       // TODO: Здесь нужно вычислить новый хеш и соль
       // Пока используем простую заглушку
+
+      final resultException = result.exceptionOrNull();
+
+      if (resultException != null) {
+        throw Exception(resultException);
+      }
+
       final newPasswordHash = state.newPassword; // Заглушка
       final newSalt = 'new_salt'; // Заглушка
 
