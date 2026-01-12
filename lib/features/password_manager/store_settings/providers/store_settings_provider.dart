@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/password_manager/store_settings/models/store_settings_state.dart';
@@ -5,6 +8,7 @@ import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/main_store/provider/db_history_provider.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 import 'package:result_dart/result_dart.dart';
+import 'package:uuid/uuid.dart';
 
 /// Провайдер для управления настройками хранилища
 final storeSettingsProvider =
@@ -208,18 +212,15 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
 
       final result = await daoResult.changePassword(state.newPassword);
 
-      // Обновляем хеш и соль в мета-таблице
-      // TODO: Здесь нужно вычислить новый хеш и соль
-      // Пока используем простую заглушку
-
       final resultException = result.exceptionOrNull();
 
       if (resultException != null) {
         throw Exception(resultException);
       }
 
-      final newPasswordHash = state.newPassword; // Заглушка
-      final newSalt = 'new_salt'; // Заглушка
+      // Генерируем новую соль и вычисляем хеш пароля
+      final newSalt = const Uuid().v4();
+      final newPasswordHash = _hashPassword(state.newPassword, newSalt);
 
       await daoResult.updatePasswordHash(
         newPasswordHash: newPasswordHash,
@@ -350,5 +351,12 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       return 'Пароли не совпадают';
     }
     return null;
+  }
+
+  /// Хешировать пароль с солью (аналогично MainStoreManager)
+  String _hashPassword(String password, String salt) {
+    final bytes = utf8.encode(password + salt);
+    final digest = sha512.convert(bytes);
+    return digest.toString();
   }
 }
