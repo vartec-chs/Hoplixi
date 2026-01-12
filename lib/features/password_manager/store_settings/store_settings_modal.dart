@@ -50,7 +50,7 @@ Future<bool?> showStoreSettingsModal(
               tooltip: 'Сменить пароль',
             ),
           ),
-          // TODO: Починить смену пароля
+
           child: const StoreSettingsForm(),
         ),
 
@@ -76,7 +76,7 @@ Future<bool?> showStoreSettingsModal(
             ),
           ),
           child: const Padding(
-            padding: EdgeInsets.all(16.0),
+            padding: EdgeInsets.all(8.0),
             child: ChangePasswordSection(),
           ),
         ),
