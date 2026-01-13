@@ -168,6 +168,18 @@ lib/
 
 ## 🔧 Разработка
 
+### Структура стора
+
+```
+store_name/
+├── store_name.hplxdb
+├── attachments_decrypted/
+└── attachments/
+```
+
+- attachments folder for encrypt files
+- attachments_decrypted temporary decrypt files
+
 ### Сборка для релиза
 
 #### Android APK
