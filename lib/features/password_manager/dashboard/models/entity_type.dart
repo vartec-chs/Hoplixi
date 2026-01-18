@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 
 enum EntityType {
   password('passwords', 'Пароли', Icons.lock),
@@ -47,4 +48,38 @@ enum EntityType {
 
   @override
   String toString() => 'EntityType(id: $id, label: $label, icon: $icon)';
+}
+
+extension EntityTypeX on EntityType {
+  /// Конвертирует EntityType в соответствующий TagType для фильтров
+  TagType toTagType() {
+    switch (this) {
+      case EntityType.password:
+        return TagType.password;
+      case EntityType.note:
+        return TagType.note;
+      case EntityType.bankCard:
+        return TagType.bankCard;
+      case EntityType.file:
+        return TagType.file;
+      case EntityType.otp:
+        return TagType.totp;
+    }
+  }
+
+  /// Конвертирует EntityType в соответствующий CategoryType для фильтров
+  CategoryType toCategoryType() {
+    switch (this) {
+      case EntityType.password:
+        return CategoryType.password;
+      case EntityType.note:
+        return CategoryType.note;
+      case EntityType.bankCard:
+        return CategoryType.bankCard;
+      case EntityType.file:
+        return CategoryType.file;
+      case EntityType.otp:
+        return CategoryType.totp;
+    }
+  }
 }

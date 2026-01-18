@@ -138,18 +138,6 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
 
               const SizedBox(width: 8),
 
-              // Кнопка отмены
-              SmoothButton(
-                label: 'Отменить',
-                onPressed: state.isSaving
-                    ? null
-                    : () => Navigator.of(context).pop(false),
-                type: SmoothButtonType.outlined,
-                variant: SmoothButtonVariant.normal,
-              ),
-
-              const SizedBox(width: 8),
-
               // Кнопка сохранения
               SmoothButton(
                 label: state.isSaving ? 'Сохранение...' : 'Сохранить',

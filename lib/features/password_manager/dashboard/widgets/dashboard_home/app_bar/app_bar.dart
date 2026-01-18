@@ -244,7 +244,7 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
           child: SafeArea(
             child: Column(
               children: [
-                const SizedBox(height: 58),
+                const SizedBox(height: 56),
 
                 // Нижняя часть с поиском и вкладками
                 Expanded(

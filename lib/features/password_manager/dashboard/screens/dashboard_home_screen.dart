@@ -10,6 +10,7 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/current_vi
 import 'package:hoplixi/features/password_manager/dashboard/providers/list_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_builders.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/app_bar/app_bar_widgets.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_list_toolbar.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
@@ -36,6 +37,9 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
 
   late final ScrollController _scrollController;
   Timer? _loadMoreDebounce;
+
+  /// Ключ для Scaffold (для открытия drawer)
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   /// Ключи для анимированных списков — пересоздаются при сбросе.
   GlobalKey<SliverAnimatedListState> _listKey = GlobalKey();
@@ -372,6 +376,8 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
     });
 
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: DashboardDrawer(entityType: widget.entityType),
       body: RefreshIndicator(
         onRefresh: () => ref
             .read(paginatedListProvider(widget.entityType).notifier)
@@ -381,12 +387,13 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
           slivers: [
             DashboardSliverAppBar(
               entityType: widget.entityType,
-              expandedHeight: 178.0,
+              expandedHeight: 176.0,
               collapsedHeight: 60.0,
               pinned: true,
               floating: false,
               snap: false,
               showEntityTypeSelector: true,
+              onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
             ),
             SliverToBoxAdapter(
               child: DashboardListToolBar(
