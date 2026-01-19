@@ -255,8 +255,8 @@ class _CategorySectionState extends ConsumerState<_CategorySection> {
                     : null,
                 secondary: category.color != null
                     ? Container(
-                        width: 24,
-                        height: 24,
+                        width: 18,
+                        height: 18,
                         decoration: BoxDecoration(
                           color: _parseCategoryColor(category.color, context),
                           shape: BoxShape.circle,
@@ -388,8 +388,8 @@ class _TagSectionState extends ConsumerState<_TagSection> {
                     : null,
                 secondary: tag.color != null
                     ? Container(
-                        width: 24,
-                        height: 24,
+                        width: 18,
+                        height: 18,
                         decoration: BoxDecoration(
                           color: _parseCategoryColor(tag.color, context),
                           shape: BoxShape.circle,
