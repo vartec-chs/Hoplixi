@@ -5,11 +5,9 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/data_refresh_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/drawer_filter_selection_storage.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/drawer_filter_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/base_filter_provider.dart';
-import 'package:hoplixi/main_store/models/filter/categories_filter.dart';
-import 'package:hoplixi/main_store/models/filter/tags_filter.dart';
+import 'package:hoplixi/main_store/models/filter/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
 const int _kPageSize = 20;
@@ -65,14 +63,10 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
       }
     });
 
-    // Загружаем сохранённый выбор для этой сущности
-    final storage = ref.read(drawerFilterSelectionStorageProvider.notifier);
-    final savedSelection = storage.getSelection(_entityType);
-
-    // Начальное состояние с сохранённым выбором
+    // Начальное состояние без сохранённого выбора
     var currentState = DrawerFilterState(
-      selectedCategoryIds: savedSelection.selectedCategoryIds,
-      selectedTagIds: savedSelection.selectedTagIds,
+      selectedCategoryIds: [],
+      selectedTagIds: [],
     );
 
     try {
@@ -316,11 +310,6 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
         currentState.copyWith(selectedCategoryIds: newSelected),
       );
 
-      // Сохраняем выбор в хранилище
-      ref
-          .read(drawerFilterSelectionStorageProvider.notifier)
-          .setCategoryIds(_entityType, newSelected);
-
       _applyFilterToBase();
     });
   }
@@ -337,11 +326,6 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
         currentState.copyWith(selectedTagIds: newSelected),
       );
 
-      // Сохраняем выбор в хранилище
-      ref
-          .read(drawerFilterSelectionStorageProvider.notifier)
-          .setTagIds(_entityType, newSelected);
-
       _applyFilterToBase();
     });
   }
@@ -351,11 +335,6 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
     state.whenData((currentState) {
       state = AsyncValue.data(currentState.copyWith(selectedCategoryIds: []));
 
-      // Сохраняем очистку в хранилище
-      ref
-          .read(drawerFilterSelectionStorageProvider.notifier)
-          .setCategoryIds(_entityType, []);
-
       _applyFilterToBase();
     });
   }
@@ -364,11 +343,6 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
   void clearTags() {
     state.whenData((currentState) {
       state = AsyncValue.data(currentState.copyWith(selectedTagIds: []));
-
-      // Сохраняем очистку в хранилище
-      ref
-          .read(drawerFilterSelectionStorageProvider.notifier)
-          .setTagIds(_entityType, []);
 
       _applyFilterToBase();
     });
@@ -380,11 +354,6 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
       state = AsyncValue.data(
         currentState.copyWith(selectedCategoryIds: [], selectedTagIds: []),
       );
-
-      // Сохраняем полную очистку в хранилище
-      ref
-          .read(drawerFilterSelectionStorageProvider.notifier)
-          .clearSelection(_entityType);
 
       _applyFilterToBase();
     });
@@ -398,10 +367,8 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
   void _applyFilterToBase() {
     state.whenData((currentState) {
       final baseFilter = ref.read(baseFilterProvider.notifier);
-      // Очищаем старые фильтры перед установкой новых
-      baseFilter.clearCategories();
-      baseFilter.clearTags();
-      // Устанавливаем новые фильтры для текущей сущности
+      // Устанавливаем фильтры для текущей сущности
+      // (очистка происходит автоматически в setEntityType при смене сущности)
       baseFilter.setCategoryIds(currentState.selectedCategoryIds);
       baseFilter.setTagIds(currentState.selectedTagIds);
     });

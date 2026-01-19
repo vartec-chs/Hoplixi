@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_store/models/filter/index.dart';
@@ -13,6 +14,9 @@ class BaseFilterNotifier extends Notifier<BaseFilter> {
   Timer? _debounceTimer;
   static const _debounceDuration = Duration(milliseconds: 300);
 
+  /// Текущий тип сущности (для автоматического сброса фильтров)
+  String? _currentEntityTypeId;
+
   @override
   BaseFilter build() {
     logDebug('Инициализация базового фильтра', tag: _logTag);
@@ -23,6 +27,19 @@ class BaseFilterNotifier extends Notifier<BaseFilter> {
     });
 
     return const BaseFilter();
+  }
+
+  /// Установить тип сущности и сбросить фильтры категорий/тегов при смене
+  void setEntityType(String entityTypeId) {
+    if (_currentEntityTypeId != entityTypeId) {
+      logDebug(
+        'Смена сущности: $_currentEntityTypeId -> $entityTypeId. Сброс фильтров категорий и тегов',
+        tag: _logTag,
+      );
+      _currentEntityTypeId = entityTypeId;
+      // Сбрасываем только фильтры категорий и тегов
+      state = state.copyWith(categoryIds: [], tagIds: []);
+    }
   }
 
   // set state
@@ -193,10 +210,7 @@ class BaseFilterNotifier extends Notifier<BaseFilter> {
   /// Установить диапазон дат последнего доступа
   void setLastAccessedDateRange(DateTime? after, DateTime? before) {
     logDebug('Диапазон последнего доступа: $after - $before', tag: _logTag);
-    state = state.copyWith(
-      lastUsedAfter: after,
-      lastUsedBefore: before,
-    );
+    state = state.copyWith(lastUsedAfter: after, lastUsedBefore: before);
   }
 
   // ============================================================================

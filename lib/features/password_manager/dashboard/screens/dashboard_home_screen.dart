@@ -7,6 +7,7 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/list_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/current_view_mode_provider.dart';
+import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/base_filter_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/list_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_builders.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/app_bar/app_bar_widgets.dart';
@@ -341,6 +342,9 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
   Widget build(BuildContext context) {
     final viewMode = ref.watch(currentViewModeProvider);
     final asyncValue = ref.watch(paginatedListProvider(widget.entityType));
+    Future.microtask(() {
+      ref.read(baseFilterProvider.notifier).setEntityType(widget.entityType.id);
+    });
 
     // Начальная синхронизация при первом построении
     if (_isFirstBuild) {

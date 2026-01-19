@@ -24,15 +24,31 @@ class DashboardDrawer extends ConsumerWidget {
 }
 
 /// Контент панели фильтрации (может использоваться как в Drawer, так и как постоянная панель)
-class DashboardDrawerContent extends ConsumerWidget {
+class DashboardDrawerContent extends ConsumerStatefulWidget {
   const DashboardDrawerContent({super.key, required this.entityType});
 
   final EntityType entityType;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardDrawerContent> createState() =>
+      _DashboardDrawerContentState();
+}
+
+class _DashboardDrawerContentState
+    extends ConsumerState<DashboardDrawerContent> {
+  @override
+  void didUpdateWidget(DashboardDrawerContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Если entityType изменился, сбрасываем выбранные фильтры
+    if (oldWidget.entityType != widget.entityType) {
+      ref.read(drawerFilterProvider(oldWidget.entityType).notifier).clearAll();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final drawerStateAsync = ref.watch(drawerFilterProvider(entityType));
+    final drawerStateAsync = ref.watch(drawerFilterProvider(widget.entityType));
 
     return SafeArea(
       child: drawerStateAsync.when(
@@ -51,7 +67,9 @@ class DashboardDrawerContent extends ConsumerWidget {
                     SmoothButton(
                       onPressed: () {
                         ref
-                            .read(drawerFilterProvider(entityType).notifier)
+                            .read(
+                              drawerFilterProvider(widget.entityType).notifier,
+                            )
                             .clearAll();
                       },
                       label: 'Очистить все',
@@ -71,7 +89,7 @@ class DashboardDrawerContent extends ConsumerWidget {
                 children: [
                   // Блок категорий
                   _CategorySection(
-                    entityType: entityType,
+                    entityType: widget.entityType,
                     categories: drawerState.categories,
                     selectedIds: drawerState.selectedCategoryIds,
                     searchQuery: drawerState.categorySearchQuery,
@@ -85,7 +103,7 @@ class DashboardDrawerContent extends ConsumerWidget {
 
                   // Блок тегов
                   _TagSection(
-                    entityType: entityType,
+                    entityType: widget.entityType,
                     tags: drawerState.tags,
                     selectedIds: drawerState.selectedTagIds,
                     searchQuery: drawerState.tagSearchQuery,
