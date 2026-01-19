@@ -6,9 +6,21 @@ import 'package:hoplixi/main_store/models/dto/category_dto.dart';
 import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
-/// Drawer с фильтрацией по категориям и тегам
+/// Drawer с фильтрацией по категориям и тегам (для мобильных устройств)
 class DashboardDrawer extends ConsumerWidget {
   const DashboardDrawer({super.key, required this.entityType});
+
+  final EntityType entityType;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Drawer(child: DashboardDrawerContent(entityType: entityType));
+  }
+}
+
+/// Контент панели фильтрации (может использоваться как в Drawer, так и как постоянная панель)
+class DashboardDrawerContent extends ConsumerWidget {
+  const DashboardDrawerContent({super.key, required this.entityType});
 
   final EntityType entityType;
 
@@ -17,84 +29,82 @@ class DashboardDrawer extends ConsumerWidget {
     final theme = Theme.of(context);
     final drawerStateAsync = ref.watch(drawerFilterProvider(entityType));
 
-    return Drawer(
-      child: SafeArea(
-        child: drawerStateAsync.when(
-          data: (drawerState) => Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Заголовок
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Фильтры', style: theme.textTheme.titleLarge),
-                    if (drawerState.selectedCategoryIds.isNotEmpty ||
-                        drawerState.selectedTagIds.isNotEmpty)
-                      TextButton(
-                        onPressed: () {
-                          ref
-                              .read(drawerFilterProvider(entityType).notifier)
-                              .clearAll();
-                        },
-                        child: const Text('Очистить все'),
-                      ),
-                  ],
-                ),
+    return SafeArea(
+      child: drawerStateAsync.when(
+        data: (drawerState) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Заголовок
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Фильтры', style: theme.textTheme.titleLarge),
+                  if (drawerState.selectedCategoryIds.isNotEmpty ||
+                      drawerState.selectedTagIds.isNotEmpty)
+                    TextButton(
+                      onPressed: () {
+                        ref
+                            .read(drawerFilterProvider(entityType).notifier)
+                            .clearAll();
+                      },
+                      child: const Text('Очистить все'),
+                    ),
+                ],
               ),
-              const Divider(height: 1),
+            ),
+            const Divider(height: 1),
 
-              // Контент с прокруткой
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    // Блок категорий
-                    _CategorySection(
-                      entityType: entityType,
-                      categories: drawerState.categories,
-                      selectedIds: drawerState.selectedCategoryIds,
-                      searchQuery: drawerState.categorySearchQuery,
-                      isLoading: drawerState.isCategoriesLoading,
-                      hasMore: drawerState.hasMoreCategories,
-                    ),
+            // Контент с прокруткой
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  // Блок категорий
+                  _CategorySection(
+                    entityType: entityType,
+                    categories: drawerState.categories,
+                    selectedIds: drawerState.selectedCategoryIds,
+                    searchQuery: drawerState.categorySearchQuery,
+                    isLoading: drawerState.isCategoriesLoading,
+                    hasMore: drawerState.hasMoreCategories,
+                  ),
 
-                    const SizedBox(height: 24.0),
+                  const SizedBox(height: 24.0),
 
-                    // Блок тегов
-                    _TagSection(
-                      entityType: entityType,
-                      tags: drawerState.tags,
-                      selectedIds: drawerState.selectedTagIds,
-                      searchQuery: drawerState.tagSearchQuery,
-                      isLoading: drawerState.isTagsLoading,
-                      hasMore: drawerState.hasMoreTags,
-                    ),
-                  ],
-                ),
+                  // Блок тегов
+                  _TagSection(
+                    entityType: entityType,
+                    tags: drawerState.tags,
+                    selectedIds: drawerState.selectedTagIds,
+                    searchQuery: drawerState.tagSearchQuery,
+                    isLoading: drawerState.isTagsLoading,
+                    hasMore: drawerState.hasMoreTags,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(
+                'Ошибка загрузки фильтров',
+                style: theme.textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                error.toString(),
+                style: theme.textTheme.bodySmall,
+                textAlign: TextAlign.center,
               ),
             ],
-          ),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                const SizedBox(height: 16),
-                Text(
-                  'Ошибка загрузки фильтров',
-                  style: theme.textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  error.toString(),
-                  style: theme.textTheme.bodySmall,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
           ),
         ),
       ),

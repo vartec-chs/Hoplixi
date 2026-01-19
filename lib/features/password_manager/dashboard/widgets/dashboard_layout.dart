@@ -2,8 +2,68 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_screen.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/expandable_fab.dart';
 import 'package:hoplixi/routing/paths.dart';
+
+// ===========================================================================
+// Constants
+// ===========================================================================
+
+// Animation durations
+const Duration kPanelAnimationDuration = Duration(milliseconds: 280);
+const Duration kFadeAnimationDuration = Duration(milliseconds: 250);
+const Duration kScaleAnimationDuration = Duration(milliseconds: 300);
+const Duration kOpacityAnimationDuration = Duration(milliseconds: 150);
+
+// Screen breakpoints
+const double kMobileBreakpoint = 700.0;
+const double kDesktopBreakpoint = 1000.0;
+
+// Layout dimensions
+const double kRailWidth = 80.0;
+const double kLeftPanelWidth = 280.0;
+const double kDividerWidth = 2.0;
+const double kBottomNavHeight = 70.0;
+const double kFabSpaceWidth = 40.0;
+const double kIndicatorBorderRadius = 16.0;
+const double kBottomNavBorderRadius = 12.0;
+const double kBottomNavFontSize = 12.0;
+const double kBottomNavSpacing = 4.0;
+const double kBottomNavPaddingHorizontal = 8.0;
+const double kBottomNavPaddingVertical = 4.0;
+
+// Animation values
+const double kCenterScaleWhenPanelOpen = 0.92;
+const double kCenterScaleWhenFullCenter = 0.96;
+const double kPanelZoomBegin = 0.85;
+const double kPanelZoomEnd = 1.0;
+const double kFadeBegin = 0.0;
+const double kFadeEnd = 1.0;
+const double kFullCenterScaleBegin = 0.92;
+const double kFullCenterScaleOffset = 0.08;
+
+// Path segments
+const int kMinPathSegmentsForPanel = 3;
+const int kPathSegmentsForEntity = 2;
+
+// Navigation indices
+const int kHomeIndex = 0;
+const int kCategoriesIndex = 1;
+const int kTagsIndex = 2;
+const int kIconsIndex = 3;
+const int kGraphIndex = 4;
+
+// Bottom navigation
+const double kBottomNavNotchMargin = 8.0;
+
+// Animation intervals
+const double kFadeAnimationIntervalStart = 0.1;
+const double kFadeAnimationIntervalEnd = 0.4;
+
+// ===========================================================================
+// Widget
+// ===========================================================================
 
 // В теле класса _DashboardLayoutState добавьте:
 const List<String> _fullCenterPaths = [
@@ -56,7 +116,7 @@ class _DashboardLayoutState extends State<DashboardLayout>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 280),
+      duration: kPanelAnimationDuration,
     );
 
     final uri = widget.state.uri.toString();
@@ -148,7 +208,6 @@ class _DashboardLayoutState extends State<DashboardLayout>
     List<NavigationRailDestination> destinations,
   ) {
     final currentIndex = _selectedRailIndex() ?? 0;
-    final homeIndex = 0;
 
     final leftDestinations = destinations
         .where((d) => d == destinations[0] || d == destinations[1])
@@ -159,9 +218,12 @@ class _DashboardLayoutState extends State<DashboardLayout>
 
     return BottomAppBar(
       shape: const CircularNotchedRectangle(),
-      notchMargin: 8.0,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      height: 70,
+      notchMargin: kBottomNavNotchMargin,
+      padding: const EdgeInsets.symmetric(
+        horizontal: kBottomNavPaddingHorizontal,
+        vertical: kBottomNavPaddingVertical,
+      ),
+      height: kBottomNavHeight,
       child: Row(
         mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -177,10 +239,10 @@ class _DashboardLayoutState extends State<DashboardLayout>
           ),
           // FAB space
           AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
+            duration: kScaleAnimationDuration,
             curve: Curves.easeInOut,
-            width: currentIndex == homeIndex ? 40 : 0,
-            child: const SizedBox(width: 40),
+            width: currentIndex == kHomeIndex ? kFabSpaceWidth : 0,
+            child: const SizedBox(width: kFabSpaceWidth),
           ),
           // Right side
           ...rightDestinations.map(
@@ -198,12 +260,12 @@ class _DashboardLayoutState extends State<DashboardLayout>
 
   /// Обработать нажатие на пункт BottomNavigationBar
   void _onBottomNavItemSelected(String entity, int index) {
-    if (index == 0) {
+    if (index == kHomeIndex) {
       // home: close panel
       context.go('/dashboard/$entity');
-    } else if (index >= 1 && index <= 3) {
+    } else if (index >= kCategoriesIndex && index <= kIconsIndex) {
       context.go('/dashboard/$entity/${actions[index - 1]}');
-    } else if (index == 4 && entity == EntityType.note.id) {
+    } else if (index == kGraphIndex && entity == EntityType.note.id) {
       context.go(AppRoutesPaths.notesGraph);
     }
   }
@@ -222,7 +284,7 @@ class _DashboardLayoutState extends State<DashboardLayout>
     // считаем, что панель открыта когда путь имеет третий сегмент:
     // /dashboard/<entity>/<panel-or-action>
     final segments = Uri.parse(location).pathSegments;
-    return segments.length >= 3;
+    return segments.length >= kMinPathSegmentsForPanel;
   }
 
   bool _isFullCenter(String location) {
@@ -232,35 +294,38 @@ class _DashboardLayoutState extends State<DashboardLayout>
   // Проверяем, нужно ли показывать FAB (только на 2-сегментных путях)
   bool _shouldShowFAB(String location) {
     final segments = Uri.parse(location).pathSegments;
-    return segments.length == 2; // /dashboard/entity
+    return segments.length == kPathSegmentsForEntity; // /dashboard/entity
   }
 
   // Проверяем, нужно ли показывать BottomNavigationBar на мобильных устройствах
   bool _shouldShowBottomNav(String location) {
     final segments = Uri.parse(location).pathSegments;
-    if (segments.length < 2) return false;
-    if (segments.length == 2) return true; // /dashboard/:entity
-    if (segments.length == 3 && actions.contains(segments[2]))
+    if (segments.length < kPathSegmentsForEntity) return false;
+    if (segments.length == kPathSegmentsForEntity)
+      return true; // /dashboard/:entity
+    if (segments.length == kMinPathSegmentsForPanel &&
+        actions.contains(segments[2])) {
       return true; // /dashboard/:entity/action
+    }
     return false;
   }
 
   int? _selectedRailIndex() {
     final location = widget.state.uri.toString();
     final segments = Uri.parse(location).pathSegments;
-    if (segments.length < 3) return 0; // home
+    if (segments.length < kMinPathSegmentsForPanel) return kHomeIndex; // home
     final action = segments[2];
     switch (action) {
       case 'categories':
-        return 1;
+        return kCategoriesIndex;
       case 'tags':
-        return 2;
+        return kTagsIndex;
       case 'icons':
-        return 3;
+        return kIconsIndex;
       case 'graph':
-        return 4;
+        return kGraphIndex;
       default:
-        return 0;
+        return kHomeIndex;
     }
   }
 
@@ -269,8 +334,10 @@ class _DashboardLayoutState extends State<DashboardLayout>
     final uri = widget.state.uri.toString();
     final entity = _currentEntity();
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final isMobile = screenWidth < 700;
-    final panelOpenWidth = screenWidth * 0.46;
+    final isMobile = screenWidth < kMobileBreakpoint;
+    final showDrawerAsPanel =
+        screenWidth >=
+        kDesktopBreakpoint; // Показывать drawer как панель для больших экранов
     final hasPanel = _hasPanel(uri);
     final panel = hasPanel ? widget.panelChild : const SizedBox.shrink();
     final isFullCenter = _isFullCenter(uri);
@@ -290,17 +357,18 @@ class _DashboardLayoutState extends State<DashboardLayout>
             // Центр: DashboardHomeScreen с обратной анимацией (fade + scale down)
             AnimatedOpacity(
               opacity: showPanel ? 0.0 : 1.0,
-              duration: const Duration(milliseconds: 250),
+              duration: kFadeAnimationDuration,
               curve: showPanel ? Curves.easeOut : Curves.easeIn,
               child: AnimatedScale(
-                scale: showPanel ? 0.92 : 1.0,
-                duration: const Duration(milliseconds: 300),
+                scale: showPanel ? kCenterScaleWhenPanelOpen : 1.0,
+                duration: kScaleAnimationDuration,
                 curve: Curves.easeInOut,
                 child: IgnorePointer(
                   ignoring: showPanel, // отключаем взаимодействие когда скрыт
                   child: RepaintBoundary(
                     child: DashboardHomeScreen(
                       entityType: EntityType.fromId(entity)!,
+                      showDrawerButton: !showDrawerAsPanel,
                     ),
                   ),
                 ),
@@ -309,24 +377,31 @@ class _DashboardLayoutState extends State<DashboardLayout>
 
             // Анимированная панель поверх центра (ZoomPageTransitionsBuilder стиль)
             AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
+              duration: kScaleAnimationDuration,
               switchInCurve: Curves.easeOut,
               switchOutCurve: Curves.easeIn,
               transitionBuilder: (child, animation) {
                 // Zoom in/out анимация как в ZoomPageTransitionsBuilder
-                final scaleAnimation = Tween<double>(begin: 0.85, end: 1.0)
-                    .animate(
+                final scaleAnimation =
+                    Tween<double>(
+                      begin: kPanelZoomBegin,
+                      end: kPanelZoomEnd,
+                    ).animate(
                       CurvedAnimation(
                         parent: animation,
                         curve: const Interval(0.0, 1.0, curve: Curves.easeOut),
                       ),
                     );
 
-                final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0)
-                    .animate(
+                final fadeAnimation =
+                    Tween<double>(begin: kFadeBegin, end: kFadeEnd).animate(
                       CurvedAnimation(
                         parent: animation,
-                        curve: const Interval(0.1, 0.4, curve: Curves.easeOut),
+                        curve: const Interval(
+                          kFadeAnimationIntervalStart,
+                          kFadeAnimationIntervalEnd,
+                          curve: Curves.easeOut,
+                        ),
                       ),
                     );
 
@@ -357,140 +432,173 @@ class _DashboardLayoutState extends State<DashboardLayout>
     // Desktop/tablet: трёхколоночный layout с animated panel
     return Scaffold(
       // appBar: AppBar(title: Text('${GoRouter.of(context).state.uri}')),
-      body: Row(
-        children: [
-          // NavigationRail / left menu для categories, tags, icons
-          NavigationRail(
-            unselectedIconTheme: IconThemeData(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            unselectedLabelTextStyle: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w400,
-            ),
-            selectedIconTheme: IconThemeData(
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-            selectedLabelTextStyle: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w400,
-            ),
-            indicatorColor: Theme.of(context).colorScheme.primaryContainer,
-            indicatorShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return Row(
+            children: [
+              // NavigationRail / left menu для categories, tags, icons
+              NavigationRail(
+                unselectedIconTheme: IconThemeData(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                unselectedLabelTextStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w400,
+                ),
+                selectedIconTheme: IconThemeData(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+                selectedLabelTextStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w400,
+                ),
+                indicatorColor: Theme.of(context).colorScheme.primaryContainer,
+                indicatorShape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(kIndicatorBorderRadius),
+                ),
 
-            backgroundColor: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerLowest,
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerLowest,
 
-            selectedIndex:
-                _selectedRailIndex(), // highlight based on current panel
-            onDestinationSelected: (i) {
-              if (i == 0) {
-                // home: close panel
-                context.go('/dashboard/$entity');
-              } else if (i >= 1 && i <= 3) {
-                context.go('/dashboard/$entity/${actions[i - 1]}');
-              } else if (i == 4 && entity == EntityType.note.id) {
-                context.go(AppRoutesPaths.notesGraph);
-              }
-            },
-            labelType: NavigationRailLabelType.all,
-            destinations: destinations,
-            leading: Padding(
-              padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-              child: _buildExpandableFAB(entity, isMobile),
-            ),
-          ),
-          const VerticalDivider(width: 1, thickness: 1),
+                selectedIndex:
+                    _selectedRailIndex(), // highlight based on current panel
+                onDestinationSelected: (i) {
+                  if (i == kHomeIndex) {
+                    // home: close panel
+                    context.go('/dashboard/$entity');
+                  } else if (i >= kCategoriesIndex && i <= kIconsIndex) {
+                    context.go('/dashboard/$entity/${actions[i - 1]}');
+                  } else if (i == kGraphIndex && entity == EntityType.note.id) {
+                    context.go(AppRoutesPaths.notesGraph);
+                  }
+                },
+                labelType: NavigationRailLabelType.all,
+                destinations: destinations,
+                leading: Padding(
+                  padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+                  child: _buildExpandableFAB(entity, isMobile),
+                ),
+              ),
+              const VerticalDivider(width: 1, thickness: 1),
 
-          // Center: если isFullCenter — panelChild, иначе DashboardHomeScreen с анимацией
-          Expanded(
-            flex: 3,
-            child: Stack(
-              children: [
-                // DashboardHomeScreen — всегда видим, скрывается только при isFullCenter
-                AnimatedOpacity(
-                  opacity: isFullCenter ? 0.0 : 1.0,
-                  duration: const Duration(milliseconds: 250),
-                  curve: isFullCenter ? Curves.easeOut : Curves.easeIn,
-                  child: AnimatedScale(
-                    scale: isFullCenter ? 0.96 : 1.0,
-                    duration: const Duration(milliseconds: 280),
-                    curve: Curves.easeInOut,
-                    child: IgnorePointer(
-                      ignoring: isFullCenter,
-                      child: RepaintBoundary(
-                        child: DashboardHomeScreen(
-                          entityType: EntityType.fromId(entity)!,
+              // Левая панель фильтрации (DashboardDrawerContent) для экранов >= 1000px
+              if (showDrawerAsPanel && !isFullCenter)
+                SizedBox(
+                  width: kLeftPanelWidth,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        right: BorderSide(
+                          color: Theme.of(context).dividerColor,
+                          width: 1,
                         ),
                       ),
+                    ),
+                    child: DashboardDrawerContent(
+                      entityType: EntityType.fromId(entity)!,
                     ),
                   ),
                 ),
-                // Full-center content с анимацией появления,
-                // но panelChild рендерится напрямую без AnimatedSwitcher
-                if (isFullCenter)
-                  TweenAnimationBuilder<double>(
-                    key: ValueKey('fullCenter-$uri'),
-                    tween: Tween(begin: 0.0, end: 1.0),
-                    duration: const Duration(milliseconds: 280),
-                    curve: Curves.easeOut,
-                    builder: (context, value, child) {
-                      return Opacity(
-                        opacity: value,
-                        child: Transform.scale(
-                          scale: 0.92 + (0.08 * value), // 0.92 -> 1.0
-                          child: child,
-                        ),
-                      );
-                    },
-                    // panelChild рендерится как child — без пересоздания
-                    child: widget.panelChild,
-                  ),
-              ],
-            ),
-          ),
 
-          // Анимированная правая панель — только если не isFullCenter
-          if (!isMobile && !isFullCenter)
-            RepaintBoundary(
-              child: AnimatedBuilder(
-                animation: _controller,
-                builder: (context, child) {
-                  final widthFactor = isFullCenter ? 0.0 : _controller.value;
-
-                  return ClipRect(
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      widthFactor: widthFactor,
-                      child: SizedBox(
-                        width: panelOpenWidth,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
-                            border: Border(
-                              left: BorderSide(
-                                color: Theme.of(context).dividerColor,
-                                width: 1,
-                              ),
+              // Center: если isFullCenter — panelChild, иначе DashboardHomeScreen с анимацией
+              Expanded(
+                child: Stack(
+                  children: [
+                    // DashboardHomeScreen — всегда видим, скрывается только при isFullCenter
+                    AnimatedOpacity(
+                      opacity: isFullCenter ? 0.0 : 1.0,
+                      duration: kFadeAnimationDuration,
+                      curve: isFullCenter ? Curves.easeOut : Curves.easeIn,
+                      child: AnimatedScale(
+                        scale: isFullCenter ? kCenterScaleWhenFullCenter : 1.0,
+                        duration: kPanelAnimationDuration,
+                        curve: Curves.easeInOut,
+                        child: IgnorePointer(
+                          ignoring: isFullCenter,
+                          child: RepaintBoundary(
+                            child: DashboardHomeScreen(
+                              entityType: EntityType.fromId(entity)!,
+                              showDrawerButton: !showDrawerAsPanel,
                             ),
-                          ),
-                          child: AnimatedOpacity(
-                            opacity: widthFactor,
-                            duration: const Duration(milliseconds: 150),
-                            child: hasPanel ? child : const SizedBox.shrink(),
                           ),
                         ),
                       ),
                     ),
-                  );
-                },
-                child: panel,
+                    // Full-center content с анимацией появления,
+                    // но panelChild рендерится напрямую без AnimatedSwitcher
+                    if (isFullCenter)
+                      TweenAnimationBuilder<double>(
+                        key: ValueKey('fullCenter-$uri'),
+                        tween: Tween(begin: kFadeBegin, end: kFadeEnd),
+                        duration: kPanelAnimationDuration,
+                        curve: Curves.easeOut,
+                        builder: (context, value, child) {
+                          return Opacity(
+                            opacity: value,
+                            child: Transform.scale(
+                              scale:
+                                  kFullCenterScaleBegin +
+                                  (kFullCenterScaleOffset *
+                                      value), // 0.92 -> 1.0
+                              child: child,
+                            ),
+                          );
+                        },
+                        // panelChild рендерится как child — без пересоздания
+                        child: widget.panelChild,
+                      ),
+                  ],
+                ),
               ),
-            ),
-        ],
+
+              // Анимированная правая панель — только если не isFullCenter
+              if (!isMobile && !isFullCenter)
+                RepaintBoundary(
+                  child: AnimatedBuilder(
+                    animation: _controller,
+                    builder: (context, child) {
+                      // Вычисляем доступное пространство для центра и правой панели
+                      const railWidth =
+                          kRailWidth; // примерная ширина NavigationRail
+                      final leftPanelWidth =
+                          (showDrawerAsPanel && !isFullCenter)
+                          ? kLeftPanelWidth
+                          : 0.0;
+                      final availableWidth =
+                          constraints.maxWidth -
+                          railWidth -
+                          leftPanelWidth -
+                          kDividerWidth; // -2 для dividers
+
+                      return SizedBox(
+                        width: availableWidth * 0.5 * _controller.value,
+                        child: ClipRect(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surface,
+                              border: Border(
+                                left: BorderSide(
+                                  color: Theme.of(context).dividerColor,
+                                  width: 1,
+                                ),
+                              ),
+                            ),
+                            child: AnimatedOpacity(
+                              opacity: _controller.value,
+                              duration: kOpacityAnimationDuration,
+                              child: hasPanel ? child : const SizedBox.shrink(),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    child: panel,
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -530,19 +638,22 @@ class _BottomNavIconButton extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(kBottomNavBorderRadius),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(
+          horizontal: kBottomNavPaddingHorizontal,
+          vertical: kBottomNavPaddingVertical,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             destination.icon,
-            const SizedBox(height: 4),
+            const SizedBox(height: kBottomNavSpacing),
             Text(
               (destination.label as Text).data ?? '',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: kBottomNavFontSize,
                 color: isSelected
                     ? colorScheme.primary
                     : colorScheme.onSurfaceVariant,

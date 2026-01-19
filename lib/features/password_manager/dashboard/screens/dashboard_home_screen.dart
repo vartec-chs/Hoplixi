@@ -23,9 +23,14 @@ const kAnimationDuration = Duration(milliseconds: 180);
 /// Использует [SliverAnimatedList]/[SliverAnimatedGrid] для анимированного
 /// отображения элементов с поддержкой diff-обновлений.
 class DashboardHomeScreen extends ConsumerStatefulWidget {
-  const DashboardHomeScreen({super.key, required this.entityType});
+  const DashboardHomeScreen({
+    super.key,
+    required this.entityType,
+    this.showDrawerButton = true,
+  });
 
   final EntityType entityType;
+  final bool showDrawerButton;
 
   @override
   ConsumerState<DashboardHomeScreen> createState() =>
@@ -377,7 +382,9 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
 
     return Scaffold(
       key: _scaffoldKey,
-      drawer: DashboardDrawer(entityType: widget.entityType),
+      drawer: widget.showDrawerButton
+          ? DashboardDrawer(entityType: widget.entityType)
+          : null,
       body: RefreshIndicator(
         onRefresh: () => ref
             .read(paginatedListProvider(widget.entityType).notifier)
