@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/data_refresh_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/drawer_filter_selection_storage.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/drawer_filter_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/base_filter_provider.dart';
@@ -37,6 +39,30 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
     ref.onDispose(() {
       _categorySearchDebounce?.cancel();
       _tagSearchDebounce?.cancel();
+    });
+
+    // Прослушиваем изменения в категориях и тегах СИНХРОННО до любых await
+    ref.listen<DataRefreshState>(dataRefreshTriggerProvider, (previous, next) {
+      logTrace(
+        '$_logTag dataRefreshTriggerProvider изменился: '
+        'previous=${previous?.toString() ?? 'null'}, next=${next.toString()}',
+        tag: _logTag,
+      );
+      // Проверяем, что это изменение категорий или тегов
+      final resourceType = next.data?['resourceType'];
+      if (resourceType == 'category') {
+        logDebug(
+          '$_logTag Обнаружено изменение категорий (${next.type}), перезагружаем...',
+          tag: _logTag,
+        );
+        _reloadCategories();
+      } else if (resourceType == 'tag') {
+        logDebug(
+          '$_logTag Обнаружено изменение тегов (${next.type}), перезагружаем...',
+          tag: _logTag,
+        );
+        _reloadTags();
+      }
     });
 
     // Загружаем сохранённый выбор для этой сущности
@@ -98,6 +124,23 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
   // Загрузка категорий
   // ─────────────────────────────────────────────────────────────────────────
 
+  /// Перезагрузить категории (вызывается из listener)
+  void _reloadCategories() {
+    logDebug(
+      '$_logTag _reloadCategories вызван, state.hasValue: ${state.hasValue}',
+    );
+    state.whenData((currentState) {
+      logDebug(
+        '$_logTag Перезагрузка категорий, текущее количество: ${currentState.categories.length}',
+      );
+      // Сбрасываем состояние и перезагружаем
+      state = AsyncValue.data(
+        currentState.copyWith(categorySearchQuery: '', categoriesOffset: 0),
+      );
+      _loadCategories(reset: true);
+    });
+  }
+
   Future<void> _loadCategories({bool reset = false}) async {
     final currentState = state.value;
     if (currentState == null || currentState.isCategoriesLoading) return;
@@ -116,6 +159,10 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
       );
 
       final categories = await categoryDao.getCategoryCardsFiltered(filter);
+
+      logDebug(
+        '$_logTag Загружено категорий: ${categories.length}, reset: $reset',
+      );
 
       if (reset) {
         state = AsyncValue.data(
@@ -171,6 +218,21 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
   // Загрузка тегов
   // ─────────────────────────────────────────────────────────────────────────
 
+  /// Перезагрузить теги (вызывается из listener)
+  void _reloadTags() {
+    logDebug('$_logTag _reloadTags вызван, state.hasValue: ${state.hasValue}');
+    state.whenData((currentState) {
+      logDebug(
+        '$_logTag Перезагрузка тегов, текущее количество: ${currentState.tags.length}',
+      );
+      // Сбрасываем состояние и перезагружаем
+      state = AsyncValue.data(
+        currentState.copyWith(tagSearchQuery: '', tagsOffset: 0),
+      );
+      _loadTags(reset: true);
+    });
+  }
+
   Future<void> _loadTags({bool reset = false}) async {
     final currentState = state.value;
     if (currentState == null || currentState.isTagsLoading) return;
@@ -189,6 +251,8 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
       );
 
       final tags = await tagDao.getTagCardsFiltered(filter);
+
+      logDebug('$_logTag Загружено тегов: ${tags.length}, reset: $reset');
 
       if (reset) {
         state = AsyncValue.data(

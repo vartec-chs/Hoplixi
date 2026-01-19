@@ -12,5 +12,6 @@ sealed class DataRefreshState with _$DataRefreshState {
     required DateTime timestamp,
     String? entityId,
     EntityType? entityType,
+    Map<String, dynamic>? data,
   }) = _DataRefreshState;
 }

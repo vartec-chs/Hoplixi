@@ -344,6 +344,11 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
         final categoryDao = await ref.read(categoryDaoProvider.future);
         await categoryDao.deleteCategory(category.id);
 
+        // Уведомляем об удалении категории
+        ref
+            .read(categoryFilterProvider.notifier)
+            .notifyCategoryDeleted(categoryId: category.id);
+
         if (context.mounted) {
           Toaster.success(
             title: 'Категория удалена',

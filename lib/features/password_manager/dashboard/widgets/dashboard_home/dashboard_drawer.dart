@@ -4,6 +4,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/dashboard/providers/drawer_filter_provider.dart';
 import 'package:hoplixi/main_store/models/dto/category_dto.dart';
 import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
+import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 /// Drawer с фильтрацией по категориям и тегам (для мобильных устройств)
@@ -14,7 +15,11 @@ class DashboardDrawer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Drawer(child: DashboardDrawerContent(entityType: entityType));
+    final theme = Theme.of(context);
+    return Drawer(
+      backgroundColor: theme.colorScheme.surface,
+      child: DashboardDrawerContent(entityType: entityType),
+    );
   }
 }
 
@@ -36,20 +41,23 @@ class DashboardDrawerContent extends ConsumerWidget {
           children: [
             // Заголовок
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('Фильтры', style: theme.textTheme.titleLarge),
                   if (drawerState.selectedCategoryIds.isNotEmpty ||
                       drawerState.selectedTagIds.isNotEmpty)
-                    TextButton(
+                    SmoothButton(
                       onPressed: () {
                         ref
                             .read(drawerFilterProvider(entityType).notifier)
                             .clearAll();
                       },
-                      child: const Text('Очистить все'),
+                      label: 'Очистить все',
+                      size: .small,
+                      type: .text,
+                      variant: .error,
                     ),
                 ],
               ),
@@ -59,7 +67,7 @@ class DashboardDrawerContent extends ConsumerWidget {
             // Контент с прокруткой
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(8),
                 children: [
                   // Блок категорий
                   _CategorySection(
@@ -71,7 +79,9 @@ class DashboardDrawerContent extends ConsumerWidget {
                     hasMore: drawerState.hasMoreCategories,
                   ),
 
-                  const SizedBox(height: 24.0),
+                  const SizedBox(height: 12.0),
+                  const Divider(height: 1),
+                  const SizedBox(height: 12.0),
 
                   // Блок тегов
                   _TagSection(
@@ -172,22 +182,27 @@ class _CategorySectionState extends ConsumerState<_CategorySection> {
           children: [
             Text('Категории', style: theme.textTheme.titleMedium),
             if (widget.selectedIds.isNotEmpty)
-              TextButton(
+              SmoothButton(
                 onPressed: () => notifier.clearCategories(),
-                child: Text('Очистить (${widget.selectedIds.length})'),
+                label: 'Очистить (${widget.selectedIds.length})',
+                size: .small,
+                type: .text,
               ),
           ],
         ),
         const SizedBox(height: 8.0),
 
         // Поиск
-        TextField(
-          decoration: primaryInputDecoration(
-            context,
-            hintText: 'Поиск категорий...',
-            prefixIcon: const Icon(Icons.search),
+        SizedBox(
+          height: 40.0,
+          child: TextField(
+            decoration: primaryInputDecoration(
+              context,
+              hintText: 'Поиск категорий...',
+              prefixIcon: const Icon(Icons.search),
+            ),
+            onChanged: (value) => notifier.searchCategories(value),
           ),
-          onChanged: (value) => notifier.searchCategories(value),
         ),
         const SizedBox(height: 8.0),
 
@@ -231,6 +246,7 @@ class _CategorySectionState extends ConsumerState<_CategorySection> {
                       )
                     : null,
                 dense: true,
+
                 contentPadding: EdgeInsets.zero,
               );
             },
@@ -299,22 +315,27 @@ class _TagSectionState extends ConsumerState<_TagSection> {
           children: [
             Text('Теги', style: theme.textTheme.titleMedium),
             if (widget.selectedIds.isNotEmpty)
-              TextButton(
+              SmoothButton(
                 onPressed: () => notifier.clearTags(),
-                child: Text('Очистить (${widget.selectedIds.length})'),
+                label: 'Очистить (${widget.selectedIds.length})',
+                size: .small,
+                type: .text,
               ),
           ],
         ),
         const SizedBox(height: 8.0),
 
         // Поиск
-        TextField(
-          decoration: primaryInputDecoration(
-            context,
-            hintText: 'Поиск тегов...',
-            prefixIcon: const Icon(Icons.search),
+        SizedBox(
+          height: 40.0,
+          child: TextField(
+            decoration: primaryInputDecoration(
+              context,
+              hintText: 'Поиск тегов...',
+              prefixIcon: const Icon(Icons.search),
+            ),
+            onChanged: (value) => notifier.searchTags(value),
           ),
-          onChanged: (value) => notifier.searchTags(value),
         ),
         const SizedBox(height: 8.0),
 

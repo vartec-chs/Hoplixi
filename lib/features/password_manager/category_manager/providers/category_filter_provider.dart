@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:hoplixi/main_store/models/filter/categories_filter.dart';
 
@@ -117,5 +118,30 @@ class CategoryFilterNotifier extends Notifier<CategoriesFilter> {
     _debounceTimer?.cancel();
     state = filter;
     await Future.microtask(() {});
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Уведомления об изменениях
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Уведомить о добавлении категории
+  void notifyCategoryAdded({String? categoryId}) {
+    ref
+        .read(dataRefreshTriggerProvider.notifier)
+        .triggerCategoryAdd(categoryId: categoryId);
+  }
+
+  /// Уведомить об обновлении категории
+  void notifyCategoryUpdated({String? categoryId}) {
+    ref
+        .read(dataRefreshTriggerProvider.notifier)
+        .triggerCategoryUpdate(categoryId: categoryId);
+  }
+
+  /// Уведомить об удалении категории
+  void notifyCategoryDeleted({String? categoryId}) {
+    ref
+        .read(dataRefreshTriggerProvider.notifier)
+        .triggerCategoryDelete(categoryId: categoryId);
   }
 }

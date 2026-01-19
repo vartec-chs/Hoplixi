@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/data_refresh_state.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 
 /// Провайдер для триггера обновления данных
 /// Используется для оповещения о том, что данные изменились и нужно перезапросить
@@ -30,7 +30,7 @@ class DataRefreshTriggerNotifier extends Notifier<DataRefreshState> {
     final now = DateTime.now();
     final entityTag = entityType != null ? ' для $entityType' : '';
     logDebug(
-      'DataRefreshTriggerNotifier: ${reason ?? 'Триггер обновления'}$entityTag в $now',
+      'DataRefreshTriggerNotifier: ${reason ?? 'Триггер обновления'}$entityTag в $now | Data: $data',
       data: data,
     );
     state = DataRefreshState(
@@ -38,6 +38,7 @@ class DataRefreshTriggerNotifier extends Notifier<DataRefreshState> {
       timestamp: now,
       entityId: entityId ?? entityType?.toString(),
       entityType: entityType,
+      data: data,
     );
   }
 
@@ -108,6 +109,74 @@ class DataRefreshTriggerNotifier extends Notifier<DataRefreshState> {
     _emitRefreshState(
       type: DataRefreshType.update,
       reason: reason ?? 'Обновление всех данных',
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Методы для категорий
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Триггерит добавление категории
+  void triggerCategoryAdd({String? categoryId}) {
+    _emitRefreshState(
+      type: DataRefreshType.add,
+      entityId: categoryId,
+      reason: 'Добавлена категория',
+      data: {'resourceType': 'category'},
+    );
+  }
+
+  /// Триггерит обновление категории
+  void triggerCategoryUpdate({String? categoryId}) {
+    _emitRefreshState(
+      type: DataRefreshType.update,
+      entityId: categoryId,
+      reason: 'Обновлена категория',
+      data: {'resourceType': 'category'},
+    );
+  }
+
+  /// Триггерит удаление категории
+  void triggerCategoryDelete({String? categoryId}) {
+    _emitRefreshState(
+      type: DataRefreshType.delete,
+      entityId: categoryId,
+      reason: 'Удалена категория',
+      data: {'resourceType': 'category'},
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Методы для тегов
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Триггерит добавление тега
+  void triggerTagAdd({String? tagId}) {
+    _emitRefreshState(
+      type: DataRefreshType.add,
+      entityId: tagId,
+      reason: 'Добавлен тег',
+      data: {'resourceType': 'tag'},
+    );
+  }
+
+  /// Триггерит обновление тега
+  void triggerTagUpdate({String? tagId}) {
+    _emitRefreshState(
+      type: DataRefreshType.update,
+      entityId: tagId,
+      reason: 'Обновлен тег',
+      data: {'resourceType': 'tag'},
+    );
+  }
+
+  /// Триггерит удаление тега
+  void triggerTagDelete({String? tagId}) {
+    _emitRefreshState(
+      type: DataRefreshType.delete,
+      entityId: tagId,
+      reason: 'Удален тег',
+      data: {'resourceType': 'tag'},
     );
   }
 }
@@ -220,5 +289,53 @@ class DataRefreshHelper {
           entityId: entityId,
           data: data,
         );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Методы для категорий
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Обновляет данные после создания категории
+  static void refreshAfterCategoryCreate(WidgetRef ref, {String? categoryId}) {
+    ref
+        .read(dataRefreshTriggerProvider.notifier)
+        .triggerCategoryAdd(categoryId: categoryId);
+  }
+
+  /// Обновляет данные после обновления категории
+  static void refreshAfterCategoryUpdate(WidgetRef ref, {String? categoryId}) {
+    ref
+        .read(dataRefreshTriggerProvider.notifier)
+        .triggerCategoryUpdate(categoryId: categoryId);
+  }
+
+  /// Обновляет данные после удаления категории
+  static void refreshAfterCategoryDelete(WidgetRef ref, {String? categoryId}) {
+    ref
+        .read(dataRefreshTriggerProvider.notifier)
+        .triggerCategoryDelete(categoryId: categoryId);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Методы для тегов
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Обновляет данные после создания тега
+  static void refreshAfterTagCreate(WidgetRef ref, {String? tagId}) {
+    ref.read(dataRefreshTriggerProvider.notifier).triggerTagAdd(tagId: tagId);
+  }
+
+  /// Обновляет данные после обновления тега
+  static void refreshAfterTagUpdate(WidgetRef ref, {String? tagId}) {
+    ref
+        .read(dataRefreshTriggerProvider.notifier)
+        .triggerTagUpdate(tagId: tagId);
+  }
+
+  /// Обновляет данные после удаления тега
+  static void refreshAfterTagDelete(WidgetRef ref, {String? tagId}) {
+    ref
+        .read(dataRefreshTriggerProvider.notifier)
+        .triggerTagDelete(tagId: tagId);
   }
 }

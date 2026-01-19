@@ -332,6 +332,9 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
         final tagDao = await ref.read(tagDaoProvider.future);
         await tagDao.deleteTag(tag.id);
 
+        // Уведомляем об удалении тега
+        ref.read(tagFilterProvider.notifier).notifyTagDeleted(tagId: tag.id);
+
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Тег "${tag.name}" успешно удален')),
