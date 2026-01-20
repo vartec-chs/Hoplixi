@@ -1,3 +1,4 @@
+import 'package:drift/native.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'db_errors.freezed.dart';
@@ -150,4 +151,27 @@ sealed class DatabaseError with _$DatabaseError implements Exception {
     @JsonKey(includeToJson: true) StackTrace? stackTrace,
     @JsonKey(includeToJson: true) DateTime? timestamp,
   }) = UnknownDatabaseError;
+
+  String get description => '$code — $message';
+
+  DatabaseError dbErrorFromException(Object e, [StackTrace? st]) {
+    if (e is SqliteException) {
+      if (e.message?.contains('file is not a database') ?? false) {
+        return DatabaseError.corruptedDatabase(
+          message: e.message ?? 'Corrupted DB',
+          data: {'original': e.toString()},
+          stackTrace: st,
+          timestamp: DateTime.now(),
+        );
+      }
+      // маппинг кодов/сообщений -> варианты
+    }
+
+    return DatabaseError.unknown(
+      message: e.toString(),
+      data: {'exception': e.runtimeType.toString()},
+      stackTrace: st,
+      timestamp: DateTime.now(),
+    );
+  }
 }
