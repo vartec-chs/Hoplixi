@@ -346,6 +346,8 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
       ref.read(baseFilterProvider.notifier).setEntityType(widget.entityType.id);
     });
 
+    final disableAppBarMenu = MediaQuery.of(context).size.width <= 1000;
+
     // Начальная синхронизация при первом построении
     if (_isFirstBuild) {
       _isFirstBuild = false;
@@ -404,7 +406,9 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
               floating: false,
               snap: false,
               showEntityTypeSelector: true,
-              onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+              onMenuPressed: !disableAppBarMenu
+                  ? null
+                  : () => _scaffoldKey.currentState?.openDrawer(),
             ),
             SliverToBoxAdapter(
               child: DashboardListToolBar(

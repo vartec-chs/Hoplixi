@@ -52,92 +52,126 @@ class _DashboardDrawerContentState
     final drawerStateAsync = ref.watch(drawerFilterProvider(widget.entityType));
 
     return SafeArea(
-      child: drawerStateAsync.when(
-        data: (drawerState) => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Заголовок
-            SizedBox(
-              height: 50,
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        switchInCurve: Curves.easeInOut,
+        switchOutCurve: Curves.easeInOut,
+        transitionBuilder: (child, animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.0, 0.02),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
+            ),
+          );
+        },
+        child: drawerStateAsync.when(
+          data: (drawerState) => Column(
+            key: ValueKey(widget.entityType),
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Заголовок
+              SizedBox(
+                height: 50,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Фильтры', style: theme.textTheme.titleMedium),
+                      if (drawerState.selectedCategoryIds.isNotEmpty ||
+                          drawerState.selectedTagIds.isNotEmpty)
+                        SmoothButton(
+                          onPressed: () {
+                            ref
+                                .read(
+                                  drawerFilterProvider(
+                                    widget.entityType,
+                                  ).notifier,
+                                )
+                                .clearAll();
+                          },
+                          label: 'Очистить все',
+                          size: .small,
+                          type: .text,
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const Divider(height: 1),
+
+              // Контент с прокруткой
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.all(8),
                   children: [
-                    Text('Фильтры', style: theme.textTheme.titleMedium),
-                    if (drawerState.selectedCategoryIds.isNotEmpty ||
-                        drawerState.selectedTagIds.isNotEmpty)
-                      SmoothButton(
-                        onPressed: () {
-                          ref
-                              .read(
-                                drawerFilterProvider(
-                                  widget.entityType,
-                                ).notifier,
-                              )
-                              .clearAll();
-                        },
-                        label: 'Очистить все',
-                        size: .small,
-                        type: .text,
-                      ),
+                    // Блок категорий
+                    _CategorySection(
+                      entityType: widget.entityType,
+                      categories: drawerState.categories,
+                      selectedIds: drawerState.selectedCategoryIds,
+                      searchQuery: drawerState.categorySearchQuery,
+                      isLoading: drawerState.isCategoriesLoading,
+                      hasMore: drawerState.hasMoreCategories,
+                    ),
+
+                    const SizedBox(height: 8.0),
+                    const Divider(height: 1),
+                    const SizedBox(height: 8.0),
+
+                    // Блок тегов
+                    _TagSection(
+                      entityType: widget.entityType,
+                      tags: drawerState.tags,
+                      selectedIds: drawerState.selectedTagIds,
+                      searchQuery: drawerState.tagSearchQuery,
+                      isLoading: drawerState.isTagsLoading,
+                      hasMore: drawerState.hasMoreTags,
+                    ),
                   ],
                 ),
               ),
-            ),
-            const Divider(height: 1),
-
-            // Контент с прокруткой
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(8),
-                children: [
-                  // Блок категорий
-                  _CategorySection(
-                    entityType: widget.entityType,
-                    categories: drawerState.categories,
-                    selectedIds: drawerState.selectedCategoryIds,
-                    searchQuery: drawerState.categorySearchQuery,
-                    isLoading: drawerState.isCategoriesLoading,
-                    hasMore: drawerState.hasMoreCategories,
-                  ),
-
-                  const SizedBox(height: 12.0),
-                  const Divider(height: 1),
-                  const SizedBox(height: 12.0),
-
-                  // Блок тегов
-                  _TagSection(
-                    entityType: widget.entityType,
-                    tags: drawerState.tags,
-                    selectedIds: drawerState.selectedTagIds,
-                    searchQuery: drawerState.tagSearchQuery,
-                    isLoading: drawerState.isTagsLoading,
-                    hasMore: drawerState.hasMoreTags,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.red),
-              const SizedBox(height: 16),
-              Text(
-                'Ошибка загрузки фильтров',
-                style: theme.textTheme.titleMedium,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                error.toString(),
-                style: theme.textTheme.bodySmall,
-                textAlign: TextAlign.center,
-              ),
             ],
+          ),
+          loading: () => Column(
+            key: const ValueKey('loading'),
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Заголовок (для предотвращения скачка)
+              SizedBox(
+                height: 50,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Text('Фильтры', style: theme.textTheme.titleMedium),
+                ),
+              ),
+              const Divider(height: 1),
+              const Expanded(child: Center(child: CircularProgressIndicator())),
+            ],
+          ),
+          error: (error, stack) => Center(
+            key: const ValueKey('error'),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                const SizedBox(height: 16),
+                Text(
+                  'Ошибка загрузки фильтров',
+                  style: theme.textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  error.toString(),
+                  style: theme.textTheme.bodySmall,
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
       ),

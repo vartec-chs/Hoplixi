@@ -21,12 +21,7 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
   @override
   void initState() {
     super.initState();
-    // Инициализируем контроллеры текущими значениями
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final state = ref.read(storeSettingsProvider);
-      _nameController.text = state.newName;
-      _descriptionController.text = state.newDescription ?? '';
-    });
+    // Контроллеры будут инициализированы в build методе
   }
 
   @override
@@ -68,6 +63,14 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(storeSettingsProvider);
+
+    // Обновляем контроллеры при изменении состояния
+    if (_nameController.text != state.newName) {
+      _nameController.text = state.newName;
+    }
+    if (_descriptionController.text != (state.newDescription ?? '')) {
+      _descriptionController.text = state.newDescription ?? '';
+    }
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
