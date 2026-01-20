@@ -664,13 +664,17 @@ class DashboardHomeBuilders {
       direction: DismissDirection.horizontal,
       background: Container(
         decoration: BoxDecoration(
-          color: isDeleted ? Colors.greenAccent : Colors.blueAccent,
+          color: isDeleted
+              ? Colors.greenAccent
+              : (item.isArchived ? Colors.orangeAccent : Colors.blueAccent),
           borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 24),
         alignment: Alignment.centerLeft,
         child: Icon(
-          isDeleted ? Icons.restore : Icons.edit,
+          isDeleted
+              ? Icons.restore
+              : (item.isArchived ? Icons.unarchive : Icons.edit),
           color: Colors.white,
         ),
       ),
@@ -685,14 +689,18 @@ class DashboardHomeBuilders {
       ),
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
-          // Вправо → редактирование или восстановление
+          // Вправо → редактирование, восстановление или разархивирование
           if (isDeleted) {
             // Восстанавливаем удаленный элемент
             callbacks.onRestore(item.id);
             return false;
+          } else if (item.isArchived) {
+            // Разархивируем элемент
+            callbacks.onToggleArchive(item.id);
+            return false;
           }
 
-          // Открываем экран редактирования для не удаленных элементов
+          // Открываем экран редактирования для не удаленных и не архивированных элементов
           if (item is PasswordCardDto) {
             final path = AppRoutesPaths.dashboardEntityEdit(
               EntityType.password,

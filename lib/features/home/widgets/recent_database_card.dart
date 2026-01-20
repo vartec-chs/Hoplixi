@@ -38,6 +38,7 @@ class RecentDatabaseCard extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
+      color: colorScheme.surfaceContainerLow,
       margin: EdgeInsets.zero,
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

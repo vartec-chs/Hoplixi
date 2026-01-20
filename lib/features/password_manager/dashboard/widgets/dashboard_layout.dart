@@ -22,7 +22,7 @@ const double kDesktopBreakpoint = 1000.0;
 
 // Layout dimensions
 const double kRailWidth = 80.0;
-const double kLeftPanelWidth = 280.0;
+const double kLeftPanelWidth = 260.0;
 const double kDividerWidth = 2.0;
 const double kBottomNavHeight = 70.0;
 const double kFabSpaceWidth = 40.0;

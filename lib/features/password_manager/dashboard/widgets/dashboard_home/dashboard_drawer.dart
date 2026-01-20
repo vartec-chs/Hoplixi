@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/core/utils/color_parser.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/drawer_filter_provider.dart';
 import 'package:hoplixi/main_store/models/dto/category_dto.dart';
@@ -56,28 +57,32 @@ class _DashboardDrawerContentState
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Заголовок
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Фильтры', style: theme.textTheme.titleLarge),
-                  if (drawerState.selectedCategoryIds.isNotEmpty ||
-                      drawerState.selectedTagIds.isNotEmpty)
-                    SmoothButton(
-                      onPressed: () {
-                        ref
-                            .read(
-                              drawerFilterProvider(widget.entityType).notifier,
-                            )
-                            .clearAll();
-                      },
-                      label: 'Очистить все',
-                      size: .small,
-                      type: .text,
-                      variant: .error,
-                    ),
-                ],
+            SizedBox(
+              height: 50,
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Фильтры', style: theme.textTheme.titleMedium),
+                    if (drawerState.selectedCategoryIds.isNotEmpty ||
+                        drawerState.selectedTagIds.isNotEmpty)
+                      SmoothButton(
+                        onPressed: () {
+                          ref
+                              .read(
+                                drawerFilterProvider(
+                                  widget.entityType,
+                                ).notifier,
+                              )
+                              .clearAll();
+                        },
+                        label: 'Очистить все',
+                        size: .small,
+                        type: .text,
+                      ),
+                  ],
+                ),
               ),
             ),
             const Divider(height: 1),
@@ -195,18 +200,21 @@ class _CategorySectionState extends ConsumerState<_CategorySection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Заголовок секции
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Категории', style: theme.textTheme.titleMedium),
-            if (widget.selectedIds.isNotEmpty)
-              SmoothButton(
-                onPressed: () => notifier.clearCategories(),
-                label: 'Очистить (${widget.selectedIds.length})',
-                size: .small,
-                type: .text,
-              ),
-          ],
+        SizedBox(
+          height: 36,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Категории', style: theme.textTheme.titleMedium),
+              if (widget.selectedIds.isNotEmpty)
+                SmoothButton(
+                  onPressed: () => notifier.clearCategories(),
+                  label: 'Очистить (${widget.selectedIds.length})',
+                  size: .small,
+                  type: .text,
+                ),
+            ],
+          ),
         ),
         const SizedBox(height: 8.0),
 
@@ -258,7 +266,7 @@ class _CategorySectionState extends ConsumerState<_CategorySection> {
                         width: 18,
                         height: 18,
                         decoration: BoxDecoration(
-                          color: _parseCategoryColor(category.color, context),
+                          color: parseColor(category.color, context),
                           shape: BoxShape.circle,
                         ),
                       )
@@ -328,18 +336,21 @@ class _TagSectionState extends ConsumerState<_TagSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Заголовок секции
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Теги', style: theme.textTheme.titleMedium),
-            if (widget.selectedIds.isNotEmpty)
-              SmoothButton(
-                onPressed: () => notifier.clearTags(),
-                label: 'Очистить (${widget.selectedIds.length})',
-                size: .small,
-                type: .text,
-              ),
-          ],
+        SizedBox(
+          height: 36,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Теги', style: theme.textTheme.titleMedium),
+              if (widget.selectedIds.isNotEmpty)
+                SmoothButton(
+                  onPressed: () => notifier.clearTags(),
+                  label: 'Очистить (${widget.selectedIds.length})',
+                  size: .small,
+                  type: .text,
+                ),
+            ],
+          ),
         ),
         const SizedBox(height: 8.0),
 
@@ -391,7 +402,7 @@ class _TagSectionState extends ConsumerState<_TagSection> {
                         width: 18,
                         height: 18,
                         decoration: BoxDecoration(
-                          color: _parseCategoryColor(tag.color, context),
+                          color: parseColor(tag.color, context),
                           shape: BoxShape.circle,
                         ),
                       )
@@ -405,13 +416,4 @@ class _TagSectionState extends ConsumerState<_TagSection> {
       ],
     );
   }
-}
-
-/// Парсит цвет категории из строки в Color
-Color _parseCategoryColor(String? colorString, BuildContext context) {
-  final colorValue = int.tryParse(colorString ?? 'FFFFFF', radix: 16);
-  final color = colorValue != null
-      ? Color(0xFF000000 | colorValue)
-      : Theme.of(context).colorScheme.primary;
-  return color;
 }

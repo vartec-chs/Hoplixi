@@ -19,7 +19,7 @@ import '../widgets/note_metadata_modal.dart';
 
 /// Экран формы создания/редактирования заметки
 /// Основной интерфейс - QuillEditor для редактирования контента
-/// При сохранении открывается модальное окно для редактирования метаданных
+/// Быстрое сохранение сохраняет без метаданных, кнопка настроек открывает модальное окно
 class NoteFormScreen extends ConsumerStatefulWidget {
   const NoteFormScreen({super.key, this.noteId});
 
@@ -159,8 +159,59 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
     logInfo('Добавлена ссылка на заметку: ${result.id}');
   }
 
-  /// Показать модальное окно и сохранить заметку
-  void _handleSave() async {
+  /// Быстрое сохранение без открытия модального окна
+  void _handleQuickSave() async {
+    // Сначала обновляем контент из редактора
+    _updateStateFromController();
+
+    final state = ref.read(noteFormProvider);
+
+    // Проверяем, что контент не пустой
+    if (state.content.trim().isEmpty) {
+      Toaster.warning(
+        title: 'Пустая заметка',
+        description: 'Добавьте содержание перед сохранением',
+      );
+      return;
+    }
+
+    // Для режима создания: если заголовок пустой, берем первую строку
+    if (!isEditMode && state.title.isEmpty) {
+      final firstLine = state.content.split('\n').first.trim();
+      if (firstLine.isNotEmpty) {
+        ref.read(noteFormProvider.notifier).setTitle(firstLine);
+      }
+    }
+
+    // Сохраняем
+    final success = await ref.read(noteFormProvider.notifier).save();
+
+    if (!mounted) return;
+
+    if (success) {
+      Toaster.success(
+        title: isEditMode ? 'Заметка обновлена' : 'Заметка создана',
+        description: 'Изменения успешно сохранены',
+      );
+      context.pop(true);
+
+      if (isEditMode) {
+        logInfo('Заметка отредактирована: ${widget.noteId}');
+        DataRefreshHelper.refreshNotes(ref);
+      } else {
+        logInfo('Создана новая заметка');
+        DataRefreshHelper.refreshNotes(ref);
+      }
+    } else {
+      Toaster.error(
+        title: 'Ошибка сохранения',
+        description: 'Не удалось сохранить заметку',
+      );
+    }
+  }
+
+  /// Показать модальное окно настроек
+  void _handleSettings() async {
     // Сначала обновляем контент из редактора
     _updateStateFromController();
 
@@ -357,12 +408,18 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
               )
-            else
+            else ...[
               IconButton(
                 icon: const Icon(Icons.save),
-                tooltip: 'Сохранить',
-                onPressed: _handleSave,
+                tooltip: 'Быстрое сохранение',
+                onPressed: _handleQuickSave,
               ),
+              IconButton(
+                icon: const Icon(Icons.settings),
+                tooltip: 'Настройки',
+                onPressed: _handleSettings,
+              ),
+            ],
           ],
         ),
         body: state.isLoading

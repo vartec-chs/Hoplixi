@@ -90,6 +90,20 @@ class _NoteMetadataFormState extends ConsumerState<_NoteMetadataForm> {
     final state = ref.read(noteFormProvider);
     _titleController = TextEditingController(text: state.title);
     _descriptionController = TextEditingController(text: state.description);
+
+    // В режиме создания, если заголовок пустой, берем первую строку из контента
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!widget.isEditMode &&
+          state.title.isEmpty &&
+          state.content.isNotEmpty) {
+        final firstLine = state.content.split('\n').first.trim();
+        if (firstLine.isNotEmpty) {
+          _titleController.text = firstLine;
+          // Обновляем провайдер
+          ref.read(noteFormProvider.notifier).setTitle(firstLine);
+        }
+      }
+    });
   }
 
   @override
