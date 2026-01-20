@@ -83,7 +83,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
       _description = null;
       _iconId = null;
       _selectedColor = null;
-      _selectedType = CategoryType.mixed;
+      _selectedType = _convertEntityTypeToCategoryType(widget.forEntity);
     }
     setState(() {
       _isDataLoading = false;
@@ -389,5 +389,21 @@ String _getCategoryTypeLabel(CategoryType type) {
       return 'Файлы';
     case CategoryType.mixed:
       return 'Смешанная';
+  }
+}
+
+/// Преобразовать EntityType в CategoryType
+CategoryType _convertEntityTypeToCategoryType(EntityType entityType) {
+  switch (entityType) {
+    case EntityType.password:
+      return CategoryType.password;
+    case EntityType.note:
+      return CategoryType.note;
+    case EntityType.bankCard:
+      return CategoryType.bankCard;
+    case EntityType.file:
+      return CategoryType.file;
+    case EntityType.otp:
+      return CategoryType.totp;
   }
 }

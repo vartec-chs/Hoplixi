@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/tags_manager/providers/tag_filter_provider.dart';
 import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
@@ -13,8 +14,9 @@ import 'package:hoplixi/shared/ui/text_field.dart';
 class TagFormScreen extends ConsumerStatefulWidget {
   final String? tagId;
   final VoidCallback? onSuccess;
+  final EntityType? entityType;
 
-  const TagFormScreen({super.key, this.tagId, this.onSuccess});
+  const TagFormScreen({super.key, this.tagId, this.onSuccess, this.entityType});
 
   @override
   ConsumerState<TagFormScreen> createState() => _TagFormScreenState();
@@ -69,7 +71,9 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
       // Режим создания - значения по умолчанию
       _name = '';
       _selectedColor = null;
-      _selectedType = TagType.mixed;
+      _selectedType = widget.entityType != null
+          ? _convertEntityTypeToTagType(widget.entityType!)
+          : TagType.mixed;
     }
     setState(() {
       _isDataLoading = false;
@@ -342,5 +346,21 @@ String _getTagTypeLabel(TagType type) {
       return 'Файлы';
     case TagType.mixed:
       return 'Смешанная';
+  }
+}
+
+/// Преобразовать EntityType в TagType
+TagType _convertEntityTypeToTagType(EntityType entityType) {
+  switch (entityType) {
+    case EntityType.password:
+      return TagType.password;
+    case EntityType.note:
+      return TagType.note;
+    case EntityType.bankCard:
+      return TagType.bankCard;
+    case EntityType.file:
+      return TagType.file;
+    case EntityType.otp:
+      return TagType.totp;
   }
 }

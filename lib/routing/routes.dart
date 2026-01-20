@@ -151,10 +151,10 @@ final List<RouteBase> appRoutes = [
                 path: 'add',
                 name: 'entity_tags_add',
                 builder: (context, state) {
-                  // final entity = EntityType.fromId(
-                  //   state.pathParameters['entity']!,
-                  // )!;
-                  return TagFormScreen();
+                  final entity = EntityType.fromId(
+                    state.pathParameters['entity']!,
+                  )!;
+                  return TagFormScreen(entityType: entity);
                 },
               ),
               GoRoute(
@@ -162,7 +162,10 @@ final List<RouteBase> appRoutes = [
                 name: 'entity_tags_edit',
                 builder: (context, state) {
                   final id = state.pathParameters['id']!;
-                  return TagFormScreen(tagId: id);
+                  final entity = EntityType.fromId(
+                    state.pathParameters['entity']!,
+                  )!;
+                  return TagFormScreen(tagId: id, entityType: entity);
                 },
               ),
             ],
