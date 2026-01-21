@@ -9,11 +9,28 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/core/utils/window_manager.dart';
 import 'package:hoplixi/setup_error_handling.dart';
 import 'package:hoplixi/setup_tray.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:toastification/toastification.dart';
 import 'package:universal_platform/universal_platform.dart';
 
 import 'app.dart';
 import 'di_init.dart';
+
+Future<void> _handleLostData() async {
+  final ImagePicker picker = ImagePicker();
+  final LostDataResponse response = await picker.retrieveLostData();
+  if (response.isEmpty) {
+    return;
+  }
+  final List<XFile>? files = response.files;
+  if (files != null) {
+    for (final XFile file in files) {
+      logInfo('Retrieved lost file: ${file.path}');
+    }
+  } else {
+    logError('Lost data exception: ${response.exception}');
+  }
+}
 
 Future<void> main() async {
   if (UniversalPlatform.isWeb) {
@@ -53,6 +70,10 @@ Future<void> main() async {
       );
 
       setupErrorHandling();
+      // Handle lost data from image_picker on Android
+      if (UniversalPlatform.isAndroid) {
+        await _handleLostData();
+      }
       await WindowManager.initialize();
       await setupDI();
       await setupTray();

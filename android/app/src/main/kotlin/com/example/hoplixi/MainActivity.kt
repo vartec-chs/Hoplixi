@@ -1,8 +1,8 @@
 package com.example.hoplixi
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
 	 private val screenProtector by lazy { AndroidScreenProtector.newInstance(this) }
 
     // For Android 12+
