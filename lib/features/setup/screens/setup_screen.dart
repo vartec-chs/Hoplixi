@@ -115,6 +115,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       const WelcomePage(),
       const ThemeSelectionPage(),
       const BiometricPage(),
+
       if (!UniversalPlatform.isDesktop) const PermissionsPage(),
     ];
 

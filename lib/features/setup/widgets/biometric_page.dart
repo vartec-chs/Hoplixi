@@ -63,113 +63,116 @@ class _BiometricPageState extends ConsumerState<BiometricPage>
     final colorScheme = theme.colorScheme;
     final setupState = ref.watch(setupProvider);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Spacer(flex: 2),
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            const SizedBox(height: 100),
 
-          // Иконка отпечатка с анимацией
-          SlideTransition(
-            position: _slideAnimation,
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: ScaleTransition(
-                scale: _pulseAnimation,
-                child: Container(
-                  width: 140,
-                  height: 140,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: setupState.biometricEnabled
-                          ? [Colors.green.shade400, Colors.teal.shade600]
-                          : [
-                              colorScheme.surfaceContainerHighest,
-                              colorScheme.surfaceContainerHigh,
-                            ],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: setupState.biometricEnabled
-                            ? Colors.teal.withOpacity(0.3)
-                            : colorScheme.shadow.withOpacity(0.1),
-                        blurRadius: 24,
-                        offset: const Offset(0, 8),
+            // Иконка отпечатка с анимацией
+            SlideTransition(
+              position: _slideAnimation,
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: ScaleTransition(
+                  scale: _pulseAnimation,
+                  child: Container(
+                    width: 140,
+                    height: 140,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: setupState.biometricEnabled
+                            ? [Colors.green.shade400, Colors.teal.shade600]
+                            : [
+                                colorScheme.surfaceContainerHighest,
+                                colorScheme.surfaceContainerHigh,
+                              ],
                       ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.fingerprint,
-                    size: 72,
-                    color: setupState.biometricEnabled
-                        ? Colors.white
-                        : colorScheme.onSurfaceVariant,
+                      boxShadow: [
+                        BoxShadow(
+                          color: setupState.biometricEnabled
+                              ? Colors.teal.withOpacity(0.3)
+                              : colorScheme.shadow.withOpacity(0.1),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.fingerprint,
+                      size: 72,
+                      color: setupState.biometricEnabled
+                          ? Colors.white
+                          : colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
 
-          const SizedBox(height: 48),
+            const SizedBox(height: 48),
 
-          // Заголовок
-          SlideTransition(
-            position: _slideAnimation,
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: Column(
-                children: [
-                  Text(
-                    'Биометрическая защита',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    setupState.biometricAvailable
-                        ? 'Используйте отпечаток пальца или Face ID\n'
-                              'для быстрого и безопасного доступа'
-                        : 'Биометрическая аутентификация\n'
-                              'недоступна на этом устройстве',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const Spacer(),
-
-          // Карточка с информацией и переключателем
-          if (setupState.biometricAvailable) ...[
+            // Заголовок
             SlideTransition(
               position: _slideAnimation,
               child: FadeTransition(
                 opacity: _fadeAnimation,
-                child: _buildBiometricCard(context, setupState),
+                child: Column(
+                  children: [
+                    Text(
+                      'Биометрическая защита',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      setupState.biometricAvailable
+                          ? 'Используйте отпечаток пальца или Face ID\n'
+                                'для быстрого и безопасного доступа'
+                          : 'Биометрическая аутентификация\n'
+                                'недоступна на этом устройстве',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ] else ...[
-            SlideTransition(
-              position: _slideAnimation,
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: _buildUnavailableCard(context),
+
+            const SizedBox(height: 50),
+
+            // Карточка с информацией и переключателем
+            if (setupState.biometricAvailable) ...[
+              SlideTransition(
+                position: _slideAnimation,
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: _buildBiometricCard(context, setupState),
+                ),
               ),
-            ),
+            ] else ...[
+              SlideTransition(
+                position: _slideAnimation,
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: _buildUnavailableCard(context),
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 100),
           ],
-
-          const Spacer(flex: 2),
-        ],
+        ),
       ),
     );
   }

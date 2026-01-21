@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_preferences/app_preferences.dart';
+import 'package:hoplixi/core/logger/index.dart';
 import 'package:hoplixi/di_init.dart';
 
 /// Провайдер для проверки, завершена ли первоначальная настройка
@@ -20,6 +21,7 @@ class SetupCompletedNotifier extends AsyncNotifier<bool> {
   FutureOr<bool> build() async {
     final storage = getIt<AppStorageService>();
     final completed = await storage.get(AppKeys.setupCompleted);
+    logInfo('Setup completed status: $completed');
     return completed ?? false;
   }
 

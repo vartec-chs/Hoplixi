@@ -56,141 +56,144 @@ class _PermissionsPageState extends ConsumerState<PermissionsPage>
     final colorScheme = theme.colorScheme;
     final setupState = ref.watch(setupProvider);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Spacer(flex: 2),
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            const SizedBox(height: 100),
 
-          // Заголовок
-          SlideTransition(
-            position: _slideAnimation,
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: Column(
-                children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          colorScheme.tertiary.withOpacity(0.8),
-                          colorScheme.tertiary,
+            // Заголовок
+            SlideTransition(
+              position: _slideAnimation,
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: Column(
+                  children: [
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            colorScheme.tertiary.withOpacity(0.8),
+                            colorScheme.tertiary,
+                          ],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: colorScheme.tertiary.withOpacity(0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 6),
+                          ),
                         ],
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: colorScheme.tertiary.withOpacity(0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 6),
+                      child: Icon(
+                        Icons.verified_user_outlined,
+                        size: 48,
+                        color: colorScheme.onTertiary,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Text(
+                      'Разрешения',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Для полноценной работы приложения\n'
+                      'нам нужны следующие разрешения',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 50),
+
+            // Список разрешений
+            SlideTransition(
+              position: _slideAnimation,
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: _buildPermissionsList(context, setupState),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Кнопка запросить все
+            if (!setupState.allPermissionsGranted)
+              SlideTransition(
+                position: _slideAnimation,
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SmoothButton(
+                    label: 'Разрешить все',
+                    onPressed: setupState.isLoading
+                        ? null
+                        : () {
+                            ref
+                                .read(setupProvider.notifier)
+                                .requestAllPermissions();
+                          },
+                    type: SmoothButtonType.filled,
+                    isFullWidth: true,
+                    loading: setupState.isLoading,
+                    icon: const Icon(Icons.check_circle_outline, size: 20),
+                  ),
+                ),
+              ),
+
+            if (setupState.allPermissionsGranted)
+              SlideTransition(
+                position: _slideAnimation,
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.green.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.check_circle_rounded,
+                          color: Colors.green.shade600,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Все разрешения получены!',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: Colors.green.shade600,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
-                    child: Icon(
-                      Icons.verified_user_outlined,
-                      size: 48,
-                      color: colorScheme.onTertiary,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  Text(
-                    'Разрешения',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Для полноценной работы приложения\n'
-                    'нам нужны следующие разрешения',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const Spacer(),
-
-          // Список разрешений
-          SlideTransition(
-            position: _slideAnimation,
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: _buildPermissionsList(context, setupState),
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Кнопка запросить все
-          if (!setupState.allPermissionsGranted)
-            SlideTransition(
-              position: _slideAnimation,
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: SmoothButton(
-                  label: 'Разрешить все',
-                  onPressed: setupState.isLoading
-                      ? null
-                      : () {
-                          ref
-                              .read(setupProvider.notifier)
-                              .requestAllPermissions();
-                        },
-                  type: SmoothButtonType.filled,
-                  isFullWidth: true,
-                  loading: setupState.isLoading,
-                  icon: const Icon(Icons.check_circle_outline, size: 20),
-                ),
-              ),
-            ),
-
-          if (setupState.allPermissionsGranted)
-            SlideTransition(
-              position: _slideAnimation,
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.green.withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.check_circle_rounded,
-                        color: Colors.green.shade600,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Все разрешения получены!',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: Colors.green.shade600,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
                   ),
                 ),
               ),
-            ),
 
-          const Spacer(flex: 2),
-        ],
+            const SizedBox(height: 100),
+          ],
+        ),
       ),
     );
   }

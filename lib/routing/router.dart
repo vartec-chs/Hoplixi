@@ -19,7 +19,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = ref.watch(routerRefreshNotifierProvider.notifier);
 
   final router = GoRouter(
-    initialLocation: AppRoutesPaths.home,
+    initialLocation: '/',
     navigatorKey: navigatorKey,
 
     observers: [LoggingRouteObserver(), RootOverlayObserver.instance],
@@ -33,12 +33,19 @@ final routerProvider = Provider<GoRouter>((ref) {
           ]
         : appRoutes,
 
-    redirect: (context, state) {
+    redirect: (context, state) async {
       final currentPath = state.matchedLocation;
 
       // Проверяем, завершена ли первоначальная настройка
-      final setupCompletedAsync = ref.read(setupCompletedNotifierProvider);
-      final setupCompleted = setupCompletedAsync.value ?? true;
+      final setupCompletedAsync = await ref.read(
+        setupCompletedNotifierProvider.future,
+      );
+      final setupCompleted = setupCompletedAsync;
+
+      // Если на корневом пути - редиректим в зависимости от состояния setup
+      if (currentPath == '/') {
+        return setupCompleted ? AppRoutesPaths.home : AppRoutesPaths.setup;
+      }
 
       // Если настройка не завершена и мы не на экране setup — редирект
       if (!setupCompleted && currentPath != AppRoutesPaths.setup) {

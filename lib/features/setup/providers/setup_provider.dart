@@ -75,6 +75,7 @@ class SetupNotifier extends Notifier<SetupState> {
     Permission.camera,
     Permission.storage,
     Permission.photos,
+    Permission.manageExternalStorage,
   ];
 
   @override
@@ -85,7 +86,8 @@ class SetupNotifier extends Notifier<SetupState> {
     // Определяем количество страниц в зависимости от платформы
     final totalPages = UniversalPlatform.isDesktop ? 3 : 4;
 
-    _initializeState();
+    // Отложенная инициализация после возврата начального состояния
+    Future.microtask(() => _initializeState());
 
     return SetupState(totalPages: totalPages);
   }
