@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/features/setup/providers/setup_completed_provider.dart';
 import 'package:hoplixi/global_key.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -33,12 +34,27 @@ final routerProvider = Provider<GoRouter>((ref) {
         : appRoutes,
 
     redirect: (context, state) {
+      final currentPath = state.matchedLocation;
+
+      // Проверяем, завершена ли первоначальная настройка
+      final setupCompletedAsync = ref.read(setupCompletedNotifierProvider);
+      final setupCompleted = setupCompletedAsync.value ?? true;
+
+      // Если настройка не завершена и мы не на экране setup — редирект
+      if (!setupCompleted && currentPath != AppRoutesPaths.setup) {
+        return AppRoutesPaths.setup;
+      }
+
+      // Если настройка завершена, но мы на экране setup — редирект на home
+      if (setupCompleted && currentPath == AppRoutesPaths.setup) {
+        return AppRoutesPaths.home;
+      }
+
       final dbStateAsync = ref.read(mainStoreProvider);
 
       // Редирект на dashboard если БД открыта и пользователь на пути создания/открытия БД
       if (dbStateAsync.hasValue) {
         final dbState = dbStateAsync.value!;
-        final currentPath = state.matchedLocation;
 
         // Если БД заблокирована, редиректим на экран блокировки
         if (dbState.isLocked) {

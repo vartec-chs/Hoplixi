@@ -33,6 +33,13 @@ class AppKeys {
     isHiddenUI: true,
   );
 
+  static const setupCompleted = AppKey<bool>(
+    'setup_completed',
+    category: PrefCategory.system,
+    editable: false,
+    isHiddenUI: true,
+  );
+
   // ==================== Настройки безопасности ====================
 
   static const autoLockTimeout = AppKey<int>(
@@ -41,9 +48,6 @@ class AppKeys {
     editable: true,
     isHiddenUI: false,
   );
-
- 
-  
 
   // ==================== Настройки синхронизации ====================
 
@@ -77,9 +81,6 @@ class AppKeys {
     isHiddenUI: false,
   );
 
-  
-
-  
   // ==================== Защищённые ключи (SecureStorage) ====================
 
   /// Включена ли биометрия (требует подтверждения биометрией при изменении)
@@ -91,13 +92,6 @@ class AppKeys {
     isProtected: true,
     biometricProtect: true,
   );
-
-  
-
-
-
-
-  
 
   /// PIN код (защищённое хранилище, требует подтверждения биометрией)
   static const pinCode = AppKey<String>(
@@ -125,9 +119,10 @@ class AppKeys {
       themeMode,
       language,
       isFirstLaunch,
+      setupCompleted,
       autoLockTimeout,
       biometricEnabled,
-     
+
       autoSyncEnabled,
       lastSyncTime,
       autoBackupEnabled,

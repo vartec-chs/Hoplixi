@@ -22,6 +22,7 @@ import 'package:hoplixi/features/password_manager/open_store/open_store_screen.d
 import 'package:hoplixi/features/password_manager/tags_manager/tag_form_screen.dart';
 import 'package:hoplixi/features/password_manager/tags_manager/tags_manager_screen.dart';
 import 'package:hoplixi/features/settings/screens/settings_screen.dart';
+import 'package:hoplixi/features/setup/screens/setup_screen.dart';
 import 'package:hoplixi/global_key.dart';
 import 'package:hoplixi/routing/paths.dart';
 
@@ -29,6 +30,10 @@ final List<RouteBase> appRoutes = [
   GoRoute(
     path: AppRoutesPaths.splash,
     builder: (context, state) => const BaseScreen(title: 'Splash Screen'),
+  ),
+  GoRoute(
+    path: AppRoutesPaths.setup,
+    builder: (context, state) => const SetupScreen(),
   ),
   GoRoute(
     path: AppRoutesPaths.home,
