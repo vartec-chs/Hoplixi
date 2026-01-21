@@ -75,6 +75,8 @@ class SetupNotifier extends Notifier<SetupState> {
     Permission.camera,
     Permission.storage,
     Permission.photos,
+    Permission.videos,
+    Permission.audio,
     Permission.manageExternalStorage,
   ];
 

@@ -59,7 +59,7 @@ class _ThemeSelectionPageState extends ConsumerState<ThemeSelectionPage>
     final setupState = ref.watch(setupProvider);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
