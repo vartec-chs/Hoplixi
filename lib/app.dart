@@ -78,7 +78,7 @@ class _AppState extends ConsumerState<App> with TrayListener {
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
-    final theme = ref.read(themeProvider);
+    final theme = ref.watch(themeProvider);
 
     final themeMode = theme.value ?? ThemeMode.system;
 
@@ -93,10 +93,7 @@ class _AppState extends ConsumerState<App> with TrayListener {
             : AppTheme.light(context),
         child: MaterialApp.router(
           title: MainConstants.appName,
-          theme: AppTheme.light(context),
-          darkTheme: AppTheme.dark(context),
           routerConfig: router,
-          // themeMode: themeMode,
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,

@@ -1,5 +1,9 @@
+import 'package:animated_theme_switcher/animated_theme_switcher.dart'
+    as animated_theme;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/core/theme/theme.dart';
+import 'package:hoplixi/core/theme/theme_provider.dart';
 import 'package:hoplixi/features/setup/providers/setup_provider.dart';
 
 /// Страница выбора темы приложения
@@ -112,6 +116,18 @@ class _ThemeSelectionPageState extends ConsumerState<ThemeSelectionPage>
   }
 
   Widget _buildThemeOptions(BuildContext context, SetupState setupState) {
+    return animated_theme.ThemeSwitcher.switcher(
+      builder: (context, switcher) {
+        return _buildThemeList(context, setupState, switcher);
+      },
+    );
+  }
+
+  Widget _buildThemeList(
+    BuildContext context,
+    SetupState setupState,
+    dynamic switcher,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -151,8 +167,47 @@ class _ThemeSelectionPageState extends ConsumerState<ThemeSelectionPage>
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: () {
-                  ref.read(setupProvider.notifier).setTheme(themeOption.$1);
+                onTap: () async {
+                  final selectedTheme = themeOption.$1;
+
+                  // Определяем новую тему
+                  final newTheme = selectedTheme == ThemeMode.light
+                      ? AppTheme.light(context)
+                      : selectedTheme == ThemeMode.dark
+                      ? AppTheme.dark(context)
+                      : MediaQuery.of(context).platformBrightness ==
+                            Brightness.dark
+                      ? AppTheme.dark(context)
+                      : AppTheme.light(context);
+
+                  // Определяем направление анимации
+                  final currentIsDark =
+                      setupState.selectedTheme == ThemeMode.dark ||
+                      (setupState.selectedTheme == ThemeMode.system &&
+                          MediaQuery.of(context).platformBrightness ==
+                              Brightness.dark);
+                  final isReversed =
+                      currentIsDark && selectedTheme != ThemeMode.dark;
+
+                  // Анимируем переход темы
+                  switcher.changeTheme(theme: newTheme, isReversed: isReversed);
+
+                  // Обновляем состояние setup
+                  ref.read(setupProvider.notifier).setTheme(selectedTheme);
+
+                  // Обновляем глобальную тему
+                  final themeNotifier = ref.read(themeProvider.notifier);
+                  switch (selectedTheme) {
+                    case ThemeMode.light:
+                      await themeNotifier.setLightTheme();
+                      break;
+                    case ThemeMode.dark:
+                      await themeNotifier.setDarkTheme();
+                      break;
+                    case ThemeMode.system:
+                      await themeNotifier.setSystemTheme();
+                      break;
+                  }
                 },
                 borderRadius: BorderRadius.circular(20),
                 child: AnimatedContainer(
