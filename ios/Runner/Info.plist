@@ -85,5 +85,14 @@
 	<string>This app needs access to Siri</string>
 	<key>NSAppleMusicUsageDescription</key>
 	<string>This app needs access to your music library</string>
+	<key>UISupportsDocumentBrowser</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>

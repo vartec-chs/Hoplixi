@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.hoplixi"
-    compileSdk = 35
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -17,6 +17,7 @@ android {
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
+        freeCompilerArgs += listOf("-Xsuppress-version-warnings")
     }
 
     defaultConfig {
@@ -30,6 +31,16 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("${rootProject.projectDir}/../debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
@@ -40,7 +51,8 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.github.prongbang:screen-protector:1.0.1")
 }
 
 flutter {

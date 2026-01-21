@@ -29,6 +29,10 @@
   `tools:replace` для разрешения конфликтов. Файл `res/xml/filepaths.xml`
   создан. Entitlement `com.apple.security.files.user-selected.read-only` для
   macOS.
+- **file_picker**: `use_frameworks!` в `Podfile`. Ключи `UIBackgroundModes`,
+  `NSAppleMusicUsageDescription`, `UISupportsDocumentBrowser`,
+  `LSSupportsOpeningDocumentsInPlace` в `Info.plist`. Entitlement
+  `com.apple.security.files.user-selected.read-only` для macOS.
 
 ## Библиотеки, не требующие платформенных изменений
 
@@ -62,7 +66,6 @@
 - animations
 - path
 - path_provider
-- file_picker
 - flutter_dotenv
 - get_it
 - flutter_launcher_icons

@@ -58,3 +58,4 @@ app.*.map.json
 log.txt
 
 .VSCodeCounter
+debug.keystore

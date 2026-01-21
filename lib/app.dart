@@ -13,6 +13,7 @@ import 'package:hoplixi/routing/router.dart';
 import 'package:hoplixi/setup_tray.dart';
 import 'package:hoplixi/shared/widgets/desktop_shell.dart';
 import 'package:tray_manager/tray_manager.dart';
+import 'package:universal_platform/universal_platform.dart';
 
 class App extends ConsumerStatefulWidget {
   const App({super.key});
@@ -103,7 +104,9 @@ class _AppState extends ConsumerState<App> with TrayListener {
           debugShowCheckedModeBanner: false,
           builder: (context, child) {
             return animated_theme.ThemeSwitchingArea(
-              child: RootBarsOverlay(child: child!),
+              child: UniversalPlatform.isDesktop
+                  ? RootBarsOverlay(child: child!)
+                  : child!,
             );
           },
         ),
