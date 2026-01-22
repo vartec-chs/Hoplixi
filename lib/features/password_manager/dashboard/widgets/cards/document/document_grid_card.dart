@@ -17,6 +17,7 @@ class DocumentGridCard extends ConsumerStatefulWidget {
   final VoidCallback? onToggleArchive;
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
+  final VoidCallback? onDecrypt;
 
   const DocumentGridCard({
     super.key,
@@ -27,6 +28,7 @@ class DocumentGridCard extends ConsumerStatefulWidget {
     this.onToggleArchive,
     this.onDelete,
     this.onRestore,
+    this.onDecrypt,
   });
 
   @override
@@ -202,6 +204,30 @@ class _DocumentGridCardState extends ConsumerState<DocumentGridCard>
 
                       if (!document.isDeleted) ...[
                         const SizedBox(height: 8),
+                        // Кнопка расшифровки
+                        if (widget.onDecrypt != null)
+                          FadeTransition(
+                            opacity: _iconsAnimation,
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton.icon(
+                                onPressed: widget.onDecrypt,
+                                icon: const Icon(Icons.lock_open, size: 16),
+                                label: const Text(
+                                  'Расшифровать',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 8,
+                                  ),
+                                  minimumSize: Size.zero,
+                                ),
+                              ),
+                            ),
+                          ),
+                        SizedBox(height: isMobile ? 3 : 4),
                         FadeTransition(
                           opacity: _iconsAnimation,
                           child: Row(

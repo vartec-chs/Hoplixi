@@ -18,6 +18,7 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/otp/ot
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/otp/otp_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/password/password_grid.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/password/password_list_card.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/modals/document_decrypt_modal.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/modals/file_decrypt_modal.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -647,6 +648,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onDecrypt: () => showDocumentDecryptModal(context, item),
           onOpenHistory: () => {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -905,6 +907,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onDecrypt: () => showDocumentDecryptModal(context, item),
         );
     }
   }

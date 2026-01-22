@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/main_store/models/dto/document_dto.dart';
+import 'package:hoplixi/shared/ui/button.dart';
 
 class DocumentListCard extends ConsumerStatefulWidget {
   final DocumentCardDto document;
@@ -12,6 +13,7 @@ class DocumentListCard extends ConsumerStatefulWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
   final VoidCallback? onOpenHistory;
+  final VoidCallback? onDecrypt;
 
   const DocumentListCard({
     super.key,
@@ -23,6 +25,7 @@ class DocumentListCard extends ConsumerStatefulWidget {
     this.onDelete,
     this.onRestore,
     this.onOpenHistory,
+    this.onDecrypt,
   });
 
   @override
@@ -327,6 +330,21 @@ class _DocumentListCardState extends ConsumerState<DocumentListCard>
             ),
 
             const SizedBox(height: 8),
+
+            // Кнопка расшифровки
+            if (!document.isDeleted && widget.onDecrypt != null) ...[
+              SizedBox(
+                width: double.infinity,
+                child: SmoothButton(
+                  onPressed: widget.onDecrypt,
+                  icon: const Icon(Icons.lock_open, size: 18),
+                  label: 'Расшифровать страницы',
+                  size: .small,
+                  type: .outlined,
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
 
             // Кнопки действий
             CardActionButtons(

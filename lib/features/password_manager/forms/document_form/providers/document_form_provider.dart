@@ -5,9 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
+import 'package:hoplixi/main_store/dao/index.dart';
 import 'package:hoplixi/main_store/models/dto/document_dto.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/main_store/provider/service_providers.dart';
+import 'package:hoplixi/main_store/services/index.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 
@@ -326,7 +328,7 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
   }
 
   /// Создать новый документ
-  Future<bool> _createDocument(dynamic documentService) async {
+  Future<bool> _createDocument(DocumentStorageService documentService) async {
     final newPages = state.pages
         .where((p) => p.isNew && p.file != null)
         .toList();
@@ -370,7 +372,10 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
   }
 
   /// Обновить существующий документ
-  Future<bool> _updateDocument(dynamic dao, dynamic documentService) async {
+  Future<bool> _updateDocument(
+    DocumentDao dao,
+    DocumentStorageService documentService,
+  ) async {
     final documentId = state.editingDocumentId!;
 
     // Обновляем метаданные документа
