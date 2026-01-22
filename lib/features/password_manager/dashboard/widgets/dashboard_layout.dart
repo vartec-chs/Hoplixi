@@ -483,20 +483,46 @@ class _DashboardLayoutState extends State<DashboardLayout>
               const VerticalDivider(width: 1, thickness: 1),
 
               // Левая панель фильтрации (DashboardDrawerContent) для экранов >= 1000px
+              // Анимируется в противофазе с правой панелью
               if (showDrawerAsPanel && !isFullCenter)
-                SizedBox(
-                  width: kLeftPanelWidth,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        right: BorderSide(
-                          color: Theme.of(context).dividerColor,
-                          width: 1,
+                RepaintBoundary(
+                  child: AnimatedBuilder(
+                    animation: _controller,
+                    builder: (context, child) {
+                      // Левая панель сворачивается когда правая открывается
+                      // При _controller.value = 0 (панель закрыта) -> width = kLeftPanelWidth
+                      // При _controller.value = 1 (панель открыта) -> width = 0
+                      final leftPanelWidthAnimated =
+                          kLeftPanelWidth * (1.0 - _controller.value);
+                      return SizedBox(
+                        width: leftPanelWidthAnimated,
+                        child: ClipRect(
+                          child: OverflowBox(
+                            alignment: Alignment.centerLeft,
+                            minWidth: kLeftPanelWidth,
+                            maxWidth: kLeftPanelWidth,
+                            child: AnimatedOpacity(
+                              opacity: 1.0 - _controller.value,
+                              duration: kOpacityAnimationDuration,
+                              child: child,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: kLeftPanelWidth,
+                      decoration: BoxDecoration(
+                        border: Border(
+                          right: BorderSide(
+                            color: Theme.of(context).dividerColor,
+                            width: 1,
+                          ),
                         ),
                       ),
-                    ),
-                    child: DashboardDrawerContent(
-                      entityType: EntityType.fromId(entity)!,
+                      child: DashboardDrawerContent(
+                        entityType: EntityType.fromId(entity)!,
+                      ),
                     ),
                   ),
                 ),
@@ -561,9 +587,10 @@ class _DashboardLayoutState extends State<DashboardLayout>
                       // Вычисляем доступное пространство для центра и правой панели
                       const railWidth =
                           kRailWidth; // примерная ширина NavigationRail
+                      // Левая панель анимируется в противофазе
                       final leftPanelWidth =
                           (showDrawerAsPanel && !isFullCenter)
-                          ? kLeftPanelWidth
+                          ? kLeftPanelWidth * (1.0 - _controller.value)
                           : 0.0;
                       final availableWidth =
                           constraints.maxWidth -
@@ -571,23 +598,35 @@ class _DashboardLayoutState extends State<DashboardLayout>
                           leftPanelWidth -
                           kDividerWidth; // -2 для dividers
 
+                      final rightPanelMaxWidth = availableWidth * 0.5;
+                      final rightPanelWidthAnimated =
+                          rightPanelMaxWidth * _controller.value;
+
                       return SizedBox(
-                        width: availableWidth * 0.5 * _controller.value,
+                        width: rightPanelWidthAnimated,
                         child: ClipRect(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surface,
-                              border: Border(
-                                left: BorderSide(
-                                  color: Theme.of(context).dividerColor,
-                                  width: 1,
+                          child: OverflowBox(
+                            alignment: Alignment.centerLeft,
+                            minWidth: rightPanelMaxWidth,
+                            maxWidth: rightPanelMaxWidth,
+                            child: Container(
+                              width: rightPanelMaxWidth,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surface,
+                                border: Border(
+                                  left: BorderSide(
+                                    color: Theme.of(context).dividerColor,
+                                    width: 1,
+                                  ),
                                 ),
                               ),
-                            ),
-                            child: AnimatedOpacity(
-                              opacity: _controller.value,
-                              duration: kOpacityAnimationDuration,
-                              child: hasPanel ? child : const SizedBox.shrink(),
+                              child: AnimatedOpacity(
+                                opacity: _controller.value,
+                                duration: kOpacityAnimationDuration,
+                                child: hasPanel
+                                    ? child
+                                    : const SizedBox.shrink(),
+                              ),
                             ),
                           ),
                         ),
