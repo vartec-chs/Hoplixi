@@ -45,6 +45,9 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
       final tagDao = await ref.read(tagDaoProvider.future);
       final tagRecords = await tagDao.getTagsByIds(tagIds);
 
+      final otpDao = await ref.read(otpDaoProvider.future);
+      final linkedOtp = await otpDao.getOtpByPasswordId(passwordId);
+
       state = PasswordFormState(
         isEditMode: true,
         editingPasswordId: passwordId,
@@ -56,10 +59,12 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
         description: password.description ?? '',
         noteId: password.noteId,
         categoryId: password.categoryId,
-
-        // categoryName: ..., // TODO: Получить имя категории
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
+        otpId: linkedOtp?.id,
+        otpName: linkedOtp != null
+            ? (linkedOtp.issuer ?? linkedOtp.accountName)
+            : null,
         isLoading: false,
       );
     } catch (e, stack) {
@@ -115,6 +120,11 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
   /// Обновить поле noteId
   void setNoteId(String? value) {
     state = state.copyWith(noteId: value);
+  }
+
+  /// Обновить поле otpId
+  void setOtp(String? otpId, String? otpName) {
+    state = state.copyWith(otpId: otpId, otpName: otpName);
   }
 
   /// Обновить категорию
@@ -252,6 +262,7 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
 
         if (success) {
           await dao.syncPasswordTags(state.editingPasswordId!, state.tagIds);
+          await _updateOtpLink(state.editingPasswordId!);
 
           logInfo('Password updated: ${state.editingPasswordId}', tag: _logTag);
           state = state.copyWith(isSaving: false, isSaved: true);
@@ -290,6 +301,7 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
         );
 
         final passwordId = await dao.createPassword(dto);
+        await _updateOtpLink(passwordId);
 
         logInfo('Password created: $passwordId', tag: _logTag);
         state = state.copyWith(isSaving: false, isSaved: true);
@@ -316,5 +328,28 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
   /// Сбросить флаг сохранения
   void resetSaved() {
     state = state.copyWith(isSaved: false);
+  }
+
+  /// Обновить привязку OTP
+  Future<void> _updateOtpLink(String passwordId) async {
+    try {
+      final otpDao = await ref.read(otpDaoProvider.future);
+      // 1. Найти текущие привязки
+      final currentLinkedOtps = await otpDao.getOtpsByPasswordId(passwordId);
+
+      // 2. Отвязать лишние
+      for (final otp in currentLinkedOtps) {
+        if (otp.id != state.otpId) {
+          await otpDao.updateOtpLink(otp.id, null);
+        }
+      }
+
+      // 3. Привязать новый
+      if (state.otpId != null) {
+        await otpDao.updateOtpLink(state.otpId!, passwordId);
+      }
+    } catch (e) {
+      logError('Failed to update OTP link', error: e, tag: _logTag);
+    }
   }
 }

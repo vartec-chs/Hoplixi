@@ -5,6 +5,7 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/category_manager/features/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_button.dart';
 import 'package:hoplixi/features/password_manager/note_picker/note_picker_field.dart';
+import 'package:hoplixi/features/password_manager/otp_picker/otp_picker_field.dart';
 import 'package:hoplixi/features/password_manager/tags_manager/features/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
@@ -34,6 +35,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
   late final TextEditingController _descriptionController;
 
   String? _noteName;
+  String? _otpName;
 
   bool _obscurePassword = true;
 
@@ -75,6 +77,14 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
     final note = await dao.getNoteById(noteId);
     if (mounted) {
       setState(() => _noteName = note?.title);
+    }
+  }
+
+  Future<void> _loadOtpName(String otpId) async {
+    final dao = await ref.read(otpDaoProvider.future);
+    final otp = await dao.getOtpById(otpId);
+    if (mounted) {
+      setState(() => _otpName = otp?.issuer ?? otp?.accountName);
     }
   }
 
@@ -123,6 +133,15 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
         _loadNoteName(next.noteId!);
       } else if (next.noteId == null) {
         setState(() => _noteName = null);
+      }
+    });
+
+    // Загрузка имени OTP
+    ref.listen(passwordFormProvider, (prev, next) {
+      if (next.otpId != null && next.otpId != prev?.otpId) {
+        _loadOtpName(next.otpId!);
+      } else if (next.otpId == null) {
+        setState(() => _otpName = null);
       }
     });
 
@@ -313,6 +332,18 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                             ref
                                 .read(passwordFormProvider.notifier)
                                 .setDescription(value);
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // OTP
+                        OtpPickerField(
+                          selectedOtpId: state.otpId,
+                          selectedOtpName: _otpName,
+                          onOtpSelected: (otpId, otpName) {
+                            ref
+                                .read(passwordFormProvider.notifier)
+                                .setOtp(otpId, otpName);
                           },
                         ),
                         const SizedBox(height: 16),

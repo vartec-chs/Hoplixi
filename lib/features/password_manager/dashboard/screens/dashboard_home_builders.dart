@@ -260,7 +260,7 @@ class DashboardHomeBuilders {
     required DashboardCardCallbacks callbacks,
   }) {
     return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       sliver: SliverAnimatedList(
         key: listKey,
         initialItemCount: displayedItems.length,
@@ -290,7 +290,7 @@ class DashboardHomeBuilders {
     required DashboardCardCallbacks callbacks,
   }) {
     return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       sliver: SliverAnimatedGrid(
         key: gridKey,
         initialItemCount: displayedItems.length,

@@ -51,6 +51,16 @@ This document describes the schema of all tables in the Hoplixi database.
 | recentScore        | Real     | nullable              | EWMA snapshot                             |
 | lastUsedAt         | DateTime | nullable              | Last used snapshot                        |
 | isDeleted          | Bool     | default: false        | Deleted flag snapshot                     |
+| otpId              | Text     | nullable              | ID of associated OTP                      |
+| otpType            | Text     | nullable              | Type: TOTP or HOTP                        |
+| otpIssuer          | Text     | nullable              | Service name                              |
+| otpAccountName     | Text     | nullable              | Account identifier                        |
+| otpSecret          | Blob     | nullable              | Encrypted OTP secret                      |
+| otpSecretEncoding  | Text     | nullable              | Encoding of the secret                    |
+| otpAlgorithm       | Text     | nullable              | HMAC algorithm                            |
+| otpDigits          | Int      | nullable              | Number of digits in OTP code              |
+| otpPeriod          | Int      | nullable              | Time period in seconds for TOTP           |
+| otpCounter         | Int      | nullable              | Counter for HOTP                          |
 | originalCreatedAt  | DateTime | nullable              | Original creation time                    |
 | originalModifiedAt | DateTime | nullable              | Original modification time                |
 | originalLastUsedAt | DateTime | nullable              | Original last used time                   |

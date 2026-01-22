@@ -35,6 +35,20 @@ class PasswordsHistory extends Table {
       dateTime().nullable()(); // Last used snapshot
   BoolColumn get isDeleted =>
       boolean().withDefault(const Constant(false))(); // Soft delete flag
+
+  // OTP fields snapshot
+  TextColumn get otpId => text().nullable()(); // ID of associated OTP
+  TextColumn get otpType =>
+      textEnum<OtpType>().nullable()(); // Type: TOTP or HOTP
+  TextColumn get otpIssuer => text().nullable()(); // Service name
+  TextColumn get otpAccountName => text().nullable()(); // Account identifier
+  BlobColumn get otpSecret => blob().nullable()();
+  TextColumn get otpSecretEncoding => textEnum<SecretEncoding>().nullable()();
+  TextColumn get otpAlgorithm => textEnum<AlgorithmOtp>().nullable()();
+  IntColumn get otpDigits => integer().nullable()();
+  IntColumn get otpPeriod => integer().nullable()();
+  IntColumn get otpCounter => integer().nullable()();
+
   DateTimeColumn get originalCreatedAt => dateTime().nullable()();
   DateTimeColumn get originalModifiedAt => dateTime().nullable()();
   DateTimeColumn get originalLastUsedAt => dateTime().nullable()();

@@ -27,6 +27,26 @@ class OtpDao extends DatabaseAccessor<MainStore>
     return (select(otps)..where((o) => o.id.equals(id))).getSingleOrNull();
   }
 
+  /// Получить OTP по ID пароля
+  Future<OtpsData?> getOtpByPasswordId(String passwordId) {
+    return (select(
+      otps,
+    )..where((o) => o.passwordId.equals(passwordId))).getSingleOrNull();
+  }
+
+  /// Получить список OTP по ID пароля (для проверки дубликатов)
+  Future<List<OtpsData>> getOtpsByPasswordId(String passwordId) {
+    return (select(otps)..where((o) => o.passwordId.equals(passwordId))).get();
+  }
+
+  /// Обновить привязку OTP к паролю
+  Future<bool> updateOtpLink(String otpId, String? passwordId) async {
+    final result = await (update(otps)..where((o) => o.id.equals(otpId))).write(
+      OtpsCompanion(passwordId: Value(passwordId)),
+    );
+    return result > 0;
+  }
+
   // toggle favorite
   @override
   Future<bool> toggleFavorite(String id, bool isFavorite) async {

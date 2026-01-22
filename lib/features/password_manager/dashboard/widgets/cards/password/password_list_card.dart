@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
+import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:otp/otp.dart';
 
 /// Карточка пароля для режима списка (переписана с shared компонентами)
 class PasswordListCard extends ConsumerStatefulWidget {
@@ -40,11 +44,20 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
   bool _passwordCopied = false;
   bool _loginCopied = false;
   bool _urlCopied = false;
+  bool _isLoadingOtp = false;
+  bool _codeCopied = false;
 
   late final AnimationController _expandController;
   late final Animation<double> _expandAnimation;
   late final AnimationController _iconsController;
   late final Animation<double> _iconsAnimation;
+
+  // TOTP state
+  OtpsData? _linkedOtp;
+  Uint8List? _secret;
+  String? _currentCode;
+  int _remainingSeconds = 0;
+  Timer? _totpTimer;
 
   @override
   void initState() {
@@ -70,6 +83,7 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
 
   @override
   void dispose() {
+    _stopTimerAndCleanupOtp();
     _expandController.dispose();
     _iconsController.dispose();
     super.dispose();
@@ -80,12 +94,137 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
     if (_isExpanded) {
       _expandController.forward();
       _iconsController.forward();
+      _checkAndLoadOtp();
     } else {
       _expandController.reverse();
       if (!_isHovered) {
         _iconsController.reverse();
       }
+      _stopTimerAndCleanupOtp();
     }
+  }
+
+  Future<void> _checkAndLoadOtp() async {
+    setState(() => _isLoadingOtp = true);
+
+    try {
+      final otpDao = await ref.read(otpDaoProvider.future);
+      final otp = await otpDao.getOtpByPasswordId(widget.password.id);
+
+      if (otp != null && mounted) {
+        _linkedOtp = otp;
+        final secretBytes = await otpDao.getOtpSecretById(otp.id);
+
+        if (secretBytes != null && mounted) {
+          setState(() {
+            _secret = secretBytes;
+          });
+          _generateCode();
+          _startTimer();
+        }
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print('Error loading OTP for password: $e');
+    } finally {
+      if (mounted) setState(() => _isLoadingOtp = false);
+    }
+  }
+
+  void _stopTimerAndCleanupOtp() {
+    _totpTimer?.cancel();
+    _totpTimer = null;
+    // Очищаем секрет
+    if (_secret != null) {
+      for (int i = 0; i < _secret!.length; i++) {
+        _secret![i] = 0;
+      }
+      _secret = null;
+    }
+    _currentCode = null;
+    _linkedOtp = null;
+    _remainingSeconds = 0;
+  }
+
+  void _startTimer() {
+    _totpTimer?.cancel();
+    if (_linkedOtp == null) return;
+
+    _updateRemainingSeconds();
+
+    _totpTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted || !_isExpanded) {
+        timer.cancel();
+        return;
+      }
+
+      _updateRemainingSeconds();
+
+      if (_remainingSeconds == _linkedOtp!.period || _remainingSeconds == 0) {
+        _generateCode();
+      }
+    });
+  }
+
+  void _updateRemainingSeconds() {
+    if (_linkedOtp == null) return;
+    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final period = _linkedOtp!.period;
+    setState(() {
+      _remainingSeconds = period - (now % period);
+    });
+  }
+
+  void _generateCode() {
+    if (_secret == null || _linkedOtp == null) return;
+
+    try {
+      final secretBase32 = String.fromCharCodes(_secret!);
+
+      final code = OTP.generateTOTPCodeString(
+        secretBase32,
+        DateTime.now().millisecondsSinceEpoch,
+        length: _linkedOtp!.digits,
+        interval: _linkedOtp!.period,
+        isGoogle: true,
+        algorithm: Algorithm.SHA1,
+      );
+
+      setState(() {
+        _currentCode = code;
+      });
+    } catch (e) {
+      // ignore: avoid_print
+      print('Error generating TOTP code: $e');
+    }
+  }
+
+  Future<void> _copyCode() async {
+    if (_currentCode == null) return;
+
+    await Clipboard.setData(ClipboardData(text: _currentCode!));
+    setState(() => _codeCopied = true);
+    Toaster.success(title: 'Код скопирован');
+
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _codeCopied = false);
+    });
+
+    // Инкрементируем использование связанного OTP
+    if (_linkedOtp != null) {
+      final otpDao = await ref.read(otpDaoProvider.future);
+      await otpDao.incrementUsage(_linkedOtp!.id);
+    }
+  }
+
+  String _formatCode(String code) {
+    if (code.length <= 3) return code;
+    final buffer = StringBuffer();
+    for (int i = 0; i < code.length; i++) {
+      if (i > 0 && i % 3 == 0) buffer.write(' ');
+      buffer.write(code[i]);
+    }
+    return buffer.toString();
   }
 
   void _onHoverChanged(bool isHovered) {
@@ -432,6 +571,12 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
               const SizedBox(height: 12),
             ],
 
+            // TOTP Section
+            if (_linkedOtp != null || _isLoadingOtp) ...[
+              _buildTotpCodeSection(theme),
+              const SizedBox(height: 12),
+            ],
+
             // Кнопки копирования (горизонтальный скролл)
             HorizontalScrollableActions(actions: _buildCopyActions()),
 
@@ -459,6 +604,119 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTotpCodeSection(ThemeData theme) {
+    if (_isLoadingOtp && _linkedOtp == null) {
+      return const SizedBox(
+        height: 60,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_linkedOtp == null) return const SizedBox.shrink();
+
+    final progress = _remainingSeconds / _linkedOtp!.period;
+    final isLowTime = _remainingSeconds <= 5;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isLowTime
+              ? Colors.red.withOpacity(0.5)
+              : theme.colorScheme.outline.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.security, size: 16, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                'TOTP Code',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Spacer(),
+              if (_currentCode != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isLowTime
+                        ? Colors.red.withOpacity(0.1)
+                        : theme.colorScheme.primaryContainer.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${_remainingSeconds}с',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: isLowTime ? Colors.red : theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (_currentCode != null)
+            Row(
+              children: [
+                Text(
+                  _formatCode(_currentCode!),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2,
+                    color: isLowTime ? Colors.red : null,
+                  ),
+                ),
+                const Spacer(),
+                IconButton.filled(
+                  onPressed: _copyCode,
+                  icon: Icon(_codeCopied ? Icons.check : Icons.copy, size: 18),
+                  constraints: const BoxConstraints(
+                    minHeight: 32,
+                    minWidth: 32,
+                  ),
+                  padding: EdgeInsets.zero,
+                  style: IconButton.styleFrom(
+                    backgroundColor: _codeCopied
+                        ? Colors.green
+                        : theme.colorScheme.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  tooltip: 'Копировать код',
+                ),
+              ],
+            )
+          else
+            const Center(child: Text('Код недоступен')),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(2),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 4,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              valueColor: AlwaysStoppedAnimation(
+                isLowTime ? Colors.red : theme.colorScheme.primary,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

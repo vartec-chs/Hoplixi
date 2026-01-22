@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import 'categories.dart';
+import 'notes.dart';
 
 @DataClassName('DocumentsData')
 class Documents extends Table {
@@ -33,6 +34,9 @@ class Documents extends Table {
     #id,
     onDelete: KeyAction.setNull,
   )();
+
+  TextColumn get noteId =>
+      text().nullable().references(Notes, #id, onDelete: KeyAction.setNull)();
 
   /// UX-флаги
   BoolColumn get isFavorite => boolean().withDefault(const Constant(false))();

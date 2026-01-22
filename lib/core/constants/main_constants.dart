@@ -14,7 +14,7 @@ class MainConstants {
   static const bool isCenter = true;
 
   static const int databaseSchemaVersion = 1;
-  static const String dbExtension = '.hplxdb';
+  static const String dbExtension = '.hplx';
 
   // Минимальное количество использований для считания записи часто используемой
   static const int frequentlyUsedThreshold = 5;

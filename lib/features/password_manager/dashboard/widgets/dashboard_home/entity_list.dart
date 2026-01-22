@@ -193,7 +193,7 @@ class _EntitySliverListState<T extends BaseCardDto>
       );
     } else {
       return SliverPadding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         sliver: SliverAnimatedGrid(
           key: _gridKey,
           initialItemCount: _items.length,
