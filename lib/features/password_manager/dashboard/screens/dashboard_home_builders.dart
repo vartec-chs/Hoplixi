@@ -8,6 +8,8 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/current_vi
 import 'package:hoplixi/features/password_manager/dashboard/providers/list_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/bank_card/bank_card_grid.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/bank_card/bank_card_list_card.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/document/document_grid_card.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/document/document_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/file/file_grid_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/file/file_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/note/note_grid.dart';
@@ -636,6 +638,32 @@ class DashboardHomeBuilders {
           },
         );
         break;
+      case EntityType.document:
+        if (item is! DocumentCardDto) return noCorrectType;
+        card = DocumentListCard(
+          document: item,
+          onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
+          onOpenHistory: () => {
+            if (location !=
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.document,
+                  item.id,
+                ))
+              {
+                context.push(
+                  AppRoutesPaths.dashboardHistoryWithParams(
+                    EntityType.document,
+                    item.id,
+                  ),
+                ),
+              },
+          },
+        );
+        break;
     }
 
     if (!isDismissible) return card;
@@ -741,6 +769,14 @@ class DashboardHomeBuilders {
             if (GoRouter.of(context).state.matchedLocation != path) {
               context.push(path);
             }
+          } else if (item is DocumentCardDto) {
+            final path = AppRoutesPaths.dashboardEntityEdit(
+              EntityType.document,
+              item.id,
+            );
+            if (GoRouter.of(context).state.matchedLocation != path) {
+              context.push(path);
+            }
           }
 
           return false;
@@ -757,6 +793,8 @@ class DashboardHomeBuilders {
             itemName = item.accountName ?? 'OTP';
           } else if (item is FileCardDto) {
             itemName = item.name;
+          } else if (item is DocumentCardDto) {
+            itemName = item.title ?? 'Документ';
           }
 
           final shouldDelete = await showDialog<bool>(
@@ -851,6 +889,17 @@ class DashboardHomeBuilders {
         if (item is! OtpCardDto) return noCorrectType;
         return TotpGridCard(
           otp: item,
+          onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
+        );
+
+      case EntityType.document:
+        if (item is! DocumentCardDto) return noCorrectType;
+        return DocumentGridCard(
+          document: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
           onTogglePin: () => callbacks.onTogglePin(item.id),
           onToggleArchive: () => callbacks.onToggleArchive(item.id),

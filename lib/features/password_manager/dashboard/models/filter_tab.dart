@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'entity_type.dart';
 
 enum FilterTab {
@@ -50,6 +51,14 @@ enum FilterTab {
           FilterTab.delete,
         ];
       case EntityType.file:
+        return [
+          FilterTab.all,
+          FilterTab.favorites,
+          FilterTab.frequent,
+          FilterTab.archived,
+          FilterTab.delete,
+        ];
+      case EntityType.document:
         return [
           FilterTab.all,
           FilterTab.favorites,

@@ -364,5 +364,7 @@ TagType _convertEntityTypeToTagType(EntityType entityType) {
       return TagType.file;
     case EntityType.otp:
       return TagType.totp;
+    case EntityType.document:
+      return TagType.document;
   }
 }

@@ -1,5 +1,6 @@
 export 'bank_card_dao.dart';
 export 'category_dao.dart';
+export 'document_dao.dart';
 export 'file_dao.dart';
 export 'filters_dao/filters_dao.dart';
 export 'history_dao/bank_card_history_dao.dart';

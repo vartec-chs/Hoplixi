@@ -294,6 +294,8 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         return _fetchFileHistory(offset, searchQuery);
       case EntityType.otp:
         return _fetchOtpHistory(offset, searchQuery);
+      case EntityType.document:
+        throw UnimplementedError('Document history fetching not implemented');
     }
   }
 
@@ -458,6 +460,8 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
       case EntityType.otp:
         final dao = await ref.read(otpHistoryDaoProvider.future);
         return dao.countOtpHistoryByOriginalId(_params.entityId, searchQuery);
+      case EntityType.document:
+        throw UnimplementedError('Document history count not implemented');
     }
   }
 
@@ -479,6 +483,8 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
       case EntityType.otp:
         final dao = await ref.read(otpHistoryDaoProvider.future);
         return await dao.deleteOtpHistoryById(historyItemId) > 0;
+      case EntityType.document:
+        throw UnimplementedError('Document history deletion not implemented');
     }
   }
 
@@ -502,6 +508,8 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
       case EntityType.otp:
         final dao = await ref.read(otpHistoryDaoProvider.future);
         return await dao.deleteOtpHistoryByOtpId(_params.entityId) >= 0;
+      case EntityType.document:
+        throw UnimplementedError('Document history deletion not implemented');
     }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/forms/bank_card_form/screens/bank_card_form_screen.dart';
+import 'package:hoplixi/features/password_manager/forms/document_form/screens/document_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/file_form/screens/file_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/note_form/screens/note_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/otp_form/screens/otp_form_screen.dart';
@@ -38,6 +39,8 @@ class EntityAddEdit extends StatelessWidget {
         return FileFormScreen(fileId: id);
       case EntityType.otp:
         return OtpFormScreen(otpId: id);
+      case EntityType.document:
+        return DocumentFormScreen(documentId: id);
     }
   }
 }

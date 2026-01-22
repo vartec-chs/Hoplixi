@@ -15,6 +15,7 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import '../../models/entity_type.dart';
 import '../../providers/filter_providers/bank_cards_filter_provider.dart';
 import '../../providers/filter_providers/base_filter_provider.dart';
+import '../../providers/filter_providers/documents_filter_provider.dart';
 import '../../providers/filter_providers/files_filter_provider.dart';
 import '../../providers/filter_providers/notes_filter_provider.dart';
 import '../../providers/filter_providers/otp_filter_provider.dart';
@@ -30,6 +31,7 @@ class _InitialFilterValues {
   final OtpsFilter? otpsFilter;
   final BankCardsFilter? bankCardsFilter;
   final FilesFilter? filesFilter;
+  final DocumentsFilter? documentsFilter;
 
   _InitialFilterValues({
     required this.baseFilter,
@@ -38,6 +40,7 @@ class _InitialFilterValues {
     this.otpsFilter,
     this.bankCardsFilter,
     this.filesFilter,
+    this.documentsFilter,
   });
 }
 
@@ -202,6 +205,11 @@ class _FilterModalActions extends ConsumerWidget {
               .read(filesFilterProvider.notifier)
               .updateFilter(FilesFilter(base: emptyBaseFilter));
           break;
+        case EntityType.document:
+          ref
+              .read(documentsFilterProvider.notifier)
+              .updateFilter(DocumentsFilter(base: emptyBaseFilter));
+          break;
       }
 
       contentState.clearFields();
@@ -285,6 +293,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
   OtpsFilter? _localOtpsFilter;
   BankCardsFilter? _localBankCardsFilter;
   FilesFilter? _localFilesFilter;
+  DocumentsFilter? _localDocumentsFilter;
 
   // Типобезопасное хранение начальных значений для отката
   _InitialFilterValues? _initialValues;
@@ -322,6 +331,10 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
       case EntityType.file:
         _localFilesFilter = ref.read(filesFilterProvider);
         break;
+
+      case EntityType.document:
+        _localDocumentsFilter = ref.read(documentsFilterProvider);
+        break;
     }
 
     // Загружаем имена категорий и тегов в postFrameCallback
@@ -351,6 +364,14 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         _initialValues = _InitialFilterValues(
           baseFilter: baseFilter,
           passwordsFilter: passwordFilter,
+        );
+        break;
+
+      case EntityType.document:
+        final documentsFilter = ref.read(documentsFilterProvider);
+        _initialValues = _InitialFilterValues(
+          baseFilter: baseFilter,
+          documentsFilter: documentsFilter,
         );
         break;
 
@@ -566,6 +587,13 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
                     );
                   }
                   break;
+                case EntityType.document:
+                  if (_localDocumentsFilter != null) {
+                    _localDocumentsFilter = _localDocumentsFilter!.copyWith(
+                      base: updatedFilter,
+                    );
+                  }
+                  break;
               }
             });
             logDebug('FilterModal: Обновлены базовые фильтры локально');
@@ -649,11 +677,25 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
             logDebug('FilterModal: Обновлены фильтры файлов локально');
           },
         );
+
+      case EntityType.document:
+        return DocumentsFilterSection(
+          filter:
+              _localDocumentsFilter ?? DocumentsFilter(base: _localBaseFilter),
+          onFilterChanged: (updatedFilter) {
+            setState(() {
+              _localDocumentsFilter = updatedFilter;
+            });
+            logDebug('FilterModal: Обновлены фильтры документов локально');
+          },
+        );
     }
   }
 
   CategoryType _getCategoryType(EntityType entityType) {
     switch (entityType) {
+      case EntityType.document:
+        return CategoryType.document;
       case EntityType.password:
         return CategoryType.password;
       case EntityType.note:
@@ -669,6 +711,8 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
 
   TagType _getTagType(EntityType entityType) {
     switch (entityType) {
+      case EntityType.document:
+        return TagType.document;
       case EntityType.password:
         return TagType.password;
       case EntityType.note:
@@ -805,6 +849,17 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
             ref.read(filesFilterProvider.notifier).updateFilter(syncedFilter);
           }
           break;
+
+        case EntityType.document:
+          if (_localDocumentsFilter != null) {
+            final syncedFilter = _localDocumentsFilter!.copyWith(
+              base: _localBaseFilter,
+            );
+            ref
+                .read(documentsFilterProvider.notifier)
+                .updateFilter(syncedFilter);
+          }
+          break;
       }
 
       logInfo('FilterModal: Локальные фильтры успешно применены к провайдерам');
@@ -872,6 +927,14 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
                 .updateFilterDebounced(_initialValues!.filesFilter!);
           }
           break;
+
+        case EntityType.document:
+          if (_initialValues!.documentsFilter != null) {
+            ref
+                .read(documentsFilterProvider.notifier)
+                .updateFilterDebounced(_initialValues!.documentsFilter!);
+          }
+          break;
       }
 
       // Восстановление локального состояния
@@ -916,6 +979,10 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           break;
         case EntityType.file:
           _localFilesFilter = FilesFilter(base: _localBaseFilter);
+          break;
+
+        case EntityType.document:
+          _localDocumentsFilter = DocumentsFilter(base: _localBaseFilter);
           break;
       }
     });

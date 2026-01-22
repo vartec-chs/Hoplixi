@@ -7,7 +7,8 @@ enum EntityType {
   note('notes', 'Заметки', Icons.note),
   bankCard('bank_cards', 'Банковские карты', Icons.credit_card),
   file('files', 'Файлы', Icons.attach_file),
-  otp('otps', 'OTP/2FA', Icons.security);
+  otp('otps', 'OTP/2FA', Icons.security),
+  document('documents', 'Документы', Icons.description);
 
   const EntityType(this.id, this.label, this.icon);
 
@@ -64,6 +65,8 @@ extension EntityTypeX on EntityType {
         return TagType.file;
       case EntityType.otp:
         return TagType.totp;
+      case EntityType.document:
+        return TagType.document;
     }
   }
 
@@ -80,6 +83,8 @@ extension EntityTypeX on EntityType {
         return CategoryType.file;
       case EntityType.otp:
         return CategoryType.totp;
+      case EntityType.document:
+        return CategoryType.document;
     }
   }
 }

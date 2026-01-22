@@ -41,6 +41,7 @@ class PaginatedListNotifier
   ProviderSubscription<DataRefreshState>? _bankCardRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _fileRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _otpRefreshSubscription;
+  ProviderSubscription<DataRefreshState>? _documentRefreshSubscription;
 
   int get pageSize {
     // можно иметь разный pageSize для разных типов, если нужно
@@ -86,6 +87,19 @@ class PaginatedListNotifier
           },
         );
 
+        break;
+      case EntityType.document:
+        _documentRefreshSubscription = ref.listen<DataRefreshState>(
+          dataRefreshTriggerProvider,
+          (previous, next) {
+            if (_shouldHandleRefresh(next, EntityType.document)) {
+              logDebug(
+                'PaginatedListNotifier: Триггер обновления данных документов',
+              );
+              _resetAndLoad();
+            }
+          },
+        );
         break;
       case EntityType.note:
         _noteFilterSubscription = ref.listen(notesFilterProvider, (prev, next) {
@@ -188,6 +202,8 @@ class PaginatedListNotifier
     _fileRefreshSubscription = null;
     _otpRefreshSubscription?.close();
     _otpRefreshSubscription = null;
+    _documentRefreshSubscription?.close();
+    _documentRefreshSubscription = null;
   }
 
   /// Выбор DAO по type — вынеси в отдельную функцию/мапу
@@ -203,6 +219,8 @@ class PaginatedListNotifier
         return ref.read(fileFilterDaoProvider.future);
       case EntityType.otp:
         return ref.read(otpFilterDaoProvider.future);
+      case EntityType.document:
+        return ref.read(documentFilterDaoProvider.future);
     }
   }
 
@@ -219,6 +237,8 @@ class PaginatedListNotifier
         return ref.read(fileDaoProvider.future);
       case EntityType.otp:
         return ref.read(otpDaoProvider.future);
+      case EntityType.document:
+        return ref.read(documentDaoProvider.future);
     }
   }
 
@@ -293,6 +313,19 @@ class PaginatedListNotifier
           offset: offset,
         );
         return otpsFilter.copyWith(base: base);
+      case EntityType.document:
+        final documentsFilter = ref.read(documentsFilterProvider);
+        final base = documentsFilter.base.copyWith(
+          isFavorite: documentsFilter.base.isFavorite ?? tabFilter.isFavorite,
+          isArchived: documentsFilter.base.isArchived ?? tabFilter.isArchived,
+          isDeleted: documentsFilter.base.isDeleted ?? tabFilter.isDeleted,
+          isFrequentlyUsed:
+              tabFilter.isFrequentlyUsed ??
+              documentsFilter.base.isFrequentlyUsed,
+          limit: limit,
+          offset: offset,
+        );
+        return documentsFilter.copyWith(base: base);
     }
   }
 

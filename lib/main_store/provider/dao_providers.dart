@@ -97,3 +97,11 @@ final noteLinkDaoProvider = FutureProvider<NoteLinkDao>(
 final storeMetaDaoProvider = FutureProvider<StoreMetaDao>(
   (ref) => _ensureDao(ref, (store) => StoreMetaDao(store)),
 );
+
+final documentDaoProvider = FutureProvider<DocumentDao>(
+  (ref) => _ensureDao(ref, (store) => DocumentDao(store)),
+);
+
+final documentFilterDaoProvider = FutureProvider<DocumentFilterDao>(
+  (ref) => _ensureDao(ref, (store) => DocumentFilterDao(store)),
+);

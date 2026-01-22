@@ -3,6 +3,7 @@ import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_store/dao/bank_card_dao.dart';
 import 'package:hoplixi/main_store/dao/category_dao.dart';
+import 'package:hoplixi/main_store/dao/document_dao.dart';
 import 'package:hoplixi/main_store/dao/file_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/bank_card_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/file_history_dao.dart';
@@ -71,6 +72,7 @@ part 'main_store.g.dart';
     NoteFilterDao,
     OtpFilterDao,
     PasswordFilterDao,
+    DocumentDao,
   ],
 )
 class MainStore extends _$MainStore {

@@ -124,6 +124,8 @@ class EntityTypeFullDropdown extends StatelessWidget {
         return 'Защищенные файлы и документы';
       case EntityType.otp:
         return 'Коды двухфакторной аутентификации';
+      case EntityType.document:
+        return 'Сканированные и цифровые документы';
     }
   }
 

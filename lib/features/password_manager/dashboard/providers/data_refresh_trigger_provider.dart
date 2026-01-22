@@ -233,6 +233,13 @@ class DataRefreshHelper {
         .triggerEntityUpdate(EntityType.file);
   }
 
+  /// Обновляет данные документов
+  static void refreshDocuments(WidgetRef ref) {
+    ref
+        .read(dataRefreshTriggerProvider.notifier)
+        .triggerEntityUpdate(EntityType.document);
+  }
+
   /// Обновляет все данные
   static void refreshAll(WidgetRef ref) {
     ref.read(dataRefreshTriggerProvider.notifier).triggerRefreshAll();

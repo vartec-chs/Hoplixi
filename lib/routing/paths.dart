@@ -58,6 +58,11 @@ class AppRoutesPaths {
   static String fileAdd = '/dashboard/${EntityType.file.id}/add';
   static String fileEdit = '/dashboard/${EntityType.file.id}/edit/:id';
 
+  /// - documents
+  static String documents = '/dashboard/${EntityType.document.id}';
+  static String documentAdd = '/dashboard/${EntityType.document.id}/add';
+  static String documentEdit = '/dashboard/${EntityType.document.id}/edit/:id';
+
   static String categoryEditWithId(EntityType entity, String id) =>
       '/dashboard/${entity.id}/categories/edit/$id';
 

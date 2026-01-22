@@ -407,5 +407,7 @@ CategoryType _convertEntityTypeToCategoryType(EntityType entityType) {
       return CategoryType.file;
     case EntityType.otp:
       return CategoryType.totp;
+    case EntityType.document:
+      return CategoryType.document;
   }
 }
