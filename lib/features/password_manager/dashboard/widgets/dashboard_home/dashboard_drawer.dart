@@ -7,6 +7,7 @@ import 'package:hoplixi/main_store/models/dto/category_dto.dart';
 import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/shared/widgets/close_database_button.dart';
 
 /// Drawer с фильтрацией по категориям и тегам (для мобильных устройств)
 class DashboardDrawer extends ConsumerWidget {
@@ -135,6 +136,8 @@ class _DashboardDrawerContentState
                   ],
                 ),
               ),
+              const SizedBox(height: 16),
+              const CloseDatabaseButton(type: CloseDatabaseButtonType.smooth),
             ],
           ),
           loading: () => Column(

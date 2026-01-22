@@ -78,14 +78,18 @@ final routerProvider = Provider<GoRouter>((ref) {
                 currentPath == AppRoutesPaths.openStore ||
                 currentPath == AppRoutesPaths.home ||
                 currentPath == AppRoutesPaths.lockStore)) {
-          WindowManager.instance.setSize(MainConstants.defaultDashboardSize);
-          WindowManager.instance.center();
+          if (UniversalPlatform.isDesktop) {
+            WindowManager.instance.setSize(MainConstants.defaultDashboardSize);
+            WindowManager.instance.center();
+          }
           return AppRoutesPaths.dashboard;
         } else if ((dbState.isClosed || dbState.isIdle) &&
             (currentPath.startsWith(AppRoutesPaths.dashboard) ||
                 currentPath == AppRoutesPaths.lockStore)) {
-          WindowManager.instance.setSize(MainConstants.defaultWindowSize);
-          WindowManager.instance.center();
+          if (UniversalPlatform.isDesktop) {
+            WindowManager.instance.setSize(MainConstants.defaultWindowSize);
+            WindowManager.instance.center();
+          }
           return AppRoutesPaths.home;
         }
       }

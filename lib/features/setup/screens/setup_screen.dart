@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hoplixi/core/logger/index.dart';
 import 'package:hoplixi/features/setup/providers/setup_provider.dart';
 import 'package:hoplixi/features/setup/widgets/biometric_page.dart';
 import 'package:hoplixi/features/setup/widgets/navigation_bar.dart';
@@ -102,6 +103,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     await ref.read(setupProvider.notifier).completeSetup();
     if (mounted) {
       context.go(AppRoutesPaths.home);
+      logDebug('Setup completed, navigating to home screen');
     }
   }
 

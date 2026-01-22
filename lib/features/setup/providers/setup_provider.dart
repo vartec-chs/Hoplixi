@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_preferences/app_preferences.dart';
 import 'package:hoplixi/core/theme/theme_provider.dart';
 import 'package:hoplixi/di_init.dart';
+import 'package:hoplixi/features/setup/providers/setup_completed_provider.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:universal_platform/universal_platform.dart';
@@ -73,10 +74,7 @@ class SetupNotifier extends Notifier<SetupState> {
   /// Требуемые разрешения для мобильных платформ
   static const List<Permission> requiredPermissions = [
     Permission.camera,
-    Permission.storage,
     Permission.photos,
-    Permission.videos,
-    Permission.audio,
     Permission.manageExternalStorage,
   ];
 
@@ -242,6 +240,9 @@ class SetupNotifier extends Notifier<SetupState> {
   /// Завершить настройку
   Future<void> completeSetup() async {
     await _storage.set(AppKeys.setupCompleted, true);
+    // Обновляем провайдер, который отвечает за флаг завершения setup,
+    // чтобы редиректы и слушатели получили актуальное значение.
+    await ref.read(setupCompletedNotifierProvider.notifier).markAsCompleted();
   }
 }
 

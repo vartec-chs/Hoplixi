@@ -113,9 +113,9 @@ Widget setupToastificationWrapper(Widget app) {
           return const EdgeInsets.only(right: 8, bottom: 28);
         } else {
           return EdgeInsets.only(
-            top: MediaQuery.of(context).padding.top + 16,
-            left: 16,
-            right: 16,
+            top: MediaQuery.of(context).padding.top,
+            left: 12,
+            right: 12,
           );
         }
       },

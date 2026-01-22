@@ -341,6 +341,12 @@ class _PermissionTile extends StatelessWidget {
           'Фотографии',
           'Для выбора изображений',
         );
+      case Permission.manageExternalStorage:
+        return (
+          Icons.sd_storage_outlined,
+          'Управление хранилищем',
+          'Для расширенного доступа к файлам',
+        );
       default:
         return (
           Icons.settings_outlined,

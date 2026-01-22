@@ -36,6 +36,8 @@ class RecentDatabaseCard extends ConsumerWidget {
 
   Widget _buildCard(BuildContext context, WidgetRef ref, DatabaseEntry entry) {
     final colorScheme = Theme.of(context).colorScheme;
+    final dbStateAsync = ref.watch(mainStoreProvider);
+    final isLoading = dbStateAsync.value?.isLoading ?? false;
 
     return Card(
       color: colorScheme.surfaceContainerLow,
@@ -100,10 +102,18 @@ class RecentDatabaseCard extends ConsumerWidget {
             SizedBox(
               width: double.infinity,
               child: SmoothButton(
-                label: 'Открыть',
+                label: isLoading ? 'Открытие...' : 'Открыть',
                 type: SmoothButtonType.outlined,
-                icon: const Icon(CupertinoIcons.arrow_right_circle),
-                onPressed: () => _openDatabase(context, ref, entry),
+                icon: isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(CupertinoIcons.arrow_right_circle),
+                onPressed: isLoading
+                    ? null
+                    : () => _openDatabase(context, ref, entry),
               ),
             ),
           ],
