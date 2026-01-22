@@ -51,6 +51,7 @@ class _DashboardDrawerContentState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final drawerStateAsync = ref.watch(drawerFilterProvider(widget.entityType));
+    final isMobile = MediaQuery.of(context).size.width < 600;
 
     return SafeArea(
       child: AnimatedSwitcher(
@@ -136,8 +137,16 @@ class _DashboardDrawerContentState
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-              const CloseDatabaseButton(type: CloseDatabaseButtonType.smooth),
+              if (isMobile) ...[
+                const Divider(height: 1),
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: CloseDatabaseButton(
+                    type: CloseDatabaseButtonType.smooth,
+                  ),
+                ),
+                const SizedBox(height: 8.0),
+              ],
             ],
           ),
           loading: () => Column(
