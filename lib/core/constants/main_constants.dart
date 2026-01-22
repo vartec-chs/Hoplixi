@@ -13,7 +13,7 @@ class MainConstants {
   static const Size defaultDashboardSize = Size(1080, 750);
   static const bool isCenter = true;
 
-  static const int databaseSchemaVersion = 6;
+  static const int databaseSchemaVersion = 11;
   static const String dbExtension = '.hplxdb';
 
   // Минимальное количество использований для считания записи часто используемой

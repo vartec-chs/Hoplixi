@@ -11,22 +11,14 @@ class FilesHistory extends Table {
     max: 50,
   )(); // 'deleted', 'modified'
 
-  // File data snapshot
-  TextColumn get name => text().withLength(min: 1, max: 255)();
-  TextColumn get description => text().nullable()();
-  TextColumn get fileName => text()(); // Original file name
-  TextColumn get fileExtension => text()(); // File extension
-  TextColumn get filePath => text()(); // Relative path from files directory
-  TextColumn get mimeType => text()(); // MIME type
-  IntColumn get fileSize => integer()(); // File size in bytes
-  TextColumn get fileHash =>
-      text().nullable()(); // SHA256 hash for integrity check
-  TextColumn get noteId => text().nullable()(); // Foreign key to notes
-
   // Relations
+  TextColumn get metadataId => text().nullable()(); // File metadata ID snapshot
+  TextColumn get name => text().nullable()(); // Display name snapshot
+  TextColumn get description => text().nullable()(); // Description snapshot
   TextColumn get categoryId => text().nullable()();
   TextColumn get categoryName =>
       text().nullable()(); // Category name at time of action
+  TextColumn get noteId => text().nullable()(); // Foreign key to notes
 
   // State flags snapshot
   IntColumn get usedCount =>

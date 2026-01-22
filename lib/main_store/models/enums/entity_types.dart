@@ -1,6 +1,6 @@
-enum CategoryType { note, password, totp, bankCard, file, mixed }
+enum CategoryType { note, password, totp, bankCard, file, document, mixed }
 
-enum TagType { note, password, totp, bankCard, file, mixed }
+enum TagType { note, password, totp, bankCard, file, document, mixed }
 
 enum OtpType { totp, hotp }
 
@@ -60,6 +60,8 @@ extension CategoryTypeX on CategoryType {
         return 'bankCard';
       case CategoryType.file:
         return 'file';
+      case CategoryType.document:
+        return 'document';
       case CategoryType.mixed:
         return 'mixed';
     }
@@ -77,6 +79,8 @@ extension CategoryTypeX on CategoryType {
         return CategoryType.bankCard;
       case 'file':
         return CategoryType.file;
+      case 'document':
+        return CategoryType.document;
       case 'mixed':
         return CategoryType.mixed;
       default:
@@ -98,6 +102,8 @@ extension TagTypeX on TagType {
         return 'bankCard';
       case TagType.file:
         return 'file';
+      case TagType.document:
+        return 'document';
       case TagType.mixed:
         return 'mixed';
     }
@@ -115,6 +121,8 @@ extension TagTypeX on TagType {
         return TagType.bankCard;
       case 'file':
         return TagType.file;
+      case 'document':
+        return TagType.document;
       case 'mixed':
         return TagType.mixed;
       default:

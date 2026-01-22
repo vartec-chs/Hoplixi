@@ -37,6 +37,7 @@ part 'main_store.g.dart';
     BankCards,
     BankCardsHistory,
     Files,
+    FileMetadata,
     FilesTags,
     FilesHistory,
     Categories,
@@ -46,6 +47,9 @@ part 'main_store.g.dart';
     OtpsTags,
     NotesTags,
     BankCardsTags,
+    Documents,
+    DocumentPages,
+    DocumentsTags,
   ],
   daos: [
     StoreMetaDao,
@@ -88,7 +92,7 @@ class MainStore extends _$MainStore {
 
         // Переустановка триггеров при каждом открытии БД
         // (на случай если они были удалены или изменены)
-        await _installHistoryTriggers();
+        // await _installHistoryTriggers();
       },
       onUpgrade: (Migrator m, int from, int to) async {
         logInfo(
@@ -136,6 +140,9 @@ class MainStore extends _$MainStore {
         notesTags,
         bankCardsTags,
         filesTags,
+        documents,
+        documentPages,
+        documentsTags,
       }, // отслеживаем все основные таблицы
     ).watch().map((_) {
       return;
@@ -155,6 +162,7 @@ class MainStore extends _$MainStore {
         ...notesHistoryDropTriggers,
         ...filesHistoryDropTriggers,
         ...bankCardsHistoryDropTriggers,
+        ...documentsDropTriggers,
       ]) {
         await customStatement(drop);
       }
@@ -176,6 +184,7 @@ class MainStore extends _$MainStore {
         ...notesHistoryCreateTriggers,
         ...filesHistoryCreateTriggers,
         ...bankCardsHistoryCreateTriggers,
+        ...documentsDeleteTriggers,
       ]) {
         await customStatement(trigger);
       }

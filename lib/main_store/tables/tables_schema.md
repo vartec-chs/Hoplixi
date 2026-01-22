@@ -154,27 +154,35 @@ This document describes the schema of all tables in the Hoplixi database.
 
 ## Table: files
 
-| Column        | Type     | Constraints                             | Description                        |
-| ------------- | -------- | --------------------------------------- | ---------------------------------- |
-| id            | Text     | Primary Key, UUID v4                    | Unique identifier                  |
-| name          | Text     | min: 1, max: 255                        | File name                          |
-| description   | Text     | nullable                                | Description                        |
-| fileName      | Text     | -                                       | Original file name                 |
-| fileExtension | Text     | -                                       | File extension                     |
-| filePath      | Text     | nullable                                | Relative path from files directory |
-| mimeType      | Text     | -                                       | MIME type                          |
-| fileSize      | Int      | -                                       | File size in bytes                 |
-| fileHash      | Text     | nullable                                | SHA256 hash for integrity          |
-| categoryId    | Text     | nullable, FK to categories.id (setNull) | Category reference                 |
-| usedCount     | Int      | default: 0                              | Usage count                        |
-| isFavorite    | Bool     | default: false                          | Favorite flag                      |
-| isArchived    | Bool     | default: false                          | Archived flag                      |
-| isPinned      | Bool     | default: false                          | Pinned flag                        |
-| isDeleted     | Bool     | default: false                          | Soft delete flag                   |
-| createdAt     | DateTime | default: now                            | Creation timestamp                 |
-| modifiedAt    | DateTime | default: now                            | Modification timestamp             |
-| recentScore   | Real     | nullable                                | EWMA for sorting                   |
-| lastUsedAt    | DateTime | nullable                                | Last used timestamp                |
+| Column      | Type     | Constraints                                | Description             |
+| ----------- | -------- | ------------------------------------------ | ----------------------- |
+| id          | Text     | Primary Key, UUID v4                       | Unique identifier       |
+| metadataId  | Text     | nullable, FK to file_metadata.id (setNull) | File metadata reference |
+| name        | Text     | min: 1, max: 255                           | Display name            |
+| description | Text     | nullable                                   | Description             |
+| categoryId  | Text     | nullable, FK to categories.id (setNull)    | Category reference      |
+| noteId      | Text     | nullable, FK to notes.id (setNull)         | Note reference          |
+| usedCount   | Int      | default: 0                                 | Usage count             |
+| isFavorite  | Bool     | default: false                             | Favorite flag           |
+| isArchived  | Bool     | default: false                             | Archived flag           |
+| isPinned    | Bool     | default: false                             | Pinned flag             |
+| isDeleted   | Bool     | default: false                             | Soft delete flag        |
+| createdAt   | DateTime | default: now                               | Creation timestamp      |
+| modifiedAt  | DateTime | default: now                               | Modification timestamp  |
+| recentScore | Real     | nullable                                   | EWMA for sorting        |
+| lastUsedAt  | DateTime | nullable                                   | Last used timestamp     |
+
+## Table: file_metadata
+
+| Column        | Type | Constraints          | Description                        |
+| ------------- | ---- | -------------------- | ---------------------------------- |
+| id            | Text | Primary Key, UUID v4 | Unique identifier                  |
+| fileName      | Text | -                    | Original file name                 |
+| fileExtension | Text | -                    | File extension                     |
+| filePath      | Text | nullable             | Relative path from files directory |
+| mimeType      | Text | -                    | MIME type                          |
+| fileSize      | Int  | -                    | File size in bytes                 |
+| fileHash      | Text | nullable             | SHA256 hash for integrity          |
 
 ## Table: files_history
 
@@ -183,16 +191,12 @@ This document describes the schema of all tables in the Hoplixi database.
 | id                 | Text     | Primary Key, UUID v4  | Unique identifier            |
 | originalFileId     | Text     | -                     | ID of original file          |
 | action             | Text     | enum: ActionInHistory | Action performed             |
-| name               | Text     | min: 1, max: 255      | Name snapshot                |
+| metadataId         | Text     | nullable              | File metadata ID snapshot    |
+| name               | Text     | nullable              | Display name snapshot        |
 | description        | Text     | nullable              | Description snapshot         |
-| fileName           | Text     | -                     | Original file name snapshot  |
-| fileExtension      | Text     | -                     | File extension snapshot      |
-| filePath           | Text     | -                     | Relative path snapshot       |
-| mimeType           | Text     | -                     | MIME type snapshot           |
-| fileSize           | Int      | -                     | File size snapshot           |
-| fileHash           | Text     | nullable              | SHA256 hash snapshot         |
 | categoryId         | Text     | nullable              | Category ID snapshot         |
 | categoryName       | Text     | nullable              | Category name at action time |
+| noteId             | Text     | nullable              | Note ID snapshot             |
 | usedCount          | Int      | default: 0            | Usage count snapshot         |
 | isFavorite         | Bool     | default: false        | Favorite flag snapshot       |
 | isArchived         | Bool     | default: false        | Archived flag snapshot       |
@@ -387,3 +391,54 @@ This document describes the schema of all tables in the Hoplixi database.
 | type       | Text     | enum: TagType        | Tag type (notes, password, totp, mixed) |
 | createdAt  | DateTime | default: now         | Creation timestamp                      |
 | modifiedAt | DateTime | default: now         | Modification timestamp                  |
+
+## Table: documents
+
+| Column         | Type     | Constraints                             | Description                      |
+| -------------- | -------- | --------------------------------------- | -------------------------------- |
+| id             | Text     | Primary Key, UUID v4                    | Unique identifier                |
+| title          | Text     | min: 1, max: 255, nullable              | Display name                     |
+| documentType   | Text     | min: 1, max: 64, nullable               | Document type                    |
+| description    | Text     | nullable                                | Description / notes              |
+| aggregatedText | Text     | nullable                                | Aggregated OCR text of all pages |
+| aggregateHash  | Text     | nullable                                | Hash of document version         |
+| pageCount      | Int      | default: 0                              | Number of pages                  |
+| categoryId     | Text     | nullable, FK to categories.id (setNull) | Category reference               |
+| isFavorite     | Bool     | default: false                          | Favorite flag                    |
+| isArchived     | Bool     | default: false                          | Archived flag                    |
+| isPinned       | Bool     | default: false                          | Pinned flag                      |
+| isDeleted      | Bool     | default: false                          | Soft delete flag                 |
+| usedCount      | Int      | default: 0                              | Usage count                      |
+| createdAt      | DateTime | default: now                            | Creation timestamp               |
+| modifiedAt     | DateTime | default: now                            | Modification timestamp           |
+| recentScore    | Real     | nullable                                | EWMA score for sorting           |
+| lastUsedAt     | DateTime | nullable                                | Last used timestamp              |
+
+## Table: document_pages
+
+| Column        | Type     | Constraints                                | Description             |
+| ------------- | -------- | ------------------------------------------ | ----------------------- |
+| id            | Text     | Primary Key, UUID v4                       | Unique identifier       |
+| documentId    | Text     | FK to documents.id (cascade)               | Document owner          |
+| fileId        | Text     | FK to files.id (restrict)                  | File page               |
+| metadataId    | Text     | nullable, FK to file_metadata.id (setNull) | File metadata reference |
+| pageNumber    | Int      | -                                          | Page number (1..N)      |
+| extractedText | Text     | nullable                                   | OCR text of the page    |
+| pageHash      | Text     | nullable                                   | Hash of the page        |
+| isPrimary     | Bool     | default: false                             | Primary page (cover)    |
+| usedCount     | Int      | default: 0                                 | Usage count             |
+| createdAt     | DateTime | default: now                               | Creation timestamp      |
+| modifiedAt    | DateTime | default: now                               | Modification timestamp  |
+| lastUsedAt    | DateTime | nullable                                   | Last used timestamp     |
+
+**Constraints:** UNIQUE {documentId, pageNumber}
+
+## Table: documents_tags
+
+| Column     | Type     | Constraints                  | Description        |
+| ---------- | -------- | ---------------------------- | ------------------ |
+| documentId | Text     | FK to documents.id (cascade) | Document reference |
+| tagId      | Text     | FK to tags.id (cascade)      | Tag reference      |
+| createdAt  | DateTime | default: now                 | Creation timestamp |
+
+**Primary Key:** {documentId, tagId}

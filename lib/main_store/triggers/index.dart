@@ -4,6 +4,7 @@
 
 // Триггеры истории изменений
 export 'bank_cards_triggers.dart';
+export 'documents_triggers.dart';
 export 'files_triggers.dart';
 export 'notes_triggers.dart';
 export 'otps_triggers.dart';

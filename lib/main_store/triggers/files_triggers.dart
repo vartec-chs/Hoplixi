@@ -9,14 +9,9 @@ const List<String> filesHistoryCreateTriggers = [
     AFTER UPDATE ON files
     FOR EACH ROW
     WHEN OLD.id = NEW.id AND (
+      OLD.metadata_id != NEW.metadata_id OR
       OLD.name != NEW.name OR
       OLD.description != NEW.description OR
-      OLD.file_name != NEW.file_name OR
-      OLD.file_extension != NEW.file_extension OR
-      OLD.file_path != NEW.file_path OR
-      OLD.mime_type != NEW.mime_type OR
-      OLD.file_size != NEW.file_size OR
-      OLD.file_hash != NEW.file_hash OR
       OLD.note_id != NEW.note_id OR
       OLD.category_id != NEW.category_id OR
       OLD.is_favorite != NEW.is_favorite OR
@@ -31,14 +26,9 @@ const List<String> filesHistoryCreateTriggers = [
         id,
         original_file_id,
         action,
+        metadata_id,
         name,
         description,
-        file_name,
-        file_extension,
-        file_path,
-        mime_type,
-        file_size,
-        file_hash,
         note_id,
         category_id,
         category_name,
@@ -57,14 +47,9 @@ const List<String> filesHistoryCreateTriggers = [
         lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
         OLD.id,
         'modified',
+        OLD.metadata_id,
         OLD.name,
         OLD.description,
-        OLD.file_name,
-        OLD.file_extension,
-        COALESCE(OLD.file_path, ''),
-        OLD.mime_type,
-        OLD.file_size,
-        OLD.file_hash,
         OLD.note_id,
         OLD.category_id,
         (SELECT name FROM categories WHERE id = OLD.category_id),
@@ -92,14 +77,9 @@ const List<String> filesHistoryCreateTriggers = [
         id,
         original_file_id,
         action,
+        metadata_id,
         name,
         description,
-        file_name,
-        file_extension,
-        file_path,
-        mime_type,
-        file_size,
-        file_hash,
         note_id,
         category_id,
         category_name,
@@ -118,14 +98,9 @@ const List<String> filesHistoryCreateTriggers = [
         lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
         OLD.id,
         'deleted',
+        OLD.metadata_id,
         OLD.name,
         OLD.description,
-        OLD.file_name,
-        OLD.file_extension,
-        COALESCE(OLD.file_path, ''),
-        OLD.mime_type,
-        OLD.file_size,
-        OLD.file_hash,
         OLD.note_id,
         OLD.category_id,
         (SELECT name FROM categories WHERE id = OLD.category_id),

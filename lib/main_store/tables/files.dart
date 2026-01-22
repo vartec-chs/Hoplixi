@@ -2,31 +2,29 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import 'categories.dart';
+import 'file_metadata.dart';
 import 'notes.dart';
 
 @DataClassName('FilesData')
 class Files extends Table {
   TextColumn get id => text().clientDefault(() => Uuid().v4())(); // UUID v4
-  TextColumn get name => text().withLength(min: 1, max: 255)();
-  TextColumn get description => text().nullable()();
-  TextColumn get fileName => text()(); // Original file name
-  TextColumn get fileExtension => text()(); // File extension (e.g., .pdf, .txt)
-  TextColumn get filePath =>
-      text().nullable()(); // Relative path from files directory
-  TextColumn get mimeType => text()(); // MIME type (e.g., application/pdf)
-  IntColumn get fileSize => integer()(); // File size in bytes
-  TextColumn get fileHash =>
-      text().nullable()(); // SHA256 hash for integrity check
-  TextColumn get noteId => text().nullable().references(
-    Notes,
+  TextColumn get metadataId => text().nullable().references(
+    FileMetadata,
     #id,
     onDelete: KeyAction.setNull,
-  )(); // Foreign key to notes
+  )(); // Foreign key to file metadata
+  TextColumn get name => text().withLength(min: 1, max: 255)(); // Display name
+  TextColumn get description => text().nullable()(); // Description
   TextColumn get categoryId => text().nullable().references(
     Categories,
     #id,
     onDelete: KeyAction.setNull,
   )(); // Foreign key to categories
+  TextColumn get noteId => text().nullable().references(
+    Notes,
+    #id,
+    onDelete: KeyAction.setNull,
+  )(); // Foreign key to notes
 
   IntColumn get usedCount =>
       integer().withDefault(const Constant(0))(); // Usage count

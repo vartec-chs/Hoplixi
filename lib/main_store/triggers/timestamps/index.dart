@@ -3,6 +3,8 @@
 /// Этот файл экспортирует все триггеры временных меток для удобного импорта.
 import 'bank_cards_timestamps.dart';
 import 'categories_timestamps.dart';
+import 'document_pages_timestamps.dart';
+import 'documents_timestamps.dart';
 import 'files_timestamps.dart';
 import 'icons_timestamps.dart';
 import 'notes_timestamps.dart';
@@ -13,6 +15,8 @@ import 'tags_timestamps.dart';
 
 export 'bank_cards_timestamps.dart';
 export 'categories_timestamps.dart';
+export 'document_pages_timestamps.dart';
+export 'documents_timestamps.dart';
 export 'files_timestamps.dart';
 export 'icons_timestamps.dart';
 export 'meta_touch_triggers.dart';
@@ -36,6 +40,10 @@ final List<String> allInsertTimestampTriggers = [
   ...filesInsertTimestampTriggers,
   // Bank Cards
   ...bankCardsInsertTimestampTriggers,
+  // Documents
+  ...documentsInsertTimestampTriggers,
+  // Document Pages
+  ...documentPagesInsertTimestampTriggers,
   // Categories
   ...categoriesInsertTimestampTriggers,
   // Tags
@@ -58,6 +66,10 @@ final List<String> allModifiedAtTriggers = [
   ...filesModifiedAtTriggers,
   // Bank Cards
   ...bankCardsModifiedAtTriggers,
+  // Documents
+  ...documentsModifiedAtTriggers,
+  // Document Pages
+  ...documentPagesModifiedAtTriggers,
   // Categories
   ...categoriesModifiedAtTriggers,
   // Tags
@@ -80,6 +92,10 @@ final List<String> allTimestampDropTriggers = [
   ...filesTimestampDropTriggers,
   // Bank Cards
   ...bankCardsTimestampDropTriggers,
+  // Documents
+  ...documentsTimestampDropTriggers,
+  // Document Pages
+  ...documentPagesTimestampDropTriggers,
   // Categories
   ...categoriesTimestampDropTriggers,
   // Tags
