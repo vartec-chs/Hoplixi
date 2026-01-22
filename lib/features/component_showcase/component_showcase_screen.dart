@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/features/component_showcase/screens/button_showcase_screen.dart';
+import 'package:hoplixi/features/component_showcase/screens/document_scanner_showcase_screen.dart';
 import 'package:hoplixi/features/component_showcase/screens/expandable_fab_screen.dart';
 import 'package:hoplixi/features/component_showcase/screens/modal_sheet_showcase_screen.dart';
 import 'package:hoplixi/features/component_showcase/screens/notification_showcase_screen.dart';
@@ -60,6 +61,11 @@ class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
       title: 'QR Scanners',
       icon: Icons.qr_code_scanner,
       screen: const QrScannerShowcaseScreen(),
+    ),
+    ShowcaseItem(
+      title: 'Document Scanner',
+      icon: Icons.document_scanner,
+      screen: const DocumentScannerShowcaseScreen(),
     ),
   ];
 

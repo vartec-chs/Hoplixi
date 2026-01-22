@@ -102,6 +102,7 @@ dependencies:
   protobuf: ^6.0.0
   lucide_icons_flutter: ^3.1.9
   flutter_graph_view: ^2.1.0
+  flutter_doc_scanner: ^0.0.17
 
   file_crypto:
     path: ./packages/file_crypto

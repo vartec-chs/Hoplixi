@@ -112,11 +112,7 @@ Widget setupToastificationWrapper(Widget app) {
         if (UniversalPlatform.isDesktop) {
           return const EdgeInsets.only(right: 8, bottom: 28);
         } else {
-          return EdgeInsets.only(
-            top: MediaQuery.of(context).padding.top,
-            left: 12,
-            right: 12,
-          );
+          return EdgeInsets.only(top: 12, left: 12, right: 12);
         }
       },
     ),
