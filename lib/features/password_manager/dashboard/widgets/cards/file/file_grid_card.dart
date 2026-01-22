@@ -175,7 +175,7 @@ class _FileGridCardState extends ConsumerState<FileGridCard>
 
                       const SizedBox(height: 4),
                       Text(
-                        '${file.fileName} • ${_formatFileSize(file.fileSize)}',
+                        '${file.fileName ?? ''} • ${_formatFileSize(file.fileSize ?? 0)}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: Colors.grey,
                         ),

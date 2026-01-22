@@ -4,13 +4,14 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/base_main_entity_dao.dart';
 import 'package:hoplixi/main_store/models/dto/file_dto.dart';
+import 'package:hoplixi/main_store/tables/file_metadata.dart';
 import 'package:hoplixi/main_store/tables/file_tags.dart';
 import 'package:hoplixi/main_store/tables/files.dart';
 import 'package:uuid/uuid.dart';
 
 part 'file_dao.g.dart';
 
-@DriftAccessor(tables: [Files, FilesTags])
+@DriftAccessor(tables: [Files, FilesTags, FileMetadata])
 class FileDao extends DatabaseAccessor<MainStore>
     with _$FileDaoMixin
     implements BaseMainEntityDao {
@@ -75,16 +76,29 @@ class FileDao extends DatabaseAccessor<MainStore>
   Future<String> createFile(CreateFileDto dto) async {
     final uuid = const Uuid().v4();
     return await db.transaction(() async {
+      // Создаем FileMetadata если нужно (и если переданы данные для него)
+      String? metadataId;
+      if (dto.fileName != null) {
+        metadataId = const Uuid().v4();
+        await into(db.fileMetadata).insert(
+          FileMetadataCompanion.insert(
+            id: Value(metadataId),
+            fileName: dto.fileName!,
+            fileExtension: dto.fileExtension ?? '',
+            filePath: Value(dto.filePath),
+            mimeType: dto.mimeType ?? 'application/octet-stream',
+            fileSize: dto.fileSize ?? 0,
+            fileHash: Value(dto.fileHash),
+          ),
+        );
+      }
+
+      // Создаем запись Files
       final companion = FilesCompanion.insert(
         id: Value(uuid),
         name: dto.name,
-        fileName: dto.fileName,
-        fileExtension: dto.fileExtension,
-        filePath: Value(dto.filePath),
-        mimeType: dto.mimeType,
-        fileSize: dto.fileSize,
-        fileHash: Value(dto.fileHash),
         description: Value(dto.description),
+        metadataId: Value(metadataId),
         noteId: Value(dto.noteId),
         categoryId: Value(dto.categoryId),
       );

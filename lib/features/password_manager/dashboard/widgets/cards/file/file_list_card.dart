@@ -168,7 +168,7 @@ class _FileListCardState extends ConsumerState<FileListCard>
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      '${file.fileName} • ${_formatFileSize(file.fileSize)}',
+                      '${file.fileName} • ${_formatFileSize(file.fileSize ?? 0)}',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.grey,
                       ),
@@ -286,14 +286,14 @@ class _FileListCardState extends ConsumerState<FileListCard>
                 _buildMetaRow(
                   theme,
                   label: 'Имя файла',
-                  value: file.fileName,
+                  value: file.fileName ?? '',
                   icon: Icons.description,
                 ),
                 const SizedBox(height: 8),
                 _buildMetaRow(
                   theme,
                   label: 'Размер',
-                  value: _formatFileSize(file.fileSize),
+                  value: _formatFileSize(file.fileSize ?? 0),
                   icon: Icons.data_usage,
                 ),
               ],

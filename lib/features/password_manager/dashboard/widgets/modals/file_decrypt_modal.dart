@@ -225,7 +225,7 @@ class _FileDecryptContentState extends ConsumerState<_FileDecryptContent> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        widget.file.fileName,
+                        widget.file.fileName ?? '',
                         style: theme.textTheme.bodySmall,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

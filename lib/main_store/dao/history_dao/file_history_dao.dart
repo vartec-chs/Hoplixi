@@ -33,9 +33,7 @@ class FileHistoryDao extends DatabaseAccessor<MainStore>
             id: fh.id,
             originalFileId: fh.originalFileId,
             action: fh.action.value,
-            name: fh.name,
-            fileName: fh.fileName,
-            fileExtension: fh.fileExtension,
+            name: fh.name ?? '',
             actionAt: fh.actionAt,
           ),
         )
@@ -60,9 +58,7 @@ class FileHistoryDao extends DatabaseAccessor<MainStore>
               id: fh.id,
               originalFileId: fh.originalFileId,
               action: fh.action.value,
-              name: fh.name,
-              fileName: fh.fileName,
-              fileExtension: fh.fileExtension,
+              name: fh.name ?? '',
               actionAt: fh.actionAt,
             ),
           )
@@ -83,9 +79,7 @@ class FileHistoryDao extends DatabaseAccessor<MainStore>
                   id: fh.id,
                   originalFileId: fh.originalFileId,
                   action: fh.action.value,
-                  name: fh.name,
-                  fileName: fh.fileName,
-                  fileExtension: fh.fileExtension,
+                  name: fh.name ?? '',
                   actionAt: fh.actionAt,
                 ),
               )
@@ -114,9 +108,7 @@ class FileHistoryDao extends DatabaseAccessor<MainStore>
                   id: fh.id,
                   originalFileId: fh.originalFileId,
                   action: fh.action.value,
-                  name: fh.name,
-                  fileName: fh.fileName,
-                  fileExtension: fh.fileExtension,
+                  name: fh.name ?? '',
                   actionAt: fh.actionAt,
                 ),
               )
@@ -131,15 +123,9 @@ class FileHistoryDao extends DatabaseAccessor<MainStore>
       id: Value(uuid),
       originalFileId: dto.originalFileId,
       action: ActionInHistoryX.fromString(dto.action),
-      name: dto.name,
-      fileName: dto.fileName,
-      fileExtension: dto.fileExtension,
-      filePath: dto.filePath,
-      mimeType: dto.mimeType,
-      fileSize: dto.fileSize,
-      fileHash: Value(dto.fileHash),
+      metadataId: Value(dto.metadataId),
+      name: Value(dto.name),
       description: Value(dto.description),
-      noteId: Value(dto.noteId),
       categoryName: Value(dto.categoryName),
       usedCount: Value(dto.usedCount),
       isFavorite: Value(dto.isFavorite),
@@ -188,12 +174,7 @@ class FileHistoryDao extends DatabaseAccessor<MainStore>
     if (searchQuery != null && searchQuery.isNotEmpty) {
       final search = '%$searchQuery%';
       query = query
-        ..where(
-          (fh) =>
-              fh.name.like(search) |
-              fh.fileName.like(search) |
-              fh.description.like(search),
-        );
+        ..where((fh) => fh.name.like(search) | fh.description.like(search));
     }
 
     final results = await query.get();
@@ -203,9 +184,7 @@ class FileHistoryDao extends DatabaseAccessor<MainStore>
             id: fh.id,
             originalFileId: fh.originalFileId,
             action: fh.action.value,
-            name: fh.name,
-            fileName: fh.fileName,
-            fileExtension: fh.fileExtension,
+            name: fh.name ?? '',
             actionAt: fh.actionAt,
           ),
         )
@@ -226,7 +205,6 @@ class FileHistoryDao extends DatabaseAccessor<MainStore>
       query = query
         ..where(
           filesHistory.name.like(search) |
-              filesHistory.fileName.like(search) |
               filesHistory.description.like(search),
         );
     }

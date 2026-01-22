@@ -387,6 +387,8 @@ String _getCategoryTypeLabel(CategoryType type) {
       return 'Банковские карты';
     case CategoryType.file:
       return 'Файлы';
+    case CategoryType.document:
+      return 'Документы';
     case CategoryType.mixed:
       return 'Смешанная';
   }

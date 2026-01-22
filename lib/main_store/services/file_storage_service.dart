@@ -103,9 +103,22 @@ class FileStorageService {
       throw Exception('File not found in database');
     }
 
+    // Получаем FileMetadata через metadataId
+    if (fileData.metadataId == null) {
+      throw Exception('File has no metadata');
+    }
+
+    final metadata = await (_db.select(
+      _db.fileMetadata,
+    )..where((m) => m.id.equals(fileData.metadataId!))).getSingleOrNull();
+
+    if (metadata == null) {
+      throw Exception('File metadata not found');
+    }
+
     final key = await _getAttachmentKey();
     final attachmentsPath = await _getAttachmentsPath();
-    final encryptedFilePath = p.join(attachmentsPath, '${fileData.filePath}');
+    final encryptedFilePath = p.join(attachmentsPath, metadata.filePath);
 
     logDebug('Decrypting file: $encryptedFilePath');
 
@@ -159,6 +172,19 @@ class FileStorageService {
     final currentFile = await _db.fileDao.getFileById(fileId);
     if (currentFile == null) throw Exception('File not found');
 
+    // Получаем FileMetadata
+    if (currentFile.metadataId == null) {
+      throw Exception('File has no metadata');
+    }
+
+    final currentMetadata = await (_db.select(
+      _db.fileMetadata,
+    )..where((m) => m.id.equals(currentFile.metadataId!))).getSingleOrNull();
+
+    if (currentMetadata == null) {
+      throw Exception('File metadata not found');
+    }
+
     // 1. Создаем запись в истории
     String? categoryName;
     if (currentFile.categoryId != null) {
@@ -171,13 +197,8 @@ class FileStorageService {
     final historyDto = CreateFileHistoryDto(
       originalFileId: currentFile.id,
       action: ActionInHistory.modified.value,
+      metadataId: currentFile.metadataId!,
       name: currentFile.name,
-      fileName: currentFile.fileName,
-      fileExtension: currentFile.fileExtension,
-      filePath: currentFile.filePath!,
-      mimeType: currentFile.mimeType,
-      fileSize: currentFile.fileSize,
-      fileHash: currentFile.fileHash ?? '',
       description: currentFile.description,
       categoryName: categoryName,
       usedCount: currentFile.usedCount,
@@ -214,17 +235,28 @@ class FileStorageService {
     final newMimeType =
         lookupMimeType(newFile.path) ?? 'application/octet-stream';
 
-    // 4. Обновляем запись в таблице Files
+    // 4. Создаем новую запись FileMetadata
+    final newMetadataId = const Uuid().v4();
+    await _db
+        .into(_db.fileMetadata)
+        .insert(
+          FileMetadataCompanion.insert(
+            id: Value(newMetadataId),
+            fileName: newFileName,
+            fileExtension: newFileExtension,
+            filePath: Value(newEncryptedFileName),
+            mimeType: newMimeType,
+            fileSize: newFileSize,
+            fileHash: Value(newFileHash),
+          ),
+        );
+
+    // 5. Обновляем запись в таблице Files
     final updateQuery = _db.update(_db.files)
       ..where((f) => f.id.equals(fileId));
     await updateQuery.write(
       FilesCompanion(
-        filePath: Value(newEncryptedFileName),
-        fileSize: Value(newFileSize),
-        fileHash: Value(newFileHash),
-        fileName: Value(newFileName),
-        fileExtension: Value(newFileExtension),
-        mimeType: Value(newMimeType),
+        metadataId: Value(newMetadataId),
         modifiedAt: Value(DateTime.now()),
       ),
     );
@@ -235,8 +267,16 @@ class FileStorageService {
     final fileData = await _db.fileDao.getFileById(fileId);
     if (fileData == null) return false;
 
+    if (fileData.metadataId == null) return false;
+
+    final metadata = await (_db.select(
+      _db.fileMetadata,
+    )..where((m) => m.id.equals(fileData.metadataId!))).getSingleOrNull();
+
+    if (metadata == null) return false;
+
     final attachmentsPath = await _getAttachmentsPath();
-    final encryptedFilePath = p.join(attachmentsPath, fileData.filePath);
+    final encryptedFilePath = p.join(attachmentsPath, metadata.filePath);
     final file = File(encryptedFilePath);
 
     if (await file.exists()) {

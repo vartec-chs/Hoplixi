@@ -636,7 +636,17 @@ class PaginatedListNotifier
 
         // Удаляем файлы истории с диска
         for (final record in historyRecords) {
-          await fileService.deleteHistoryFileFromDisk(record.filePath);
+          // Получаем filePath из FileMetadata через metadataId
+          if (record.metadataId != null) {
+            final fileDao = await ref.read(fileDaoProvider.future);
+            final metadata = await (fileDao.attachedDatabase.select(
+              fileDao.attachedDatabase.fileMetadata,
+            )..where((m) => m.id.equals(record.metadataId!))).getSingleOrNull();
+
+            if (metadata != null && metadata.filePath != null) {
+              await fileService.deleteHistoryFileFromDisk(metadata.filePath!);
+            }
+          }
         }
 
         // Удаляем записи истории из БД

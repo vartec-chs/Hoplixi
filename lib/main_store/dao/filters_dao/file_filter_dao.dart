@@ -10,7 +10,7 @@ import 'package:hoplixi/main_store/tables/index.dart';
 
 part 'file_filter_dao.g.dart';
 
-@DriftAccessor(tables: [Files, Categories, FilesTags, Tags])
+@DriftAccessor(tables: [Files, FileMetadata, Categories, FilesTags, Tags])
 class FileFilterDao extends DatabaseAccessor<MainStore>
     with _$FileFilterDaoMixin
     implements FilterDao<FilesFilter, FileCardDto> {
@@ -21,6 +21,7 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
   Future<List<FileCardDto>> getFiltered(FilesFilter filter) async {
     final query = select(files).join([
       leftOuterJoin(categories, categories.id.equalsExp(files.categoryId)),
+      leftOuterJoin(fileMetadata, fileMetadata.id.equalsExp(files.metadataId)),
     ]);
 
     final whereExpression = _buildWhereExpression(filter, hasNotesJoin: true);
@@ -45,6 +46,7 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
     return results.map((row) {
       final file = row.readTable(files);
       final category = row.readTableOrNull(categories);
+      final metadata = row.readTableOrNull(fileMetadata);
 
       // Получаем теги для текущего файла
       final fileTags = tagsMap[file.id] ?? [];
@@ -52,9 +54,10 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
       return FileCardDto(
         id: file.id,
         name: file.name,
-        fileName: file.fileName,
-        fileExtension: file.fileExtension,
-        fileSize: file.fileSize,
+        metadataId: file.metadataId,
+        fileName: metadata?.fileName,
+        fileExtension: metadata?.fileExtension,
+        fileSize: metadata?.fileSize,
         category: category != null
             ? CategoryInCardDto(
                 id: category.id,
@@ -82,6 +85,7 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
     final query = select(files).join([
       leftOuterJoin(categories, categories.id.equalsExp(files.categoryId)),
       leftOuterJoin(notes, notes.id.equalsExp(files.noteId)),
+      leftOuterJoin(fileMetadata, fileMetadata.id.equalsExp(files.metadataId)),
     ]);
 
     // Применяем те же фильтры
@@ -124,8 +128,8 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
       final queryLower = base.query.toLowerCase();
       Expression<bool> searchExpression =
           files.name.lower().like('%$queryLower%') |
-          files.fileName.lower().like('%$queryLower%') |
-          files.description.lower().like('%$queryLower%');
+          files.description.lower().like('%$queryLower%') |
+          fileMetadata.fileName.lower().like('%$queryLower%');
       if (hasNotesJoin) {
         searchExpression =
             searchExpression | notes.content.lower().like('%$queryLower%');
@@ -233,7 +237,9 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
     if (filter.fileExtensions.isNotEmpty) {
       Expression<bool>? extensionExpression;
       for (final ext in filter.fileExtensions) {
-        final condition = files.fileExtension.lower().equals(ext.toLowerCase());
+        final condition = fileMetadata.fileExtension.lower().equals(
+          ext.toLowerCase(),
+        );
         extensionExpression = extensionExpression == null
             ? condition
             : (extensionExpression | condition);
@@ -247,7 +253,9 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
     if (filter.mimeTypes.isNotEmpty) {
       Expression<bool>? mimeExpression;
       for (final mime in filter.mimeTypes) {
-        final condition = files.mimeType.lower().equals(mime.toLowerCase());
+        final condition = fileMetadata.mimeType.lower().equals(
+          mime.toLowerCase(),
+        );
         mimeExpression = mimeExpression == null
             ? condition
             : (mimeExpression | condition);
@@ -260,18 +268,20 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
     // Фильтр по имени файла
     if (filter.fileName != null && filter.fileName!.isNotEmpty) {
       final fileNameLower = filter.fileName!.toLowerCase();
-      expressions.add(files.fileName.lower().like('%$fileNameLower%'));
+      expressions.add(fileMetadata.fileName.lower().like('%$fileNameLower%'));
     }
 
     // Фильтр по минимальному размеру файла
     if (filter.minFileSize != null) {
-      expressions.add(files.fileSize.isBiggerOrEqualValue(filter.minFileSize!));
+      expressions.add(
+        fileMetadata.fileSize.isBiggerOrEqualValue(filter.minFileSize!),
+      );
     }
 
     // Фильтр по максимальному размеру файла
     if (filter.maxFileSize != null) {
       expressions.add(
-        files.fileSize.isSmallerOrEqualValue(filter.maxFileSize!),
+        fileMetadata.fileSize.isSmallerOrEqualValue(filter.maxFileSize!),
       );
     }
   }
@@ -323,18 +333,24 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
           orderTerms.add(OrderingTerm(expression: files.name, mode: mode));
           break;
         case FilesSortField.fileName:
-          orderTerms.add(OrderingTerm(expression: files.fileName, mode: mode));
+          orderTerms.add(
+            OrderingTerm(expression: fileMetadata.fileName, mode: mode),
+          );
           break;
         case FilesSortField.fileSize:
-          orderTerms.add(OrderingTerm(expression: files.fileSize, mode: mode));
+          orderTerms.add(
+            OrderingTerm(expression: fileMetadata.fileSize, mode: mode),
+          );
           break;
         case FilesSortField.fileExtension:
           orderTerms.add(
-            OrderingTerm(expression: files.fileExtension, mode: mode),
+            OrderingTerm(expression: fileMetadata.fileExtension, mode: mode),
           );
           break;
         case FilesSortField.mimeType:
-          orderTerms.add(OrderingTerm(expression: files.mimeType, mode: mode));
+          orderTerms.add(
+            OrderingTerm(expression: fileMetadata.mimeType, mode: mode),
+          );
           break;
         case FilesSortField.createdAt:
           orderTerms.add(OrderingTerm(expression: files.createdAt, mode: mode));

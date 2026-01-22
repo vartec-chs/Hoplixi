@@ -10,13 +10,17 @@ part 'file_dto.g.dart';
 sealed class CreateFileDto with _$CreateFileDto {
   const factory CreateFileDto({
     required String name,
-    required String fileName,
-    required String fileExtension,
-    String? filePath,
-    required String mimeType,
-    required int fileSize,
-    required String fileHash,
     String? description,
+    String?
+    metadataId, // ID существующих метаданных или null для создания новых
+    // Поля для создания FileMetadata (если metadataId == null)
+    String? fileName,
+    String? fileExtension,
+    String? filePath,
+    String? mimeType,
+    int? fileSize,
+    String? fileHash,
+    // Связи
     String? noteId,
     String? categoryId,
     required List<String> tagsIds,
@@ -32,16 +36,20 @@ sealed class GetFileDto with _$GetFileDto {
   const factory GetFileDto({
     required String id,
     required String name,
-    required String fileName,
-    required String fileExtension,
-    required String filePath,
-    required String mimeType,
-    required int fileSize,
-    required String fileHash,
     String? description,
+    String? metadataId,
+    // Поля из FileMetadata (если загружены)
+    String? fileName,
+    String? fileExtension,
+    String? filePath,
+    String? mimeType,
+    int? fileSize,
+    String? fileHash,
+    // Связи
     String? noteId,
     String? categoryId,
     String? categoryName,
+    // Системные поля Files
     required int usedCount,
     required bool isFavorite,
     required bool isArchived,
@@ -63,9 +71,12 @@ sealed class FileCardDto with _$FileCardDto implements BaseCardDto {
   const factory FileCardDto({
     required String id,
     required String name,
-    required String fileName,
-    required String fileExtension,
-    required int fileSize,
+    String? metadataId,
+    // Поля из FileMetadata (могут быть null если метаданные не загружены)
+    String? fileName,
+    String? fileExtension,
+    int? fileSize,
+    // Системные поля Files
     required bool isFavorite,
     required bool isPinned,
     required bool isArchived,

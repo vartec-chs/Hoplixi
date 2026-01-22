@@ -52,14 +52,31 @@ class FileFormNotifier extends Notifier<FileFormState> {
       final tagIds = await dao.getFileTagIds(fileId);
       final tagRecords = await tagDao.getTagsByIds(tagIds);
 
+      // Получаем FileMetadata через metadataId
+      String? existingFileName;
+      int? existingFileSize;
+      String? existingFileExtension;
+
+      if (file.metadataId != null) {
+        final metadata = await (dao.attachedDatabase.select(
+          dao.attachedDatabase.fileMetadata,
+        )..where((m) => m.id.equals(file.metadataId!))).getSingleOrNull();
+
+        if (metadata != null) {
+          existingFileName = metadata.fileName;
+          existingFileSize = metadata.fileSize;
+          existingFileExtension = metadata.fileExtension;
+        }
+      }
+
       state = FileFormState(
         isEditMode: true,
         editingFileId: fileId,
         name: file.name,
         description: file.description ?? '',
-        existingFileName: file.fileName,
-        existingFileSize: file.fileSize,
-        existingFileExtension: file.fileExtension,
+        existingFileName: existingFileName,
+        existingFileSize: existingFileSize,
+        existingFileExtension: existingFileExtension,
         categoryId: file.categoryId,
         noteId: file.noteId,
         tagIds: tagIds,

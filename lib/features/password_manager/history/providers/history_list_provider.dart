@@ -400,7 +400,7 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
             entityType: EntityType.file,
             action: card.action,
             title: card.name,
-            subtitle: '${card.fileName}.${card.fileExtension}',
+            subtitle: null,
             actionAt: card.actionAt,
           ),
         )

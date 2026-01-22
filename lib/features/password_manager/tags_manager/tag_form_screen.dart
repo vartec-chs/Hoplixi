@@ -344,6 +344,8 @@ String _getTagTypeLabel(TagType type) {
       return 'Банковские карты';
     case TagType.file:
       return 'Файлы';
+    case TagType.document:
+      return 'Документы';
     case TagType.mixed:
       return 'Смешанная';
   }
