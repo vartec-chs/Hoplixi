@@ -3,7 +3,6 @@ import 'package:uuid/uuid.dart';
 
 import 'documents.dart';
 import 'file_metadata.dart';
-import 'files.dart';
 
 @DataClassName('DocumentPagesData')
 class DocumentPages extends Table {
@@ -13,10 +12,6 @@ class DocumentPages extends Table {
   /// Документ-владелец
   TextColumn get documentId =>
       text().references(Documents, #id, onDelete: KeyAction.cascade)();
-
-  /// Файл-страница (jpeg/png/pdf)
-  TextColumn get fileId =>
-      text().references(Files, #id, onDelete: KeyAction.restrict)();
 
   /// Метаданные файла страницы
   TextColumn get metadataId => text().nullable().references(

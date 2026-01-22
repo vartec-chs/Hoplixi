@@ -260,7 +260,7 @@ class _DocumentPagesListContentState
         newPages.add(
           DocumentPageDisplayInfo(
             pageId: page.id,
-            fileId: page.fileId,
+            fileId: page.metadataId!,
             pageNumber: page.pageNumber,
             isPrimary: page.isPrimary,
             fileName: fileName,

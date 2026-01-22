@@ -262,6 +262,189 @@ class FileStorageService {
     );
   }
 
+  /// Импортировать файл страницы (только метаданные)
+  Future<String> importPageFile({
+    required File sourceFile,
+    void Function(int, int)? onProgress,
+  }) async {
+    if (!await sourceFile.exists()) {
+      throw Exception('Source file not found');
+    }
+
+    final key = await _getAttachmentKey();
+    final attachmentsPath = await _getAttachmentsPath();
+    final filePathUuid = const Uuid().v4();
+    final extension = p.extension(sourceFile.path);
+    final encryptedFileName = '$filePathUuid.enc';
+    final encryptedFilePath = p.join(attachmentsPath, encryptedFileName);
+
+    await _encryptor.encrypt(
+      inputPath: sourceFile.path,
+      outputPath: encryptedFilePath,
+      password: key,
+      onProgress: onProgress,
+    );
+
+    final digest = await sha256.bind(sourceFile.openRead()).first;
+    final fileHash = digest.toString();
+    final fileSize = await sourceFile.length();
+    final fileName = p.basename(sourceFile.path);
+    final mimeType =
+        lookupMimeType(sourceFile.path) ?? 'application/octet-stream';
+
+    final metadataId = const Uuid().v4();
+    await _db
+        .into(_db.fileMetadata)
+        .insert(
+          FileMetadataCompanion.insert(
+            id: Value(metadataId),
+            fileName: fileName,
+            fileExtension: extension,
+            filePath: Value(encryptedFileName),
+            mimeType: mimeType,
+            fileSize: fileSize,
+            fileHash: Value(fileHash),
+          ),
+        );
+
+    return metadataId;
+  }
+
+  /// Расшифровать файл страницы по metadataId
+  Future<String> decryptPageFile({
+    required String metadataId,
+    void Function(int, int)? onProgress,
+  }) async {
+    final metadata = await (_db.select(
+      _db.fileMetadata,
+    )..where((m) => m.id.equals(metadataId))).getSingleOrNull();
+
+    if (metadata == null) {
+      throw Exception('File metadata not found');
+    }
+
+    final key = await _getAttachmentKey();
+    final attachmentsPath = await _getAttachmentsPath();
+    final encryptedFilePath = p.join(attachmentsPath, metadata.filePath);
+
+    logDebug('Decrypting page file: $encryptedFilePath');
+
+    if (!await File(encryptedFilePath).exists()) {
+      throw Exception('Encrypted file not found on disk');
+    }
+
+    final tempDir = await Directory.systemTemp.createTemp('hoplixi_decrypt_');
+    try {
+      final result = await _encryptor.decrypt(
+        inputPath: encryptedFilePath,
+        outputPath: tempDir.path,
+        password: key,
+        onProgress: onProgress,
+      );
+
+      final decryptedFile = File(result.outputPath);
+      if (await decryptedFile.exists()) {
+        final destDir = Directory(_decryptedAttachmentsPath);
+        if (!await destDir.exists()) {
+          await destDir.create(recursive: true);
+        }
+        final destinationPath = p.join(
+          _decryptedAttachmentsPath,
+          p.basename(decryptedFile.path),
+        );
+        await decryptedFile.copy(destinationPath);
+        return destinationPath;
+      } else {
+        throw Exception(
+          'Decryption finished but file not found at ${result.outputPath}',
+        );
+      }
+    } finally {
+      if (await tempDir.exists()) {
+        await tempDir.delete(recursive: true);
+      }
+    }
+  }
+
+  /// Обновить содержимое файла страницы (обновляет метаданные)
+  Future<void> updatePageFile({
+    required String metadataId,
+    required File newFile,
+    void Function(int, int)? onProgress,
+  }) async {
+    final metadata = await (_db.select(
+      _db.fileMetadata,
+    )..where((m) => m.id.equals(metadataId))).getSingleOrNull();
+
+    if (metadata == null) throw Exception('File metadata not found');
+
+    // Удаляем старый файл с диска
+    final attachmentsPath = await _getAttachmentsPath();
+    final oldEncryptedFilePath = p.join(attachmentsPath, metadata.filePath);
+    final oldFile = File(oldEncryptedFilePath);
+    if (await oldFile.exists()) {
+      await oldFile.delete();
+    }
+
+    // Шифруем новый файл
+    final key = await _getAttachmentKey();
+    final newFilePathUuid = const Uuid().v4();
+    final newEncryptedFileName = '$newFilePathUuid.enc';
+    final newEncryptedFilePath = p.join(attachmentsPath, newEncryptedFileName);
+
+    await _encryptor.encrypt(
+      inputPath: newFile.path,
+      outputPath: newEncryptedFilePath,
+      password: key,
+      onProgress: onProgress,
+    );
+
+    // Вычисляем новые метаданные
+    final digest = await sha256.bind(newFile.openRead()).first;
+    final newFileHash = digest.toString();
+    final newFileSize = await newFile.length();
+    final newFileName = p.basename(newFile.path);
+    final newFileExtension = p.extension(newFile.path);
+    final newMimeType =
+        lookupMimeType(newFile.path) ?? 'application/octet-stream';
+
+    await (_db.update(
+      _db.fileMetadata,
+    )..where((m) => m.id.equals(metadataId))).write(
+      FileMetadataCompanion(
+        fileName: Value(newFileName),
+        fileExtension: Value(newFileExtension),
+        filePath: Value(newEncryptedFileName),
+        mimeType: Value(newMimeType),
+        fileSize: Value(newFileSize),
+        fileHash: Value(newFileHash),
+      ),
+    );
+  }
+
+  /// Удалить файл страницы с диска по metadataId + удаление записи
+  Future<bool> deletePageFile(String metadataId) async {
+    final metadata = await (_db.select(
+      _db.fileMetadata,
+    )..where((m) => m.id.equals(metadataId))).getSingleOrNull();
+
+    if (metadata == null) return false;
+
+    final attachmentsPath = await _getAttachmentsPath();
+    final encryptedFilePath = p.join(attachmentsPath, metadata.filePath);
+    final file = File(encryptedFilePath);
+
+    if (await file.exists()) {
+      await file.delete();
+    }
+
+    await (_db.delete(
+      _db.fileMetadata,
+    )..where((m) => m.id.equals(metadataId))).go();
+
+    return true;
+  }
+
   /// Удалить файл с диска (используется при удалении из БД)
   Future<bool> deleteFileFromDisk(String fileId) async {
     final fileData = await _db.fileDao.getFileById(fileId);

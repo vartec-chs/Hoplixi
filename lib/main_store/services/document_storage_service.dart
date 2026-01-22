@@ -48,22 +48,12 @@ class DocumentStorageService {
         final isPrimary = i == 0; // Первая страница - главная
 
         // Импортируем файл страницы
-        final fileId = await _fileStorageService.importFile(
+        final metadataId = await _fileStorageService.importPageFile(
           sourceFile: pageFile,
-          name: '$title - Страница $pageNumber',
-          description: 'Страница $pageNumber документа $title',
-          categoryId: categoryId,
-          tagsIds: [],
           onProgress: (processed, total) {
             onProgress?.call(i + 1, pageFiles.length);
           },
         );
-
-        // Получаем metadataId созданного файла
-        final fileData = await _db.fileDao.getFileById(fileId);
-        if (fileData == null) {
-          throw Exception('Failed to get created file data');
-        }
 
         // Создаем запись страницы документа
         final pageId = const Uuid().v4();
@@ -73,8 +63,7 @@ class DocumentStorageService {
               DocumentPagesCompanion.insert(
                 id: Value(pageId),
                 documentId: documentId,
-                fileId: fileId,
-                metadataId: Value(fileData.metadataId),
+                metadataId: Value(metadataId),
                 pageNumber: pageNumber,
                 isPrimary: Value(isPrimary),
               ),
@@ -124,22 +113,12 @@ class DocumentStorageService {
         }
 
         // Импортируем файл страницы
-        final fileId = await _fileStorageService.importFile(
+        final metadataId = await _fileStorageService.importPageFile(
           sourceFile: pageFile,
-          name: '${document.title ?? "Документ"} - Страница $pageNumber',
-          description: 'Страница $pageNumber документа ${document.title}',
-          categoryId: document.categoryId,
-          tagsIds: [],
           onProgress: (processed, total) {
             onProgress?.call(i + 1, pageFiles.length);
           },
         );
-
-        // Получаем metadataId
-        final fileData = await _db.fileDao.getFileById(fileId);
-        if (fileData == null) {
-          throw Exception('Failed to get created file data');
-        }
 
         // Создаем запись страницы
         final pageId = const Uuid().v4();
@@ -149,8 +128,8 @@ class DocumentStorageService {
               DocumentPagesCompanion.insert(
                 id: Value(pageId),
                 documentId: documentId,
-                fileId: fileId,
-                metadataId: Value(fileData.metadataId),
+             
+                metadataId: Value(metadataId),
                 pageNumber: pageNumber,
               ),
             );
@@ -197,10 +176,10 @@ class DocumentStorageService {
       if (page == null) return false;
 
       // Удаляем файл страницы с диска
-      await _fileStorageService.deleteFileFromDisk(page.fileId);
+      await _fileStorageService.deleteFileFromDisk(page.metadataId!);
 
       // Удаляем запись файла из БД
-      await _db.fileDao.permanentDelete(page.fileId);
+      await _db.fileDao.permanentDelete(page.metadataId!);
 
       // Удаляем запись страницы
       final result = await (_db.delete(
@@ -283,8 +262,8 @@ class DocumentStorageService {
 
       // Удаляем каждую страницу (файлы и записи)
       for (final page in pages) {
-        await _fileStorageService.deleteFileFromDisk(page.fileId);
-        await _db.fileDao.permanentDelete(page.fileId);
+        await _fileStorageService.deleteFileFromDisk(page.metadataId!);
+        await _db.fileDao.permanentDelete(page.metadataId!);
       }
 
       // Удаляем все записи страниц
@@ -320,7 +299,7 @@ class DocumentStorageService {
     }
 
     return await _fileStorageService.decryptFile(
-      fileId: page.fileId,
+      fileId: page.metadataId!,
       onProgress: onProgress,
     );
   }
@@ -342,7 +321,7 @@ class DocumentStorageService {
 
       // Обновляем содержимое файла страницы
       await _fileStorageService.updateFileContent(
-        fileId: page.fileId,
+        fileId: page.metadataId!,
         newFile: newPageFile,
         onProgress: onProgress,
       );

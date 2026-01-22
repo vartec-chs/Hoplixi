@@ -65,7 +65,7 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
       for (final pageData in pagesData) {
         // Получаем информацию о файле страницы
         final fileDao = await ref.read(fileDaoProvider.future);
-        final fileInfo = await fileDao.getFileById(pageData.fileId);
+        final fileInfo = await fileDao.getFileById(pageData.metadataId!);
 
         String fileName = 'Страница ${pageData.pageNumber}';
         int fileSize = 0;
@@ -86,7 +86,7 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
         pages.add(
           DocumentPageInfo(
             pageId: pageData.id,
-            fileId: pageData.fileId,
+            fileId: pageData.metadataId!,
             fileName: fileName,
             fileSize: fileSize,
             mimeType: mimeType,
