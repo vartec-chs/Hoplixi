@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/category_manager/providers/category_filter_provider.dart';
+import 'package:hoplixi/features/password_manager/managers/category_manager/providers/category_filter_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/pickers/icon_picker/icon_picker_button.dart';
 import 'package:hoplixi/main_store/models/dto/category_dto.dart';
