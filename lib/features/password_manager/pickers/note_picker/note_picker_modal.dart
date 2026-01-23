@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/features/password_manager/note_picker/models/note_picker_models.dart';
-import 'package:hoplixi/features/password_manager/note_picker/providers/note_picker_providers.dart';
-import 'package:hoplixi/features/password_manager/note_picker/widgets/note_list_tile.dart';
+import 'package:hoplixi/features/password_manager/pickers/note_picker/models/note_picker_models.dart';
+import 'package:hoplixi/features/password_manager/pickers/note_picker/providers/note_picker_providers.dart';
+import 'package:hoplixi/features/password_manager/pickers/note_picker/widgets/note_list_tile.dart';
 import 'package:hoplixi/main_store/models/dto/note_dto.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';

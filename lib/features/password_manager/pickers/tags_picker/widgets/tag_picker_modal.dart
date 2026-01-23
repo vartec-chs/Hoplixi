@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/tags_manager/features/tags_picker/providers/tag_picker_provider.dart';
-import 'package:hoplixi/features/password_manager/tags_manager/features/tags_picker/widgets/tag_picker_filters.dart';
-import 'package:hoplixi/features/password_manager/tags_manager/features/tags_picker/widgets/tag_picker_item.dart';
+import 'package:hoplixi/features/password_manager/pickers/tags_picker/providers/tag_picker_provider.dart';
+import 'package:hoplixi/features/password_manager/pickers/tags_picker/widgets/tag_picker_filters.dart';
+import 'package:hoplixi/features/password_manager/pickers/tags_picker/widgets/tag_picker_item.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 

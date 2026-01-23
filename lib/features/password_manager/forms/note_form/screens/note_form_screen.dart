@@ -9,7 +9,7 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/forms/note_form/models/note_form_state.dart';
-import 'package:hoplixi/features/password_manager/note_picker/note_picker_modal.dart';
+import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_modal.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 

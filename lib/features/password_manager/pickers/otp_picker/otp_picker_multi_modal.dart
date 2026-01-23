@@ -1,34 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/features/password_manager/note_picker/models/note_picker_models.dart';
-import 'package:hoplixi/features/password_manager/note_picker/providers/note_picker_providers.dart';
-import 'package:hoplixi/features/password_manager/note_picker/widgets/note_list_tile.dart';
-import 'package:hoplixi/main_store/models/dto/note_dto.dart';
+import 'package:hoplixi/features/password_manager/pickers/otp_picker/models/otp_picker_models.dart';
+import 'package:hoplixi/features/password_manager/pickers/otp_picker/providers/otp_picker_providers.dart';
+import 'package:hoplixi/features/password_manager/pickers/otp_picker/widgets/otp_list_tile.dart';
+import 'package:hoplixi/main_store/models/dto/otp_dto.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
-/// Показать модальное окно выбора нескольких заметок
-Future<NotePickerMultiResult?> showNotePickerMultiModal(
+/// Показать модальное окно выбора нескольких OTP
+Future<OtpPickerMultiResult?> showOtpPickerMultiModal(
   BuildContext context,
   WidgetRef ref, {
-  String? excludeNoteId,
+  String? excludeOtpId,
   List<String>? initialSelectedIds,
 }) async {
   // Сбрасываем состояние перед показом
-  ref.read(notePickerFilterProvider.notifier).reset();
-  ref.invalidate(notePickerDataProvider);
+  ref.read(otpPickerFilterProvider.notifier).reset();
+  ref.invalidate(otpPickerDataProvider);
 
-  // Загружаем начальные данные с исключением заметки
-  await ref.read(notePickerDataProvider.notifier).loadInitial(excludeNoteId);
+  // Загружаем начальные данные с исключением OTP
+  await ref.read(otpPickerDataProvider.notifier).loadInitial(excludeOtpId);
 
   if (!context.mounted) return null;
 
-  return await WoltModalSheet.show<NotePickerMultiResult>(
+  return await WoltModalSheet.show<OtpPickerMultiResult>(
     useRootNavigator: true,
     context: context,
     pageListBuilder: (context) => [
-      _buildNotePickerMultiPage(
+      _buildOtpPickerMultiPage(
         context,
         ref,
         initialSelectedIds: initialSelectedIds,
@@ -38,7 +38,7 @@ Future<NotePickerMultiResult?> showNotePickerMultiModal(
 }
 
 /// Построить страницу модального окна
-WoltModalSheetPage _buildNotePickerMultiPage(
+WoltModalSheetPage _buildOtpPickerMultiPage(
   BuildContext context,
   WidgetRef ref, {
   List<String>? initialSelectedIds,
@@ -46,7 +46,7 @@ WoltModalSheetPage _buildNotePickerMultiPage(
   return WoltModalSheetPage(
     hasSabGradient: false,
     topBarTitle: Text(
-      'Выбрать заметки',
+      'Выбрать OTP',
       style: Theme.of(context).textTheme.titleLarge,
     ),
     isTopBarLayerAlwaysVisible: true,
@@ -54,34 +54,34 @@ WoltModalSheetPage _buildNotePickerMultiPage(
       icon: const Icon(Icons.close),
       onPressed: () => Navigator.of(context).pop(),
     ),
-    child: _NotePickerMultiContent(initialSelectedIds: initialSelectedIds),
+    child: _OtpPickerMultiContent(initialSelectedIds: initialSelectedIds),
   );
 }
 
 /// Контент модального окна для множественного выбора
-class _NotePickerMultiContent extends ConsumerStatefulWidget {
+class _OtpPickerMultiContent extends ConsumerStatefulWidget {
   final List<String>? initialSelectedIds;
 
-  const _NotePickerMultiContent({this.initialSelectedIds});
+  const _OtpPickerMultiContent({this.initialSelectedIds});
 
   @override
-  ConsumerState<_NotePickerMultiContent> createState() =>
-      _NotePickerMultiContentState();
+  ConsumerState<_OtpPickerMultiContent> createState() =>
+      _OtpPickerMultiContentState();
 }
 
-class _NotePickerMultiContentState
-    extends ConsumerState<_NotePickerMultiContent> {
+class _OtpPickerMultiContentState
+    extends ConsumerState<_OtpPickerMultiContent> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final Set<String> _selectedNoteIds = {};
-  final Map<String, String> _selectedNoteTitles = {};
+  final Set<String> _selectedOtpIds = {};
+  final Map<String, String> _selectedOtpTitles = {};
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
     if (widget.initialSelectedIds != null) {
-      _selectedNoteIds.addAll(widget.initialSelectedIds!);
+      _selectedOtpIds.addAll(widget.initialSelectedIds!);
     }
   }
 
@@ -95,43 +95,44 @@ class _NotePickerMultiContentState
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      ref.read(notePickerDataProvider.notifier).loadMore();
+      ref.read(otpPickerDataProvider.notifier).loadMore();
     }
   }
 
   void _onSearchChanged(String value) {
-    ref.read(notePickerFilterProvider.notifier).updateQuery(value);
-    final currentData = ref.read(notePickerDataProvider);
+    ref.read(otpPickerFilterProvider.notifier).updateQuery(value);
+    final currentData = ref.read(otpPickerDataProvider);
     ref
-        .read(notePickerDataProvider.notifier)
-        .loadInitial(currentData.excludeNoteId);
+        .read(otpPickerDataProvider.notifier)
+        .loadInitial(currentData.excludeOtpId);
   }
 
-  void _toggleNoteSelection(NoteCardDto note) {
+  void _toggleOtpSelection(OtpCardDto otp) {
     setState(() {
-      if (_selectedNoteIds.contains(note.id)) {
-        _selectedNoteIds.remove(note.id);
-        _selectedNoteTitles.remove(note.id);
+      if (_selectedOtpIds.contains(otp.id)) {
+        _selectedOtpIds.remove(otp.id);
+        _selectedOtpTitles.remove(otp.id);
       } else {
-        _selectedNoteIds.add(note.id);
-        _selectedNoteTitles[note.id] = note.title;
+        _selectedOtpIds.add(otp.id);
+        _selectedOtpTitles[otp.id] =
+            otp.issuer ?? otp.accountName ?? 'Без названия';
       }
     });
   }
 
   void _onConfirm() {
-    final results = _selectedNoteIds
+    final results = _selectedOtpIds
         .map(
-          (id) => NotePickerResult(id: id, name: _selectedNoteTitles[id] ?? ''),
+          (id) => OtpPickerResult(id: id, name: _selectedOtpTitles[id] ?? ''),
         )
         .toList();
 
-    Navigator.of(context).pop(NotePickerMultiResult(notes: results));
+    Navigator.of(context).pop(OtpPickerMultiResult(otps: results));
   }
 
   @override
   Widget build(BuildContext context) {
-    final data = ref.watch(notePickerDataProvider);
+    final data = ref.watch(otpPickerDataProvider);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -144,15 +145,15 @@ class _NotePickerMultiContentState
             decoration: primaryInputDecoration(
               context,
               labelText: 'Поиск',
-              hintText: 'Введите название заметки',
+              hintText: 'Введите название сервиса или аккаунта',
               prefixIcon: const Icon(Icons.search),
             ),
             onChanged: _onSearchChanged,
           ),
         ),
 
-        // Индикатор выбранных заметок
-        if (_selectedNoteIds.isNotEmpty)
+        // Индикатор выбранных OTP
+        if (_selectedOtpIds.isNotEmpty)
           Container(
             padding: const EdgeInsets.symmetric(
               horizontal: 12.0,
@@ -168,7 +169,7 @@ class _NotePickerMultiContentState
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Выбрано: ${_selectedNoteIds.length}',
+                  'Выбрано: ${_selectedOtpIds.length}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onPrimaryContainer,
                   ),
@@ -179,43 +180,43 @@ class _NotePickerMultiContentState
 
         const Divider(height: 1),
 
-        // Список заметок
+        // Список OTP
         Padding(
           padding: const EdgeInsets.all(12.0),
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxHeight: MediaQuery.of(context).size.height * 0.5,
             ),
-            child: data.notes.isEmpty
+            child: data.otps.isEmpty
                 ? const Center(
                     child: Padding(
                       padding: EdgeInsets.all(32.0),
-                      child: Text('Заметки не найдены'),
+                      child: Text('OTP не найдены'),
                     ),
                   )
                 : ListView.separated(
                     controller: _scrollController,
                     shrinkWrap: true,
-                    itemCount: data.notes.length + (data.isLoadingMore ? 1 : 0),
+                    itemCount: data.otps.length + (data.isLoadingMore ? 1 : 0),
                     separatorBuilder: (context, index) =>
                         const Divider(height: 1),
                     itemBuilder: (context, index) {
-                      if (index == data.notes.length) {
+                      if (index == data.otps.length) {
                         return const Padding(
                           padding: EdgeInsets.all(16.0),
                           child: Center(child: CircularProgressIndicator()),
                         );
                       }
 
-                      final note = data.notes[index] as NoteCardDto;
-                      final isSelected = _selectedNoteIds.contains(note.id);
+                      final otp = data.otps[index] as OtpCardDto;
+                      final isSelected = _selectedOtpIds.contains(otp.id);
 
-                      return NoteListTile(
-                        note: note,
-                        onTap: () => _toggleNoteSelection(note),
+                      return OtpListTile(
+                        otp: otp,
+                        onTap: () => _toggleOtpSelection(otp),
                         trailing: Checkbox(
                           value: isSelected,
-                          onChanged: (_) => _toggleNoteSelection(note),
+                          onChanged: (_) => _toggleOtpSelection(otp),
                         ),
                       );
                     },
@@ -239,8 +240,8 @@ class _NotePickerMultiContentState
               const SizedBox(width: 12),
               Expanded(
                 child: SmoothButton(
-                  label: 'Выбрать (${_selectedNoteIds.length})',
-                  onPressed: _selectedNoteIds.isEmpty ? null : _onConfirm,
+                  label: 'Выбрать (${_selectedOtpIds.length})',
+                  onPressed: _selectedOtpIds.isEmpty ? null : _onConfirm,
                   type: SmoothButtonType.filled,
                   variant: SmoothButtonVariant.normal,
                 ),

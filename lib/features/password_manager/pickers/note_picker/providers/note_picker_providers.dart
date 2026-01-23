@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/note_picker/models/note_picker_models.dart';
+import 'package:hoplixi/features/password_manager/pickers/note_picker/models/note_picker_models.dart';
 import 'package:hoplixi/main_store/models/filter/base_filter.dart';
 import 'package:hoplixi/main_store/models/filter/notes_filter.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';

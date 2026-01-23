@@ -1,32 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/features/password_manager/tags_manager/features/tags_picker/providers/tag_filter_provider.dart';
+import 'package:hoplixi/features/password_manager/pickers/category_picker/providers/category_filter_provider.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/ui/type_chip.dart';
 
-/// Панель фильтров для пикера тегов
-class TagPickerFilters extends ConsumerWidget {
-  const TagPickerFilters({
+/// Панель фильтров для пикера категорий
+class CategoryPickerFilters extends ConsumerWidget {
+  const CategoryPickerFilters({
     super.key,
-    this.filterByType,
+    this.hideTypeFilter = false,
     this.selectedCount = 0,
-    this.maxCount,
   });
 
-  /// Фиксированный тип для фильтрации (если задан, выбор типа скрыт)
-  final List<TagType?>? filterByType;
+  /// Скрыть фильтр по типу (используется когда тип уже задан извне)
+  final bool hideTypeFilter;
 
-  /// Количество выбранных тегов
+  /// Количество выбранных категорий
   final int selectedCount;
-
-  /// Максимальное количество тегов (если задано)
-  final int? maxCount;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final filter = ref.watch(tagPickerFilterProvider);
-    final filterNotifier = ref.read(tagPickerFilterProvider.notifier);
+    final filter = ref.watch(categoryPickerFilterProvider);
+    final filterNotifier = ref.read(categoryPickerFilterProvider.notifier);
     final theme = Theme.of(context);
 
     return Container(
@@ -45,7 +41,7 @@ class TagPickerFilters extends ConsumerWidget {
                 child: TextField(
                   decoration: primaryInputDecoration(
                     context,
-                    hintText: 'Поиск тега...',
+                    hintText: 'Поиск категории...',
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: filter.query.isNotEmpty
                         ? IconButton(
@@ -57,7 +53,7 @@ class TagPickerFilters extends ConsumerWidget {
                   onChanged: filterNotifier.updateQuery,
                 ),
               ),
-              // Счетчик выбранных тегов
+              // Счетчик выбранных категорий
               if (selectedCount > 0) ...[
                 const SizedBox(width: 8),
                 Container(
@@ -66,15 +62,13 @@ class TagPickerFilters extends ConsumerWidget {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer,
+                    color: theme.colorScheme.secondaryContainer,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    maxCount != null
-                        ? '$selectedCount / $maxCount'
-                        : '$selectedCount',
+                    '$selectedCount',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onPrimaryContainer,
+                      color: theme.colorScheme.onSecondaryContainer,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -83,15 +77,13 @@ class TagPickerFilters extends ConsumerWidget {
             ],
           ),
 
-          // Фильтр по типу (скрываем если filterByType задан)
-          if (filterByType == null) ...[
+          // Фильтр по типу (скрываем если hideTypeFilter = true)
+          if (!hideTypeFilter) ...[
             const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
                   child: SingleChildScrollView(
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
@@ -103,37 +95,43 @@ class TagPickerFilters extends ConsumerWidget {
                         const SizedBox(width: 8),
                         TypeChip(
                           label: 'Пароли',
-                          isSelected: filter.types.contains(TagType.password),
-                          onTap: () =>
-                              filterNotifier.updateType([TagType.password]),
+                          isSelected: filter.types.contains(
+                            CategoryType.password,
+                          ),
+                          onTap: () => filterNotifier.updateType([
+                            CategoryType.password,
+                          ]),
                         ),
                         const SizedBox(width: 8),
                         TypeChip(
                           label: 'Банковские карты',
-                          isSelected: filter.types.contains(TagType.bankCard),
-                          onTap: () =>
-                              filterNotifier.updateType([TagType.bankCard]),
+                          isSelected: filter.types.contains(
+                            CategoryType.bankCard,
+                          ),
+                          onTap: () => filterNotifier.updateType([
+                            CategoryType.bankCard,
+                          ]),
                         ),
                         const SizedBox(width: 8),
                         TypeChip(
                           label: 'Заметки',
-                          isSelected: filter.types.contains(TagType.note),
+                          isSelected: filter.types.contains(CategoryType.note),
                           onTap: () =>
-                              filterNotifier.updateType([TagType.note]),
+                              filterNotifier.updateType([CategoryType.note]),
                         ),
                         const SizedBox(width: 8),
                         TypeChip(
                           label: 'Файлы',
-                          isSelected: filter.types.contains(TagType.file),
+                          isSelected: filter.types.contains(CategoryType.file),
                           onTap: () =>
-                              filterNotifier.updateType([TagType.file]),
+                              filterNotifier.updateType([CategoryType.file]),
                         ),
                         const SizedBox(width: 8),
                         TypeChip(
                           label: 'Mixed',
-                          isSelected: filter.types.contains(TagType.mixed),
+                          isSelected: filter.types.contains(CategoryType.mixed),
                           onTap: () =>
-                              filterNotifier.updateType([TagType.mixed]),
+                              filterNotifier.updateType([CategoryType.mixed]),
                         ),
                       ],
                     ),

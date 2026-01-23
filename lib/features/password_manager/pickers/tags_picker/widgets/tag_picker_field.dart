@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hoplixi/features/password_manager/tags_manager/features/tags_picker/widgets/tag_picker_modal.dart';
+import 'package:hoplixi/features/password_manager/pickers/tags_picker/widgets/tag_picker_modal.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';

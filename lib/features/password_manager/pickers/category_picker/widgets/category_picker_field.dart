@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/features/password_manager/category_manager/features/category_picker/providers/category_info_provider.dart';
-import 'package:hoplixi/features/password_manager/category_manager/features/category_picker/widgets/category_picker_modal.dart';
+import 'package:hoplixi/features/password_manager/pickers/category_picker/providers/category_info_provider.dart';
+import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_modal.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';

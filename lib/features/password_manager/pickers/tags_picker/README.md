@@ -20,7 +20,7 @@
 ### Базовое использование (без ограничений)
 
 ```dart
-import 'package:hoplixi/features/password_manager/tags_manager/features/tags_picker/tags_picker.dart';
+import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 
 class MyWidget extends StatefulWidget {
   @override

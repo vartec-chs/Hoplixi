@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/features/password_manager/otp_picker/models/otp_picker_models.dart';
-import 'package:hoplixi/features/password_manager/otp_picker/providers/otp_picker_providers.dart';
-import 'package:hoplixi/features/password_manager/otp_picker/widgets/otp_list_tile.dart';
+import 'package:hoplixi/features/password_manager/pickers/otp_picker/models/otp_picker_models.dart';
+import 'package:hoplixi/features/password_manager/pickers/otp_picker/providers/otp_picker_providers.dart';
+import 'package:hoplixi/features/password_manager/pickers/otp_picker/widgets/otp_list_tile.dart';
 import 'package:hoplixi/main_store/models/dto/otp_dto.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';

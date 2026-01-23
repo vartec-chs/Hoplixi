@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/features/password_manager/note_picker/note_picker_modal.dart';
+import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_modal.dart';
 
 
 /// Кастомная кнопка для вставки ссылки на заметку в Quill редактор

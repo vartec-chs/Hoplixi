@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/category_manager/features/category_picker/providers/category_picker_provider.dart';
-import 'package:hoplixi/features/password_manager/category_manager/features/category_picker/widgets/category_picker_filters.dart';
-import 'package:hoplixi/features/password_manager/category_manager/features/category_picker/widgets/category_picker_item.dart';
+import 'package:hoplixi/features/password_manager/pickers/category_picker/providers/category_picker_provider.dart';
+import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_filters.dart';
+import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_item.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
