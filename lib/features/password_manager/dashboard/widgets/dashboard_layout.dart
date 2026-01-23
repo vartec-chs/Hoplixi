@@ -339,7 +339,7 @@ class _DashboardLayoutState extends State<DashboardLayout>
         screenWidth >=
         kDesktopBreakpoint; // Показывать drawer как панель для больших экранов
     final hasPanel = _hasPanel(uri);
-    final panel = hasPanel ? widget.panelChild : const SizedBox.shrink();
+    final panel = widget.panelChild;
     final isFullCenter = _isFullCenter(uri);
 
     // Используем кэшированные destinations, добавляя Graph только для notes
@@ -379,46 +379,19 @@ class _DashboardLayoutState extends State<DashboardLayout>
             ),
 
             // Анимированная панель поверх центра (ZoomPageTransitionsBuilder стиль)
-            AnimatedSwitcher(
-              duration: kScaleAnimationDuration,
-              switchInCurve: Curves.easeOut,
-              switchOutCurve: Curves.easeIn,
-              transitionBuilder: (child, animation) {
-                // Zoom in/out анимация как в ZoomPageTransitionsBuilder
-                final scaleAnimation =
-                    Tween<double>(
-                      begin: kPanelZoomBegin,
-                      end: kPanelZoomEnd,
-                    ).animate(
-                      CurvedAnimation(
-                        parent: animation,
-                        curve: const Interval(0.0, 1.0, curve: Curves.easeOut),
-                      ),
-                    );
-
-                final fadeAnimation =
-                    Tween<double>(begin: kFadeBegin, end: kFadeEnd).animate(
-                      CurvedAnimation(
-                        parent: animation,
-                        curve: const Interval(
-                          kFadeAnimationIntervalStart,
-                          kFadeAnimationIntervalEnd,
-                          curve: Curves.easeOut,
-                        ),
-                      ),
-                    );
-
-                return ScaleTransition(
-                  scale: scaleAnimation,
-                  child: FadeTransition(opacity: fadeAnimation, child: child),
-                );
-              },
-              child: showPanel
-                  ? Container(
-                      key: const ValueKey('panel'),
-                      child: widget.panelChild,
-                    )
-                  : const SizedBox.shrink(key: ValueKey('empty')),
+            IgnorePointer(
+              ignoring: !showPanel,
+              child: AnimatedOpacity(
+                duration: kFadeAnimationDuration,
+                opacity: showPanel ? 1.0 : 0.0,
+                curve: showPanel ? Curves.easeOut : Curves.easeIn,
+                child: AnimatedScale(
+                  scale: showPanel ? kPanelZoomEnd : kPanelZoomBegin,
+                  duration: kScaleAnimationDuration,
+                  curve: Curves.easeOut,
+                  child: Container(key: const ValueKey('panel'), child: panel),
+                ),
+              ),
             ),
           ],
         ),
@@ -626,9 +599,7 @@ class _DashboardLayoutState extends State<DashboardLayout>
                               child: AnimatedOpacity(
                                 opacity: _controller.value,
                                 duration: kOpacityAnimationDuration,
-                                child: hasPanel
-                                    ? child
-                                    : const SizedBox.shrink(),
+                                child: child,
                               ),
                             ),
                           ),

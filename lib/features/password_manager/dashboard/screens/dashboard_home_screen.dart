@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/list_state.dart';
@@ -13,6 +14,7 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_ho
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_list_toolbar.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
+import 'package:hoplixi/routing/paths.dart';
 
 /// Длительность анимации для элементов списка.
 const kAnimationDuration = Duration(milliseconds: 180);
@@ -317,7 +319,7 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
                 Navigator.of(context).pop();
                 await _closeDatabase();
                 if (mounted) {
-                  Navigator.of(context).pop();
+                  context.go(AppRoutesPaths.home);
                 }
               },
             ),

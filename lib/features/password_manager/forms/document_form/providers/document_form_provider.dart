@@ -205,48 +205,93 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
       final scannedDocs = await FlutterDocScanner()
           .getScannedDocumentAsImages();
 
-      if (scannedDocs is List) {
-        final newPages = <DocumentPageInfo>[];
-        final startPageNumber = state.pages.length + 1;
+      logTrace('Scanned docs: $scannedDocs', tag: _logTag);
 
-        for (int i = 0; i < scannedDocs.length; i++) {
-          final path = scannedDocs[i];
-          if (path is! String) continue;
+      final List<String> paths = [];
 
-          final file = File(path);
-          if (!await file.exists()) continue;
+      if (scannedDocs is Map) {
+        final images = scannedDocs['images'] ?? scannedDocs['Uri'];
+        if (images is List) {
+          for (final item in images) {
+            if (item is String) {
+              if (item.startsWith('file://')) {
+                try {
+                  paths.add(Uri.parse(item).toFilePath());
+                } catch (e) {
+                  paths.add(item);
+                }
+              } else {
+                paths.add(item);
+              }
+            }
+          }
+        }
+      } else if (scannedDocs is List) {
+        for (final item in scannedDocs) {
+          if (item is String) paths.add(item);
+        }
+      }
 
-          final length = await file.length();
-          final mimeType = lookupMimeType(path) ?? 'image/jpeg';
+      final newPages = <DocumentPageInfo>[];
+      final startPageNumber = state.pages.length + 1;
 
-          newPages.add(
-            DocumentPageInfo(
-              file: file,
-              fileName: 'Скан ${startPageNumber + i}.jpg',
-              fileSize: length,
-              mimeType: mimeType,
-              pageNumber: startPageNumber + i,
-              isPrimary: state.pages.isEmpty && i == 0,
-              isNew: true,
-            ),
-          );
+      for (int i = 0; i < paths.length; i++) {
+        final path = paths[i];
+        final file = File(path);
+
+        if (!await file.exists()) continue;
+
+        // Перемещаем файл в кэш приложения для безопасности и удаляем исходный
+        File processedFile = file;
+        try {
+          final tempDir = Directory.systemTemp;
+          final newName =
+              'scan_${DateTime.now().millisecondsSinceEpoch}_$i${p.extension(path)}';
+          final newPath = p.join(tempDir.path, newName);
+
+          try {
+            processedFile = await file.rename(newPath);
+          } catch (_) {
+            // Если rename не сработал (разные файловые системы), копируем и удаляем
+            processedFile = await file.copy(newPath);
+            await file.delete();
+          }
+          logInfo('Moved scanned file to: $newPath', tag: _logTag);
+        } catch (e) {
+          logError('Failed to move scanned file', error: e, tag: _logTag);
+          // Продолжаем с исходным файлом если не удалось переместить
         }
 
-        if (newPages.isNotEmpty) {
-          final updatedPages = [...state.pages, ...newPages];
-          state = state.copyWith(
-            pages: updatedPages,
-            pagesError: null,
-            title: state.title.isEmpty && newPages.isNotEmpty
-                ? 'Скан документа'
-                : state.title,
-          );
+        final length = await processedFile.length();
+        final mimeType = lookupMimeType(processedFile.path) ?? 'image/jpeg';
 
-          logInfo(
-            'Added ${newPages.length} scanned pages, total: ${updatedPages.length}',
-            tag: _logTag,
-          );
-        }
+        newPages.add(
+          DocumentPageInfo(
+            file: processedFile,
+            fileName: 'Скан ${startPageNumber + i}.jpg',
+            fileSize: length,
+            mimeType: mimeType,
+            pageNumber: startPageNumber + i,
+            isPrimary: state.pages.isEmpty && i == 0,
+            isNew: true,
+          ),
+        );
+      }
+
+      if (newPages.isNotEmpty) {
+        final updatedPages = [...state.pages, ...newPages];
+        state = state.copyWith(
+          pages: updatedPages,
+          pagesError: null,
+          title: state.title.isEmpty && newPages.isNotEmpty
+              ? 'Скан документа'
+              : state.title,
+        );
+
+        logInfo(
+          'Added ${newPages.length} scanned pages, total: ${updatedPages.length}',
+          tag: _logTag,
+        );
       }
     } catch (e, stack) {
       logError(
