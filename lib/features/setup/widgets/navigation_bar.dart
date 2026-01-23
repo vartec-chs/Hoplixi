@@ -32,65 +32,62 @@ class SetupNavigationBar extends StatelessWidget {
 
       color: colorScheme.surface,
 
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            // Кнопка назад
-            AnimatedOpacity(
+      child: Row(
+        children: [
+          // Кнопка назад
+          AnimatedOpacity(
+            duration: const Duration(milliseconds: 300),
+            opacity: canGoBack ? 1.0 : 0.0,
+            child: AnimatedScale(
               duration: const Duration(milliseconds: 300),
-              opacity: canGoBack ? 1.0 : 0.0,
-              child: AnimatedScale(
-                duration: const Duration(milliseconds: 300),
-                scale: canGoBack ? 1.0 : 0.8,
-                child: IconButton.filled(
-                  onPressed: canGoBack ? onBack : null,
-                  style: IconButton.styleFrom(
-                    backgroundColor: colorScheme.surfaceContainerHighest,
-                    foregroundColor: colorScheme.onSurfaceVariant,
-                  ),
-                  icon: const Icon(Icons.arrow_back_rounded),
+              scale: canGoBack ? 1.0 : 0.8,
+              child: IconButton.filled(
+                onPressed: canGoBack ? onBack : null,
+                style: IconButton.styleFrom(
+                  backgroundColor: colorScheme.surfaceContainerHighest,
+                  foregroundColor: colorScheme.onSurfaceVariant,
                 ),
+                icon: const Icon(Icons.arrow_back_rounded),
               ),
             ),
+          ),
 
-            const Spacer(),
+          const Spacer(),
 
-            // Индикатор страниц
-            if (indicator != null) indicator!,
+          // Индикатор страниц
+          if (indicator != null) indicator!,
 
-            const Spacer(),
+          const Spacer(),
 
-            // Кнопка вперёд / завершить
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              transitionBuilder: (child, animation) {
-                return ScaleTransition(
-                  scale: animation,
-                  child: FadeTransition(opacity: animation, child: child),
-                );
-              },
-              child: isLastPage
-                  ? SmoothButton(
-                      key: const ValueKey('complete'),
-                      label: 'Завершить',
-                      onPressed: isLoading ? null : onComplete,
-                      type: SmoothButtonType.filled,
-                      variant: SmoothButtonVariant.success,
-                      loading: isLoading,
-                      icon: const Icon(Icons.check_circle_outline, size: 20),
-                    )
-                  : SmoothButton(
-                      key: const ValueKey('next'),
-                      label: 'Далее',
-                      onPressed: isLoading ? null : onNext,
-                      type: SmoothButtonType.filled,
-                      icon: const Icon(Icons.arrow_forward_rounded, size: 20),
-                      iconPosition: SmoothButtonIconPosition.end,
-                    ),
-            ),
-          ],
-        ),
+          // Кнопка вперёд / завершить
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            transitionBuilder: (child, animation) {
+              return ScaleTransition(
+                scale: animation,
+                child: FadeTransition(opacity: animation, child: child),
+              );
+            },
+            child: isLastPage
+                ? SmoothButton(
+                    key: const ValueKey('complete'),
+                    label: 'Завершить',
+                    onPressed: isLoading ? null : onComplete,
+                    type: SmoothButtonType.filled,
+                    variant: SmoothButtonVariant.success,
+                    loading: isLoading,
+                    icon: const Icon(Icons.check_circle_outline, size: 20),
+                  )
+                : SmoothButton(
+                    key: const ValueKey('next'),
+                    label: 'Далее',
+                    onPressed: isLoading ? null : onNext,
+                    type: SmoothButtonType.filled,
+                    icon: const Icon(Icons.arrow_forward_rounded, size: 20),
+                    iconPosition: SmoothButtonIconPosition.end,
+                  ),
+          ),
+        ],
       ),
     );
   }

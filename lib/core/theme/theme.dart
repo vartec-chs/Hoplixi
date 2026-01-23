@@ -46,6 +46,9 @@ abstract final class AppTheme {
     );
 
     final base = bs.copyWith(
+      dialogTheme: bs.dialogTheme.copyWith(
+        insetPadding: EdgeInsets.symmetric(horizontal: 12),
+      ),
       cardTheme: bs.cardTheme.copyWith(margin: EdgeInsets.zero),
       elevatedButtonTheme: ButtonThemes.adaptiveElevatedButtonTheme(
         context,
@@ -94,6 +97,9 @@ abstract final class AppTheme {
     );
 
     final base = bs.copyWith(
+      dialogTheme: bs.dialogTheme.copyWith(
+        insetPadding: EdgeInsets.symmetric(horizontal: 12),
+      ),
       cardTheme: bs.cardTheme.copyWith(margin: EdgeInsets.zero),
       elevatedButtonTheme: ButtonThemes.adaptiveElevatedButtonTheme(
         context,

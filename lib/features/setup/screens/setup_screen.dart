@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/core/utils/system_ui_utils.dart';
 import 'package:hoplixi/features/setup/providers/setup_provider.dart';
 import 'package:hoplixi/features/setup/widgets/biometric_page.dart';
 import 'package:hoplixi/features/setup/widgets/navigation_bar.dart';
@@ -110,7 +111,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   @override
   Widget build(BuildContext context) {
     final setupState = ref.watch(setupProvider);
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    setSystemUiOverlayStyle(theme);
 
     // Определяем страницы в зависимости от платформы
     final pages = <Widget>[
@@ -122,24 +126,24 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     ];
 
     return Scaffold(
-      body: AnimatedBuilder(
-        animation: _backgroundController,
-        builder: (context, child) {
-          Color? backgroundColor;
-          if (_backgroundController.isAnimating &&
-              _backgroundColorAnimation.value != null) {
-            backgroundColor = _backgroundColorAnimation.value;
-          } else {
-            backgroundColor = colorScheme.surface;
-          }
+      body: SafeArea(
+        child: AnimatedBuilder(
+          animation: _backgroundController,
+          builder: (context, child) {
+            Color? backgroundColor;
+            if (_backgroundController.isAnimating &&
+                _backgroundColorAnimation.value != null) {
+              backgroundColor = _backgroundColorAnimation.value;
+            } else {
+              backgroundColor = colorScheme.surface;
+            }
 
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            color: backgroundColor,
-            child: child,
-          );
-        },
-        child: SafeArea(
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              color: backgroundColor,
+              child: child,
+            );
+          },
           child: Column(
             children: [
               // Область страниц

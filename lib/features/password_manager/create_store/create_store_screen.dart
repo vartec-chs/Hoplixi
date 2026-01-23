@@ -115,7 +115,9 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen>
             onPressed: () => _handleClose(context, formNotifier),
           ),
         ),
+
         body: SafeArea(
+          bottom: false,
           child: Column(
             children: [
               // Индикатор прогресса
@@ -422,7 +424,12 @@ class _NavigationButtons extends StatelessWidget {
     final isLastStep = formState.stepIndex == CreateStoreStep.values.length - 1;
 
     return Container(
-      padding: screenPadding,
+      padding: EdgeInsets.only(
+        left: screenPaddingValue,
+        top: screenPaddingValue,
+        right: screenPaddingValue,
+        bottom: screenPaddingValue + MediaQuery.of(context).viewPadding.bottom,
+      ),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         border: Border(
