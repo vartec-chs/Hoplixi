@@ -140,7 +140,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           );
         },
         child: SafeArea(
-          bottom: false,
           child: Column(
             children: [
               // Область страниц

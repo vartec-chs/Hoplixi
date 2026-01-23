@@ -115,37 +115,39 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen>
             onPressed: () => _handleClose(context, formNotifier),
           ),
         ),
-        body: Column(
-          children: [
-            // Индикатор прогресса
-            _ProgressIndicator(
-              currentStep: formState.stepIndex,
-              totalSteps: 4,
-              progress: formState.progress,
-            ),
-
-            // Содержимое шагов
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                children: const [
-                  Step1NameAndDescription(),
-                  Step2SelectPath(),
-                  Step3MasterPassword(),
-                  Step4Confirmation(),
-                ],
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Индикатор прогресса
+              _ProgressIndicator(
+                currentStep: formState.stepIndex,
+                totalSteps: 4,
+                progress: formState.progress,
               ),
-            ),
 
-            // Кнопки навигации
-            _NavigationButtons(
-              formState: formState,
-              onPrevious: () => formNotifier.previousStep(),
-              onNext: () => formNotifier.nextStep(),
-              onCreate: () => _handleCreate(context, formState),
-            ),
-          ],
+              // Содержимое шагов
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: const [
+                    Step1NameAndDescription(),
+                    Step2SelectPath(),
+                    Step3MasterPassword(),
+                    Step4Confirmation(),
+                  ],
+                ),
+              ),
+
+              // Кнопки навигации
+              _NavigationButtons(
+                formState: formState,
+                onPrevious: () => formNotifier.previousStep(),
+                onNext: () => formNotifier.nextStep(),
+                onCreate: () => _handleCreate(context, formState),
+              ),
+            ],
+          ),
         ),
       ),
     );
