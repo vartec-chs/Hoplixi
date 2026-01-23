@@ -7,20 +7,22 @@ import 'package:hoplixi/features/cloud_sync/oauth_apps/ui/oauth_apps_screen.dart
 import 'package:hoplixi/features/component_showcase/component_showcase_screen.dart';
 import 'package:hoplixi/features/home/home_screen.dart';
 import 'package:hoplixi/features/logs_viewer/screens/logs_tabs_screen.dart';
-import 'package:hoplixi/features/password_manager/managers/category_manager/screens/category_form_screen.dart';
-import 'package:hoplixi/features/password_manager/managers/category_manager/screens/category_manager_screen.dart';
 import 'package:hoplixi/features/password_manager/create_store/create_store_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/screens/notes_graph_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_layout.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/entity_add_edit.dart';
 import 'package:hoplixi/features/password_manager/history/ui/screens/history_screen.dart';
+import 'package:hoplixi/features/password_manager/lock_store/lock_store_screen.dart';
+import 'package:hoplixi/features/password_manager/managers/category_manager/screens/category_form_screen.dart';
+import 'package:hoplixi/features/password_manager/managers/category_manager/screens/category_manager_screen.dart';
 import 'package:hoplixi/features/password_manager/managers/icon_manager/icon_form_screen.dart';
 import 'package:hoplixi/features/password_manager/managers/icon_manager/icon_manager_screen.dart';
-import 'package:hoplixi/features/password_manager/lock_store/lock_store_screen.dart';
-import 'package:hoplixi/features/password_manager/open_store/open_store_screen.dart';
 import 'package:hoplixi/features/password_manager/managers/tags_manager/tag_form_screen.dart';
 import 'package:hoplixi/features/password_manager/managers/tags_manager/tags_manager_screen.dart';
+import 'package:hoplixi/features/password_manager/migration/otp/screens/import_otp_screen.dart';
+import 'package:hoplixi/features/password_manager/migration/passwords/screens/password_migration_screen.dart';
+import 'package:hoplixi/features/password_manager/open_store/open_store_screen.dart';
 import 'package:hoplixi/features/settings/screens/settings_screen.dart';
 import 'package:hoplixi/features/setup/screens/setup_screen.dart';
 import 'package:hoplixi/global_key.dart';
@@ -254,6 +256,36 @@ final List<RouteBase> appRoutes = [
               final id = state.pathParameters['id']!;
               return HistoryScreen(entityType: entity, entityId: id);
             },
+          ),
+
+          GoRoute(
+            path: 'migrate',
+            name: 'entity_migrate',
+            redirect: (context, state) {
+              final entity = EntityType.fromId(
+                state.pathParameters['entity']!,
+              )!;
+              if (entity != EntityType.password) {
+                return '/dashboard/${entity.id}';
+              }
+              return null;
+            },
+            builder: (context, state) => const PasswordMigrationScreen(),
+          ),
+
+          GoRoute(
+            path: 'import',
+            name: 'entity_import',
+            redirect: (context, state) {
+              final entity = EntityType.fromId(
+                state.pathParameters['entity']!,
+              )!;
+              if (entity != EntityType.otp) {
+                return '/dashboard/${entity.id}';
+              }
+              return null;
+            },
+            builder: (context, state) => const ImportOtpScreen(),
           ),
         ],
       ),

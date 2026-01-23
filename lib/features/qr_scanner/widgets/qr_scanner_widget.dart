@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/shared/widgets/titlebar.dart';
-import 'package:universal_platform/universal_platform.dart';
-
-import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/features/qr_scanner/screens/qr_scanner_with_camera_screen.dart';
 import 'package:hoplixi/features/qr_scanner/screens/qr_scanner_with_image_screen.dart';
+import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/shared/widgets/titlebar.dart';
+import 'package:universal_platform/universal_platform.dart';
 
 /// Режим сканирования QR-кода
 enum QrScannerMode {
@@ -155,7 +154,7 @@ class QrScannerWidget extends StatelessWidget {
     // Если доступен только один режим, показываем одну кнопку
     if (!_showCameraMode && showImageMode) {
       return SmoothButton(
-        label: 'Сканировать QR-код',
+        label: 'Сканировать QR-код с изображения',
         icon: const Icon(Icons.qr_code_scanner),
         type: SmoothButtonType.filled,
         isFullWidth: true,

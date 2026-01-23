@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_button.dart';
+import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/otp_picker/otp_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -152,6 +153,12 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
           widget.passwordId != null ? 'Редактировать пароль' : 'Новый пароль',
         ),
         actions: [
+          // Кнопка миграции паролей
+          IconButton(
+            icon: const Icon(LucideIcons.import),
+            tooltip: 'Миграция паролей',
+            onPressed: () => context.go(AppRoutesPaths.passwordMigrate),
+          ),
           if (state.isSaving)
             const Padding(
               padding: EdgeInsets.all(16.0),

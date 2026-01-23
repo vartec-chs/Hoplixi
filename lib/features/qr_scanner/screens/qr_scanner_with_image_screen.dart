@@ -7,13 +7,16 @@
 /// 3. Decode QR code using zxing2
 /// 4. Show result in WoltModalSheet for confirmation
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:crop_image/crop_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/shared/ui/notification_card.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
@@ -22,11 +25,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:universal_platform/universal_platform.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import 'package:zxing2/qrcode.dart';
-
-import 'package:hoplixi/core/logger/index.dart';
-import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/shared/ui/button.dart';
-import 'package:hoplixi/shared/ui/notification_card.dart';
 
 /// Custom aspect ratio preset for QR codes (square) - used on mobile
 class _QrAspectRatioPreset implements CropAspectRatioPresetData {
@@ -52,6 +50,7 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
   final FocusNode _focusNode = FocusNode();
 
   bool _isLoading = false;
+  bool _isProcessFileSelect = false;
   String? _errorMessage;
   File? _selectedImage;
 
@@ -88,7 +87,7 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
 
   /// Handle paste from clipboard
   Future<void> _handlePaste() async {
-    if (_isLoading) return;
+    if (_isProcessFileSelect || _isLoading) return;
 
     try {
       final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
@@ -151,7 +150,7 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
   /// Paste image from clipboard and process it
   Future<void> _pasteImageFromClipboard() async {
     setState(() {
-      _isLoading = true;
+      _isProcessFileSelect = true;
       _errorMessage = null;
     });
 
@@ -164,7 +163,7 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
           description:
               'В буфере обмена нет изображения. Скопируйте изображение с QR-кодом.',
         );
-        setState(() => _isLoading = false);
+        setState(() => _isProcessFileSelect = false);
         return;
       }
 
@@ -181,7 +180,7 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
           if (croppedFile != null) {
             setState(() {
               _selectedImage = croppedFile;
-              _isLoading = false;
+              _isProcessFileSelect = false;
             });
             return;
           }
@@ -190,22 +189,19 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
           if (mobileCropped != null) {
             setState(() {
               _selectedImage = File(mobileCropped.path);
-              _isLoading = false;
+              _isProcessFileSelect = false;
             });
             return;
           }
         }
 
-        // User cancelled crop, use original
-        setState(() {
-          _selectedImage = tempFile;
-          _isLoading = false;
-        });
+        // User cancelled crop, don't select the image
+        setState(() => _isProcessFileSelect = false);
       }
     } catch (e, stackTrace) {
       logError('Error pasting image: $e', tag: _logTag, stackTrace: stackTrace);
       setState(() {
-        _isLoading = false;
+        _isProcessFileSelect = false;
         _errorMessage = 'Ошибка вставки изображения: $e';
       });
     }
@@ -234,7 +230,9 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
                 message: 'Вставить из буфера (Ctrl+V)',
                 child: IconButton(
                   icon: const Icon(Icons.content_paste),
-                  onPressed: _isLoading ? null : _handlePaste,
+                  onPressed: _isProcessFileSelect || _isLoading
+                      ? null
+                      : _handlePaste,
                 ),
               ),
           ],
@@ -310,14 +308,18 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    if (_isLoading) {
-      return const Center(
+    if (_isProcessFileSelect || _isLoading) {
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Обработка изображения...'),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(
+              _isProcessFileSelect
+                  ? 'Выбор и обработка файла...'
+                  : 'Сканирование QR-кода...',
+            ),
           ],
         ),
       );
@@ -376,28 +378,30 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
       children: [
         // Pick from gallery / camera row
         Row(
+          spacing: 12,
           children: [
             Expanded(
               child: SmoothButton(
                 label: 'Галерея',
                 icon: const Icon(Icons.photo_library_outlined),
                 type: SmoothButtonType.tonal,
-                onPressed: _isLoading
+                onPressed: _isProcessFileSelect || _isLoading
                     ? null
                     : () => _pickImage(ImageSource.gallery),
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: SmoothButton(
-                label: 'Камера',
-                icon: const Icon(Icons.camera_alt_outlined),
-                type: SmoothButtonType.tonal,
-                onPressed: _isLoading
-                    ? null
-                    : () => _pickImage(ImageSource.camera),
+
+            if (UniversalPlatform.isMobile)
+              Expanded(
+                child: SmoothButton(
+                  label: 'Камера',
+                  icon: const Icon(Icons.camera_alt_outlined),
+                  type: SmoothButtonType.tonal,
+                  onPressed: _isProcessFileSelect || _isLoading
+                      ? null
+                      : () => _pickImage(ImageSource.camera),
+                ),
               ),
-            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -408,8 +412,11 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
           icon: const Icon(Icons.qr_code),
           type: SmoothButtonType.filled,
           isFullWidth: true,
-          loading: _isLoading,
-          onPressed: _selectedImage != null && !_isLoading ? _scanQrCode : null,
+          loading: _isProcessFileSelect || _isLoading,
+          onPressed:
+              _selectedImage != null && !(_isProcessFileSelect || _isLoading)
+              ? _scanQrCode
+              : null,
         ),
       ],
     );
@@ -425,7 +432,7 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
   Future<void> _pickImage(ImageSource source) async {
     try {
       setState(() {
-        _isLoading = true;
+        _isProcessFileSelect = true;
         _errorMessage = null;
       });
 
@@ -437,7 +444,7 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
       );
 
       if (pickedFile == null) {
-        setState(() => _isLoading = false);
+        setState(() => _isProcessFileSelect = false);
         return;
       }
 
@@ -455,26 +462,23 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
       if (croppedFile != null) {
         setState(() {
           _selectedImage = croppedFile;
-          _isLoading = false;
+          _isProcessFileSelect = false;
         });
       } else {
-        // User cancelled crop, but keep the original image
-        setState(() {
-          _selectedImage = File(pickedFile.path);
-          _isLoading = false;
-        });
+        // User cancelled crop, don't select the image
+        setState(() => _isProcessFileSelect = false);
       }
     } on PlatformException catch (e) {
       logError('Platform exception during image pick: $e', tag: _logTag);
       setState(() {
-        _isLoading = false;
+        _isProcessFileSelect = false;
         _errorMessage =
             'Ошибка доступа к ${source == ImageSource.camera ? 'камере' : 'галерее'}: ${e.message}';
       });
     } catch (e, stackTrace) {
       logError('Error picking image: $e', tag: _logTag, stackTrace: stackTrace);
       setState(() {
-        _isLoading = false;
+        _isProcessFileSelect = false;
         _errorMessage = 'Ошибка выбора изображения: $e';
       });
     }
@@ -855,7 +859,6 @@ class _DesktopCropDialogState extends State<_DesktopCropDialog> {
     final colorScheme = theme.colorScheme;
 
     return Dialog(
-      backgroundColor: colorScheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
         constraints: BoxConstraints(
@@ -869,7 +872,6 @@ class _DesktopCropDialogState extends State<_DesktopCropDialog> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest,
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(16),
                 ),

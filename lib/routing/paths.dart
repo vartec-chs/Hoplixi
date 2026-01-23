@@ -47,6 +47,7 @@ class AppRoutesPaths {
   static String otps = '/dashboard/${EntityType.otp.id}';
   static String otpAdd = '/dashboard/${EntityType.otp.id}/add';
   static String otpEdit = '/dashboard/${EntityType.otp.id}/edit/:id';
+  static String otpImport = '/dashboard/${EntityType.otp.id}/import';
 
   /// - bank cards
   static String bankCards = '/dashboard/${EntityType.bankCard.id}';

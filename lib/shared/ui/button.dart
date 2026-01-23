@@ -93,6 +93,9 @@ class SmoothButton extends StatelessWidget {
   Widget _buildChild() {
     final textWidget = Text(
       label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      softWrap: false,
       style: TextStyle(
         fontSize: _fontSize,
         fontWeight: bold ? FontWeight.bold : FontWeight.normal,
@@ -109,7 +112,7 @@ class SmoothButton extends StatelessWidget {
             child: const CircularProgressIndicator(strokeWidth: 2),
           ),
           const SizedBox(width: 8),
-          textWidget,
+          Flexible(child: textWidget),
         ],
       );
     }
@@ -123,8 +126,8 @@ class SmoothButton extends StatelessWidget {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: iconPosition == SmoothButtonIconPosition.start
-            ? [iconWidget, textWidget]
-            : [textWidget, iconWidget],
+            ? [iconWidget, Flexible(child: textWidget)]
+            : [Flexible(child: textWidget), iconWidget],
       );
     }
 

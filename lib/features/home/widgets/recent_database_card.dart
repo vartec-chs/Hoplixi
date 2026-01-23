@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_preferences/app_storage_service.dart';
 import 'package:hoplixi/core/services/local_auth_failure.dart';
 import 'package:hoplixi/core/services/local_auth_service.dart';
+import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/di_init.dart';
 import 'package:hoplixi/features/home/providers/recent_database_provider.dart';
@@ -104,13 +105,8 @@ class RecentDatabaseCard extends ConsumerWidget {
               child: SmoothButton(
                 label: isLoading ? 'Открытие...' : 'Открыть',
                 type: SmoothButtonType.outlined,
-                icon: isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(CupertinoIcons.arrow_right_circle),
+                icon: const Icon(CupertinoIcons.arrow_right_circle),
+                loading: isLoading,
                 onPressed: isLoading
                     ? null
                     : () => _openDatabase(context, ref, entry),
@@ -302,7 +298,9 @@ class _PasswordDialogState extends State<_PasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final fillColor = AppColors.getInputFieldBackgroundColor(context);
     return AlertDialog(
+      insetPadding: const EdgeInsets.all(12),
       title: Text('Введите пароль для "${widget.dbName}"'),
       content: SizedBox(
         width: 300,
@@ -333,6 +331,7 @@ class _PasswordDialogState extends State<_PasswordDialog> {
             ),
             const SizedBox(height: 12),
             SwitchListTile(
+              tileColor: fillColor,
               title: const Text('Сохранить пароль'),
               value: _savePassword,
               onChanged: (value) {
