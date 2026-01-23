@@ -142,11 +142,11 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
                           // Секция страниц документа
                           _buildPagesSection(theme, state),
                           const SizedBox(height: 16),
-        
+
                           // Прогресс загрузки
                           if (state.isSaving && state.uploadProgress > 0)
                             _buildUploadProgress(theme, state),
-        
+
                           // Название *
                           TextField(
                             controller: _titleController,
@@ -163,11 +163,11 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
                             },
                           ),
                           const SizedBox(height: 16),
-        
+
                           // Тип документа
                           _buildDocumentTypeDropdown(theme, state),
                           const SizedBox(height: 16),
-        
+
                           // Категория
                           CategoryPickerField(
                             selectedCategoryId: state.categoryId,
@@ -185,7 +185,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
                             },
                           ),
                           const SizedBox(height: 16),
-        
+
                           // Теги
                           TagPickerField(
                             selectedTagIds: state.tagIds,
@@ -200,7 +200,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
                             },
                           ),
                           const SizedBox(height: 16),
-        
+
                           // Описание
                           TextField(
                             controller: _descriptionController,
@@ -327,7 +327,23 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
             label: 'Выбрать из галереи',
             subLabel: 'PDF, JPG, PNG, TIFF',
           ),
-          const SizedBox(height: 12),
+
+          const SizedBox(height: 8),
+          Row(
+            spacing: 8,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const Expanded(child: Divider()),
+              Text(
+                "или",
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const Expanded(child: Divider()),
+            ],
+          ),
+          const SizedBox(height: 8),
           buildButton(
             onTap: _handleScanPages,
             icon: Icons.document_scanner_outlined,
