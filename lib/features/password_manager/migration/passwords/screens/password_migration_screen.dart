@@ -183,7 +183,7 @@ class _PasswordMigrationScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Password Migration'),
+        title: const Text('Миграция Паролей'),
         leading: const FormCloseButton(),
       ),
 
@@ -240,19 +240,19 @@ class _PasswordMigrationScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Generate Template',
+              'Генерация Шаблона',
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             const Text(
-              'Create a JSON file with empty password templates to fill in.',
+              'Создайте JSON-файл с пустыми шаблонами паролей для заполнения.',
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _countController,
               decoration: primaryInputDecoration(
                 context,
-                labelText: 'Number of templates',
+                labelText: 'Количество шаблонов',
                 hintText: '10',
               ),
               keyboardType: TextInputType.number,
@@ -262,7 +262,7 @@ class _PasswordMigrationScreenState
             SizedBox(
               width: double.infinity,
               child: SmoothButton(
-                label: 'Generate JSON',
+                label: 'Сгенерировать JSON',
                 onPressed: _generateTemplate,
                 type: SmoothButtonType.filled,
               ),
@@ -272,7 +272,7 @@ class _PasswordMigrationScreenState
               SizedBox(
                 width: double.infinity,
                 child: SmoothButton(
-                  label: 'Open Generated File',
+                  label: 'Открыть сгенерированный файл',
                   onPressed: _openGeneratedFile,
                   type: SmoothButtonType.outlined,
                   icon: const Icon(Icons.open_in_new, size: 18),
@@ -295,17 +295,17 @@ class _PasswordMigrationScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Import Passwords',
+              'Импорт Паролей',
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
-            const Text('Import passwords from a filled JSON template.'),
+            const Text('Импортируйте пароли из заполненного JSON-шаблона.'),
             const SizedBox(height: 16),
             if (state.value?.importFilePath != null) ...[
               Text(
                 state.value!.importFilePath == state.value!.generatedFilePath
-                    ? 'Generated template ready for import: ${state.value!.importFilePath}'
-                    : 'Selected file: ${state.value!.importFilePath}',
+                    ? 'Сгенерированный шаблон готов к импорту: ${state.value!.importFilePath}'
+                    : 'Выбранный файл: ${state.value!.importFilePath}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -314,7 +314,7 @@ class _PasswordMigrationScreenState
               SizedBox(
                 width: double.infinity,
                 child: SmoothButton(
-                  label: 'Import',
+                  label: 'Импортировать',
                   onPressed: _importPasswords,
                   type: SmoothButtonType.filled,
                 ),
@@ -323,7 +323,7 @@ class _PasswordMigrationScreenState
               SizedBox(
                 width: double.infinity,
                 child: SmoothButton(
-                  label: 'Select Different File',
+                  label: 'Выбрать другой файл',
                   onPressed: _selectFile,
                   type: SmoothButtonType.outlined,
                 ),
@@ -332,7 +332,7 @@ class _PasswordMigrationScreenState
               SizedBox(
                 width: double.infinity,
                 child: SmoothButton(
-                  label: 'Select JSON File',
+                  label: 'Выбрать JSON файл',
                   onPressed: _selectFile,
                   type: SmoothButtonType.filled,
                 ),

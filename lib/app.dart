@@ -79,7 +79,7 @@ class _AppState extends ConsumerState<App> with TrayListener {
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
-    final theme = ref.watch(themeProvider);
+    final theme = ref.read(themeProvider);
 
     final themeMode = theme.value ?? ThemeMode.system;
 
