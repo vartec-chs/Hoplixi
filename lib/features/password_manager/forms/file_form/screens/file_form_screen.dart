@@ -146,152 +146,154 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
         ],
         leading: FormCloseButton(),
       ),
-      body: state.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Expanded(
-                  child: Form(
-                    key: _formKey,
-                    child: ListView(
-                      padding: const EdgeInsets.all(12),
-                      children: [
-                        // Выбор файла (только для режима создания)
-                        if (!state.isEditMode) ...[
-                          _buildFilePickerSection(theme, state),
-                          const SizedBox(height: 16),
-                        ],
-
-                        if (state.isSaving && state.uploadProgress > 0)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Column(
-                              children: [
-                                LinearProgressIndicator(
-                                  value: state.uploadProgress,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Шифрование: ${(state.uploadProgress * 100).toStringAsFixed(0)}%',
-                                  style: theme.textTheme.bodySmall,
-                                ),
-                              ],
+      body: SafeArea(
+        child: state.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  Expanded(
+                    child: Form(
+                      key: _formKey,
+                      child: ListView(
+                        padding: const EdgeInsets.all(12),
+                        children: [
+                          // Выбор файла (только для режима создания)
+                          if (!state.isEditMode) ...[
+                            _buildFilePickerSection(theme, state),
+                            const SizedBox(height: 16),
+                          ],
+        
+                          if (state.isSaving && state.uploadProgress > 0)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Column(
+                                children: [
+                                  LinearProgressIndicator(
+                                    value: state.uploadProgress,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Шифрование: ${(state.uploadProgress * 100).toStringAsFixed(0)}%',
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-
-                        // Информация о файле (режим редактирования)
-                        if (state.isEditMode) ...[
-                          Text(
-                            'Файл',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w500,
+        
+                          // Информация о файле (режим редактирования)
+                          if (state.isEditMode) ...[
+                            Text(
+                              'Файл',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          if (state.selectedFile != null)
-                            _buildSelectedFileCard(theme, state)
-                          else
-                            _buildExistingFileInfo(theme, state),
-                          if (state.selectedFile == null) ...[
                             const SizedBox(height: 8),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: TextButton.icon(
-                                onPressed: _handlePickFile,
-                                icon: const Icon(Icons.file_upload_outlined),
-                                label: const Text('Заменить файл'),
-                                style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
+                            if (state.selectedFile != null)
+                              _buildSelectedFileCard(theme, state)
+                            else
+                              _buildExistingFileInfo(theme, state),
+                            if (state.selectedFile == null) ...[
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: TextButton.icon(
+                                  onPressed: _handlePickFile,
+                                  icon: const Icon(Icons.file_upload_outlined),
+                                  label: const Text('Заменить файл'),
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
+                            ],
+                            const SizedBox(height: 16),
                           ],
+        
+                          // Название *
+                          TextField(
+                            controller: _nameController,
+                            decoration: primaryInputDecoration(
+                              context,
+                              labelText: 'Название *',
+                              hintText: 'Введите название файла',
+                              errorText: state.nameError,
+                            ),
+                            onChanged: (value) {
+                              ref.read(fileFormProvider.notifier).setName(value);
+                            },
+                          ),
                           const SizedBox(height: 16),
+        
+                          // Категория
+                          CategoryPickerField(
+                            selectedCategoryId: state.categoryId,
+                            selectedCategoryName: state.categoryName,
+                            label: 'Категория',
+                            hintText: 'Выберите категорию',
+                            filterByType: [CategoryType.file, CategoryType.mixed],
+                            onCategorySelected: (categoryId, categoryName) {
+                              ref
+                                  .read(fileFormProvider.notifier)
+                                  .setCategory(categoryId, categoryName);
+                            },
+                          ),
+                          const SizedBox(height: 16),
+        
+                          // Теги
+                          TagPickerField(
+                            selectedTagIds: state.tagIds,
+                            selectedTagNames: state.tagNames,
+                            label: 'Теги',
+                            hintText: 'Выберите теги',
+                            filterByType: [TagType.file, TagType.mixed],
+                            onTagsSelected: (tagIds, tagNames) {
+                              ref
+                                  .read(fileFormProvider.notifier)
+                                  .setTags(tagIds, tagNames);
+                            },
+                          ),
+                          const SizedBox(height: 16),
+        
+                          // Описание
+                          TextField(
+                            controller: _descriptionController,
+                            decoration: primaryInputDecoration(
+                              context,
+                              labelText: 'Описание',
+                              hintText: 'Краткое описание файла',
+                            ),
+                            maxLines: 3,
+                            onChanged: (value) {
+                              ref
+                                  .read(fileFormProvider.notifier)
+                                  .setDescription(value);
+                            },
+                          ),
+                          const SizedBox(height: 16),
+        
+                          // Заметки
+                          NotePickerField(
+                            selectedNoteId: state.noteId,
+                            selectedNoteName: _noteName,
+                            onNoteSelected: (noteId, noteName) {
+                              ref
+                                  .read(fileFormProvider.notifier)
+                                  .setNoteId(noteId);
+                            },
+                          ),
                         ],
-
-                        // Название *
-                        TextField(
-                          controller: _nameController,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'Название *',
-                            hintText: 'Введите название файла',
-                            errorText: state.nameError,
-                          ),
-                          onChanged: (value) {
-                            ref.read(fileFormProvider.notifier).setName(value);
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Категория
-                        CategoryPickerField(
-                          selectedCategoryId: state.categoryId,
-                          selectedCategoryName: state.categoryName,
-                          label: 'Категория',
-                          hintText: 'Выберите категорию',
-                          filterByType: [CategoryType.file, CategoryType.mixed],
-                          onCategorySelected: (categoryId, categoryName) {
-                            ref
-                                .read(fileFormProvider.notifier)
-                                .setCategory(categoryId, categoryName);
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Теги
-                        TagPickerField(
-                          selectedTagIds: state.tagIds,
-                          selectedTagNames: state.tagNames,
-                          label: 'Теги',
-                          hintText: 'Выберите теги',
-                          filterByType: [TagType.file, TagType.mixed],
-                          onTagsSelected: (tagIds, tagNames) {
-                            ref
-                                .read(fileFormProvider.notifier)
-                                .setTags(tagIds, tagNames);
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Описание
-                        TextField(
-                          controller: _descriptionController,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'Описание',
-                            hintText: 'Краткое описание файла',
-                          ),
-                          maxLines: 3,
-                          onChanged: (value) {
-                            ref
-                                .read(fileFormProvider.notifier)
-                                .setDescription(value);
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Заметки
-                        NotePickerField(
-                          selectedNoteId: state.noteId,
-                          selectedNoteName: _noteName,
-                          onNoteSelected: (noteId, noteName) {
-                            ref
-                                .read(fileFormProvider.notifier)
-                                .setNoteId(noteId);
-                          },
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-
-                // Прогресс загрузки
-              ],
-            ),
+        
+                  // Прогресс загрузки
+                ],
+              ),
+      ),
     );
   }
 

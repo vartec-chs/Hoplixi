@@ -461,7 +461,7 @@ class _NavigationButtons extends StatelessWidget {
               iconPosition: SmoothButtonIconPosition.end,
               label: formState.isCreating
                   ? 'Создание...'
-                  : (isLastStep ? 'Создать хранилище' : 'Далее'),
+                  : (isLastStep ? 'Создать' : 'Далее'),
               type: SmoothButtonType.filled,
               loading: formState.isCreating,
               isFullWidth: true,

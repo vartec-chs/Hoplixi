@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -78,6 +80,10 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
     await ref.read(documentFormProvider.notifier).pickPages();
   }
 
+  void _handleScanPages() async {
+    await ref.read(documentFormProvider.notifier).scanPages();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -122,99 +128,101 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
         ],
         leading: const FormCloseButton(),
       ),
-      body: state.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Expanded(
-                  child: Form(
-                    key: _formKey,
-                    child: ListView(
-                      padding: const EdgeInsets.all(12),
-                      children: [
-                        // Секция страниц документа
-                        _buildPagesSection(theme, state),
-                        const SizedBox(height: 16),
-
-                        // Прогресс загрузки
-                        if (state.isSaving && state.uploadProgress > 0)
-                          _buildUploadProgress(theme, state),
-
-                        // Название *
-                        TextField(
-                          controller: _titleController,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'Название *',
-                            hintText: 'Введите название документа',
-                            errorText: state.titleError,
+      body: SafeArea(
+        child: state.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  Expanded(
+                    child: Form(
+                      key: _formKey,
+                      child: ListView(
+                        padding: const EdgeInsets.all(12),
+                        children: [
+                          // Секция страниц документа
+                          _buildPagesSection(theme, state),
+                          const SizedBox(height: 16),
+        
+                          // Прогресс загрузки
+                          if (state.isSaving && state.uploadProgress > 0)
+                            _buildUploadProgress(theme, state),
+        
+                          // Название *
+                          TextField(
+                            controller: _titleController,
+                            decoration: primaryInputDecoration(
+                              context,
+                              labelText: 'Название *',
+                              hintText: 'Введите название документа',
+                              errorText: state.titleError,
+                            ),
+                            onChanged: (value) {
+                              ref
+                                  .read(documentFormProvider.notifier)
+                                  .setTitle(value);
+                            },
                           ),
-                          onChanged: (value) {
-                            ref
-                                .read(documentFormProvider.notifier)
-                                .setTitle(value);
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Тип документа
-                        _buildDocumentTypeDropdown(theme, state),
-                        const SizedBox(height: 16),
-
-                        // Категория
-                        CategoryPickerField(
-                          selectedCategoryId: state.categoryId,
-                          selectedCategoryName: state.categoryName,
-                          label: 'Категория',
-                          hintText: 'Выберите категорию',
-                          filterByType: [
-                            CategoryType.document,
-                            CategoryType.mixed,
-                          ],
-                          onCategorySelected: (categoryId, categoryName) {
-                            ref
-                                .read(documentFormProvider.notifier)
-                                .setCategory(categoryId, categoryName);
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Теги
-                        TagPickerField(
-                          selectedTagIds: state.tagIds,
-                          selectedTagNames: state.tagNames,
-                          label: 'Теги',
-                          hintText: 'Выберите теги',
-                          filterByType: [TagType.document, TagType.mixed],
-                          onTagsSelected: (tagIds, tagNames) {
-                            ref
-                                .read(documentFormProvider.notifier)
-                                .setTags(tagIds, tagNames);
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Описание
-                        TextField(
-                          controller: _descriptionController,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'Описание',
-                            hintText: 'Краткое описание документа',
+                          const SizedBox(height: 16),
+        
+                          // Тип документа
+                          _buildDocumentTypeDropdown(theme, state),
+                          const SizedBox(height: 16),
+        
+                          // Категория
+                          CategoryPickerField(
+                            selectedCategoryId: state.categoryId,
+                            selectedCategoryName: state.categoryName,
+                            label: 'Категория',
+                            hintText: 'Выберите категорию',
+                            filterByType: [
+                              CategoryType.document,
+                              CategoryType.mixed,
+                            ],
+                            onCategorySelected: (categoryId, categoryName) {
+                              ref
+                                  .read(documentFormProvider.notifier)
+                                  .setCategory(categoryId, categoryName);
+                            },
                           ),
-                          maxLines: 3,
-                          onChanged: (value) {
-                            ref
-                                .read(documentFormProvider.notifier)
-                                .setDescription(value);
-                          },
-                        ),
-                      ],
+                          const SizedBox(height: 16),
+        
+                          // Теги
+                          TagPickerField(
+                            selectedTagIds: state.tagIds,
+                            selectedTagNames: state.tagNames,
+                            label: 'Теги',
+                            hintText: 'Выберите теги',
+                            filterByType: [TagType.document, TagType.mixed],
+                            onTagsSelected: (tagIds, tagNames) {
+                              ref
+                                  .read(documentFormProvider.notifier)
+                                  .setTags(tagIds, tagNames);
+                            },
+                          ),
+                          const SizedBox(height: 16),
+        
+                          // Описание
+                          TextField(
+                            controller: _descriptionController,
+                            decoration: primaryInputDecoration(
+                              context,
+                              labelText: 'Описание',
+                              hintText: 'Краткое описание документа',
+                            ),
+                            maxLines: 3,
+                            onChanged: (value) {
+                              ref
+                                  .read(documentFormProvider.notifier)
+                                  .setDescription(value);
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+      ),
     );
   }
 
@@ -262,45 +270,79 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
 
   /// Кнопка добавления страниц
   Widget _buildAddPagesButton(ThemeData theme, DocumentFormState state) {
-    return InkWell(
-      onTap: _handleAddPages,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: state.pagesError != null
-                ? theme.colorScheme.error
-                : theme.colorScheme.outline,
-            width: 1.5,
+    final isMobile = Platform.isAndroid || Platform.isIOS;
+
+    Widget buildButton({
+      required VoidCallback onTap,
+      required IconData icon,
+      required String label,
+      required String subLabel,
+    }) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: state.pagesError != null
+                  ? theme.colorScheme.error
+                  : theme.colorScheme.outline,
+              width: 1.5,
+            ),
+            borderRadius: BorderRadius.circular(12),
           ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              Icons.add_photo_alternate_outlined,
-              size: 48,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Добавить страницы документа',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.primary,
+          child: Column(
+            children: [
+              Icon(icon, size: 48, color: theme.colorScheme.primary),
+              const SizedBox(height: 12),
+              Text(
+                label,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.primary,
+                ),
+                textAlign: TextAlign.center,
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'PDF, JPG, PNG, TIFF',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+              const SizedBox(height: 4),
+              Text(
+                subLabel,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
+      );
+    }
+
+    if (isMobile) {
+      return Column(
+        children: [
+          buildButton(
+            onTap: _handleAddPages,
+            icon: Icons.add_photo_alternate_outlined,
+            label: 'Выбрать из галереи',
+            subLabel: 'PDF, JPG, PNG, TIFF',
+          ),
+          const SizedBox(height: 12),
+          buildButton(
+            onTap: _handleScanPages,
+            icon: Icons.document_scanner_outlined,
+            label: 'Сканировать документы',
+            subLabel: 'Используйте камеру',
+          ),
+        ],
+      );
+    }
+
+    return buildButton(
+      onTap: _handleAddPages,
+      icon: Icons.add_photo_alternate_outlined,
+      label: 'Добавить страницы документа',
+      subLabel: 'PDF, JPG, PNG, TIFF',
     );
   }
 
@@ -331,10 +373,22 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
         const SizedBox(height: 8),
         Align(
           alignment: Alignment.centerLeft,
-          child: TextButton.icon(
-            onPressed: _handleAddPages,
-            icon: const Icon(Icons.add),
-            label: const Text('Добавить страницы'),
+          child: Row(
+            children: [
+              TextButton.icon(
+                onPressed: _handleAddPages,
+                icon: const Icon(Icons.add),
+                label: const Text('Добавить'),
+              ),
+              if (Platform.isAndroid || Platform.isIOS) ...[
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: _handleScanPages,
+                  icon: const Icon(Icons.document_scanner),
+                  label: const Text('Сканировать'),
+                ),
+              ],
+            ],
           ),
         ),
       ],

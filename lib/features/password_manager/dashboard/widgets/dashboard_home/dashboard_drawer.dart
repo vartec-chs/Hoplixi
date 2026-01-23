@@ -20,7 +20,7 @@ class DashboardDrawer extends ConsumerWidget {
     final theme = Theme.of(context);
     return Drawer(
       backgroundColor: theme.colorScheme.surface,
-      child: DashboardDrawerContent(entityType: entityType),
+      child: SafeArea(child: DashboardDrawerContent(entityType: entityType)),
     );
   }
 }
@@ -145,7 +145,6 @@ class _DashboardDrawerContentState
                     type: CloseDatabaseButtonType.smooth,
                   ),
                 ),
-                const SizedBox(height: 8.0),
               ],
             ],
           ),

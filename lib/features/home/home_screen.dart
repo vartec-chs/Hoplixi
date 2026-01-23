@@ -151,7 +151,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         : 12,
                   ),
 
-                  child: _buildContentSection(),
+                  child: SafeArea(child: _buildContentSection(), top: false),
                 ),
               ),
             ],

@@ -352,6 +352,9 @@ class _DashboardLayoutState extends State<DashboardLayout>
       final showPanel = hasPanel || isFullCenter;
 
       return Scaffold(
+        drawer: DashboardDrawer(
+          entityType: EntityType.fromId(entity) ?? EntityType.password,
+        ),
         body: Stack(
           children: [
             // Центр: DashboardHomeScreen с обратной анимацией (fade + scale down)

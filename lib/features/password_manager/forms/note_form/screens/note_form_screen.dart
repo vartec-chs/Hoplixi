@@ -422,86 +422,88 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
             ],
           ],
         ),
-        body: state.isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : Column(
-                children: [
-                  // Панель инструментов Quill
-                  Container(
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      border: Border(
-                        bottom: BorderSide(color: theme.dividerColor, width: 1),
-                      ),
-                    ),
-                    child: QuillSimpleToolbar(
-                      controller: _quillController,
-                      config: QuillSimpleToolbarConfig(
-                        showClipboardPaste: true,
-                        multiRowsDisplay: false,
-                        dialogTheme: QuillDialogTheme(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        customButtons: [
-                          // Кастомная кнопка для ссылки на заметку
-                          QuillToolbarCustomButtonOptions(
-                            icon: const Icon(Icons.link),
-                            tooltip: 'Ссылка на заметку',
-                            onPressed: () async {
-                              await _insertNoteLink();
-                            },
-                          ),
-                        ],
-                        buttonOptions: QuillSimpleToolbarButtonOptions(
-                          base: QuillToolbarBaseButtonOptions(
-                            afterButtonPressed: () {
-                              // Возвращаем фокус в редактор после нажатия кнопки
-                              _editorFocusNode.requestFocus();
-                            },
-                          ),
+        body: SafeArea(
+          child: state.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Column(
+                  children: [
+                    // Панель инструментов Quill
+                    Container(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        border: Border(
+                          bottom: BorderSide(color: theme.dividerColor, width: 1),
                         ),
                       ),
-                    ),
-                  ),
-
-                  // Редактор Quill
-                  Expanded(
-                    child: QuillEditor(
-                      focusNode: _editorFocusNode,
-                      scrollController: _editorScrollController,
-                      controller: _quillController,
-                      config: QuillEditorConfig(
-                        placeholder: 'Начните писать заметку...',
-                        padding: const EdgeInsets.all(16),
-                        expands: true,
-                        onLaunchUrl: (url) async {
-                          logInfo('QuillEditor onLaunchUrl: $url');
-                          // Перехватываем ссылки на заметки, чтобы не открывать в браузере
-                          // Quill может добавить https:// перед note://
-
-                          if (url.contains('note://')) {
-                            final noteId = url.split('//').last;
-                            _handleNoteLinkClick(noteId);
-                          }
-                          // Для обычных URL можно добавить url_launcher
-                        },
-                        onTapDown: (details, p1) {
-                          // Обработка тапов
-                          return false;
-                        },
-                        customStyles: DefaultStyles(
-                          link: TextStyle(
-                            color: theme.colorScheme.primary,
-                            decoration: TextDecoration.underline,
+                      child: QuillSimpleToolbar(
+                        controller: _quillController,
+                        config: QuillSimpleToolbarConfig(
+                          showClipboardPaste: true,
+                          multiRowsDisplay: false,
+                          dialogTheme: QuillDialogTheme(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          customButtons: [
+                            // Кастомная кнопка для ссылки на заметку
+                            QuillToolbarCustomButtonOptions(
+                              icon: const Icon(Icons.link),
+                              tooltip: 'Ссылка на заметку',
+                              onPressed: () async {
+                                await _insertNoteLink();
+                              },
+                            ),
+                          ],
+                          buttonOptions: QuillSimpleToolbarButtonOptions(
+                            base: QuillToolbarBaseButtonOptions(
+                              afterButtonPressed: () {
+                                // Возвращаем фокус в редактор после нажатия кнопки
+                                _editorFocusNode.requestFocus();
+                              },
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+          
+                    // Редактор Quill
+                    Expanded(
+                      child: QuillEditor(
+                        focusNode: _editorFocusNode,
+                        scrollController: _editorScrollController,
+                        controller: _quillController,
+                        config: QuillEditorConfig(
+                          placeholder: 'Начните писать заметку...',
+                          padding: const EdgeInsets.all(16),
+                          expands: true,
+                          onLaunchUrl: (url) async {
+                            logInfo('QuillEditor onLaunchUrl: $url');
+                            // Перехватываем ссылки на заметки, чтобы не открывать в браузере
+                            // Quill может добавить https:// перед note://
+          
+                            if (url.contains('note://')) {
+                              final noteId = url.split('//').last;
+                              _handleNoteLinkClick(noteId);
+                            }
+                            // Для обычных URL можно добавить url_launcher
+                          },
+                          onTapDown: (details, p1) {
+                            // Обработка тапов
+                            return false;
+                          },
+                          customStyles: DefaultStyles(
+                            link: TextStyle(
+                              color: theme.colorScheme.primary,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+        ),
       ),
     );
   }

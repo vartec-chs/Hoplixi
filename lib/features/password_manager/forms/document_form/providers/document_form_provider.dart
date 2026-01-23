@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_doc_scanner/flutter_doc_scanner.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
@@ -12,6 +13,7 @@ import 'package:hoplixi/main_store/provider/service_providers.dart';
 import 'package:hoplixi/main_store/services/index.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
+import 'package:permission_handler/permission_handler.dart';
 
 import '../models/document_form_state.dart';
 
@@ -181,6 +183,79 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
         tag: _logTag,
       );
       state = state.copyWith(pagesError: 'Ошибка при выборе файлов');
+    }
+  }
+
+  /// Сканировать страницы через камеру (только мобильные)
+  Future<void> scanPages() async {
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      logWarning('Scanning is only supported on mobile', tag: _logTag);
+      return;
+    }
+
+    final status = await Permission.camera.request();
+    if (!status.isGranted) {
+      state = state.copyWith(
+        pagesError: 'Нет разрешения на использование камеры',
+      );
+      return;
+    }
+
+    try {
+      final scannedDocs = await FlutterDocScanner()
+          .getScannedDocumentAsImages();
+
+      if (scannedDocs is List) {
+        final newPages = <DocumentPageInfo>[];
+        final startPageNumber = state.pages.length + 1;
+
+        for (int i = 0; i < scannedDocs.length; i++) {
+          final path = scannedDocs[i];
+          if (path is! String) continue;
+
+          final file = File(path);
+          if (!await file.exists()) continue;
+
+          final length = await file.length();
+          final mimeType = lookupMimeType(path) ?? 'image/jpeg';
+
+          newPages.add(
+            DocumentPageInfo(
+              file: file,
+              fileName: 'Скан ${startPageNumber + i}.jpg',
+              fileSize: length,
+              mimeType: mimeType,
+              pageNumber: startPageNumber + i,
+              isPrimary: state.pages.isEmpty && i == 0,
+              isNew: true,
+            ),
+          );
+        }
+
+        if (newPages.isNotEmpty) {
+          final updatedPages = [...state.pages, ...newPages];
+          state = state.copyWith(
+            pages: updatedPages,
+            pagesError: null,
+            title: state.title.isEmpty && newPages.isNotEmpty
+                ? 'Скан документа'
+                : state.title,
+          );
+
+          logInfo(
+            'Added ${newPages.length} scanned pages, total: ${updatedPages.length}',
+            tag: _logTag,
+          );
+        }
+      }
+    } catch (e, stack) {
+      logError(
+        'Failed to scan pages',
+        error: e,
+        stackTrace: stack,
+        tag: _logTag,
+      );
+      state = state.copyWith(pagesError: 'Ошибка при сканировании');
     }
   }
 

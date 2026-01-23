@@ -166,204 +166,206 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
         leading: FormCloseButton(),
       ),
 
-      body: state.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Expanded(
-                  child: Form(
-                    key: _formKey,
-                    child: ListView(
-                      padding: const EdgeInsets.all(12),
-                      children: [
-                        // Название *
-                        TextField(
-                          controller: _nameController,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'Название *',
-                            hintText: 'Введите название',
-                            errorText: state.nameError,
+      body: SafeArea(
+        child: state.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  Expanded(
+                    child: Form(
+                      key: _formKey,
+                      child: ListView(
+                        padding: const EdgeInsets.all(12),
+                        children: [
+                          // Название *
+                          TextField(
+                            controller: _nameController,
+                            decoration: primaryInputDecoration(
+                              context,
+                              labelText: 'Название *',
+                              hintText: 'Введите название',
+                              errorText: state.nameError,
+                            ),
+                            onChanged: (value) {
+                              ref
+                                  .read(passwordFormProvider.notifier)
+                                  .setName(value);
+                            },
                           ),
-                          onChanged: (value) {
-                            ref
-                                .read(passwordFormProvider.notifier)
-                                .setName(value);
-                          },
-                        ),
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
-                        // Пароль *
-                        TextField(
-                          controller: _passwordController,
-                          obscureText: _obscurePassword,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'Пароль *',
-                            hintText: 'Введите пароль',
-                            errorText: state.passwordError,
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
+                          // Пароль *
+                          TextField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            decoration: primaryInputDecoration(
+                              context,
+                              labelText: 'Пароль *',
+                              hintText: 'Введите пароль',
+                              errorText: state.passwordError,
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
+                            ),
+                            onChanged: (value) {
+                              ref
+                                  .read(passwordFormProvider.notifier)
+                                  .setPassword(value);
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Логин
+                          TextField(
+                            controller: _loginController,
+                            decoration: primaryInputDecoration(
+                              context,
+                              labelText: 'Логин',
+                              hintText: 'Введите логин',
+                              errorText: state.loginError,
+                            ),
+                            onChanged: (value) {
+                              ref
+                                  .read(passwordFormProvider.notifier)
+                                  .setLogin(value);
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Email
+                          TextField(
+                            controller: _emailController,
+                            decoration: primaryInputDecoration(
+                              context,
+                              labelText: 'Email',
+                              hintText: 'Введите email',
+                              errorText: state.emailError,
+                            ),
+                            keyboardType: TextInputType.emailAddress,
+                            onChanged: (value) {
+                              ref
+                                  .read(passwordFormProvider.notifier)
+                                  .setEmail(value);
+                            },
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Подсказка
+                          Text(
+                            '* Заполните хотя бы одно поле: Логин или Email',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontStyle: FontStyle.italic,
                             ),
                           ),
-                          onChanged: (value) {
-                            ref
-                                .read(passwordFormProvider.notifier)
-                                .setPassword(value);
-                          },
-                        ),
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
-                        // Логин
-                        TextField(
-                          controller: _loginController,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'Логин',
-                            hintText: 'Введите логин',
-                            errorText: state.loginError,
+                          // URL
+                          TextField(
+                            controller: _urlController,
+                            decoration: primaryInputDecoration(
+                              context,
+                              labelText: 'URL',
+                              hintText: 'https://example.com',
+                              errorText: state.urlError,
+                            ),
+                            keyboardType: TextInputType.url,
+                            onChanged: (value) {
+                              ref
+                                  .read(passwordFormProvider.notifier)
+                                  .setUrl(value);
+                            },
                           ),
-                          onChanged: (value) {
-                            ref
-                                .read(passwordFormProvider.notifier)
-                                .setLogin(value);
-                          },
-                        ),
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
-                        // Email
-                        TextField(
-                          controller: _emailController,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'Email',
-                            hintText: 'Введите email',
-                            errorText: state.emailError,
+                          // Категория
+                          CategoryPickerField(
+                            selectedCategoryId: state.categoryId,
+                            selectedCategoryName: state.categoryName,
+                            label: 'Категория',
+                            hintText: 'Выберите категорию',
+                            filterByType: [
+                              CategoryType.password,
+                              CategoryType.mixed,
+                            ],
+                            onCategorySelected: (categoryId, categoryName) {
+                              ref
+                                  .read(passwordFormProvider.notifier)
+                                  .setCategory(categoryId, categoryName);
+                            },
                           ),
-                          keyboardType: TextInputType.emailAddress,
-                          onChanged: (value) {
-                            ref
-                                .read(passwordFormProvider.notifier)
-                                .setEmail(value);
-                          },
-                        ),
-                        const SizedBox(height: 8),
+                          const SizedBox(height: 16),
 
-                        // Подсказка
-                        Text(
-                          '* Заполните хотя бы одно поле: Логин или Email',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontStyle: FontStyle.italic,
+                          // Теги
+                          TagPickerField(
+                            selectedTagIds: state.tagIds,
+                            selectedTagNames: state.tagNames,
+                            label: 'Теги',
+                            hintText: 'Выберите теги',
+                            filterByType: [TagType.password, TagType.mixed],
+                            onTagsSelected: (tagIds, tagNames) {
+                              ref
+                                  .read(passwordFormProvider.notifier)
+                                  .setTags(tagIds, tagNames);
+                            },
                           ),
-                        ),
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
-                        // URL
-                        TextField(
-                          controller: _urlController,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'URL',
-                            hintText: 'https://example.com',
-                            errorText: state.urlError,
+                          // Описание
+                          TextField(
+                            controller: _descriptionController,
+                            decoration: primaryInputDecoration(
+                              context,
+                              labelText: 'Описание',
+                              hintText: 'Краткое описание',
+                            ),
+                            maxLines: 2,
+                            onChanged: (value) {
+                              ref
+                                  .read(passwordFormProvider.notifier)
+                                  .setDescription(value);
+                            },
                           ),
-                          keyboardType: TextInputType.url,
-                          onChanged: (value) {
-                            ref
-                                .read(passwordFormProvider.notifier)
-                                .setUrl(value);
-                          },
-                        ),
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
-                        // Категория
-                        CategoryPickerField(
-                          selectedCategoryId: state.categoryId,
-                          selectedCategoryName: state.categoryName,
-                          label: 'Категория',
-                          hintText: 'Выберите категорию',
-                          filterByType: [
-                            CategoryType.password,
-                            CategoryType.mixed,
-                          ],
-                          onCategorySelected: (categoryId, categoryName) {
-                            ref
-                                .read(passwordFormProvider.notifier)
-                                .setCategory(categoryId, categoryName);
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Теги
-                        TagPickerField(
-                          selectedTagIds: state.tagIds,
-                          selectedTagNames: state.tagNames,
-                          label: 'Теги',
-                          hintText: 'Выберите теги',
-                          filterByType: [TagType.password, TagType.mixed],
-                          onTagsSelected: (tagIds, tagNames) {
-                            ref
-                                .read(passwordFormProvider.notifier)
-                                .setTags(tagIds, tagNames);
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Описание
-                        TextField(
-                          controller: _descriptionController,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'Описание',
-                            hintText: 'Краткое описание',
+                          // OTP
+                          OtpPickerField(
+                            selectedOtpId: state.otpId,
+                            selectedOtpName: _otpName,
+                            onOtpSelected: (otpId, otpName) {
+                              ref
+                                  .read(passwordFormProvider.notifier)
+                                  .setOtp(otpId, otpName);
+                            },
                           ),
-                          maxLines: 2,
-                          onChanged: (value) {
-                            ref
-                                .read(passwordFormProvider.notifier)
-                                .setDescription(value);
-                          },
-                        ),
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
-                        // OTP
-                        OtpPickerField(
-                          selectedOtpId: state.otpId,
-                          selectedOtpName: _otpName,
-                          onOtpSelected: (otpId, otpName) {
-                            ref
-                                .read(passwordFormProvider.notifier)
-                                .setOtp(otpId, otpName);
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Заметка
-                        NotePickerField(
-                          selectedNoteId: state.noteId,
-                          selectedNoteName: _noteName,
-                          onNoteSelected: (noteId, noteName) {
-                            ref
-                                .read(passwordFormProvider.notifier)
-                                .setNoteId(noteId);
-                          },
-                        ),
-                      ],
+                          // Заметка
+                          NotePickerField(
+                            selectedNoteId: state.noteId,
+                            selectedNoteName: _noteName,
+                            onNoteSelected: (noteId, noteName) {
+                              ref
+                                  .read(passwordFormProvider.notifier)
+                                  .setNoteId(noteId);
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+      ),
     );
   }
 }

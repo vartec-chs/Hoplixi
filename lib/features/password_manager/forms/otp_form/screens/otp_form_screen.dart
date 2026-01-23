@@ -222,23 +222,25 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
           ],
         ),
       ),
-      body: state.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      // TOTP форма
-                      _buildTotpForm(context, state),
-                      // HOTP форма (заглушка)
-                      _buildHotpPlaceholder(context),
-                    ],
+      body: SafeArea(
+        child: state.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        // TOTP форма
+                        _buildTotpForm(context, state),
+                        // HOTP форма (заглушка)
+                        _buildHotpPlaceholder(context),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+      ),
     );
   }
 

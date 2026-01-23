@@ -213,331 +213,333 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
         ],
         leading: FormCloseButton(),
       ),
-      body: state.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Expanded(
-                  child: Form(
-                    key: _formKey,
-                    child: ListView(
-                      padding: const EdgeInsets.all(12),
-                      children: [
-                        // Визуализация кредитной карты
-                        CreditCardWidget(
-                          cardNumber: _formatCardNumber(state.cardNumber),
-                          expiryDate: state.formattedExpiryDate,
-                          cardHolderName: state.cardholderName.isEmpty
-                              ? 'CARD HOLDER'
-                              : state.cardholderName.toUpperCase(),
-                          cvvCode: state.cvv,
-                          showBackView: state.isCvvFocused,
-                          onCreditCardWidgetChange: (brand) {},
-                          bankName: state.bankName.isEmpty
-                              ? null
-                              : state.bankName,
-                          cardBgColor: colorScheme.primary,
-                          obscureCardNumber: false,
-                          obscureCardCvv: false,
-                          labelCardHolder: 'CARD HOLDER',
-                          labelValidThru: 'VALID\nTHRU',
-                          isHolderNameVisible: true,
-                          height: 200,
-                          width: MediaQuery.of(context).size.width,
-                          isChipVisible: true,
-                          isSwipeGestureEnabled: true,
-                          animationDuration: const Duration(milliseconds: 500),
-                          frontCardBorder: Border.all(
-                            color: colorScheme.outline.withOpacity(0.3),
+      body: SafeArea(
+        child: state.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  Expanded(
+                    child: Form(
+                      key: _formKey,
+                      child: ListView(
+                        padding: const EdgeInsets.all(12),
+                        children: [
+                          // Визуализация кредитной карты
+                          CreditCardWidget(
+                            cardNumber: _formatCardNumber(state.cardNumber),
+                            expiryDate: state.formattedExpiryDate,
+                            cardHolderName: state.cardholderName.isEmpty
+                                ? 'CARD HOLDER'
+                                : state.cardholderName.toUpperCase(),
+                            cvvCode: state.cvv,
+                            showBackView: state.isCvvFocused,
+                            onCreditCardWidgetChange: (brand) {},
+                            bankName: state.bankName.isEmpty
+                                ? null
+                                : state.bankName,
+                            cardBgColor: colorScheme.primary,
+                            obscureCardNumber: false,
+                            obscureCardCvv: false,
+                            labelCardHolder: 'CARD HOLDER',
+                            labelValidThru: 'VALID\nTHRU',
+                            isHolderNameVisible: true,
+                            height: 200,
+                            width: MediaQuery.of(context).size.width,
+                            isChipVisible: true,
+                            isSwipeGestureEnabled: true,
+                            animationDuration: const Duration(milliseconds: 500),
+                            frontCardBorder: Border.all(
+                              color: colorScheme.outline.withOpacity(0.3),
+                            ),
+                            backCardBorder: Border.all(
+                              color: colorScheme.outline.withOpacity(0.3),
+                            ),
+                            padding: 8,
                           ),
-                          backCardBorder: Border.all(
-                            color: colorScheme.outline.withOpacity(0.3),
+        
+                          const SizedBox(height: 24),
+        
+                          // Название карты *
+                          TextField(
+                            controller: _nameController,
+                            decoration: primaryInputDecoration(
+                              context,
+                              labelText: 'Название карты *',
+                              hintText: 'Например: Основная карта',
+                              errorText: state.nameError,
+                              prefixIcon: const Icon(Icons.label_outline),
+                            ),
+                            onChanged: (value) {
+                              ref
+                                  .read(bankCardFormProvider.notifier)
+                                  .setName(value);
+                            },
                           ),
-                          padding: 8,
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Название карты *
-                        TextField(
-                          controller: _nameController,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'Название карты *',
-                            hintText: 'Например: Основная карта',
-                            errorText: state.nameError,
-                            prefixIcon: const Icon(Icons.label_outline),
+                          const SizedBox(height: 8),
+        
+                          // Имя владельца *
+                          TextField(
+                            controller: _cardholderNameController,
+                            decoration: primaryInputDecoration(
+                              context,
+                              labelText: 'Имя владельца *',
+                              hintText: 'Как на карте',
+                              errorText: state.cardholderNameError,
+                              prefixIcon: const Icon(Icons.person_outline),
+                            ),
+                            textCapitalization: TextCapitalization.characters,
+                            onChanged: (value) {
+                              ref
+                                  .read(bankCardFormProvider.notifier)
+                                  .setCardholderName(value);
+                            },
                           ),
-                          onChanged: (value) {
-                            ref
-                                .read(bankCardFormProvider.notifier)
-                                .setName(value);
-                          },
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Имя владельца *
-                        TextField(
-                          controller: _cardholderNameController,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'Имя владельца *',
-                            hintText: 'Как на карте',
-                            errorText: state.cardholderNameError,
-                            prefixIcon: const Icon(Icons.person_outline),
+                          const SizedBox(height: 8),
+        
+                          // Номер карты *
+                          TextField(
+                            controller: _cardNumberController,
+                            decoration: primaryInputDecoration(
+                              context,
+                              labelText: 'Номер карты *',
+                              hintText: '0000 0000 0000 0000',
+                              errorText: state.cardNumberError,
+                              prefixIcon: const Icon(Icons.credit_card),
+                            ),
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(19),
+                              _CardNumberInputFormatter(),
+                            ],
+                            onChanged: (value) {
+                              ref
+                                  .read(bankCardFormProvider.notifier)
+                                  .setCardNumber(value);
+                            },
                           ),
-                          textCapitalization: TextCapitalization.characters,
-                          onChanged: (value) {
-                            ref
-                                .read(bankCardFormProvider.notifier)
-                                .setCardholderName(value);
-                          },
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Номер карты *
-                        TextField(
-                          controller: _cardNumberController,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'Номер карты *',
-                            hintText: '0000 0000 0000 0000',
-                            errorText: state.cardNumberError,
-                            prefixIcon: const Icon(Icons.credit_card),
-                          ),
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(19),
-                            _CardNumberInputFormatter(),
-                          ],
-                          onChanged: (value) {
-                            ref
-                                .read(bankCardFormProvider.notifier)
-                                .setCardNumber(value);
-                          },
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Срок действия
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _expiryMonthController,
-                                decoration: primaryInputDecoration(
-                                  context,
-                                  labelText: 'Месяц *',
-                                  hintText: 'MM',
-                                  errorText: state.expiryMonthError,
+                          const SizedBox(height: 8),
+        
+                          // Срок действия
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _expiryMonthController,
+                                  decoration: primaryInputDecoration(
+                                    context,
+                                    labelText: 'Месяц *',
+                                    hintText: 'MM',
+                                    errorText: state.expiryMonthError,
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                    LengthLimitingTextInputFormatter(2),
+                                  ],
+                                  onChanged: (value) {
+                                    ref
+                                        .read(bankCardFormProvider.notifier)
+                                        .setExpiryMonth(value);
+                                  },
                                 ),
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                  LengthLimitingTextInputFormatter(2),
-                                ],
-                                onChanged: (value) {
-                                  ref
-                                      .read(bankCardFormProvider.notifier)
-                                      .setExpiryMonth(value);
-                                },
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextField(
+                                  controller: _expiryYearController,
+                                  decoration: primaryInputDecoration(
+                                    context,
+                                    labelText: 'Год *',
+                                    hintText: 'YYYY',
+                                    errorText: state.expiryYearError,
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                    LengthLimitingTextInputFormatter(4),
+                                  ],
+                                  onChanged: (value) {
+                                    ref
+                                        .read(bankCardFormProvider.notifier)
+                                        .setExpiryYear(value);
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextField(
+                                  controller: _cvvController,
+                                  focusNode: _cvvFocusNode,
+                                  decoration: primaryInputDecoration(
+                                    context,
+                                    labelText: 'CVV',
+                                    hintText: '***',
+                                    errorText: state.cvvError,
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  obscureText: true,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                    LengthLimitingTextInputFormatter(4),
+                                  ],
+                                  onChanged: (value) {
+                                    ref
+                                        .read(bankCardFormProvider.notifier)
+                                        .setCvv(value);
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+        
+                          _CardTypeDropdown(
+                            value: state.cardType,
+                            onChanged: (value) {
+                              ref
+                                  .read(bankCardFormProvider.notifier)
+                                  .setCardType(value);
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          _CardNetworkDropdown(
+                            value: state.cardNetwork,
+                            onChanged: (value) {
+                              ref
+                                  .read(bankCardFormProvider.notifier)
+                                  .setCardNetwork(value);
+                            },
+                          ),
+        
+                          const SizedBox(height: 8),
+        
+                          // Название банка
+                          TextField(
+                            controller: _bankNameController,
+                            decoration: primaryInputDecoration(
+                              context,
+                              labelText: 'Название банка',
+                              hintText: 'Например: Сбербанк',
+                              prefixIcon: const Icon(
+                                Icons.account_balance_outlined,
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: TextField(
-                                controller: _expiryYearController,
-                                decoration: primaryInputDecoration(
-                                  context,
-                                  labelText: 'Год *',
-                                  hintText: 'YYYY',
-                                  errorText: state.expiryYearError,
-                                ),
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                  LengthLimitingTextInputFormatter(4),
-                                ],
-                                onChanged: (value) {
-                                  ref
-                                      .read(bankCardFormProvider.notifier)
-                                      .setExpiryYear(value);
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: TextField(
-                                controller: _cvvController,
-                                focusNode: _cvvFocusNode,
-                                decoration: primaryInputDecoration(
-                                  context,
-                                  labelText: 'CVV',
-                                  hintText: '***',
-                                  errorText: state.cvvError,
-                                ),
-                                keyboardType: TextInputType.number,
-                                obscureText: true,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                  LengthLimitingTextInputFormatter(4),
-                                ],
-                                onChanged: (value) {
-                                  ref
-                                      .read(bankCardFormProvider.notifier)
-                                      .setCvv(value);
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-
-                        _CardTypeDropdown(
-                          value: state.cardType,
-                          onChanged: (value) {
-                            ref
-                                .read(bankCardFormProvider.notifier)
-                                .setCardType(value);
-                          },
-                        ),
-                        const SizedBox(height: 8),
-                        _CardNetworkDropdown(
-                          value: state.cardNetwork,
-                          onChanged: (value) {
-                            ref
-                                .read(bankCardFormProvider.notifier)
-                                .setCardNetwork(value);
-                          },
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        // Название банка
-                        TextField(
-                          controller: _bankNameController,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'Название банка',
-                            hintText: 'Например: Сбербанк',
-                            prefixIcon: const Icon(
-                              Icons.account_balance_outlined,
-                            ),
+                            onChanged: (value) {
+                              ref
+                                  .read(bankCardFormProvider.notifier)
+                                  .setBankName(value);
+                            },
                           ),
-                          onChanged: (value) {
-                            ref
-                                .read(bankCardFormProvider.notifier)
-                                .setBankName(value);
-                          },
-                        ),
-                        const Divider(height: 32),
-
-                        // Номер счета и Routing number
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _accountNumberController,
-                                decoration: primaryInputDecoration(
-                                  context,
-                                  labelText: 'Номер счета',
-                                  hintText: 'Опционально',
+                          const Divider(height: 32),
+        
+                          // Номер счета и Routing number
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _accountNumberController,
+                                  decoration: primaryInputDecoration(
+                                    context,
+                                    labelText: 'Номер счета',
+                                    hintText: 'Опционально',
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  onChanged: (value) {
+                                    ref
+                                        .read(bankCardFormProvider.notifier)
+                                        .setAccountNumber(value);
+                                  },
                                 ),
-                                keyboardType: TextInputType.number,
-                                onChanged: (value) {
-                                  ref
-                                      .read(bankCardFormProvider.notifier)
-                                      .setAccountNumber(value);
-                                },
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: TextField(
-                                controller: _routingNumberController,
-                                decoration: primaryInputDecoration(
-                                  context,
-                                  labelText: 'Routing Number',
-                                  hintText: 'Опционально',
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextField(
+                                  controller: _routingNumberController,
+                                  decoration: primaryInputDecoration(
+                                    context,
+                                    labelText: 'Routing Number',
+                                    hintText: 'Опционально',
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  onChanged: (value) {
+                                    ref
+                                        .read(bankCardFormProvider.notifier)
+                                        .setRoutingNumber(value);
+                                  },
                                 ),
-                                keyboardType: TextInputType.number,
-                                onChanged: (value) {
-                                  ref
-                                      .read(bankCardFormProvider.notifier)
-                                      .setRoutingNumber(value);
-                                },
                               ),
-                            ),
-                          ],
-                        ),
-                        const Divider(height: 32),
-
-                        // Категория
-                        CategoryPickerField(
-                          selectedCategoryId: state.categoryId,
-                          selectedCategoryName: state.categoryName,
-                          label: 'Категория',
-                          hintText: 'Выберите категорию',
-                          filterByType: [
-                            CategoryType.bankCard,
-                            CategoryType.mixed,
-                          ],
-                          onCategorySelected: (categoryId, categoryName) {
-                            ref
-                                .read(bankCardFormProvider.notifier)
-                                .setCategory(categoryId, categoryName);
-                          },
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Теги
-                        TagPickerField(
-                          selectedTagIds: state.tagIds,
-                          selectedTagNames: state.tagNames,
-                          label: 'Теги',
-                          hintText: 'Выберите теги',
-                          filterByType: [TagType.bankCard, TagType.mixed],
-                          onTagsSelected: (tagIds, tagNames) {
-                            ref
-                                .read(bankCardFormProvider.notifier)
-                                .setTags(tagIds, tagNames);
-                          },
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Описание
-                        TextField(
-                          controller: _descriptionController,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'Описание',
-                            hintText: 'Краткое описание',
+                            ],
                           ),
-                          maxLines: 2,
-                          onChanged: (value) {
-                            ref
-                                .read(bankCardFormProvider.notifier)
-                                .setDescription(value);
-                          },
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Заметки
-                        NotePickerField(
-                          selectedNoteId: state.noteId,
-                          selectedNoteName: _noteName,
-                          onNoteSelected: (noteId, noteName) {
-                            ref
-                                .read(bankCardFormProvider.notifier)
-                                .setNoteId(noteId);
-                          },
-                        ),
-                      ],
+                          const Divider(height: 32),
+        
+                          // Категория
+                          CategoryPickerField(
+                            selectedCategoryId: state.categoryId,
+                            selectedCategoryName: state.categoryName,
+                            label: 'Категория',
+                            hintText: 'Выберите категорию',
+                            filterByType: [
+                              CategoryType.bankCard,
+                              CategoryType.mixed,
+                            ],
+                            onCategorySelected: (categoryId, categoryName) {
+                              ref
+                                  .read(bankCardFormProvider.notifier)
+                                  .setCategory(categoryId, categoryName);
+                            },
+                          ),
+                          const SizedBox(height: 8),
+        
+                          // Теги
+                          TagPickerField(
+                            selectedTagIds: state.tagIds,
+                            selectedTagNames: state.tagNames,
+                            label: 'Теги',
+                            hintText: 'Выберите теги',
+                            filterByType: [TagType.bankCard, TagType.mixed],
+                            onTagsSelected: (tagIds, tagNames) {
+                              ref
+                                  .read(bankCardFormProvider.notifier)
+                                  .setTags(tagIds, tagNames);
+                            },
+                          ),
+                          const SizedBox(height: 8),
+        
+                          // Описание
+                          TextField(
+                            controller: _descriptionController,
+                            decoration: primaryInputDecoration(
+                              context,
+                              labelText: 'Описание',
+                              hintText: 'Краткое описание',
+                            ),
+                            maxLines: 2,
+                            onChanged: (value) {
+                              ref
+                                  .read(bankCardFormProvider.notifier)
+                                  .setDescription(value);
+                            },
+                          ),
+                          const SizedBox(height: 8),
+        
+                          // Заметки
+                          NotePickerField(
+                            selectedNoteId: state.noteId,
+                            selectedNoteName: _noteName,
+                            onNoteSelected: (noteId, noteName) {
+                              ref
+                                  .read(bankCardFormProvider.notifier)
+                                  .setNoteId(noteId);
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+      ),
     );
   }
 }
