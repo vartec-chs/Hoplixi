@@ -1,0 +1,58 @@
+ide: vscode
+
+flavors:
+  dev:
+    app:
+      name: 'Hoplixi Dev'
+      icon: 'assets/logo/logo.png'
+    android:
+      applicationId: 'com.hiplixi.app.dev'
+      generateDummyAssets: false
+    ios:
+      bundleId: 'com.hiplixi.app.dev'
+      generateDummyAssets: false
+    macos:
+      bundleId: 'com.hiplixi.app.dev'
+      generateDummyAssets: false
+
+  prod:
+    app:
+      name: 'Hoplixi'
+      icon: 'assets/logo/logo.png'
+    android:
+      applicationId: 'com.hiplixi.app'
+      generateDummyAssets: false
+    ios:
+      bundleId: 'com.hiplixi.app'
+      generateDummyAssets: false
+    macos:
+      bundleId: 'com.hiplixi.app'
+      generateDummyAssets: false
+
+instructions:
+  - assets:download
+  - assets:extract
+  - android:flavorizrGradle
+  - android:buildGradle
+  - android:androidManifest
+  - android:dummyAssets
+  - android:icons
+  - flutter:flavors
+  # Отключены, чтобы не перезаписать существующие файлы проекта
+  # - flutter:app
+  # - flutter:pages
+  # - flutter:main
+  # - ios:buildTargets
+  # - ios:schema
+  # - ios:dummyAssets
+  # - ios:icons
+  # - ios:plist
+  # - ios:launchScreen
+  # - macos:xcconfig
+  # - macos:buildTargets
+  # - macos:schema
+  # - macos:dummyAssets
+  # - macos:icons
+  # - macos:plist
+  - ide:config
+  - assets:clean
