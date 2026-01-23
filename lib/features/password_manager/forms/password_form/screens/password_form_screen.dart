@@ -10,6 +10,7 @@ import 'package:hoplixi/features/password_manager/tags_manager/features/tags_pic
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../providers/password_form_provider.dart';
 
@@ -185,6 +186,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                               labelText: 'Название *',
                               hintText: 'Введите название',
                               errorText: state.nameError,
+                              prefixIcon: Icon(LucideIcons.tag),
                             ),
                             onChanged: (value) {
                               ref
@@ -203,6 +205,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                               labelText: 'Пароль *',
                               hintText: 'Введите пароль',
                               errorText: state.passwordError,
+                              prefixIcon: Icon(LucideIcons.lock),
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _obscurePassword
@@ -232,6 +235,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                               labelText: 'Логин',
                               hintText: 'Введите логин',
                               errorText: state.loginError,
+                              prefixIcon: Icon(LucideIcons.user),
                             ),
                             onChanged: (value) {
                               ref
@@ -249,6 +253,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                               labelText: 'Email',
                               hintText: 'Введите email',
                               errorText: state.emailError,
+                              prefixIcon: Icon(LucideIcons.mail),
                             ),
                             keyboardType: TextInputType.emailAddress,
                             onChanged: (value) {
@@ -277,6 +282,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                               labelText: 'URL',
                               hintText: 'https://example.com',
                               errorText: state.urlError,
+                              prefixIcon: Icon(LucideIcons.globe),
                             ),
                             keyboardType: TextInputType.url,
                             onChanged: (value) {
@@ -327,6 +333,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                               context,
                               labelText: 'Описание',
                               hintText: 'Краткое описание',
+                              prefixIcon: Icon(LucideIcons.fileText),
                             ),
                             maxLines: 2,
                             onChanged: (value) {

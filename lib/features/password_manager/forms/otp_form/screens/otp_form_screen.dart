@@ -11,6 +11,7 @@ import 'package:hoplixi/features/qr_scanner/widgets/qr_scanner_widget.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../models/otp_form_state.dart';
 import '../providers/otp_form_provider.dart';
@@ -302,6 +303,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
               hintText: 'JBSWY3DPEHPK3PXP',
               errorText: state.secretError,
               helperText: 'Обычно находится в настройках 2FA сервиса',
+              prefixIcon: Icon(LucideIcons.key),
               suffixIcon: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -344,6 +346,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
               context,
               labelText: 'Сервис / Издатель',
               hintText: 'Google, GitHub, Steam...',
+              prefixIcon: Icon(LucideIcons.building),
             ),
             onChanged: (value) {
               ref.read(otpFormProvider.notifier).setIssuer(value);
@@ -358,6 +361,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
               context,
               labelText: 'Имя аккаунта',
               hintText: 'email@example.com',
+              prefixIcon: Icon(LucideIcons.user),
             ),
             keyboardType: TextInputType.emailAddress,
             onChanged: (value) {
@@ -413,6 +417,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
                   labelText: 'Период (секунды)',
                   hintText: '30',
                   errorText: state.periodError,
+                  prefixIcon: Icon(LucideIcons.clock),
                 ),
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],

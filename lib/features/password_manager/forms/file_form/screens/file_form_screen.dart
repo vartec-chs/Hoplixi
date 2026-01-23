@@ -9,6 +9,7 @@ import 'package:hoplixi/features/password_manager/tags_manager/features/tags_pic
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../models/file_form_state.dart';
 import '../providers/file_form_provider.dart';
@@ -162,7 +163,7 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                             _buildFilePickerSection(theme, state),
                             const SizedBox(height: 16),
                           ],
-        
+
                           if (state.isSaving && state.uploadProgress > 0)
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -179,7 +180,7 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                                 ],
                               ),
                             ),
-        
+
                           // Информация о файле (режим редактирования)
                           if (state.isEditMode) ...[
                             Text(
@@ -212,7 +213,7 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                             ],
                             const SizedBox(height: 16),
                           ],
-        
+
                           // Название *
                           TextField(
                             controller: _nameController,
@@ -221,20 +222,26 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                               labelText: 'Название *',
                               hintText: 'Введите название файла',
                               errorText: state.nameError,
+                              prefixIcon: Icon(LucideIcons.tag),
                             ),
                             onChanged: (value) {
-                              ref.read(fileFormProvider.notifier).setName(value);
+                              ref
+                                  .read(fileFormProvider.notifier)
+                                  .setName(value);
                             },
                           ),
                           const SizedBox(height: 16),
-        
+
                           // Категория
                           CategoryPickerField(
                             selectedCategoryId: state.categoryId,
                             selectedCategoryName: state.categoryName,
                             label: 'Категория',
                             hintText: 'Выберите категорию',
-                            filterByType: [CategoryType.file, CategoryType.mixed],
+                            filterByType: [
+                              CategoryType.file,
+                              CategoryType.mixed,
+                            ],
                             onCategorySelected: (categoryId, categoryName) {
                               ref
                                   .read(fileFormProvider.notifier)
@@ -242,7 +249,7 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                             },
                           ),
                           const SizedBox(height: 16),
-        
+
                           // Теги
                           TagPickerField(
                             selectedTagIds: state.tagIds,
@@ -257,7 +264,7 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                             },
                           ),
                           const SizedBox(height: 16),
-        
+
                           // Описание
                           TextField(
                             controller: _descriptionController,
@@ -265,6 +272,7 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                               context,
                               labelText: 'Описание',
                               hintText: 'Краткое описание файла',
+                              prefixIcon: Icon(LucideIcons.fileText),
                             ),
                             maxLines: 3,
                             onChanged: (value) {
@@ -274,7 +282,7 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                             },
                           ),
                           const SizedBox(height: 16),
-        
+
                           // Заметки
                           NotePickerField(
                             selectedNoteId: state.noteId,
@@ -289,7 +297,7 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                       ),
                     ),
                   ),
-        
+
                   // Прогресс загрузки
                 ],
               ),

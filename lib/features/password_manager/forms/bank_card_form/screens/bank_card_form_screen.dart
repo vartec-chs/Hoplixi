@@ -12,6 +12,7 @@ import 'package:hoplixi/features/password_manager/tags_manager/features/tags_pic
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:universal_platform/universal_platform.dart';
 
 import '../providers/bank_card_form_provider.dart';
@@ -307,7 +308,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                               labelText: 'Название карты *',
                               hintText: 'Например: Основная карта',
                               errorText: state.nameError,
-                              prefixIcon: const Icon(Icons.label_outline),
+                              prefixIcon: Icon(LucideIcons.tag),
                             ),
                             onChanged: (value) {
                               ref
@@ -325,7 +326,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                               labelText: 'Имя владельца *',
                               hintText: 'Как на карте',
                               errorText: state.cardholderNameError,
-                              prefixIcon: const Icon(Icons.person_outline),
+                              prefixIcon: Icon(LucideIcons.user),
                             ),
                             textCapitalization: TextCapitalization.characters,
                             onChanged: (value) {
@@ -344,7 +345,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                               labelText: 'Номер карты *',
                               hintText: '0000 0000 0000 0000',
                               errorText: state.cardNumberError,
-                              prefixIcon: const Icon(Icons.credit_card),
+                              prefixIcon: Icon(LucideIcons.creditCard),
                               suffixIcon: UniversalPlatform.isMobile
                                   ? IconButton(
                                       icon: const Icon(Icons.camera_alt),
@@ -378,6 +379,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                                     labelText: 'Месяц *',
                                     hintText: 'MM',
                                     errorText: state.expiryMonthError,
+                                    prefixIcon: Icon(LucideIcons.calendar),
                                   ),
                                   keyboardType: TextInputType.number,
                                   inputFormatters: [
@@ -400,6 +402,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                                     labelText: 'Год *',
                                     hintText: 'YYYY',
                                     errorText: state.expiryYearError,
+                                    prefixIcon: Icon(LucideIcons.calendar),
                                   ),
                                   keyboardType: TextInputType.number,
                                   inputFormatters: [
@@ -423,6 +426,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                                     labelText: 'CVV',
                                     hintText: '***',
                                     errorText: state.cvvError,
+                                    prefixIcon: Icon(LucideIcons.shield),
                                   ),
                                   keyboardType: TextInputType.number,
                                   obscureText: true,
@@ -468,9 +472,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                               context,
                               labelText: 'Название банка',
                               hintText: 'Например: Сбербанк',
-                              prefixIcon: const Icon(
-                                Icons.account_balance_outlined,
-                              ),
+                              prefixIcon: Icon(LucideIcons.building),
                             ),
                             onChanged: (value) {
                               ref
@@ -490,6 +492,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                                     context,
                                     labelText: 'Номер счета',
                                     hintText: 'Опционально',
+                                    prefixIcon: Icon(LucideIcons.hash),
                                   ),
                                   keyboardType: TextInputType.number,
                                   onChanged: (value) {
@@ -507,6 +510,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                                     context,
                                     labelText: 'Routing Number',
                                     hintText: 'Опционально',
+                                    prefixIcon: Icon(LucideIcons.hash),
                                   ),
                                   keyboardType: TextInputType.number,
                                   onChanged: (value) {
@@ -560,6 +564,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                               context,
                               labelText: 'Описание',
                               hintText: 'Краткое описание',
+                              prefixIcon: Icon(LucideIcons.fileText),
                             ),
                             maxLines: 2,
                             onChanged: (value) {

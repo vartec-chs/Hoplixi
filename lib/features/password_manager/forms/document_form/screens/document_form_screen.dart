@@ -9,6 +9,7 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_b
 import 'package:hoplixi/features/password_manager/tags_manager/features/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../models/document_form_state.dart';
 import '../providers/document_form_provider.dart';
@@ -155,6 +156,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
                               labelText: 'Название *',
                               hintText: 'Введите название документа',
                               errorText: state.titleError,
+                              prefixIcon: Icon(LucideIcons.tag),
                             ),
                             onChanged: (value) {
                               ref
@@ -208,6 +210,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
                               context,
                               labelText: 'Описание',
                               hintText: 'Краткое описание документа',
+                              prefixIcon: Icon(LucideIcons.fileText),
                             ),
                             maxLines: 3,
                             onChanged: (value) {

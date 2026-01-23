@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/otp_picker/otp_picker_modal.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Виджет для выбора OTP
 class OtpPickerField extends ConsumerStatefulWidget {
@@ -214,6 +215,7 @@ class _OtpPickerFieldState extends ConsumerState<OtpPickerField> {
                     context,
                     labelText: widget.label,
                     hintText: widget.hintText,
+                    prefixIcon: Icon(LucideIcons.smartphone),
                     suffixIcon: hasValue && widget.enabled
                         ? IconButton(
                             icon: const Icon(Icons.close, size: 20),
