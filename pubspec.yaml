@@ -103,15 +103,19 @@ dependencies:
   lucide_icons_flutter: ^3.1.9
   flutter_graph_view: ^2.1.0
   flutter_doc_scanner: ^0.0.17
+  build_config: ^1.2.0
+  rename_app: ^1.6.5
+  flutter_flavorizr: ^2.4.1
 
   file_crypto:
     path: ./packages/file_crypto
 
+  card_scanner:
+    path: ./packages/card_scanner
+
   cloud_storage_all:
     path: ./packages/cloud_storage_sdk/packages/cloud_storage_all
-  build_config: ^1.2.0
-  rename_app: ^1.6.5
-  flutter_flavorizr: ^2.4.1
+ 
 
 dev_dependencies:
   flutter_test:

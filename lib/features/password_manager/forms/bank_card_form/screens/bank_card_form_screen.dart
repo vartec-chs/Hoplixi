@@ -1,3 +1,4 @@
+import 'package:card_scanner/card_scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_credit_card/flutter_credit_card.dart';
@@ -11,6 +12,7 @@ import 'package:hoplixi/features/password_manager/tags_manager/features/tags_pic
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:universal_platform/universal_platform.dart';
 
 import '../providers/bank_card_form_provider.dart';
 
@@ -94,6 +96,42 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
     _cvvFocusNode.dispose();
 
     super.dispose();
+  }
+
+  Future<void> _scanCard() async {
+    if (!UniversalPlatform.isMobile) return;
+
+    try {
+      final cardDetails = await CardScanner.scanCard(
+        scanOptions: const CardScanOptions(scanCardHolderName: true),
+      );
+
+      if (cardDetails == null || !mounted) return;
+
+      final notifier = ref.read(bankCardFormProvider.notifier);
+
+      if (cardDetails.cardNumber.isNotEmpty) {
+        notifier.setCardNumber(cardDetails.cardNumber);
+      }
+
+      if (cardDetails.cardHolderName.isNotEmpty) {
+        notifier.setCardholderName(cardDetails.cardHolderName);
+      }
+
+      if (cardDetails.expiryDate.isNotEmpty) {
+        final parts = cardDetails.expiryDate.split('/');
+        if (parts.length == 2) {
+          notifier.setExpiryMonth(parts[0]);
+          final year = parts[1].length == 2 ? '20${parts[1]}' : parts[1];
+          notifier.setExpiryYear(year);
+        }
+      }
+    } catch (e) {
+      Toaster.error(
+        title: 'Ошибка сканирования',
+        description: 'Не удалось просканировать карту: $e',
+      );
+    }
   }
 
   void _handleSave() async {
@@ -247,7 +285,9 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                             width: MediaQuery.of(context).size.width,
                             isChipVisible: true,
                             isSwipeGestureEnabled: true,
-                            animationDuration: const Duration(milliseconds: 500),
+                            animationDuration: const Duration(
+                              milliseconds: 500,
+                            ),
                             frontCardBorder: Border.all(
                               color: colorScheme.outline.withOpacity(0.3),
                             ),
@@ -256,9 +296,9 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                             ),
                             padding: 8,
                           ),
-        
+
                           const SizedBox(height: 24),
-        
+
                           // Название карты *
                           TextField(
                             controller: _nameController,
@@ -276,7 +316,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                             },
                           ),
                           const SizedBox(height: 8),
-        
+
                           // Имя владельца *
                           TextField(
                             controller: _cardholderNameController,
@@ -295,7 +335,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                             },
                           ),
                           const SizedBox(height: 8),
-        
+
                           // Номер карты *
                           TextField(
                             controller: _cardNumberController,
@@ -305,6 +345,13 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                               hintText: '0000 0000 0000 0000',
                               errorText: state.cardNumberError,
                               prefixIcon: const Icon(Icons.credit_card),
+                              suffixIcon: UniversalPlatform.isMobile
+                                  ? IconButton(
+                                      icon: const Icon(Icons.camera_alt),
+                                      onPressed: _scanCard,
+                                      tooltip: 'Сканировать карту',
+                                    )
+                                  : null,
                             ),
                             keyboardType: TextInputType.number,
                             inputFormatters: [
@@ -319,7 +366,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                             },
                           ),
                           const SizedBox(height: 8),
-        
+
                           // Срок действия
                           Row(
                             children: [
@@ -393,7 +440,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                             ],
                           ),
                           const SizedBox(height: 8),
-        
+
                           _CardTypeDropdown(
                             value: state.cardType,
                             onChanged: (value) {
@@ -411,9 +458,9 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                                   .setCardNetwork(value);
                             },
                           ),
-        
+
                           const SizedBox(height: 8),
-        
+
                           // Название банка
                           TextField(
                             controller: _bankNameController,
@@ -432,7 +479,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                             },
                           ),
                           const Divider(height: 32),
-        
+
                           // Номер счета и Routing number
                           Row(
                             children: [
@@ -472,7 +519,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                             ],
                           ),
                           const Divider(height: 32),
-        
+
                           // Категория
                           CategoryPickerField(
                             selectedCategoryId: state.categoryId,
@@ -490,7 +537,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                             },
                           ),
                           const SizedBox(height: 8),
-        
+
                           // Теги
                           TagPickerField(
                             selectedTagIds: state.tagIds,
@@ -505,7 +552,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                             },
                           ),
                           const SizedBox(height: 8),
-        
+
                           // Описание
                           TextField(
                             controller: _descriptionController,
@@ -522,7 +569,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                             },
                           ),
                           const SizedBox(height: 8),
-        
+
                           // Заметки
                           NotePickerField(
                             selectedNoteId: state.noteId,
