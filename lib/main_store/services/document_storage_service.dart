@@ -128,7 +128,7 @@ class DocumentStorageService {
               DocumentPagesCompanion.insert(
                 id: Value(pageId),
                 documentId: documentId,
-             
+
                 metadataId: Value(metadataId),
                 pageNumber: pageNumber,
               ),
@@ -298,8 +298,8 @@ class DocumentStorageService {
       throw Exception('Document page not found');
     }
 
-    return await _fileStorageService.decryptFile(
-      fileId: page.metadataId!,
+    return await _fileStorageService.decryptPageFile(
+      metadataId: page.metadataId!,
       onProgress: onProgress,
     );
   }

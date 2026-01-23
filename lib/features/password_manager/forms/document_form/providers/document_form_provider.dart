@@ -79,8 +79,8 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
           )..where((m) => m.id.equals(fileInfo.metadataId!))).getSingleOrNull();
 
           if (metadata != null) {
-            fileName = metadata.fileName ?? fileName;
-            fileSize = metadata.fileSize ?? 0;
+            fileName = metadata.fileName;
+            fileSize = metadata.fileSize;
             mimeType = metadata.mimeType;
           }
         }

@@ -706,6 +706,8 @@ class _DocumentDecryptContentState
       for (int i = 0; i < selectedIds.length; i++) {
         final pageId = selectedIds[i];
 
+        logInfo('Decrypting page $pageId', tag: _logTag);
+
         setState(() {
           _currentDecryptingIndex = i + 1;
         });
