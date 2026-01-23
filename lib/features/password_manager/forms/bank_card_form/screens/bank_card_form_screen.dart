@@ -5,8 +5,8 @@ import 'package:flutter_credit_card/flutter_credit_card.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_button.dart';
+import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
@@ -196,39 +196,84 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
       }
     });
 
-    // Синхронизация контроллеров с состоянием при загрузке данных
-    if (state.isEditMode && !state.isLoading) {
-      if (_nameController.text != state.name) {
-        _nameController.text = state.name;
+    // Синхронизация контроллеров с состоянием
+    ref.listen(bankCardFormProvider.select((state) => state.name), (
+      prev,
+      next,
+    ) {
+      if (next != _nameController.text) {
+        _nameController.text = next;
       }
-      if (_cardholderNameController.text != state.cardholderName) {
-        _cardholderNameController.text = state.cardholderName;
+    });
+    ref.listen(bankCardFormProvider.select((state) => state.cardholderName), (
+      prev,
+      next,
+    ) {
+      if (next != _cardholderNameController.text) {
+        _cardholderNameController.text = next;
       }
-      if (_cardNumberController.text != state.cardNumber) {
-        _cardNumberController.text = state.cardNumber;
+    });
+    ref.listen(bankCardFormProvider.select((state) => state.cardNumber), (
+      prev,
+      next,
+    ) {
+      if (next != _cardNumberController.text) {
+        _cardNumberController.text = next;
       }
-      if (_expiryMonthController.text != state.expiryMonth) {
-        _expiryMonthController.text = state.expiryMonth;
+    });
+    ref.listen(bankCardFormProvider.select((state) => state.expiryMonth), (
+      prev,
+      next,
+    ) {
+      if (next != _expiryMonthController.text) {
+        _expiryMonthController.text = next;
       }
-      if (_expiryYearController.text != state.expiryYear) {
-        _expiryYearController.text = state.expiryYear;
+    });
+    ref.listen(bankCardFormProvider.select((state) => state.expiryYear), (
+      prev,
+      next,
+    ) {
+      if (next != _expiryYearController.text) {
+        _expiryYearController.text = next;
       }
-      if (_cvvController.text != state.cvv) {
-        _cvvController.text = state.cvv;
+    });
+    ref.listen(bankCardFormProvider.select((state) => state.cvv), (prev, next) {
+      if (next != _cvvController.text) {
+        _cvvController.text = next;
       }
-      if (_bankNameController.text != state.bankName) {
-        _bankNameController.text = state.bankName;
+    });
+    ref.listen(bankCardFormProvider.select((state) => state.bankName), (
+      prev,
+      next,
+    ) {
+      if (next != _bankNameController.text) {
+        _bankNameController.text = next;
       }
-      if (_accountNumberController.text != state.accountNumber) {
-        _accountNumberController.text = state.accountNumber;
+    });
+    ref.listen(bankCardFormProvider.select((state) => state.accountNumber), (
+      prev,
+      next,
+    ) {
+      if (next != _accountNumberController.text) {
+        _accountNumberController.text = next;
       }
-      if (_routingNumberController.text != state.routingNumber) {
-        _routingNumberController.text = state.routingNumber;
+    });
+    ref.listen(bankCardFormProvider.select((state) => state.routingNumber), (
+      prev,
+      next,
+    ) {
+      if (next != _routingNumberController.text) {
+        _routingNumberController.text = next;
       }
-      if (_descriptionController.text != state.description) {
-        _descriptionController.text = state.description;
+    });
+    ref.listen(bankCardFormProvider.select((state) => state.description), (
+      prev,
+      next,
+    ) {
+      if (next != _descriptionController.text) {
+        _descriptionController.text = next;
       }
-    }
+    });
 
     return Scaffold(
       appBar: AppBar(

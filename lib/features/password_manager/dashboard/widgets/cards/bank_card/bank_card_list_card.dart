@@ -102,7 +102,8 @@ class _BankCardListCardState extends ConsumerState<BankCardListCard>
     final digitsOnly = cardNumber.replaceAll(RegExp(r'\D'), '');
     if (digitsOnly.length < 4) return '•••• ••••';
     final lastFour = digitsOnly.substring(digitsOnly.length - 4);
-    return '•••• •••• •••• $lastFour';
+    // return '•••• •••• •••• $lastFour';
+    return '$lastFour';
   }
 
   /// Возвращает цвет для типа карты

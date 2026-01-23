@@ -40,10 +40,13 @@ class CardScannerCameraActivity : AppCompatActivity() {
   private var analysisUseCase: ImageAnalysis? = null
   private var cardScannerOptions: CardScannerOptions? = null
   private lateinit var cameraExecutor: ExecutorService
+  private var camera: Camera? = null
+  private var isTorchOn: Boolean = false
   lateinit var animator: ObjectAnimator
   lateinit var scannerLayout: View
   lateinit var scannerBar: View
   lateinit var backButton: View
+  lateinit var flashButton: View
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -53,11 +56,15 @@ class CardScannerCameraActivity : AppCompatActivity() {
     scannerLayout = findViewById(R.id.scannerLayout)
     scannerBar = findViewById(R.id.scannerBar)
     backButton = findViewById(R.id.backButton)
+    flashButton = findViewById(R.id.flashButton)
     supportActionBar?.hide()
 
     val vto = scannerLayout.viewTreeObserver
     backButton.setOnClickListener {
       finish()
+    }
+    flashButton.setOnClickListener {
+      toggleTorch()
     }
     vto.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
       override fun onGlobalLayout() {
@@ -133,7 +140,20 @@ class CardScannerCameraActivity : AppCompatActivity() {
     val previewView = findViewById<PreviewView>(R.id.cameraView)
 
     previewUseCase!!.setSurfaceProvider(previewView.surfaceProvider)
-    cameraProvider!!.bindToLifecycle( /* lifecycleOwner= */this, cameraSelector!!, previewUseCase)
+    camera = cameraProvider!!.bindToLifecycle( /* lifecycleOwner= */this, cameraSelector!!, previewUseCase)
+
+    if (camera?.cameraInfo?.hasFlashUnit() == true) {
+      flashButton.visibility = View.VISIBLE
+      camera?.cameraInfo?.torchState?.observe(this) { state ->
+        isTorchOn = state == TorchState.ON
+        val color = if (isTorchOn) 0xFFFFFF00.toInt() else 0xFFF0F0F2.toInt()
+        flashButton.background.setTint(color)
+      }
+    }
+  }
+
+  private fun toggleTorch() {
+    camera?.cameraControl?.enableTorch(!isTorchOn)
   }
 
   private fun bindAnalysisUseCase() {

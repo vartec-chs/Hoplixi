@@ -28,6 +28,18 @@
                 android:layout_height="17dp"
                 android:textSize="24sp"/>
 
+            <Button
+                android:id="@+id/flashButton"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="28dp"
+                android:layout_marginTop="28dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:background="@drawable/ic_flash"
+                android:backgroundTint="#F0F0F2"
+                android:visibility="gone"
+                />
+
 
         </RelativeLayout>
 
