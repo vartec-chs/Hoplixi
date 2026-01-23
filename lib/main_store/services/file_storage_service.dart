@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
 import 'package:file_crypto/file_crypto.dart';
+import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/dto/file_dto.dart';
@@ -56,7 +57,8 @@ class FileStorageService {
     final attachmentsPath = await _getAttachmentsPath();
     final filePathUuid = const Uuid().v4();
     final extension = p.extension(sourceFile.path);
-    final encryptedFileName = '$filePathUuid.enc';
+    final encryptedFileName =
+        '$filePathUuid${MainConstants.encryptedFileExtension}';
     final encryptedFilePath = p.join(attachmentsPath, encryptedFileName);
 
     // Шифруем файл
@@ -216,7 +218,8 @@ class FileStorageService {
     final key = await _getAttachmentKey();
     final attachmentsPath = await _getAttachmentsPath();
     final newFilePathUuid = const Uuid().v4();
-    final newEncryptedFileName = '$newFilePathUuid.enc';
+    final newEncryptedFileName =
+        '$newFilePathUuid${MainConstants.encryptedFileExtension}';
     final newEncryptedFilePath = p.join(attachmentsPath, newEncryptedFileName);
 
     await _encryptor.encrypt(
@@ -275,7 +278,8 @@ class FileStorageService {
     final attachmentsPath = await _getAttachmentsPath();
     final filePathUuid = const Uuid().v4();
     final extension = p.extension(sourceFile.path);
-    final encryptedFileName = '$filePathUuid.enc';
+    final encryptedFileName =
+        '$filePathUuid${MainConstants.encryptedFileExtension}';
     final encryptedFilePath = p.join(attachmentsPath, encryptedFileName);
 
     await _encryptor.encrypt(
@@ -389,7 +393,8 @@ class FileStorageService {
     // Шифруем новый файл
     final key = await _getAttachmentKey();
     final newFilePathUuid = const Uuid().v4();
-    final newEncryptedFileName = '$newFilePathUuid.enc';
+    final newEncryptedFileName =
+        '$newFilePathUuid${MainConstants.encryptedFileExtension}';
     final newEncryptedFilePath = p.join(attachmentsPath, newEncryptedFileName);
 
     await _encryptor.encrypt(
