@@ -427,6 +427,19 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
                 tooltip: 'Связи заметки',
                 onPressed: _showLinksModal,
               ),
+            IconButton(
+              icon: Icon(
+                _quillController.readOnly ? Icons.edit : Icons.visibility,
+              ),
+              tooltip: _quillController.readOnly
+                  ? 'Режим редактирования'
+                  : 'Режим просмотра',
+              onPressed: () {
+                setState(() {
+                  _quillController.readOnly = !_quillController.readOnly;
+                });
+              },
+            ),
             if (state.isSaving)
               const Padding(
                 padding: EdgeInsets.all(12.0),
