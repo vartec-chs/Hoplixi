@@ -8,13 +8,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
-
 import 'package:hoplixi/core/logger/index.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/notification_card.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 /// QR Scanner Screen that uses live camera for scanning QR codes.
 class QrScannerWithCameraScreen extends StatefulWidget {

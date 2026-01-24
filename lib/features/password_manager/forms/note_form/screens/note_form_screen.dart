@@ -11,6 +11,7 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/data_refre
 import 'package:hoplixi/features/password_manager/forms/note_form/models/note_form_state.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_modal.dart';
 import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/shared/ui/modal_sheet_close_button.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 import '../providers/note_form_provider.dart';
@@ -78,6 +79,16 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
   void _onDocumentChanged() {
     // Обновляем стейт при каждом изменении
     _updateStateFromController();
+
+    // В режиме создания мгновенно обновляем title из первой строки
+    if (!isEditMode) {
+      final plainText = _quillController.document.toPlainText();
+      final firstLine = plainText.split('\n').first.trim();
+      final currentState = ref.read(noteFormProvider);
+      if (firstLine != currentState.title) {
+        ref.read(noteFormProvider.notifier).setTitle(firstLine);
+      }
+    }
   }
 
   @override
@@ -317,17 +328,24 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
           'У вас есть несохраненные изменения. Вы уверены, что хотите закрыть без сохранения?',
         ),
         actions: [
-          SmoothButton(
-            onPressed: () => Navigator.pop(context, false),
-            label: 'Отмена',
-            type: .outlined,
-            variant: .error,
-          ),
-          SmoothButton(
-            onPressed: () => Navigator.pop(context, true),
-            type: .filled,
-            variant: .error,
-            label: 'Закрыть без сохранения',
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.end,
+            children: [
+              SmoothButton(
+                onPressed: () => Navigator.pop(context, false),
+                label: 'Отмена',
+                type: .text,
+              ),
+
+              SmoothButton(
+                onPressed: () => Navigator.pop(context, true),
+                type: .filled,
+                variant: .error,
+                label: 'Закрыть без сохранения',
+              ),
+            ],
           ),
         ],
       ),
@@ -348,6 +366,10 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
         SliverWoltModalSheetPage(
           hasTopBarLayer: true,
           isTopBarLayerAlwaysVisible: true,
+          leadingNavBarWidget: Padding(
+            padding: const EdgeInsets.only(left: 8.0),
+            child: ModalSheetCloseButton(),
+          ),
 
           topBarTitle: Builder(
             builder: (context) {
@@ -382,7 +404,13 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(isEditMode ? 'Редактировать заметку' : 'Новая заметка'),
+          title: Text(
+            isEditMode
+                ? state.title
+                : state.title.isNotEmpty
+                ? state.title
+                : 'Создать заметку',
+          ),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () async {
@@ -430,9 +458,11 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
                     // Панель инструментов Quill
                     Container(
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surface,
                         border: Border(
-                          bottom: BorderSide(color: theme.dividerColor, width: 1),
+                          bottom: BorderSide(
+                            color: theme.dividerColor,
+                            width: 1,
+                          ),
                         ),
                       ),
                       child: QuillSimpleToolbar(
@@ -440,11 +470,15 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
                         config: QuillSimpleToolbarConfig(
                           showClipboardPaste: true,
                           multiRowsDisplay: false,
+                          decoration: BoxDecoration(color: Colors.transparent),
+                          toolbarSize: 40,
                           dialogTheme: QuillDialogTheme(
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
+                            dialogBackgroundColor: theme.colorScheme.surface,
                           ),
+
                           customButtons: [
                             // Кастомная кнопка для ссылки на заметку
                             QuillToolbarCustomButtonOptions(
@@ -466,7 +500,7 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
                         ),
                       ),
                     ),
-          
+
                     // Редактор Quill
                     Expanded(
                       child: QuillEditor(
@@ -475,13 +509,20 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
                         controller: _quillController,
                         config: QuillEditorConfig(
                           placeholder: 'Начните писать заметку...',
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(12),
                           expands: true,
+                          dialogTheme: QuillDialogTheme(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            dialogBackgroundColor: theme.colorScheme.surface,
+                          ),
+
                           onLaunchUrl: (url) async {
                             logInfo('QuillEditor onLaunchUrl: $url');
                             // Перехватываем ссылки на заметки, чтобы не открывать в браузере
                             // Quill может добавить https:// перед note://
-          
+
                             if (url.contains('note://')) {
                               final noteId = url.split('//').last;
                               _handleNoteLinkClick(noteId);

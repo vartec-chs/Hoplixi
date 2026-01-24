@@ -10,6 +10,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:crop_image/crop_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -238,6 +239,7 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
           ],
         ),
         body: SafeArea(
+          top: false,
           child: Padding(
             padding: const EdgeInsets.all(12.0),
             child: Column(
@@ -615,45 +617,15 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
   Future<String?> _decodeQrCode(File imageFile) async {
     try {
       final bytes = await imageFile.readAsBytes();
-      final image = img.decodeImage(bytes);
+      final result = await compute(_decodeQrCodeInIsolate, bytes);
 
-      if (image == null) {
-        logWarning('Failed to decode image', tag: _logTag);
-        return null;
+      if (result != null) {
+        logInfo('QR code decoded successfully: $result', tag: _logTag);
+      } else {
+        logInfo('QR code not found in image', tag: _logTag);
       }
 
-      // Convert image to ABGR format for zxing2
-      final convertedImage = image.convert(numChannels: 4);
-      final int32List = convertedImage
-          .getBytes(order: img.ChannelOrder.abgr)
-          .buffer
-          .asInt32List();
-
-      final source = RGBLuminanceSource(image.width, image.height, int32List);
-
-      final bitmap = BinaryBitmap(GlobalHistogramBinarizer(source));
-      final reader = QRCodeReader();
-
-      try {
-        final result = reader.decode(bitmap);
-        logInfo('QR code decoded successfully: ${result.text}', tag: _logTag);
-        return result.text;
-      } on NotFoundException {
-        // Try with HybridBinarizer as fallback
-        logInfo('Trying HybridBinarizer...', tag: _logTag);
-        final hybridBitmap = BinaryBitmap(HybridBinarizer(source));
-        try {
-          final result = reader.decode(hybridBitmap);
-          logInfo(
-            'QR code decoded with HybridBinarizer: ${result.text}',
-            tag: _logTag,
-          );
-          return result.text;
-        } on NotFoundException {
-          logInfo('QR code not found with HybridBinarizer', tag: _logTag);
-          return null;
-        }
-      }
+      return result;
     } catch (e, stackTrace) {
       logError(
         'Error decoding QR code: $e',
@@ -1075,5 +1047,44 @@ class _AspectRatioButton extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Function to decode QR code in isolate to avoid blocking UI
+String? _decodeQrCodeInIsolate(Uint8List bytes) {
+  try {
+    final image = img.decodeImage(bytes);
+
+    if (image == null) {
+      return null;
+    }
+
+    // Convert image to ABGR format for zxing2
+    final convertedImage = image.convert(numChannels: 4);
+    final int32List = convertedImage
+        .getBytes(order: img.ChannelOrder.abgr)
+        .buffer
+        .asInt32List();
+
+    final source = RGBLuminanceSource(image.width, image.height, int32List);
+
+    final bitmap = BinaryBitmap(GlobalHistogramBinarizer(source));
+    final reader = QRCodeReader();
+
+    try {
+      final result = reader.decode(bitmap);
+      return result.text;
+    } on NotFoundException {
+      // Try with HybridBinarizer as fallback
+      final hybridBitmap = BinaryBitmap(HybridBinarizer(source));
+      try {
+        final result = reader.decode(hybridBitmap);
+        return result.text;
+      } on NotFoundException {
+        return null;
+      }
+    }
+  } catch (e) {
+    return null;
   }
 }

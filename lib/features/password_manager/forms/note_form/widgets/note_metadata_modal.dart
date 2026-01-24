@@ -4,6 +4,7 @@ import 'package:hoplixi/features/password_manager/pickers/category_picker/catego
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/shared/ui/modal_sheet_close_button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
@@ -35,17 +36,13 @@ Future<bool?> showNoteMetadataModal(
             },
           ),
           isTopBarLayerAlwaysVisible: true,
-          leadingNavBarWidget: Builder(
-            builder: (context) {
-              return IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.of(modalContext).pop(false),
-              );
-            },
+          leadingNavBarWidget: Padding(
+            padding: const EdgeInsets.only(left: 8.0),
+            child: ModalSheetCloseButton(),
           ),
           child: Builder(
             builder: (context) => Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(12),
               child: _NoteMetadataForm(
                 isEditMode: isEditMode,
                 onSave: () {

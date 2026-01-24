@@ -40,6 +40,7 @@ class ImportOtpScreen extends ConsumerWidget {
         leading: const FormCloseButton(),
       ),
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             if (state.importedOtps.isEmpty)
@@ -84,9 +85,11 @@ class ImportOtpScreen extends ConsumerWidget {
               )
             else
               Expanded(
-                child: ListView.builder(
+                child: ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: state.importedOtps.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final otp = state.importedOtps[index];
                     final isSelected = state.selectedIndices.contains(index);
@@ -131,60 +134,60 @@ class ImportOtpScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                child: SafeArea(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '${state.selectedIndices.length} selected',
-                            style: theme.textTheme.titleMedium,
-                          ),
-                          TextButton.icon(
-                            onPressed: () async {
-                              final result = await showQrScannerDialog(
-                                context: context,
-                                title: 'Scan Another QR',
-                              );
-                              if (result != null) {
-                                await notifier.importOtp(
-                                  Uint8List.fromList(result.codeUnits),
-                                );
-                              }
-                            },
-                            icon: const Icon(Icons.add),
-                            label: const Text('Add More'),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      SliderButton(
-                        text: 'Save to Database',
-                        type: SliderButtonType.confirm,
-                        onSlideCompleteAsync: () async {
-                          try {
-                            await notifier.saveSelectedOtps();
-                            if (context.mounted) {
-                              Toaster.success(
-                                title: 'Success',
-                                description: 'Selected OTPs saved successfully',
-                              );
-                              if (state.importedOtps.isEmpty) {
-                                context.pop();
-                              }
-                            }
-                          } catch (e) {
-                            Toaster.error(
-                              title: 'Error',
-                              description: 'Failed to save selected OTPs: $e',
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${state.selectedIndices.length} выбрано',
+                          style: theme.textTheme.titleMedium,
+                        ),
+                        TextButton.icon(
+                          onPressed: () async {
+                            final result = await showQrScannerDialog(
+                              context: context,
+                              title: 'Сканировать еще один QR',
                             );
+                            if (result != null) {
+                              await notifier.importOtp(
+                                Uint8List.fromList(result.codeUnits),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.add),
+                          label: const Text('Добавить еще'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SliderButton(
+                      text: 'Сохранить выбранные OTP',
+                      type: SliderButtonType.confirm,
+                      onSlideCompleteAsync: () async {
+                        try {
+                          await notifier.saveSelectedOtps();
+                          if (context.mounted) {
+                            Toaster.success(
+                              title: 'Успех',
+                              description: 'Выбранные OTP успешно сохранены',
+                            );
+                            if (state.importedOtps.isEmpty) {
+                              context.pop();
+                            }
                           }
-                        },
-                      ),
-                    ],
-                  ),
+                        } catch (e) {
+                          Toaster.error(
+                            title: 'Ошибка',
+                            description:
+                                'Не удалось сохранить выбранные OTP: $e',
+                          );
+                        }
+                      },
+                    ),
+                    SizedBox(height: MediaQuery.of(context).viewPadding.bottom),
+                  ],
                 ),
               ),
           ],

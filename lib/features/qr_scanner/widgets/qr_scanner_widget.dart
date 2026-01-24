@@ -154,7 +154,7 @@ class QrScannerWidget extends StatelessWidget {
     // Если доступен только один режим, показываем одну кнопку
     if (!_showCameraMode && showImageMode) {
       return SmoothButton(
-        label: 'Сканировать QR-код с изображения',
+        label: 'Сканировать QR-код',
         icon: const Icon(Icons.qr_code_scanner),
         type: SmoothButtonType.filled,
         isFullWidth: true,
@@ -217,24 +217,26 @@ class QrScannerWidget extends StatelessWidget {
     final globalNavigator = Navigator.of(context, rootNavigator: true);
     final result = await globalNavigator.push<String?>(
       MaterialPageRoute(
-        builder: (_) => Column(
-          children: [
-            Consumer(
-              builder: (context, ref, _) {
-                final titlebarState = ref.watch(titlebarStateProvider);
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 100),
-                  height:
-                      titlebarState.hidden ||
-                          titlebarState.backgroundTransparent
-                      ? 0
-                      : 40,
-                );
-              },
-            ),
-            Expanded(child: QrScannerWithImageScreen()),
-          ],
-        ),
+        builder: UniversalPlatform.isDesktop
+            ? (_) => Column(
+                children: [
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final titlebarState = ref.watch(titlebarStateProvider);
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 100),
+                        height:
+                            titlebarState.hidden ||
+                                titlebarState.backgroundTransparent
+                            ? 0
+                            : 40,
+                      );
+                    },
+                  ),
+                  Expanded(child: QrScannerWithImageScreen()),
+                ],
+              )
+            : (_) => const QrScannerWithImageScreen(),
       ),
     );
 
