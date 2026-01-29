@@ -35,6 +35,209 @@ securely store and manage their passwords.
 - Flutter Secure Storage
 - Result Dart (result_dart package) for error handling use patterns.
 
+## Important
+
+- When writing code, the agent must strictly follow this project documentation
+  and docs-ai/*. If information is missing or unclear, the agent must consult
+  the MCP server instead of inventing solutions.
+
+- The agent must never make assumptions about APIs, architecture, or behavior.
+  If something is unknown, it must be explicitly verified or left unimplemented.
+
+- User data security is a top priority:
+  - Never log, expose, or store sensitive data in plain text
+  - Never bypass encryption, secure storage, or authentication flows
+
+- Code must prioritize:
+  - readability
+  - maintainability
+  - explicitness over cleverness
+
+- UI and UX decisions must:
+  - follow existing shared UI components
+  - maintain visual and behavioral consistency
+  - avoid custom solutions when standardized components exist
+
+- Performance considerations are mandatory:
+  - avoid unnecessary rebuilds
+  - avoid heavy synchronous work on the UI thread
+  - prefer lazy loading and pagination where applicable
+
+- One source of truth
+
+## Best Practices
+
+### Extension Methods
+
+Use extension methods to reduce boilerplate and improve code readability:
+
+```dart
+extension ContextX on BuildContext {
+  ThemeData get theme => Theme.of(this);
+  ColorScheme get colorScheme => Theme.of(this).colorScheme;
+  TextTheme get textTheme => Theme.of(this).textTheme;
+  MediaQueryData get mediaQuery => MediaQuery.of(this);
+  Size get screenSize => MediaQuery.sizeOf(this);
+}
+
+// Usage
+Widget build(BuildContext context) {
+  return Text('Hello', style: context.textTheme.bodyLarge);
+}
+```
+
+### Async/Await Pattern
+
+Always use async/await instead of `.then()`. Use `result_dart` for error
+handling:
+
+```dart
+// ❌ Bad
+fetchData().then((data) => process(data)).catchError((error) => handle(error));
+
+// ✅ Good
+try {
+  final data = await fetchData();
+  process(data);
+} catch (error) {
+  handle(error);
+}
+
+// ✅ Best with result_dart
+final result = await fetchData();
+result.when(
+  success: (data) => process(data),
+  failure: (error) => handle(error),
+);
+```
+
+### Minimize Rebuilds
+
+- **Break widgets into smaller pieces** - Each widget should be small and
+  focused
+- **Use const constructors** - Mark immutable widgets with `const`
+- **Use Consumer/Selector** - Watch only specific parts of state
+- **Avoid logic in build()** - Move heavy calculations to providers
+
+```dart
+// ❌ Bad - Heavy logic in build()
+Widget build(BuildContext context) {
+  final data = heavyCalculation(); // Recalculates on every rebuild
+  return Text(data);
+}
+
+// ✅ Good - Logic in provider
+final dataProvider = Provider((ref) => heavyCalculation());
+
+Widget build(BuildContext context, WidgetRef ref) {
+  final data = ref.watch(dataProvider);
+  return Text(data);
+}
+
+// ✅ Good - Const widgets
+Widget build(BuildContext context) {
+  return const Column(
+    children: [
+      Text('Static text'), // Won't rebuild
+      MyStaticWidget(),
+    ],
+  );
+}
+```
+
+### Widget Composition
+
+Break large widgets into smaller, reusable components:
+
+```dart
+// ❌ Bad - Monolithic widget
+class MyScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Title')),
+      body: Column(
+        children: [
+          // 100+ lines of complex UI
+        ],
+      ),
+    );
+  }
+}
+
+// ✅ Good - Composed widgets
+class MyScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: _AppBar(),
+      body: Column(
+        children: [
+          const _HeaderSection(),
+          const _ContentSection(),
+          const _FooterSection(),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeaderSection extends StatelessWidget {
+  const _HeaderSection();
+  
+  @override
+  Widget build(BuildContext context) => /* ... */;
+}
+```
+
+### Selective Rebuilds with Consumer
+
+Only rebuild widgets that need to react to state changes:
+
+```dart
+// ❌ Bad - Entire widget rebuilds
+class CounterWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final count = ref.watch(counterProvider);
+    return Column(
+      children: [
+        ExpensiveWidget(), // Rebuilds unnecessarily
+        Text('Count: $count'),
+      ],
+    );
+  }
+}
+
+// ✅ Good - Only Text rebuilds
+class CounterWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const ExpensiveWidget(), // Never rebuilds
+        Consumer(
+          builder: (context, ref, child) {
+            final count = ref.watch(counterProvider);
+            return Text('Count: $count');
+          },
+        ),
+      ],
+    );
+  }
+}
+
+// ✅ Best - Use select for granular updates
+class UserWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Only rebuilds when name changes, not when other user fields change
+    final name = ref.watch(userProvider.select((user) => user.name));
+    return Text('Name: $name');
+  }
+}
+```
+
 ## Error Handling and custom error types
 
 - Always handle errors and display clear error messages in the UI or use
@@ -363,6 +566,26 @@ Core application files at the root level:
   `dashboardNavigatorKey`). Used for navigation without context and in services.
 - **flavors.dart** - Flavor configuration (dev/staging/prod).
 
+## Custom Packages (`packages/`)
+
+Custom local packages developed for this project:
+
+- **card_scanner/** - Credit card scanning functionality using device camera
+- **cloud_storage_sdk/** - Unified SDK for cloud storage providers (Dropbox,
+  Google Drive, OneDrive, Yandex Drive) with OAuth2 support
+- **file_crypto/** - File encryption/decryption services using AES and other
+  crypto algorithms
+- **secure_clipboard_win/** - Secure clipboard operations for Windows platform
+
+These packages are referenced in `pubspec.yaml` as path dependencies.
+
+## Source Priority
+
+1. This project documentation
+2. docs-ai/*
+3. MCP server (Dart / Flutter)
+4. General Flutter knowledge
+
 ## MCP Server
 
 **For additional support and information, refer to the MCP server `context7`**
@@ -372,3 +595,16 @@ Use MCP server `context7` when:
 - Flutter / Riverpod APIs are unclear
 - Best practices are version-dependent
 - There is missing information in docs-ai
+
+## Dart & Flutter MCP Server
+
+The MCP server provides authoritative, version-aware information about Dart,
+Flutter, and related libraries.
+
+Use MCP server when:
+
+- APIs or behavior depend on framework version
+- Flutter or Riverpod behavior is unclear
+- Project docs do not cover the topic
+
+Never override project rules with MCP suggestions.

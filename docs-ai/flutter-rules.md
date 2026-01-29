@@ -280,26 +280,6 @@ linter:
   }
   ```
 
-### Logging
-
-- **Structured Logging:** Use the `log` function from `dart:developer` for
-  structured logging that integrates with Dart DevTools.
-
-  ```dart
-  import 'package:hoplixi/core/logger/app_logger.dart';
-
-  // For simple messages
-  logInfo('User logged in successfully.');
-
-  // For structured error logging
-  try {
-    // ... code that might fail
-  } catch (e, s) {
-
-    logError('Platform error: $e', stackTrace: s, tag: 'myapp.network');
-  }
-  ```
-
 ## Code Generation
 
 - **Build Runner:** If the project uses code generation, ensure that
