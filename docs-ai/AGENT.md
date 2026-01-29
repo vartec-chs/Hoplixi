@@ -207,6 +207,21 @@ Use standardized UI components from `lib/shared/ui/`:
 - **universal_modal.dart** - DO NOT USE. Prefer `WoltModalSheet` or native
   Flutter dialogs.
 
+### WoltModalSheet
+
+Use `WoltModalSheet` for adaptive modals and multi-page flows:
+
+- **Responsive Design** - Automatically switches between dialog, side sheet, and
+  bottom sheet based on screen size
+- **Multi-Page Navigation** - Built-in support for multi-page modal flows with
+  smooth transitions
+- **Scrollable Content** - Handles large content with proper scrolling behavior
+- **Custom Modal Types** - Supports bottomSheet, dialog, sideSheet, alertDialog,
+  and custom types
+
+See [docs-ai/wolt-modal-sheet.md](wolt-modal-sheet.md) for detailed usage
+examples and API reference.
+
 ## Routing (`lib/routing/`)
 
 Uses `go_router` with the following structure:

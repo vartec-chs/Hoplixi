@@ -157,7 +157,7 @@ The code above will show you the screen below:
 
 ### Basic Multi Page Example app
 
-The [example](./example/) app demonstrates how to display a two-pages modal
+The [example](./example) app demonstrates how to display a two-pages modal
 sheet that can be customized for dark and light themes
 using [WoltModalSheetThemeData](./lib/src/theme/wolt_modal_sheet_theme_data.dart) theme
 extension.
@@ -347,7 +347,7 @@ use cases.
 ### Playground app with declarative navigation
 
 The playground_navigator2 app ([source code](https://github.com/woltapp/wolt_modal_sheet/tree/main/examples/playground_navigator2), [web app](https://playgroundnavigator2woltexample.web.app)) has the similar content with
-the [playground](./examples/playground/) app but the modal sheet is shown using 
+the [playground](./examples/playground) app but the modal sheet is shown using 
 Navigator 2.0 (Router API) in a declarative way.
 
 ### Coffee maker app for state management example
