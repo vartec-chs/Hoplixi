@@ -47,7 +47,7 @@ securely store and manage their passwords.
 
 - Use Riverpod 3.0 and above for state management. Not use Deprecated providers.
 
-- Not use code generation with `@riverpod`
+- Not use code generation riverpod_generator with `@riverpod`
 
 - See [docs-ai/state-management.md](state-management.md) for information on how
   state is managed using Riverpod. If there is not enough information, use mcp

@@ -1,58 +1,130 @@
-# Riverpod - Reactive State Management Framework
+# Riverpod State Management
 
-Riverpod is a reactive caching and data-binding framework for Dart and Flutter applications. It provides a robust solution for managing application state by handling asynchronous code, errors, and loading states automatically. The framework separates business logic from UI components, ensuring testable, scalable, and reusable code that works seamlessly across Flutter widgets, pure Dart applications, and backend services.
+Riverpod is a reactive caching and data-binding framework for Dart/Flutter that
+handles async code, errors, and loading states automatically. It separates
+business logic from UI, ensuring testable and scalable code.
 
-The framework consists of three main packages: `riverpod` for pure Dart state management, `flutter_riverpod` for Flutter integration with Consumer widgets, and `hooks_riverpod` for combining with flutter_hooks. Riverpod supports multiple provider types including Provider for synchronous values, FutureProvider for async operations, StreamProvider for reactive streams, and NotifierProvider for mutable state with business logic. The framework features automatic dependency tracking, built-in caching, code generation via `@riverpod` annotations, and comprehensive async state management through the `AsyncValue` type.
+**Project uses Riverpod 3.0+ without code generation (`@riverpod` not used).**
 
-## Active Providers List
+## Core Concepts
 
-- Provider
-- FutureProvider
-- StreamProvider
-- NotifierProvider
-- AsyncNotifierProvider
-- StreamNotifierProvider
-- StateProvider (Deprecated, use NotifierProvider or AsyncNotifierProvider instead)
-- StateNotifierProvider (Deprecated, use NotifierProvider or AsyncNotifierProvider instead)
-- ChangeNotifierProvider (Deprecated, use NotifierProvider or AsyncNotifierProvider instead)
+- **Providers** - Expose values (sync/async) and automatically cache results
+- **Notifiers** - Manage mutable state with business logic methods
+- **AsyncValue** - Type-safe wrapper for async states (loading/data/error)
+- **Ref** - Access other providers and manage dependencies
+- **Consumer** - Flutter widgets that watch providers and rebuild on changes
 
-## Provider - Synchronous Read-Only State
+## Active Providers
 
-Provider exposes a synchronous, immutable value that can be accessed throughout the application. It automatically caches the value and recomputes only when dependencies change.
+- `Provider` - Synchronous read-only values
+- `NotifierProvider` - Mutable state with methods
+- `FutureProvider` - Async data fetching
+- `StreamProvider` - Real-time data streams
+- `AsyncNotifierProvider` - Async mutable state
+- `StreamNotifierProvider` - Stream-based mutable state
+
+**Deprecated (don't use):** StateProvider, StateNotifierProvider,
+ChangeNotifierProvider
+
+## Provider - Synchronous Values
+
+Exposes immutable, cached values. Automatically recomputes when dependencies
+change.
 
 ```dart
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-// Simple value provider
+// Simple value
 final cityProvider = Provider((ref) => 'London');
 
-// Computed provider that watches other providers
+// Computed from other providers
 final greetingProvider = Provider((ref) {
   final city = ref.watch(cityProvider);
   return 'Hello from $city';
 });
 
-// Using in a widget
+// Usage in widget
 class GreetingWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final greeting = ref.watch(greetingProvider);
-    return Text(greeting); // Displays: "Hello from London"
+    return Text(greeting);
   }
 }
 ```
 
-## FutureProvider - Asynchronous Data Fetching
+## NotifierProvider - Mutable State
 
-FutureProvider handles asynchronous operations and automatically manages loading, error, and data states through AsyncValue. Perfect for API calls, file I/O, and database queries.
+Manages mutable state with methods. Encapsulates business logic.
 
 ```dart
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+class TodoList extends Notifier<List<Todo>> {
+  @override
+  List<Todo> build() => [
+    const Todo(id: 'todo-0', description: 'Buy cookies'),
+  ];
 
-final dio = Dio();
+  void add(String description) {
+    state = [...state, Todo(id: _uuid.v4(), description: description)];
+  }
 
-// Fetching data from an API
+  void toggle(String id) {
+    state = [
+      for (final todo in state)
+        if (todo.id == id)
+          Todo(id: todo.id, completed: !todo.completed, description: todo.description)
+        else
+          todo,
+    ];
+  }
+
+  void remove(String id) {
+    state = state.where((todo) => todo.id != id).toList();
+  }
+}
+
+final todoListProvider = NotifierProvider<TodoList, List<Todo>>(TodoList.new);
+
+// Computed state
+final uncompletedCountProvider = Provider<int>((ref) {
+  final todos = ref.watch(todoListProvider);
+  return todos.where((todo) => !todo.completed).length;
+});
+
+// Usage
+class TodoWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final todos = ref.watch(todoListProvider);
+    final count = ref.watch(uncompletedCountProvider);
+
+    return Column(
+      children: [
+        Text('$count tasks remaining'),
+        ListView.builder(
+          itemCount: todos.length,
+          itemBuilder: (context, index) {
+            final todo = todos[index];
+            return CheckboxListTile(
+              value: todo.completed,
+              title: Text(todo.description),
+              onChanged: (_) => ref.read(todoListProvider.notifier).toggle(todo.id),
+            );
+          },
+        ),
+        ElevatedButton(
+          onPressed: () => ref.read(todoListProvider.notifier).add('New task'),
+          child: Text('Add Todo'),
+        ),
+      ],
+    );
+  }
+}
+```
+
+## FutureProvider - Async Data
+
+Handles async operations with automatic loading/error states via AsyncValue.
+
+```dart
 final randomJokeProvider = FutureProvider<Joke>((ref) async {
   final response = await dio.get<Map<String, Object?>>(
     'https://official-joke-api.appspot.com/random_joke',
@@ -60,23 +132,6 @@ final randomJokeProvider = FutureProvider<Joke>((ref) async {
   return Joke.fromJson(response.data!);
 });
 
-class Joke {
-  final String setup;
-  final String punchline;
-  final int id;
-
-  Joke({required this.setup, required this.punchline, required this.id});
-
-  factory Joke.fromJson(Map<String, Object?> json) {
-    return Joke(
-      setup: json['setup']! as String,
-      punchline: json['punchline']! as String,
-      id: json['id']! as int,
-    );
-  }
-}
-
-// Consuming async data with error/loading handling
 class JokeWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -96,33 +151,18 @@ class JokeWidget extends ConsumerWidget {
 }
 ```
 
-## StreamProvider - Real-Time Data Streams
+## StreamProvider - Real-Time Streams
 
-StreamProvider exposes the latest value from a Stream, automatically handling subscription management and providing AsyncValue for state handling.
+Exposes latest value from Stream with automatic subscription management.
 
 ```dart
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
-
-// WebSocket stream provider
 final messageStreamProvider = StreamProvider<String>((ref) async* {
   final channel = IOWebSocketChannel.connect('ws://echo.websocket.org');
 
-  ref.onDispose(() {
-    channel.sink.close();
-  });
+  ref.onDispose(() => channel.sink.close());
 
   await for (final message in channel.stream) {
     yield message.toString();
-  }
-});
-
-// Ticker stream example
-final tickerProvider = StreamProvider<int>((ref) async* {
-  int count = 0;
-  while (true) {
-    await Future.delayed(Duration(seconds: 1));
-    yield count++;
   }
 });
 
@@ -134,198 +174,67 @@ class LiveDataWidget extends ConsumerWidget {
     return messages.when(
       data: (message) => Text('Latest: $message'),
       loading: () => Text('Connecting...'),
-      error: (err, stack) => Text('Connection error: $err'),
+      error: (err, stack) => Text('Error: $err'),
     );
   }
 }
 ```
 
-## StreamNotifierProvider - Real-Time Data Streams with Notifier
+## AsyncNotifierProvider - Async Mutable State
 
-StreamNotifierProvider<NotifierT extends StreamNotifier<ValueT>, ValueT> class final Providers
-A provider which creates and listen to an StreamNotifier.
-
-This is similar to FutureProvider but allows to perform side-effects.
-
-The syntax for using this provider is slightly different from the others in that the provider's function doesn't receive a "ref" (and in case of family, doesn't receive an argument either). Instead the ref (and argument) are directly accessible in the associated StreamNotifier.
-
-## NotifierProvider - Mutable State with Business Logic
-
-NotifierProvider manages mutable state with methods for state manipulation. The class-based approach encapsulates business logic and provides a clean API for state updates.
+Manages async mutable state with AsyncValue for loading/error handling.
 
 ```dart
-import 'package:riverpod/riverpod.dart';
-import 'package:uuid/uuid.dart';
-
-const _uuid = Uuid();
-
-class Todo {
-  final String id;
-  final String description;
-  final bool completed;
-
-  const Todo({
-    required this.id,
-    required this.description,
-    this.completed = false,
-  });
-}
-
-// Notifier class with mutable state
-class TodoList extends Notifier<List<Todo>> {
-  @override
-  List<Todo> build() => [
-    const Todo(id: 'todo-0', description: 'Buy cookies'),
-    const Todo(id: 'todo-1', description: 'Star Riverpod'),
-  ];
-
-  void add(String description) {
-    state = [...state, Todo(id: _uuid.v4(), description: description)];
-  }
-
-  void toggle(String id) {
-    state = [
-      for (final todo in state)
-        if (todo.id == id)
-          Todo(
-            id: todo.id,
-            completed: !todo.completed,
-            description: todo.description,
-          )
-        else
-          todo,
-    ];
-  }
-
-  void remove(Todo target) {
-    state = state.where((todo) => todo.id != target.id).toList();
-  }
-}
-
-final todoListProvider = NotifierProvider<TodoList, List<Todo>>(TodoList.new);
-
-// Derived computed state
-final uncompletedTodosProvider = Provider<int>((ref) {
-  final todos = ref.watch(todoListProvider);
-  return todos.where((todo) => !todo.completed).length;
-});
-
-// Using in UI
-class TodoListWidget extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final todos = ref.watch(todoListProvider);
-    final uncompletedCount = ref.watch(uncompletedTodosProvider);
-
-    return Column(
-      children: [
-        Text('$uncompletedCount tasks remaining'),
-        ListView.builder(
-          itemCount: todos.length,
-          itemBuilder: (context, index) {
-            final todo = todos[index];
-            return CheckboxListTile(
-              value: todo.completed,
-              title: Text(todo.description),
-              onChanged: (_) => ref.read(todoListProvider.notifier).toggle(todo.id),
-            );
-          },
-        ),
-        ElevatedButton(
-          onPressed: () {
-            ref.read(todoListProvider.notifier).add('New task');
-          },
-          child: Text('Add Todo'),
-        ),
-      ],
-    );
-  }
-}
-```
-
-## AsyncNotifierProvider — Асинхронное состояние 
-
-AsyncNotifierProvider используется, когда состояние требует асинхронной загрузки, работы с API, файлами или долгих операций.
-Он работает с типом AsyncValue, который покрывает три состояния:
-- AsyncLoading
-- AsyncData
-- AsyncError
-AsyncNotifier инкапсулирует бизнес-логику и позволяет удобно обновлять состояние.
-
-```dart
-import 'package:riverpod/riverpod.dart';
-import 'package:uuid/uuid.dart';
-
-const _uuid = Uuid();
-
 class TodoListAsync extends AsyncNotifier<List<Todo>> {
   @override
   Future<List<Todo>> build() async {
-    // Имитируем загрузку
+    // Initial async load
     await Future.delayed(const Duration(milliseconds: 300));
-
     return const [
       Todo(id: 'todo-0', description: 'Buy cookies'),
-      Todo(id: 'todo-1', description: 'Learn AsyncNotifier'),
     ];
   }
 
-  /// Добавить задачу
   Future<void> add(String description) async {
-    // Обновление с учётом существующего AsyncValue
     state = await AsyncValue.guard(() async {
       final current = state.value ?? [];
-      return [
-        ...current,
-        Todo(id: _uuid.v4(), description: description),
-      ];
+      return [...current, Todo(id: _uuid.v4(), description: description)];
     });
   }
 
-  /// Переключить completed
   Future<void> toggle(String id) async {
     state = await AsyncValue.guard(() async {
       final current = state.value ?? [];
       return [
         for (final todo in current)
           if (todo.id == id)
-            Todo(
-              id: todo.id,
-              description: todo.description,
-              completed: !todo.completed,
-            )
+            Todo(id: todo.id, description: todo.description, completed: !todo.completed)
           else
             todo,
       ];
     });
   }
 
-  /// Удаление
-  Future<void> remove(Todo target) async {
+  Future<void> remove(String id) async {
     state = await AsyncValue.guard(() async {
       final current = state.value ?? [];
-      return current.where((t) => t.id != target.id).toList();
+      return current.where((t) => t.id != id).toList();
     });
   }
 }
+
+final todoListAsyncProvider = AsyncNotifierProvider<TodoListAsync, List<Todo>>(
+  TodoListAsync.new,
+);
 ```
 
-## @riverpod Annotation - Code Generation (No used)
+## ProviderScope - Root Setup
 
-The @riverpod annotation generates boilerplate code for providers, creating type-safe providers with automatic parameter handling and family support. 
-
-
-## ProviderScope - Root Container Setup
-
-ProviderScope is the root widget that stores all provider states. It enables Riverpod functionality for the entire application and supports overriding providers for testing.
+ProviderScope stores all provider states and enables Riverpod functionality.
 
 ```dart
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 void main() {
   runApp(
-    // Wrap app with ProviderScope to enable Riverpod
     const ProviderScope(
       child: MyApp(),
     ),
@@ -337,7 +246,6 @@ void testMain() {
   runApp(
     ProviderScope(
       overrides: [
-        // Override providers for testing
         apiProvider.overrideWithValue(MockApi()),
         userIdProvider.overrideWithValue('test-user-123'),
       ],
@@ -345,42 +253,15 @@ void testMain() {
     ),
   );
 }
-
-// Multiple ProviderScopes for isolation
-Widget buildNestedScopes() {
-  return ProviderScope(
-    child: MaterialApp(
-      home: ProviderScope(
-        overrides: [
-          themeProvider.overrideWithValue(ThemeData.dark()),
-        ],
-        child: MyPage(),
-      ),
-    ),
-  );
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: HomeView(),
-    );
-  }
-}
 ```
 
-## Consumer Widgets - Flutter Integration
+## Consumer Widgets
 
-Consumer widgets provide access to WidgetRef for watching providers. ConsumerWidget replaces StatelessWidget, while ConsumerStatefulWidget replaces StatefulWidget.
+ConsumerWidget replaces StatelessWidget, ConsumerStatefulWidget replaces
+StatefulWidget.
 
 ```dart
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-// ConsumerWidget for stateless widgets
+// Stateless consumer
 class CounterDisplay extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -407,7 +288,7 @@ class OptimizedWidget extends StatelessWidget {
   }
 }
 
-// ConsumerStatefulWidget for stateful widgets
+// Stateful consumer
 class CounterPage extends ConsumerStatefulWidget {
   @override
   ConsumerState<CounterPage> createState() => _CounterPageState();
@@ -418,7 +299,7 @@ class _CounterPageState extends ConsumerState<CounterPage> {
   void initState() {
     super.initState();
 
-    // Listen for changes in initState
+    // Listen for side effects
     ref.listenManual(
       errorProvider,
       (previous, next) {
@@ -433,13 +314,11 @@ class _CounterPageState extends ConsumerState<CounterPage> {
 
   @override
   Widget build(BuildContext context) {
-    // ref.watch rebuilds on changes
     final count = ref.watch(counterProvider);
 
     return Scaffold(
       body: Center(child: Text('$count')),
       floatingActionButton: FloatingActionButton(
-        // ref.read for one-time access
         onPressed: () => ref.read(counterProvider.notifier).increment(),
         child: Icon(Icons.add),
       ),
@@ -450,36 +329,39 @@ class _CounterPageState extends ConsumerState<CounterPage> {
 
 ## AsyncValue - Type-Safe Async State
 
-AsyncValue represents the state of an asynchronous operation with type-safe pattern matching for loading, data, and error states.
+AsyncValue represents async operation state with type-safe pattern matching.
+
+### Creating AsyncValue
 
 ```dart
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+// Loading state
+state = const AsyncValue.loading();
+state = const AsyncLoading();
 
+// Data state
+state = AsyncValue.data(myData);
+state = AsyncData(myData);
+
+// Error state
+state = AsyncValue.error(error, stackTrace);
+state = AsyncError(error, stackTrace);
+
+// Guard - automatically wraps in try-catch
+state = await AsyncValue.guard(() async {
+  return await fetchData();
+});
+```
+
+### Consuming AsyncValue
+
+```dart
 final dataProvider = FutureProvider<String>((ref) async {
   await Future.delayed(Duration(seconds: 2));
-  if (DateTime.now().second % 2 == 0) {
-    throw Exception('Random error occurred');
-  }
   return 'Success data';
 });
 
-// Pattern matching with when
-class AsyncWidget extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final asyncValue = ref.watch(dataProvider);
-
-    return asyncValue.when(
-      data: (data) => Text('Data: $data'),
-      loading: () => CircularProgressIndicator(),
-      error: (error, stackTrace) => Text('Error: $error'),
-    );
-  }
-}
-
 // Pattern matching with switch
-class SwitchAsyncWidget extends ConsumerWidget {
+class AsyncWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncValue = ref.watch(dataProvider);
@@ -492,6 +374,20 @@ class SwitchAsyncWidget extends ConsumerWidget {
   }
 }
 
+// Pattern matching with when
+class AsyncWhenWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncValue = ref.watch(dataProvider);
+
+    return asyncValue.when(
+      data: (data) => Text('Data: $data'),
+      loading: () => CircularProgressIndicator(),
+      error: (error, stackTrace) => Text('Error: $error'),
+    );
+  }
+}
+
 // Handling refresh state
 class RefreshableWidget extends ConsumerWidget {
   @override
@@ -500,14 +396,9 @@ class RefreshableWidget extends ConsumerWidget {
 
     return Stack(
       children: [
-        // Show loading indicator while refreshing
         if (data.isRefreshing || data.isReloading)
           LinearProgressIndicator(),
-
-        // Always show previous data during refresh
-        if (data.hasValue)
-          Text('Current: ${data.value}'),
-
+        if (data.hasValue) Text('Current: ${data.value}'),
         ElevatedButton(
           onPressed: () => ref.refresh(dataProvider),
           child: Text('Refresh'),
@@ -516,24 +407,17 @@ class RefreshableWidget extends ConsumerWidget {
     );
   }
 }
-
-// Transform AsyncValue
-final transformedProvider = Provider<AsyncValue<int>>((ref) {
-  final data = ref.watch(dataProvider);
-  return data.whenData((value) => value.length);
-});
 ```
 
-## Ref Methods - Provider Interaction
+## Ref Methods
 
-Ref provides methods for interacting with providers: watch for reactive dependencies, read for one-time access, and listen for side effects.
+- `ref.watch()` - Subscribe and rebuild on changes
+- `ref.read()` - One-time read without subscription
+- `ref.listen()` - Side effects without rebuilding
+- `ref.refresh()` - Force provider rebuild
+- `ref.invalidate()` - Mark provider as stale
 
 ```dart
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-final counterProvider = StateProvider((ref) => 0);
-final multiplierProvider = StateProvider((ref) => 2);
-
 // ref.watch - Reactive subscription
 final computedProvider = Provider((ref) {
   final count = ref.watch(counterProvider); // Rebuilds when changes
@@ -541,7 +425,7 @@ final computedProvider = Provider((ref) {
   return count * multiplier;
 });
 
-// ref.read - One-time read without subscription
+// ref.read - One-time read
 final actionProvider = Provider((ref) {
   return () {
     final currentCount = ref.read(counterProvider);
@@ -550,15 +434,11 @@ final actionProvider = Provider((ref) {
 });
 
 // ref.listen - Side effects
-final authProvider = StateProvider<User?>((ref) => null);
-
 class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Listen for navigation side effects
     ref.listen(authProvider, (previous, next) {
       if (next == null && previous != null) {
-        // User logged out - navigate to login
         Navigator.of(context).pushReplacementNamed('/login');
       }
     });
@@ -567,75 +447,31 @@ class HomePage extends ConsumerWidget {
   }
 }
 
-// ref.refresh - Force provider rebuild
-class RefreshExample extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return ElevatedButton(
-      onPressed: () {
-        ref.refresh(dataProvider); // Refetch data
-      },
-      child: Text('Refresh'),
-    );
-  }
-}
-
-// ref.invalidate - Mark provider as stale
-final cacheProvider = FutureProvider((ref) async {
-  ref.cacheFor(Duration(minutes: 5));
-  return fetchExpensiveData();
-});
-
-void clearCache(Ref ref) {
-  ref.invalidate(cacheProvider); // Clear cache
-}
-
 // Lifecycle methods
 final resourceProvider = Provider((ref) {
   final resource = Resource();
 
-  ref.onDispose(() {
-    resource.dispose(); // Cleanup
-  });
-
-  ref.onCancel(() {
-    print('Last listener removed');
-  });
-
-  ref.onResume(() {
-    print('New listener added after cancellation');
-  });
+  ref.onDispose(() => resource.dispose());
+  ref.onCancel(() => print('Last listener removed'));
+  ref.onResume(() => print('New listener added'));
 
   return resource;
 });
-
-// Keep provider alive
-final importantProvider = Provider.autoDispose((ref) {
-  final link = ref.keepAlive();
-
-  // Later, allow disposal
-  Timer(Duration(minutes: 5), link.close);
-
-  return 'Important data';
-});
 ```
 
-## Repository Pattern - Dependency Injection
+## Repository Pattern
 
-Riverpod enables clean architecture with repository patterns, dependency injection, and testable business logic separation.
+Clean architecture with dependency injection and testable logic.
 
 ```dart
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-// Infrastructure layer
+// Infrastructure
 final dioProvider = Provider((ref) {
   final dio = Dio(BaseOptions(baseUrl: 'https://api.example.com'));
   ref.onDispose(dio.close);
   return dio;
 });
 
-// Repository layer
+// Repository
 abstract class UserRepository {
   Future<User> getUser(String id);
   Future<List<User>> getUsers();
@@ -656,16 +492,8 @@ class UserRepositoryImpl implements UserRepository {
   @override
   Future<List<User>> getUsers() async {
     final dio = ref.read(dioProvider);
-    final cancelToken = ref.cancelToken();
-
-    final response = await dio.get(
-      '/users',
-      cancelToken: cancelToken,
-    );
-
-    return (response.data as List)
-        .map((json) => User.fromJson(json))
-        .toList();
+    final response = await dio.get('/users');
+    return (response.data as List).map((json) => User.fromJson(json)).toList();
   }
 }
 
@@ -673,15 +501,8 @@ final userRepositoryProvider = Provider<UserRepository>((ref) {
   return UserRepositoryImpl(ref);
 });
 
-// Domain layer - Use cases
-@riverpod
-Future<User> fetchUser(Ref ref, String userId) async {
-  final repository = ref.watch(userRepositoryProvider);
-  return repository.getUser(userId);
-}
-
-@riverpod
-class UserList extends _$UserList {
+// Use case
+class UserList extends AsyncNotifier<List<User>> {
   @override
   Future<List<User>> build() async {
     final repository = ref.watch(userRepositoryProvider);
@@ -697,36 +518,11 @@ class UserList extends _$UserList {
   }
 }
 
-// Presentation layer
-class UserListView extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final usersAsync = ref.watch(userListProvider);
+final userListProvider = AsyncNotifierProvider<UserList, List<User>>(
+  UserList.new,
+);
 
-    return usersAsync.when(
-      data: (users) => ListView.builder(
-        itemCount: users.length,
-        itemBuilder: (context, index) => UserTile(user: users[index]),
-      ),
-      loading: () => CircularProgressIndicator(),
-      error: (error, _) => ErrorView(error: error),
-    );
-  }
-}
-
-// Testing with mock repositories
-class MockUserRepository implements UserRepository {
-  @override
-  Future<User> getUser(String id) async {
-    return User(id: id, name: 'Test User');
-  }
-
-  @override
-  Future<List<User>> getUsers() async {
-    return [User(id: '1', name: 'User 1')];
-  }
-}
-
+// Testing with mocks
 void main() {
   runApp(
     ProviderScope(
@@ -739,48 +535,33 @@ void main() {
 }
 ```
 
-## Provider Families - Parameterized Providers
+## Provider Families
 
-Provider families create multiple instances of providers based on parameters, automatically caching each instance and managing their lifecycle.
+Create parameterized provider instances with automatic caching.
 
 ```dart
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-// Family with single parameter (using code generation)
-@riverpod
-Future<User> user(Ref ref, String userId) async {
+// Single parameter
+final userProvider = FutureProvider.family<User, String>((ref, userId) async {
   final response = await http.get('https://api.example.com/users/$userId');
   return User.fromJson(jsonDecode(response.body));
-}
+});
 
-// Generated: userProvider(userId)
 // Usage: ref.watch(userProvider('user-123'))
 
-// Family with multiple parameters
-@riverpod
-Future<List<Post>> userPosts(
-  Ref ref, {
-  required String userId,
-  required int page,
-  int limit = 10,
-}) async {
-  final repository = ref.watch(postRepositoryProvider);
-  return repository.fetchPosts(
-    userId: userId,
-    page: page,
-    limit: limit,
-  );
-}
+// Multiple parameters with named args
+final userPostsProvider = FutureProvider.family<List<Post>, ({String userId, int page})>(
+  (ref, params) async {
+    final repository = ref.watch(postRepositoryProvider);
+    return repository.fetchPosts(userId: params.userId, page: params.page);
+  },
+);
 
-// Usage: userPostsProvider(userId: 'abc', page: 1, limit: 20)
+// Usage: ref.watch(userPostsProvider((userId: 'abc', page: 1)))
 
-// Filtered list example
+// Filtered list
 enum TodoFilter { all, active, completed }
 
-final todoFilterProvider = StateProvider<TodoFilter>((ref) => TodoFilter.all);
-
-@riverpod
-List<Todo> filteredTodos(Ref ref, TodoFilter filter) {
+final filteredTodosProvider = Provider.family<List<Todo>, TodoFilter>((ref, filter) {
   final todos = ref.watch(todoListProvider);
 
   return switch (filter) {
@@ -788,7 +569,7 @@ List<Todo> filteredTodos(Ref ref, TodoFilter filter) {
     TodoFilter.active => todos.where((t) => !t.completed).toList(),
     TodoFilter.completed => todos.where((t) => t.completed).toList(),
   };
-}
+});
 
 class FilteredTodoList extends ConsumerWidget {
   @override
@@ -802,41 +583,15 @@ class FilteredTodoList extends ConsumerWidget {
     );
   }
 }
-
-// Paginated data with family
-@riverpod
-class PaginatedPosts extends _$PaginatedPosts {
-  @override
-  Future<List<Post>> build(int page) async {
-    final repository = ref.watch(postRepositoryProvider);
-    return repository.fetchPosts(page: page);
-  }
-
-  Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() => build(page));
-  }
-}
-
-class PaginatedView extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return PageView.builder(
-      itemBuilder: (context, index) {
-        final posts = ref.watch(paginatedPostsProvider(index));
-        return posts.when(
-          data: (posts) => PostList(posts),
-          loading: () => LoadingIndicator(),
-          error: (err, _) => ErrorView(err),
-        );
-      },
-    );
-  }
-}
 ```
 
 ## Summary
 
-Riverpod provides a comprehensive solution for state management in Dart and Flutter applications with automatic dependency tracking, built-in caching, and robust async handling. The framework's primary use cases include API data fetching with automatic loading/error states, complex state management with business logic encapsulation, derived/computed state with automatic recomputation, and real-time data streams from WebSockets or Firebase. The reactive architecture ensures UI components automatically rebuild when dependencies change while maintaining performance through intelligent caching.
+Riverpod 3.0+ provides reactive state management with:
 
-Integration patterns focus on separating concerns through repository patterns for data access, provider composition for dependent state, and Consumer widgets for UI reactivity. The framework supports code generation via `@riverpod` annotations to reduce boilerplate, provides ProviderScope for dependency injection and testing overrides, and includes lifecycle management with automatic disposal and cleanup. AsyncValue offers type-safe async state handling, while provider families enable parameterized instances with automatic caching. Testing is simplified through provider overrides and ProviderContainer for unit tests, making Riverpod suitable for applications ranging from simple counters to complex enterprise systems with multiple data sources and intricate state relationships.
+- Automatic dependency tracking and caching
+- Built-in async handling with AsyncValue
+- Type-safe provider composition
+- Clean architecture with repository pattern
+- Easy testing with provider overrides
+- No code generation required (unlike older patterns)
