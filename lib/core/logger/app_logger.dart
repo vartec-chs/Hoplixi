@@ -318,6 +318,7 @@ void logInfo(String message, {String? tag, Map<String, dynamic>? data}) {
   AppLogger.instance.info(message, tag: tag, data: data);
 }
 
+// Не записывает данные в продакшене
 void logDebug(String message, {String? tag, Map<String, dynamic>? data}) {
   AppLogger.instance.debug(message, tag: tag, data: data);
 }
