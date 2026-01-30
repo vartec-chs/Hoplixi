@@ -235,14 +235,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                 const SizedBox(height: 12),
 
-                ActionButton(
-                  icon: LucideIcons.users,
-                  label: 'OAuth Приложения',
-                  description: 'Открыть настройки OAuth приложений',
-                  onTap: () {
-                    context.push(AppRoutesPaths.oauthApps);
-                  },
-                ),
+                // ActionButton(
+                //   icon: LucideIcons.users,
+                //   label: 'OAuth Приложения',
+                //   description: 'Открыть настройки OAuth приложений',
+                //   onTap: () {
+                //     context.push(AppRoutesPaths.oauthApps);
+                //   },
+                // ),
               ],
             ),
           );
@@ -321,16 +321,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 },
               ),
 
-              const SizedBox(height: 12),
+              // const SizedBox(height: 12),
 
-              ActionButton(
-                icon: LucideIcons.users,
-                label: 'OAuth Приложения',
-                description: 'Открыть настройки OAuth приложений',
-                onTap: () {
-                  context.push(AppRoutesPaths.oauthApps);
-                },
-              ),
+              // ActionButton(
+              //   icon: LucideIcons.users,
+              //   label: 'OAuth Приложения',
+              //   description: 'Открыть настройки OAuth приложений',
+              //   onTap: () {
+              //     context.push(AppRoutesPaths.oauthApps);
+              //   },
+              // ),
             ],
           ),
         );
