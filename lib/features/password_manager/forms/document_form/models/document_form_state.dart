@@ -82,6 +82,8 @@ sealed class DocumentFormState with _$DocumentFormState {
     String? categoryName,
     @Default([]) List<String> tagIds,
     @Default([]) List<String> tagNames,
+    String? noteId,
+    String? noteName,
 
     // Ошибки валидации
     String? titleError,

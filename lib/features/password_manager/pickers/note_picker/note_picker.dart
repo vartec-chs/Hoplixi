@@ -21,6 +21,7 @@ library;
 
 // Модели
 export 'models/note_picker_models.dart';
+export 'note_picker_field.dart' show NotePickerField;
 // Модальные окна
 export 'note_picker_modal.dart' show showNotePickerModal;
 export 'note_picker_multi_modal.dart' show showNotePickerMultiModal;

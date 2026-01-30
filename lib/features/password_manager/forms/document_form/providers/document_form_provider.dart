@@ -56,6 +56,24 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
       final tagIds = await dao.getDocumentTagIds(documentId);
       final tagRecords = await tagDao.getTagsByIds(tagIds);
 
+      // Получаем категорию документа
+      String? categoryName;
+      if (document.categoryId != null) {
+        final categoryDao = await ref.read(categoryDaoProvider.future);
+        final category = await categoryDao.getCategoryById(
+          document.categoryId!,
+        );
+        categoryName = category?.name;
+      }
+
+      // Получаем заметку документа
+      String? noteName;
+      if (document.noteId != null) {
+        final noteDao = await ref.read(noteDaoProvider.future);
+        final note = await noteDao.getNoteById(document.noteId!);
+        noteName = note?.title;
+      }
+
       // Получаем страницы документа
       final documentService = await ref.read(
         documentStorageServiceProvider.future,
@@ -107,8 +125,11 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
         description: document.description ?? '',
         pages: pages,
         categoryId: document.categoryId,
+        categoryName: categoryName,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
+        noteId: document.noteId,
+        noteName: noteName,
         isLoading: false,
       );
     } catch (e, stack) {
@@ -379,6 +400,11 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
     state = state.copyWith(categoryId: categoryId, categoryName: categoryName);
   }
 
+  /// Обновить заметку
+  void setNote(String? noteId, String? noteName) {
+    state = state.copyWith(noteId: noteId, noteName: noteName);
+  }
+
   /// Обновить теги
   void setTags(List<String> tagIds, List<String> tagNames) {
     state = state.copyWith(tagIds: tagIds, tagNames: tagNames);
@@ -470,6 +496,7 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
           ? null
           : state.description.trim(),
       categoryId: state.categoryId,
+      noteId: state.noteId,
       tagsIds: state.tagIds,
       pageFiles: pageFiles,
       onProgress: (current, total) {
@@ -506,6 +533,7 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
           ? null
           : state.description.trim(),
       categoryId: state.categoryId,
+      noteId: state.noteId,
       tagsIds: state.tagIds,
     );
 

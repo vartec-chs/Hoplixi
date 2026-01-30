@@ -10,7 +10,7 @@ import 'package:hoplixi/main_store/tables/index.dart';
 
 part 'document_filter_dao.g.dart';
 
-@DriftAccessor(tables: [Documents, Categories, DocumentsTags, Tags])
+@DriftAccessor(tables: [Documents, Categories, DocumentsTags, Tags, Notes])
 class DocumentFilterDao extends DatabaseAccessor<MainStore>
     with _$DocumentFilterDaoMixin
     implements FilterDao<DocumentsFilter, DocumentCardDto> {
@@ -21,6 +21,7 @@ class DocumentFilterDao extends DatabaseAccessor<MainStore>
   Future<List<DocumentCardDto>> getFiltered(DocumentsFilter filter) async {
     final query = select(documents).join([
       leftOuterJoin(categories, categories.id.equalsExp(documents.categoryId)),
+      leftOuterJoin(notes, notes.id.equalsExp(documents.noteId)),
     ]);
 
     final whereExpression = _buildWhereExpression(filter);
@@ -47,6 +48,7 @@ class DocumentFilterDao extends DatabaseAccessor<MainStore>
     return results.map((row) {
       final document = row.readTable(documents);
       final category = row.readTableOrNull(categories);
+      final note = row.readTableOrNull(notes);
 
       // Получаем теги для текущего документа
       final documentTags = tagsMap[document.id] ?? [];
@@ -66,6 +68,8 @@ class DocumentFilterDao extends DatabaseAccessor<MainStore>
                 iconId: category.iconId,
               )
             : null,
+        noteId: note?.id,
+        noteName: note?.title,
         tags: documentTags,
         isFavorite: document.isFavorite,
         isArchived: document.isArchived,
@@ -83,6 +87,7 @@ class DocumentFilterDao extends DatabaseAccessor<MainStore>
     // Создаем запрос для подсчета с join
     final query = select(documents).join([
       leftOuterJoin(categories, categories.id.equalsExp(documents.categoryId)),
+      leftOuterJoin(notes, notes.id.equalsExp(documents.noteId)),
     ]);
 
     // Применяем те же фильтры

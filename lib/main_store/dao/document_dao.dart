@@ -47,6 +47,7 @@ class DocumentDao extends DatabaseAccessor<MainStore>
         aggregateHash: Value(dto.aggregateHash),
         pageCount: Value(dto.pageCount),
         categoryId: Value(dto.categoryId),
+        noteId: Value(dto.noteId),
       );
       await into(documents).insert(companion);
       await _insertDocumentTags(uuid, dto.tagsIds);
@@ -155,6 +156,7 @@ class DocumentDao extends DatabaseAccessor<MainStore>
         categoryId: dto.categoryId != null
             ? Value(dto.categoryId)
             : const Value.absent(),
+        noteId: dto.noteId != null ? Value(dto.noteId) : const Value.absent(),
         isFavorite: dto.isFavorite != null
             ? Value(dto.isFavorite!)
             : const Value.absent(),

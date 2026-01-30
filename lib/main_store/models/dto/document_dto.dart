@@ -16,6 +16,7 @@ sealed class CreateDocumentDto with _$CreateDocumentDto {
     String? aggregateHash,
     @Default(0) int pageCount,
     String? categoryId,
+    String? noteId,
     required List<String> tagsIds,
   }) = _CreateDocumentDto;
 
@@ -36,6 +37,8 @@ sealed class GetDocumentDto with _$GetDocumentDto {
     required int pageCount,
     String? categoryId,
     String? categoryName,
+    String? noteId,
+    String? noteName,
     // Системные поля
     required int usedCount,
     required bool isFavorite,
@@ -70,6 +73,8 @@ sealed class DocumentCardDto with _$DocumentCardDto implements BaseCardDto {
     required int usedCount,
     required DateTime modifiedAt,
     CategoryInCardDto? category,
+    String? noteId,
+    String? noteName,
     List<TagInCardDto>? tags,
   }) = _DocumentCardDto;
 
@@ -88,6 +93,7 @@ sealed class UpdateDocumentDto with _$UpdateDocumentDto {
     String? aggregateHash,
     int? pageCount,
     String? categoryId,
+    String? noteId,
     bool? isFavorite,
     bool? isArchived,
     bool? isPinned,

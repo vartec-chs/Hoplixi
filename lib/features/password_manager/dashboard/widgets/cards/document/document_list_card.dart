@@ -175,6 +175,40 @@ class _DocumentListCardState extends ConsumerState<DocumentListCard>
                 SizedBox(width: 150, child: CardTagsList(tags: document.tags!)),
               ],
 
+              // Заметка (если есть)
+              if (document.noteName != null) ...[
+                const SizedBox(width: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.secondaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.note,
+                        size: 14,
+                        color: theme.colorScheme.onSecondaryContainer,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        document.noteName!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSecondaryContainer,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
               const SizedBox(width: 8),
               _buildHeaderActions(theme),
             ],

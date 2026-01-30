@@ -20,6 +20,7 @@ class DocumentStorageService {
     String? documentType,
     String? description,
     String? categoryId,
+    String? noteId,
     required List<String> tagsIds,
     required List<File> pageFiles,
     void Function(int current, int total)? onProgress,
@@ -36,6 +37,7 @@ class DocumentStorageService {
         description: description,
         pageCount: pageFiles.length,
         categoryId: categoryId,
+        noteId: noteId,
         tagsIds: tagsIds,
       );
 

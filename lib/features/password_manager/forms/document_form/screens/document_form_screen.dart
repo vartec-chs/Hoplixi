@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_button.dart';
+import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
+import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
@@ -199,6 +200,20 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
                               ref
                                   .read(documentFormProvider.notifier)
                                   .setTags(tagIds, tagNames);
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Заметка
+                          NotePickerField(
+                            selectedNoteId: state.noteId,
+                            selectedNoteName: state.noteName,
+                            label: 'Заметка',
+                            hintText: 'Выберите заметку',
+                            onNoteSelected: (noteId, noteName) {
+                              ref
+                                  .read(documentFormProvider.notifier)
+                                  .setNote(noteId, noteName);
                             },
                           ),
                           const SizedBox(height: 16),

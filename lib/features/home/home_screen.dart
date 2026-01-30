@@ -233,7 +233,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   },
                 ),
 
-                const SizedBox(height: 12),
+                // const SizedBox(height: 12),
 
                 // ActionButton(
                 //   icon: LucideIcons.users,
