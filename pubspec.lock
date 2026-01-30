@@ -106,7 +106,7 @@ packages:
     source: hosted
     version: "4.0.7"
   args:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: args
       sha256: d0481093c50b1da8910eb0bb301626d4d8eb7284aa739614d2b394ee09e3ea04
@@ -279,6 +279,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.19.1"
+  commandline_or_gui_windows:
+    dependency: "direct main"
+    description:
+      name: commandline_or_gui_windows
+      sha256: "2b5399d0628b32ea42e6c8a0cc63da830a866bfb58a019fac89f0f39d2ffd4b9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.0"
   convert:
     dependency: transitive
     description:
@@ -783,6 +791,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.0"
+  flutter_single_instance:
+    dependency: "direct main"
+    description:
+      name: flutter_single_instance
+      sha256: a0eef1d359705cdbc9031d551a8c4fc68687b731c71881e8eeb97e1a12b9c7a0
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.2"
   flutter_staggered_grid_view:
     dependency: transitive
     description:

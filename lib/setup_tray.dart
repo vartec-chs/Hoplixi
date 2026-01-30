@@ -14,6 +14,8 @@ Future<void> setupTray() async {
       MenuItem(key: 'show_window', label: 'Показать окно'),
       MenuItem.separator(),
       MenuItem(key: 'exit_app', label: 'Выход из приложения'),
+      MenuItem.separator(),
+      MenuItem(key: 'path_launcher', label: 'Открыть папку с приложением'),
     ],
   );
 
@@ -25,7 +27,8 @@ Future<void> setupTray() async {
 
 enum AppTrayMenuItemKey {
   showWindow('show_window'),
-  exitApp('exit_app');
+  exitApp('exit_app'),
+  pathLauncher('path_launcher');
 
   final String key;
   const AppTrayMenuItemKey(this.key);

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-
 import 'package:universal_platform/universal_platform.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -64,6 +63,20 @@ class WindowManager {
   static Future<void> setSize(Size size) async {
     if (UniversalPlatform.isWindows) {
       await windowManager.setSize(size);
+    }
+  }
+
+  // focus
+  static Future<void> focus() async {
+    if (UniversalPlatform.isWindows) {
+      await windowManager.focus();
+    }
+  }
+
+  //setTitle
+  static Future<void> setTitle(String title) async {
+    if (UniversalPlatform.isWindows) {
+      await windowManager.setTitle(title);
     }
   }
 }

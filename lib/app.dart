@@ -16,7 +16,9 @@ import 'package:tray_manager/tray_manager.dart';
 import 'package:universal_platform/universal_platform.dart';
 
 class App extends ConsumerStatefulWidget {
-  const App({super.key});
+  const App({super.key, this.filePath});
+
+  final String? filePath;
 
   @override
   ConsumerState<App> createState() => _AppState();
@@ -71,6 +73,13 @@ class _AppState extends ConsumerState<App> with TrayListener {
         break;
       case AppTrayMenuItemKey.exitApp:
         await WindowManager.close();
+        break;
+      case AppTrayMenuItemKey.pathLauncher:
+        await WindowManager.setTitle(widget.filePath ?? 'None');
+        logInfo(
+          'Path Launcher clicked, file path: ${widget.filePath}',
+          tag: 'TrayManager',
+        );
         break;
     }
     super.onTrayMenuItemClick(menuItem);
