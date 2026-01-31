@@ -668,9 +668,9 @@ class DashboardHomeBuilders {
         break;
     }
 
-    // Обертка для двойного клика -> открытие view
+    // Обертка для долгого нажатия -> открытие view
     final wrappedCard = GestureDetector(
-      onDoubleTap: () {
+      onLongPress: () {
         final viewPath = AppRoutesPaths.dashboardEntityView(type, item.id);
         if (GoRouter.of(context).state.matchedLocation != viewPath) {
           context.push(viewPath);
@@ -924,9 +924,9 @@ class DashboardHomeBuilders {
         );
     }
 
-    // Обёртка для двойного клика -> открытие view
+    // Обёртка для долгого нажатия -> открытие view
     return GestureDetector(
-      onDoubleTap: () {
+      onLongPress: () {
         final viewPath = AppRoutesPaths.dashboardEntityView(type, item.id);
         if (GoRouter.of(context).state.matchedLocation != viewPath) {
           context.push(viewPath);
