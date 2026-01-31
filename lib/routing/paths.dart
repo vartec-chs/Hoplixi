@@ -30,6 +30,13 @@ class AppRoutesPaths {
   static String dashboardEntityEdit(EntityType entity, String id) =>
       '/dashboard/${entity.id}/edit/$id';
 
+  /// Entity view with params
+  static String dashboardEntityView(EntityType entity, String id) =>
+      '/dashboard/${entity.id}/view/$id';
+
+  /// Dashboard entity view route pattern
+  static const String dashboardEntitiesView = '/dashboard/:entity/view/:id';
+
   /// - notes
   static const String notes = '/dashboard/notes';
   static const String noteAdd = '/dashboard/notes/add';

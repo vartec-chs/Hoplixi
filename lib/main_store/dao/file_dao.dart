@@ -27,6 +27,13 @@ class FileDao extends DatabaseAccessor<MainStore>
     return (select(files)..where((f) => f.id.equals(id))).getSingleOrNull();
   }
 
+  /// Получить метаданные файла по ID метаданных
+  Future<FileMetadataData?> getFileMetadataById(String metadataId) {
+    return (select(
+      db.fileMetadata,
+    )..where((m) => m.id.equals(metadataId))).getSingleOrNull();
+  }
+
   /// Получить теги файла по ID
   Future<List<String>> getFileTagIds(String fileId) async {
     final rows = await (select(

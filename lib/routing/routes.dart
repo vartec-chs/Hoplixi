@@ -12,6 +12,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/dashboard/screens/notes_graph_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_layout.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/entity_add_edit.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/entity_view.dart';
 import 'package:hoplixi/features/password_manager/history/ui/screens/history_screen.dart';
 import 'package:hoplixi/features/password_manager/lock_store/lock_store_screen.dart';
 import 'package:hoplixi/features/password_manager/managers/category_manager/screens/category_form_screen.dart';
@@ -227,6 +228,17 @@ final List<RouteBase> appRoutes = [
               )!;
               final id = state.pathParameters['id']!;
               return EntityAddEdit(entity: entity, isEdit: true, id: id);
+            },
+          ),
+          GoRoute(
+            path: 'view/:id',
+            name: 'entity_view',
+            builder: (context, state) {
+              final entity = EntityType.fromId(
+                state.pathParameters['entity']!,
+              )!;
+              final id = state.pathParameters['id']!;
+              return EntityView(entity: entity, id: id);
             },
           ),
 

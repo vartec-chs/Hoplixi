@@ -668,13 +668,25 @@ class DashboardHomeBuilders {
         break;
     }
 
-    if (!isDismissible) return card;
+    // Обертка для двойного клика -> открытие view
+    final wrappedCard = GestureDetector(
+      onDoubleTap: () {
+        final viewPath = AppRoutesPaths.dashboardEntityView(type, item.id);
+        if (GoRouter.of(context).state.matchedLocation != viewPath) {
+          context.push(viewPath);
+        }
+      },
+      child: card,
+    );
+
+    if (!isDismissible) return wrappedCard;
 
     return buildDismissible(
       context: context,
       ref: ref,
-      child: card,
+      child: wrappedCard,
       item: item,
+      type: type,
       callbacks: callbacks,
     );
   }
@@ -685,6 +697,7 @@ class DashboardHomeBuilders {
     required WidgetRef ref,
     required Widget child,
     required BaseCardDto item,
+    required EntityType type,
     required DashboardCardCallbacks callbacks,
   }) {
     final isDeleted = item.isDeleted;
@@ -845,10 +858,11 @@ class DashboardHomeBuilders {
       style: const TextStyle(color: Colors.red),
     );
 
+    Widget card;
     switch (type) {
       case EntityType.password:
         if (item is! PasswordCardDto) return noCorrectType;
-        return PasswordGridCard(
+        card = PasswordGridCard(
           password: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
           onTogglePin: () => callbacks.onTogglePin(item.id),
@@ -858,7 +872,7 @@ class DashboardHomeBuilders {
         );
       case EntityType.note:
         if (item is! NoteCardDto) return noCorrectType;
-        return NoteGridCard(
+        card = NoteGridCard(
           note: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
           onTogglePin: () => callbacks.onTogglePin(item.id),
@@ -868,7 +882,7 @@ class DashboardHomeBuilders {
         );
       case EntityType.bankCard:
         if (item is! BankCardCardDto) return noCorrectType;
-        return BankCardGridCard(
+        card = BankCardGridCard(
           bankCard: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
           onTogglePin: () => callbacks.onTogglePin(item.id),
@@ -878,7 +892,7 @@ class DashboardHomeBuilders {
         );
       case EntityType.file:
         if (item is! FileCardDto) return noCorrectType;
-        return FileGridCard(
+        card = FileGridCard(
           file: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
           onTogglePin: () => callbacks.onTogglePin(item.id),
@@ -889,7 +903,7 @@ class DashboardHomeBuilders {
         );
       case EntityType.otp:
         if (item is! OtpCardDto) return noCorrectType;
-        return TotpGridCard(
+        card = TotpGridCard(
           otp: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
           onTogglePin: () => callbacks.onTogglePin(item.id),
@@ -897,10 +911,9 @@ class DashboardHomeBuilders {
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
         );
-
       case EntityType.document:
         if (item is! DocumentCardDto) return noCorrectType;
-        return DocumentGridCard(
+        card = DocumentGridCard(
           document: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
           onTogglePin: () => callbacks.onTogglePin(item.id),
@@ -910,5 +923,16 @@ class DashboardHomeBuilders {
           onDecrypt: () => showDocumentDecryptModal(context, item),
         );
     }
+
+    // Обёртка для двойного клика -> открытие view
+    return GestureDetector(
+      onDoubleTap: () {
+        final viewPath = AppRoutesPaths.dashboardEntityView(type, item.id);
+        if (GoRouter.of(context).state.matchedLocation != viewPath) {
+          context.push(viewPath);
+        }
+      },
+      child: card,
+    );
   }
 }
