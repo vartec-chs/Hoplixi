@@ -68,9 +68,11 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
     }
   }
 
-  void _copy(String v, String f) {
+  Future<void> _copy(String v, String f) async {
     Clipboard.setData(ClipboardData(text: v));
     Toaster.success(title: 'Скопировано', description: '$f скопирован');
+    final dao = await ref.read(bankCardDaoProvider.future);
+    await dao.incrementUsage(widget.bankCardId);
   }
 
   void _edit() => context.go(

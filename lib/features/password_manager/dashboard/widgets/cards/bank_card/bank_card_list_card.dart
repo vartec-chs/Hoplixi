@@ -248,6 +248,7 @@ class _BankCardListCardState extends ConsumerState<BankCardListCard>
       children: [
         Card(
           margin: EdgeInsets.zero,
+          elevation: 0,
           clipBehavior: Clip.hardEdge,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),

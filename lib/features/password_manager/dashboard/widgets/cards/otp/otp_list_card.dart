@@ -265,6 +265,7 @@ class _TotpListCardState extends ConsumerState<TotpListCard>
         Card(
           margin: EdgeInsets.zero,
           clipBehavior: Clip.hardEdge,
+          elevation: 0,
           borderOnForeground: true,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),

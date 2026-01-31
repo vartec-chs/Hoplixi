@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/modals/file_decrypt_modal.dart';
+import 'package:hoplixi/features/password_manager/decrypt_modal/file_decrypt_modal.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/dto/file_dto.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
@@ -77,9 +77,11 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
     }
   }
 
-  void _copy(String v, String f) {
+  Future<void> _copy(String v, String f) async {
     Clipboard.setData(ClipboardData(text: v));
     Toaster.success(title: 'Скопировано', description: '$f скопирован');
+    final dao = await ref.read(fileDaoProvider.future);
+    await dao.incrementUsage(widget.fileId);
   }
 
   void _edit() => context.go(

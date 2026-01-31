@@ -18,8 +18,8 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/otp/ot
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/otp/otp_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/password/password_grid.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/password/password_list_card.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/modals/document_decrypt_modal.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/modals/file_decrypt_modal.dart';
+import 'package:hoplixi/features/password_manager/decrypt_modal/document_decrypt_modal.dart';
+import 'package:hoplixi/features/password_manager/decrypt_modal/file_decrypt_modal.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';

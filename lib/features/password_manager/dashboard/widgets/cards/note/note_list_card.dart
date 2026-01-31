@@ -142,7 +142,7 @@ class _NoteListCardState extends ConsumerState<NoteListCard>
         Card(
           clipBehavior: Clip.hardEdge,
           margin: EdgeInsets.zero,
-
+          elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),

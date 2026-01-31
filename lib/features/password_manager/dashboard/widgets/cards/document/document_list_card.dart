@@ -102,6 +102,7 @@ class _DocumentListCardState extends ConsumerState<DocumentListCard>
       children: [
         Card(
           margin: EdgeInsets.zero,
+          elevation: 0,
           clipBehavior: Clip.hardEdge,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),

@@ -97,11 +97,13 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
     }
   }
 
-  void _copyContent() {
+  Future<void> _copyContent() async {
     if (_quillController != null) {
       final text = _quillController!.document.toPlainText();
       Clipboard.setData(ClipboardData(text: text));
       Toaster.success(title: 'Скопировано', description: 'Текст скопирован');
+      final dao = await ref.read(noteDaoProvider.future);
+      await dao.incrementUsage(widget.noteId);
     }
   }
 

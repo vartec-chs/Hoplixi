@@ -141,9 +141,11 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
     }
   }
 
-  void _copyCode() {
+  Future<void> _copyCode() async {
     Clipboard.setData(ClipboardData(text: _currentCode));
     Toaster.success(title: 'Скопировано', description: 'OTP код скопирован');
+    final dao = await ref.read(otpDaoProvider.future);
+    await dao.incrementUsage(widget.otpId);
   }
 
   void _edit() => context.go(

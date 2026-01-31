@@ -75,7 +75,6 @@ class _AppState extends ConsumerState<App> with TrayListener {
         await WindowManager.close();
         break;
       case AppTrayMenuItemKey.pathLauncher:
-        await WindowManager.setTitle(widget.filePath ?? 'None');
         logInfo(
           'Path Launcher clicked, file path: ${widget.filePath}',
           tag: 'TrayManager',

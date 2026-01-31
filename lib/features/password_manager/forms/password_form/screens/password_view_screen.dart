@@ -74,9 +74,11 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
     }
   }
 
-  void _copy(String v, String f) {
+  Future<void> _copy(String v, String f) async {
     Clipboard.setData(ClipboardData(text: v));
     Toaster.success(title: 'Скопировано', description: '$f скопирован');
+    final dao = await ref.read(passwordDaoProvider.future);
+    await dao.incrementUsage(widget.passwordId);
   }
 
   void _edit() => context.go(

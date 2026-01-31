@@ -111,6 +111,7 @@ class _FileListCardState extends ConsumerState<FileListCard>
       children: [
         Card(
           margin: EdgeInsets.zero,
+          elevation: 0,
           clipBehavior: Clip.hardEdge,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
