@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/theme/index.dart';
+import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 import 'package:hoplixi/shared/widgets/close_database_button.dart';
 // import 'package:hoplixi/app/constants/main_constants.dart';
 // import 'package:hoplixi/app/theme/index.dart';
@@ -64,7 +65,7 @@ class _TitleBarState extends ConsumerState<TitleBar> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: Image(
+                          child: const Image(
                             image: AssetImage('assets/logo/logo.png'),
                           ),
                         ),
@@ -98,7 +99,7 @@ class _TitleBarState extends ConsumerState<TitleBar> {
 
                 children: [
                   const CloseDatabaseButton(type: CloseDatabaseButtonType.icon),
-                  ThemeSwitcher(size: 26, style: ThemeSwitcherStyle.animated),
+                  const ThemeSwitcher(size: 26, style: ThemeSwitcherStyle.animated),
                   IconButton(
                     padding: const EdgeInsets.all(6),
                     icon: Icon(Icons.minimize, size: 20),
@@ -118,14 +119,14 @@ class _TitleBarState extends ConsumerState<TitleBar> {
                     tooltip: 'Закрыть',
                     hoverColor: Colors.red,
                     constraints: constraints,
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.close,
                       size: 20,
                       fontWeight: FontWeight.bold,
                     ),
-                    onPressed: () async => {
-                      await windowManager.hide(),
-                      // await windowManager.close(),
+                    onPressed: () async {
+                      await ref.read(mainStoreProvider.notifier).lockStore();
+                      await windowManager.hide();
                     },
                   ),
                 ],
