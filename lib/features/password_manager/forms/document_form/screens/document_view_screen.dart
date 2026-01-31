@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/modals/document_decrypt_modal.dart';
 import 'package:hoplixi/main_store/main_store.dart';
+import 'package:hoplixi/main_store/models/dto/document_dto.dart';
+import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -74,6 +77,24 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
     AppRoutesPaths.dashboardEntityEdit(EntityType.document, widget.documentId),
   );
 
+  DocumentCardDto _createDocumentDto() {
+    return DocumentCardDto(
+      id: _document!.id,
+      title: _document!.title,
+      documentType: _document!.documentType,
+      description: _document!.description,
+      pageCount: _document!.pageCount,
+      isFavorite: _document!.isFavorite,
+      isPinned: _document!.isPinned,
+      isArchived: _document!.isArchived,
+      isDeleted: _document!.isDeleted,
+      usedCount: _document!.usedCount,
+      modifiedAt: _document!.modifiedAt,
+      category: null,
+      tags: null,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -85,6 +106,12 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
       appBar: AppBar(
         title: Text(title),
         actions: [
+          IconButton(
+            icon: const Icon(LucideIcons.lockOpen),
+            onPressed: _document == null
+                ? null
+                : () => showDocumentDecryptModal(context, _createDocumentDto()),
+          ),
           IconButton(icon: const Icon(LucideIcons.pencil), onPressed: _edit),
         ],
       ),

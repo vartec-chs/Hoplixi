@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/modals/file_decrypt_modal.dart';
 import 'package:hoplixi/main_store/main_store.dart';
+import 'package:hoplixi/main_store/models/dto/file_dto.dart';
+import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -83,6 +86,25 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
     AppRoutesPaths.dashboardEntityEdit(EntityType.file, widget.fileId),
   );
 
+  FileCardDto _createFileDto() {
+    return FileCardDto(
+      id: _file!.id,
+      name: _file!.name,
+      metadataId: _file!.metadataId,
+      fileName: _metadata?.fileName,
+      fileExtension: _metadata?.fileExtension,
+      fileSize: _metadata?.fileSize,
+      isFavorite: _file!.isFavorite,
+      isPinned: _file!.isPinned,
+      isArchived: _file!.isArchived,
+      isDeleted: _file!.isDeleted,
+      usedCount: _file!.usedCount,
+      modifiedAt: _file!.modifiedAt,
+      category: null,
+      tags: null,
+    );
+  }
+
   String _formatSize(int? bytes) {
     if (bytes == null || bytes == 0) return '0 Б';
     const sizes = ['Б', 'КБ', 'МБ', 'ГБ'];
@@ -130,6 +152,12 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
       appBar: AppBar(
         title: Text(_file?.name ?? 'Файл'),
         actions: [
+          IconButton(
+            icon: const Icon(LucideIcons.lockOpen),
+            onPressed: _file == null
+                ? null
+                : () => showFileDecryptModal(context, _createFileDto()),
+          ),
           IconButton(icon: const Icon(LucideIcons.pencil), onPressed: _edit),
         ],
       ),
