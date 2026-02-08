@@ -25,10 +25,9 @@ class NotesGraphScreen extends ConsumerWidget {
     final graphAsync = ref.watch(_notesGraphDataProvider);
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         title: const Text('Граф заметок'),
-        backgroundColor: theme.colorScheme.surface,
+
         actions: [
           IconButton(
             tooltip: 'Обновить',
@@ -109,15 +108,9 @@ class _NotesGraphView extends StatefulWidget {
 }
 
 class _NotesGraphViewState extends State<_NotesGraphView> {
-  late final Options _options;
-  late final GraphStyle _graphStyle;
-  late final ForceDirected _algorithm;
-
-  @override
-  void initState() {
-    super.initState();
-    _initGraphOptions();
-  }
+  Options? _options;
+  GraphStyle? _graphStyle;
+  ForceDirected? _algorithm;
 
   void _initGraphOptions() {
     // Создаём GraphStyle один раз
@@ -139,38 +132,43 @@ class _NotesGraphViewState extends State<_NotesGraphView> {
 
     // Создаём Options один раз
     _options = Options();
-    _options.enableHit = true;
-    _options.hoverable = true;
-    _options.panelDelay = const Duration(milliseconds: 200);
-    _options.showText = true;
-    _options.textGetter = (vertex) {
+    _options!.enableHit = true;
+    _options!.hoverable = true;
+    _options!.panelDelay = const Duration(milliseconds: 200);
+    _options!.showText = true;
+    _options!.textGetter = (vertex) {
       final title = vertex.data is Map
           ? (vertex.data['title']?.toString() ?? '')
           : '';
       return title.length > 20 ? '${title.substring(0, 17)}...' : title;
     };
-    _options.edgePanelBuilder = _buildEdgePanel;
-    _options.vertexPanelBuilder = _buildVertexPanel;
-    _options.onVertexTapUp = (vertex, event) {
+    _options!.edgePanelBuilder = _buildEdgePanel;
+    _options!.vertexPanelBuilder = _buildVertexPanel;
+
+    // Обработка клика по вершине
+    // Примечание: библиотека вызывает onVertexTapUp только когда есть hoverVertex
+    _options!.onVertexTapUp = (vertex, event) {
       final id = vertex.id?.toString() ?? '';
-      if (id.isNotEmpty) {
+      logInfo('Vertex tap up: id=$id');
+      if (id.isNotEmpty && mounted) {
         context.push(AppRoutesPaths.dashboardEntityEdit(EntityType.note, id));
       }
     };
-    _options.edgeShape = EdgeLineShape();
-    _options.vertexShape = VertexCircleShape();
-    _options.backgroundBuilder = (ctx) =>
-        ColoredBox(color: widget.theme.colorScheme.surface);
-    _options.graphStyle = _graphStyle;
 
-    // Создаём алгоритм один раз
+    _options!.edgeShape = EdgeLineShape();
+    _options!.vertexShape = VertexCircleShape();
+    _options!.backgroundBuilder = (ctx) =>
+        ColoredBox(color: widget.theme.colorScheme.surfaceContainerLowest);
+    _options!.graphStyle = _graphStyle!;
+
+    // Создаём алгоритм с декораторами, притягивающими к центру
+    // Убран CoulombCenterDecorator, который отталкивает от центра
     _algorithm = ForceDirected(
       decorators: [
         CoulombDecorator(),
         HookeBorderDecorator(),
         HookeDecorator(),
-        CoulombCenterDecorator(),
-        HookeCenterDecorator(),
+        HookeCenterDecorator(), // Притягивает к центру
         ForceDecorator(),
         ForceMotionDecorator(),
         TimeCounterDecorator(),
@@ -180,14 +178,32 @@ class _NotesGraphViewState extends State<_NotesGraphView> {
 
   @override
   Widget build(BuildContext context) {
-    return FlutterGraphWidget(
-      data: {
-        'vertexes': widget.data.vertexes.map((v) => v.toJson()).toList(),
-        'edges': widget.data.edges.map((e) => e.toJson()).toList(),
+    // Используем LayoutBuilder для получения размера и Center для центрирования
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Инициализируем опции при первом build, когда размер известен
+        if (_options == null) {
+          _initGraphOptions();
+        }
+
+        return Center(
+          child: SizedBox(
+            width: constraints.maxWidth,
+            height: constraints.maxHeight,
+            child: FlutterGraphWidget(
+              data: {
+                'vertexes': widget.data.vertexes
+                    .map((v) => v.toJson())
+                    .toList(),
+                'edges': widget.data.edges.map((e) => e.toJson()).toList(),
+              },
+              algorithm: _algorithm!,
+              convertor: MapConvertor(),
+              options: _options!,
+            ),
+          ),
+        );
       },
-      algorithm: _algorithm,
-      convertor: MapConvertor(),
-      options: _options,
     );
   }
 

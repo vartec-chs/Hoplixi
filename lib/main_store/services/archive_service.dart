@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:isolate';
+
 import 'package:archive/archive_io.dart';
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
@@ -58,10 +59,16 @@ class _IsolateResult {
   final bool success;
   final String? data;
   final String? error;
+  final bool isInvalidPassword;
 
-  _IsolateResult.success(this.data) : success = true, error = null;
+  _IsolateResult.success(this.data)
+    : success = true,
+      error = null,
+      isInvalidPassword = false;
 
-  _IsolateResult.error(this.error) : success = false, data = null;
+  _IsolateResult.error(this.error, {this.isInvalidPassword = false})
+    : success = false,
+      data = null;
 }
 
 class ArchiveService {
@@ -199,7 +206,17 @@ class ArchiveService {
           tag: 'ArchiveService',
         );
         return rd.Success(targetPath);
+      } else if (result?.isInvalidPassword == true) {
+        // Удаляем созданную папку при ошибке
+        await _cleanupDirectory(targetPath);
+        return rd.Failure(
+          DatabaseError.archiveInvalidPassword(
+            message: result?.error ?? 'Неверный пароль для архива',
+          ),
+        );
       } else {
+        // Удаляем созданную папку при ошибке
+        await _cleanupDirectory(targetPath);
         return rd.Failure(
           DatabaseError.unarchiveFailed(
             message: result?.error ?? 'Неизвестная ошибка разархивации',
@@ -215,6 +232,18 @@ class ArchiveService {
       return rd.Failure(
         DatabaseError.unarchiveFailed(message: e.toString(), stackTrace: s),
       );
+    }
+  }
+
+  /// Удаляет директорию если она существует
+  static Future<void> _cleanupDirectory(String path) async {
+    try {
+      final dir = Directory(path);
+      if (await dir.exists()) {
+        await dir.delete(recursive: true);
+      }
+    } catch (e) {
+      logError('Не удалось удалить папку $path: $e', tag: 'ArchiveService');
     }
   }
 
@@ -361,6 +390,26 @@ void _unarchiveInIsolate(_UnarchiveParams params) async {
 
     params.sendPort.send(_IsolateResult.success(params.targetPath));
   } catch (e) {
-    params.sendPort.send(_IsolateResult.error(e.toString()));
+    final errorMessage = e.toString();
+    // Определяем ошибку неверного пароля по характерным сообщениям
+    final isInvalidPassword = _isPasswordError(errorMessage);
+    params.sendPort.send(
+      _IsolateResult.error(errorMessage, isInvalidPassword: isInvalidPassword),
+    );
   }
+}
+
+/// Определяет, является ли ошибка ошибкой неверного пароля
+/// При неверном пароле библиотека archive выбрасывает FormatException
+/// с характерными сообщениями о CRC, checksum или corrupted данных
+/// При отсутствии пароля для защищённого архива может быть Null check ошибка
+bool _isPasswordError(String errorMessage) {
+  final lowerMessage = errorMessage.toLowerCase();
+  return lowerMessage.contains('crc') ||
+      lowerMessage.contains('checksum') ||
+      lowerMessage.contains('invalid') ||
+      lowerMessage.contains('corrupted') ||
+      lowerMessage.contains('password') ||
+      lowerMessage.contains('decrypt') ||
+      lowerMessage.contains('null');
 }

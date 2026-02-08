@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/archive_storage/provider/archive_notifier.dart';
+import 'package:hoplixi/main_store/models/db_errors.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
@@ -36,9 +37,13 @@ class _ImportTabState extends ConsumerState<ImportTab> {
       }
       // Показываем ошибку только если она новая
       if (next.error != null && (prev == null || prev.error != next.error)) {
+        // Специальное сообщение для ошибки неверного пароля
+        final isPasswordError = next.error is ArchiveInvalidPasswordError;
         Toaster.error(
-          title: 'Ошибка импорта',
-          description: next.error!.message,
+          title: isPasswordError ? 'Неверный пароль' : 'Ошибка импорта',
+          description: isPasswordError
+              ? 'Проверьте пароль и попробуйте снова'
+              : next.error!.message,
         );
       }
     });

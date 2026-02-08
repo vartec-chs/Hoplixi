@@ -63,6 +63,14 @@ sealed class DatabaseError with _$DatabaseError implements Exception {
     @JsonKey(includeToJson: true) DateTime? timestamp,
   }) = UnarchiveFailedError;
 
+  const factory DatabaseError.archiveInvalidPassword({
+    @Default('DB_ARCHIVE_INVALID_PASSWORD') String code,
+    @Default('Неверный пароль для архива') String message,
+    Map<String, dynamic>? data,
+    @JsonKey(includeToJson: true) StackTrace? stackTrace,
+    @JsonKey(includeToJson: true) DateTime? timestamp,
+  }) = ArchiveInvalidPasswordError;
+
   const factory DatabaseError.recordNotFound({
     @Default('DB_RECORD_NOT_FOUND') String code,
     @Default('Запись не найдена в базе данных') String message,
