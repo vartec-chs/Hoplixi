@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/main_store/models/dto/category_dto.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
+import '../../providers/manager_refresh_trigger_provider.dart';
 import '../models/category_pagination_state.dart';
 import 'category_filter_provider.dart';
 
@@ -23,6 +24,14 @@ class CategoryListNotifier extends AsyncNotifier<CategoryPaginationState> {
     // Слушаем изменения фильтра для автоматической перезагрузки
     ref.listen(categoryFilterProvider, (previous, next) {
       if (previous != next) {
+        refresh();
+      }
+    });
+
+    // Слушаем триггер обновления категорий
+    ref.listen(managerRefreshTriggerProvider, (previous, next) {
+      if (next.resourceType == ManagerResourceType.category ||
+          next.resourceType == null) {
         refresh();
       }
     });

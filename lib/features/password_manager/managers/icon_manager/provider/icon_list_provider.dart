@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+
+import '../../providers/manager_refresh_trigger_provider.dart';
 import '../models/icon_pagination_state.dart';
 import 'icon_filter_provider.dart';
 
@@ -19,6 +21,14 @@ class IconListNotifier extends AsyncNotifier<IconPaginationState> {
     // Слушаем изменения фильтра для автоматической перезагрузки
     ref.listen(iconFilterProvider, (previous, next) {
       if (previous != next) {
+        refresh();
+      }
+    });
+
+    // Слушаем триггер обновления иконок
+    ref.listen(managerRefreshTriggerProvider, (previous, next) {
+      if (next.resourceType == ManagerResourceType.icon ||
+          next.resourceType == null) {
         refresh();
       }
     });

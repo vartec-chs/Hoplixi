@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/dto/category_dto.dart';
 import 'package:hoplixi/main_store/models/filter/categories_filter.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
@@ -28,6 +29,10 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
   void initState() {
     super.initState();
     // Инициализация или загрузка данных, если необходимо
+  }
+
+  bool _isMobileLayout(BuildContext context) {
+    return MediaQuery.sizeOf(context).width > 700.0;
   }
 
   Widget build(BuildContext context) {
@@ -186,21 +191,23 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'categoryManagerFab',
-        onPressed: () {
-          final result = context.push<bool>(
-            AppRoutesPaths.categoryAdd(widget.entity),
-          );
+      floatingActionButton: _isMobileLayout(context)
+          ? FloatingActionButton(
+              heroTag: 'categoryManagerFab',
+              onPressed: () {
+                final result = context.push<bool>(
+                  AppRoutesPaths.categoryAdd(widget.entity),
+                );
 
-          result.then((created) {
-            if (created == true) {
-              ref.read(categoryListProvider.notifier).refresh();
-            }
-          });
-        },
-        child: const Icon(Icons.add),
-      ),
+                result.then((created) {
+                  if (created == true) {
+                    ref.read(categoryListProvider.notifier).refresh();
+                  }
+                });
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 
@@ -346,8 +353,8 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
 
         // Уведомляем об удалении категории
         ref
-            .read(categoryFilterProvider.notifier)
-            .notifyCategoryDeleted(categoryId: category.id);
+            .read(managerRefreshTriggerProvider.notifier)
+            .triggerCategoryRefresh();
 
         if (context.mounted) {
           Toaster.success(

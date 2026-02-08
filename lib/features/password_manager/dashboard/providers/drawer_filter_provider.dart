@@ -2,11 +2,10 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/data_refresh_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/drawer_filter_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/base_filter_provider.dart';
+import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/filter/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -40,23 +39,26 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
     });
 
     // Прослушиваем изменения в категориях и тегах СИНХРОННО до любых await
-    ref.listen<DataRefreshState>(dataRefreshTriggerProvider, (previous, next) {
+    ref.listen<ManagerRefreshState>(managerRefreshTriggerProvider, (
+      previous,
+      next,
+    ) {
       logTrace(
-        '$_logTag dataRefreshTriggerProvider изменился: '
+        '$_logTag managerRefreshTriggerProvider изменился: '
         'previous=${previous?.toString() ?? 'null'}, next=${next.toString()}',
         tag: _logTag,
       );
       // Проверяем, что это изменение категорий или тегов
-      final resourceType = next.data?['resourceType'];
-      if (resourceType == 'category') {
+      final resourceType = next.resourceType;
+      if (resourceType == ManagerResourceType.category) {
         logDebug(
-          '$_logTag Обнаружено изменение категорий (${next.type}), перезагружаем...',
+          '$_logTag Обнаружено изменение категорий, перезагружаем...',
           tag: _logTag,
         );
         _reloadCategories();
-      } else if (resourceType == 'tag') {
+      } else if (resourceType == ManagerResourceType.tag) {
         logDebug(
-          '$_logTag Обнаружено изменение тегов (${next.type}), перезагружаем...',
+          '$_logTag Обнаружено изменение тегов, перезагружаем...',
           tag: _logTag,
         );
         _reloadTags();
@@ -64,7 +66,7 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
     });
 
     // Начальное состояние без сохранённого выбора
-    var currentState = DrawerFilterState(
+    var currentState = const DrawerFilterState(
       selectedCategoryIds: [],
       selectedTagIds: [],
     );
@@ -133,6 +135,11 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
       );
       _loadCategories(reset: true);
     });
+  }
+
+  /// Public метод для перезагрузки категорий
+  void reloadCategories() {
+    _reloadCategories();
   }
 
   Future<void> _loadCategories({bool reset = false}) async {
@@ -225,6 +232,11 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
       );
       _loadTags(reset: true);
     });
+  }
+
+  /// Public метод для перезагрузки тегов
+  void reloadTags() {
+    _reloadTags();
   }
 
   Future<void> _loadTags({bool reset = false}) async {

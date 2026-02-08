@@ -251,13 +251,22 @@ class _CategorySectionState extends ConsumerState<_CategorySection> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Категории', style: theme.textTheme.titleMedium),
-              if (widget.selectedIds.isNotEmpty)
-                SmoothButton(
-                  onPressed: () => notifier.clearCategories(),
-                  label: 'Очистить (${widget.selectedIds.length})',
-                  size: .small,
-                  type: .text,
-                ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    onPressed: () => notifier.reloadCategories(),
+                    tooltip: 'Обновить категории',
+                  ),
+                  if (widget.selectedIds.isNotEmpty)
+                    SmoothButton(
+                      onPressed: () => notifier.clearCategories(),
+                      label: 'Очистить (${widget.selectedIds.length})',
+                      size: .small,
+                      type: .text,
+                    ),
+                ],
+              ),
             ],
           ),
         ),
@@ -387,13 +396,22 @@ class _TagSectionState extends ConsumerState<_TagSection> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Теги', style: theme.textTheme.titleMedium),
-              if (widget.selectedIds.isNotEmpty)
-                SmoothButton(
-                  onPressed: () => notifier.clearTags(),
-                  label: 'Очистить (${widget.selectedIds.length})',
-                  size: .small,
-                  type: .text,
-                ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    onPressed: () => notifier.reloadTags(),
+                    tooltip: 'Обновить теги',
+                  ),
+                  if (widget.selectedIds.isNotEmpty)
+                    SmoothButton(
+                      onPressed: () => notifier.clearTags(),
+                      label: 'Очистить (${widget.selectedIds.length})',
+                      size: .small,
+                      type: .text,
+                    ),
+                ],
+              ),
             ],
           ),
         ),

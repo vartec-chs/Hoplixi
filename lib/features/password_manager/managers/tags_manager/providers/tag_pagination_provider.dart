@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
+import '../../providers/manager_refresh_trigger_provider.dart';
 import '../models/tag_pagination_state.dart';
 import 'tag_filter_provider.dart';
 
@@ -20,6 +21,14 @@ class TagListNotifier extends AsyncNotifier<TagPaginationState> {
     // Слушаем изменения фильтра для автоматической перезагрузки
     ref.listen(tagFilterProvider, (previous, next) {
       if (previous != next) {
+        refresh();
+      }
+    });
+
+    // Слушаем триггер обновления тегов
+    ref.listen(managerRefreshTriggerProvider, (previous, next) {
+      if (next.resourceType == ManagerResourceType.tag ||
+          next.resourceType == null) {
         refresh();
       }
     });

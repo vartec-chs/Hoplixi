@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_store/models/filter/tags_filter.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
@@ -25,6 +26,10 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
   @override
   void initState() {
     super.initState();
+  }
+
+  bool _isMobileLayout(BuildContext context) {
+    return MediaQuery.sizeOf(context).width > 700.0;
   }
 
   @override
@@ -183,22 +188,24 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'tagsManagerFab',
-        onPressed: () {
-          final result = context.push<bool>(
-            AppRoutesPaths.tagsAdd(widget.entity),
-          );
-          if (result != null) {
-            result.then((added) {
-              if (added == true) {
-                ref.read(tagListProvider.notifier).refresh();
-              }
-            });
-          }
-        },
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: _isMobileLayout(context)
+          ? FloatingActionButton(
+              heroTag: 'tagsManagerFab',
+              onPressed: () {
+                final result = context.push<bool>(
+                  AppRoutesPaths.tagsAdd(widget.entity),
+                );
+                if (result != null) {
+                  result.then((added) {
+                    if (added == true) {
+                      ref.read(tagListProvider.notifier).refresh();
+                    }
+                  });
+                }
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 
@@ -333,7 +340,7 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
         await tagDao.deleteTag(tag.id);
 
         // Уведомляем об удалении тега
-        ref.read(tagFilterProvider.notifier).notifyTagDeleted(tagId: tag.id);
+        ref.read(managerRefreshTriggerProvider.notifier).triggerTagRefresh();
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/expandable_fab.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:universal_platform/universal_platform.dart';
 
 // ===========================================================================
 // Constants
@@ -17,8 +19,6 @@ const Duration kScaleAnimationDuration = Duration(milliseconds: 300);
 const Duration kOpacityAnimationDuration = Duration(milliseconds: 150);
 
 // Screen breakpoints
-const double kMobileBreakpoint = 700.0;
-const double kDesktopBreakpoint = 1000.0;
 
 // Layout dimensions
 const double kRailWidth = 80.0;
@@ -56,6 +56,27 @@ const int kGraphIndex = 4;
 
 // Bottom navigation
 const double kBottomNavNotchMargin = 8.0;
+
+// Floating bottom navigation
+const double kFloatingNavMarginHorizontal = 12.0;
+const double kFloatingNavMarginBottom = 24.0;
+const double kFloatingNavBarBorderRadius = 28.0;
+const double kFloatingNavBarHeight = 64.0;
+const double kFloatingNavShadowBlurRadius = 20.0;
+const double kFloatingNavShadowOpacity = 0.12;
+const double kFloatingNavShadowOffsetY = 4.0;
+const double kFloatingNavItemBorderRadius = 16.0;
+const double kFloatingNavItemPaddingH = 12.0;
+const double kFloatingNavItemPaddingV = 6.0;
+const double kFloatingNavIconSize = 22.0;
+const double kFloatingNavLabelFontSize = 10.0;
+const double kFloatingNavLabelSpacing = 2.0;
+const double kFloatingNavFabBottomOffset = 12.0;
+
+// Segment indicator
+const Duration kSegmentIndicatorDuration = Duration(milliseconds: 300);
+const double kSegmentIndicatorVerticalPadding = 8.0;
+const double kSegmentIndicatorHorizontalPadding = 8.0;
 
 // Animation intervals
 const double kFadeAnimationIntervalStart = 0.1;
@@ -162,16 +183,59 @@ class _DashboardLayoutState extends State<DashboardLayout>
   // ===========================================================================
 
   /// Построить список действий FAB для текущей entity
-  List<FABActionData> _buildFabActions(String entity, BuildContext context) {
+  List<FABActionData> _buildFabActions(
+    String entity,
+    BuildContext context,
+    String? currentAction,
+  ) {
     final theme = Theme.of(context);
-    return [
-      FABActionData(
+
+    // Если на странице categories/tags/icons, первым действием — добавить соответствующий элемент
+    FABActionData? primaryAction;
+    if (currentAction == 'categories') {
+      primaryAction = FABActionData(
         icon: Icons.add,
-        label: 'Добавить',
-        onPressed: () => _onFabActionPressed(entity, 'add'),
+        label: 'Добавить категорию',
+        onPressed: () => _onFabActionPressed(entity, 'add_category'),
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: theme.colorScheme.onPrimary,
-      ),
+      );
+    } else if (currentAction == 'tags') {
+      primaryAction = FABActionData(
+        icon: Icons.add,
+        label: 'Добавить тег',
+        onPressed: () => _onFabActionPressed(entity, 'add_tag'),
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
+      );
+    } else if (currentAction == 'icons') {
+      primaryAction = FABActionData(
+        icon: Icons.add,
+        label: 'Добавить иконку',
+        onPressed: () => _onFabActionPressed(entity, 'add_icon'),
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
+      );
+    }
+
+    final actions = <FABActionData>[];
+    if (primaryAction != null) {
+      actions.add(primaryAction);
+    } else {
+      // Стандартные действия для главной страницы entity
+      actions.add(
+        FABActionData(
+          icon: Icons.add,
+          label: 'Добавить',
+          onPressed: () => _onFabActionPressed(entity, 'add'),
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: theme.colorScheme.onPrimary,
+        ),
+      );
+    }
+
+    // Остальные действия
+    actions.addAll([
       FABActionData(
         icon: Icons.category,
         label: 'Категории',
@@ -187,73 +251,69 @@ class _DashboardLayoutState extends State<DashboardLayout>
         label: 'Иконки',
         onPressed: () => _onFabActionPressed(entity, 'icons'),
       ),
-    ];
+    ]);
+
+    return actions;
   }
 
   /// Обработать нажатие на FAB action
   void _onFabActionPressed(String entity, String action) {
-    final path = '/dashboard/$entity/$action';
+    final entityType = EntityType.fromId(entity)!;
+    String path;
+
+    switch (action) {
+      case 'add':
+        path = '/dashboard/$entity/add';
+        break;
+      case 'add_category':
+        path = AppRoutesPaths.categoryAdd(entityType);
+        break;
+      case 'add_tag':
+        path = AppRoutesPaths.tagsAdd(entityType);
+        break;
+      case 'add_icon':
+        path = AppRoutesPaths.iconAddForEntity(entityType);
+        break;
+      case 'categories':
+        path = '/dashboard/$entity/categories';
+        break;
+      case 'tags':
+        path = '/dashboard/$entity/tags';
+        break;
+      case 'icons':
+        path = '/dashboard/$entity/icons';
+        break;
+      default:
+        path = '/dashboard/$entity/$action';
+    }
+
     if (context.mounted) {
       context.go(path);
     }
   }
 
   // ===========================================================================
-  // Bottom Navigation Bar
+  // Floating Bottom Navigation Bar
   // ===========================================================================
 
-  /// Построить BottomNavigationBar для мобильных устройств
-  BottomAppBar _buildBottomNavigationBar(
+  /// Построить плавающий BottomNavigationBar для мобильных устройств
+  Widget _buildFloatingBottomNav(
     String entity,
     List<NavigationRailDestination> destinations,
   ) {
     final currentIndex = _selectedRailIndex() ?? 0;
+    final systemPadding = MediaQuery.of(context).viewPadding;
 
-    final leftDestinations = destinations
-        .where((d) => d == destinations[0] || d == destinations[1])
-        .toList();
-    final rightDestinations = destinations
-        .where((d) => destinations.indexOf(d) > 1)
-        .toList();
-
-    return BottomAppBar(
-      shape: const CircularNotchedRectangle(),
-      notchMargin: kBottomNavNotchMargin,
-      padding: const EdgeInsets.symmetric(
-        horizontal: kBottomNavPaddingHorizontal,
-        vertical: kBottomNavPaddingVertical,
-      ),
-      height: kBottomNavHeight,
-      child: Row(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          // Left side
-          ...leftDestinations.map(
-            (d) => _BottomNavIconButton(
-              destination: d,
-              isSelected: currentIndex == destinations.indexOf(d),
-              onTap: () =>
-                  _onBottomNavItemSelected(entity, destinations.indexOf(d)),
-            ),
-          ),
-          // FAB space
-          AnimatedContainer(
-            duration: kScaleAnimationDuration,
-            curve: Curves.easeInOut,
-            width: currentIndex == kHomeIndex ? kFabSpaceWidth : 0,
-            child: const SizedBox(width: kFabSpaceWidth),
-          ),
-          // Right side
-          ...rightDestinations.map(
-            (d) => _BottomNavIconButton(
-              destination: d,
-              isSelected: currentIndex == destinations.indexOf(d),
-              onTap: () =>
-                  _onBottomNavItemSelected(entity, destinations.indexOf(d)),
-            ),
-          ),
-        ],
+    return Positioned(
+      bottom: UniversalPlatform.isDesktop
+          ? kBottomNavNotchMargin
+          : systemPadding.bottom,
+      left: kFloatingNavMarginHorizontal,
+      right: kFloatingNavMarginHorizontal,
+      child: _FloatingNavBar(
+        destinations: destinations,
+        selectedIndex: currentIndex,
+        onItemSelected: (index) => _onBottomNavItemSelected(entity, index),
       ),
     );
   }
@@ -291,10 +351,17 @@ class _DashboardLayoutState extends State<DashboardLayout>
     return _fullCenterPaths.contains(location);
   }
 
-  // Проверяем, нужно ли показывать FAB (только на 2-сегментных путях)
+  // Проверяем, нужно ли показывать FAB (на 2-сегментных путях и на categories/tags/icons)
   bool _shouldShowFAB(String location) {
     final segments = Uri.parse(location).pathSegments;
-    return segments.length == kPathSegmentsForEntity; // /dashboard/entity
+    if (segments.length == kPathSegmentsForEntity) {
+      return true; // /dashboard/entity
+    }
+    if (segments.length == kMinPathSegmentsForPanel &&
+        actions.contains(segments[2])) {
+      return true; // /dashboard/:entity/categories, /dashboard/:entity/tags, /dashboard/:entity/icons
+    }
+    return false;
   }
 
   // Проверяем, нужно ли показывать BottomNavigationBar на мобильных устройствах
@@ -329,15 +396,21 @@ class _DashboardLayoutState extends State<DashboardLayout>
     }
   }
 
+  bool _isMobileLayout(BuildContext context) {
+    return MediaQuery.sizeOf(context).width < MainConstants.kMobileBreakpoint;
+  }
+
   @override
   Widget build(BuildContext context) {
     final uri = widget.state.uri.toString();
     final entity = _currentEntity();
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final isMobile = screenWidth < kMobileBreakpoint;
+    final systemPadding = MediaQuery.of(context).viewPadding;
+    final isMobile = _isMobileLayout(context);
     final showDrawerAsPanel =
         screenWidth >=
-        kDesktopBreakpoint; // Показывать drawer как панель для больших экранов
+        MainConstants
+            .kDesktopBreakpoint; // Показывать drawer как панель для больших экранов
     final hasPanel = _hasPanel(uri);
     final panel = widget.panelChild;
     final isFullCenter = _isFullCenter(uri);
@@ -347,17 +420,20 @@ class _DashboardLayoutState extends State<DashboardLayout>
         ? [..._baseDestinations, _graphDestination]
         : _baseDestinations;
 
-    // Mobile: единый layout с Stack и взаимной анимацией центра и панели
+    // Mobile: единый layout с Stack и floating bottom navigation
     if (isMobile) {
       final showPanel = hasPanel || isFullCenter;
+      final showBottomNav = _shouldShowBottomNav(uri) && !isFullCenter;
+      final showFAB = _shouldShowFAB(uri);
 
       return Scaffold(
+        extendBody: true,
         drawer: DashboardDrawer(
           entityType: EntityType.fromId(entity) ?? EntityType.password,
         ),
         body: Stack(
           children: [
-            // Центр: DashboardHomeScreen с обратной анимацией (fade + scale down)
+            // Центр: DashboardHomeScreen с обратной анимацией
             AnimatedOpacity(
               opacity: showPanel ? 0.0 : 1.0,
               duration: kFadeAnimationDuration,
@@ -367,7 +443,7 @@ class _DashboardLayoutState extends State<DashboardLayout>
                 duration: kScaleAnimationDuration,
                 curve: Curves.easeInOut,
                 child: IgnorePointer(
-                  ignoring: showPanel, // отключаем взаимодействие когда скрыт
+                  ignoring: showPanel,
                   child: RepaintBoundary(
                     child: DashboardHomeScreen(
                       entityType: EntityType.fromId(entity)!,
@@ -378,7 +454,7 @@ class _DashboardLayoutState extends State<DashboardLayout>
               ),
             ),
 
-            // Анимированная панель поверх центра (ZoomPageTransitionsBuilder стиль)
+            // Анимированная панель поверх центра
             IgnorePointer(
               ignoring: !showPanel,
               child: AnimatedOpacity(
@@ -393,15 +469,39 @@ class _DashboardLayoutState extends State<DashboardLayout>
                 ),
               ),
             ),
+
+            // Floating bottom navigation bar
+            if (showBottomNav) _buildFloatingBottomNav(entity, destinations),
+
+            // FAB выше floating nav
+            Positioned(
+              bottom: showBottomNav && UniversalPlatform.isDesktop
+                  ? kFloatingNavFabBottomOffset + kFloatingNavBarHeight + 5
+                  : systemPadding.bottom + kFloatingNavFabBottomOffset,
+              left: null,
+              right: 0,
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  right: kFloatingNavMarginHorizontal,
+                ),
+                child: AnimatedScale(
+                  scale: showFAB ? 1.0 : 0.0,
+                  duration: kScaleAnimationDuration,
+                  curve: showFAB ? Curves.easeOutBack : Curves.easeIn,
+                  child: AnimatedOpacity(
+                    opacity: showFAB ? 1.0 : 0.0,
+                    duration: kFadeAnimationDuration,
+                    curve: Curves.easeInOut,
+                    child: IgnorePointer(
+                      ignoring: !showFAB,
+                      child: _buildExpandableFAB(entity, isMobile),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
-        bottomNavigationBar: (_shouldShowBottomNav(uri) && !isFullCenter)
-            ? _buildBottomNavigationBar(entity, destinations)
-            : null,
-        floatingActionButton: (_shouldShowFAB(uri) && !showPanel)
-            ? _buildExpandableFAB(entity, isMobile)
-            : null,
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       );
     }
 
@@ -618,6 +718,13 @@ class _DashboardLayoutState extends State<DashboardLayout>
 
   // Вспомогательный метод для создания ExpandableFAB
   Widget _buildExpandableFAB(String entity, bool isMobile) {
+    final uri = widget.state.uri.toString();
+    final segments = Uri.parse(uri).pathSegments;
+    final currentAction =
+        isMobile && segments.length >= kMinPathSegmentsForPanel
+        ? segments[2]
+        : null;
+
     return ExpandableFAB(
       executeFirstActionDirectly: true,
       direction: isMobile
@@ -625,21 +732,112 @@ class _DashboardLayoutState extends State<DashboardLayout>
           : FABExpandDirection.rightDown,
       isUseInNavigationRail: !isMobile, // true для десктопа
       shape: isMobile ? FABShape.circle : FABShape.square,
-      actions: _buildFabActions(entity, context),
+      actions: _buildFabActions(entity, context, currentAction),
     );
   }
 }
 
 // =============================================================================
-// Bottom Nav Icon Button
+// Floating Nav Bar with Segment Control Animation
 // =============================================================================
 
-class _BottomNavIconButton extends StatelessWidget {
+/// Плавающий навигационный бар со скользящим индикатором
+/// в стиле segment control.
+class _FloatingNavBar extends StatelessWidget {
+  final List<NavigationRailDestination> destinations;
+  final int selectedIndex;
+  final ValueChanged<int> onItemSelected;
+
+  const _FloatingNavBar({
+    required this.destinations,
+    required this.selectedIndex,
+    required this.onItemSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final itemCount = destinations.length;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(kFloatingNavBarBorderRadius),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(
+              context,
+            ).shadowColor.withValues(alpha: kFloatingNavShadowOpacity),
+            blurRadius: kFloatingNavShadowBlurRadius,
+            offset: const Offset(0, kFloatingNavShadowOffsetY),
+          ),
+        ],
+      ),
+      child: SizedBox(
+        height: kFloatingNavBarHeight,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final totalWidth = constraints.maxWidth;
+            final itemWidth = totalWidth / itemCount;
+            final indicatorLeft =
+                selectedIndex * itemWidth + kSegmentIndicatorHorizontalPadding;
+            final indicatorWidth =
+                itemWidth - kSegmentIndicatorHorizontalPadding * 2;
+
+            return Stack(
+              children: [
+                // Скользящий индикатор
+                AnimatedPositioned(
+                  duration: kSegmentIndicatorDuration,
+                  curve: Curves.easeOutCubic,
+                  left: indicatorLeft,
+                  top: kSegmentIndicatorVerticalPadding,
+                  bottom: kSegmentIndicatorVerticalPadding,
+                  width: indicatorWidth,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer.withValues(
+                        alpha: 0.1,
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                ),
+                // Элементы навигации
+                Row(
+                  children: destinations
+                      .asMap()
+                      .entries
+                      .map(
+                        (entry) => Expanded(
+                          child: _FloatingNavItem(
+                            destination: entry.value,
+                            isSelected: selectedIndex == entry.key,
+                            onTap: () => onItemSelected(entry.key),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// Floating Nav Item
+// =============================================================================
+
+class _FloatingNavItem extends StatelessWidget {
   final NavigationRailDestination destination;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _BottomNavIconButton({
+  const _FloatingNavItem({
     required this.destination,
     required this.isSelected,
     required this.onTap,
@@ -649,31 +847,52 @@ class _BottomNavIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(kBottomNavBorderRadius),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: kBottomNavPaddingHorizontal,
-          vertical: kBottomNavPaddingVertical,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            destination.icon,
-            const SizedBox(height: kBottomNavSpacing),
-            Text(
-              (destination.label as Text).data ?? '',
-              style: TextStyle(
-                fontSize: kBottomNavFontSize,
-                color: isSelected
-                    ? colorScheme.primary
-                    : colorScheme.onSurfaceVariant,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+      behavior: HitTestBehavior.opaque,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: kFloatingNavItemPaddingH,
+            vertical: kFloatingNavItemPaddingV,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedDefaultTextStyle(
+                duration: kSegmentIndicatorDuration,
+                curve: Curves.easeOutCubic,
+                style: TextStyle(
+                  color: isSelected
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
+                ),
+                child: IconTheme(
+                  data: IconThemeData(
+                    color: isSelected
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant,
+                    size: kFloatingNavIconSize,
+                  ),
+                  child: destination.icon,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: kFloatingNavLabelSpacing),
+              AnimatedDefaultTextStyle(
+                duration: kSegmentIndicatorDuration,
+                curve: Curves.easeOutCubic,
+                style: TextStyle(
+                  fontSize: kFloatingNavLabelFontSize,
+                  color: isSelected
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                ),
+                child: Text((destination.label as Text).data ?? ''),
+              ),
+            ],
+          ),
         ),
       ),
     );

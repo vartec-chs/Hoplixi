@@ -26,6 +26,9 @@ class _IconManagerScreenState extends ConsumerState<IconManagerScreen> {
     _scrollController.dispose();
     super.dispose();
   }
+  bool _isMobileLayout(BuildContext context) {
+    return MediaQuery.sizeOf(context).width > 700.0;
+  }
 
   void _refresh() {
     final notifier = ref.read(iconListProvider.notifier);
@@ -56,21 +59,23 @@ class _IconManagerScreenState extends ConsumerState<IconManagerScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'iconManagerFab',
-        onPressed: () {
-          final result = context.push<bool>(
-            AppRoutesPaths.iconAddForEntity(widget.entity),
-          );
+      floatingActionButton: _isMobileLayout(context)
+          ? FloatingActionButton(
+              heroTag: 'iconManagerFab',
+              onPressed: () {
+                final result = context.push<bool>(
+                  AppRoutesPaths.iconAddForEntity(widget.entity),
+                );
 
-          result.then((added) {
-            if (added == true) {
-              _refresh();
-            }
-          });
-        },
-        child: const Icon(Icons.add),
-      ),
+                result.then((added) {
+                  if (added == true) {
+                    _refresh();
+                  }
+                });
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 }

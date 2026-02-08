@@ -3,7 +3,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/managers/tags_manager/providers/tag_filter_provider.dart';
+import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
@@ -292,9 +292,7 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
         await tagDao.updateTag(widget.tagId!, dto);
 
         // Уведомляем об обновлении тега
-        ref
-            .read(tagFilterProvider.notifier)
-            .notifyTagUpdated(tagId: widget.tagId);
+        ref.read(managerRefreshTriggerProvider.notifier).triggerTagRefresh();
 
         if (mounted) {
           Toaster.success(title: 'Тег успешно обновлен');
@@ -309,12 +307,10 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
           color: colorHex,
         );
 
-        final createdTagId = await tagDao.createTag(dto);
+        await tagDao.createTag(dto);
 
         // Уведомляем о создании тега
-        ref
-            .read(tagFilterProvider.notifier)
-            .notifyTagAdded(tagId: createdTagId);
+        ref.read(managerRefreshTriggerProvider.notifier).triggerTagRefresh();
 
         if (mounted) {
           Toaster.success(title: 'Тег успешно создан');

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/dto/icon_dto.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
@@ -373,6 +374,9 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
 
         await iconDao.updateIcon(widget.iconId!, dto);
 
+        // Уведомляем об обновлении иконки
+        ref.read(managerRefreshTriggerProvider.notifier).triggerIconRefresh();
+
         if (mounted) {
           Toaster.success(title: 'Иконка успешно обновлена');
           widget.onSuccess?.call();
@@ -387,6 +391,9 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
         );
 
         await iconDao.createIcon(dto);
+
+        // Уведомляем о создании иконки
+        ref.read(managerRefreshTriggerProvider.notifier).triggerIconRefresh();
 
         if (mounted) {
           Toaster.success(title: 'Иконка успешно создана');

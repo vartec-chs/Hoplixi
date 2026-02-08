@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/managers/category_manager/providers/category_filter_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/pickers/icon_picker/icon_picker_button.dart';
 import 'package:hoplixi/main_store/models/dto/category_dto.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
@@ -334,8 +334,8 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
 
         // Уведомляем об обновлении категории
         ref
-            .read(categoryFilterProvider.notifier)
-            .notifyCategoryUpdated(categoryId: widget.categoryId);
+            .read(managerRefreshTriggerProvider.notifier)
+            .triggerCategoryRefresh();
 
         if (mounted) {
           Toaster.success(title: 'Категория успешно обновлена');
@@ -352,12 +352,12 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
           iconId: _iconId,
         );
 
-        final createdCategoryId = await categoryDao.createCategory(dto);
+        await categoryDao.createCategory(dto);
 
         // Уведомляем о создании категории
         ref
-            .read(categoryFilterProvider.notifier)
-            .notifyCategoryAdded(categoryId: createdCategoryId);
+            .read(managerRefreshTriggerProvider.notifier)
+            .triggerCategoryRefresh();
 
         if (mounted) {
           Toaster.success(title: 'Категория успешно создана');

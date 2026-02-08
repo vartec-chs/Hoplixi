@@ -22,4 +22,7 @@ class MainConstants {
 
   // Минимальное количество использований для считания записи популярной
   static const int popularItemThreshold = 100;
+
+  static const double kMobileBreakpoint = 700.0;
+  static const double kDesktopBreakpoint = 1000.0;
 }

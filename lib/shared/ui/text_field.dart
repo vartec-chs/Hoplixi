@@ -94,8 +94,6 @@ InputDecoration primaryInputDecoration(
 }) {
   final theme = Theme.of(context);
   final fillColor = AppColors.getInputFieldBackgroundColor(context);
-
-  final effectiveBorderRadius = borderRadius ?? defaultBorderRadiusValue;
   return InputDecoration(
     labelText: labelText,
     hintText: hintText,
@@ -135,9 +133,6 @@ InputDecoration primaryInputDecoration(
     suffixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
 
     // focusColor: theme.colorScheme.primary,
-    labelStyle: (errorText != null || error != null)
-        ? TextStyle(color: theme.colorScheme.error, fontSize: 14)
-        : TextStyle(color: theme.colorScheme.onSurface, fontSize: 14),
     hintStyle: TextStyle(
       fontSize: 14,
       color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
@@ -200,11 +195,7 @@ InputDecoration primaryInputDecoration(
             color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             fontSize: 14,
           )
-        : (errorText != null || error != null)
-        ? TextStyle(color: theme.colorScheme.error, fontSize: 14)
-        : isFocused
-        ? TextStyle(color: theme.colorScheme.primary, fontSize: 14)
-        : TextStyle(color: theme.colorScheme.onSurface, fontSize: 14),
+        : null, // Allow Flutter to handle labelStyle for enabled state
     hintStyle: !enabled
         ? TextStyle(
             fontSize: 14,
