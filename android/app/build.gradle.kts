@@ -17,7 +17,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.hoplixi.app"
     compileSdk = 36
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "29.0.13113456 rc1"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
