@@ -339,7 +339,7 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
                       hintText: hasValue ? null : widget.hintText,
                       enabled: widget.enabled,
                       isFocused: isFocused,
-                      prefixIcon: Icon(LucideIcons.folder),
+                      prefixIcon: const Icon(LucideIcons.folder),
                       suffixIcon: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [

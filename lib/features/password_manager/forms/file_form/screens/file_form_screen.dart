@@ -287,6 +287,7 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                           NotePickerField(
                             selectedNoteId: state.noteId,
                             selectedNoteName: _noteName,
+                             hintText: 'Выберите заметку',
                             onNoteSelected: (noteId, noteName) {
                               ref
                                   .read(fileFormProvider.notifier)

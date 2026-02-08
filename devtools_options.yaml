@@ -3,3 +3,5 @@ documentation: https://docs.flutter.dev/tools/devtools/extensions#configure-exte
 extensions:
   - drift: true
   - hive_ce: true
+  - get_it: true
+  - shared_preferences: true

@@ -66,7 +66,7 @@ const double kFloatingNavShadowBlurRadius = 20.0;
 const double kFloatingNavShadowOpacity = 0.12;
 const double kFloatingNavShadowOffsetY = 4.0;
 const double kFloatingNavItemBorderRadius = 16.0;
-const double kFloatingNavItemPaddingH = 12.0;
+const double kFloatingNavItemPaddingH = 8.0;
 const double kFloatingNavItemPaddingV = 6.0;
 const double kFloatingNavIconSize = 22.0;
 const double kFloatingNavLabelFontSize = 10.0;
@@ -75,8 +75,8 @@ const double kFloatingNavFabBottomOffset = 12.0;
 
 // Segment indicator
 const Duration kSegmentIndicatorDuration = Duration(milliseconds: 300);
-const double kSegmentIndicatorVerticalPadding = 8.0;
-const double kSegmentIndicatorHorizontalPadding = 8.0;
+const double kSegmentIndicatorVerticalPadding = 6.0;
+const double kSegmentIndicatorHorizontalPadding = 6.0;
 
 // Animation intervals
 const double kFadeAnimationIntervalStart = 0.1;
@@ -477,7 +477,9 @@ class _DashboardLayoutState extends State<DashboardLayout>
             Positioned(
               bottom: showBottomNav && UniversalPlatform.isDesktop
                   ? kFloatingNavFabBottomOffset + kFloatingNavBarHeight + 5
-                  : systemPadding.bottom + kFloatingNavFabBottomOffset,
+                  : systemPadding.bottom +
+                        kFloatingNavFabBottomOffset +
+                        kFloatingNavBarHeight,
               left: null,
               right: 0,
               child: Padding(
@@ -799,7 +801,7 @@ class _FloatingNavBar extends StatelessWidget {
                       color: colorScheme.primaryContainer.withValues(
                         alpha: 0.1,
                       ),
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(20),
                     ),
                   ),
                 ),

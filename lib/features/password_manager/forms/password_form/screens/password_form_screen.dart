@@ -367,6 +367,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                           NotePickerField(
                             selectedNoteId: state.noteId,
                             selectedNoteName: _noteName,
+                            hintText: 'Выберите заметку',
                             onNoteSelected: (noteId, noteName) {
                               ref
                                   .read(passwordFormProvider.notifier)

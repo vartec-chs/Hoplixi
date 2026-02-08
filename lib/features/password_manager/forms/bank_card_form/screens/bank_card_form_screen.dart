@@ -624,6 +624,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                           NotePickerField(
                             selectedNoteId: state.noteId,
                             selectedNoteName: _noteName,
+                             hintText: 'Выберите заметку',
                             onNoteSelected: (noteId, noteName) {
                               ref
                                   .read(bankCardFormProvider.notifier)

@@ -469,6 +469,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
           NotePickerField(
             selectedNoteId: state.noteId,
             selectedNoteName: _noteName,
+            hintText: 'Выберите заметку',
             onNoteSelected: (noteId, noteName) {
               ref.read(otpFormProvider.notifier).setNoteId(noteId);
             },
