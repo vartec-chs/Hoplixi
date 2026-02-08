@@ -316,13 +316,10 @@ class _CategorySectionState extends ConsumerState<_CategorySection> {
                     ? Text('${category.itemsCount} элементов')
                     : null,
                 secondary: category.color != null
-                    ? Container(
-                        width: 18,
-                        height: 18,
-                        decoration: BoxDecoration(
-                          color: parseColor(category.color, context),
-                          shape: BoxShape.circle,
-                        ),
+                    ? Icon(
+                        Icons.folder,
+                        size: 18,
+                        color: parseColor(category.color, context),
                       )
                     : null,
                 dense: true,
@@ -461,13 +458,10 @@ class _TagSectionState extends ConsumerState<_TagSection> {
                     ? Text('${tag.itemsCount} элементов')
                     : null,
                 secondary: tag.color != null
-                    ? Container(
-                        width: 18,
-                        height: 18,
-                        decoration: BoxDecoration(
-                          color: parseColor(tag.color, context),
-                          shape: BoxShape.circle,
-                        ),
+                    ? Icon(
+                        Icons.tag,
+                        size: 18,
+                        color: parseColor(tag.color, context),
                       )
                     : null,
                 dense: true,

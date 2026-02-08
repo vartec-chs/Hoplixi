@@ -1,12 +1,11 @@
-import 'package:hoplixi/core/theme/clippers/fancy_theme_switcher_clippers.dart';
-
-import 'theme_provider.dart';
-import 'theme.dart';
-import 'clippers/wave_theme_switcher_clipper.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:animated_theme_switcher/animated_theme_switcher.dart'
     as animated_theme;
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'clippers/wave_theme_switcher_clipper.dart';
+import 'theme.dart';
+import 'theme_provider.dart';
 
 /// Современный виджет для переключения темы приложения
 class ThemeSwitcher extends ConsumerWidget {
@@ -57,7 +56,7 @@ class ThemeSwitcher extends ConsumerWidget {
             MediaQuery.of(context).platformBrightness == Brightness.dark);
 
     return animated_theme.ThemeSwitcher.switcher(
-      clipper: const PolygonThemeSwitcherClipper(),
+      clipper: const animated_theme.ThemeSwitcherBoxClipper(),
       builder: (context, switcher) {
         return GestureDetector(
           onTap: () async {
@@ -309,12 +308,13 @@ class ThemeSwitcher extends ConsumerWidget {
             MediaQuery.of(context).platformBrightness == Brightness.dark);
 
     return animated_theme.ThemeSwitcher.switcher(
-      clipper: const WaveThemeSwitcherClipper(
-        waveCount: 8,
-        amplitude: 50.0,
-        spiralEffect: true,
-        starEffect: true,
-      ),
+      // clipper: const WaveThemeSwitcherClipper(
+      //   waveCount: 8,
+      //   amplitude: 50.0,
+      //   spiralEffect: true,
+      //   starEffect: true,
+      // ),
+      clipper: const animated_theme.ThemeSwitcherCircleClipper(),
       builder: (context, switcher) {
         return GestureDetector(
           onTap: () async {
@@ -491,7 +491,10 @@ class SettingsThemeSwitcher extends ConsumerWidget {
       leading: Icon(_getThemeIcon(themeMode, context)),
       title: const Text('Тема'),
       subtitle: Text(_getThemeText(themeMode)),
-      trailing: const ThemeSwitcher(size: 40, style: ThemeSwitcherStyle.segmented),
+      trailing: const ThemeSwitcher(
+        size: 40,
+        style: ThemeSwitcherStyle.segmented,
+      ),
     );
   }
 

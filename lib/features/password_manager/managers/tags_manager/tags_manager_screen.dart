@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
@@ -12,6 +13,7 @@ import 'package:hoplixi/shared/ui/text_field.dart';
 
 import 'providers/tag_filter_provider.dart';
 import 'providers/tag_pagination_provider.dart';
+import 'widgets/tag_card.dart';
 
 class TagsManagerScreen extends ConsumerStatefulWidget {
   final EntityType entity;
@@ -135,7 +137,7 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
                 );
               }
               return SliverPadding(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.all(16),
                 sliver: SliverList.separated(
                   itemBuilder: (context, index) {
                     if (index == state.items.length && state.hasMore) {
@@ -151,15 +153,36 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
                     if (index >= state.items.length) {
                       return null;
                     }
-                    return _buildTagCard(
-                      context,
-                      ref,
-                      state.items[index],
-                      () => ref.read(tagListProvider.notifier).refresh(),
+                    final tag = state.items[index];
+                    return TagCard(
+                      tag: tag,
+                      onTap: () {
+                        context
+                            .push<bool>(
+                              AppRoutesPaths.tagsEdit(widget.entity, tag.id),
+                            )
+                            .then((edited) {
+                              if (edited == true) {
+                                ref.read(tagListProvider.notifier).refresh();
+                              }
+                            });
+                      },
+                      onEdit: () {
+                        context
+                            .push<bool>(
+                              AppRoutesPaths.tagsEdit(widget.entity, tag.id),
+                            )
+                            .then((edited) {
+                              if (edited == true) {
+                                ref.read(tagListProvider.notifier).refresh();
+                              }
+                            });
+                      },
+                      onDelete: () => _handleDeleteTag(context, ref, tag),
                     );
                   },
                   separatorBuilder: (context, index) =>
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                   itemCount: state.hasMore
                       ? state.items.length + 1
                       : state.items.length,
@@ -200,7 +223,7 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
                     ref.read(tagListProvider.notifier).refresh();
                   }
                 });
-                            },
+              },
               child: const Icon(Icons.add),
             )
           : null,
@@ -244,66 +267,6 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
     );
   }
 
-  Widget _buildTagCard(
-    BuildContext context,
-    WidgetRef ref,
-    TagCardDto tag,
-    VoidCallback onRefresh,
-  ) {
-    final colorValue = int.tryParse(tag.color ?? 'FFFFFF', radix: 16);
-    final color = colorValue != null
-        ? Color(0xFF000000 | colorValue)
-        : Theme.of(context).colorScheme.primary;
-
-    return Card(
-      margin: EdgeInsets.zero,
-      child: ListTile(
-        leading: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Center(child: Icon(Icons.label, color: color)),
-        ),
-        title: Text(tag.name),
-        subtitle: Text('Тип: ${tag.type} • Элементов: ${tag.itemsCount}'),
-        trailing: PopupMenuButton(
-          itemBuilder: (context) => [
-            const PopupMenuItem(value: 'edit', child: Text('Редактировать')),
-            const PopupMenuItem(value: 'delete', child: Text('Удалить')),
-          ],
-          onSelected: (value) async {
-            if (value == 'edit') {
-              final result = context.push<bool>(
-                AppRoutesPaths.tagsEdit(widget.entity, tag.id),
-              );
-              result.then((edited) {
-                if (edited == true) {
-                  onRefresh();
-                }
-              });
-                        } else if (value == 'delete') {
-              await _handleDeleteTag(context, ref, tag);
-            }
-          },
-        ),
-        onTap: () {
-          final result = context.push<bool>(
-            AppRoutesPaths.tagsEdit(widget.entity, tag.id),
-          );
-
-          result.then((edited) {
-            if (edited == true) {
-              onRefresh();
-            }
-          });
-                },
-      ),
-    );
-  }
-
   Future<void> _handleDeleteTag(
     BuildContext context,
     WidgetRef ref,
@@ -315,14 +278,16 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
         title: const Text('Удалить тег?'),
         content: Text('Вы уверены, что хотите удалить тег "${tag.name}"?'),
         actions: [
-          TextButton(
+          SmoothButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Отмена'),
+            label: 'Отмена',
+            variant: .normal,
+            type: .text,
           ),
-          FilledButton(
+          SmoothButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Удалить'),
+            variant: .error,
+            label: 'Удалить',
           ),
         ],
       ),
@@ -335,19 +300,20 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
 
         // Уведомляем об удалении тега
         ref.read(managerRefreshTriggerProvider.notifier).triggerTagRefresh();
+        ref.read(tagListProvider.notifier).refresh();
 
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Тег "${tag.name}" успешно удален')),
+          Toaster.success(
+            title: 'Тег удален',
+            description: 'Тег "${tag.name}" успешно удален.',
           );
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Ошибка удаления: $e'),
-              backgroundColor: Colors.red,
-            ),
+          Toaster.error(
+            title: 'Ошибка удаления',
+            description:
+                'Не удалось удалить тег "${tag.name}". Попробуйте еще раз.',
           );
         }
       }

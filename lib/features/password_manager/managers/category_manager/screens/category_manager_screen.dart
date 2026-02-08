@@ -13,6 +13,7 @@ import 'package:hoplixi/shared/ui/text_field.dart';
 
 import '../providers/category_filter_provider.dart';
 import '../providers/category_pagination_provider.dart';
+import '../widgets/category_card.dart';
 
 class CategoryManagerScreen extends ConsumerStatefulWidget {
   const CategoryManagerScreen({super.key, required this.entity});
@@ -140,33 +141,92 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
                 );
               }
               return SliverPadding(
-                padding: const EdgeInsets.all(12),
-                sliver: SliverList.separated(
-                  itemBuilder: (context, index) {
-                    if (index == state.items.length && state.hasMore) {
-                      // Загружаем следующую страницу при достижении конца
-                      Future.microtask(
-                        () =>
-                            ref.read(categoryListProvider.notifier).loadMore(),
-                      );
-                      return const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    }
-                    if (index >= state.items.length) {
-                      return null;
-                    }
-                    final category = state.items[index];
-                    return _buildCategoryCard(context, category, () {
-                      ref.read(categoryListProvider.notifier).refresh();
-                    });
+                padding: const EdgeInsets.all(16),
+                sliver: SliverLayoutBuilder(
+                  builder: (context, constraints) {
+                    // Адаптивное количество колонок в зависимости от ширины
+                    final width = constraints.crossAxisExtent;
+                    final crossAxisCount = width < 400
+                        ? 1
+                        : width < 600
+                        ? 2
+                        : width < 900
+                        ? 3
+                        : 4;
+
+                    return SliverGrid(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        mainAxisSpacing: 16,
+                        crossAxisSpacing: 16,
+                        childAspectRatio: 1.1,
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          if (index == state.items.length && state.hasMore) {
+                            // Загружаем следующую страницу при достижении конца
+                            Future.microtask(
+                              () => ref
+                                  .read(categoryListProvider.notifier)
+                                  .loadMore(),
+                            );
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(16),
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          }
+                          if (index >= state.items.length) {
+                            return null;
+                          }
+                          final category = state.items[index];
+                          return CategoryCard(
+                            category: category,
+                            onTap: () {
+                              context
+                                  .push<bool>(
+                                    AppRoutesPaths.categoryEditWithId(
+                                      widget.entity,
+                                      category.id,
+                                    ),
+                                  )
+                                  .then((updated) {
+                                    if (updated == true) {
+                                      ref
+                                          .read(categoryListProvider.notifier)
+                                          .refresh();
+                                    }
+                                  });
+                            },
+                            onEdit: () async {
+                              final result = await context.push<bool>(
+                                AppRoutesPaths.categoryEditWithId(
+                                  widget.entity,
+                                  category.id,
+                                ),
+                              );
+                              if (result == true) {
+                                ref
+                                    .read(categoryListProvider.notifier)
+                                    .refresh();
+                              }
+                            },
+                            onDelete: () => _handleDeleteCategory(
+                              context,
+                              category,
+                              () => ref
+                                  .read(categoryListProvider.notifier)
+                                  .refresh(),
+                            ),
+                          );
+                        },
+                        childCount: state.hasMore
+                            ? state.items.length + 1
+                            : state.items.length,
+                      ),
+                    );
                   },
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 8),
-                  itemCount: state.hasMore
-                      ? state.items.length + 1
-                      : state.items.length,
                 ),
               );
             },
@@ -245,76 +305,6 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
             label: 'Поиск',
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildCategoryCard(
-    BuildContext context,
-    CategoryCardDto category,
-    VoidCallback onRefresh,
-  ) {
-    final colorValue = int.tryParse(category.color ?? 'FFFFFF', radix: 16);
-    final color = colorValue != null
-        ? Color(0xFF000000 | colorValue)
-        : Theme.of(context).colorScheme.primary;
-
-    return Card(
-      child: ListTile(
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Center(
-            child: category.iconId != null
-                ? Icon(Icons.folder, color: color)
-                : Text(
-                    category.name[0].toUpperCase(),
-                    style: TextStyle(
-                      color: color,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-          ),
-        ),
-        title: Text(category.name),
-        subtitle: Text(
-          'Тип: ${category.type} • Элементов: ${category.itemsCount}',
-        ),
-        trailing: PopupMenuButton(
-          itemBuilder: (context) => [
-            const PopupMenuItem(value: 'edit', child: Text('Редактировать')),
-            const PopupMenuItem(value: 'delete', child: Text('Удалить')),
-          ],
-          onSelected: (value) async {
-            if (value == 'edit') {
-              final result = await context.push<bool>(
-                AppRoutesPaths.categoryEditWithId(widget.entity, category.id),
-              );
-
-              if (result == true) {
-                onRefresh();
-              }
-            } else if (value == 'delete') {
-              await _handleDeleteCategory(context, category, onRefresh);
-            }
-          },
-        ),
-        onTap: () {
-          context
-              .push<bool>(
-                AppRoutesPaths.categoryEditWithId(widget.entity, category.id),
-              )
-              .then((updated) {
-                if (updated == true) {
-                  onRefresh();
-                }
-              });
-        },
       ),
     );
   }
