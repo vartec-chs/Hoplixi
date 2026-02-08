@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer.dart';
-import 'package:hoplixi/routing/paths.dart';
 
 import 'dashboard_layout_constants.dart';
 import 'widgets/fab_builder.dart';
@@ -58,6 +56,8 @@ class DesktopDashboardLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final showDrawerAsPanel = screenWidth >= MainConstants.kDesktopBreakpoint;
+    // При широком разрешении левая панель остаётся видимой
+    final isWideScreen = screenWidth >= MainConstants.kWideDesktopBreakpoint;
 
     return Scaffold(
       body: LayoutBuilder(
@@ -69,14 +69,20 @@ class DesktopDashboardLayout extends StatelessWidget {
               const VerticalDivider(width: 1, thickness: 1),
 
               // Левая панель фильтрации для экранов >= 1000px
-              if (showDrawerAsPanel && !isFullCenter) _buildLeftPanel(context),
+              if (showDrawerAsPanel && !isFullCenter)
+                _buildLeftPanel(context, isWideScreen),
 
               // Center content
               Expanded(child: _buildCenterContent(context, showDrawerAsPanel)),
 
               // Анимированная правая панель
               if (!isFullCenter)
-                _buildRightPanel(context, constraints, showDrawerAsPanel),
+                _buildRightPanel(
+                  context,
+                  constraints,
+                  showDrawerAsPanel,
+                  isWideScreen,
+                ),
             ],
           );
         },
@@ -121,7 +127,21 @@ class DesktopDashboardLayout extends StatelessWidget {
     );
   }
 
-  Widget _buildLeftPanel(BuildContext context) {
+  Widget _buildLeftPanel(BuildContext context, bool isWideScreen) {
+    // При широком разрешении панель всегда видна полностью
+    if (isWideScreen) {
+      return Container(
+        width: kLeftPanelWidth,
+        decoration: BoxDecoration(
+          border: Border(
+            right: BorderSide(color: Theme.of(context).dividerColor, width: 1),
+          ),
+        ),
+        child: DashboardDrawerContent(entityType: EntityType.fromId(entity)!),
+      );
+    }
+
+    // При обычном desktop разрешении панель анимируется
     return RepaintBoundary(
       child: AnimatedBuilder(
         animation: panelAnimation,
@@ -211,6 +231,7 @@ class DesktopDashboardLayout extends StatelessWidget {
     BuildContext context,
     BoxConstraints constraints,
     bool showDrawerAsPanel,
+    bool isWideScreen,
   ) {
     return RepaintBoundary(
       child: AnimatedBuilder(
@@ -218,9 +239,11 @@ class DesktopDashboardLayout extends StatelessWidget {
         builder: (context, child) {
           // Вычисляем доступное пространство для центра и правой панели
           const railWidth = kRailWidth;
-          // Левая панель анимируется в противофазе
+          // При широком разрешении левая панель не сворачивается
           final leftPanelWidth = (showDrawerAsPanel && !isFullCenter)
-              ? kLeftPanelWidth * (1.0 - panelAnimation.value)
+              ? isWideScreen
+                    ? kLeftPanelWidth
+                    : kLeftPanelWidth * (1.0 - panelAnimation.value)
               : 0.0;
           final availableWidth =
               constraints.maxWidth - railWidth - leftPanelWidth - kDividerWidth;

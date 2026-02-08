@@ -111,20 +111,37 @@ class MobileDashboardLayout extends StatelessWidget {
             ),
           ),
 
-          // Floating bottom navigation bar
-          if (showBottomNav)
-            Positioned(
-              bottom: UniversalPlatform.isDesktop
-                  ? kBottomNavNotchMargin
-                  : systemPadding.bottom,
-              left: kFloatingNavMarginHorizontal,
-              right: kFloatingNavMarginHorizontal,
-              child: FloatingNavBar(
-                destinations: destinations,
-                selectedIndex: selectedIndex,
-                onItemSelected: onNavItemSelected,
+          // Floating bottom navigation bar с анимацией появления/исчезновения
+          Positioned(
+            bottom: UniversalPlatform.isDesktop
+                ? kBottomNavNotchMargin
+                : systemPadding.bottom,
+            left: kFloatingNavMarginHorizontal,
+            right: kFloatingNavMarginHorizontal,
+            child: IgnorePointer(
+              ignoring: !showBottomNav,
+              child: AnimatedSlide(
+                offset: showBottomNav ? Offset.zero : const Offset(0, 1.5),
+                duration: kScaleAnimationDuration,
+                curve: showBottomNav ? Curves.easeOutCubic : Curves.easeInCubic,
+                child: AnimatedOpacity(
+                  opacity: showBottomNav ? 1.0 : 0.0,
+                  duration: kFadeAnimationDuration,
+                  curve: Curves.easeInOut,
+                  child: AnimatedScale(
+                    scale: showBottomNav ? 1.0 : 0.95,
+                    duration: kScaleAnimationDuration,
+                    curve: showBottomNav ? Curves.easeOutBack : Curves.easeIn,
+                    child: FloatingNavBar(
+                      destinations: destinations,
+                      selectedIndex: selectedIndex,
+                      onItemSelected: onNavItemSelected,
+                    ),
+                  ),
+                ),
               ),
             ),
+          ),
 
           // FAB выше floating nav
           Positioned(

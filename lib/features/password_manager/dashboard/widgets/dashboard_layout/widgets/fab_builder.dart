@@ -4,8 +4,6 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/dashboard/widgets/expandable_fab.dart';
 import 'package:hoplixi/routing/paths.dart';
 
-import '../dashboard_layout_constants.dart';
-
 /// Утилита для построения FAB действий в DashboardLayout.
 ///
 /// Инкапсулирует логику создания FAB actions и навигации.
