@@ -32,6 +32,7 @@
 ///   },
 /// )
 /// ```
+library;
 
 export 'widgets/tag_picker_field.dart';
 

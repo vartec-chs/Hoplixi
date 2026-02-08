@@ -35,14 +35,14 @@ Future<void> setupDI() async {
 }
 
 FlutterSecureStorage setupSecureStorage() {
-  return FlutterSecureStorage(
-    aOptions: const AndroidOptions(encryptedSharedPreferences: true),
-    iOptions: const IOSOptions(
+  return const FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock,
     ),
-    lOptions: const LinuxOptions(),
-    wOptions: const WindowsOptions(),
-    mOptions: const MacOsOptions(),
-    webOptions: const WebOptions(),
+    lOptions: LinuxOptions(),
+    wOptions: WindowsOptions(),
+    mOptions: MacOsOptions(),
+    webOptions: WebOptions(),
   );
 }

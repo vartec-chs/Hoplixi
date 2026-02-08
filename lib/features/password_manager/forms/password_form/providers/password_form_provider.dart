@@ -153,7 +153,7 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     if (value.isEmpty) {
       return 'Пароль обязателен';
     }
-    if (value.length < 1) {
+    if (value.isEmpty) {
       return 'Пароль не может быть пустым';
     }
     return null;

@@ -174,8 +174,9 @@ class SmartConverter {
               buffer.write(_base32Alphabet[digit]);
             } else {
               buffer.write(_base32Alphabet[digit]);
-              if (addPadding)
+              if (addPadding) {
                 buffer.write('='); // pad 7th produced, 8th missing
+              }
             }
           } else {
             buffer.write(_base32Alphabet[digit]);
@@ -224,7 +225,9 @@ class SmartConverter {
     if (addPadding) {
       // pad to multiple of 8 chars
       final padNeeded = (8 - (buffer.length % 8)) % 8;
-      for (var i = 0; i < padNeeded; i++) buffer.write('=');
+      for (var i = 0; i < padNeeded; i++) {
+        buffer.write('=');
+      }
     }
 
     return buffer.toString();

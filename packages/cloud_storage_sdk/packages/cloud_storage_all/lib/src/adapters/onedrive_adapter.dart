@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:oauth2restclient/oauth2restclient.dart';
 import 'package:onedrive_api/onedrive_rest_api.dart';
 
 import '../cloud_storage_api.dart';

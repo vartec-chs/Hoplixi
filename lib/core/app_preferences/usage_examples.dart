@@ -11,15 +11,15 @@ void exampleUsage() async {
 
   // Инициализация унифицированного сервиса
   final storage = await AppStorageService.init(
-    secureStorage: FlutterSecureStorage(
-      aOptions: const AndroidOptions(encryptedSharedPreferences: true),
-      iOptions: const IOSOptions(
+    secureStorage: const FlutterSecureStorage(
+      aOptions: AndroidOptions(encryptedSharedPreferences: true),
+      iOptions: IOSOptions(
         accessibility: KeychainAccessibility.first_unlock,
       ),
-      lOptions: const LinuxOptions(),
-      wOptions: const WindowsOptions(),
-      mOptions: const MacOsOptions(),
-      webOptions: const WebOptions(),
+      lOptions: LinuxOptions(),
+      wOptions: WindowsOptions(),
+      mOptions: MacOsOptions(),
+      webOptions: WebOptions(),
     ),
   );
 

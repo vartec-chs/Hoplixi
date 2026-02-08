@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:file_crypto/services/encryptor.dart';
-import 'package:file_crypto/models/exceptions.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 

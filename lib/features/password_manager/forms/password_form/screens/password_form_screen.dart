@@ -118,15 +118,19 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
     // Синхронизация контроллеров с состоянием при загрузке данных
     if (state.isEditMode && !state.isLoading) {
       if (_nameController.text != state.name) _nameController.text = state.name;
-      if (_passwordController.text != state.password)
+      if (_passwordController.text != state.password) {
         _passwordController.text = state.password;
-      if (_loginController.text != state.login)
+      }
+      if (_loginController.text != state.login) {
         _loginController.text = state.login;
-      if (_emailController.text != state.email)
+      }
+      if (_emailController.text != state.email) {
         _emailController.text = state.email;
+      }
       if (_urlController.text != state.url) _urlController.text = state.url;
-      if (_descriptionController.text != state.description)
+      if (_descriptionController.text != state.description) {
         _descriptionController.text = state.description;
+      }
     }
 
     // Загрузка имени заметки
@@ -171,7 +175,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
           else
             IconButton(icon: const Icon(Icons.save), onPressed: _handleSave),
         ],
-        leading: FormCloseButton(),
+        leading: const FormCloseButton(),
       ),
 
       body: SafeArea(
@@ -193,7 +197,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                               labelText: 'Название *',
                               hintText: 'Введите название',
                               errorText: state.nameError,
-                              prefixIcon: Icon(LucideIcons.tag),
+                              prefixIcon: const Icon(LucideIcons.tag),
                             ),
                             onChanged: (value) {
                               ref
@@ -212,7 +216,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                               labelText: 'Пароль *',
                               hintText: 'Введите пароль',
                               errorText: state.passwordError,
-                              prefixIcon: Icon(LucideIcons.lock),
+                              prefixIcon: const Icon(LucideIcons.lock),
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _obscurePassword
@@ -242,7 +246,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                               labelText: 'Логин',
                               hintText: 'Введите логин',
                               errorText: state.loginError,
-                              prefixIcon: Icon(LucideIcons.user),
+                              prefixIcon: const Icon(LucideIcons.user),
                             ),
                             onChanged: (value) {
                               ref
@@ -260,7 +264,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                               labelText: 'Email',
                               hintText: 'Введите email',
                               errorText: state.emailError,
-                              prefixIcon: Icon(LucideIcons.mail),
+                              prefixIcon: const Icon(LucideIcons.mail),
                             ),
                             keyboardType: TextInputType.emailAddress,
                             onChanged: (value) {
@@ -289,7 +293,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                               labelText: 'URL',
                               hintText: 'https://example.com',
                               errorText: state.urlError,
-                              prefixIcon: Icon(LucideIcons.globe),
+                              prefixIcon: const Icon(LucideIcons.globe),
                             ),
                             keyboardType: TextInputType.url,
                             onChanged: (value) {
@@ -340,7 +344,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                               context,
                               labelText: 'Описание',
                               hintText: 'Краткое описание',
-                              prefixIcon: Icon(LucideIcons.fileText),
+                              prefixIcon: const Icon(LucideIcons.fileText),
                             ),
                             maxLines: 2,
                             onChanged: (value) {

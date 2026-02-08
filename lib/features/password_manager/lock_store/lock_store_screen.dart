@@ -197,7 +197,7 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
                   loading: _isLoading,
                   type: SmoothButtonType.filled,
                   variant: SmoothButtonVariant.normal,
-                  icon: Icon(Icons.lock_open),
+                  icon: const Icon(Icons.lock_open),
                 ),
                 const SizedBox(height: 16),
                 SmoothButton(
@@ -205,7 +205,7 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
                   onPressed: _goHome,
                   type: SmoothButtonType.text,
                   variant: SmoothButtonVariant.normal,
-                  icon: Icon(Icons.home),
+                  icon: const Icon(Icons.home),
                 ),
               ],
             ),

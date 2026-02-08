@@ -1,4 +1,4 @@
-library dropbox_api;
+library;
 
 export 'package:oauth2restclient/oauth2restclient.dart';
 

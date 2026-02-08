@@ -103,8 +103,8 @@ class CategoryPickerModal {
       isTopBarLayerAlwaysVisible: true,
       mainContentSliversBuilder: (context) => [
         // Фильтры (только поле поиска для множественного выбора)
-        SliverToBoxAdapter(
-          child: const CategoryPickerFilters(hideTypeFilter: true),
+        const SliverToBoxAdapter(
+          child: CategoryPickerFilters(hideTypeFilter: true),
         ),
         // Контент с состоянием
         _MultipleCategoryPickerContent(
@@ -572,8 +572,8 @@ class _MultipleCategoryPickerContentState
                 selectedCount: _selectedCategoryIds.length,
               ),
             ),
-          SliverFillRemaining(
-            child: const Center(child: CircularProgressIndicator()),
+          const SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
           ),
         ],
       ),

@@ -118,7 +118,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           CustomScrollView(
             controller: _scrollController,
-            scrollBehavior: ScrollBehavior().copyWith(
+            scrollBehavior: const ScrollBehavior().copyWith(
               overscroll: false,
               scrollbars: false,
 
@@ -151,7 +151,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         : 12,
                   ),
 
-                  child: SafeArea(child: _buildContentSection(), top: false),
+                  child: SafeArea(top: false, child: _buildContentSection()),
                 ),
               ),
             ],

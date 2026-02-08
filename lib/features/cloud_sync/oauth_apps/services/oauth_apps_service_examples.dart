@@ -143,13 +143,13 @@ Future<void> exampleExportImport(OAuthAppsService service) async {
 
   // Импорт приложений
   final appsToImport = <String, OauthApps>{
-    'app1': OauthApps(
+    'app1': const OauthApps(
       id: 'app1',
       name: 'App 1',
       type: OauthAppsType.google,
       clientId: 'client-id-1',
     ),
-    'app2': OauthApps(
+    'app2': const OauthApps(
       id: 'app2',
       name: 'App 2',
       type: OauthAppsType.onedrive,
@@ -200,7 +200,7 @@ Future<void> exampleErrorHandling(OAuthAppsService service) async {
   );
 
   // Попытка создать приложение с пустым ID
-  final invalidApp = OauthApps(
+  final invalidApp = const OauthApps(
     id: '',
     name: 'Invalid App',
     type: OauthAppsType.google,
@@ -316,14 +316,14 @@ Future<void> exampleFullLifecycle(OAuthAppsService service) async {
 
   // 2. Создание встроенных приложений
   final builtinApps = [
-    OauthApps(
+    const OauthApps(
       id: 'google-builtin',
       name: 'Google (встроенное)',
       type: OauthAppsType.google,
       clientId: 'builtin-google-client-id',
       isBuiltin: true,
     ),
-    OauthApps(
+    const OauthApps(
       id: 'dropbox-builtin',
       name: 'Dropbox (встроенное)',
       type: OauthAppsType.dropbox,

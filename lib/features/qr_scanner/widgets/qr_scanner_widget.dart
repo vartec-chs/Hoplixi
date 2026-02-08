@@ -233,7 +233,7 @@ class QrScannerWidget extends StatelessWidget {
                       );
                     },
                   ),
-                  Expanded(child: QrScannerWithImageScreen()),
+                  const Expanded(child: QrScannerWithImageScreen()),
                 ],
               )
             : (_) => const QrScannerWithImageScreen(),

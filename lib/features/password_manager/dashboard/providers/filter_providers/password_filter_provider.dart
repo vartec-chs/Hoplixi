@@ -359,10 +359,10 @@ class PasswordFilterNotifier extends Notifier<PasswordsFilter> {
   }) {
     return state.copyWith(
       base: base ?? state.base,
-      name: name != null ? name : state.name,
-      login: login != null ? login : state.login,
-      email: email != null ? email : state.email,
-      url: url != null ? url : state.url,
+      name: name ?? state.name,
+      login: login ?? state.login,
+      email: email ?? state.email,
+      url: url ?? state.url,
       hasDescription: hasDescription ?? state.hasDescription,
       hasNotes: hasNotes ?? state.hasNotes,
       hasUrl: hasUrl ?? state.hasUrl,

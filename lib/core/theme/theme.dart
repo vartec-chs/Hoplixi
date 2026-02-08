@@ -47,7 +47,7 @@ abstract final class AppTheme {
 
     final base = bs.copyWith(
       dialogTheme: bs.dialogTheme.copyWith(
-        insetPadding: EdgeInsets.symmetric(horizontal: 12),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 12),
       ),
       cardTheme: bs.cardTheme.copyWith(margin: EdgeInsets.zero),
       elevatedButtonTheme: ButtonThemes.adaptiveElevatedButtonTheme(
@@ -63,7 +63,7 @@ abstract final class AppTheme {
       listTileTheme: ComponentThemes.adaptiveListTileTheme(),
       textTheme: GoogleFonts.nunitoTextTheme(bs.textTheme),
       extensions: <ThemeExtension>[
-        WoltModalSheetThemeData(
+        const WoltModalSheetThemeData(
           backgroundColor: Color(0xFFF5F5F5),
           surfaceTintColor: Colors.transparent,
           useSafeArea: true,
@@ -98,7 +98,7 @@ abstract final class AppTheme {
 
     final base = bs.copyWith(
       dialogTheme: bs.dialogTheme.copyWith(
-        insetPadding: EdgeInsets.symmetric(horizontal: 12),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 12),
       ),
       cardTheme: bs.cardTheme.copyWith(margin: EdgeInsets.zero),
       elevatedButtonTheme: ButtonThemes.adaptiveElevatedButtonTheme(
@@ -114,7 +114,7 @@ abstract final class AppTheme {
       listTileTheme: ComponentThemes.adaptiveListTileTheme(),
       textTheme: GoogleFonts.nunitoTextTheme(bs.textTheme),
       extensions: <ThemeExtension>[
-        WoltModalSheetThemeData(
+        const WoltModalSheetThemeData(
           backgroundColor: AppColors.darkSurface,
           surfaceTintColor: Colors.transparent,
           useSafeArea: true,

@@ -1,5 +1,5 @@
 /// Модуль настроек приложения
-library settings;
+library;
 
 export 'screens/settings_screen.dart';
 export 'providers/settings_provider.dart';

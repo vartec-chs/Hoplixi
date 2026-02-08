@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:dotenv/dotenv.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
-import 'package:oauth2restclient/oauth2restclient.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:yandex_drive_api/yandex_drive_api.dart';
 
@@ -96,9 +95,7 @@ class _HomePageState extends State<HomePage> {
         }
       }
 
-      if (token == null) {
-        token = await account.newLogin(serviceName);
-      }
+      token ??= await account.newLogin(serviceName);
 
       if (token != null) {
         final client = await account.createClient(token);
@@ -179,16 +176,16 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _uploadFile() async {
     if (_yandexDrive == null ||
-        _selectedFile == null ||
-        _selectedFile!.name == null)
+        _selectedFile == null) {
       return;
+    }
 
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final path = 'disk:/${_selectedFile!.name!}';
+      final path = 'disk:/${_selectedFile!.name}';
       final link = await _yandexDrive!.getUploadLink(path);
       final file = File(_selectedFile!.path!);
       final response = await http.put(

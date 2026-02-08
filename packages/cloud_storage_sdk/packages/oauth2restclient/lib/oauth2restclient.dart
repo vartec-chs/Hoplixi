@@ -1,4 +1,4 @@
-library oauth2restclient;
+library;
 
 export 'src/oauth2_account.dart';
 export 'src/oauth2_cancel_token.dart';

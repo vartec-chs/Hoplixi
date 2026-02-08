@@ -9,7 +9,7 @@ import 'passwords.dart';
 @DataClassName('OtpsData')
 class Otps extends Table {
   // Primary key
-  TextColumn get id => text().clientDefault(() => Uuid().v4())(); // UUID v4
+  TextColumn get id => text().clientDefault(() => const Uuid().v4())(); // UUID v4
 
   // Foreign keys
   TextColumn get passwordId => text().nullable().references(

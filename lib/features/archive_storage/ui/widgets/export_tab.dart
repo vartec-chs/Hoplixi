@@ -75,7 +75,7 @@ class _ExportTabState extends ConsumerState<ExportTab> {
                     )
                   else
                     DropdownButtonFormField(
-                      value: state.selectedStore,
+                      initialValue: state.selectedStore,
                       decoration: primaryInputDecoration(
                         context,
                         labelText: 'Хранилище',

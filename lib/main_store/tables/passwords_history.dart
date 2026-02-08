@@ -4,7 +4,7 @@ import 'package:uuid/uuid.dart';
 
 @DataClassName('PasswordsHistoryData')
 class PasswordsHistory extends Table {
-  TextColumn get id => text().clientDefault(() => Uuid().v4())(); // UUID v4
+  TextColumn get id => text().clientDefault(() => const Uuid().v4())(); // UUID v4
   TextColumn get originalPasswordId => text()(); // ID of original password
   TextColumn get action => textEnum<ActionInHistory>().withLength(
     min: 1,

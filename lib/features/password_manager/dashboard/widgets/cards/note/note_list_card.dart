@@ -183,7 +183,7 @@ class _NoteListCardState extends ConsumerState<NoteListCard>
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceVariant,
+                  color: theme.colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(Icons.note, color: theme.colorScheme.onSurface),

@@ -139,7 +139,7 @@ class SmoothButton extends StatelessWidget {
     final variantColor = _getVariantColor(context);
     final theme = Theme.of(context);
 
-    final effectiveStyle = (style ?? ButtonStyle()).copyWith(
+    final effectiveStyle = (style ?? const ButtonStyle()).copyWith(
       padding: WidgetStateProperty.all(_padding),
     );
 

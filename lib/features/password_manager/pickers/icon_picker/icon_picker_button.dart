@@ -142,7 +142,7 @@ class _IconPickerButtonState extends ConsumerState<IconPickerButton> {
                   customBorder: const CircleBorder(),
                   child: Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: Colors.redAccent,
                       shape: BoxShape.circle,
                     ),

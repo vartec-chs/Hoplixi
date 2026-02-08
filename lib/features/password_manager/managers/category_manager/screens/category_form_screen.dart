@@ -219,7 +219,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                   else
                     // В режиме создания - dropdown
                     DropdownButtonFormField<CategoryType>(
-                      value: _selectedType,
+                      initialValue: _selectedType,
                       decoration: primaryInputDecoration(
                         context,
                         labelText: 'Тип категории',

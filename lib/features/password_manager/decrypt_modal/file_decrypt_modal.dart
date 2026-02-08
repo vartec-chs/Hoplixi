@@ -193,7 +193,7 @@ class _FileDecryptContentState extends ConsumerState<_FileDecryptContent> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          NotificationCard(
+          const NotificationCard(
             type: .warning,
             text:
                 'Не закрывайте это окно, пока не закончите работу с расшифрованным файлом для безопасности. В противном случае временный файл будет принудительно удален.',
@@ -268,9 +268,9 @@ class _FileDecryptContentState extends ConsumerState<_FileDecryptContent> {
             child: _isFileModified
                 ? Column(
                     children: [
-                      Divider(),
+                      const Divider(),
                       const SizedBox(height: 8),
-                      NotificationCard(
+                      const NotificationCard(
                         type: .info,
                         text:
                             'Файл был изменен. Протяните "Обновить файл", чтобы сохранить изменения в хранилище.',
@@ -283,11 +283,11 @@ class _FileDecryptContentState extends ConsumerState<_FileDecryptContent> {
                         showLoading: _isUpdating,
                       ),
                       const SizedBox(height: 12),
-                      Divider(),
+                      const Divider(),
                       const SizedBox(height: 16),
                     ],
                   )
-                : SizedBox.shrink(),
+                : const SizedBox.shrink(),
           ),
 
           // Кнопки действий
@@ -298,7 +298,7 @@ class _FileDecryptContentState extends ConsumerState<_FileDecryptContent> {
                 label: 'Расшифровать',
                 onPressed: _isDecrypting ? null : _decryptFile,
                 loading: _isDecrypting,
-                icon: Icon(Icons.lock_open),
+                icon: const Icon(Icons.lock_open),
               ),
             ),
           ] else ...[
@@ -307,7 +307,7 @@ class _FileDecryptContentState extends ConsumerState<_FileDecryptContent> {
               child: SmoothButton(
                 label: 'Открыть файл',
                 onPressed: _openFile,
-                icon: Icon(Icons.open_in_new),
+                icon: const Icon(Icons.open_in_new),
                 variant: SmoothButtonVariant.success,
               ),
             ),
@@ -317,7 +317,7 @@ class _FileDecryptContentState extends ConsumerState<_FileDecryptContent> {
               child: SmoothButton(
                 label: 'Удалить расшифрованный файл',
                 onPressed: _deleteAndClose,
-                icon: Icon(Icons.delete_forever),
+                icon: const Icon(Icons.delete_forever),
                 variant: SmoothButtonVariant.error,
                 type: SmoothButtonType.outlined,
               ),

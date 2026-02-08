@@ -157,33 +157,33 @@ class ThemeSwitcher extends ConsumerWidget {
         }
       },
       itemBuilder: (BuildContext context) => [
-        PopupMenuItem(
+        const PopupMenuItem(
           value: ThemeMode.light,
           child: Row(
             children: [
               Icon(Icons.wb_sunny, color: Colors.orange),
-              const SizedBox(width: 8),
-              const Text('Светлая'),
+              SizedBox(width: 8),
+              Text('Светлая'),
             ],
           ),
         ),
-        PopupMenuItem(
+        const PopupMenuItem(
           value: ThemeMode.dark,
           child: Row(
             children: [
               Icon(Icons.nights_stay, color: Colors.blue),
-              const SizedBox(width: 8),
-              const Text('Темная'),
+              SizedBox(width: 8),
+              Text('Темная'),
             ],
           ),
         ),
-        PopupMenuItem(
+        const PopupMenuItem(
           value: ThemeMode.system,
           child: Row(
             children: [
               Icon(Icons.settings_brightness, color: Colors.grey),
-              const SizedBox(width: 8),
-              const Text('Системная'),
+              SizedBox(width: 8),
+              Text('Системная'),
             ],
           ),
         ),
@@ -491,7 +491,7 @@ class SettingsThemeSwitcher extends ConsumerWidget {
       leading: Icon(_getThemeIcon(themeMode, context)),
       title: const Text('Тема'),
       subtitle: Text(_getThemeText(themeMode)),
-      trailing: ThemeSwitcher(size: 40, style: ThemeSwitcherStyle.segmented),
+      trailing: const ThemeSwitcher(size: 40, style: ThemeSwitcherStyle.segmented),
     );
   }
 

@@ -53,7 +53,7 @@ class _TitleBarState extends ConsumerState<TitleBar> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             titlebarState.hidden
-                ? SizedBox.shrink()
+                ? const SizedBox.shrink()
                 : Padding(
                     padding: const EdgeInsets.only(left: 8.0),
                     child: Row(
@@ -102,7 +102,7 @@ class _TitleBarState extends ConsumerState<TitleBar> {
                   const ThemeSwitcher(size: 26, style: ThemeSwitcherStyle.animated),
                   IconButton(
                     padding: const EdgeInsets.all(6),
-                    icon: Icon(Icons.minimize, size: 20),
+                    icon: const Icon(Icons.minimize, size: 20),
                     tooltip: 'Свернуть',
                     constraints: constraints,
                     onPressed: () => windowManager.minimize(),
@@ -111,7 +111,7 @@ class _TitleBarState extends ConsumerState<TitleBar> {
                     padding: const EdgeInsets.all(6),
                     tooltip: 'Развернуть',
                     constraints: constraints,
-                    icon: Icon(Icons.crop_square, size: 20),
+                    icon: const Icon(Icons.crop_square, size: 20),
                     onPressed: () => windowManager.maximize(),
                   ),
                   IconButton(

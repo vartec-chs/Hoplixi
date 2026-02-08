@@ -6,6 +6,7 @@
 ///    image_cropper on mobile)
 /// 3. Decode QR code using zxing2
 /// 4. Show result in WoltModalSheet for confirmation
+library;
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -778,7 +779,7 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
             const SizedBox(height: 16),
 
             // Info message
-            NotificationCard(
+            const NotificationCard(
               type: NotificationType.info,
               text:
                   'Нажмите "Использовать данные", чтобы передать содержимое QR-кода.',
@@ -843,8 +844,8 @@ class _DesktopCropDialogState extends State<_DesktopCropDialog> {
             // Header
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.vertical(
                   top: Radius.circular(16),
                 ),
               ),

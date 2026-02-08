@@ -193,7 +193,7 @@ class _TagPickerFieldState extends State<TagPickerField> {
                       hintText: hasValue ? null : widget.hintText,
                       enabled: widget.enabled,
                       isFocused: isFocused,
-                      prefixIcon: Icon(LucideIcons.tag),
+                      prefixIcon: const Icon(LucideIcons.tag),
                       suffixIcon: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [

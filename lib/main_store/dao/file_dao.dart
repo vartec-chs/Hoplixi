@@ -165,7 +165,7 @@ class FileDao extends DatabaseAccessor<MainStore>
           .difference(file.lastUsedAt!)
           .inSeconds
           .toDouble();
-      final tau = Duration(days: 7).inSeconds.toDouble(); // 7 дней в секундах
+      final tau = const Duration(days: 7).inSeconds.toDouble(); // 7 дней в секундах
       final decayFactor = exp(-deltaSeconds / tau);
       newScore = file.recentScore! * decayFactor + 1.0;
     }

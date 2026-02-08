@@ -512,8 +512,8 @@ class PaginatedListNotifier
     final item = cur.items[index];
 
     logDebug(
-      'Toggling archive for item $id, current isArchived: ${item}',
-      tag: '${_logTag} toggleArchive',
+      'Toggling archive for item $id, current isArchived: $item',
+      tag: '$_logTag toggleArchive',
     );
     final newArchive = !item.isArchived;
 
@@ -524,7 +524,7 @@ class PaginatedListNotifier
 
     logInfo(
       'Toggling archive for item $id to $newArchive',
-      tag: '${_logTag} toggleArchive',
+      tag: '$_logTag toggleArchive',
     );
 
     try {
@@ -534,7 +534,7 @@ class PaginatedListNotifier
 
       logInfo(
         'Toggle archive result for item $id: $success',
-        tag: '${_logTag} toggleArchive',
+        tag: '$_logTag toggleArchive',
       );
 
       if (!success) {
@@ -550,7 +550,7 @@ class PaginatedListNotifier
       // откат
       logError(
         'Error toggling archive',
-        tag: '${_logTag} toggleArchive',
+        tag: '$_logTag toggleArchive',
         error: e,
       );
       updated[index] = item;

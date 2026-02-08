@@ -96,7 +96,7 @@ class ButtonShowcaseScreen extends StatelessWidget {
           children: [
             SmoothButton(label: 'Loading', loading: true, onPressed: () {}),
             const SizedBox(height: 12),
-            SmoothButton(label: 'Disabled', onPressed: null),
+            const SmoothButton(label: 'Disabled', onPressed: null),
             const SizedBox(height: 12),
             SmoothButton(label: 'Bold Text', bold: true, onPressed: () {}),
           ],

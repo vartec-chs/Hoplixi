@@ -27,7 +27,7 @@ class ThemeProvider extends AsyncNotifier<ThemeMode> {
         return ThemeMode.system;
       }
     } catch (e) {
-      state = AsyncData(ThemeMode.system);
+      state = const AsyncData(ThemeMode.system);
       return ThemeMode.system;
     }
   }
@@ -53,19 +53,19 @@ class ThemeProvider extends AsyncNotifier<ThemeMode> {
   }
 
   Future<void> setLightTheme() async {
-    state = AsyncData(ThemeMode.light);
+    state = const AsyncData(ThemeMode.light);
     // logInfo('Theme changed to light', tag: 'Theme');
     await _saveTheme(ThemeMode.light);
   }
 
   Future<void> setDarkTheme() async {
-    state = AsyncData(ThemeMode.dark);
+    state = const AsyncData(ThemeMode.dark);
     // logInfo('Theme changed to dark', tag: 'Theme');
     await _saveTheme(ThemeMode.dark);
   }
 
   Future<void> setSystemTheme() async {
-    state = AsyncData(ThemeMode.system);
+    state = const AsyncData(ThemeMode.system);
     // logInfo('Theme changed to system', tag: 'Theme');
     await _saveTheme(ThemeMode.system);
   }

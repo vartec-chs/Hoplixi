@@ -1,5 +1,4 @@
 import 'package:hoplixi/main_store/models/dto/index.dart';
-import 'package:hoplixi/main_store/models/dto/base_card_dto.dart';
 
 extension BaseCardDtoExtension on BaseCardDto {
   BaseCardDto copyWithBase({

@@ -435,7 +435,7 @@ class FilesFilterNotifier extends Notifier<FilesFilter> {
       mimeTypes: mimeTypes ?? state.mimeTypes,
       minFileSize: minFileSize ?? state.minFileSize,
       maxFileSize: maxFileSize ?? state.maxFileSize,
-      fileName: fileName != null ? fileName : state.fileName,
+      fileName: fileName ?? state.fileName,
       sortField: sortField ?? state.sortField,
     );
   }

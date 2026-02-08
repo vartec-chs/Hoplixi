@@ -50,7 +50,7 @@ void main() {
     });
 
     test('validateParameters accepts valid parameters', () async {
-      await KeyDerivationService.validateParameters(
+      KeyDerivationService.validateParameters(
         memory: 19 * 1024,
         parallelism: 1,
         iterations: 2,

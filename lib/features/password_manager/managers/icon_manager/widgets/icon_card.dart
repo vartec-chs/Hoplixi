@@ -89,7 +89,7 @@ class IconCard extends ConsumerWidget {
             snapshot.data == null ||
             snapshot.data!.isEmpty) {
           logWarning('Failed to load icon data for ID: ${icon.id}');
-          return Icon(Icons.image_not_supported, size: 64, color: Colors.grey);
+          return const Icon(Icons.image_not_supported, size: 64, color: Colors.grey);
         }
 
         return _buildIcon(snapshot.data!);
@@ -111,7 +111,7 @@ class IconCard extends ConsumerWidget {
   /// Построить иконку из данных
   Widget _buildIcon(Uint8List iconDataBytes) {
     if (iconDataBytes.isEmpty) {
-      return Icon(Icons.image_not_supported, size: 64, color: Colors.grey);
+      return const Icon(Icons.image_not_supported, size: 64, color: Colors.grey);
     }
 
     logTrace(

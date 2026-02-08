@@ -41,15 +41,15 @@ class _TextFieldShowcaseScreenState extends State<TextFieldShowcaseScreen> {
               hintText: 'Enter some text',
             ),
             const SizedBox(height: 16),
-            PrimaryTextField(
+            const PrimaryTextField(
               label: 'With Prefix Icon',
-              prefixIcon: const Icon(Icons.person),
+              prefixIcon: Icon(Icons.person),
               hintText: 'Username',
             ),
             const SizedBox(height: 16),
-            PrimaryTextField(
+            const PrimaryTextField(
               label: 'With Suffix Icon',
-              suffixIcon: const Icon(Icons.clear),
+              suffixIcon: Icon(Icons.clear),
               hintText: 'Search',
             ),
             const SizedBox(height: 16),
@@ -59,7 +59,7 @@ class _TextFieldShowcaseScreenState extends State<TextFieldShowcaseScreen> {
               controller: TextEditingController(text: 'Cannot edit this'),
             ),
             const SizedBox(height: 16),
-            PrimaryTextField(
+            const PrimaryTextField(
               label: 'Disabled',
               enabled: false,
               hintText: 'This field is disabled',
@@ -143,17 +143,17 @@ class _TextFieldShowcaseScreenState extends State<TextFieldShowcaseScreen> {
           context,
           title: 'Special Types',
           children: [
-            PrimaryTextField(
+            const PrimaryTextField(
               label: 'Phone Number',
               keyboardType: TextInputType.phone,
-              prefixIcon: const Icon(Icons.phone),
+              prefixIcon: Icon(Icons.phone),
               hintText: '+1 234 567 8900',
             ),
             const SizedBox(height: 16),
-            PrimaryTextField(
+            const PrimaryTextField(
               label: 'Number',
               keyboardType: TextInputType.number,
-              prefixIcon: const Icon(Icons.numbers),
+              prefixIcon: Icon(Icons.numbers),
               hintText: '123456',
             ),
             const SizedBox(height: 16),

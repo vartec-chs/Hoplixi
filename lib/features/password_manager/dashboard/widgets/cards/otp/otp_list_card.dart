@@ -583,7 +583,7 @@ class _TotpListCardState extends ConsumerState<TotpListCard>
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '${_remainingSeconds}с',
+                  '$_remainingSecondsс',
                   style: theme.textTheme.labelMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: isLowTime ? Colors.red : theme.colorScheme.primary,

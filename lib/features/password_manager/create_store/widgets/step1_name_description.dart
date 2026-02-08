@@ -81,7 +81,7 @@ class _Step1NameAndDescriptionState
               context,
               labelText: 'Описание (необязательно)',
               hintText: 'Добавьте описание для хранилища',
-              prefixIcon: Icon(Icons.description),
+              prefixIcon: const Icon(Icons.description),
             ),
             onChanged: notifier.updateDescription,
             maxLines: 3,

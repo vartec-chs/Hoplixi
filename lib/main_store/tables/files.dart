@@ -7,7 +7,7 @@ import 'notes.dart';
 
 @DataClassName('FilesData')
 class Files extends Table {
-  TextColumn get id => text().clientDefault(() => Uuid().v4())(); // UUID v4
+  TextColumn get id => text().clientDefault(() => const Uuid().v4())(); // UUID v4
   TextColumn get metadataId => text().nullable().references(
     FileMetadata,
     #id,

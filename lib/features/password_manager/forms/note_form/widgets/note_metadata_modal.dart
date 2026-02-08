@@ -36,8 +36,8 @@ Future<bool?> showNoteMetadataModal(
             },
           ),
           isTopBarLayerAlwaysVisible: true,
-          leadingNavBarWidget: Padding(
-            padding: const EdgeInsets.only(left: 8.0),
+          leadingNavBarWidget: const Padding(
+            padding: EdgeInsets.only(left: 8.0),
             child: ModalSheetCloseButton(),
           ),
           child: Builder(

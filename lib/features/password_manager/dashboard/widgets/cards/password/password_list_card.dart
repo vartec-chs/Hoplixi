@@ -661,7 +661,7 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    '${_remainingSeconds}с',
+                    '$_remainingSecondsс',
                     style: theme.textTheme.labelSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: isLowTime ? Colors.red : theme.colorScheme.primary,

@@ -366,8 +366,8 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
         SliverWoltModalSheetPage(
           hasTopBarLayer: true,
           isTopBarLayerAlwaysVisible: true,
-          leadingNavBarWidget: Padding(
-            padding: const EdgeInsets.only(left: 8.0),
+          leadingNavBarWidget: const Padding(
+            padding: EdgeInsets.only(left: 8.0),
             child: ModalSheetCloseButton(),
           ),
 
@@ -483,7 +483,7 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
                         config: QuillSimpleToolbarConfig(
                           showClipboardPaste: true,
                           multiRowsDisplay: false,
-                          decoration: BoxDecoration(color: Colors.transparent),
+                          decoration: const BoxDecoration(color: Colors.transparent),
                           toolbarSize: 40,
                           dialogTheme: QuillDialogTheme(
                             shape: RoundedRectangleBorder(

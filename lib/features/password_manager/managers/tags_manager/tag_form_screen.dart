@@ -192,7 +192,7 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
                       else
                         // В режиме создания - dropdown
                         DropdownButtonFormField<TagType>(
-                          value: _selectedType,
+                          initialValue: _selectedType,
                           decoration: primaryInputDecoration(
                             context,
                             labelText: 'Тип тега',

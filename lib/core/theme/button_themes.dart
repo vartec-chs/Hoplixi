@@ -6,11 +6,11 @@ abstract final class ButtonThemes {
   /// Адаптивные отступы для кнопок в зависимости от платформы
   static EdgeInsets _adaptivePadding(BuildContext context) {
     if (UniversalPlatform.isMobile) {
-      return EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0);
+      return const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0);
     } else if (UniversalPlatform.isDesktop) {
-      return EdgeInsets.symmetric(horizontal: 28.0, vertical: 18.0);
+      return const EdgeInsets.symmetric(horizontal: 28.0, vertical: 18.0);
     } else if (UniversalPlatform.isWeb) {
-      return EdgeInsets.symmetric(horizontal: 20.0, vertical: 14.0);
+      return const EdgeInsets.symmetric(horizontal: 20.0, vertical: 14.0);
     }
     final size = MediaQuery.of(context).size;
     return EdgeInsets.symmetric(

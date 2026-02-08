@@ -452,8 +452,9 @@ class _ModalSheetShowcaseScreenState extends State<ModalSheetShowcaseScreen> {
                         ),
                         keyboardType: TextInputType.phone,
                         validator: (value) {
-                          if (value?.isEmpty ?? true)
+                          if (value?.isEmpty ?? true) {
                             return 'Phone is required';
+                          }
                           return null;
                         },
                         onSaved: (value) => phone = value ?? '',
@@ -466,8 +467,9 @@ class _ModalSheetShowcaseScreenState extends State<ModalSheetShowcaseScreen> {
                           prefixIcon: Icon(Icons.business),
                         ),
                         validator: (value) {
-                          if (value?.isEmpty ?? true)
+                          if (value?.isEmpty ?? true) {
                             return 'Company is required';
+                          }
                           return null;
                         },
                         onSaved: (value) => company = value ?? '',
@@ -480,8 +482,9 @@ class _ModalSheetShowcaseScreenState extends State<ModalSheetShowcaseScreen> {
                           prefixIcon: Icon(Icons.public),
                         ),
                         validator: (value) {
-                          if (value?.isEmpty ?? true)
+                          if (value?.isEmpty ?? true) {
                             return 'Country is required';
+                          }
                           return null;
                         },
                         onSaved: (value) => country = value ?? '',
@@ -495,8 +498,9 @@ class _ModalSheetShowcaseScreenState extends State<ModalSheetShowcaseScreen> {
                         ),
                         maxLines: 3,
                         validator: (value) {
-                          if (value?.isEmpty ?? true)
+                          if (value?.isEmpty ?? true) {
                             return 'Message is required';
+                          }
                           return null;
                         },
                         onSaved: (value) => message = value ?? '',
@@ -695,7 +699,7 @@ class _ModalSheetShowcaseScreenState extends State<ModalSheetShowcaseScreen> {
         SliverWoltModalSheetPage(
           surfaceTintColor: Colors.transparent,
           hasTopBarLayer: true,
-          topBarTitle: Text('Long Text Content'),
+          topBarTitle: const Text('Long Text Content'),
           isTopBarLayerAlwaysVisible: true,
           leadingNavBarWidget: IconButton(
             icon: const Icon(Icons.close),
@@ -708,9 +712,9 @@ class _ModalSheetShowcaseScreenState extends State<ModalSheetShowcaseScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Terms and Conditions'),
+                    const Text('Terms and Conditions'),
                     const SizedBox(height: 16),
-                    Text(
+                    const Text(
                       'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
                       'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. '
                       'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n\n'

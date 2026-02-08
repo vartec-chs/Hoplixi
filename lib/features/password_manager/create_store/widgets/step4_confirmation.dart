@@ -109,7 +109,7 @@ class Step4Confirmation extends ConsumerWidget {
                 const Divider(height: 24),
 
                 // Пароль
-                _InfoRow(
+                const _InfoRow(
                   icon: Icons.lock,
                   label: 'Мастер пароль',
                   value: '••••••••',

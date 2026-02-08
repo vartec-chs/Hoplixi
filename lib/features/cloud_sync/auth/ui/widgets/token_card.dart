@@ -109,7 +109,7 @@ class _TokenCardState extends State<TokenCard> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.refresh,
                                       size: 12,
                                       color: Colors.orange,
@@ -139,7 +139,7 @@ class _TokenCardState extends State<TokenCard> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.login,
                                       size: 12,
                                       color: Colors.red,

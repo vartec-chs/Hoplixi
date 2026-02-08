@@ -36,7 +36,7 @@ class DesktopShell extends StatelessWidget {
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 150),
                   height: statusBarState.hidden ? 0 : 28,
-                  child: StatusBar(),
+                  child: const StatusBar(),
                 );
               },
             ),
@@ -105,11 +105,11 @@ class _RootBarsOverlayState extends State<RootBarsOverlay> {
   OverlayEntry _createEntry() {
     return OverlayEntry(
       builder: (context) {
-        return IgnorePointer(
+        return const IgnorePointer(
           ignoring: false,
 
           child: Stack(
-            children: const [
+            children: [
               // TitleBar сверху
               Positioned(
                 top: 0,

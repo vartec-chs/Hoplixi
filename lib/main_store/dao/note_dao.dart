@@ -142,7 +142,7 @@ class NoteDao extends DatabaseAccessor<MainStore>
           .difference(note.lastUsedAt!)
           .inSeconds
           .toDouble();
-      final tau = Duration(days: 7).inSeconds.toDouble(); // 7 дней в секундах
+      final tau = const Duration(days: 7).inSeconds.toDouble(); // 7 дней в секундах
       final decayFactor = exp(-deltaSeconds / tau);
       newScore = note.recentScore! * decayFactor + 1.0;
     }

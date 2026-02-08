@@ -46,9 +46,7 @@ void main() {
     }
 
     // Если токен не загружен, выполнить новый логин
-    if (token == null) {
-      token = await account.newLogin(serviceName);
-    }
+    token ??= await account.newLogin(serviceName);
 
     if (token == null) {
       fail(

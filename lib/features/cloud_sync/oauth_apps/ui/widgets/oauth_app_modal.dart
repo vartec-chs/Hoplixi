@@ -42,7 +42,7 @@ SliverWoltModalSheetPage _buildFormPage(BuildContext context, OauthApps? app) {
       ),
     ),
 
-    leadingNavBarWidget: ModalSheetCloseButton(),
+    leadingNavBarWidget: const ModalSheetCloseButton(),
     mainContentSliversBuilder: (context) => [
       SliverPadding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -110,20 +110,20 @@ class _OAuthAppFormState extends ConsumerState<_OAuthAppForm> {
           const SizedBox(height: 12),
           SegmentedButton<OauthAppsType>(
             segments: [
-              ButtonSegment(
+              const ButtonSegment(
                 value: OauthAppsType.google,
-                label: const Text('Google'),
-                icon: const Icon(Icons.g_mobiledata),
+                label: Text('Google'),
+                icon: Icon(Icons.g_mobiledata),
               ),
-              ButtonSegment(
+              const ButtonSegment(
                 value: OauthAppsType.dropbox,
-                label: const Text('Dropbox'),
-                icon: const Icon(Icons.cloud_queue),
+                label: Text('Dropbox'),
+                icon: Icon(Icons.cloud_queue),
               ),
-              ButtonSegment(
+              const ButtonSegment(
                 value: OauthAppsType.onedrive,
-                label: const Text('OneDrive'),
-                icon: const Icon(Icons.cloud_outlined),
+                label: Text('OneDrive'),
+                icon: Icon(Icons.cloud_outlined),
               ),
             ],
             selected: {_selectedType},
@@ -137,15 +137,15 @@ class _OAuthAppFormState extends ConsumerState<_OAuthAppForm> {
           const SizedBox(height: 8),
           SegmentedButton<OauthAppsType>(
             segments: [
-              ButtonSegment(
+              const ButtonSegment(
                 value: OauthAppsType.yandex,
-                label: const Text('Yandex'),
-                icon: const Icon(Icons.language),
+                label: Text('Yandex'),
+                icon: Icon(Icons.language),
               ),
-              ButtonSegment(
+              const ButtonSegment(
                 value: OauthAppsType.other,
-                label: const Text('Другое'),
-                icon: const Icon(Icons.extension),
+                label: Text('Другое'),
+                icon: Icon(Icons.extension),
               ),
             ],
             selected: {_selectedType},

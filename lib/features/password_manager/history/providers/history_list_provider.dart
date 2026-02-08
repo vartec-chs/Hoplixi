@@ -236,8 +236,8 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
     if (current == null) return false;
 
     // Оптимистичное обновление
-    state = AsyncValue.data(
-      const HistoryListState(
+    state = const AsyncValue.data(
+      HistoryListState(
         items: [],
         isLoading: false,
         hasMore: false,

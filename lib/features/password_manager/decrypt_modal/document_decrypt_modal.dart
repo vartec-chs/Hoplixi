@@ -840,7 +840,7 @@ class _DocumentDecryptContentState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Предупреждение
-          NotificationCard(
+          const NotificationCard(
             type: NotificationType.warning,
             text:
                 'Не закрывайте это окно, пока не закончите работу с расшифрованными файлами. При закрытии временные файлы будут удалены.',
@@ -947,7 +947,7 @@ class _DocumentDecryptContentState
             ),
           ] else ...[
             if (hasModified) ...[
-              NotificationCard(
+              const NotificationCard(
                 type: NotificationType.info,
                 text:
                     'Некоторые файлы были изменены. Сохраните изменения перед закрытием.',

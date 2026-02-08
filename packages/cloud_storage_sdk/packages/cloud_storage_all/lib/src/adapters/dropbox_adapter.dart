@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:dropbox_api/dropbox_api.dart';
-import 'package:oauth2restclient/oauth2restclient.dart';
 
 import '../cloud_storage_api.dart';
 import '../models/cloud_item.dart';

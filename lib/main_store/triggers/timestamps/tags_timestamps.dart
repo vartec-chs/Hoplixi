@@ -2,6 +2,7 @@
 ///
 /// Эти триггеры автоматически устанавливают `created_at` и `modified_at`
 /// при вставке и обновлении записей.
+library;
 
 /// Триггеры для установки временных меток при вставке.
 const List<String> tagsInsertTimestampTriggers = [

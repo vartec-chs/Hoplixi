@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:google_drive_api/google_drive_api.dart';
-import 'package:oauth2restclient/oauth2restclient.dart';
 
 import '../cloud_storage_api.dart';
 import '../models/cloud_item.dart';

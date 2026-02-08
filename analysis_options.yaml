@@ -9,10 +9,14 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+plugins:
+  custom_lint: 0.8.1
+  riverpod_lint: 3.1.0
+
 analyzer:
-  plugins:
-    - custom_lint
-    - riverpod_lint
+  # plugins:
+  #   - custom_lint
+  #   - riverpod_lint
 
 linter:
   # The lint rules applied to this project can be customized in the

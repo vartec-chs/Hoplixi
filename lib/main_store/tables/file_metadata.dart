@@ -4,7 +4,7 @@ import 'package:uuid/uuid.dart';
 @DataClassName('FileMetadataData')
 class FileMetadata extends Table {
   /// UUID метаданных
-  TextColumn get id => text().clientDefault(() => Uuid().v4())();
+  TextColumn get id => text().clientDefault(() => const Uuid().v4())();
 
   /// Оригинальное имя файла
   TextColumn get fileName => text()();

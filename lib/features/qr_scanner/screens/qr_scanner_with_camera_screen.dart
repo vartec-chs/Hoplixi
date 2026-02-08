@@ -3,6 +3,7 @@
 /// This screen provides real-time QR code scanning using the device camera
 /// via mobile_scanner package. When a QR code is detected, a confirmation
 /// modal is shown using WoltModalSheet.
+library;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -517,7 +518,7 @@ class _QrScannerWithCameraScreenState extends State<QrScannerWithCameraScreen>
             const SizedBox(height: 16),
 
             // Info message
-            NotificationCard(
+            const NotificationCard(
               type: NotificationType.info,
               text:
                   'Нажмите "Использовать данные", чтобы передать содержимое QR-кода, '

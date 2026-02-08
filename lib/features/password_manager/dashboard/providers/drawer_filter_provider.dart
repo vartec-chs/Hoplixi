@@ -197,8 +197,9 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
     final currentState = state.value;
     if (currentState == null ||
         !currentState.hasMoreCategories ||
-        currentState.isCategoriesLoading)
+        currentState.isCategoriesLoading) {
       return;
+    }
     await _loadCategories(reset: false);
   }
 
@@ -290,8 +291,9 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
     final currentState = state.value;
     if (currentState == null ||
         !currentState.hasMoreTags ||
-        currentState.isTagsLoading)
+        currentState.isTagsLoading) {
       return;
+    }
     await _loadTags(reset: false);
   }
 

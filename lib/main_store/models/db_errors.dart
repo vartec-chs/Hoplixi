@@ -156,7 +156,7 @@ sealed class DatabaseError with _$DatabaseError implements Exception {
 
   DatabaseError dbErrorFromException(Object e, [StackTrace? st]) {
     if (e is SqliteException) {
-      if (e.message?.contains('file is not a database') ?? false) {
+      if (e.message.contains('file is not a database') ?? false) {
         return DatabaseError.corruptedDatabase(
           message: e.message ?? 'Corrupted DB',
           data: {'original': e.toString()},

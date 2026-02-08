@@ -15,7 +15,7 @@ part 'bank_card_filter_dao.g.dart';
 class BankCardFilterDao extends DatabaseAccessor<MainStore>
     with _$BankCardFilterDaoMixin
     implements FilterDao<BankCardsFilter, BankCardCardDto> {
-  BankCardFilterDao(MainStore db) : super(db);
+  BankCardFilterDao(super.db);
 
   /// Получить отфильтрованные банковские карты
   @override

@@ -14,33 +14,33 @@ class SettingsScreen extends ConsumerWidget {
         elevation: 0,
         scrolledUnderElevation: 2,
       ),
-      body: SingleChildScrollView(
+      body: const SingleChildScrollView(
         child: Column(
           children: [
             // Секция внешнего вида
-            const AppearanceSettingsSection(),
+            AppearanceSettingsSection(),
 
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
 
             // Секция общих настроек
-            const GeneralSettingsSection(),
+            GeneralSettingsSection(),
 
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
 
             // Секция безопасности
-            const SecuritySettingsSection(),
+            SecuritySettingsSection(),
 
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
 
             // Секция синхронизации
-            const SyncSettingsSection(),
+            SyncSettingsSection(),
 
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
 
             // Секция резервного копирования
-            const BackupSettingsSection(),
+            BackupSettingsSection(),
 
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
           ],
         ),
       ),

@@ -295,7 +295,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
           else
             IconButton(icon: const Icon(Icons.save), onPressed: _handleSave),
         ],
-        leading: FormCloseButton(),
+        leading: const FormCloseButton(),
       ),
       body: SafeArea(
         child: state.isLoading
@@ -353,7 +353,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                               labelText: 'Название карты *',
                               hintText: 'Например: Основная карта',
                               errorText: state.nameError,
-                              prefixIcon: Icon(LucideIcons.tag),
+                              prefixIcon: const Icon(LucideIcons.tag),
                             ),
                             onChanged: (value) {
                               ref
@@ -371,7 +371,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                               labelText: 'Имя владельца *',
                               hintText: 'Как на карте',
                               errorText: state.cardholderNameError,
-                              prefixIcon: Icon(LucideIcons.user),
+                              prefixIcon: const Icon(LucideIcons.user),
                             ),
                             textCapitalization: TextCapitalization.characters,
                             onChanged: (value) {
@@ -390,7 +390,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                               labelText: 'Номер карты *',
                               hintText: '0000 0000 0000 0000',
                               errorText: state.cardNumberError,
-                              prefixIcon: Icon(LucideIcons.creditCard),
+                              prefixIcon: const Icon(LucideIcons.creditCard),
                               suffixIcon: UniversalPlatform.isMobile
                                   ? IconButton(
                                       icon: const Icon(Icons.camera_alt),
@@ -424,7 +424,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                                     labelText: 'Месяц *',
                                     hintText: 'MM',
                                     errorText: state.expiryMonthError,
-                                    prefixIcon: Icon(LucideIcons.calendar),
+                                    prefixIcon: const Icon(LucideIcons.calendar),
                                   ),
                                   keyboardType: TextInputType.number,
                                   inputFormatters: [
@@ -447,7 +447,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                                     labelText: 'Год *',
                                     hintText: 'YYYY',
                                     errorText: state.expiryYearError,
-                                    prefixIcon: Icon(LucideIcons.calendar),
+                                    prefixIcon: const Icon(LucideIcons.calendar),
                                   ),
                                   keyboardType: TextInputType.number,
                                   inputFormatters: [
@@ -471,7 +471,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                                     labelText: 'CVV',
                                     hintText: '***',
                                     errorText: state.cvvError,
-                                    prefixIcon: Icon(LucideIcons.shield),
+                                    prefixIcon: const Icon(LucideIcons.shield),
                                   ),
                                   keyboardType: TextInputType.number,
                                   obscureText: true,
@@ -517,7 +517,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                               context,
                               labelText: 'Название банка',
                               hintText: 'Например: Сбербанк',
-                              prefixIcon: Icon(LucideIcons.building),
+                              prefixIcon: const Icon(LucideIcons.building),
                             ),
                             onChanged: (value) {
                               ref
@@ -537,7 +537,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                                     context,
                                     labelText: 'Номер счета',
                                     hintText: 'Опционально',
-                                    prefixIcon: Icon(LucideIcons.hash),
+                                    prefixIcon: const Icon(LucideIcons.hash),
                                   ),
                                   keyboardType: TextInputType.number,
                                   onChanged: (value) {
@@ -555,7 +555,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                                     context,
                                     labelText: 'Routing Number',
                                     hintText: 'Опционально',
-                                    prefixIcon: Icon(LucideIcons.hash),
+                                    prefixIcon: const Icon(LucideIcons.hash),
                                   ),
                                   keyboardType: TextInputType.number,
                                   onChanged: (value) {
@@ -609,7 +609,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                               context,
                               labelText: 'Описание',
                               hintText: 'Краткое описание',
-                              prefixIcon: Icon(LucideIcons.fileText),
+                              prefixIcon: const Icon(LucideIcons.fileText),
                             ),
                             maxLines: 2,
                             onChanged: (value) {
@@ -675,7 +675,7 @@ class _CardTypeDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: primaryInputDecoration(context, labelText: 'Тип карты'),
       items: const [
         DropdownMenuItem(value: null, child: Text('Не выбрано')),
@@ -699,7 +699,7 @@ class _CardNetworkDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: primaryInputDecoration(context, labelText: 'Платежная сеть'),
       items: const [
         DropdownMenuItem(value: null, child: Text('Не выбрано')),

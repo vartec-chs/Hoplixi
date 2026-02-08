@@ -93,9 +93,9 @@ class FilterModal {
           );
         },
       ),
-      leadingNavBarWidget: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-        child: const ModalSheetCloseButton(),
+      leadingNavBarWidget: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8.0),
+        child: ModalSheetCloseButton(),
       ),
       trailingNavBarWidget: Consumer(
         builder: (context, ref, _) {

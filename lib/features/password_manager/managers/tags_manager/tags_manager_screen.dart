@@ -195,14 +195,12 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
                 final result = context.push<bool>(
                   AppRoutesPaths.tagsAdd(widget.entity),
                 );
-                if (result != null) {
-                  result.then((added) {
-                    if (added == true) {
-                      ref.read(tagListProvider.notifier).refresh();
-                    }
-                  });
-                }
-              },
+                result.then((added) {
+                  if (added == true) {
+                    ref.read(tagListProvider.notifier).refresh();
+                  }
+                });
+                            },
               child: const Icon(Icons.add),
             )
           : null,
@@ -281,14 +279,12 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
               final result = context.push<bool>(
                 AppRoutesPaths.tagsEdit(widget.entity, tag.id),
               );
-              if (result != null) {
-                result.then((edited) {
-                  if (edited == true) {
-                    onRefresh();
-                  }
-                });
-              }
-            } else if (value == 'delete') {
+              result.then((edited) {
+                if (edited == true) {
+                  onRefresh();
+                }
+              });
+                        } else if (value == 'delete') {
               await _handleDeleteTag(context, ref, tag);
             }
           },
@@ -298,14 +294,12 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
             AppRoutesPaths.tagsEdit(widget.entity, tag.id),
           );
 
-          if (result != null) {
-            result.then((edited) {
-              if (edited == true) {
-                onRefresh();
-              }
-            });
-          }
-        },
+          result.then((edited) {
+            if (edited == true) {
+              onRefresh();
+            }
+          });
+                },
       ),
     );
   }

@@ -395,8 +395,8 @@ class NotesFilterNotifier extends Notifier<NotesFilter> {
   }) {
     return state.copyWith(
       base: base ?? state.base,
-      title: title != null ? title : state.title,
-      content: content != null ? content : state.content,
+      title: title ?? state.title,
+      content: content ?? state.content,
       hasDescription: hasDescription ?? state.hasDescription,
       hasDeltaJson: hasDeltaJson ?? state.hasDeltaJson,
       minContentLength: minContentLength ?? state.minContentLength,

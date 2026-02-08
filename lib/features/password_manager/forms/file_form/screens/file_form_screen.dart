@@ -145,7 +145,7 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
           else
             IconButton(icon: const Icon(Icons.save), onPressed: _handleSave),
         ],
-        leading: FormCloseButton(),
+        leading: const FormCloseButton(),
       ),
       body: SafeArea(
         child: state.isLoading
@@ -222,7 +222,7 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                               labelText: 'Название *',
                               hintText: 'Введите название файла',
                               errorText: state.nameError,
-                              prefixIcon: Icon(LucideIcons.tag),
+                              prefixIcon: const Icon(LucideIcons.tag),
                             ),
                             onChanged: (value) {
                               ref
@@ -272,7 +272,7 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                               context,
                               labelText: 'Описание',
                               hintText: 'Краткое описание файла',
-                              prefixIcon: Icon(LucideIcons.fileText),
+                              prefixIcon: const Icon(LucideIcons.fileText),
                             ),
                             maxLines: 3,
                             onChanged: (value) {

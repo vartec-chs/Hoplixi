@@ -453,10 +453,8 @@ class BankCardsFilterNotifier extends Notifier<BankCardsFilter> {
       base: base ?? state.base,
       cardTypes: cardTypes ?? state.cardTypes,
       cardNetworks: cardNetworks ?? state.cardNetworks,
-      bankName: bankName != null ? bankName : state.bankName,
-      cardholderName: cardholderName != null
-          ? cardholderName
-          : state.cardholderName,
+      bankName: bankName ?? state.bankName,
+      cardholderName: cardholderName ?? state.cardholderName,
       hasExpiryDatePassed: hasExpiryDatePassed ?? state.hasExpiryDatePassed,
       isExpiringSoon: isExpiringSoon ?? state.isExpiringSoon,
       sortField: sortField ?? state.sortField,

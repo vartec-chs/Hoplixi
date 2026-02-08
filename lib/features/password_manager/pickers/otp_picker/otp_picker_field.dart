@@ -215,7 +215,7 @@ class _OtpPickerFieldState extends ConsumerState<OtpPickerField> {
                     context,
                     labelText: widget.label,
                     hintText: widget.hintText,
-                    prefixIcon: Icon(LucideIcons.smartphone),
+                    prefixIcon: const Icon(LucideIcons.smartphone),
                     suffixIcon: hasValue && widget.enabled
                         ? IconButton(
                             icon: const Icon(Icons.close, size: 20),

@@ -157,7 +157,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
                               labelText: 'Название *',
                               hintText: 'Введите название документа',
                               errorText: state.titleError,
-                              prefixIcon: Icon(LucideIcons.tag),
+                              prefixIcon: const Icon(LucideIcons.tag),
                             ),
                             onChanged: (value) {
                               ref
@@ -225,7 +225,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
                               context,
                               labelText: 'Описание',
                               hintText: 'Краткое описание документа',
-                              prefixIcon: Icon(LucideIcons.fileText),
+                              prefixIcon: const Icon(LucideIcons.fileText),
                             ),
                             maxLines: 3,
                             onChanged: (value) {
@@ -550,7 +550,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
     ];
 
     return DropdownButtonFormField<String>(
-      value: state.documentType,
+      initialValue: state.documentType,
       decoration: primaryInputDecoration(
         context,
         labelText: 'Тип документа',

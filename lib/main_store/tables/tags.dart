@@ -4,7 +4,7 @@ import 'package:uuid/uuid.dart';
 
 @DataClassName('TagsData')
 class Tags extends Table {
-  TextColumn get id => text().clientDefault(() => Uuid().v4())(); // UUID v4
+  TextColumn get id => text().clientDefault(() => const Uuid().v4())(); // UUID v4
   TextColumn get name => text().unique()();
   TextColumn get color =>
       text().withDefault(const Constant('FFFFFF'))(); // Hex color code

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:oauth2restclient/oauth2restclient.dart';
 import 'package:yandex_drive_api/yandex_drive_api.dart';
 
 import '../cloud_storage_api.dart';

@@ -35,6 +35,7 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
     return MediaQuery.sizeOf(context).width > 700.0;
   }
 
+  @override
   Widget build(BuildContext context) {
     final currentSortField = ref.watch(
       categoryFilterProvider.select((filter) => filter.sortField),

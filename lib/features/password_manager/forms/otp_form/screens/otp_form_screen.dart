@@ -220,7 +220,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
           else
             IconButton(icon: const Icon(Icons.save), onPressed: _handleSave),
         ],
-        leading: FormCloseButton(),
+        leading: const FormCloseButton(),
         bottom: TabBar(
           tabAlignment: TabAlignment.fill,
           controller: _tabController,
@@ -310,7 +310,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
               hintText: 'JBSWY3DPEHPK3PXP',
               errorText: state.secretError,
               helperText: 'Обычно находится в настройках 2FA сервиса',
-              prefixIcon: Icon(LucideIcons.key),
+              prefixIcon: const Icon(LucideIcons.key),
               suffixIcon: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -353,7 +353,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
               context,
               labelText: 'Сервис / Издатель',
               hintText: 'Google, GitHub, Steam...',
-              prefixIcon: Icon(LucideIcons.building),
+              prefixIcon: const Icon(LucideIcons.building),
             ),
             onChanged: (value) {
               ref.read(otpFormProvider.notifier).setIssuer(value);
@@ -368,7 +368,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
               context,
               labelText: 'Имя аккаунта',
               hintText: 'email@example.com',
-              prefixIcon: Icon(LucideIcons.user),
+              prefixIcon: const Icon(LucideIcons.user),
             ),
             keyboardType: TextInputType.emailAddress,
             onChanged: (value) {
@@ -424,7 +424,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
                   labelText: 'Период (секунды)',
                   hintText: '30',
                   errorText: state.periodError,
-                  prefixIcon: Icon(LucideIcons.clock),
+                  prefixIcon: const Icon(LucideIcons.clock),
                 ),
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -616,7 +616,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<T>(
-          value: value,
+          initialValue: value,
           decoration: primaryInputDecoration(context),
           items: items.map((item) {
             return DropdownMenuItem<T>(

@@ -116,7 +116,7 @@ class DocumentDao extends DatabaseAccessor<MainStore>
           .difference(document.lastUsedAt!)
           .inSeconds
           .toDouble();
-      final tau = Duration(days: 7).inSeconds.toDouble(); // 7 дней в секундах
+      final tau = const Duration(days: 7).inSeconds.toDouble(); // 7 дней в секундах
       final decayFactor = exp(-deltaSeconds / tau);
       newScore = document.recentScore! * decayFactor + 1.0;
     }
@@ -209,7 +209,7 @@ class DocumentDao extends DatabaseAccessor<MainStore>
   @override
   Future<bool> softDelete(String id) async {
     final result = await (update(documents)..where((d) => d.id.equals(id)))
-        .write(DocumentsCompanion(isDeleted: Value(true)));
+        .write(const DocumentsCompanion(isDeleted: Value(true)));
     return result > 0;
   }
 
@@ -217,7 +217,7 @@ class DocumentDao extends DatabaseAccessor<MainStore>
   @override
   Future<bool> restoreFromDeleted(String id) async {
     final result = await (update(documents)..where((d) => d.id.equals(id)))
-        .write(DocumentsCompanion(isDeleted: Value(false)));
+        .write(const DocumentsCompanion(isDeleted: Value(false)));
     return result > 0;
   }
 

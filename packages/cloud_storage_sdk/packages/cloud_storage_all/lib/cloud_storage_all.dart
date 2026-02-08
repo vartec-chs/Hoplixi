@@ -1,4 +1,4 @@
-library cloud_storage_all;
+library;
 
 // universal API
 export 'src/cloud_storage.dart';

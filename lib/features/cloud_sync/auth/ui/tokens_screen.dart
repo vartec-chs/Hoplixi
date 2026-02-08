@@ -39,7 +39,7 @@ class TokensScreen extends ConsumerWidget {
               await ref.read(tokenProvider.notifier).reload();
             },
             child: ListView.separated(
-              padding: EdgeInsets.all(12),
+              padding: const EdgeInsets.all(12),
               itemCount: tokens.length,
               separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {

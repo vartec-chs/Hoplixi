@@ -361,8 +361,8 @@ class _TagPickerContentState extends ConsumerState<_TagPickerContent> {
               maxCount: widget.maxTagPicks,
             ),
           ),
-          SliverFillRemaining(
-            child: const Center(child: CircularProgressIndicator()),
+          const SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
           ),
         ],
       ),

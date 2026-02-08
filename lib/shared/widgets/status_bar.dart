@@ -73,14 +73,14 @@ class StatusBar extends ConsumerWidget {
               ),
             ),
             // Правая часть - информация о БД и дополнительный контент
-            Row(
+            const Row(
               mainAxisSize: MainAxisSize.min,
               spacing: 8,
               children: [
-                const _AutoLockTimerWidget(),
-                const _UpdateMarkerWidget(),
-                const _DatabaseStatusWidget(),
-                const _BuildModeWidget(),
+                _AutoLockTimerWidget(),
+                _UpdateMarkerWidget(),
+                _DatabaseStatusWidget(),
+                _BuildModeWidget(),
               ],
             ),
           ],
@@ -309,11 +309,11 @@ class _BuildModeWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.blue.withOpacity(0.3), width: 1),
       ),
-      child: Row(
+      child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.bug_report, size: 12, color: Colors.blue),
-          const SizedBox(width: 4),
+          SizedBox(width: 4),
           Text(
             'Debug',
             style: TextStyle(
@@ -355,11 +355,11 @@ class _CurrentRouteWidget extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.route, size: 12, color: Colors.purple),
+            const Icon(Icons.route, size: 12, color: Colors.purple),
             const SizedBox(width: 4),
             Text(
               routePath,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 11,
                 color: Colors.purple,
                 fontWeight: FontWeight.w500,
