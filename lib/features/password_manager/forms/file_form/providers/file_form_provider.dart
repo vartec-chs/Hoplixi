@@ -256,8 +256,7 @@ class FileFormNotifier extends Notifier<FileFormState> {
             );
           }
 
-          // TODO: Синхронизировать теги файла
-          // await dao.syncFileTags(state.editingFileId!, state.tagIds);
+          // Синхронизация тегов уже происходит в dao.updateFile() через dto.tagsIds
 
           logInfo('File updated: ${state.editingFileId}', tag: _logTag);
           state = state.copyWith(isSaving: false, isSaved: true);
@@ -292,6 +291,7 @@ class FileFormNotifier extends Notifier<FileFormState> {
               ? null
               : state.description.trim(),
           categoryId: state.categoryId,
+          noteId: state.noteId,
           tagsIds: state.tagIds,
           onProgress: (processed, total) {
             final progress = total > 0 ? processed / total : 0.0;

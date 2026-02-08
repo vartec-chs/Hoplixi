@@ -46,6 +46,7 @@ class FileStorageService {
     required String name,
     String? description,
     String? categoryId,
+    String? noteId,
     required List<String> tagsIds,
     void Function(int, int)? onProgress,
   }) async {
@@ -89,6 +90,7 @@ class FileStorageService {
       fileHash: fileHash,
       description: description,
       categoryId: categoryId,
+      noteId: noteId,
       tagsIds: tagsIds,
     );
 
