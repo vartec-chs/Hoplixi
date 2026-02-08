@@ -10,7 +10,7 @@ import 'package:hoplixi/features/logs_viewer/screens/logs_tabs_screen.dart';
 import 'package:hoplixi/features/password_manager/create_store/create_store_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/screens/notes_graph_screen.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_layout.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_layout/index.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/entity_add_edit.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/entity_view.dart';
 import 'package:hoplixi/features/password_manager/history/ui/screens/history_screen.dart';
