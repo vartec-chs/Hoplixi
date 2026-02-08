@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/lifecycle/app_lifecycle_observer.dart';
 import 'package:hoplixi/core/logger/index.dart';
@@ -12,6 +13,7 @@ import 'package:hoplixi/core/utils/window_manager.dart';
 import 'package:hoplixi/routing/router.dart';
 import 'package:hoplixi/setup_tray.dart';
 import 'package:hoplixi/shared/widgets/desktop_shell.dart';
+import 'package:open_dir/open_dir.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:universal_platform/universal_platform.dart';
 
@@ -75,10 +77,9 @@ class _AppState extends ConsumerState<App> with TrayListener {
         await WindowManager.close();
         break;
       case AppTrayMenuItemKey.pathLauncher:
-        logInfo(
-          'Path Launcher clicked, file path: ${widget.filePath}',
-          tag: 'TrayManager',
-        );
+        final openDirPlugin = OpenDir();
+        final appDir = await AppPaths.appPath;
+        await openDirPlugin.openNativeDir(path: appDir.path);
         break;
     }
     super.onTrayMenuItemClick(menuItem);

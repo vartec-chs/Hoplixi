@@ -106,6 +106,7 @@ dependencies:
   build_config: ^1.2.0
   rename_app: ^1.6.5
   flutter_flavorizr: ^2.4.1
+  open_dir: ^0.0.2+1
 
   file_crypto:
     path: ./packages/file_crypto

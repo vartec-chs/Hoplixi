@@ -8,6 +8,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_doc_scanner
   flutter_secure_storage_windows
   local_auth_windows
+  open_dir_windows
   pasteboard
   permission_handler_windows
   screen_retriever_windows

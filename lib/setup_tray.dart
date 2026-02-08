@@ -15,7 +15,7 @@ Future<void> setupTray() async {
       MenuItem.separator(),
       MenuItem(key: 'exit_app', label: 'Выход из приложения'),
       MenuItem.separator(),
-      MenuItem(key: 'path_launcher', label: 'Открыть папку с приложением'),
+      MenuItem(key: 'path_launcher', label: 'Открыть папку приложения'),
     ],
   );
 
