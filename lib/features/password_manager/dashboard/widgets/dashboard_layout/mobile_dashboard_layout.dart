@@ -103,10 +103,7 @@ class MobileDashboardLayout extends StatelessWidget {
                 scale: showPanel ? kPanelZoomEnd : kPanelZoomBegin,
                 duration: kScaleAnimationDuration,
                 curve: Curves.easeOut,
-                child: Container(
-                  key: const ValueKey('panel'),
-                  child: panelChild,
-                ),
+                child: Container(key: ValueKey(uri), child: panelChild),
               ),
             ),
           ),

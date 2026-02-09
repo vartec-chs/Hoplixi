@@ -280,7 +280,7 @@ class DesktopDashboardLayout extends StatelessWidget {
             ),
           );
         },
-        child: panelChild,
+        child: KeyedSubtree(key: ValueKey(uri), child: panelChild),
       ),
     );
   }
