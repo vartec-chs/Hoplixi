@@ -11,10 +11,10 @@ const Duration kPanelAnimationDuration = Duration(milliseconds: 280);
 const Duration kFadeAnimationDuration = Duration(milliseconds: 250);
 
 /// Длительность scale анимации
-const Duration kScaleAnimationDuration = Duration(milliseconds: 300);
+const Duration kScaleAnimationDuration = Duration(milliseconds: 200);
 
 /// Длительность opacity анимации
-const Duration kOpacityAnimationDuration = Duration(milliseconds: 150);
+const Duration kOpacityAnimationDuration = Duration(milliseconds: 200);
 
 /// Длительность анимации segment indicator
 const Duration kSegmentIndicatorDuration = Duration(milliseconds: 300);

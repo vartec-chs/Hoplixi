@@ -25,5 +25,5 @@ class MainConstants {
 
   static const double kMobileBreakpoint = 700.0;
   static const double kDesktopBreakpoint = 1000.0;
-  static const double kWideDesktopBreakpoint = 1400.0;
+  static const double kWideDesktopBreakpoint = 1200.0;
 }

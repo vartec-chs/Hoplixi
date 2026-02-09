@@ -25,10 +25,7 @@ class RecentDatabaseCard extends ConsumerWidget {
     return recentDbAsync.when(
       data: (entry) {
         if (entry == null) return const SizedBox.shrink();
-        return Column(
-          spacing: 4,
-          children: [_buildCard(context, ref, entry), const Divider()],
-        );
+        return _buildCard(context, ref, entry);
       },
       loading: () => const SizedBox.shrink(),
       error: (err, stack) => const SizedBox.shrink(),
@@ -100,17 +97,15 @@ class RecentDatabaseCard extends ConsumerWidget {
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: SmoothButton(
-                label: isLoading ? 'Открытие...' : 'Открыть',
-                type: SmoothButtonType.outlined,
-                icon: const Icon(CupertinoIcons.arrow_right_circle),
-                loading: isLoading,
-                onPressed: isLoading
-                    ? null
-                    : () => _openDatabase(context, ref, entry),
-              ),
+            SmoothButton(
+              label: isLoading ? 'Открытие...' : 'Открыть',
+              type: SmoothButtonType.dashed,
+              isFullWidth: true,
+              icon: const Icon(CupertinoIcons.arrow_right_circle),
+              loading: isLoading,
+              onPressed: isLoading
+                  ? null
+                  : () => _openDatabase(context, ref, entry),
             ),
           ],
         ),

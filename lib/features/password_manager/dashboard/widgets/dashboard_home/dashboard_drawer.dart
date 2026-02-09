@@ -79,11 +79,19 @@ class _DashboardDrawerContentState
               SizedBox(
                 height: 50,
                 child: Padding(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Фильтры', style: theme.textTheme.titleMedium),
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            'Фильтры',
+                            style: theme.textTheme.titleMedium,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
                       if (drawerState.selectedCategoryIds.isNotEmpty ||
                           drawerState.selectedTagIds.isNotEmpty)
                         SmoothButton(
@@ -109,7 +117,7 @@ class _DashboardDrawerContentState
               // Контент с прокруткой
               Expanded(
                 child: ListView(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(12),
                   children: [
                     // Блок категорий
                     _CategorySection(
@@ -140,7 +148,7 @@ class _DashboardDrawerContentState
               if (isMobile) ...[
                 const Divider(height: 1),
                 const Padding(
-                  padding: EdgeInsets.all(8.0),
+                  padding: EdgeInsets.all(12.0),
                   child: CloseDatabaseButton(
                     type: CloseDatabaseButtonType.smooth,
                   ),
@@ -253,18 +261,18 @@ class _CategorySectionState extends ConsumerState<_CategorySection> {
               Text('Категории', style: theme.textTheme.titleMedium),
               Row(
                 children: [
+                  if (widget.selectedIds.isNotEmpty)
+                    SmoothButton(
+                      onPressed: () => notifier.clearCategories(),
+                      label: 'Очистить',
+                      size: .small,
+                      type: .text,
+                    ),
                   IconButton(
                     icon: const Icon(Icons.refresh),
                     onPressed: () => notifier.reloadCategories(),
                     tooltip: 'Обновить категории',
                   ),
-                  if (widget.selectedIds.isNotEmpty)
-                    SmoothButton(
-                      onPressed: () => notifier.clearCategories(),
-                      label: 'Очистить (${widget.selectedIds.length})',
-                      size: .small,
-                      type: .text,
-                    ),
                 ],
               ),
             ],
@@ -395,18 +403,18 @@ class _TagSectionState extends ConsumerState<_TagSection> {
               Text('Теги', style: theme.textTheme.titleMedium),
               Row(
                 children: [
+                  if (widget.selectedIds.isNotEmpty)
+                    SmoothButton(
+                      onPressed: () => notifier.clearTags(),
+                      label: 'Очистить',
+                      size: .small,
+                      type: .text,
+                    ),
                   IconButton(
                     icon: const Icon(Icons.refresh),
                     onPressed: () => notifier.reloadTags(),
                     tooltip: 'Обновить теги',
                   ),
-                  if (widget.selectedIds.isNotEmpty)
-                    SmoothButton(
-                      onPressed: () => notifier.clearTags(),
-                      label: 'Очистить (${widget.selectedIds.length})',
-                      size: .small,
-                      type: .text,
-                    ),
                 ],
               ),
             ],

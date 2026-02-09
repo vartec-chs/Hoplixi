@@ -153,12 +153,12 @@ class MobileDashboardLayout extends StatelessWidget {
               padding: const EdgeInsets.only(
                 right: kFloatingNavMarginHorizontal,
               ),
-              child: AnimatedScale(
-                scale: showFAB ? 1.0 : 0.0,
-                duration: kScaleAnimationDuration,
+              child: AnimatedOpacity(
+                opacity: showFAB ? 1.0 : 0.0,
+                duration: kOpacityAnimationDuration,
                 curve: showFAB ? Curves.easeOutBack : Curves.easeIn,
-                child: AnimatedOpacity(
-                  opacity: showFAB ? 1.0 : 0.0,
+                child: AnimatedSlide(
+                  offset: showBottomNav ? Offset.zero : const Offset(0, 1.5),
                   duration: kFadeAnimationDuration,
                   curve: Curves.easeInOut,
                   child: IgnorePointer(
