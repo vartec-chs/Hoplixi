@@ -9,6 +9,7 @@ import 'package:hoplixi/features/home/home_screen_v2.dart';
 import 'package:hoplixi/features/logs_viewer/screens/logs_tabs_screen.dart';
 import 'package:hoplixi/features/password_manager/create_store/create_store_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/screens/notes_graph_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_layout/index.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/entity_add_edit.dart';
@@ -99,15 +100,19 @@ final List<RouteBase> appRoutes = [
   ShellRoute(
     navigatorKey: dashboardNavigatorKey,
     builder: (context, state, child) {
-      // child — самый глубокий совпавший маршрут (если есть) — используем в DashboardLayout
-      return DashboardLayout(state: state, panelChild: child);
+      return DashboardLayout(state: state, child: child);
     },
     routes: [
       GoRoute(
         path: '/dashboard/:entity',
         name: 'entity',
-        // Этот GoRoute существует для сопоставления базовой сущности и для вложенных panel маршрутов.
-        builder: (context, state) => const SizedBox.shrink(),
+        builder: (context, state) {
+          final entity = EntityType.fromId(state.pathParameters['entity']!)!;
+          return DashboardHomeScreen(
+            key: ValueKey('dashboard_home_${entity.id}'),
+            entityType: entity,
+          );
+        },
         routes: [
           // categories + nested add/edit
           GoRoute(

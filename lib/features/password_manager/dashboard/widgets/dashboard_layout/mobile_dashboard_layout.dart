@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer.dart';
 import 'package:universal_platform/universal_platform.dart';
 
@@ -11,8 +9,9 @@ import 'widgets/floating_nav_bar.dart';
 
 /// Mobile-специфичный layout для DashboardLayout.
 ///
-/// Отображает Stack с анимированными панелями,
-/// floating bottom navigation и FAB.
+/// Отображает контент из роутинга ([child]) с floating bottom navigation
+/// и FAB. DashboardHomeScreen приходит из роутера как [child] на базовом
+/// маршруте, панели (categories, tags, etc.) — на sub-маршрутах.
 class MobileDashboardLayout extends StatelessWidget {
   /// Текущий entity (passwords, notes, etc.)
   final String entity;
@@ -20,11 +19,8 @@ class MobileDashboardLayout extends StatelessWidget {
   /// Текущий URI
   final String uri;
 
-  /// Контент панели
-  final Widget panelChild;
-
-  /// Показывать ли панель
-  final bool showPanel;
+  /// Контент из роутера (DashboardHomeScreen или панель)
+  final Widget child;
 
   /// Показывать ли bottom navigation
   final bool showBottomNav;
@@ -47,8 +43,7 @@ class MobileDashboardLayout extends StatelessWidget {
   const MobileDashboardLayout({
     required this.entity,
     required this.uri,
-    required this.panelChild,
-    required this.showPanel,
+    required this.child,
     required this.showBottomNav,
     required this.showFAB,
     required this.currentAction,
@@ -61,8 +56,6 @@ class MobileDashboardLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final systemPadding = MediaQuery.of(context).viewPadding;
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final showDrawerAsPanel = screenWidth >= MainConstants.kDesktopBreakpoint;
 
     return Scaffold(
       extendBody: true,
@@ -71,45 +64,12 @@ class MobileDashboardLayout extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          // Центр: DashboardHomeScreen с обратной анимацией
-          IgnorePointer(
-            ignoring: showPanel,
-            child: AnimatedOpacity(
-              opacity: showPanel ? 0.0 : 1.0,
-              duration: kFadeAnimationDuration,
-              curve: showPanel ? Curves.easeOut : Curves.easeIn,
-              child: AnimatedScale(
-                scale: showPanel ? kCenterScaleWhenPanelOpen : 1.0,
-                duration: kScaleAnimationDuration,
-                curve: Curves.easeInOut,
-                child: RepaintBoundary(
-                  child: DashboardHomeScreen(
-                    key: ValueKey('dashboard_home_$entity'),
-                    entityType: EntityType.fromId(entity)!,
-                    showDrawerButton: !showDrawerAsPanel,
-                  ),
-                ),
-              ),
-            ),
+          // Контент из роутера
+          Positioned.fill(
+            child: KeyedSubtree(key: ValueKey(uri), child: child),
           ),
 
-          // Анимированная панель поверх центра
-          IgnorePointer(
-            ignoring: !showPanel,
-            child: AnimatedOpacity(
-              duration: kFadeAnimationDuration,
-              opacity: showPanel ? 1.0 : 0.0,
-              curve: showPanel ? Curves.easeOut : Curves.easeIn,
-              child: AnimatedScale(
-                scale: showPanel ? kPanelZoomEnd : kPanelZoomBegin,
-                duration: kScaleAnimationDuration,
-                curve: Curves.easeOut,
-                child: Container(key: ValueKey(uri), child: panelChild),
-              ),
-            ),
-          ),
-
-          // Floating bottom navigation bar с анимацией появления/исчезновения
+          // Floating bottom navigation bar
           Positioned(
             bottom: UniversalPlatform.isDesktop
                 ? kBottomNavNotchMargin

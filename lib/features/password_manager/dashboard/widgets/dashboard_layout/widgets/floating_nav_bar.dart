@@ -69,7 +69,7 @@ class FloatingNavBar extends StatelessWidget {
                       color: colorScheme.primaryContainer.withValues(
                         alpha: 0.1,
                       ),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(24),
                     ),
                   ),
                 ),

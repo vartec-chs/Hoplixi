@@ -73,7 +73,7 @@ const double kFloatingNavMarginBottom = 24.0;
 const double kFloatingNavBarBorderRadius = 28.0;
 
 /// Высота плавающей навигационной панели
-const double kFloatingNavBarHeight = 64.0;
+const double kFloatingNavBarHeight = 66.0;
 
 /// Радиус размытия тени плавающей навигации
 const double kFloatingNavShadowBlurRadius = 20.0;
@@ -138,10 +138,10 @@ const double kFullCenterScaleOffset = 0.08;
 // =============================================================================
 
 /// Вертикальный отступ segment indicator
-const double kSegmentIndicatorVerticalPadding = 6.0;
+const double kSegmentIndicatorVerticalPadding = 4.0;
 
 /// Горизонтальный отступ segment indicator
-const double kSegmentIndicatorHorizontalPadding = 6.0;
+const double kSegmentIndicatorHorizontalPadding = 4.0;
 
 // =============================================================================
 // Animation Intervals

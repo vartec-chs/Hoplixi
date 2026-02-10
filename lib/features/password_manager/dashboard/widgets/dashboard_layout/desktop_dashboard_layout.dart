@@ -9,22 +9,26 @@ import 'widgets/fab_builder.dart';
 
 /// Desktop-специфичный layout для DashboardLayout.
 ///
-/// Отображает трёхколоночный layout с NavigationRail,
-/// левой панелью фильтрации и анимированной правой панелью.
-class DesktopDashboardLayout extends StatelessWidget {
+/// Side-by-side режим: [DashboardHomeScreen] всегда отображается как
+/// основной контент, а [panelChild] показывается как анимированная
+/// правая панель при навигации на sub-маршруты (categories, tags, icons).
+///
+/// В full-center режиме (graph) — только [panelChild] занимает всё
+/// пространство.
+class DesktopDashboardLayout extends StatefulWidget {
   /// Текущий entity (passwords, notes, etc.)
   final String entity;
 
   /// Текущий URI
   final String uri;
 
-  /// Контент панели
-  final Widget panelChild;
+  /// Контент из роутера (панель: CategoryManager, TagsManager и т.д.)
+  final Widget child;
 
-  /// Показывать ли панель
+  /// Есть ли активная правая панель (sub-маршрут)
   final bool hasPanel;
 
-  /// Находится ли в режиме full-center
+  /// Находится ли в режиме full-center (graph)
   final bool isFullCenter;
 
   /// Destinations для навигации
@@ -36,59 +40,141 @@ class DesktopDashboardLayout extends StatelessWidget {
   /// Callback при выборе пункта навигации
   final ValueChanged<int> onNavItemSelected;
 
-  /// Контроллер анимации панели
-  final Animation<double> panelAnimation;
-
   const DesktopDashboardLayout({
     required this.entity,
     required this.uri,
-    required this.panelChild,
+    required this.child,
     required this.hasPanel,
     required this.isFullCenter,
     required this.destinations,
     required this.selectedIndex,
     required this.onNavItemSelected,
-    required this.panelAnimation,
     super.key,
   });
+
+  @override
+  State<DesktopDashboardLayout> createState() => _DesktopDashboardLayoutState();
+}
+
+class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _panelAnimation;
+
+  /// Флаг: строить ли контент правой панели в дереве виджетов.
+  ///
+  /// `true` — когда панель открыта или закрывается (анимация).
+  /// `false` — когда панель полностью закрыта (dismissed).
+  ///
+  /// Это предотвращает дублирование [DashboardHomeScreen]: на базовом
+  /// маршруте роутер передаёт его как `child`, но на desktop он уже
+  /// рендерится внутренне.
+  bool _showChild = false;
+
+  /// Кэшированный виджет правой панели.
+  ///
+  /// При обратной навигации (sub-маршрут → базовый) роутер мгновенно
+  /// заменяет [widget.child] на `DashboardHomeScreen`. Если использовать
+  /// [widget.child] напрямую во время reverse-анимации, возникнут два
+  /// экземпляра `DashboardHomeScreen`. Поэтому сохраняем предыдущий
+  /// контент панели и показываем его пока анимация закрытия не завершится.
+  Widget? _lastPanelChild;
+
+  @override
+  void initState() {
+    super.initState();
+    _showChild = widget.hasPanel;
+    if (widget.hasPanel) {
+      _lastPanelChild = widget.child;
+    }
+    _panelAnimation = AnimationController(
+      vsync: this,
+      duration: kPanelAnimationDuration,
+      value: widget.hasPanel ? 1.0 : 0.0,
+    );
+    _panelAnimation.addStatusListener(_onAnimationStatus);
+  }
+
+  @override
+  void didUpdateWidget(covariant DesktopDashboardLayout oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.hasPanel != oldWidget.hasPanel) {
+      if (widget.hasPanel) {
+        _lastPanelChild = widget.child;
+        setState(() => _showChild = true);
+        _panelAnimation.forward();
+      } else {
+        // _lastPanelChild сохраняет предыдущий контент для
+        // reverse-анимации, _showChild остаётся true
+        _panelAnimation.reverse();
+      }
+    } else if (widget.hasPanel) {
+      // Контент панели обновился (например categories → tags)
+      _lastPanelChild = widget.child;
+    }
+  }
+
+  void _onAnimationStatus(AnimationStatus status) {
+    if (status == AnimationStatus.dismissed && _showChild) {
+      setState(() {
+        _showChild = false;
+        _lastPanelChild = null;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _panelAnimation.removeStatusListener(_onAnimationStatus);
+    _panelAnimation.dispose();
+    super.dispose();
+  }
+
+  // =========================================================================
+  // Build
+  // =========================================================================
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final showDrawerAsPanel = screenWidth >= MainConstants.kDesktopBreakpoint;
-    // При широком разрешении левая панель остаётся видимой
-    final isWideScreen = screenWidth >= MainConstants.kWideDesktopBreakpoint;
 
     return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return Row(
-            children: [
-              // NavigationRail / left menu
-              _buildNavigationRail(context),
-              const VerticalDivider(width: 1, thickness: 1),
+      body: Row(
+        children: [
+          _buildNavigationRail(context),
+          const VerticalDivider(width: 1, thickness: 1),
 
-              // Левая панель фильтрации для экранов >= 1000px
-              if (showDrawerAsPanel && !isFullCenter)
-                _buildLeftPanel(context, isWideScreen),
+          // Full-center режим (graph и т.д.) — только child
+          if (widget.isFullCenter)
+            Expanded(
+              child: KeyedSubtree(
+                key: ValueKey(widget.uri),
+                child: widget.child,
+              ),
+            )
+          else ...[
+            // Левая панель фильтрации (>= desktop breakpoint)
+            if (showDrawerAsPanel) _buildLeftPanel(context),
 
-              // Center content
-              Expanded(child: _buildCenterContent(context, showDrawerAsPanel)),
+            // DashboardHomeScreen — всегда видим
+            Expanded(
+              child: DashboardHomeScreen(
+                key: ValueKey('desktop_home_${widget.entity}'),
+                entityType: EntityType.fromId(widget.entity)!,
+              ),
+            ),
 
-              // Анимированная правая панель
-              if (!isFullCenter)
-                _buildRightPanel(
-                  context,
-                  constraints,
-                  showDrawerAsPanel,
-                  isWideScreen,
-                ),
-            ],
-          );
-        },
+            // Анимированная правая панель
+            _buildRightPanel(context, screenWidth),
+          ],
+        ],
       ),
     );
   }
+
+  // =========================================================================
+  // Navigation Rail
+  // =========================================================================
 
   Widget _buildNavigationRail(BuildContext context) {
     final theme = Theme.of(context);
@@ -111,15 +197,15 @@ class DesktopDashboardLayout extends StatelessWidget {
         borderRadius: BorderRadius.circular(kIndicatorBorderRadius),
       ),
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
-      selectedIndex: selectedIndex,
-      onDestinationSelected: onNavItemSelected,
+      selectedIndex: widget.selectedIndex,
+      onDestinationSelected: widget.onNavItemSelected,
       labelType: NavigationRailLabelType.all,
-      destinations: destinations,
+      destinations: widget.destinations,
       leading: Padding(
         padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
         child: DashboardFabBuilder(
           context: context,
-          entity: entity,
+          entity: widget.entity,
           currentAction: null,
           isMobile: false,
         ).buildExpandableFAB(),
@@ -127,161 +213,61 @@ class DesktopDashboardLayout extends StatelessWidget {
     );
   }
 
-  Widget _buildLeftPanel(BuildContext context, bool isWideScreen) {
-    // При широком разрешении панель всегда видна полностью
-    if (isWideScreen) {
-      return Container(
-        width: kLeftPanelWidth,
-        decoration: BoxDecoration(
-          border: Border(
-            right: BorderSide(color: Theme.of(context).dividerColor, width: 1),
-          ),
-        ),
-        child: DashboardDrawerContent(entityType: EntityType.fromId(entity)!),
-      );
-    }
+  // =========================================================================
+  // Left Panel (Drawer as Panel)
+  // =========================================================================
 
-    // При обычном desktop разрешении панель анимируется
-    return RepaintBoundary(
-      child: AnimatedBuilder(
-        animation: panelAnimation,
-        builder: (context, child) {
-          // Левая панель сворачивается когда правая открывается
-          final leftPanelWidthAnimated =
-              kLeftPanelWidth * (1.0 - panelAnimation.value);
-          return SizedBox(
-            width: leftPanelWidthAnimated,
-            child: ClipRect(
-              child: OverflowBox(
-                alignment: Alignment.centerLeft,
-                minWidth: kLeftPanelWidth,
-                maxWidth: kLeftPanelWidth,
-                child: AnimatedOpacity(
-                  opacity: 1.0 - panelAnimation.value,
-                  duration: kOpacityAnimationDuration,
-                  child: child,
-                ),
-              ),
-            ),
-          );
-        },
-        child: Container(
-          width: kLeftPanelWidth,
-          decoration: BoxDecoration(
-            border: Border(
-              right: BorderSide(
-                color: Theme.of(context).dividerColor,
-                width: 1,
-              ),
-            ),
-          ),
-          child: DashboardDrawerContent(entityType: EntityType.fromId(entity)!),
+  Widget _buildLeftPanel(BuildContext context) {
+    return Container(
+      width: kLeftPanelWidth,
+      decoration: BoxDecoration(
+        border: Border(
+          right: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),
+      ),
+      child: DashboardDrawerContent(
+        entityType: EntityType.fromId(widget.entity)!,
       ),
     );
   }
 
-  Widget _buildCenterContent(BuildContext context, bool showDrawerAsPanel) {
-    return Stack(
-      children: [
-        // DashboardHomeScreen — всегда видим, скрывается только при isFullCenter
-        AnimatedOpacity(
-          opacity: isFullCenter ? 0.0 : 1.0,
-          duration: kFadeAnimationDuration,
-          curve: isFullCenter ? Curves.easeOut : Curves.easeIn,
-          child: AnimatedScale(
-            scale: isFullCenter ? kCenterScaleWhenFullCenter : 1.0,
-            duration: kPanelAnimationDuration,
-            curve: Curves.easeInOut,
-            child: IgnorePointer(
-              ignoring: isFullCenter,
-              child: RepaintBoundary(
-                child: DashboardHomeScreen(
-                  entityType: EntityType.fromId(entity)!,
-                  showDrawerButton: !showDrawerAsPanel,
-                ),
-              ),
-            ),
-          ),
-        ),
-        // Full-center content с анимацией появления
-        if (isFullCenter)
-          TweenAnimationBuilder<double>(
-            key: ValueKey('fullCenter-$uri'),
-            tween: Tween(begin: kFadeBegin, end: kFadeEnd),
-            duration: kPanelAnimationDuration,
-            curve: Curves.easeOut,
-            builder: (context, value, child) {
-              return Opacity(
-                opacity: value,
-                child: Transform.scale(
-                  scale:
-                      kFullCenterScaleBegin + (kFullCenterScaleOffset * value),
+  // =========================================================================
+  // Right Panel (Animated)
+  // =========================================================================
+
+  Widget _buildRightPanel(BuildContext context, double screenWidth) {
+    /// Ширина правой панели — адаптивная
+    final panelMaxWidth = (screenWidth * 0.4).clamp(320.0, 500.0);
+
+    return AnimatedBuilder(
+      animation: _panelAnimation,
+      builder: (context, child) {
+        final width = _panelAnimation.value * panelMaxWidth;
+        if (width < 1) return const SizedBox.shrink();
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const VerticalDivider(width: 1, thickness: 1),
+            SizedBox(
+              width: width - 1,
+              child: ClipRect(
+                child: OverflowBox(
+                  alignment: Alignment.centerLeft,
+                  maxWidth: panelMaxWidth - 1,
                   child: child,
                 ),
-              );
-            },
-            child: panelChild,
-          ),
-      ],
-    );
-  }
-
-  Widget _buildRightPanel(
-    BuildContext context,
-    BoxConstraints constraints,
-    bool showDrawerAsPanel,
-    bool isWideScreen,
-  ) {
-    return RepaintBoundary(
-      child: AnimatedBuilder(
-        animation: panelAnimation,
-        builder: (context, child) {
-          // Вычисляем доступное пространство для центра и правой панели
-          const railWidth = kRailWidth;
-          // При широком разрешении левая панель не сворачивается
-          final leftPanelWidth = (showDrawerAsPanel && !isFullCenter)
-              ? isWideScreen
-                    ? kLeftPanelWidth
-                    : kLeftPanelWidth * (1.0 - panelAnimation.value)
-              : 0.0;
-          final availableWidth =
-              constraints.maxWidth - railWidth - leftPanelWidth - kDividerWidth;
-
-          final rightPanelMaxWidth = availableWidth * 0.5;
-          final rightPanelWidthAnimated =
-              rightPanelMaxWidth * panelAnimation.value;
-
-          return SizedBox(
-            width: rightPanelWidthAnimated,
-            child: ClipRect(
-              child: OverflowBox(
-                alignment: Alignment.centerLeft,
-                minWidth: rightPanelMaxWidth,
-                maxWidth: rightPanelMaxWidth,
-                child: Container(
-                  width: rightPanelMaxWidth,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    border: Border(
-                      left: BorderSide(
-                        color: Theme.of(context).dividerColor,
-                        width: 1,
-                      ),
-                    ),
-                  ),
-                  child: AnimatedOpacity(
-                    opacity: panelAnimation.value,
-                    duration: kOpacityAnimationDuration,
-                    child: child,
-                  ),
-                ),
               ),
             ),
-          );
-        },
-        child: KeyedSubtree(key: ValueKey(uri), child: panelChild),
-      ),
+          ],
+        );
+      },
+      // Используется _lastPanelChild (а не widget.child), чтобы
+      // во время reverse-анимации показывать предыдущий контент
+      // панели, а не DashboardHomeScreen из роутера
+      child: _showChild && _lastPanelChild != null
+          ? KeyedSubtree(key: ValueKey(widget.uri), child: _lastPanelChild!)
+          : null,
     );
   }
 }
