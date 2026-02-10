@@ -91,7 +91,6 @@ class MobileDashboardLayout extends StatelessWidget {
                     duration: kScaleAnimationDuration,
                     curve: showBottomNav ? Curves.easeOutBack : Curves.easeIn,
                     child: FloatingNavBar(
-                      key: ValueKey('nav_$selectedIndex'),
                       destinations: destinations,
                       selectedIndex: selectedIndex,
                       onItemSelected: onNavItemSelected,

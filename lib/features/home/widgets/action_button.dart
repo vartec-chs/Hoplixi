@@ -78,10 +78,10 @@ class ActionButton extends StatelessWidget {
       child: Material(
         elevation: 0,
         color: isDisabled ? disabledBackgroundColor : backgroundColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         child: InkWell(
           onTap: isDisabled ? null : onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 16.0,

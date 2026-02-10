@@ -109,7 +109,7 @@ final List<RouteBase> appRoutes = [
         builder: (context, state) {
           final entity = EntityType.fromId(state.pathParameters['entity']!)!;
           return DashboardHomeScreen(
-            key: ValueKey('dashboard_home_${entity.id}'),
+            // key: ValueKey('dashboard_home_${entity.id}'),
             entityType: entity,
           );
         },

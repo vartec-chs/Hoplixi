@@ -42,7 +42,7 @@ class HomeScreenV2 extends ConsumerStatefulWidget {
 class _HomeScreenV2State extends ConsumerState<HomeScreenV2>
     with TickerProviderStateMixin {
   late ScrollController _scrollController;
-  double _offset = 0;
+
 
   // Анимации для шариков
   late AnimationController _pulseController;
@@ -75,7 +75,6 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2>
   }
 
   void _onScroll() {
-    setState(() => _offset = _scrollController.offset);
 
     if (_scrollController.offset >= 160) {
       ref.read(titlebarStateProvider.notifier).setBackgroundTransparent(false);

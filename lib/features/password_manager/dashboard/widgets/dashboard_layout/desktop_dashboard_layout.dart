@@ -60,14 +60,14 @@ class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
     with SingleTickerProviderStateMixin {
   late final AnimationController _panelAnimation;
 
+  /// Покривлённая анимация для плавного перехода панелей.
+  ///
+  /// Линейная анимация вызывает «дерганье» при одновременном
+  /// изменении ширины трёх секций (левая, центр, правая).
+  /// `easeInOutCubic` сглаживает начало и конец.
+  late final CurvedAnimation _curvedAnimation;
+
   /// Флаг: строить ли контент правой панели в дереве виджетов.
-  ///
-  /// `true` — когда панель открыта или закрывается (анимация).
-  /// `false` — когда панель полностью закрыта (dismissed).
-  ///
-  /// Это предотвращает дублирование [DashboardHomeScreen]: на базовом
-  /// маршруте роутер передаёт его как `child`, но на desktop он уже
-  /// рендерится внутренне.
   bool _showChild = false;
 
   /// Кэшированный виджет правой панели.
@@ -90,6 +90,10 @@ class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
       vsync: this,
       duration: kPanelAnimationDuration,
       value: widget.hasPanel ? 1.0 : 0.0,
+    );
+    _curvedAnimation = CurvedAnimation(
+      parent: _panelAnimation,
+      curve: Curves.easeInOutCubic,
     );
     _panelAnimation.addStatusListener(_onAnimationStatus);
   }
@@ -125,8 +129,22 @@ class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
   @override
   void dispose() {
     _panelAnimation.removeStatusListener(_onAnimationStatus);
+    _curvedAnimation.dispose();
     _panelAnimation.dispose();
     super.dispose();
+  }
+
+  // =========================================================================
+  // Helpers
+  // =========================================================================
+
+  /// Определяет, достаточно ли ширины для одновременного показа
+  /// левой и правой панелей рядом с основным контентом.
+  ///
+  /// Если ширины не хватает, левая панель плавно скрывается при
+  /// открытии правой (и наоборот).
+  bool _canShowBothPanels(double screenWidth) {
+    return screenWidth >= kBothPanelsBreakpoint;
   }
 
   // =========================================================================
@@ -137,6 +155,13 @@ class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final showDrawerAsPanel = screenWidth >= MainConstants.kDesktopBreakpoint;
+    final canShowBoth = _canShowBothPanels(screenWidth);
+
+    // Пространство, доступное для центра + правой панели.
+    // Rail (80) + divider (1) всегда вычитаются.
+    // Если левая панель статична (canShowBoth) — вычитаем и её.
+    final fixedWidth = kRailWidth + 1 + (canShowBoth ? kLeftPanelWidth + 1 : 0);
+    final contentWidth = screenWidth - fixedWidth;
 
     return Scaffold(
       body: Row(
@@ -154,7 +179,8 @@ class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
             )
           else ...[
             // Левая панель фильтрации (>= desktop breakpoint)
-            if (showDrawerAsPanel) _buildLeftPanel(context),
+            if (showDrawerAsPanel)
+              _buildLeftPanel(context, canShowBoth: canShowBoth),
 
             // DashboardHomeScreen — всегда видим
             Expanded(
@@ -165,7 +191,7 @@ class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
             ),
 
             // Анимированная правая панель
-            _buildRightPanel(context, screenWidth),
+            _buildRightPanel(context, contentWidth),
           ],
         ],
       ),
@@ -214,19 +240,58 @@ class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
   }
 
   // =========================================================================
-  // Left Panel (Drawer as Panel)
+  // Left Panel (Drawer as Panel) — анимированная
   // =========================================================================
 
-  Widget _buildLeftPanel(BuildContext context) {
-    return Container(
-      width: kLeftPanelWidth,
-      decoration: BoxDecoration(
-        border: Border(
-          right: BorderSide(color: Theme.of(context).dividerColor, width: 1),
+  Widget _buildLeftPanel(BuildContext context, {required bool canShowBoth}) {
+    // Если экран достаточно широкий для обеих панелей —
+    // левая панель всегда видна (статичная)
+    if (canShowBoth) {
+      return Container(
+        width: kLeftPanelWidth,
+        decoration: BoxDecoration(
+          border: Border(
+            right: BorderSide(color: Theme.of(context).dividerColor, width: 1),
+          ),
         ),
-      ),
-      child: DashboardDrawerContent(
-        entityType: EntityType.fromId(widget.entity)!,
+        child: DashboardDrawerContent(
+          entityType: EntityType.fromId(widget.entity)!,
+        ),
+      );
+    }
+
+    // Экран не достаточно широкий — левая панель скрывается
+    // при открытии правой (обратная анимация от _panelAnimation)
+    return AnimatedBuilder(
+      animation: _curvedAnimation,
+      builder: (context, child) {
+        // 1.0 → правая панель полностью открыта → левая скрыта
+        // 0.0 → правая панель закрыта → левая видна
+        final progress = 1.0 - _curvedAnimation.value;
+        final width = progress * kLeftPanelWidth;
+        if (width < 1) return const SizedBox.shrink();
+
+        return SizedBox(
+          width: width,
+          child: ClipRect(
+            child: OverflowBox(
+              alignment: Alignment.centerRight,
+              maxWidth: kLeftPanelWidth,
+              child: child,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        width: kLeftPanelWidth,
+        decoration: BoxDecoration(
+          border: Border(
+            right: BorderSide(color: Theme.of(context).dividerColor, width: 1),
+          ),
+        ),
+        child: DashboardDrawerContent(
+          entityType: EntityType.fromId(widget.entity)!,
+        ),
       ),
     );
   }
@@ -235,14 +300,15 @@ class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
   // Right Panel (Animated)
   // =========================================================================
 
-  Widget _buildRightPanel(BuildContext context, double screenWidth) {
-    /// Ширина правой панели — адаптивная
-    final panelMaxWidth = (screenWidth * 0.4).clamp(320.0, 500.0);
+  /// Правая панель занимает половину [contentWidth], чтобы
+  /// центральный контент и правая панель были ≈ одинаковой ширины.
+  Widget _buildRightPanel(BuildContext context, double contentWidth) {
+    final panelMaxWidth = contentWidth / 2;
 
     return AnimatedBuilder(
-      animation: _panelAnimation,
+      animation: _curvedAnimation,
       builder: (context, child) {
-        final width = _panelAnimation.value * panelMaxWidth;
+        final width = _curvedAnimation.value * panelMaxWidth;
         if (width < 1) return const SizedBox.shrink();
 
         return Row(

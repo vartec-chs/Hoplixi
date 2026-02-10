@@ -313,7 +313,7 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
               onPressed: () async {
                 Navigator.of(context).pop();
                 await _closeDatabase();
-                if (mounted) {
+                if (context.mounted) {
                   context.go(AppRoutesPaths.home);
                 }
               },

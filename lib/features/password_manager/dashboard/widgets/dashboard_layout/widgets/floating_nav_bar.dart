@@ -7,7 +7,9 @@ import 'floating_nav_item.dart';
 /// в стиле segment control.
 ///
 /// Используется для мобильной навигации в DashboardLayout.
-class FloatingNavBar extends StatelessWidget {
+/// Индикатор анимируется через [AnimationController] для
+/// гарантированной плавной анимации скольжения.
+class FloatingNavBar extends StatefulWidget {
   /// Список пунктов навигации.
   final List<NavigationRailDestination> destinations;
 
@@ -25,9 +27,54 @@ class FloatingNavBar extends StatelessWidget {
   });
 
   @override
+  State<FloatingNavBar> createState() => _FloatingNavBarState();
+}
+
+class _FloatingNavBarState extends State<FloatingNavBar>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late Animation<double> _positionAnimation;
+  late int _previousIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _previousIndex = widget.selectedIndex;
+    _controller = AnimationController(
+      vsync: this,
+      duration: kSegmentIndicatorDuration,
+    );
+    _positionAnimation = AlwaysStoppedAnimation(
+      widget.selectedIndex.toDouble(),
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant FloatingNavBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedIndex != oldWidget.selectedIndex) {
+      _previousIndex = oldWidget.selectedIndex;
+      _positionAnimation =
+          Tween<double>(
+            begin: _previousIndex.toDouble(),
+            end: widget.selectedIndex.toDouble(),
+          ).animate(
+            CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+          );
+      _controller.forward(from: 0.0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final itemCount = destinations.length;
+    final itemCount = widget.destinations.length;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -49,21 +96,28 @@ class FloatingNavBar extends StatelessWidget {
           builder: (context, constraints) {
             final totalWidth = constraints.maxWidth;
             final itemWidth = totalWidth / itemCount;
-            final indicatorLeft =
-                selectedIndex * itemWidth + kSegmentIndicatorHorizontalPadding;
-            final indicatorWidth =
-                itemWidth - kSegmentIndicatorHorizontalPadding * 2;
 
             return Stack(
               children: [
-                // Скользящий индикатор
-                AnimatedPositioned(
-                  duration: kSegmentIndicatorDuration,
-                  curve: Curves.easeOutCubic,
-                  left: indicatorLeft,
-                  top: kSegmentIndicatorVerticalPadding,
-                  bottom: kSegmentIndicatorVerticalPadding,
-                  width: indicatorWidth,
+                // Скользящий индикатор с явной анимацией
+                AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    final position = _positionAnimation.value;
+                    final left =
+                        position * itemWidth +
+                        kSegmentIndicatorHorizontalPadding;
+                    final indicatorWidth =
+                        itemWidth - kSegmentIndicatorHorizontalPadding * 2;
+
+                    return Positioned(
+                      left: left,
+                      top: kSegmentIndicatorVerticalPadding,
+                      bottom: kSegmentIndicatorVerticalPadding,
+                      width: indicatorWidth,
+                      child: child!,
+                    );
+                  },
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       color: colorScheme.primaryContainer.withValues(
@@ -75,15 +129,15 @@ class FloatingNavBar extends StatelessWidget {
                 ),
                 // Элементы навигации
                 Row(
-                  children: destinations
+                  children: widget.destinations
                       .asMap()
                       .entries
                       .map(
                         (entry) => Expanded(
                           child: FloatingNavItem(
                             destination: entry.value,
-                            isSelected: selectedIndex == entry.key,
-                            onTap: () => onItemSelected(entry.key),
+                            isSelected: widget.selectedIndex == entry.key,
+                            onTap: () => widget.onItemSelected(entry.key),
                           ),
                         ),
                       )
