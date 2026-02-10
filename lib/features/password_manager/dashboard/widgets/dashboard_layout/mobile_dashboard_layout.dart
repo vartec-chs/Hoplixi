@@ -72,18 +72,19 @@ class MobileDashboardLayout extends StatelessWidget {
       body: Stack(
         children: [
           // Центр: DashboardHomeScreen с обратной анимацией
-          AnimatedOpacity(
-            opacity: showPanel ? 0.0 : 1.0,
-            duration: kFadeAnimationDuration,
-            curve: showPanel ? Curves.easeOut : Curves.easeIn,
-            child: AnimatedScale(
-              scale: showPanel ? kCenterScaleWhenPanelOpen : 1.0,
-              duration: kScaleAnimationDuration,
-              curve: Curves.easeInOut,
-              child: IgnorePointer(
-                ignoring: showPanel,
+          IgnorePointer(
+            ignoring: showPanel,
+            child: AnimatedOpacity(
+              opacity: showPanel ? 0.0 : 1.0,
+              duration: kFadeAnimationDuration,
+              curve: showPanel ? Curves.easeOut : Curves.easeIn,
+              child: AnimatedScale(
+                scale: showPanel ? kCenterScaleWhenPanelOpen : 1.0,
+                duration: kScaleAnimationDuration,
+                curve: Curves.easeInOut,
                 child: RepaintBoundary(
                   child: DashboardHomeScreen(
+                    key: ValueKey('dashboard_home_$entity'),
                     entityType: EntityType.fromId(entity)!,
                     showDrawerButton: !showDrawerAsPanel,
                   ),
@@ -130,6 +131,7 @@ class MobileDashboardLayout extends StatelessWidget {
                     duration: kScaleAnimationDuration,
                     curve: showBottomNav ? Curves.easeOutBack : Curves.easeIn,
                     child: FloatingNavBar(
+                      key: ValueKey('nav_$selectedIndex'),
                       destinations: destinations,
                       selectedIndex: selectedIndex,
                       onItemSelected: onNavItemSelected,

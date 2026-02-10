@@ -178,13 +178,25 @@ class _DashboardLayoutState extends State<DashboardLayout>
   // ===========================================================================
 
   void _onNavItemSelected(String entity, int index) {
+    final currentUri = widget.state.uri.toString();
+    String targetPath;
+
     if (index == kHomeIndex) {
-      context.go('/dashboard/$entity');
+      targetPath = '/dashboard/$entity';
     } else if (index >= kCategoriesIndex && index <= kIconsIndex) {
-      context.go('/dashboard/$entity/${kDashboardActions[index - 1]}');
+      targetPath = '/dashboard/$entity/${kDashboardActions[index - 1]}';
     } else if (index == kGraphIndex && entity == EntityType.note.id) {
-      context.go(AppRoutesPaths.notesGraph);
+      targetPath = AppRoutesPaths.notesGraph;
+    } else {
+      return;
     }
+
+    // Не вызываем навигацию если уже находимся на целевом пути
+    if (currentUri == targetPath) {
+      return;
+    }
+
+    context.go(targetPath);
   }
 
   // ===========================================================================
