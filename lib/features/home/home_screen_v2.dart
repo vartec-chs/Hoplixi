@@ -43,7 +43,6 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2>
     with TickerProviderStateMixin {
   late ScrollController _scrollController;
 
-
   // Анимации для шариков
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -75,7 +74,6 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2>
   }
 
   void _onScroll() {
-
     if (_scrollController.offset >= 160) {
       ref.read(titlebarStateProvider.notifier).setBackgroundTransparent(false);
     } else {
@@ -287,7 +285,7 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2>
                     padding: EdgeInsets.symmetric(horizontal: 12.0),
                     child: RecentDatabaseCard(),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Expanded(
                     child: LayoutBuilder(
                       builder: (context, constraints) {

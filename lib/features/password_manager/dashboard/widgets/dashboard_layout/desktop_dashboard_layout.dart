@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer.dart';
 
 import 'dashboard_layout_constants.dart';
+import 'keyboard_shortcuts.dart';
 import 'widgets/fab_builder.dart';
 
 /// Desktop-специфичный layout для DashboardLayout.
@@ -148,6 +150,40 @@ class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
   }
 
   // =========================================================================
+  // Keyboard Shortcuts
+  // =========================================================================
+
+  void _handleGoBack() {
+    if (!context.mounted) return;
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      // Возврат на главную dashboard текущей сущности
+      context.go('/dashboard/${widget.entity}');
+    }
+  }
+
+  void _handleCreateEntity() {
+    if (!context.mounted) return;
+    context.go('/dashboard/${widget.entity}/add');
+  }
+
+  void _handleOpenTags() {
+    if (!context.mounted) return;
+    context.go('/dashboard/${widget.entity}/tags');
+  }
+
+  void _handleOpenCategories() {
+    if (!context.mounted) return;
+    context.go('/dashboard/${widget.entity}/categories');
+  }
+
+  void _handleOpenIcons() {
+    if (!context.mounted) return;
+    context.go('/dashboard/${widget.entity}/icons');
+  }
+
+  // =========================================================================
   // Build
   // =========================================================================
 
@@ -163,37 +199,49 @@ class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
     final fixedWidth = kRailWidth + 1 + (canShowBoth ? kLeftPanelWidth + 1 : 0);
     final contentWidth = screenWidth - fixedWidth;
 
-    return Scaffold(
-      body: Row(
-        children: [
-          _buildNavigationRail(context),
-          const VerticalDivider(width: 1, thickness: 1),
+    return CallbackShortcuts(
+      bindings: <ShortcutActivator, VoidCallback>{
+        kShortcutGoBack: _handleGoBack,
+        kShortcutCreateEntity: _handleCreateEntity,
+        kShortcutOpenTags: _handleOpenTags,
+        kShortcutOpenCategories: _handleOpenCategories,
+        kShortcutOpenIcons: _handleOpenIcons,
+      },
+      child: Focus(
+        autofocus: true,
+        child: Scaffold(
+          body: Row(
+            children: [
+              _buildNavigationRail(context),
+              const VerticalDivider(width: 1, thickness: 1),
 
-          // Full-center режим (graph и т.д.) — только child
-          if (widget.isFullCenter)
-            Expanded(
-              child: KeyedSubtree(
-                key: ValueKey(widget.uri),
-                child: widget.child,
-              ),
-            )
-          else ...[
-            // Левая панель фильтрации (>= desktop breakpoint)
-            if (showDrawerAsPanel)
-              _buildLeftPanel(context, canShowBoth: canShowBoth),
+              // Full-center режим (graph и т.д.) — только child
+              if (widget.isFullCenter)
+                Expanded(
+                  child: KeyedSubtree(
+                    key: ValueKey(widget.uri),
+                    child: widget.child,
+                  ),
+                )
+              else ...[
+                // Левая панель фильтрации (>= desktop breakpoint)
+                if (showDrawerAsPanel)
+                  _buildLeftPanel(context, canShowBoth: canShowBoth),
 
-            // DashboardHomeScreen — всегда видим
-            Expanded(
-              child: DashboardHomeScreen(
-                key: ValueKey('desktop_home_${widget.entity}'),
-                entityType: EntityType.fromId(widget.entity)!,
-              ),
-            ),
+                // DashboardHomeScreen — всегда видим
+                Expanded(
+                  child: DashboardHomeScreen(
+                    key: ValueKey('desktop_home_${widget.entity}'),
+                    entityType: EntityType.fromId(widget.entity)!,
+                  ),
+                ),
 
-            // Анимированная правая панель
-            _buildRightPanel(context, contentWidth),
-          ],
-        ],
+                // Анимированная правая панель
+                _buildRightPanel(context, contentWidth),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }

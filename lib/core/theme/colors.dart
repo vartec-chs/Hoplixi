@@ -42,7 +42,7 @@ abstract final class AppColors {
 
   /// Основной цвет полей ввода
   static const Color inputFieldBackgroundDark = Color(0xFF171717);
-  static const Color inputFieldBackgroundLight = Color(0xFFF5F5F5);
+  static const Color inputFieldBackgroundLight = Color(0xFFEDEDED);
 
   static const Color primary = Color(0xFF1E6DFB);
 
