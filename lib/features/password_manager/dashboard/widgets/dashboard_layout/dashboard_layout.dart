@@ -7,6 +7,7 @@ import 'package:hoplixi/routing/paths.dart';
 import 'dashboard_layout_constants.dart';
 import 'desktop_dashboard_layout.dart';
 import 'mobile_dashboard_layout.dart';
+import 'screen_protection_wrapper.dart';
 
 // =============================================================================
 // Full Center Paths
@@ -155,11 +156,13 @@ class DashboardLayout extends StatelessWidget {
       context.go(targetPath);
     }
 
+    final Widget layout;
+
     if (isMobile) {
       final showBottomNav = _shouldShowBottomNav(uri) && !isFullCenter;
       final showFAB = _shouldShowFAB(uri);
 
-      return MobileDashboardLayout(
+      layout = MobileDashboardLayout(
         entity: entity,
         uri: uri,
         showBottomNav: showBottomNav,
@@ -170,17 +173,19 @@ class DashboardLayout extends StatelessWidget {
         onNavItemSelected: onNavItemSelected,
         child: child,
       );
+    } else {
+      layout = DesktopDashboardLayout(
+        entity: entity,
+        uri: uri,
+        hasPanel: _hasPanel(uri),
+        isFullCenter: isFullCenter,
+        destinations: destinations,
+        selectedIndex: _selectedRailIndex(),
+        onNavItemSelected: onNavItemSelected,
+        child: child,
+      );
     }
 
-    return DesktopDashboardLayout(
-      entity: entity,
-      uri: uri,
-      hasPanel: _hasPanel(uri),
-      isFullCenter: isFullCenter,
-      destinations: destinations,
-      selectedIndex: _selectedRailIndex(),
-      onNavItemSelected: onNavItemSelected,
-      child: child,
-    );
+    return ScreenProtectionWrapper(child: layout);
   }
 }
