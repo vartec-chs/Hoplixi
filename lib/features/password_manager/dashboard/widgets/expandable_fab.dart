@@ -281,7 +281,7 @@ class ExpandableFABState extends State<ExpandableFAB>
         // Скругление: зависит от формы
         final borderRadius = widget.shape == FABShape.circle
             ? 28.0
-            : 16.0 + (_controller.value * 12.0);
+            : 20.0 + (_controller.value * 12.0);
 
         return SizedBox(
           key: _fabKey,

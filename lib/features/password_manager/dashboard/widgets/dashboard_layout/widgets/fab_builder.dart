@@ -134,7 +134,7 @@ class DashboardFabBuilder {
           ? FABExpandDirection.up
           : FABExpandDirection.rightDown,
       isUseInNavigationRail: !isMobile,
-      shape: isMobile ? FABShape.circle : FABShape.square,
+      shape: .square,
       actions: buildFabActions(),
     );
   }

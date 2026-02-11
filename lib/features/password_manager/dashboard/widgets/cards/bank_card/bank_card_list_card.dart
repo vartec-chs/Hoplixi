@@ -403,7 +403,10 @@ class _BankCardListCardState extends ConsumerState<BankCardListCard>
           AnimatedBuilder(
             animation: _iconsAnimation,
             builder: (context, child) {
-              return Opacity(opacity: _iconsAnimation.value, child: child);
+              return IgnorePointer(
+                ignoring: _iconsAnimation.value == 0,
+                child: Opacity(opacity: _iconsAnimation.value, child: child),
+              );
             },
             child: Row(
               children: [
@@ -423,10 +426,13 @@ class _BankCardListCardState extends ConsumerState<BankCardListCard>
           AnimatedBuilder(
             animation: _iconsAnimation,
             builder: (context, child) {
-              return SizeTransition(
-                sizeFactor: _iconsAnimation,
-                axis: Axis.horizontal,
-                child: child,
+              return IgnorePointer(
+                ignoring: _iconsAnimation.value == 0,
+                child: SizeTransition(
+                  sizeFactor: _iconsAnimation,
+                  axis: Axis.horizontal,
+                  child: child,
+                ),
               );
             },
             child: Row(
