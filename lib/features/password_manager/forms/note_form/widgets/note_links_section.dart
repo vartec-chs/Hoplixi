@@ -126,7 +126,7 @@ class NoteLinksSection extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const Center(child: Text('Ошибка загрузки ссылок')),
+      error: (_, _) => const Center(child: Text('Ошибка загрузки ссылок')),
     );
   }
 

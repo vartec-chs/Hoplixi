@@ -58,7 +58,7 @@ class HorizontalScrollableActions extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: actions.length,
-        separatorBuilder: (_, __) => SizedBox(width: spacing),
+        separatorBuilder: (_, _) => SizedBox(width: spacing),
         itemBuilder: (context, index) {
           final action = actions[index];
           return _buildActionButton(action);

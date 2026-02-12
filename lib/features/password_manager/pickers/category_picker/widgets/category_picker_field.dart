@@ -216,7 +216,7 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
           effectiveCategoryName = categoryInfoAsync.when(
             data: (info) => info?.name,
             loading: () => 'Загрузка...',
-            error: (_, __) => null,
+            error: (_, _) => null,
           );
         }
       }
@@ -252,7 +252,7 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
           effectiveCategoryNames = categoriesInfoAsync.when(
             data: (infos) => infos.map((i) => i.name).toList(),
             loading: () => ['Загрузка...'],
-            error: (_, __) => [],
+            error: (_, _) => [],
           );
         }
       }

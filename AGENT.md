@@ -20,8 +20,8 @@ securely store and manage their passwords.
 
 ## Flutter Rules
 
-- See [docs-ai/flutter-rules.md](docs-ai/flutter-rules.md) for the coding standards and
-  best practices followed in this project.
+- See [docs-ai/flutter-rules.md](docs-ai/flutter-rules.md) for the coding
+  standards and best practices followed in this project.
 
 ## Technologies Used
 
@@ -38,7 +38,7 @@ securely store and manage their passwords.
 ## Important
 
 - When writing code, the agent must strictly follow this project documentation
-  and docs-ai/\*. If information is missing or unclear, the agent must consult
+  and docs-ai\*. If information is missing or unclear, the agent must consult
   the MCP server instead of inventing solutions.
 
 - The agent must never make assumptions about APIs, architecture, or behavior.
@@ -67,8 +67,8 @@ securely store and manage their passwords.
 
 ## Best Practices
 
-See [docs-ai/widget-patterns.md](docs-ai/widget-patterns.md) for optimized widget
-patterns and responsive layout examples.
+See [docs-ai/widget-patterns.md](docs-ai/widget-patterns.md) for optimized
+widget patterns and responsive layout examples.
 
 ### Extension Methods
 
@@ -246,8 +246,8 @@ class UserWidget extends ConsumerWidget {
 - Always handle errors and display clear error messages in the UI or use
   `Toaster.error()`.
 
-- See [docs-ai/error-handling.md](docs-ai/error-handling.md) for details on how errors
-  are managed in the application and create custom error types.
+- See [docs-ai/error-handling.md](docs-ai/error-handling.md) for details on how
+  errors are managed in the application and create custom error types.
 
 ## State Management
 
@@ -255,9 +255,9 @@ class UserWidget extends ConsumerWidget {
 
 - Not use code generation riverpod_generator with `@riverpod`
 
-- See [docs-ai/state-management.md](docs-ai/state-management.md) for information on how
-  state is managed using Riverpod. If there is not enough information, use mcp
-  server `context7`.
+- See [docs-ai/state-management.md](docs-ai/state-management.md) for information
+  on how state is managed using Riverpod. If there is not enough information,
+  use mcp server `context7`.
 
 ## Features structure
 
@@ -425,8 +425,8 @@ Use `WoltModalSheet` for adaptive modals and multi-page flows:
 - **Custom Modal Types** - Supports bottomSheet, dialog, sideSheet, alertDialog,
   and custom types
 
-See [docs-ai/wolt-modal-sheet.md](docs-ai/wolt-modal-sheet.md) for detailed usage
-examples and API reference.
+See [docs-ai/wolt-modal-sheet.md](docs-ai/wolt-modal-sheet.md) for detailed
+usage examples and API reference.
 
 ## Routing (`lib/routing/`)
 
@@ -447,8 +447,8 @@ Navigation:
 - Desktop routes automatically wrap content in `DesktopShell` for consistent
   chrome (title bar, status bar)
 
-See [docs-ai/gorouter-navigation.md](docs-ai/gorouter-navigation.md) for detailed
-navigation recipes and examples.
+See [docs-ai/gorouter-navigation.md](docs-ai/gorouter-navigation.md) for
+detailed navigation recipes and examples.
 
 ## Main Store (`lib/main_store/`)
 

@@ -174,7 +174,7 @@ class _LocalSendScreenState extends ConsumerState<LocalSendScreen>
         physics: const NeverScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(vertical: 8),
         itemCount: _selectedFiles.length,
-        separatorBuilder: (_, __) =>
+        separatorBuilder: (_, _) =>
             const Divider(height: 1, indent: 16, endIndent: 16),
         itemBuilder: (context, index) {
           final file = _selectedFiles[index];
@@ -291,7 +291,7 @@ class _LocalSendScreenState extends ConsumerState<LocalSendScreen>
                 height: 16,
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
-              error: (_, __) => Text(
+              error: (_, _) => Text(
                 'Ошибка',
                 style: textTheme.bodySmall?.copyWith(color: colorScheme.error),
               ),

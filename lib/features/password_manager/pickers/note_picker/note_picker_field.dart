@@ -133,14 +133,14 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
             });
           },
           loading: () {},
-          error: (_, __) {},
+          error: (_, _) {},
         );
 
         // Показываем временный текст пока загружается
         effectiveNoteName = noteDao.when(
           data: (_) => _resolvedNoteName ?? 'Загрузка...',
           loading: () => 'Загрузка...',
-          error: (_, __) => null,
+          error: (_, _) => null,
         );
       }
     }

@@ -276,7 +276,7 @@ class _PathOption extends StatelessWidget {
                 ),
               ],
             ),
-            if (trailing != null) trailing!,
+            ?trailing,
           ],
         ),
       ),

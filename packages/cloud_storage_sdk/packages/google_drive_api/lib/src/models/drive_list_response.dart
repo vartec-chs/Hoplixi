@@ -19,6 +19,6 @@ class DriveListResponse {
   Map<String, dynamic> toJson() => {
     if (drives != null)
       'drives': drives!.map((drive) => drive.toJson()).toList(),
-    if (nextPageToken != null) 'nextPageToken': nextPageToken!,
+    'nextPageToken': ?nextPageToken,
   };
 }

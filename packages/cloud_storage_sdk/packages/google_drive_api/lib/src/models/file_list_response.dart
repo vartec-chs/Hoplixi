@@ -20,7 +20,7 @@ class FileListResponse {
 
   Map<String, dynamic> toJson() => {
     if (files != null) 'files': files!.map((file) => file.toJson()).toList(),
-    if (incompleteSearch != null) 'incompleteSearch': incompleteSearch!,
-    if (nextPageToken != null) 'nextPageToken': nextPageToken!,
+    'incompleteSearch': ?incompleteSearch,
+    'nextPageToken': ?nextPageToken,
   };
 }

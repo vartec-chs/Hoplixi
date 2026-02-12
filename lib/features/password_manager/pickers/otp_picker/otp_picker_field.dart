@@ -137,14 +137,14 @@ class _OtpPickerFieldState extends ConsumerState<OtpPickerField> {
             });
           },
           loading: () {},
-          error: (_, __) {},
+          error: (_, _) {},
         );
 
         // Показываем временный текст пока загружается
         effectiveOtpName = otpDao.when(
           data: (_) => _resolvedOtpName ?? 'Загрузка...',
           loading: () => 'Загрузка...',
-          error: (_, __) => null,
+          error: (_, _) => null,
         );
       }
     }

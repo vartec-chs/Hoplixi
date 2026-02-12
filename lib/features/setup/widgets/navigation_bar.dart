@@ -55,7 +55,7 @@ class SetupNavigationBar extends StatelessWidget {
           const Spacer(),
 
           // Индикатор страниц
-          if (indicator != null) indicator!,
+          ?indicator,
 
           const Spacer(),
 

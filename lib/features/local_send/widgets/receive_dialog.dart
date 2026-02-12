@@ -105,7 +105,7 @@ class ReceiveDialog extends ConsumerWidget {
         physics: const NeverScrollableScrollPhysics(),
         padding: const EdgeInsets.all(12),
         itemCount: request.files.length,
-        separatorBuilder: (_, __) => const Divider(height: 12),
+        separatorBuilder: (_, _) => const Divider(height: 12),
         itemBuilder: (context, index) {
           final file = request.files[index];
           return Row(

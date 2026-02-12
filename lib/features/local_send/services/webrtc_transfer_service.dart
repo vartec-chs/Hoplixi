@@ -283,8 +283,8 @@ class WebRtcTransferService {
 
   void _setupDataChannel(RTCDataChannel channel) {
     channel.onMessage = (message) {
-      if (message.isBinary && message.binary != null) {
-        onFileChunkReceived?.call(message.binary!);
+      if (message.isBinary) {
+        onFileChunkReceived?.call(message.binary);
       }
     };
   }
