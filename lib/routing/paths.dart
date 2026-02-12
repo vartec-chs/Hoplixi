@@ -8,6 +8,9 @@ class AppRoutesPaths {
   static const String logs = '/logs';
   static const String componentShowcase = '/component-showcase';
 
+  /// LocalSend — экран отправки файлов по локальной сети.
+  static const String localSendSend = '/localsend/send';
+
   // Add other route paths as needed
   static const String createStore = '/create-store';
   static const String openStore = '/open-store';

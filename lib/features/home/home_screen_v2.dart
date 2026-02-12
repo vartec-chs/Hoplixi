@@ -292,14 +292,19 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2>
                         final isSmallScreen = constraints.maxWidth < 500;
                         final items = _buildActionItems(context);
 
-                        return SingleChildScrollView(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12.0,
+                        return SafeArea(
+                          top: false,
+                          child: SingleChildScrollView(
+                            padding: EdgeInsets.zero,
+
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12.0,
+                              ),
+                              child: isSmallScreen
+                                  ? _buildCompactGrid(items)
+                                  : _buildWideGrid(items),
                             ),
-                            child: isSmallScreen
-                                ? _buildCompactGrid(items)
-                                : _buildWideGrid(items),
                           ),
                         );
                       },
@@ -313,20 +318,24 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2>
           if (!hasRecentDb)
             Positioned.fill(
               top: 220 + MediaQuery.of(context).padding.top + 16,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final isSmallScreen = constraints.maxWidth < 500;
-                  final items = _buildActionItems(context);
+              child: SafeArea(
+                top: false,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isSmallScreen = constraints.maxWidth < 500;
+                    final items = _buildActionItems(context);
 
-                  return SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                      child: isSmallScreen
-                          ? _buildVerticalList(items)
-                          : _buildWideGrid(items),
-                    ),
-                  );
-                },
+                    return SingleChildScrollView(
+                      padding: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                        child: isSmallScreen
+                            ? _buildVerticalList(items)
+                            : _buildWideGrid(items),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
         ],
@@ -362,6 +371,12 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2>
         description: 'Просмотр логов',
         onTap: () => context.push(AppRoutesPaths.logs),
       ),
+      ActionItem(
+        icon: LucideIcons.send,
+        label: 'LocalSend',
+        description: 'Отправка файлов другим устройствам',
+        onTap: () => context.push(AppRoutesPaths.localSendSend),
+      ),
     ];
   }
 
@@ -371,8 +386,8 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2>
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
+      mainAxisSpacing: 6,
+      crossAxisSpacing: 6,
       childAspectRatio: 1.0,
       children: items
           .map(

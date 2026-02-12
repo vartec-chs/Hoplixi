@@ -6,6 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_linux
   flutter_doc_scanner
   flutter_secure_storage_linux
+  flutter_webrtc
   gtk
   open_dir_linux
   open_file_linux

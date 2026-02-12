@@ -27,6 +27,7 @@ import 'package:hoplixi/features/password_manager/migration/passwords/screens/pa
 import 'package:hoplixi/features/password_manager/open_store/open_store_screen.dart';
 import 'package:hoplixi/features/settings/screens/settings_screen.dart';
 import 'package:hoplixi/features/setup/screens/setup_screen.dart';
+import 'package:hoplixi/features/local_send/screens/local_send_screen.dart';
 import 'package:hoplixi/global_key.dart';
 import 'package:hoplixi/routing/paths.dart';
 
@@ -54,6 +55,10 @@ final List<RouteBase> appRoutes = [
   GoRoute(
     path: AppRoutesPaths.componentShowcase,
     builder: (context, state) => const ComponentShowcaseScreen(),
+  ),
+  GoRoute(
+    path: AppRoutesPaths.localSendSend,
+    builder: (context, state) => const LocalSendScreen(),
   ),
   GoRoute(
     path: AppRoutesPaths.createStore,
