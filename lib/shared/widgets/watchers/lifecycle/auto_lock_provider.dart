@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_preferences/app_preference_keys.dart';
-import 'package:hoplixi/core/lifecycle/app_lifecycle_provider.dart';
+import 'package:hoplixi/shared/widgets/watchers/lifecycle/app_lifecycle_provider.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/settings/providers/settings_provider.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';

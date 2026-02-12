@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/lifecycle/app_lifecycle_provider.dart';
+import 'package:hoplixi/shared/widgets/watchers/lifecycle/app_lifecycle_provider.dart';
 
 class AppLifecycleObserver extends ConsumerStatefulWidget {
   final Widget child;
