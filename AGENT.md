@@ -559,18 +559,36 @@ Core application files at the root level:
   `AppLogger`, DI, `WindowManager`, and tray before running `App` inside
   `ProviderScope` with `LoggingProviderObserver`.
 - **app.dart** - Root application widget with router, theme, and global
-  configurations.
+  wrappers. App tree is composed as:
+  `ShortcutWatcher -> TrayWatcher -> AppLifecycleObserver -> ThemeProvider -> MaterialApp.router`.
 - **di_init.dart** - Dependency injection setup (`setupDI()`). Wires
   `PreferencesService`, `FlutterSecureStorage`, `HiveBoxManager`,
   `DatabaseHistoryService`. Fetch services through `getIt`.
 - **setup_error_handling.dart** - Configures global error handlers
   (`runZonedGuarded`, `FlutterError.onError`, `PlatformDispatcher.onError`).
   Errors pass through `logError` + `Toaster`.
-- **setup_tray.dart** - System tray initialization (desktop only). Binds menu
-  keys to `AppTrayMenuItemKey`. Guard with `UniversalPlatform.isDesktop`.
+- **setup_tray.dart** - System tray initialization (desktop only): icon,
+  tooltip, and context menu config with `AppTrayMenuItemKey`. Runtime tray event
+  handling lives in watcher layer.
 - **global_key.dart** - Global navigator keys (`navigatorKey`,
   `dashboardNavigatorKey`). Used for navigation without context and in services.
 - **flavors.dart** - Flavor configuration (dev/staging/prod).
+
+## App Watchers (`lib/shared/widgets/watchers/`)
+
+Global watcher wrappers for app-level side effects and keyboard/system events:
+
+- **tray_watcher.dart** - Subscribes to `tray_manager` listener callbacks,
+  handles tray icon/menu actions, and delegates window actions via
+  `WindowManager`.
+- **shortcut_watcher.dart** - Centralized global hotkeys using `Shortcuts` +
+  `Actions`. Keep shortcut definitions in `_shortcuts` and handlers in
+  `_actions` for extensibility. Current bindings include:
+  - `Ctrl+Q` (Windows/Linux) and `Cmd+Q` (macOS): app exit
+  - `Cmd+W` (macOS): close window
+  - `Escape`: navigation pop via `GoRouter`
+- **lifecycle/app_lifecycle_observer.dart** - App lifecycle observation wrapper
+  used at the root widget level.
 
 ## Custom Packages (`packages/`)
 
