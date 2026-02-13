@@ -9,12 +9,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_single_instance/flutter_single_instance.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/core/logger/rust_log_bridge.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/core/utils/window_manager.dart';
 import 'package:hoplixi/run_sub_window_entry.dart';
+import 'package:hoplixi/rust/frb_generated.dart';
 import 'package:hoplixi/setup_error_handling.dart';
 import 'package:hoplixi/setup_tray.dart';
-import 'package:hoplixi/src/rust/frb_generated.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:toastification/toastification.dart';
 import 'package:universal_platform/universal_platform.dart';
@@ -178,6 +179,8 @@ Future<void> main(List<String> args) async {
           crashReportRetentionPeriod: Duration(days: 30),
         ),
       );
+
+      await RustLogBridge.instance.initialize();
 
       setupErrorHandling();
 
