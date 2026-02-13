@@ -84,8 +84,9 @@ class DiscoveryService {
         if (device.id == selfId) return;
 
         _devicesController.add(device);
-      } catch (e) {
-        logTrace('DiscoveryService: invalid packet ignored');
+      } catch (_) {
+        // Свои broadcast-пакеты или невалидные данные —
+        // нормальное явление, не логируем.
       }
     });
 

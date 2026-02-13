@@ -134,7 +134,7 @@ class TransferNotifier extends Notifier<TransferState> {
       state = const TransferState.connecting();
 
       _webrtc = WebRtcTransferService();
-      _setupSenderCallbacks(files);
+      _setupSenderCallbacks(files, text);
 
       // Создаём offer.
       final offerJson = await _webrtc!.createOffer();
@@ -155,7 +155,7 @@ class TransferNotifier extends Notifier<TransferState> {
         );
         return;
       }
-      await _webrtc!.handleOffer(answerJson);
+      await _webrtc!.handleAnswer(answerJson);
 
       // Получаем ICE candidates получателя.
       await _fetchRemoteIceCandidates(target);
@@ -175,14 +175,14 @@ class TransferNotifier extends Notifier<TransferState> {
     }
   }
 
-  void _setupSenderCallbacks(List<File> files) {
+  void _setupSenderCallbacks(List<File> files, String? text) {
     _webrtc!.onConnected = () async {
       logInfo('WebRTC connected — starting file transfer');
 
       // Даём время DataChannel полностью открыться.
       await Future<void>.delayed(const Duration(milliseconds: 200));
 
-      await _startSending(files);
+      await _startSending(files, text);
     };
 
     _webrtc!.onError = (error) {
@@ -194,7 +194,12 @@ class TransferNotifier extends Notifier<TransferState> {
     };
   }
 
-  Future<void> _startSending(List<File> files) async {
+  Future<void> _startSending(List<File> files, String? text) async {
+    // Сначала отправляем текст, если есть.
+    if (text != null && text.isNotEmpty) {
+      await _webrtc!.sendText(text);
+    }
+
     for (var i = 0; i < files.length; i++) {
       final file = files[i];
       final fileName = p.basename(file.path);
@@ -339,7 +344,8 @@ class TransferNotifier extends Notifier<TransferState> {
 
     _webrtc!.onTransferComplete = () {
       state = const TransferState.completed();
-      ref.read(incomingRequestProvider.notifier).clear();
+      // Не очищаем incomingRequestProvider здесь —
+      // диалог покажет "Получено!" с кнопкой "Закрыть".
     };
 
     _webrtc!.onCancelled = () {

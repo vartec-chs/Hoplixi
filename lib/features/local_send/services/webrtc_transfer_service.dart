@@ -25,6 +25,17 @@ class WebRtcTransferService {
   RTCDataChannel? _controlChannel;
   RTCDataChannel? _dataChannel;
 
+  /// Флаг: соединение уже было установлено.
+  /// Предотвращает повторный вызов [onConnected]
+  /// при переходах ICE Connected → Completed → Connected.
+  bool _hasConnected = false;
+
+  /// Флаг: передача завершена (отправлен или получен
+  /// `transfer_complete`). После этого ICE-ошибки
+  /// игнорируются, т.к. Disconnected/Failed — нормальное
+  /// поведение при закрытии соединения.
+  bool _isTransferDone = false;
+
   // ── Колбэки ──
 
   /// Вызывается при получении текстового сообщения.
@@ -121,6 +132,21 @@ class WebRtcTransferService {
     return jsonEncode({'sdp': answer.sdp, 'type': answer.type});
   }
 
+  /// Обрабатывает полученный SDP answer (отправитель).
+  ///
+  /// Устанавливает remote description с типом `answer`.
+  /// Вызывается только на стороне отправителя после получения
+  /// ответа от получателя.
+  Future<void> handleAnswer(String answerJson) async {
+    final answerMap = jsonDecode(answerJson) as Map<String, dynamic>;
+    final answer = RTCSessionDescription(
+      answerMap['sdp'] as String?,
+      answerMap['type'] as String?,
+    );
+
+    await _peerConnection!.setRemoteDescription(answer);
+  }
+
   /// Добавляет удалённый ICE candidate.
   Future<void> addIceCandidate(String candidateJson) async {
     final map = jsonDecode(candidateJson) as Map<String, dynamic>;
@@ -202,33 +228,79 @@ class WebRtcTransferService {
 
   /// Уведомляет удалённую сторону о завершении передачи.
   void sendTransferComplete() {
-    _ensureControlChannel();
+    if (_controlChannel == null) return;
 
-    final msg = jsonEncode({'type': DataChannelMessage.transferComplete});
-    _controlChannel!.send(RTCDataChannelMessage(msg));
+    _isTransferDone = true;
+    try {
+      final msg = jsonEncode({'type': DataChannelMessage.transferComplete});
+      _controlChannel!.send(RTCDataChannelMessage(msg));
+    } catch (e) {
+      logError('WebRtcTransfer: sendTransferComplete error', error: e);
+    }
   }
 
   /// Отменяет передачу.
   void cancelTransfer() {
-    _ensureControlChannel();
+    if (_controlChannel == null) return;
 
-    final msg = jsonEncode({'type': DataChannelMessage.cancel});
-    _controlChannel!.send(RTCDataChannelMessage(msg));
+    try {
+      final msg = jsonEncode({'type': DataChannelMessage.cancel});
+      _controlChannel!.send(RTCDataChannelMessage(msg));
+    } catch (e) {
+      logError('WebRtcTransfer: cancelTransfer error', error: e);
+    }
   }
 
   /// Освобождает ресурсы.
+  ///
+  /// Сначала обнуляет все колбэки, чтобы предотвратить
+  /// нежелательные срабатывания во время очистки.
+  /// Затем безопасно закрывает каналы и PeerConnection.
   Future<void> dispose() async {
-    _controlChannel?.close();
+    // Отключаем все колбэки первым делом, чтобы
+    // ICE-события и DataChannel-сообщения, пришедшие
+    // во время очистки, не вызвали ошибок.
+    _clearCallbacks();
+    _isTransferDone = true;
+
+    final control = _controlChannel;
+    final data = _dataChannel;
+    final peer = _peerConnection;
+
     _controlChannel = null;
-
-    _dataChannel?.close();
     _dataChannel = null;
-
-    await _peerConnection?.close();
-    await _peerConnection?.dispose();
     _peerConnection = null;
 
+    try {
+      await control?.close();
+    } catch (_) {}
+
+    try {
+      await data?.close();
+    } catch (_) {}
+
+    try {
+      await peer?.close();
+    } catch (_) {}
+
+    try {
+      await peer?.dispose();
+    } catch (_) {}
+
     logInfo('WebRtcTransfer: disposed');
+  }
+
+  void _clearCallbacks() {
+    onTextReceived = null;
+    onFileStart = null;
+    onFileChunkReceived = null;
+    onFileEnd = null;
+    onProgress = null;
+    onTransferComplete = null;
+    onCancelled = null;
+    onLocalIceCandidate = null;
+    onConnected = null;
+    onError = null;
   }
 
   // ── Private ──
@@ -245,14 +317,18 @@ class WebRtcTransferService {
       onLocalIceCandidate?.call(json);
     };
 
-    _peerConnection!.onIceConnectionState = (state) {
-      logTrace('WebRTC ICE state: $state');
+    _peerConnection!.onIceConnectionState = (iceState) {
+      logTrace('WebRTC ICE state: $iceState');
 
-      if (state == RTCIceConnectionState.RTCIceConnectionStateConnected) {
+      if (iceState == RTCIceConnectionState.RTCIceConnectionStateConnected &&
+          !_hasConnected) {
+        _hasConnected = true;
         onConnected?.call();
-      } else if (state == RTCIceConnectionState.RTCIceConnectionStateFailed ||
-          state == RTCIceConnectionState.RTCIceConnectionStateDisconnected) {
-        onError?.call('WebRTC connection failed: $state');
+      } else if (!_isTransferDone &&
+          (iceState == RTCIceConnectionState.RTCIceConnectionStateFailed ||
+              iceState ==
+                  RTCIceConnectionState.RTCIceConnectionStateDisconnected)) {
+        onError?.call('WebRTC connection failed: $iceState');
       }
     };
   }
@@ -271,6 +347,7 @@ class WebRtcTransferService {
           case DataChannelMessage.fileEnd:
             onFileEnd?.call(json['name'] as String);
           case DataChannelMessage.transferComplete:
+            _isTransferDone = true;
             onTransferComplete?.call();
           case DataChannelMessage.cancel:
             onCancelled?.call();

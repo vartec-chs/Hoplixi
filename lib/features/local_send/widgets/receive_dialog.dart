@@ -1,19 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:hoplixi/features/local_send/models/transfer_request.dart';
 import 'package:hoplixi/features/local_send/models/transfer_state.dart';
 import 'package:hoplixi/features/local_send/providers/incoming_request_provider.dart';
 import 'package:hoplixi/features/local_send/providers/transfer_provider.dart';
 
 /// Диалог подтверждения входящей передачи файлов.
-class ReceiveDialog extends ConsumerWidget {
+class ReceiveDialog extends ConsumerStatefulWidget {
   const ReceiveDialog({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ReceiveDialog> createState() => _ReceiveDialogState();
+}
+
+class _ReceiveDialogState extends ConsumerState<ReceiveDialog> {
+  @override
+  Widget build(BuildContext context) {
     final request = ref.watch(incomingRequestProvider);
     final transferState = ref.watch(transferProvider);
+
+    // Автоматически закрываем диалог при очистке запроса.
+    ref.listen(incomingRequestProvider, (prev, next) {
+      if (prev != null && next == null && mounted) {
+        Navigator.of(context).pop();
+      }
+    });
 
     if (request == null) {
       return const SizedBox.shrink();
@@ -37,7 +48,7 @@ class ReceiveDialog extends ConsumerWidget {
                 _buildTextPreview(context, request.text!),
               ],
               const SizedBox(height: 24),
-              _buildProgressOrActions(context, ref, transferState),
+              _buildProgressOrActions(context, transferState),
             ],
           ),
         ),
@@ -171,7 +182,6 @@ class ReceiveDialog extends ConsumerWidget {
 
   Widget _buildProgressOrActions(
     BuildContext context,
-    WidgetRef ref,
     TransferState transferState,
   ) {
     return switch (transferState) {
@@ -189,8 +199,10 @@ class ReceiveDialog extends ConsumerWidget {
           ),
         ),
       ),
-      TransferCompleted() => _buildCompleted(context, ref),
-      _ => _buildActions(context, ref),
+      TransferCompleted() => _buildCompleted(context),
+      TransferError(:final message) => _buildErrorState(context, message),
+      TransferCancelled() => _buildErrorState(context, 'Передача отменена'),
+      _ => _buildActions(context),
     };
   }
 
@@ -224,7 +236,7 @@ class ReceiveDialog extends ConsumerWidget {
     );
   }
 
-  Widget _buildCompleted(BuildContext context, WidgetRef ref) {
+  Widget _buildCompleted(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Center(
@@ -241,7 +253,6 @@ class ReceiveDialog extends ConsumerWidget {
           FilledButton(
             onPressed: () {
               ref.read(transferProvider.notifier).reset();
-              Navigator.of(context).pop();
             },
             child: const Text('Закрыть'),
           ),
@@ -250,7 +261,28 @@ class ReceiveDialog extends ConsumerWidget {
     );
   }
 
-  Widget _buildActions(BuildContext context, WidgetRef ref) {
+  Widget _buildErrorState(BuildContext context, String message) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Center(
+      child: Column(
+        children: [
+          Icon(Icons.error_outline, color: colorScheme.error, size: 48),
+          const SizedBox(height: 8),
+          Text(message, textAlign: TextAlign.center),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: () {
+              ref.read(transferProvider.notifier).reset();
+            },
+            child: const Text('Закрыть'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActions(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Row(
@@ -259,7 +291,6 @@ class ReceiveDialog extends ConsumerWidget {
         OutlinedButton(
           onPressed: () {
             ref.read(transferProvider.notifier).rejectIncomingTransfer();
-            Navigator.of(context).pop();
           },
           child: const Text('Отклонить'),
         ),
