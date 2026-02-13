@@ -81,41 +81,131 @@ class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
   /// контент панели и показываем его пока анимация закрытия не завершится.
   Widget? _lastPanelChild;
 
+  /// Стабильный child для full-center режима.
+  ///
+  /// Нужен, чтобы при переходе в full-center не показывать на 1 кадр
+  /// старый panel-child из предыдущего маршрута.
+  Widget? _fullCenterChild;
+
+  bool _isAwaitingFullCenterChild = false;
+
+  /// В правой панели нельзя рендерить DashboardHomeScreen,
+  /// так как он уже постоянно отображается в центральной области.
+  Widget? _sanitizePanelChild(Widget child) {
+    return _containsDashboardHomeScreen(child) ? null : child;
+  }
+
+  bool _containsDashboardHomeScreen(Widget child) {
+    if (child is DashboardHomeScreen) return true;
+    if (child is KeyedSubtree) {
+      return _containsDashboardHomeScreen(child.child);
+    }
+    return false;
+  }
+
+  void _scheduleFullCenterChildCapture() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !widget.isFullCenter) return;
+      setState(() {
+        _fullCenterChild = widget.child;
+        _isAwaitingFullCenterChild = false;
+      });
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    _showChild = widget.hasPanel;
-    if (widget.hasPanel) {
-      _lastPanelChild = widget.child;
+    final initialPanelChild = _sanitizePanelChild(widget.child);
+    _showChild = widget.hasPanel && initialPanelChild != null;
+    if (_showChild) {
+      _lastPanelChild = initialPanelChild;
     }
     _panelAnimation = AnimationController(
       vsync: this,
       duration: kPanelAnimationDuration,
-      value: widget.hasPanel ? 1.0 : 0.0,
+      value: _showChild ? 1.0 : 0.0,
     );
     _curvedAnimation = CurvedAnimation(
       parent: _panelAnimation,
       curve: Curves.easeInOutCubic,
     );
     _panelAnimation.addStatusListener(_onAnimationStatus);
+
+    if (widget.isFullCenter) {
+      _isAwaitingFullCenterChild = true;
+      _scheduleFullCenterChildCapture();
+    }
   }
 
   @override
   void didUpdateWidget(covariant DesktopDashboardLayout oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.hasPanel != oldWidget.hasPanel) {
-      if (widget.hasPanel) {
-        _lastPanelChild = widget.child;
+
+    final enteredFullCenter = !oldWidget.isFullCenter && widget.isFullCenter;
+    final changedFullCenterRoute =
+        widget.isFullCenter && oldWidget.uri != widget.uri;
+    if (enteredFullCenter || changedFullCenterRoute) {
+      _isAwaitingFullCenterChild = true;
+      _fullCenterChild = null;
+      _scheduleFullCenterChildCapture();
+    } else if (widget.isFullCenter &&
+        !identical(widget.child, oldWidget.child)) {
+      _fullCenterChild = widget.child;
+      _isAwaitingFullCenterChild = false;
+    } else if (!widget.isFullCenter && oldWidget.isFullCenter) {
+      _fullCenterChild = null;
+      _isAwaitingFullCenterChild = false;
+    }
+
+    final currentPanelChild = _sanitizePanelChild(widget.child);
+    final oldPanelChild = _sanitizePanelChild(oldWidget.child);
+    final hasPanelNow = widget.hasPanel && currentPanelChild != null;
+    final hadPanel = oldWidget.hasPanel && oldPanelChild != null;
+
+    // При переходах в/из full-center режима (graph) не анимируем панели.
+    // Иначе при возврате возможен краткий «всплеск» левой панели:
+    // _panelAnimation стартует из 0.0 и успевает показать левый drawer.
+    if (oldWidget.isFullCenter != widget.isFullCenter) {
+      _panelAnimation.stop();
+      _panelAnimation.value = hasPanelNow ? 1.0 : 0.0;
+
+      if (hasPanelNow) {
+        _lastPanelChild = currentPanelChild;
+      }
+
+      final nextShowChild = hasPanelNow;
+      final shouldClearPanelChild = !hasPanelNow && _lastPanelChild != null;
+      if (_showChild != nextShowChild || shouldClearPanelChild) {
+        setState(() {
+          _showChild = nextShowChild;
+          if (!hasPanelNow) {
+            _lastPanelChild = null;
+          }
+        });
+      }
+      return;
+    }
+
+    if (hasPanelNow != hadPanel) {
+      if (hasPanelNow) {
+        _lastPanelChild = currentPanelChild;
         setState(() => _showChild = true);
         _panelAnimation.forward();
       } else {
-        // _lastPanelChild сохраняет предыдущий контент для
-        // reverse-анимации, _showChild остаётся true
+        // На закрытии сразу убираем контент панели, чтобы при возврате
+        // на /dashboard/:entity справа не мог отрисоваться home-screen.
+        if (_showChild || _lastPanelChild != null) {
+          setState(() {
+            _showChild = false;
+            _lastPanelChild = null;
+          });
+        }
         _panelAnimation.reverse();
       }
-    } else if (widget.hasPanel) {
+    } else if (hasPanelNow) {
       // Контент панели обновился (например categories → tags)
-      _lastPanelChild = widget.child;
+      _lastPanelChild = currentPanelChild;
     }
   }
 
@@ -218,10 +308,12 @@ class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
               // Full-center режим (graph и т.д.) — только child
               if (widget.isFullCenter)
                 Expanded(
-                  child: KeyedSubtree(
-                    key: ValueKey(widget.uri),
-                    child: widget.child,
-                  ),
+                  child: _isAwaitingFullCenterChild || _fullCenterChild == null
+                      ? const SizedBox.expand()
+                      : KeyedSubtree(
+                          key: ValueKey('full_center_${widget.uri}'),
+                          child: _fullCenterChild!,
+                        ),
                 )
               else ...[
                 // Левая панель фильтрации (>= desktop breakpoint)
@@ -352,12 +444,22 @@ class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
   /// центральный контент и правая панель были ≈ одинаковой ширины.
   Widget _buildRightPanel(BuildContext context, double contentWidth) {
     final panelMaxWidth = contentWidth / 2;
+    const contentRevealThreshold = 0.45;
 
     return AnimatedBuilder(
       animation: _curvedAnimation,
       builder: (context, child) {
         final width = _curvedAnimation.value * panelMaxWidth;
         if (width < 1) return const SizedBox.shrink();
+
+        final isOpening = _panelAnimation.status == AnimationStatus.forward;
+        final shouldBuildContent =
+            !isOpening || _curvedAnimation.value >= contentRevealThreshold;
+        final revealProgress = isOpening
+            ? ((_curvedAnimation.value - contentRevealThreshold) /
+                      (1.0 - contentRevealThreshold))
+                  .clamp(0.0, 1.0)
+            : 1.0;
 
         return Row(
           mainAxisSize: MainAxisSize.min,
@@ -369,7 +471,9 @@ class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
                 child: OverflowBox(
                   alignment: Alignment.centerLeft,
                   maxWidth: panelMaxWidth - 1,
-                  child: child,
+                  child: shouldBuildContent
+                      ? Opacity(opacity: revealProgress, child: child)
+                      : null,
                 ),
               ),
             ),
