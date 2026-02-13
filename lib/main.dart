@@ -9,9 +9,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_single_instance/flutter_single_instance.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/index.dart';
-import 'package:hoplixi/run_sub_window_entry.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/core/utils/window_manager.dart';
+import 'package:hoplixi/run_sub_window_entry.dart';
 import 'package:hoplixi/setup_error_handling.dart';
 import 'package:hoplixi/setup_tray.dart';
 import 'package:hoplixi/src/rust/frb_generated.dart';
@@ -136,6 +136,7 @@ Future<void> main(List<String> args) async {
         // but we return from main after the call.
         return;
       }
+      await WindowManager.initialize();
 
       // --- GUI mode: first-instance check BEFORE heavy init ---
       final bool firstInstance = await FlutterSingleInstance()
@@ -185,7 +186,6 @@ Future<void> main(List<String> args) async {
         await _handleLostData();
       }
 
-      await WindowManager.initialize();
       await setupDI();
       await setupTray();
 

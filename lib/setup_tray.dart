@@ -13,6 +13,8 @@ Future<void> setupTray() async {
     items: [
       MenuItem(key: 'show_window', label: 'Показать окно'),
       MenuItem.separator(),
+      MenuItem(key: 'password_generator', label: 'Генератор паролей'),
+      MenuItem.separator(),
       MenuItem(key: 'exit_app', label: 'Выход из приложения'),
       MenuItem.separator(),
       MenuItem(key: 'path_launcher', label: 'Открыть папку приложения'),
@@ -27,6 +29,7 @@ Future<void> setupTray() async {
 
 enum AppTrayMenuItemKey {
   showWindow('show_window'),
+  passwordGenerator('password_generator'),
   exitApp('exit_app'),
   pathLauncher('path_launcher');
 

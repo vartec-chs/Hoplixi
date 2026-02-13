@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/core/multi_window/multi_window_service.dart';
+import 'package:hoplixi/core/multi_window/sub_window_type.dart';
 import 'package:hoplixi/core/utils/window_manager.dart';
 import 'package:hoplixi/setup_tray.dart';
 import 'package:open_dir/open_dir.dart';
@@ -61,6 +63,11 @@ class _TrayWatcherState extends State<TrayWatcher> with TrayListener {
     switch (menuItemKey) {
       case AppTrayMenuItemKey.showWindow:
         await WindowManager.show();
+        break;
+      case AppTrayMenuItemKey.passwordGenerator:
+        await MultiWindowService.instance.openWindow(
+          type: SubWindowType.passwordGenerator,
+        );
         break;
       case AppTrayMenuItemKey.exitApp:
         await WindowManager.close();
