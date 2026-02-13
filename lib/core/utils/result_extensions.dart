@@ -268,7 +268,10 @@ class ResultUtils {
 
       for (final result in results) {
         if (result.isError()) {
-          return result.fold((_) => const Success([]), (error) => Failure(error));
+          return result.fold(
+            (_) => const Success([]),
+            (error) => Failure(error),
+          );
         }
       }
 

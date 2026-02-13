@@ -9,10 +9,9 @@ class OneDriveDriveItems {
 
   factory OneDriveDriveItems.fromJson(Map<String, dynamic> json) {
     return OneDriveDriveItems(
-      value:
-          (json['value'] as List)
-              .map((e) => OneDriveDriveItem.fromJson(e as Map<String, dynamic>))
-              .toList(),
+      value: (json['value'] as List)
+          .map((e) => OneDriveDriveItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
       nextLink: json['@odata.nextLink'] as String?,
     );
   }

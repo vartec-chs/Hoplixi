@@ -33,14 +33,12 @@ class DropboxFile {
       pathLower: json['path_lower'] as String,
       pathDisplay: json['path_display'] as String,
       id: json['id'] as String,
-      clientModified:
-          json['client_modified'] != null
-              ? DateTime.parse(json['client_modified'] as String)
-              : null,
-      serverModified:
-          json['server_modified'] != null
-              ? DateTime.parse(json['server_modified'] as String)
-              : null,
+      clientModified: json['client_modified'] != null
+          ? DateTime.parse(json['client_modified'] as String)
+          : null,
+      serverModified: json['server_modified'] != null
+          ? DateTime.parse(json['server_modified'] as String)
+          : null,
       rev: json['rev'] as String?,
       size: json['size'] as int?,
       isDownloadable: json['is_downloadable'] as bool?,

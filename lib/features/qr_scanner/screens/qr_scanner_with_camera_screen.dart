@@ -4,6 +4,7 @@
 /// via mobile_scanner package. When a QR code is detected, a confirmation
 /// modal is shown using WoltModalSheet.
 library;
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';

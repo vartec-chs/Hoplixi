@@ -4,7 +4,8 @@ import 'package:uuid/uuid.dart';
 
 @DataClassName('OtpsHistoryData')
 class OtpsHistory extends Table {
-  TextColumn get id => text().clientDefault(() => const Uuid().v4())(); // UUID v4
+  TextColumn get id =>
+      text().clientDefault(() => const Uuid().v4())(); // UUID v4
   TextColumn get originalOtpId => text()(); // ID of original OTP
   TextColumn get action => textEnum<ActionInHistory>().withLength(
     min: 1,

@@ -5,7 +5,8 @@ import 'icons.dart';
 
 @DataClassName('CategoriesData')
 class Categories extends Table {
-  TextColumn get id => text().clientDefault(() => const Uuid().v4())(); // UUID v4
+  TextColumn get id =>
+      text().clientDefault(() => const Uuid().v4())(); // UUID v4
   TextColumn get name => text().unique().withLength(min: 1, max: 100)();
   TextColumn get description => text().nullable()();
   TextColumn get iconId => text().nullable().references(

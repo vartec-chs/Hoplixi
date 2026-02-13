@@ -2,6 +2,7 @@
 ///
 /// Этот файл экспортирует все триггеры временных меток для удобного импорта.
 library;
+
 import 'bank_cards_timestamps.dart';
 import 'categories_timestamps.dart';
 import 'document_pages_timestamps.dart';

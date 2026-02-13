@@ -175,8 +175,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _uploadFile() async {
-    if (_yandexDrive == null ||
-        _selectedFile == null) {
+    if (_yandexDrive == null || _selectedFile == null) {
       return;
     }
 

@@ -31,14 +31,12 @@ class OneDriveDriveItem {
       id: json['id'] as String,
       name: json['name'] as String,
       description: json['description'] as String?,
-      createdDateTime:
-          json['createdDateTime'] != null
-              ? DateTime.parse(json['createdDateTime'] as String)
-              : null,
-      lastModifiedDateTime:
-          json['lastModifiedDateTime'] != null
-              ? DateTime.parse(json['lastModifiedDateTime'] as String)
-              : null,
+      createdDateTime: json['createdDateTime'] != null
+          ? DateTime.parse(json['createdDateTime'] as String)
+          : null,
+      lastModifiedDateTime: json['lastModifiedDateTime'] != null
+          ? DateTime.parse(json['lastModifiedDateTime'] as String)
+          : null,
       size: json['size'] as int?,
       webUrl: json['webUrl'] as String?,
       downloadUrl: json['@microsoft.graph.downloadUrl'] as String?,

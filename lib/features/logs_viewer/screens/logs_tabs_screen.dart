@@ -21,7 +21,6 @@ class _LogsTabsScreenState extends State<LogsTabsScreen> {
 
         if (isDesktop) {
           return Scaffold(
-            
             body: Row(
               children: [
                 NavigationRail(

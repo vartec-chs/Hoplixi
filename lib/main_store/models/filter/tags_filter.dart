@@ -10,7 +10,7 @@ enum TagsSortField { name, type, createdAt, modifiedAt }
 abstract class TagsFilter with _$TagsFilter {
   const factory TagsFilter({
     @Default('') String query,
-    @Default([])  List<TagType?> types,
+    @Default([]) List<TagType?> types,
     String? color,
     DateTime? createdAfter,
     DateTime? createdBefore,
@@ -34,7 +34,7 @@ abstract class TagsFilter with _$TagsFilter {
     int? offset,
   }) {
     final normalizedQuery = (query ?? '').trim();
-  
+
     final normalizedColor = color?.trim();
 
     return TagsFilter(

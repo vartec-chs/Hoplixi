@@ -7,6 +7,7 @@
 /// 3. Decode QR code using zxing2
 /// 4. Show result in WoltModalSheet for confirmation
 library;
+
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -845,9 +846,7 @@ class _DesktopCropDialogState extends State<_DesktopCropDialog> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: const BoxDecoration(
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
               ),
               child: Row(
                 children: [

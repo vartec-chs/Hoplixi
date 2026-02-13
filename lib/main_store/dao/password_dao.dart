@@ -202,7 +202,9 @@ class PasswordDao extends DatabaseAccessor<MainStore>
           .difference(password.lastUsedAt!)
           .inSeconds
           .toDouble();
-      final tau = const Duration(days: 7).inSeconds.toDouble(); // 7 дней в секундах
+      final tau = const Duration(
+        days: 7,
+      ).inSeconds.toDouble(); // 7 дней в секундах
       final decayFactor = exp(-deltaSeconds / tau);
       newScore = password.recentScore! * decayFactor + 1.0;
     }

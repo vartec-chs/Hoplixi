@@ -817,7 +817,7 @@ class _DocumentDecryptContentState
   }
 
   Future<void> _openFile(String path) async {
-      await OpenFile.open(path);
+    await OpenFile.open(path);
   }
 
   Future<void> _deleteAndClose() async {

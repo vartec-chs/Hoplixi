@@ -17,8 +17,7 @@ final authProviderServiceProvider = Provider<AuthProvidersService>((ref) {
 });
 
 /// AsyncNotifier для управления инициализацией AuthProvidersService
-class AuthProvidersServiceNotifier
-    extends AsyncNotifier<AuthProvidersService> {
+class AuthProvidersServiceNotifier extends AsyncNotifier<AuthProvidersService> {
   @override
   Future<AuthProvidersService> build() async {
     final service = ref.watch(authProviderServiceProvider);

@@ -4,7 +4,8 @@ import 'package:uuid/uuid.dart';
 
 @DataClassName('IconsData')
 class Icons extends Table {
-  TextColumn get id => text().clientDefault(() => const Uuid().v4())(); // UUID v4
+  TextColumn get id =>
+      text().clientDefault(() => const Uuid().v4())(); // UUID v4
   TextColumn get name => text().withLength(min: 1, max: 255)();
   TextColumn get type => textEnum<IconType>().withLength(
     min: 1,

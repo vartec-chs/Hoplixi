@@ -36,21 +36,18 @@ class Resource {
   factory Resource.fromJson(Map<String, dynamic> json) {
     return Resource(
       publicKey: json['public_key'],
-      embedded:
-          json['_embedded'] != null
-              ? ResourceList.fromJson(json['_embedded'])
-              : null,
+      embedded: json['_embedded'] != null
+          ? ResourceList.fromJson(json['_embedded'])
+          : null,
       name: json['name'],
-      created:
-          json['created'] != null
-              ? DateTime.parse(json['created']).toLocal()
-              : null,
+      created: json['created'] != null
+          ? DateTime.parse(json['created']).toLocal()
+          : null,
       customProperties: json['custom_properties'],
       publicUrl: json['public_url'],
-      modified:
-          json['modified'] != null
-              ? DateTime.parse(json['modified']).toLocal()
-              : null,
+      modified: json['modified'] != null
+          ? DateTime.parse(json['modified']).toLocal()
+          : null,
       path: json['path'],
       type: json['type'],
       mimeType: json['mime_type'],

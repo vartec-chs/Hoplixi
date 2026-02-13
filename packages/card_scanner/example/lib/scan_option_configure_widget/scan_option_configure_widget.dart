@@ -8,7 +8,11 @@ class OptionConfigureWidget extends StatefulWidget {
   final void Function(CardScanOptions scanOptions) onScanOptionChanged;
   final CardScanOptions initialOptions;
 
-  const OptionConfigureWidget({super.key, required this.onScanOptionChanged, required this.initialOptions});
+  const OptionConfigureWidget({
+    super.key,
+    required this.onScanOptionChanged,
+    required this.initialOptions,
+  });
 
   @override
   _OptionConfigureWidgetState createState() => _OptionConfigureWidgetState();
@@ -32,7 +36,9 @@ class _OptionConfigureWidgetState extends State<OptionConfigureWidget> {
 
   bool enableDebugLogs = false;
 
-  Set<CardHolderNameScanPosition> possibleCardHolderNamePositions = {CardHolderNameScanPosition.belowCardNumber};
+  Set<CardHolderNameScanPosition> possibleCardHolderNamePositions = {
+    CardHolderNameScanPosition.belowCardNumber,
+  };
 
   @override
   void initState() {
@@ -40,15 +46,18 @@ class _OptionConfigureWidgetState extends State<OptionConfigureWidget> {
     scanExpiryDate = options.scanExpiryDate;
     scanCardHolderName = options.scanCardHolderName;
     initialScansToDrop = options.initialScansToDrop;
-    validCardsToScanBeforeFinishingScan = options.validCardsToScanBeforeFinishingScan;
+    validCardsToScanBeforeFinishingScan =
+        options.validCardsToScanBeforeFinishingScan;
     cardHolderNameBlackListedWords = options.cardHolderNameBlackListedWords;
-    considerPastDatesInExpiryDateScan = options.considerPastDatesInExpiryDateScan;
+    considerPastDatesInExpiryDateScan =
+        options.considerPastDatesInExpiryDateScan;
     maxCardHolderNameLength = options.maxCardHolderNameLength;
     enableLuhnCheck = options.enableLuhnCheck;
     cardScannerTimeOut = options.cardScannerTimeOut;
     enableDebugLogs = options.enableDebugLogs;
-    possibleCardHolderNamePositions = options.possibleCardHolderNamePositions.toSet();
-      super.initState();
+    possibleCardHolderNamePositions = options.possibleCardHolderNamePositions
+        .toSet();
+    super.initState();
   }
 
   @override
@@ -56,36 +65,82 @@ class _OptionConfigureWidgetState extends State<OptionConfigureWidget> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          buildCheckBox('enable Luhn Check', enableLuhnCheck, (newValue) => enableLuhnCheck = newValue),
-          buildCheckBox('scan expiry date', scanExpiryDate, (newValue) => scanExpiryDate = newValue),
-          buildCheckBox('scan card holder name', scanCardHolderName, (newValue) => scanCardHolderName = newValue),
-          buildCheckBox('consider past dates in expiry scan', considerPastDatesInExpiryDateScan,
-              (newValue) => considerPastDatesInExpiryDateScan = newValue),
-          buildCheckBox('enable debug logs', enableDebugLogs, (newValue) => enableDebugLogs = newValue),
-          buildIntegerEditWidget('min frames to scan before finish', validCardsToScanBeforeFinishingScan,
-              (newValue) => validCardsToScanBeforeFinishingScan = newValue),
+          buildCheckBox(
+            'enable Luhn Check',
+            enableLuhnCheck,
+            (newValue) => enableLuhnCheck = newValue,
+          ),
+          buildCheckBox(
+            'scan expiry date',
+            scanExpiryDate,
+            (newValue) => scanExpiryDate = newValue,
+          ),
+          buildCheckBox(
+            'scan card holder name',
+            scanCardHolderName,
+            (newValue) => scanCardHolderName = newValue,
+          ),
+          buildCheckBox(
+            'consider past dates in expiry scan',
+            considerPastDatesInExpiryDateScan,
+            (newValue) => considerPastDatesInExpiryDateScan = newValue,
+          ),
+          buildCheckBox(
+            'enable debug logs',
+            enableDebugLogs,
+            (newValue) => enableDebugLogs = newValue,
+          ),
           buildIntegerEditWidget(
-              'max card holder name length', maxCardHolderNameLength, (newValue) => maxCardHolderNameLength = newValue),
-          buildIntegerEditWidget('scanner timeout seconds (0 = infinite)', cardScannerTimeOut,
-              (newValue) => cardScannerTimeOut = newValue),
-          buildCheckBox('expect card holder ABOVE card number',
-              possibleCardHolderNamePositions.contains(CardHolderNameScanPosition.aboveCardNumber), (newValue) {
-            if (newValue == true) {
-              possibleCardHolderNamePositions.add(CardHolderNameScanPosition.aboveCardNumber);
-            } else {
-              possibleCardHolderNamePositions.remove(CardHolderNameScanPosition.aboveCardNumber);
-            }
-            setState(() {});
-          }),
-          buildCheckBox('expect card holder BELOW card number',
-              possibleCardHolderNamePositions.contains(CardHolderNameScanPosition.belowCardNumber), (newValue) {
-            if (newValue == true) {
-              possibleCardHolderNamePositions.add(CardHolderNameScanPosition.belowCardNumber);
-            } else {
-              possibleCardHolderNamePositions.remove(CardHolderNameScanPosition.belowCardNumber);
-            }
-            setState(() {});
-          }),
+            'min frames to scan before finish',
+            validCardsToScanBeforeFinishingScan,
+            (newValue) => validCardsToScanBeforeFinishingScan = newValue,
+          ),
+          buildIntegerEditWidget(
+            'max card holder name length',
+            maxCardHolderNameLength,
+            (newValue) => maxCardHolderNameLength = newValue,
+          ),
+          buildIntegerEditWidget(
+            'scanner timeout seconds (0 = infinite)',
+            cardScannerTimeOut,
+            (newValue) => cardScannerTimeOut = newValue,
+          ),
+          buildCheckBox(
+            'expect card holder ABOVE card number',
+            possibleCardHolderNamePositions.contains(
+              CardHolderNameScanPosition.aboveCardNumber,
+            ),
+            (newValue) {
+              if (newValue == true) {
+                possibleCardHolderNamePositions.add(
+                  CardHolderNameScanPosition.aboveCardNumber,
+                );
+              } else {
+                possibleCardHolderNamePositions.remove(
+                  CardHolderNameScanPosition.aboveCardNumber,
+                );
+              }
+              setState(() {});
+            },
+          ),
+          buildCheckBox(
+            'expect card holder BELOW card number',
+            possibleCardHolderNamePositions.contains(
+              CardHolderNameScanPosition.belowCardNumber,
+            ),
+            (newValue) {
+              if (newValue == true) {
+                possibleCardHolderNamePositions.add(
+                  CardHolderNameScanPosition.belowCardNumber,
+                );
+              } else {
+                possibleCardHolderNamePositions.remove(
+                  CardHolderNameScanPosition.belowCardNumber,
+                );
+              }
+              setState(() {});
+            },
+          ),
           const Divider(),
           Container(
             padding: const EdgeInsets.all(20),
@@ -93,8 +148,11 @@ class _OptionConfigureWidgetState extends State<OptionConfigureWidget> {
               children: [
                 const Text('black listed card holder names (comma separated)'),
                 TextField(
-                  decoration: const InputDecoration(border: OutlineInputBorder()),
-                  onChanged: (value) => cardHolderNameBlackListedWords = value.split(','),
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (value) =>
+                      cardHolderNameBlackListedWords = value.split(','),
                   onEditingComplete: () {
                     setState(() {});
                   },
@@ -116,11 +174,12 @@ class _OptionConfigureWidgetState extends State<OptionConfigureWidget> {
           children: [
             Text(key),
             Checkbox(
-                onChanged: (newValue) {
-                  onChanged?.call(newValue);
-                  setState(() {});
-                },
-                value: value),
+              onChanged: (newValue) {
+                onChanged?.call(newValue);
+                setState(() {});
+              },
+              value: value,
+            ),
           ],
         ),
       ],
@@ -149,7 +208,7 @@ class _OptionConfigureWidgetState extends State<OptionConfigureWidget> {
                 onChanged(max(0, value - 1));
                 setState(() {});
               },
-            )
+            ),
           ],
         ),
       ],
@@ -158,8 +217,10 @@ class _OptionConfigureWidgetState extends State<OptionConfigureWidget> {
 
   @override
   void setState(fn) {
-    widget.onScanOptionChanged(CardScanOptions(
-        possibleCardHolderNamePositions: possibleCardHolderNamePositions.toList(),
+    widget.onScanOptionChanged(
+      CardScanOptions(
+        possibleCardHolderNamePositions: possibleCardHolderNamePositions
+            .toList(),
         cardHolderNameBlackListedWords: cardHolderNameBlackListedWords,
         enableDebugLogs: enableDebugLogs,
         scanCardHolderName: scanCardHolderName,
@@ -169,7 +230,10 @@ class _OptionConfigureWidgetState extends State<OptionConfigureWidget> {
         initialScansToDrop: initialScansToDrop,
         maxCardHolderNameLength: maxCardHolderNameLength,
         scanExpiryDate: scanExpiryDate,
-        validCardsToScanBeforeFinishingScan: validCardsToScanBeforeFinishingScan));
+        validCardsToScanBeforeFinishingScan:
+            validCardsToScanBeforeFinishingScan,
+      ),
+    );
     super.setState(fn);
   }
 }

@@ -16,9 +16,8 @@ class DiskInfo {
       trashSize: json['trash_size'],
       totalSpace: json['total_space'],
       usedSpace: json['used_space'],
-      systemFolders:
-          (json['system_folders'] as Map<String, dynamic>?)
-              ?.cast<String, String>(),
+      systemFolders: (json['system_folders'] as Map<String, dynamic>?)
+          ?.cast<String, String>(),
     );
   }
 

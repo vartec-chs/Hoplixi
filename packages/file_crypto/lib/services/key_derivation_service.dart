@@ -110,9 +110,7 @@ abstract final class KeyDerivationService {
     });
 
     // Split: first 32 bytes for encryption, last 32 bytes for HMAC
-    final encKeyBytes = Uint8List.fromList(
-      keyBytes.sublist(0, keyLength),
-    );
+    final encKeyBytes = Uint8List.fromList(keyBytes.sublist(0, keyLength));
     final hmacKeyBytes = Uint8List.fromList(
       keyBytes.sublist(keyLength, totalKeyLength),
     );

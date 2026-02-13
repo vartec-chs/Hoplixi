@@ -16,11 +16,11 @@ class CardDetails {
   }
 
   Map<String, String> get map => {
-        'cardNumber': _cardNumber,
-        'cardIssuer': _cardIssuer,
-        'cardHolderName': _cardHolderName,
-        'expiryDate': _expiryDate,
-      };
+    'cardNumber': _cardNumber,
+    'cardIssuer': _cardIssuer,
+    'cardHolderName': _cardHolderName,
+    'expiryDate': _expiryDate,
+  };
 
   @override
   String toString() {
@@ -28,7 +28,9 @@ class CardDetails {
     string += _cardNumber.isEmpty ? "" : 'Card Number = $cardNumber\n';
     string += _expiryDate.isEmpty ? "" : 'Expiry Date = $expiryDate\n';
     string += _cardIssuer.isEmpty ? "" : 'Card Issuer = $cardIssuer\n';
-    string += _cardHolderName.isEmpty ? "" : 'Card Holder Name = $cardHolderName\n';
+    string += _cardHolderName.isEmpty
+        ? ""
+        : 'Card Holder Name = $cardHolderName\n';
     return string;
   }
 

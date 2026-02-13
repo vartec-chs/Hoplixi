@@ -13,7 +13,6 @@ class Microsoft extends OAuth2ProviderF {
              "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
          tokenEndpoint:
              "https://login.microsoftonline.com/common/oauth2/v2.0/token",
-          getUserInfoEndpoint:
-              "https://graph.microsoft.com/v1.0/me",
+         getUserInfoEndpoint: "https://graph.microsoft.com/v1.0/me",
        );
 }

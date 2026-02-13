@@ -93,10 +93,9 @@ class YandexDrive implements YandexDriveApi {
     List<String>? fields,
   }) async {
     final queryParams = _makeQueryParams(path: path, fields: fields);
-    final body =
-        customProperties != null
-            ? OAuth2JsonBody({'custom_properties': customProperties})
-            : null;
+    final body = customProperties != null
+        ? OAuth2JsonBody({'custom_properties': customProperties})
+        : null;
 
     final json = await client.patchJson(
       '$_baseUrl/resources',

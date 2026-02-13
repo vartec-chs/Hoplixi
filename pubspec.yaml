@@ -118,6 +118,9 @@ dependencies:
 
   cloud_storage_all:
     path: ./packages/cloud_storage_sdk/packages/cloud_storage_all
+  rust_lib_hoplixi:
+    path: rust_builder
+  flutter_rust_bridge: 2.11.1
  
 
 dev_dependencies:
@@ -129,6 +132,8 @@ dev_dependencies:
   json_serializable: ^6.12.0
   drift_dev: ^2.31.0
   riverpod_lint: ^3.1.3
+  integration_test:
+    sdk: flutter
 
 
 flutter:

@@ -483,7 +483,9 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
                         config: QuillSimpleToolbarConfig(
                           showClipboardPaste: true,
                           multiRowsDisplay: false,
-                          decoration: const BoxDecoration(color: Colors.transparent),
+                          decoration: const BoxDecoration(
+                            color: Colors.transparent,
+                          ),
                           toolbarSize: 40,
                           dialogTheme: QuillDialogTheme(
                             shape: RoundedRectangleBorder(

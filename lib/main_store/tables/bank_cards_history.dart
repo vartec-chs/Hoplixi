@@ -4,7 +4,8 @@ import 'package:uuid/uuid.dart';
 
 @DataClassName('BankCardsHistoryData')
 class BankCardsHistory extends Table {
-  TextColumn get id => text().clientDefault(() => const Uuid().v4())(); // UUID v4
+  TextColumn get id =>
+      text().clientDefault(() => const Uuid().v4())(); // UUID v4
   TextColumn get originalCardId => text()(); // ID of original card
   TextColumn get action => textEnum<ActionInHistory>().withLength(
     min: 1,

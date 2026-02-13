@@ -5,7 +5,8 @@ part 'list_state.freezed.dart';
 
 @freezed
 @immutable
-abstract class DashboardListState<T extends BaseCardDto> with _$DashboardListState<T> {
+abstract class DashboardListState<T extends BaseCardDto>
+    with _$DashboardListState<T> {
   const factory DashboardListState({
     @Default([]) List<T> items,
     @Default(false) bool isLoading,

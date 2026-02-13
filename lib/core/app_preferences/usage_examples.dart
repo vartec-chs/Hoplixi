@@ -13,9 +13,7 @@ void exampleUsage() async {
   final storage = await AppStorageService.init(
     secureStorage: const FlutterSecureStorage(
       aOptions: AndroidOptions(encryptedSharedPreferences: true),
-      iOptions: IOSOptions(
-        accessibility: KeychainAccessibility.first_unlock,
-      ),
+      iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
       lOptions: LinuxOptions(),
       wOptions: WindowsOptions(),
       mOptions: MacOsOptions(),

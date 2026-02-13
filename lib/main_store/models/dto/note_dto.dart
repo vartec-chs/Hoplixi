@@ -80,7 +80,7 @@ sealed class UpdateNoteDto with _$UpdateNoteDto {
     bool? isFavorite,
     bool? isArchived,
     bool? isPinned,
-     List<String>? tagsIds,
+    List<String>? tagsIds,
   }) = _UpdateNoteDto;
 
   factory UpdateNoteDto.fromJson(Map<String, dynamic> json) =>

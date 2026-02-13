@@ -204,7 +204,9 @@ class OtpDao extends DatabaseAccessor<MainStore>
     double newScore = 1.0;
     if (otp.lastUsedAt != null && otp.recentScore != null) {
       final deltaSeconds = now.difference(otp.lastUsedAt!).inSeconds.toDouble();
-      final tau = const Duration(days: 7).inSeconds.toDouble(); // 7 дней в секундах
+      final tau = const Duration(
+        days: 7,
+      ).inSeconds.toDouble(); // 7 дней в секундах
       final decayFactor = exp(-deltaSeconds / tau);
       newScore = otp.recentScore! * decayFactor + 1.0;
     }

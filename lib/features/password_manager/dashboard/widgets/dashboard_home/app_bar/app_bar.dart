@@ -156,7 +156,7 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
     return SliverAppBar(
       expandedHeight: widget.expandedHeight,
       collapsedHeight: widget.collapsedHeight,
-  
+
       pinned: widget.pinned,
       floating: widget.floating,
       snap: widget.snap,

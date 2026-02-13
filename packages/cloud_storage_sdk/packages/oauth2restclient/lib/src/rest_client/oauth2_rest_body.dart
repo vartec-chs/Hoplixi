@@ -69,9 +69,7 @@ class OAuth2FileBody implements OAuth2RestBody {
 
   @override
   List<int> toBytes() {
-    throw UnimplementedError(
-      'toBytes is not supported for OAuth2FileBody',
-    );
+    throw UnimplementedError('toBytes is not supported for OAuth2FileBody');
   }
 
   @override

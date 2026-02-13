@@ -26,6 +26,7 @@ class _IconManagerScreenState extends ConsumerState<IconManagerScreen> {
     _scrollController.dispose();
     super.dispose();
   }
+
   bool _isMobileLayout(BuildContext context) {
     return MediaQuery.sizeOf(context).width > 700.0;
   }

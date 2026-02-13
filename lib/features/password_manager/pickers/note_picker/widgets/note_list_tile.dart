@@ -38,7 +38,8 @@ class NoteListTile extends StatelessWidget {
           color: Theme.of(context).colorScheme.onPrimaryContainer,
         ),
       ),
-      trailing: trailing ??
+      trailing:
+          trailing ??
           (note.isFavorite
               ? Icon(
                   Icons.star,

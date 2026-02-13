@@ -21,10 +21,9 @@ class ResourceList {
     return ResourceList(
       sort: json['sort'],
       path: json['path'],
-      items:
-          (json['items'] as List?)
-              ?.map((e) => Resource.fromJson(e as Map<String, dynamic>))
-              .toList(),
+      items: (json['items'] as List?)
+          ?.map((e) => Resource.fromJson(e as Map<String, dynamic>))
+          .toList(),
       limit: json['limit'],
       offset: json['offset'],
       total: json['total'],

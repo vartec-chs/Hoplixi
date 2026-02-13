@@ -136,10 +136,9 @@ class OneDriveRestApi implements OneDriveApi {
     final body = <String, dynamic>{};
 
     body['parentReference'] = {
-      'path':
-          newParentPath.isEmpty
-              ? '/drive/root:'
-              : '/drive/root:/$newParentPath',
+      'path': newParentPath.isEmpty
+          ? '/drive/root:'
+          : '/drive/root:/$newParentPath',
     };
 
     if (newName.isNotEmpty) {
@@ -163,8 +162,9 @@ class OneDriveRestApi implements OneDriveApi {
     final body = <String, dynamic>{};
 
     body['parentReference'] = {
-      'path':
-          newParentPath.isEmpty ? '/drive/root:' : '/drive/root:$newParentPath',
+      'path': newParentPath.isEmpty
+          ? '/drive/root:'
+          : '/drive/root:$newParentPath',
     };
 
     if (newName.isNotEmpty) {

@@ -21,14 +21,12 @@ class OneDriveDrive {
     return OneDriveDrive(
       id: json['id'] as String,
       driveType: json['driveType'] as String,
-      owner:
-          json['owner'] != null
-              ? OneDriveUser.fromJson(json['owner'] as Map<String, dynamic>)
-              : null,
-      root:
-          json['root'] != null
-              ? OneDriveDriveItem.fromJson(json['root'] as Map<String, dynamic>)
-              : null,
+      owner: json['owner'] != null
+          ? OneDriveUser.fromJson(json['owner'] as Map<String, dynamic>)
+          : null,
+      root: json['root'] != null
+          ? OneDriveDriveItem.fromJson(json['root'] as Map<String, dynamic>)
+          : null,
       quota: json['quota']?['total'] as int?,
     );
   }

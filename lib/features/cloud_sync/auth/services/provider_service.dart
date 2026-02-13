@@ -147,10 +147,7 @@ class ProviderService {
           clientId: app.clientId,
           clientSecret: app.clientSecret,
           redirectUri: 'http://localhost:8080/callback',
-          scopes: [
-            'Files.ReadWrite.All',
-            'User.Read',
-          ],
+          scopes: ['Files.ReadWrite.All', 'User.Read'],
         );
 
       case OauthAppsType.dropbox:
@@ -158,7 +155,11 @@ class ProviderService {
           clientId: app.clientId,
           clientSecret: app.clientSecret,
           redirectUri: 'http://localhost:8080/callback',
-          scopes: ['files.metadata.read', 'files.content.read', 'files.content.write'],
+          scopes: [
+            'files.metadata.read',
+            'files.content.read',
+            'files.content.write',
+          ],
         );
 
       case OauthAppsType.yandex:

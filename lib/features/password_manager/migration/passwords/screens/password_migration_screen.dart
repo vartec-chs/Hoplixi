@@ -216,9 +216,7 @@ class _PasswordMigrationScreenState
                           const SizedBox(height: 12),
                         ],
                       )
-                    : const SizedBox.shrink(
-                        key: ValueKey('error_hidden'),
-                      ),
+                    : const SizedBox.shrink(key: ValueKey('error_hidden')),
               ),
               _buildGenerateSection(),
               const SizedBox(height: 12),

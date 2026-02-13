@@ -7,7 +7,8 @@ import 'notes.dart';
 
 @DataClassName('BankCardsData')
 class BankCards extends Table {
-  TextColumn get id => text().clientDefault(() => const Uuid().v4())(); // UUID v4
+  TextColumn get id =>
+      text().clientDefault(() => const Uuid().v4())(); // UUID v4
   TextColumn get name => text().withLength(min: 1, max: 255)();
   TextColumn get cardholderName => text().withLength(min: 1, max: 255)();
   TextColumn get cardNumber => text()(); // Encrypted card number

@@ -424,7 +424,9 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                                     labelText: 'Месяц *',
                                     hintText: 'MM',
                                     errorText: state.expiryMonthError,
-                                    prefixIcon: const Icon(LucideIcons.calendar),
+                                    prefixIcon: const Icon(
+                                      LucideIcons.calendar,
+                                    ),
                                   ),
                                   keyboardType: TextInputType.number,
                                   inputFormatters: [
@@ -447,7 +449,9 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                                     labelText: 'Год *',
                                     hintText: 'YYYY',
                                     errorText: state.expiryYearError,
-                                    prefixIcon: const Icon(LucideIcons.calendar),
+                                    prefixIcon: const Icon(
+                                      LucideIcons.calendar,
+                                    ),
                                   ),
                                   keyboardType: TextInputType.number,
                                   inputFormatters: [
@@ -624,7 +628,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                           NotePickerField(
                             selectedNoteId: state.noteId,
                             selectedNoteName: _noteName,
-                             hintText: 'Выберите заметку',
+                            hintText: 'Выберите заметку',
                             onNoteSelected: (noteId, noteName) {
                               ref
                                   .read(bankCardFormProvider.notifier)

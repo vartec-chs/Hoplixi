@@ -180,13 +180,12 @@ class GoogleDrive implements GoogleDriveApi {
       fields: theFields,
     );
 
-    final fileMeta =
-        GDFile(
-          createdTime: originalDate,
-          mimeType: contentType,
-          name: fileName,
-          parents: [parentId],
-        ).toJson();
+    final fileMeta = GDFile(
+      createdTime: originalDate,
+      mimeType: contentType,
+      name: fileName,
+      parents: [parentId],
+    ).toJson();
 
     OAuth2JsonBody meta = OAuth2JsonBody(fileMeta);
     OAuth2FileBody file = OAuth2FileBody(
@@ -211,13 +210,12 @@ class GoogleDrive implements GoogleDriveApi {
     String folderName, {
     String? driveId,
   }) async {
-    final fileMeta =
-        GDFile(
-          driveId: driveId,
-          mimeType: 'application/vnd.google-apps.folder',
-          name: folderName,
-          parents: [parentId],
-        ).toJson();
+    final fileMeta = GDFile(
+      driveId: driveId,
+      mimeType: 'application/vnd.google-apps.folder',
+      name: folderName,
+      parents: [parentId],
+    ).toJson();
 
     var url = "https://www.googleapis.com/drive/v3/files";
 

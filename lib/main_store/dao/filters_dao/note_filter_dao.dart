@@ -160,8 +160,6 @@ class NoteFilterDao extends DatabaseAccessor<MainStore>
       // Но оставляем для совместимости с BaseFilter
     }
 
-  
-
     // Диапазоны дат создания
     if (base.createdAfter != null) {
       expression =

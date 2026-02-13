@@ -116,7 +116,9 @@ class DocumentDao extends DatabaseAccessor<MainStore>
           .difference(document.lastUsedAt!)
           .inSeconds
           .toDouble();
-      final tau = const Duration(days: 7).inSeconds.toDouble(); // 7 дней в секундах
+      final tau = const Duration(
+        days: 7,
+      ).inSeconds.toDouble(); // 7 дней в секундах
       final decayFactor = exp(-deltaSeconds / tau);
       newScore = document.recentScore! * decayFactor + 1.0;
     }

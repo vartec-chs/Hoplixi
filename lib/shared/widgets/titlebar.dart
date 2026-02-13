@@ -99,7 +99,10 @@ class _TitleBarState extends ConsumerState<TitleBar> {
 
                 children: [
                   const CloseDatabaseButton(type: CloseDatabaseButtonType.icon),
-                  const ThemeSwitcher(size: 26, style: ThemeSwitcherStyle.animated),
+                  const ThemeSwitcher(
+                    size: 26,
+                    style: ThemeSwitcherStyle.animated,
+                  ),
                   IconButton(
                     padding: const EdgeInsets.all(6),
                     icon: const Icon(Icons.minimize, size: 20),

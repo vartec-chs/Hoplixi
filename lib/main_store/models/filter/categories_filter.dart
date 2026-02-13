@@ -39,7 +39,7 @@ abstract class CategoriesFilter with _$CategoriesFilter {
     int? offset,
   }) {
     final normalizedQuery = (query ?? '').trim();
-    
+
     final normalizedColor = color?.trim();
 
     return CategoriesFilter(

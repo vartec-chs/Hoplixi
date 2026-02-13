@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-// not part of plugin, added to add commandline input
 import 'package:args/args.dart';
-// import of the plugin
 import 'package:commandline_or_gui_windows/commandline_or_gui_windows.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -15,6 +13,7 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/core/utils/window_manager.dart';
 import 'package:hoplixi/setup_error_handling.dart';
 import 'package:hoplixi/setup_tray.dart';
+import 'package:hoplixi/src/rust/frb_generated.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:toastification/toastification.dart';
 import 'package:universal_platform/universal_platform.dart';
@@ -53,12 +52,7 @@ Future<void> main(List<String> args) async {
       mandatory: false,
       help: 'Path to the file to open',
     )
-    ..addFlag(
-      'help',
-      abbr: 'h',
-      negatable: false,
-      help: 'Show help for flags',
-    );
+    ..addFlag('help', abbr: 'h', negatable: false, help: 'Show help for flags');
 
   ArgResults results;
   try {
@@ -99,8 +93,8 @@ Future<void> main(List<String> args) async {
   // - If there are any flags except --file/-f -> treat as CLI
   // - If only a positional single path or only --file flag -> treat as GUI (open file)
   final List<String> flags = args.where((a) => a.startsWith('-')).toList();
-  final bool onlyFileFlag = flags.isNotEmpty &&
-      flags.every((f) => f == '--file' || f == '-f');
+  final bool onlyFileFlag =
+      flags.isNotEmpty && flags.every((f) => f == '--file' || f == '-f');
   final bool isCliMode = flags.isNotEmpty && !onlyFileFlag;
 
   // Run guarded zone for crash logging
@@ -130,7 +124,8 @@ Future<void> main(List<String> args) async {
       }
 
       // --- GUI mode: first-instance check BEFORE heavy init ---
-      final bool firstInstance = await FlutterSingleInstance().isFirstInstance();
+      final bool firstInstance = await FlutterSingleInstance()
+          .isFirstInstance();
       if (!firstInstance) {
         // App already running: focus existing window and exit.
         // (Optional) implement IPC to send filePath to primary instance.
@@ -144,6 +139,7 @@ Future<void> main(List<String> args) async {
       }
 
       // --- Now safe to perform heavy initialization for GUI ---
+      await RustLib.init();
       WidgetsFlutterBinding.ensureInitialized();
       await dotenv.load(fileName: '.env');
 
@@ -210,7 +206,10 @@ Future<void> main(List<String> args) async {
         errorType: 'UncaughtError',
       );
       try {
-        Toaster.error(title: 'Глобальная ошибка', description: error.toString());
+        Toaster.error(
+          title: 'Глобальная ошибка',
+          description: error.toString(),
+        );
       } catch (_) {
         // ignore toast errors when handling crash
       }
@@ -226,8 +225,9 @@ Widget setupToastificationWrapper(Widget app) {
       maxDescriptionLines: 5,
       maxToastLimit: 3,
       itemWidth: UniversalPlatform.isDesktop ? 400 : double.infinity,
-      alignment:
-          UniversalPlatform.isDesktop ? Alignment.bottomRight : Alignment.topCenter,
+      alignment: UniversalPlatform.isDesktop
+          ? Alignment.bottomRight
+          : Alignment.topCenter,
       marginBuilder: (context, alignment) {
         if (UniversalPlatform.isDesktop) {
           return const EdgeInsets.only(right: 8, bottom: 28);

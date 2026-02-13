@@ -37,9 +37,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text('card_scanner app'),
-        ),
+        appBar: AppBar(title: const Text('card_scanner app')),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -56,7 +54,7 @@ class _MyAppState extends State<MyApp> {
                   initialOptions: scanOptions,
                   onScanOptionChanged: (newOptions) => scanOptions = newOptions,
                 ),
-              )
+              ),
             ],
           ),
         ),

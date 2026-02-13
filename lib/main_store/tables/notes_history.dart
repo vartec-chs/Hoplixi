@@ -4,7 +4,8 @@ import 'package:uuid/uuid.dart';
 
 @DataClassName('NotesHistoryData')
 class NotesHistory extends Table {
-  TextColumn get id => text().clientDefault(() => const Uuid().v4())(); // UUID v4
+  TextColumn get id =>
+      text().clientDefault(() => const Uuid().v4())(); // UUID v4
   TextColumn get originalNoteId => text()(); // ID of original note
   TextColumn get action => textEnum<ActionInHistory>().withLength(
     min: 1,

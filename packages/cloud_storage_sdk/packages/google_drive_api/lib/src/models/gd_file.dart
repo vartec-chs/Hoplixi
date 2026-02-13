@@ -23,18 +23,16 @@ class GDFile {
 
   factory GDFile.fromJson(Map<String, dynamic> json) {
     return GDFile(
-      createdTime:
-          json['createdTime'] != null
-              ? DateTime.parse(json['createdTime']).toLocal()
-              : null,
+      createdTime: json['createdTime'] != null
+          ? DateTime.parse(json['createdTime']).toLocal()
+          : null,
       driveId: json['driveId'],
       hasThumbnail: json['hasThumbnail'],
       id: json['id'],
       mimeType: json['mimeType'],
-      modifiedTime:
-          json['modifiedTime'] != null
-              ? DateTime.parse(json['modifiedTime']).toLocal()
-              : null,
+      modifiedTime: json['modifiedTime'] != null
+          ? DateTime.parse(json['modifiedTime']).toLocal()
+          : null,
       name: json['name'],
       parents: (json['parents'] as List?)?.map((e) => e.toString()).toList(),
       size: json['size'] as String?,

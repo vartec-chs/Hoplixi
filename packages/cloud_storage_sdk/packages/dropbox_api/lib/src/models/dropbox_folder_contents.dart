@@ -14,10 +14,9 @@ class DropboxFolderContents {
 
   factory DropboxFolderContents.fromJson(Map<String, dynamic> json) {
     return DropboxFolderContents(
-      entries:
-          (json['entries'] as List)
-              .map((e) => DropboxFile.fromJson(e as Map<String, dynamic>))
-              .toList(),
+      entries: (json['entries'] as List)
+          .map((e) => DropboxFile.fromJson(e as Map<String, dynamic>))
+          .toList(),
       cursor: json['cursor'] as String?,
       hasMore: json['has_more'] as bool,
     );
