@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
-import '../window_channel_service.dart';
+import '../../../core/multi_window/window_channel_service.dart';
 
 /// Экран авторизации, открываемый в отдельном суб-окне.
 ///

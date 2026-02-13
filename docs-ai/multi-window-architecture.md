@@ -19,7 +19,7 @@ graph TD
     end
 
     subgraph Sub-Window
-        SW_Entry[SubWindowEntry]
+        SW_Entry[RunSubWindowEntry]
         WCS_Sub[WindowChannelService]
     end
 
@@ -52,7 +52,7 @@ graph TD
    - `openAndWaitResult<T>()`: Combines opening a window and waiting for a
      result via `WindowChannelService`.
 
-3. **`SubWindowEntry` (`lib/core/multi_window/sub_window_entry.dart`)**:
+3. **`RunSubWindowEntry` (`lib/run_sub_window_entry.dart`)**:
    - The entry point for sub-windows.
    - Initializes the sub-window environment, including logging (see below) and
      error handling.

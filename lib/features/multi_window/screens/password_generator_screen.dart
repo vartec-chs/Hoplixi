@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:window_manager/window_manager.dart';
 
-import '../window_channel_service.dart';
+import '../../../core/multi_window/window_channel_service.dart';
 
 /// Экран генератора паролей для отдельного суб-окна.
 ///

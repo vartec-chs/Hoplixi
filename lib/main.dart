@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_single_instance/flutter_single_instance.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/index.dart';
-import 'package:hoplixi/core/multi_window/sub_window_entry.dart';
+import 'package:hoplixi/run_sub_window_entry.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/core/utils/window_manager.dart';
 import 'package:hoplixi/setup_error_handling.dart';

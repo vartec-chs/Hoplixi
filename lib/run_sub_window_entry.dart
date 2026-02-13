@@ -6,11 +6,11 @@ import 'package:hoplixi/core/theme/theme_window_sync_service.dart';
 import 'package:hoplixi/setup_error_handling.dart';
 import 'package:window_manager/window_manager.dart';
 
-import 'screens/auth_window_screen.dart';
-import 'screens/password_generator_screen.dart';
-import 'sub_window_app.dart';
-import 'sub_window_type.dart';
-import 'window_controller_ext.dart';
+import 'features/multi_window/screens/auth_window_screen.dart';
+import 'features/multi_window/screens/password_generator_screen.dart';
+import 'core/multi_window/sub_window_app.dart';
+import 'core/multi_window/sub_window_type.dart';
+import 'core/multi_window/window_controller_ext.dart';
 
 /// Точка входа суб-окна.
 ///
