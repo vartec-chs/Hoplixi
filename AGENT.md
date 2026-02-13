@@ -75,6 +75,16 @@ widget patterns and responsive layout examples.
 See [docs-ai/multi-window-architecture.md](docs-ai/multi-window-architecture.md)
 for details on multi-window support and the corresponding logging strategy.
 
+## Rust Language
+
+Status: ✅ **Integrated**. The `flutter_rust_bridge` library is fully configured
+and ready for use. You can immediately start implementing Rust functions in
+`rust/src/api/` and calling them from Dart.
+
+See [docs-ai/rust-integration.md](docs-ai/rust-integration.md) for details on
+integrating Rust code using `flutter_rust_bridge` version 2.x and cross-platform
+requirements.
+
 ### Extension Methods
 
 Use extension methods to reduce boilerplate and improve code readability:
