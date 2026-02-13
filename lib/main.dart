@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_single_instance/flutter_single_instance.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/core/multi_window/sub_window_entry.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/core/utils/window_manager.dart';
 import 'package:hoplixi/setup_error_handling.dart';
@@ -40,8 +41,21 @@ Future<void> _handleLostData() async {
 Future<void> main(List<String> args) async {
   if (UniversalPlatform.isWeb) {
     throw UnsupportedError(
-      'Web platform is not supported in this version. Please use a different platform.',
+      'Web platform is not supported in this version. '
+      'Please use a different platform.',
     );
+  }
+
+  // --- Проверка суб-окна (desktop_multi_window) ---
+  // Если текущий процесс запущен как дочернее окно,
+  // пропускаем тяжёлую инициализацию главного приложения.
+  if (UniversalPlatform.isDesktop) {
+    try {
+      final isSubWindow = await tryRunAsSubWindow();
+      if (isSubWindow) return;
+    } catch (_) {
+      // Не суб-окно — продолжаем стандартную инициализацию
+    }
   }
 
   // --- Parse args early (before heavy init) ---

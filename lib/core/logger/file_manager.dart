@@ -43,29 +43,31 @@ class FileManager {
   Future<void> writeLogEntry(LogEntry entry) async {
     final file = await getCurrentLogFile();
     final jsonStr = jsonEncode(entry.toJson());
-    await file.writeAsString('$jsonStr\n', mode: FileMode.append);
+    await file.writeAsString('$jsonStr\n', mode: FileMode.append, flush: true);
   }
 
   Future<void> writeSessionStart(Session session) async {
     final file = await getCurrentLogFile();
     final sessionData = {
       'type': 'session_start',
+      'processId': pid,
       'timestamp': DateTime.now().toIso8601String(),
       'session': session.toJson(),
     };
     final jsonStr = jsonEncode(sessionData);
-    await file.writeAsString('$jsonStr\n', mode: FileMode.append);
+    await file.writeAsString('$jsonStr\n', mode: FileMode.append, flush: true);
   }
 
   Future<void> writeSessionEnd(Session session) async {
     final file = await getCurrentLogFile();
     final sessionData = {
       'type': 'session_end',
+      'processId': pid,
       'timestamp': DateTime.now().toIso8601String(),
       'session': session.toJson(),
     };
     final jsonStr = jsonEncode(sessionData);
-    await file.writeAsString('$jsonStr\n', mode: FileMode.append);
+    await file.writeAsString('$jsonStr\n', mode: FileMode.append, flush: true);
   }
 
   Future<void> writeCrashReport(

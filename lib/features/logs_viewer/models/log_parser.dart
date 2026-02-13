@@ -17,6 +17,7 @@ class LogParser {
       if (json.containsKey('sessionId') && json.containsKey('level')) {
         return LogEntry(
           sessionId: json['sessionId'] ?? '',
+          processId: json['processId'] ?? 0,
           timestamp: DateTime.parse(
             json['timestamp'] ?? DateTime.now().toIso8601String(),
           ),
@@ -105,6 +106,8 @@ class SessionEvent {
         sessionJson['startTime'] ?? DateTime.now().toIso8601String(),
       ),
       deviceInfo: deviceInfo,
+      isSubWindow: sessionJson['isSubWindow'] ?? false,
+      windowType: sessionJson['windowType'],
       endTime: sessionJson['endTime'] != null
           ? DateTime.parse(sessionJson['endTime'])
           : null,

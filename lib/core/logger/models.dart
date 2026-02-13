@@ -1,6 +1,7 @@
 // lib/logger/logger_config.dart
 
 import 'dart:io';
+
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uuid/uuid.dart';
@@ -78,6 +79,29 @@ class DeviceInfo {
     required this.packageName,
     required this.additionalInfo,
   });
+
+  /// Упрощённая мета-информация для суб-окна.
+  ///
+  /// Вместо полной [DeviceInfo] записывает только
+  /// PID процесса, тип окна и платформу.
+  factory DeviceInfo.subWindow({required String windowType}) {
+    return DeviceInfo(
+      deviceId: 'sub_window_${pid}',
+      platform: Platform.operatingSystem,
+      platformVersion: '',
+      deviceModel: '',
+      deviceManufacturer: '',
+      appName: 'hoplixi_sub_window',
+      appVersion: '',
+      buildNumber: '',
+      packageName: '',
+      additionalInfo: {
+        'isSubWindow': true,
+        'windowType': windowType,
+        'pid': pid,
+      },
+    );
+  }
 
   static Future<DeviceInfo> collect() async {
     final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
@@ -228,20 +252,44 @@ class Session {
   final String id;
   final DateTime startTime;
   final DeviceInfo deviceInfo;
+
+  /// Признак того, что сессия принадлежит суб-окну.
+  final bool isSubWindow;
+
+  /// Тип суб-окна (например, `passwordGenerator`).
+  /// Заполняется только если [isSubWindow] == `true`.
+  final String? windowType;
+
   DateTime? endTime;
 
   Session({
     required this.id,
     required this.startTime,
     required this.deviceInfo,
+    this.isSubWindow = false,
+    this.windowType,
     this.endTime,
   });
 
+  /// Создаёт сессию для главного окна с полной
+  /// информацией об устройстве.
   factory Session.create(DeviceInfo deviceInfo) {
     return Session(
       id: const Uuid().v4(),
       startTime: DateTime.now(),
       deviceInfo: deviceInfo,
+    );
+  }
+
+  /// Создаёт сессию для суб-окна с упрощённой
+  /// мета-информацией (PID + тип окна).
+  factory Session.createSubWindow(String windowType) {
+    return Session(
+      id: const Uuid().v4(),
+      startTime: DateTime.now(),
+      deviceInfo: DeviceInfo.subWindow(windowType: windowType),
+      isSubWindow: true,
+      windowType: windowType,
     );
   }
 
@@ -260,6 +308,8 @@ class Session {
       'startTime': startTime.toIso8601String(),
       'endTime': endTime?.toIso8601String(),
       'duration': duration?.inMilliseconds,
+      'isSubWindow': isSubWindow,
+      if (windowType != null) 'windowType': windowType,
       'deviceInfo': deviceInfo.toJson(),
     };
   }
@@ -280,6 +330,13 @@ enum LogLevel {
 
 class LogEntry {
   final String sessionId;
+
+  /// PID процесса, создавшего запись.
+  ///
+  /// Позволяет идентифицировать источник записи
+  /// в общем JSONL-файле (главное окно / суб-окно).
+  final int processId;
+
   final DateTime timestamp;
   final LogLevel level;
   final String message;
@@ -290,6 +347,7 @@ class LogEntry {
 
   LogEntry({
     required this.sessionId,
+    required this.processId,
     required this.timestamp,
     required this.level,
     required this.message,
@@ -302,6 +360,7 @@ class LogEntry {
   Map<String, dynamic> toJson() {
     return {
       'sessionId': sessionId,
+      'processId': processId,
       'timestamp': timestamp.toIso8601String(),
       'level': level.name,
       'message': message,

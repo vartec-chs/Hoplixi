@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'dart:async';
+import 'dart:io';
 
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
@@ -25,7 +25,11 @@ class AppLogger {
   LoggerConfig get config => _config;
   Session get currentSession => _currentSession;
 
-  Future<void> initialize({LoggerConfig? config}) async {
+  Future<void> initialize({
+    LoggerConfig? config,
+    bool isSubWindow = false,
+    String? windowType,
+  }) async {
     if (_initialized) return;
 
     _config = config ?? const LoggerConfig();
@@ -62,20 +66,28 @@ class AppLogger {
       ),
     );
 
-    // Collect device info and create session
-    final deviceInfo = await DeviceInfo.collect();
-    _currentSession = Session.create(deviceInfo);
+    // Создаём сессию с учётом типа окна:
+    // суб-окно получает упрощённую DeviceInfo
+    // (только PID + тип окна).
+    if (isSubWindow && windowType != null) {
+      _currentSession = Session.createSubWindow(windowType);
+    } else {
+      final deviceInfo = await DeviceInfo.collect();
+      _currentSession = Session.create(deviceInfo);
+    }
 
-    // Initialize crash report manager with config from LoggerConfig
-    await CrashReportManager.instance.initialize(
-      deviceInfo,
-      config: CrashReportConfig(
-        maxCount: _config.maxCrashReportCount,
-        maxFileSize: _config.maxCrashReportFileSize,
-        retentionPeriod: _config.crashReportRetentionPeriod,
-        autoCleanup: _config.autoCleanup,
-      ),
-    );
+    // CrashReportManager не нужен в суб-окнах
+    if (!isSubWindow && _config.enableCrashReports) {
+      await CrashReportManager.instance.initialize(
+        _currentSession.deviceInfo,
+        config: CrashReportConfig(
+          maxCount: _config.maxCrashReportCount,
+          maxFileSize: _config.maxCrashReportFileSize,
+          retentionPeriod: _config.crashReportRetentionPeriod,
+          autoCleanup: _config.autoCleanup,
+        ),
+      );
+    }
 
     // Initialize buffer
     _logBuffer = LogBuffer(_config, _fileManager);
@@ -197,6 +209,7 @@ class AppLogger {
 
     final entry = LogEntry(
       sessionId: _currentSession.id,
+      processId: pid,
       timestamp: DateTime.now(),
       level: level,
       message: message,
