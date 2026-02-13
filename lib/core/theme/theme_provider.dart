@@ -53,21 +53,21 @@ class ThemeProvider extends AsyncNotifier<ThemeMode> {
   }
 
   Future<void> setLightTheme() async {
-    state = const AsyncData(ThemeMode.light);
-    // logInfo('Theme changed to light', tag: 'Theme');
-    await _saveTheme(ThemeMode.light);
+    await setThemeMode(ThemeMode.light);
   }
 
   Future<void> setDarkTheme() async {
-    state = const AsyncData(ThemeMode.dark);
-    // logInfo('Theme changed to dark', tag: 'Theme');
-    await _saveTheme(ThemeMode.dark);
+    await setThemeMode(ThemeMode.dark);
   }
 
   Future<void> setSystemTheme() async {
-    state = const AsyncData(ThemeMode.system);
-    // logInfo('Theme changed to system', tag: 'Theme');
-    await _saveTheme(ThemeMode.system);
+    await setThemeMode(ThemeMode.system);
+  }
+
+  Future<void> setThemeMode(ThemeMode themeMode, {bool persist = true}) async {
+    state = AsyncData(themeMode);
+    if (!persist) return;
+    await _saveTheme(themeMode);
   }
 
   Future<void> toggleTheme() async {

@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hoplixi/shared/ui/button.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../window_channel_service.dart';
@@ -156,12 +157,10 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final strength = _strength;
 
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -234,34 +233,22 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
+                child: SmoothButton(
                   onPressed: _generate,
                   icon: const Icon(Icons.refresh, size: 18),
-                  label: const Text('Обновить'),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+                  label: 'Обновить',
+                  type: .text,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: FilledButton.icon(
+                child: SmoothButton(
                   onPressed: _channelRegistered && _generatedPassword.isNotEmpty
                       ? _submitAndClose
                       : null,
                   icon: const Icon(Icons.check, size: 18),
-                  label: const Text('Использовать'),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: colorScheme.onPrimary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+                  label: 'Использовать',
+                  type: .filled,
                 ),
               ),
             ],
@@ -299,12 +286,16 @@ class _PasswordField extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: SelectableText(
-              password.isEmpty ? 'Выберите параметры...' : password,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                fontFamily: 'monospace',
-                fontWeight: FontWeight.w500,
-                letterSpacing: 1.2,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SelectableText(
+                password.isEmpty ? 'Выберите параметры...' : password,
+
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontFamily: 'monospace',
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 1.2,
+                ),
               ),
             ),
           ),

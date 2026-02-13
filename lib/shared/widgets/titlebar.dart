@@ -12,7 +12,20 @@ import 'package:hoplixi/shared/widgets/close_database_button.dart';
 import 'package:window_manager/window_manager.dart';
 
 class TitleBar extends ConsumerStatefulWidget {
-  const TitleBar({super.key});
+  final String? labelOverride;
+  final bool showDatabaseButton;
+  final bool showThemeSwitcher;
+  final bool lockStoreOnClose;
+  final Future<void> Function()? onClose;
+
+  const TitleBar({
+    super.key,
+    this.labelOverride,
+    this.showDatabaseButton = true,
+    this.showThemeSwitcher = true,
+    this.lockStoreOnClose = true,
+    this.onClose,
+  });
 
   @override
   ConsumerState<TitleBar> createState() => _TitleBarState();
@@ -70,7 +83,7 @@ class _TitleBarState extends ConsumerState<TitleBar> {
                           ),
                         ),
                         Text(
-                          titlebarState.label,
+                          widget.labelOverride ?? titlebarState.label,
                           style: TextStyle(
                             color: titlebarState.backgroundTransparent
                                 ? Colors.white
@@ -98,11 +111,15 @@ class _TitleBarState extends ConsumerState<TitleBar> {
                 spacing: 4,
 
                 children: [
-                  const CloseDatabaseButton(type: CloseDatabaseButtonType.icon),
-                  const ThemeSwitcher(
-                    size: 26,
-                    style: ThemeSwitcherStyle.animated,
-                  ),
+                  if (widget.showDatabaseButton)
+                    const CloseDatabaseButton(
+                      type: CloseDatabaseButtonType.icon,
+                    ),
+                  if (widget.showThemeSwitcher)
+                    const ThemeSwitcher(
+                      size: 26,
+                      style: ThemeSwitcherStyle.animated,
+                    ),
                   IconButton(
                     padding: const EdgeInsets.all(6),
                     icon: const Icon(Icons.minimize, size: 20),
@@ -128,7 +145,13 @@ class _TitleBarState extends ConsumerState<TitleBar> {
                       fontWeight: FontWeight.bold,
                     ),
                     onPressed: () async {
-                      await ref.read(mainStoreProvider.notifier).lockStore();
+                      if (widget.onClose != null) {
+                        await widget.onClose!.call();
+                        return;
+                      }
+                      if (widget.lockStoreOnClose) {
+                        await ref.read(mainStoreProvider.notifier).lockStore();
+                      }
                       await windowManager.hide();
                     },
                   ),

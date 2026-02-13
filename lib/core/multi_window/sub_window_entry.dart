@@ -2,6 +2,7 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/core/theme/theme_window_sync_service.dart';
 import 'package:hoplixi/setup_error_handling.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -65,7 +66,7 @@ Future<bool> tryRunAsSubWindow() async {
     minimumSize: args.type.minSize,
     center: true,
     title: args.type.title,
-    titleBarStyle: TitleBarStyle.normal,
+    titleBarStyle: TitleBarStyle.hidden,
     skipTaskbar: false,
   );
 
@@ -76,7 +77,9 @@ Future<bool> tryRunAsSubWindow() async {
 
   // Инициализируем обработчик методов окна
   // для межоконного взаимодействия
-  await controller.initWindowMethodHandler();
+  await controller.initWindowMethodHandler(
+    onThemeSyncSet: ThemeWindowSyncService.instance.handleIncomingForSub,
+  );
 
   // Определяем содержимое на основе типа
   final Widget content = switch (args.type) {

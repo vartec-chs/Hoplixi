@@ -403,31 +403,31 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2>
           }
         },
       ),
-      ActionItem(
-        icon: LucideIcons.lock,
-        label: 'Авторизация',
-        description: 'Тест окна авторизации',
-        onTap: () async {
-          final result = await MultiWindowService.instance
-              .openAndWaitResult<Map>(
-                type: SubWindowType.auth,
-                channel: WindowChannels.auth,
-                payload: {'reason': 'test'},
-              );
+      // ActionItem(
+      //   icon: LucideIcons.lock,
+      //   label: 'Авторизация',
+      //   description: 'Тест окна авторизации',
+      //   onTap: () async {
+      //     final result = await MultiWindowService.instance
+      //         .openAndWaitResult<Map>(
+      //           type: SubWindowType.auth,
+      //           channel: WindowChannels.auth,
+      //           payload: {'reason': 'test'},
+      //         );
 
-          if (!context.mounted) return;
+      //     if (!context.mounted) return;
 
-          if (result != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Логин: ${result['login']}')),
-            );
-          } else {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('Отменено')));
-          }
-        },
-      ),
+      //     if (result != null) {
+      //       ScaffoldMessenger.of(context).showSnackBar(
+      //         SnackBar(content: Text('Логин: ${result['login']}')),
+      //       );
+      //     } else {
+      //       ScaffoldMessenger.of(
+      //         context,
+      //       ).showSnackBar(const SnackBar(content: Text('Отменено')));
+      //     }
+      //   },
+      // ),
     ];
   }
 

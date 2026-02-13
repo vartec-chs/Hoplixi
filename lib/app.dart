@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:animated_theme_switcher/animated_theme_switcher.dart'
     as animated_theme;
 import 'package:flutter/material.dart';
@@ -6,6 +8,7 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/theme/index.dart';
+import 'package:hoplixi/core/theme/theme_window_sync_service.dart';
 import 'package:hoplixi/routing/router.dart';
 import 'package:hoplixi/shared/widgets/desktop_shell.dart';
 import 'package:hoplixi/shared/widgets/watchers/lifecycle/app_lifecycle_observer.dart';
@@ -23,6 +26,38 @@ class App extends ConsumerStatefulWidget {
 }
 
 class _AppState extends ConsumerState<App> {
+  ProviderSubscription<AsyncValue<ThemeMode>>? _themeSyncSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    unawaited(
+      ThemeWindowSyncService.instance.bindMainNotifier(
+        ref.read(themeProvider.notifier),
+      ),
+    );
+
+    _themeSyncSubscription = ref.listenManual<AsyncValue<ThemeMode>>(
+      themeProvider,
+      (previous, next) {
+        final mode = next.value;
+        if (mode == null) return;
+        if (ThemeWindowSyncService.instance.consumeSuppressedOutboundFlag(mode)) {
+          return;
+        }
+        unawaited(ThemeWindowSyncService.instance.broadcastFromMain(mode));
+      },
+      fireImmediately: false,
+    );
+  }
+
+  @override
+  void dispose() {
+    _themeSyncSubscription?.close();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
@@ -44,6 +79,9 @@ class _AppState extends ConsumerState<App> {
             child: MaterialApp.router(
               title: MainConstants.appName,
               routerConfig: router,
+              theme: AppTheme.light(context),
+              darkTheme: AppTheme.dark(context),
+              themeMode: themeMode,
               localizationsDelegates: const [
                 GlobalMaterialLocalizations.delegate,
                 GlobalCupertinoLocalizations.delegate,

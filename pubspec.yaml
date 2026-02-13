@@ -119,6 +119,7 @@ dependencies:
 
   cloud_storage_all:
     path: ./packages/cloud_storage_sdk/packages/cloud_storage_all
+    
   rust_lib_hoplixi:
     path: rust_builder
   flutter_rust_bridge: 2.11.1

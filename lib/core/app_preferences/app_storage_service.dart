@@ -1,9 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hoplixi/core/services/local_auth_failure.dart';
 import 'package:hoplixi/core/services/local_auth_service.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+
 import 'app_key.dart';
 import 'pref_category.dart';
 import 'storage_errors.dart';

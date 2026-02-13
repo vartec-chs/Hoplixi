@@ -13,7 +13,9 @@ extension WindowControllerExt on WindowController {
   ///
   /// Вызывается внутри суб-окна для обработки
   /// входящих команд от главного окна.
-  Future<void> initWindowMethodHandler() async {
+  Future<void> initWindowMethodHandler({
+    Future<void> Function(dynamic rawMode)? onThemeSyncSet,
+  }) async {
     await setWindowMethodHandler((call) async {
       switch (call.method) {
         case 'window_center':
@@ -33,6 +35,10 @@ extension WindowControllerExt on WindowController {
           final w = (args['width'] as num).toDouble();
           final h = (args['height'] as num).toDouble();
           await windowManager.setMinimumSize(Size(w, h));
+        case 'theme_sync_set':
+          if (onThemeSyncSet != null) {
+            await onThemeSyncSet(call.arguments);
+          }
         default:
           throw MissingPluginException('Метод не реализован: ${call.method}');
       }
