@@ -70,6 +70,11 @@ securely store and manage their passwords.
 See [docs-ai/widget-patterns.md](docs-ai/widget-patterns.md) for optimized
 widget patterns and responsive layout examples.
 
+## Multi-Window and Logging
+
+See [docs-ai/multi-window-architecture.md](docs-ai/multi-window-architecture.md)
+for details on multi-window support and the corresponding logging strategy.
+
 ### Extension Methods
 
 Use extension methods to reduce boilerplate and improve code readability:
