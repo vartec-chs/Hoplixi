@@ -81,6 +81,27 @@ class AppKeys {
     isHiddenUI: false,
   );
 
+  static const backupScope = AppKey<String>(
+    'backup_scope',
+    category: PrefCategory.backup,
+    editable: true,
+    isHiddenUI: false,
+  );
+
+  static const backupIntervalMinutes = AppKey<int>(
+    'backup_interval_minutes',
+    category: PrefCategory.backup,
+    editable: true,
+    isHiddenUI: false,
+  );
+
+  static const backupMaxPerStore = AppKey<int>(
+    'backup_max_per_store',
+    category: PrefCategory.backup,
+    editable: true,
+    isHiddenUI: false,
+  );
+
   // ==================== Защищённые ключи (SecureStorage) ====================
 
   /// Включена ли биометрия (требует подтверждения биометрией при изменении)
@@ -127,6 +148,9 @@ class AppKeys {
       lastSyncTime,
       autoBackupEnabled,
       backupPath,
+      backupScope,
+      backupIntervalMinutes,
+      backupMaxPerStore,
       pinCode,
       pinAttempts,
     ];

@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/core/app_preferences/app_preference_keys.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/theme/index.dart';
+import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/settings/providers/settings_provider.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 import 'package:hoplixi/shared/widgets/close_database_button.dart';
-// import 'package:hoplixi/app/constants/main_constants.dart';
-// import 'package:hoplixi/app/theme/index.dart';
-// import 'package:hoplixi/hoplixi_store/providers/hoplixi_store_providers.dart';
-// import 'package:hoplixi/hoplixi_store/providers/providers.dart';
-// import 'package:hoplixi/core/providers/app_lifecycle_provider.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:window_manager/window_manager.dart';
 
 class TitleBar extends ConsumerStatefulWidget {
@@ -37,12 +36,57 @@ class _TitleBarState extends ConsumerState<TitleBar> {
     maxWidth: 40,
   );
 
+  BackupScope _parseBackupScope(String? raw) {
+    switch (raw) {
+      case 'databaseOnly':
+        return BackupScope.databaseOnly;
+      case 'encryptedFilesOnly':
+        return BackupScope.encryptedFilesOnly;
+      case 'full':
+      default:
+        return BackupScope.full;
+    }
+  }
+
+  Future<void> _createBackupNow() async {
+    final settings = ref.read(settingsProvider);
+    final backupPath = settings[AppKeys.backupPath.key] as String?;
+    final scopeRaw = settings[AppKeys.backupScope.key] as String?;
+    final backupMaxPerStore =
+        settings[AppKeys.backupMaxPerStore.key] as int? ?? 10;
+    final scope = _parseBackupScope(scopeRaw);
+
+    final result = await ref
+        .read(mainStoreProvider.notifier)
+        .createBackup(
+          scope: scope,
+          outputDirPath: backupPath,
+          periodic: false,
+          maxBackupsPerStore: backupMaxPerStore,
+        );
+
+    if (!mounted) return;
+
+    if (result == null) {
+      Toaster.error(
+        title: 'Бэкап не создан',
+        description: 'Проверьте, что хранилище открыто',
+      );
+      return;
+    }
+
+    Toaster.success(title: 'Бэкап создан', description: result.backupPath);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     // final isDatabaseOpen = ref.watch(isDatabaseOpenProvider);
     // final closeDbTimer = ref.watch(appInactivityTimeoutProvider);
     final titlebarState = ref.watch(titlebarStateProvider);
+    final isStoreOpen = ref
+        .watch(mainStoreProvider)
+        .maybeWhen(data: (state) => state.isOpen, orElse: () => false);
     return DragToMoveArea(
       child: AnimatedContainer(
         height: 40,
@@ -111,18 +155,29 @@ class _TitleBarState extends ConsumerState<TitleBar> {
                 spacing: 4,
 
                 children: [
+                  if (isStoreOpen)
+                    IconButton(
+                      padding: const EdgeInsets.all(6),
+                      icon: const Icon(Icons.backup, size: 20),
+                      tooltip: 'Создать бэкап',
+                      constraints: constraints,
+                      onPressed: _createBackupNow,
+                    ),
                   if (widget.showDatabaseButton)
                     const CloseDatabaseButton(
                       type: CloseDatabaseButtonType.icon,
                     ),
+                  if (widget.showDatabaseButton && widget.showThemeSwitcher)
+                    const SizedBox(width: 4),
                   if (widget.showThemeSwitcher)
                     const ThemeSwitcher(
                       size: 26,
                       style: ThemeSwitcherStyle.animated,
                     ),
+
                   IconButton(
                     padding: const EdgeInsets.all(6),
-                    icon: const Icon(Icons.minimize, size: 20),
+                    icon: const Icon(LucideIcons.minus, size: 20),
                     tooltip: 'Свернуть',
                     constraints: constraints,
                     onPressed: () => windowManager.minimize(),
@@ -131,7 +186,7 @@ class _TitleBarState extends ConsumerState<TitleBar> {
                     padding: const EdgeInsets.all(6),
                     tooltip: 'Развернуть',
                     constraints: constraints,
-                    icon: const Icon(Icons.crop_square, size: 20),
+                    icon: const Icon(LucideIcons.maximize, size: 20),
                     onPressed: () => windowManager.maximize(),
                   ),
                   IconButton(
@@ -140,7 +195,7 @@ class _TitleBarState extends ConsumerState<TitleBar> {
                     hoverColor: Colors.red,
                     constraints: constraints,
                     icon: const Icon(
-                      Icons.close,
+                      LucideIcons.x,
                       size: 20,
                       fontWeight: FontWeight.bold,
                     ),

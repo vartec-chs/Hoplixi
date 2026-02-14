@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_preferences/app_preference_keys.dart';
 import 'package:hoplixi/core/theme/theme_switcher.dart';
+import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/settings/providers/settings_provider.dart';
-import 'package:hoplixi/features/settings/ui/widgets/settings_tile.dart';
 import 'package:hoplixi/features/settings/ui/widgets/settings_section_card.dart';
+import 'package:hoplixi/features/settings/ui/widgets/settings_tile.dart';
+import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 
 /// Секция настроек внешнего вида
 class AppearanceSettingsSection extends ConsumerWidget {
@@ -60,7 +62,7 @@ class GeneralSettingsSection extends ConsumerWidget {
     WidgetRef ref,
     SettingsNotifier notifier,
   ) async {
-    final languages = {'ru': 'Русский', 'en': 'English'};
+    final languages = {'ru': 'Русский'};
 
     final result = await showDialog<String>(
       context: context,
@@ -121,14 +123,14 @@ class SecuritySettingsSection extends ConsumerWidget {
           onTap: () =>
               _showTimeoutDialog(context, ref, notifier, autoLockTimeout),
         ),
-        const Divider(height: 1),
-        SettingsTile(
-          title: 'Изменить PIN-код',
-          subtitle: 'Установить новый PIN-код',
-          leading: const Icon(Icons.pin),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-          onTap: () => _showChangePinDialog(context, ref, notifier),
-        ),
+        // const Divider(height: 1),
+        // SettingsTile(
+        //   title: 'Изменить PIN-код',
+        //   subtitle: 'Установить новый PIN-код',
+        //   leading: const Icon(Icons.pin),
+        //   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        //   onTap: () => _showChangePinDialog(context, ref, notifier),
+        // ),
       ],
     );
   }
@@ -286,14 +288,52 @@ class SyncSettingsSection extends ConsumerWidget {
 class BackupSettingsSection extends ConsumerWidget {
   const BackupSettingsSection({super.key});
 
+  BackupScope _parseScope(String? raw) {
+    switch (raw) {
+      case 'databaseOnly':
+        return BackupScope.databaseOnly;
+      case 'encryptedFilesOnly':
+        return BackupScope.encryptedFilesOnly;
+      case 'full':
+      default:
+        return BackupScope.full;
+    }
+  }
+
+  String _scopeTitle(BackupScope scope) {
+    switch (scope) {
+      case BackupScope.databaseOnly:
+        return 'Только файл базы данных';
+      case BackupScope.encryptedFilesOnly:
+        return 'Только зашифрованные файлы';
+      case BackupScope.full:
+        return 'Полный (БД + зашифрованные файлы)';
+    }
+  }
+
+  String _intervalTitle(int minutes) {
+    if (minutes < 60) return '$minutes мин';
+    final hours = minutes ~/ 60;
+    if (hours < 24) return '$hours ч';
+    final days = hours ~/ 24;
+    return '$days дн';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
+    final mainStoreNotifier = ref.read(mainStoreProvider.notifier);
 
     final autoBackupEnabled =
         settings[AppKeys.autoBackupEnabled.key] as bool? ?? false;
     final backupPath = settings[AppKeys.backupPath.key] as String?;
+    final backupScopeRaw = settings[AppKeys.backupScope.key] as String?;
+    final backupScope = _parseScope(backupScopeRaw);
+    final backupIntervalMinutes =
+        settings[AppKeys.backupIntervalMinutes.key] as int? ?? 360;
+    final backupMaxPerStore =
+        settings[AppKeys.backupMaxPerStore.key] as int? ?? 10;
 
     return SettingsSectionCard(
       title: 'Резервное копирование',
@@ -303,8 +343,74 @@ class BackupSettingsSection extends ConsumerWidget {
           subtitle: 'Создавать резервные копии автоматически',
           leading: const Icon(Icons.backup),
           value: autoBackupEnabled,
-          onChanged: (value) =>
-              notifier.setBool(AppKeys.autoBackupEnabled.key, value),
+          onChanged: (value) async {
+            await notifier.setBool(AppKeys.autoBackupEnabled.key, value);
+
+            if (value) {
+              mainStoreNotifier.startPeriodicBackup(
+                interval: Duration(minutes: backupIntervalMinutes),
+                scope: backupScope,
+                outputDirPath: backupPath,
+                runImmediately: false,
+                maxBackupsPerStore: backupMaxPerStore,
+              );
+              Toaster.success(title: 'Автобэкап включен');
+            } else {
+              mainStoreNotifier.stopPeriodicBackup();
+              Toaster.info(title: 'Автобэкап остановлен');
+            }
+          },
+        ),
+        const Divider(height: 1),
+        SettingsTile(
+          title: 'Режим бэкапа',
+          subtitle: _scopeTitle(backupScope),
+          leading: const Icon(Icons.tune),
+          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+          onTap: () => _showBackupScopeDialog(
+            context,
+            notifier,
+            mainStoreNotifier,
+            backupScope,
+            autoBackupEnabled,
+            backupIntervalMinutes,
+            backupPath,
+            backupMaxPerStore,
+          ),
+        ),
+        const Divider(height: 1),
+        SettingsTile(
+          title: 'Интервал автобэкапа',
+          subtitle: _intervalTitle(backupIntervalMinutes),
+          leading: const Icon(Icons.schedule),
+          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+          onTap: () => _showBackupIntervalDialog(
+            context,
+            notifier,
+            mainStoreNotifier,
+            backupIntervalMinutes,
+            autoBackupEnabled,
+            backupScope,
+            backupPath,
+            backupMaxPerStore,
+          ),
+        ),
+        const Divider(height: 1),
+        SettingsTile(
+          title: 'Макс. бэкапов на стор',
+          subtitle: '$backupMaxPerStore',
+          leading: const Icon(Icons.layers_clear),
+          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+          onTap: () => _showBackupMaxCountDialog(
+            context,
+            notifier,
+            mainStoreNotifier,
+            backupMaxPerStore,
+            autoBackupEnabled,
+            backupIntervalMinutes,
+            backupScope,
+            backupPath,
+          ),
         ),
         const Divider(height: 1),
         SettingsTile(
@@ -312,16 +418,202 @@ class BackupSettingsSection extends ConsumerWidget {
           subtitle: backupPath ?? 'Не установлен',
           leading: const Icon(Icons.folder),
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-          onTap: () => _showBackupPathDialog(context, ref, notifier),
+          onTap: () => _showBackupPathDialog(
+            context,
+            notifier,
+            mainStoreNotifier,
+            autoBackupEnabled,
+            backupIntervalMinutes,
+            backupScope,
+            backupMaxPerStore,
+          ),
         ),
+        // const Divider(height: 1),
+        // SettingsTile(
+        //   title: 'Создать резервную копию сейчас',
+        //   subtitle: _scopeTitle(backupScope),
+        //   leading: const Icon(Icons.save_alt),
+        //   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        //   onTap: () => _runManualBackup(
+        //     context,
+        //     mainStoreNotifier,
+        //     backupScope,
+        //     backupPath,
+        //     backupMaxPerStore,
+        //   ),
+        // ),
       ],
     );
   }
 
+  Future<void> _runManualBackup(
+    BuildContext context,
+    MainStoreAsyncNotifier mainStoreNotifier,
+    BackupScope scope,
+    String? backupPath,
+    int backupMaxPerStore,
+  ) async {
+    final result = await mainStoreNotifier.createBackup(
+      scope: scope,
+      outputDirPath: backupPath,
+      periodic: false,
+      maxBackupsPerStore: backupMaxPerStore,
+    );
+
+    if (result == null) {
+      Toaster.error(
+        title: 'Бэкап не создан',
+        description: 'Проверьте, что хранилище открыто',
+      );
+      return;
+    }
+
+    Toaster.success(title: 'Бэкап создан', description: result.backupPath);
+  }
+
+  Future<void> _showBackupScopeDialog(
+    BuildContext context,
+    SettingsNotifier notifier,
+    MainStoreAsyncNotifier mainStoreNotifier,
+    BackupScope currentScope,
+    bool autoBackupEnabled,
+    int backupIntervalMinutes,
+    String? backupPath,
+    int backupMaxPerStore,
+  ) async {
+    final scopes = BackupScope.values;
+
+    final result = await showDialog<BackupScope>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Режим резервного копирования'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: scopes.map((scope) {
+            return RadioListTile<BackupScope>(
+              title: Text(_scopeTitle(scope)),
+              value: scope,
+              groupValue: currentScope,
+              onChanged: (value) => Navigator.pop(context, value),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+
+    if (result == null) return;
+
+    await notifier.setString(AppKeys.backupScope.key, result.name);
+
+    if (autoBackupEnabled) {
+      mainStoreNotifier.startPeriodicBackup(
+        interval: Duration(minutes: backupIntervalMinutes),
+        scope: result,
+        outputDirPath: backupPath,
+        runImmediately: false,
+        maxBackupsPerStore: backupMaxPerStore,
+      );
+    }
+  }
+
+  Future<void> _showBackupIntervalDialog(
+    BuildContext context,
+    SettingsNotifier notifier,
+    MainStoreAsyncNotifier mainStoreNotifier,
+    int currentIntervalMinutes,
+    bool autoBackupEnabled,
+    BackupScope backupScope,
+    String? backupPath,
+    int backupMaxPerStore,
+  ) async {
+    final intervals = <int>[15, 30, 60, 180, 360, 720, 1440];
+
+    final result = await showDialog<int>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Интервал автобэкапа'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: intervals.map((minutes) {
+            return RadioListTile<int>(
+              title: Text(_intervalTitle(minutes)),
+              value: minutes,
+              groupValue: currentIntervalMinutes,
+              onChanged: (value) => Navigator.pop(context, value),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+
+    if (result == null) return;
+
+    await notifier.setInt(AppKeys.backupIntervalMinutes.key, result);
+
+    if (autoBackupEnabled) {
+      mainStoreNotifier.startPeriodicBackup(
+        interval: Duration(minutes: result),
+        scope: backupScope,
+        outputDirPath: backupPath,
+        runImmediately: false,
+        maxBackupsPerStore: backupMaxPerStore,
+      );
+    }
+  }
+
+  Future<void> _showBackupMaxCountDialog(
+    BuildContext context,
+    SettingsNotifier notifier,
+    MainStoreAsyncNotifier mainStoreNotifier,
+    int currentMaxCount,
+    bool autoBackupEnabled,
+    int backupIntervalMinutes,
+    BackupScope backupScope,
+    String? backupPath,
+  ) async {
+    final options = <int>[3, 5, 10, 20, 30, 50, 100];
+
+    final result = await showDialog<int>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Максимум бэкапов на один стор'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: options.map((count) {
+            return RadioListTile<int>(
+              title: Text('$count'),
+              value: count,
+              groupValue: currentMaxCount,
+              onChanged: (value) => Navigator.pop(context, value),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+
+    if (result == null) return;
+
+    await notifier.setInt(AppKeys.backupMaxPerStore.key, result);
+
+    if (autoBackupEnabled) {
+      mainStoreNotifier.startPeriodicBackup(
+        interval: Duration(minutes: backupIntervalMinutes),
+        scope: backupScope,
+        outputDirPath: backupPath,
+        runImmediately: false,
+        maxBackupsPerStore: result,
+      );
+    }
+  }
+
   Future<void> _showBackupPathDialog(
     BuildContext context,
-    WidgetRef ref,
     SettingsNotifier notifier,
+    MainStoreAsyncNotifier mainStoreNotifier,
+    bool autoBackupEnabled,
+    int backupIntervalMinutes,
+    BackupScope backupScope,
+    int backupMaxPerStore,
   ) async {
     final controller = TextEditingController();
 
@@ -359,6 +651,16 @@ class BackupSettingsSection extends ConsumerWidget {
 
     if (result != null && result.isNotEmpty) {
       await notifier.setString(AppKeys.backupPath.key, result);
+
+      if (autoBackupEnabled) {
+        mainStoreNotifier.startPeriodicBackup(
+          interval: Duration(minutes: backupIntervalMinutes),
+          scope: backupScope,
+          outputDirPath: result,
+          runImmediately: false,
+          maxBackupsPerStore: backupMaxPerStore,
+        );
+      }
     }
   }
 }

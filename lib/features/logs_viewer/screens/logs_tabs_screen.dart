@@ -17,7 +17,7 @@ class _LogsTabsScreenState extends State<LogsTabsScreen> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth >= 600;
+        final isDesktop = constraints.maxWidth >= 700;
 
         if (isDesktop) {
           return Scaffold(

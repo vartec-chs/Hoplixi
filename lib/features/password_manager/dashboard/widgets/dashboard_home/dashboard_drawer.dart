@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/core/app_preferences/app_preference_keys.dart';
 import 'package:hoplixi/core/utils/color_parser.dart';
+import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/drawer_filter_provider.dart';
+import 'package:hoplixi/features/settings/providers/settings_provider.dart';
 import 'package:hoplixi/main_store/models/dto/category_dto.dart';
 import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
+import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/widgets/close_database_button.dart';
@@ -38,6 +42,48 @@ class DashboardDrawerContent extends ConsumerStatefulWidget {
 
 class _DashboardDrawerContentState
     extends ConsumerState<DashboardDrawerContent> {
+  BackupScope _parseBackupScope(String? raw) {
+    switch (raw) {
+      case 'databaseOnly':
+        return BackupScope.databaseOnly;
+      case 'encryptedFilesOnly':
+        return BackupScope.encryptedFilesOnly;
+      case 'full':
+      default:
+        return BackupScope.full;
+    }
+  }
+
+  Future<void> _createBackupNow() async {
+    final settings = ref.read(settingsProvider);
+    final backupPath = settings[AppKeys.backupPath.key] as String?;
+    final scopeRaw = settings[AppKeys.backupScope.key] as String?;
+    final backupMaxPerStore =
+        settings[AppKeys.backupMaxPerStore.key] as int? ?? 10;
+    final scope = _parseBackupScope(scopeRaw);
+
+    final result = await ref
+        .read(mainStoreProvider.notifier)
+        .createBackup(
+          scope: scope,
+          outputDirPath: backupPath,
+          periodic: false,
+          maxBackupsPerStore: backupMaxPerStore,
+        );
+
+    if (!mounted) return;
+
+    if (result == null) {
+      Toaster.error(
+        title: 'Бэкап не создан',
+        description: 'Проверьте, что хранилище открыто',
+      );
+      return;
+    }
+
+    Toaster.success(title: 'Бэкап создан', description: result.backupPath);
+  }
+
   @override
   void didUpdateWidget(DashboardDrawerContent oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -51,6 +97,12 @@ class _DashboardDrawerContentState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final drawerStateAsync = ref.watch(drawerFilterProvider(widget.entityType));
+    final drawerNotifier = ref.read(
+      drawerFilterProvider(widget.entityType).notifier,
+    );
+    final isStoreOpen = ref
+        .watch(mainStoreProvider)
+        .maybeWhen(data: (state) => state.isOpen, orElse: () => false);
     final isMobile = MediaQuery.of(context).size.width < 600;
 
     return SafeArea(
@@ -95,15 +147,7 @@ class _DashboardDrawerContentState
                       if (drawerState.selectedCategoryIds.isNotEmpty ||
                           drawerState.selectedTagIds.isNotEmpty)
                         SmoothButton(
-                          onPressed: () {
-                            ref
-                                .read(
-                                  drawerFilterProvider(
-                                    widget.entityType,
-                                  ).notifier,
-                                )
-                                .clearAll();
-                          },
+                          onPressed: drawerNotifier.clearAll,
                           label: 'Очистить все',
                           size: .small,
                           type: .text,
@@ -147,10 +191,26 @@ class _DashboardDrawerContentState
               ),
               if (isMobile) ...[
                 const Divider(height: 1),
-                const Padding(
-                  padding: EdgeInsets.all(12.0),
-                  child: CloseDatabaseButton(
-                    type: CloseDatabaseButtonType.smooth,
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        child: CloseDatabaseButton(
+                          type: CloseDatabaseButtonType.smooth,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: SmoothButton(
+                          label: 'Бэкап',
+                          size: .small,
+                          icon: const Icon(Icons.backup),
+                          onPressed: isStoreOpen ? _createBackupNow : null,
+                          type: SmoothButtonType.filled,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

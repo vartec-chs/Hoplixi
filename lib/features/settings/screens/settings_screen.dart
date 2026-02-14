@@ -33,9 +33,9 @@ class SettingsScreen extends ConsumerWidget {
             SizedBox(height: 8),
 
             // Секция синхронизации
-            SyncSettingsSection(),
+            // SyncSettingsSection(),
 
-            SizedBox(height: 8),
+            // SizedBox(height: 8),
 
             // Секция резервного копирования
             BackupSettingsSection(),

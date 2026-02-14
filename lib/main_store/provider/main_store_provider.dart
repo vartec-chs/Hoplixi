@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/core/app_paths.dart';
+import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/main_store_manager.dart';
@@ -9,6 +12,23 @@ import 'package:hoplixi/main_store/models/db_errors.dart';
 import 'package:hoplixi/main_store/models/db_state.dart';
 import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_store/provider/db_history_provider.dart';
+import 'package:path/path.dart' as p;
+
+enum BackupScope { databaseOnly, encryptedFilesOnly, full }
+
+class BackupResult {
+  final String backupPath;
+  final BackupScope scope;
+  final DateTime createdAt;
+  final bool periodic;
+
+  const BackupResult({
+    required this.backupPath,
+    required this.scope,
+    required this.createdAt,
+    required this.periodic,
+  });
+}
 
 final _mainStoreManagerProvider = FutureProvider<MainStoreManager>((ref) async {
   final dbHistoryService = await ref.read(dbHistoryProvider.future);
@@ -83,6 +103,11 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
 
   late final MainStoreManager _manager;
   Timer? _errorResetTimer;
+  Timer? _periodicBackupTimer;
+  Duration? _periodicBackupInterval;
+  BackupScope _periodicBackupScope = BackupScope.full;
+  String? _periodicBackupOutputDirPath;
+  int _periodicBackupMaxPerStore = 10;
 
   /// Completer для блокировки параллельных операций (защита от race condition)
   Completer<void>? _operationLock;
@@ -167,8 +192,263 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
 
     logInfo('MainStoreAsyncNotifier initialized', tag: _logTag);
     _manager = await ref.read(_mainStoreManagerProvider.future);
+
+    ref.onDispose(() {
+      _periodicBackupTimer?.cancel();
+      _periodicBackupTimer = null;
+    });
+
     return const DatabaseState(status: DatabaseStatus.idle);
   }
+
+  Future<String?> _findDatabaseFileInStoreDir(String storeDirPath) async {
+    final storeDir = Directory(storeDirPath);
+    if (!await storeDir.exists()) {
+      return null;
+    }
+
+    await for (final entity in storeDir.list(recursive: false)) {
+      if (entity is File && entity.path.endsWith(MainConstants.dbExtension)) {
+        return entity.path;
+      }
+    }
+
+    return null;
+  }
+
+  Future<void> _copyDirectoryRecursive({
+    required Directory source,
+    required Directory destination,
+  }) async {
+    if (!await source.exists()) return;
+    if (!await destination.exists()) {
+      await destination.create(recursive: true);
+    }
+
+    await for (final entity in source.list(recursive: false)) {
+      final name = p.basename(entity.path);
+      final targetPath = p.join(destination.path, name);
+
+      if (entity is File) {
+        await entity.copy(targetPath);
+      } else if (entity is Directory) {
+        await _copyDirectoryRecursive(
+          source: entity,
+          destination: Directory(targetPath),
+        );
+      }
+    }
+  }
+
+  Future<String> _resolveDefaultBackupsDir() async {
+    return await AppPaths.backupsPath;
+  }
+
+  Future<void> _enforceBackupRetention({
+    required String backupRootPath,
+    required String storeName,
+    required int maxBackupsPerStore,
+  }) async {
+    if (maxBackupsPerStore <= 0) return;
+
+    final rootDir = Directory(backupRootPath);
+    if (!await rootDir.exists()) return;
+
+    final prefix = '${storeName}_backup_';
+    final backups = <Directory>[];
+
+    await for (final entity in rootDir.list(recursive: false)) {
+      if (entity is! Directory) continue;
+      final name = p.basename(entity.path);
+      if (name.startsWith(prefix)) {
+        backups.add(entity);
+      }
+    }
+
+    if (backups.length <= maxBackupsPerStore) return;
+
+    backups.sort((a, b) {
+      final aName = p.basename(a.path);
+      final bName = p.basename(b.path);
+      return aName.compareTo(bName);
+    });
+
+    final toDeleteCount = backups.length - maxBackupsPerStore;
+    for (int i = 0; i < toDeleteCount; i++) {
+      final dir = backups[i];
+      try {
+        await dir.delete(recursive: true);
+        logInfo('Old backup removed by retention: ${dir.path}', tag: _logTag);
+      } catch (e) {
+        logWarning(
+          'Failed to remove old backup: ${dir.path}',
+     
+          tag: _logTag,
+        );
+      }
+    }
+  }
+
+  Future<BackupResult?> createBackup({
+    BackupScope scope = BackupScope.full,
+    String? outputDirPath,
+    bool periodic = false,
+    int maxBackupsPerStore = 10,
+  }) async {
+    try {
+      if (!_currentState.isOpen) {
+        logWarning('Store is not open, cannot create backup', tag: _logTag);
+        return null;
+      }
+
+      final storeDirPath = _currentState.path ?? _manager.currentStorePath;
+      if (storeDirPath == null || storeDirPath.isEmpty) {
+        logError('Store path is null, backup aborted', tag: _logTag);
+        return null;
+      }
+
+      final backupRootPath = outputDirPath ?? await _resolveDefaultBackupsDir();
+      final backupRootDir = Directory(backupRootPath);
+      if (!await backupRootDir.exists()) {
+        await backupRootDir.create(recursive: true);
+      }
+
+      final retentionLimit = maxBackupsPerStore <= 0 ? 1 : maxBackupsPerStore;
+
+      final now = DateTime.now();
+      final timestamp = now
+          .toIso8601String()
+          .replaceAll(':', '-')
+          .replaceAll('.', '-');
+      final storeName = (_currentState.name ?? 'store').replaceAll(
+        RegExp(r'[^a-zA-Z0-9_-]'),
+        '_',
+      );
+
+      final backupDir = Directory(
+        p.join(backupRootPath, '${storeName}_backup_$timestamp'),
+      );
+      await backupDir.create(recursive: true);
+
+      if (scope == BackupScope.databaseOnly || scope == BackupScope.full) {
+        final dbFilePath = await _findDatabaseFileInStoreDir(storeDirPath);
+        if (dbFilePath == null) {
+          throw Exception('Database file not found for backup');
+        }
+
+        final dbFile = File(dbFilePath);
+        await dbFile.copy(p.join(backupDir.path, p.basename(dbFile.path)));
+      }
+
+      if (scope == BackupScope.encryptedFilesOnly ||
+          scope == BackupScope.full) {
+        final attachmentsPath = await getAttachmentsPath();
+        if (attachmentsPath == null || attachmentsPath.isEmpty) {
+          throw Exception('Encrypted attachments path not found for backup');
+        }
+
+        await _copyDirectoryRecursive(
+          source: Directory(attachmentsPath),
+          destination: Directory(p.join(backupDir.path, 'attachments')),
+        );
+      }
+
+      final manifestFile = File(p.join(backupDir.path, 'backup_manifest.json'));
+      await manifestFile.writeAsString(
+        jsonEncode({
+          'createdAt': now.toIso8601String(),
+          'storeName': _currentState.name,
+          'storePath': storeDirPath,
+          'scope': scope.name,
+          'periodic': periodic,
+        }),
+      );
+
+      logInfo(
+        'Backup created successfully: ${backupDir.path} (scope: ${scope.name})',
+        tag: _logTag,
+      );
+
+      await _enforceBackupRetention(
+        backupRootPath: backupRootPath,
+        storeName: storeName,
+        maxBackupsPerStore: retentionLimit,
+      );
+
+      return BackupResult(
+        backupPath: backupDir.path,
+        scope: scope,
+        createdAt: now,
+        periodic: periodic,
+      );
+    } catch (e, stackTrace) {
+      logError(
+        'Failed to create backup: $e',
+        stackTrace: stackTrace,
+        tag: _logTag,
+      );
+      return null;
+    }
+  }
+
+  void startPeriodicBackup({
+    required Duration interval,
+    BackupScope scope = BackupScope.full,
+    String? outputDirPath,
+    bool runImmediately = false,
+    int maxBackupsPerStore = 10,
+  }) {
+    if (interval.inSeconds <= 0) {
+      logWarning('Invalid backup interval: $interval', tag: _logTag);
+      return;
+    }
+
+    stopPeriodicBackup();
+
+    _periodicBackupInterval = interval;
+    _periodicBackupScope = scope;
+    _periodicBackupOutputDirPath = outputDirPath;
+    _periodicBackupMaxPerStore = maxBackupsPerStore <= 0
+        ? 1
+        : maxBackupsPerStore;
+
+    _periodicBackupTimer = Timer.periodic(interval, (_) {
+      unawaited(_runPeriodicBackupTick());
+    });
+
+    if (runImmediately) {
+      unawaited(_runPeriodicBackupTick());
+    }
+
+    logInfo(
+      'Periodic backup started (interval: $interval, scope: ${scope.name})',
+      tag: _logTag,
+    );
+  }
+
+  Future<void> _runPeriodicBackupTick() async {
+    if (!_currentState.isOpen) {
+      return;
+    }
+
+    await createBackup(
+      scope: _periodicBackupScope,
+      outputDirPath: _periodicBackupOutputDirPath,
+      periodic: true,
+      maxBackupsPerStore: _periodicBackupMaxPerStore,
+    );
+  }
+
+  void stopPeriodicBackup() {
+    _periodicBackupTimer?.cancel();
+    _periodicBackupTimer = null;
+    _periodicBackupInterval = null;
+    _periodicBackupOutputDirPath = null;
+
+    logInfo('Periodic backup stopped', tag: _logTag);
+  }
+
+  bool get isPeriodicBackupActive => _periodicBackupTimer != null;
 
   /// Создать новое хранилище
   ///

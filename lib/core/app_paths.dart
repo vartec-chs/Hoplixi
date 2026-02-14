@@ -21,6 +21,8 @@ class AppPaths {
       await _getExportStoragesPath();
   static Future<String> get cloudSyncFilePath async =>
       await _getCloudSyncFilePath();
+    
+  static Future<String> get backupsPath async => await _getBackupsPath();
 
   /// Получение списка всех папок хранилищ
   static Future<List<StoreFolderInfo>> getAllStorageFolders() async =>
@@ -79,6 +81,20 @@ Future<String> _getAppCrashReportsPath() async {
 Future<String> _getApplicationStoragePath() async {
   final appDir = await _getAppPath();
   final basePath = p.join(appDir.path, 'storages');
+
+  // Создаем директорию если её нет
+  final directory = Directory(basePath);
+  if (!await directory.exists()) {
+    await directory.create(recursive: true);
+  }
+
+  return basePath;
+}
+
+/// Путь бекапов
+Future<String> _getBackupsPath() async {
+  final appDir = await _getAppPath();
+  final basePath = p.join(appDir.path, 'backups');
 
   // Создаем директорию если её нет
   final directory = Directory(basePath);

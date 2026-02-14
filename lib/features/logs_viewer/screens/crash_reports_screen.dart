@@ -17,7 +17,7 @@ class CrashReportsScreen extends ConsumerWidget {
     final selectedReport = ref.watch(selectedCrashReportProvider);
     final reportContent = ref.watch(crashReportContentProvider);
     final theme = Theme.of(context);
-    final isDesktop = MediaQuery.of(context).size.width >= 600;
+    final isDesktop = MediaQuery.of(context).size.width >= 700;
 
     return Scaffold(
       appBar: AppBar(

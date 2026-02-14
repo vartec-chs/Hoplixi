@@ -19,7 +19,7 @@ class LogsViewerScreen extends ConsumerWidget {
     final selectedFile = ref.watch(selectedLogFileProvider);
     final paginatedLogs = ref.watch(paginatedLogsProvider);
     final theme = Theme.of(context);
-    final isDesktop = MediaQuery.of(context).size.width >= 600;
+    final isDesktop = MediaQuery.of(context).size.width >= 700;
 
     return Scaffold(
       appBar: AppBar(
