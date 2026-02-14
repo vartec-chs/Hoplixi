@@ -7,16 +7,18 @@
 #define MyAppBuild "6"
 #define MyAppPublisher "Hoplixi"
 #define MyAppExeName "hoplixi.exe"
+#define MyAppId "c6d1c972-acc4-46af-996d-936b9a1f43d8"
+#define ProjectRoot "..\\.."
 
 [Setup]
-AppId={{ app_id }}
+AppId={#MyAppId}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppVerName={#MyAppName} {#MyAppVersion} (build {#MyAppBuild})
 AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
-SetupIconFile=..\..\runner\resources\app_icon.ico
+SetupIconFile={#ProjectRoot}\\windows\\runner\\resources\\app_icon.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 OutputDir=.
 OutputBaseFilename=HoplixiSetup-{#MyAppVersion}-build-{#MyAppBuild}
@@ -32,7 +34,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "..\\..\\..\\build\\windows\\x64\\runner\\Release\\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#ProjectRoot}\\build\\windows\\x64\\runner\\Release\\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\\{#MyAppName}"; Filename: "{app}\\{#MyAppExeName}"
