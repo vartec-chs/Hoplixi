@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
 import 'widgets/icon_picker_modal.dart';
@@ -194,7 +195,12 @@ class _IconPickerButtonState extends ConsumerState<IconPickerButton> {
   }
 
   Widget _buildIconPreview() {
-    final isSvg = _iconType == 'svg';
+    final isSvg =
+        IconType.values.firstWhere(
+          (e) => e.toString() == _iconType,
+          orElse: () => IconType.png,
+        ) ==
+        IconType.svg;
 
     if (isSvg) {
       return SvgPicture.memory(

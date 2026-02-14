@@ -159,13 +159,9 @@ class _FilterTabsState extends ConsumerState<FilterTabs>
     }
 
     // Определяем цвет индикатора в зависимости от текущей вкладки
-    final indicatorColor = currentTab == FilterTab.delete
-        ? theme.colorScheme.errorContainer
-        : theme.colorScheme.surfaceContainerHighest;
+    final indicatorColor = theme.colorScheme.surfaceContainerLow;
 
-    final labelColor = currentTab == FilterTab.delete
-        ? theme.colorScheme.onErrorContainer
-        : theme.colorScheme.onSecondary;
+    final labelColor = theme.colorScheme.onSecondary;
 
     final fillColor = AppColors.getInputFieldBackgroundColor(context);
 
@@ -187,18 +183,15 @@ class _FilterTabsState extends ConsumerState<FilterTabs>
         unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.7),
         splashFactory: InkRipple.splashFactory,
         dividerColor: Colors.transparent,
-        overlayColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return currentTab == FilterTab.delete
-                ? theme.colorScheme.error.withOpacity(0.1)
-                : theme.colorScheme.primary.withOpacity(0.1);
-          }
-          return theme.colorScheme.primary.withOpacity(0.05);
-        }),
+
         physics: const BouncingScrollPhysics(),
         labelStyle: theme.textTheme.bodyMedium?.copyWith(
           fontWeight: FontWeight.w500,
         ),
+        overlayColor: MaterialStateProperty.all(
+          theme.colorScheme.onSurface.withOpacity(0.05),
+        ),
+
         indicatorPadding: const EdgeInsets.all(2),
         unselectedLabelStyle: theme.textTheme.bodyMedium,
         tabAlignment: tabAlignment,

@@ -47,7 +47,7 @@ class EntityTypeCompactDropdown extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       decoration: BoxDecoration(
         color: fillColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: DropdownButton<EntityType>(
         value: currentType,
