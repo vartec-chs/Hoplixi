@@ -5,26 +5,8 @@
 #include "flutter_window.h"
 #include "utils.h"
 
-// ******* ADDED *******
-#include "win32_window.h"                     // where flag to hide gui is added
-
-#pragma comment(linker, "/subsystem:console") // tells the linker to use console subsystem
-
-/*
-  New main, because the app is now a console app
-*/
-int main(int argc, char *argv[]) {
-
-
-    // if any arguments are passed run in commandline mode
-    if (argc > 1)
-    {
-        H_HIDE_WINDOW = true;
-    }
-    else
-    {
-        ::ShowWindow(::GetConsoleWindow(), SW_HIDE);
-    }
+int APIENTRY wWinMain(HINSTANCE instance, HINSTANCE prev,
+                      wchar_t *command_line, int show_command) {
 
 
     // Attach to console when present (e.g., 'flutter run') or create a

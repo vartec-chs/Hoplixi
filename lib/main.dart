@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:args/args.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,22 +20,6 @@ import 'package:universal_platform/universal_platform.dart';
 
 import 'app.dart';
 import 'di_init.dart';
-
-final ArgParser _parser = ArgParser()
-  ..addOption(
-    'file',
-    abbr: 'f',
-    mandatory: false,
-    help: 'Path to the file to open',
-  )
-  ..addFlag('help', abbr: 'h', negatable: false, help: 'Show help for flags');
-
-class _LaunchOptions {
-  const _LaunchOptions({required this.filePath, required this.isCliMode});
-
-  final String? filePath;
-  final bool isCliMode;
-}
 
 Future<void> _handleLostData() async {
   final ImagePicker picker = ImagePicker();
@@ -82,31 +65,12 @@ Future<bool> _handleSubWindowStartup() async {
   return false;
 }
 
-_LaunchOptions _parseLaunchOptions(List<String> args) {
-  ArgResults results;
-  try {
-    results = _parser.parse(args);
-  } catch (error) {
-    stderr.writeln(error.toString());
-    exit(1);
+String? _parseLaunchFilePath(List<String> args) {
+  if (args.isEmpty) {
+    return null;
   }
 
-  if (results['help'] == true) {
-    stdout.writeln(_parser.usage);
-    exit(0);
-  }
-
-  String? filePath = results['file'] as String?;
-  if (filePath == null && args.isNotEmpty && !args.first.startsWith('-')) {
-    filePath = args.first;
-  }
-
-  final List<String> flags = args.where((a) => a.startsWith('-')).toList();
-  final bool onlyFileFlag =
-      flags.isNotEmpty && flags.every((f) => f == '--file' || f == '-f');
-  final bool isCliMode = flags.isNotEmpty && !onlyFileFlag;
-
-  return _LaunchOptions(filePath: filePath, isCliMode: isCliMode);
+  return args.first;
 }
 
 Future<void> _runGuardedApp(List<String> args) async {
@@ -118,27 +82,10 @@ Future<void> _runGuardedApp(List<String> args) async {
       return;
     }
 
-    final _LaunchOptions launchOptions = _parseLaunchOptions(args);
-
-    final String? filePath = launchOptions.filePath;
-    final bool isCliMode = launchOptions.isCliMode;
-
-    if (Platform.isWindows && isCliMode) {
-      await _runCliMode(filePath);
-      return;
-    }
+    final String? filePath = _parseLaunchFilePath(args);
 
     await _runGuiMode(filePath);
   }, _handleUncaughtError);
-}
-
-Future<void> _runCliMode(String? filePath) async {
-  if (filePath != null) {
-    stdout.writeln('File path: $filePath');
-  } else {
-    stdout.writeln('No file path provided');
-  }
-  exit(0);
 }
 
 Future<void> _runGuiMode(String? filePath) async {
@@ -190,6 +137,8 @@ Future<void> _runGuiMode(String? filePath) async {
   if (UniversalPlatform.isDesktop) {
     await setupTray();
   }
+
+  logInfo('Starting app with file path: $filePath');
 
   final app = ProviderScope(
     observers: [LoggingProviderObserver()],

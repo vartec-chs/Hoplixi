@@ -1,5 +1,6 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
+
 import 'constants.dart';
 
 /// Темы компонентов приложения
@@ -64,6 +65,7 @@ abstract final class ComponentThemes {
     searchViewRadius: 16.0,
     navigationBarLabelBehavior:
         NavigationDestinationLabelBehavior.onlyShowSelected,
+    dialogRadius: 16.0,
     navigationRailSelectedLabelSchemeColor: SchemeColor.primary,
     navigationRailUnselectedLabelSchemeColor: SchemeColor.onPrimary,
     navigationRailMutedUnselectedLabel: true,
@@ -114,6 +116,7 @@ abstract final class ComponentThemes {
     useInputDecoratorThemeInDialogs: true,
     timePickerElementRadius: 16.0,
     snackBarRadius: 16,
+    dialogRadius: 16.0,
     snackBarBackgroundSchemeColor: SchemeColor.surfaceContainerHigh,
     snackBarActionSchemeColor: SchemeColor.primary,
     tabBarItemSchemeColor: SchemeColor.primary,

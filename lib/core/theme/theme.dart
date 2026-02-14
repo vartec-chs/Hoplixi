@@ -42,12 +42,14 @@ abstract final class AppTheme {
       error: AppColors.lightColors.error,
       cupertinoOverrideTheme: const CupertinoThemeData(applyThemeToAll: true),
 
+
       errorContainer: AppColors.lightColors.errorContainer,
     );
 
     final base = bs.copyWith(
       dialogTheme: bs.dialogTheme.copyWith(
         insetPadding: const EdgeInsets.symmetric(horizontal: 12),
+        
       ),
       cardTheme: bs.cardTheme.copyWith(margin: EdgeInsets.zero),
       elevatedButtonTheme: ButtonThemes.adaptiveElevatedButtonTheme(

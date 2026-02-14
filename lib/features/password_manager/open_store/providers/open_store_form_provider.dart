@@ -18,6 +18,8 @@ final openStoreFormProvider =
 
 /// Notifier для управления состоянием формы открытия хранилища
 class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
+  bool get _isMounted => ref.mounted;
+
   @override
   Future<OpenStoreState> build() async {
     // Загружаем хранилища при инициализации
@@ -39,6 +41,10 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
 
   /// Загрузить список хранилищ из истории и папки
   Future<void> loadStorages() async {
+    if (!_isMounted) {
+      return;
+    }
+
     final currentState = _currentState;
     _setState(currentState.copyWith(isLoading: true, error: null));
 
@@ -47,6 +53,9 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
 
       // 1. Загрузить из истории
       final historyStorages = await _loadFromHistory();
+      if (!_isMounted) {
+        return;
+      }
       logTrace(
         'Loaded ${historyStorages.length} storages from history',
         tag: 'OpenStoreForm',
@@ -55,6 +64,9 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
 
       // 2. Сканировать папку хранилищ
       final folderStorages = await _loadFromFolder();
+      if (!_isMounted) {
+        return;
+      }
       logTrace(
         'Loaded ${folderStorages.length} storages from folder',
         tag: 'OpenStoreForm',
@@ -69,6 +81,9 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
 
       // 3. Сканировать папку бэкапов
       final backupStorages = await _loadFromBackups();
+      if (!_isMounted) {
+        return;
+      }
       logTrace(
         'Loaded ${backupStorages.length} storages from backups',
         tag: 'OpenStoreForm',
@@ -95,6 +110,9 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
       });
 
       final updatedState = _currentState;
+      if (!_isMounted) {
+        return;
+      }
       _setState(
         updatedState.copyWith(
           storages: storages,
@@ -111,6 +129,10 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
         tag: 'OpenStoreForm',
       );
 
+      if (!_isMounted) {
+        return;
+      }
+
       final updatedState = _currentState;
       _setState(
         updatedState.copyWith(
@@ -124,8 +146,19 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
   /// Загрузить хранилища из истории
   Future<List<StorageInfo>> _loadFromHistory() async {
     try {
+      if (!_isMounted) {
+        return [];
+      }
+
       final historyService = await ref.read(dbHistoryProvider.future);
+      if (!_isMounted) {
+        return [];
+      }
+
       final history = await historyService.getRecent(limit: 10);
+      if (!_isMounted) {
+        return [];
+      }
 
       logTrace(
         'Fetched ${history.length} history entries',
@@ -188,7 +221,15 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
   /// Сканировать папку хранилищ
   Future<List<StorageInfo>> _loadFromFolder() async {
     try {
+      if (!_isMounted) {
+        return [];
+      }
+
       final storagePath = await AppPaths.appStoragePath;
+      if (!_isMounted) {
+        return [];
+      }
+
       final storageDir = Directory(storagePath);
 
       if (!await storageDir.exists()) {
@@ -246,7 +287,15 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
   /// Сканировать папку бэкапов
   Future<List<StorageInfo>> _loadFromBackups() async {
     try {
+      if (!_isMounted) {
+        return [];
+      }
+
       final backupsPath = await AppPaths.backupsPath;
+      if (!_isMounted) {
+        return [];
+      }
+
       final backupsDir = Directory(backupsPath);
 
       if (!await backupsDir.exists()) {
@@ -297,6 +346,10 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
 
   /// Выбрать хранилище
   void selectStorage(StorageInfo storage) {
+    if (!_isMounted) {
+      return;
+    }
+
     final currentState = _currentState;
     _setState(
       currentState.copyWith(
@@ -310,6 +363,10 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
 
   /// Обновить пароль
   void updatePassword(String password) {
+    if (!_isMounted) {
+      return;
+    }
+
     final currentState = _currentState;
     _setState(currentState.copyWith(password: password, passwordError: null));
   }
@@ -340,6 +397,9 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
 
       final storeNotifier = ref.read(mainStoreProvider.notifier);
       final success = await storeNotifier.openStore(dto);
+      if (!_isMounted) {
+        return false;
+      }
 
       if (success) {
         logInfo(
@@ -349,6 +409,10 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
         return true;
       } else {
         final storeState = await ref.read(mainStoreProvider.future);
+        if (!_isMounted) {
+          return false;
+        }
+
         final errorMessage =
             storeState.error?.message ?? 'Не удалось открыть хранилище';
 
@@ -367,6 +431,10 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
         tag: 'OpenStoreForm',
       );
 
+      if (!_isMounted) {
+        return false;
+      }
+
       final updatedState = _currentState;
       _setState(
         updatedState.copyWith(
@@ -382,6 +450,10 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
   /// Удалить хранилище с диска
   Future<bool> deleteStorage(String path) async {
     try {
+      if (!_isMounted) {
+        return false;
+      }
+
       logInfo('Deleting storage at: $path', tag: 'OpenStoreForm');
 
       final storeNotifier = ref.read(mainStoreProvider.notifier);
@@ -389,6 +461,9 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
       // Получаем путь к директории из пути к файлу
       final dir = Directory(path).parent;
       final success = await storeNotifier.deleteStoreFromDisk(dir.path);
+      if (!_isMounted) {
+        return false;
+      }
 
       if (success) {
         logInfo('Storage deleted successfully', tag: 'OpenStoreForm');
@@ -413,11 +488,19 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
 
   /// Сбросить состояние
   void reset() {
+    if (!_isMounted) {
+      return;
+    }
+
     _setState(const OpenStoreState());
   }
 
   /// Отменить выбор хранилища
   void cancelSelection() {
+    if (!_isMounted) {
+      return;
+    }
+
     final currentState = _currentState;
     _setState(
       currentState.copyWith(

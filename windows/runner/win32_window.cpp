@@ -5,9 +5,6 @@
 
 #include "resource.h"
 
-// ******* ADDED *******
-bool H_HIDE_WINDOW = false;
-
 namespace {
 
 /// Window attribute that enables dark mode window decorations.
@@ -137,45 +134,11 @@ bool Win32Window::Create(const std::wstring& title,
     UINT dpi = FlutterDesktopGetDpiForMonitor(monitor);
     double scale_factor = dpi / 96.0;
 
-    /*
-    // Original
     HWND window = CreateWindow(
         window_class, title.c_str(), WS_OVERLAPPEDWINDOW,
         Scale(origin.x, scale_factor), Scale(origin.y, scale_factor),
         Scale(size.width, scale_factor), Scale(size.height, scale_factor),
         nullptr, nullptr, GetModuleHandle(nullptr), this);
-
-    */
-    // ******* ADDED *******
-
-    // create gui window
-    HWND window;
-
-    // hide the gui after created if in commandline mode
-    if (H_HIDE_WINDOW)
-    {
-
-        // don't allow gui to get focus
-        LockSetForegroundWindow(1);
-
-        // gui with 1 pixel size in top left corner of screen
-        window = CreateWindow(
-                window_class, title.c_str(), WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-                Scale(0, scale_factor), Scale(0, scale_factor),
-                Scale(1, scale_factor), Scale(1, scale_factor),
-                nullptr, nullptr, GetModuleHandle(nullptr), this);
-
-        ShowWindow(window, SW_HIDE);
-
-        // normal gui
-    } else {
-        window = CreateWindow(
-                window_class, title.c_str(), WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-                Scale(origin.x, scale_factor), Scale(origin.y, scale_factor),
-                Scale(size.width, scale_factor), Scale(size.height, scale_factor),
-                nullptr, nullptr, GetModuleHandle(nullptr), this);
-    }
-    // ******* ADDED *******
 
     if (!window) {
         return false;

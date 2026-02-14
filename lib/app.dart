@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
+import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
 import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/core/theme/theme_window_sync_service.dart';
 import 'package:hoplixi/main_store/provider/decrypted_files_guard_provider.dart';
@@ -34,6 +35,7 @@ class _AppState extends ConsumerState<App> {
     super.initState();
 
     Future<void>(() {
+      ref.read(launchDbPathProvider.notifier).setPath(widget.filePath);
       ref.read(decryptedFilesGuardProvider);
     });
 

@@ -1,13 +1,23 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/multi_window/index.dart';
+import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
+import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
+import 'package:hoplixi/main_store/provider/db_history_provider.dart';
+import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/widgets/titlebar.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:path/path.dart' as p;
 
 import 'providers/recent_database_provider.dart';
 import 'widgets/action_button.dart';
@@ -45,6 +55,8 @@ class HomeScreenV2 extends ConsumerStatefulWidget {
 class _HomeScreenV2State extends ConsumerState<HomeScreenV2>
     with TickerProviderStateMixin {
   late ScrollController _scrollController;
+  ProviderSubscription<String?>? _launchPathSubscription;
+  bool _isHandlingLaunchPath = false;
 
   // Анимации для шариков
   late AnimationController _pulseController;
@@ -66,9 +78,204 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2>
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
+    _launchPathSubscription = ref.listenManual<String?>(launchDbPathProvider, (
+      previous,
+      next,
+    ) {
+      if (next == null || next.trim().isEmpty || _isHandlingLaunchPath) {
+        return;
+      }
+      unawaited(_handleLaunchDbPath(next));
+    }, fireImmediately: true);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateTitleBarLabel();
     });
+  }
+
+  Future<void> _handleLaunchDbPath(String launchPath) async {
+    _isHandlingLaunchPath = true;
+
+    try {
+      ref.read(launchDbPathProvider.notifier).clearPath();
+
+      final normalizedPath = launchPath.trim();
+      final lowerPath = normalizedPath.toLowerCase();
+
+      if (!lowerPath.endsWith(MainConstants.dbExtension)) {
+        Toaster.error(
+          title: 'Неверный формат файла',
+          description:
+              'Поддерживаются только файлы ${MainConstants.dbExtension}',
+        );
+        return;
+      }
+
+      final dbFile = File(normalizedPath);
+      if (!await dbFile.exists()) {
+        Toaster.error(
+          title: 'Файл базы не найден',
+          description: normalizedPath,
+        );
+        return;
+      }
+
+      final storageDirPath = p.dirname(normalizedPath);
+      final historyService = await ref.read(dbHistoryProvider.future);
+      final historyEntry = await historyService.getByPath(storageDirPath);
+
+      final savedPassword = historyEntry?.password;
+      if (savedPassword != null && savedPassword.isNotEmpty) {
+        final opened = await ref
+            .read(mainStoreProvider.notifier)
+            .openStore(
+              OpenStoreDto(path: normalizedPath, password: savedPassword),
+            );
+        if (opened) {
+          return;
+        }
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      await _showLaunchPasswordDialog(normalizedPath);
+    } finally {
+      _isHandlingLaunchPath = false;
+    }
+  }
+
+  Future<void> _showLaunchPasswordDialog(String dbPath) async {
+    if (!mounted) {
+      return;
+    }
+
+    final dbStat = await File(dbPath).stat();
+    if (!mounted) {
+      return;
+    }
+
+    final dbName = p.basenameWithoutExtension(dbPath);
+    final passwordController = TextEditingController();
+    String? passwordError;
+    bool isOpening = false;
+
+    await showDialog<void>(
+      context: context,
+      useRootNavigator: false,
+      barrierDismissible: !isOpening,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            Future<void> localSubmit() async {
+              final password = passwordController.text;
+              if (password.isEmpty) {
+                setState(() {
+                  passwordError = 'Введите пароль';
+                });
+                return;
+              }
+
+              setState(() {
+                isOpening = true;
+                passwordError = null;
+              });
+
+              final opened = await ref
+                  .read(mainStoreProvider.notifier)
+                  .openStore(OpenStoreDto(path: dbPath, password: password));
+
+              if (!context.mounted) {
+                return;
+              }
+
+              if (opened) {
+                return;
+              }
+
+              final storeState = await ref.read(mainStoreProvider.future);
+              if (!context.mounted) {
+                return;
+              }
+
+              setState(() {
+                isOpening = false;
+                passwordError =
+                    storeState.error?.message ?? 'Не удалось открыть хранилище';
+              });
+            }
+
+            return Dialog(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 500),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Открытие хранилища',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        dbName,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Изменён: ${dbStat.modified}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 16),
+                      PasswordField(
+                        label: 'Пароль',
+                        controller: passwordController,
+                        autofocus: true,
+                      ),
+                      if (passwordError != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          passwordError!,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          SmoothButton(
+                            label: 'Отмена',
+                            type: SmoothButtonType.text,
+                            onPressed: isOpening
+                                ? null
+                                : () => Navigator.of(context).pop(),
+                          ),
+                          const SizedBox(width: 8),
+                          SmoothButton(
+                            label: 'Открыть',
+                            type: SmoothButtonType.filled,
+                            loading: isOpening,
+                            onPressed: isOpening ? null : localSubmit,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    passwordController.dispose();
   }
 
   void _updateTitleBarLabel() {
@@ -86,6 +293,7 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2>
 
   @override
   void dispose() {
+    _launchPathSubscription?.close();
     _scrollController.dispose();
     _pulseController.dispose();
     super.dispose();
