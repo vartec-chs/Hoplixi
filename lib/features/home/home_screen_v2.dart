@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -374,7 +376,7 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2>
       ),
       ActionItem(
         icon: LucideIcons.send,
-        label: 'LocalSend',
+        label: 'LocalSend (alpha)',
         description: 'Отправка файлов другим устройствам',
         onTap: () => context.push(AppRoutesPaths.localSendSend),
       ),
@@ -382,52 +384,15 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2>
       ActionItem(
         icon: LucideIcons.key,
         label: 'Генератор',
-        description: 'Тест окна генератора',
+        description: 'Генерация паролей',
         onTap: () async {
-          final password = await MultiWindowService.instance
-              .openAndWaitResult<String>(
-                type: SubWindowType.passwordGenerator,
-                channel: WindowChannels.passwordGenerator,
-              );
-
-          if (!context.mounted) return;
-
-          if (password != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Получен пароль: $password')),
-            );
-          } else {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('Отменено')));
-          }
+          unawaited(
+            MultiWindowService.instance.openWindow(
+              type: SubWindowType.passwordGenerator,
+            ),
+          );
         },
       ),
-      // ActionItem(
-      //   icon: LucideIcons.lock,
-      //   label: 'Авторизация',
-      //   description: 'Тест окна авторизации',
-      //   onTap: () async {
-      //     final result = await MultiWindowService.instance
-      //         .openAndWaitResult<Map>(
-      //           type: SubWindowType.auth,
-      //           channel: WindowChannels.auth,
-      //           payload: {'reason': 'test'},
-      //         );
-
-      //     if (!context.mounted) return;
-
-      //     if (result != null) {
-      //       ScaffoldMessenger.of(context).showSnackBar(
-      //         SnackBar(content: Text('Логин: ${result['login']}')),
-      //       );
-      //     } else {
-      //       ScaffoldMessenger.of(
-      //         context,
-      //       ).showSnackBar(const SnackBar(content: Text('Отменено')));
-      //     }
-      //   },
-      // ),
     ];
   }
 
