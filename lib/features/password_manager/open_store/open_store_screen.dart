@@ -181,6 +181,13 @@ class _OpenStoreScreenState extends ConsumerState<OpenStoreScreen> {
     OpenStoreFormNotifier notifier,
     WidgetRef ref,
   ) {
+    final regularStorages = state.storages
+        .where((storage) => !storage.path.contains('_backup_'))
+        .toList();
+    final backupStorages = state.storages
+        .where((storage) => storage.path.contains('_backup_'))
+        .toList();
+
     // Показываем индикатор загрузки
     if (state.isLoading && state.storages.isEmpty) {
       return const Center(
@@ -269,12 +276,50 @@ class _OpenStoreScreenState extends ConsumerState<OpenStoreScreen> {
             ),
           ),
         Expanded(
-          child: StorageList(
-            storages: state.storages,
-            selectedStorage: state.selectedStorage,
-            onStorageSelected: notifier.selectStorage,
-            onStorageDelete: (storage) => _handleDeleteStorage(storage, ref),
-          ),
+          child: backupStorages.isEmpty
+              ? StorageList(
+                  storages: regularStorages,
+                  selectedStorage: state.selectedStorage,
+                  onStorageSelected: notifier.selectStorage,
+                  onStorageDelete: (storage) =>
+                      _handleDeleteStorage(storage, ref),
+                )
+              : Column(
+                  children: [
+                    Expanded(
+                      child: StorageList(
+                        storages: regularStorages,
+                        selectedStorage: state.selectedStorage,
+                        onStorageSelected: notifier.selectStorage,
+                        onStorageDelete: (storage) =>
+                            _handleDeleteStorage(storage, ref),
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                      child: Row(
+                        children: [
+                          Text(
+                            'Бэкапы',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 320),
+                      child: StorageList(
+                        storages: backupStorages,
+                        selectedStorage: state.selectedStorage,
+                        onStorageSelected: notifier.selectStorage,
+                        onStorageDelete: (storage) =>
+                            _handleDeleteBackup(storage, ref),
+                        showCreateButton: false,
+                      ),
+                    ),
+                  ],
+                ),
         ),
       ],
     );
@@ -323,6 +368,53 @@ class _OpenStoreScreenState extends ConsumerState<OpenStoreScreen> {
         context: context,
         title: 'Ошибка',
         description: 'Не удалось удалить хранилище',
+      );
+    }
+  }
+
+  Future<void> _handleDeleteBackup(StorageInfo storage, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Удалить бэкап'),
+        content: Text(
+          'Удалить бэкап "${storage.name}" с диска?\n\n'
+          'Это действие необратимо.',
+        ),
+        actions: [
+          SmoothButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            label: 'Отмена',
+            variant: SmoothButtonVariant.normal,
+            type: SmoothButtonType.text,
+          ),
+          SmoothButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            label: 'Удалить',
+            variant: SmoothButtonVariant.error,
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final notifier = ref.read(openStoreFormProvider.notifier);
+    final success = await notifier.deleteStorage(storage.path);
+
+    if (!mounted) return;
+
+    if (success) {
+      Toaster.success(
+        context: context,
+        title: 'Успех',
+        description: 'Бэкап удалён с диска',
+      );
+    } else {
+      Toaster.error(
+        context: context,
+        title: 'Ошибка',
+        description: 'Не удалось удалить бэкап',
       );
     }
   }

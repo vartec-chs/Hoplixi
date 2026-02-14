@@ -67,6 +67,19 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
         }
       }
 
+      // 3. Сканировать папку бэкапов
+      final backupStorages = await _loadFromBackups();
+      logTrace(
+        'Loaded ${backupStorages.length} storages from backups',
+        tag: 'OpenStoreForm',
+      );
+
+      for (final storage in backupStorages) {
+        if (!storages.any((s) => s.path == storage.path)) {
+          storages.add(storage);
+        }
+      }
+
       // Сортировать: сначала из истории по времени, потом из папки по дате изменения
       storages.sort((a, b) {
         if (a.fromHistory && !b.fromHistory) return -1;
@@ -223,6 +236,58 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
     } catch (e, stackTrace) {
       logError(
         'Error scanning storage folder: $e',
+        stackTrace: stackTrace,
+        tag: 'OpenStoreForm',
+      );
+      return [];
+    }
+  }
+
+  /// Сканировать папку бэкапов
+  Future<List<StorageInfo>> _loadFromBackups() async {
+    try {
+      final backupsPath = await AppPaths.backupsPath;
+      final backupsDir = Directory(backupsPath);
+
+      if (!await backupsDir.exists()) {
+        return [];
+      }
+
+      final storages = <StorageInfo>[];
+
+      await for (final entity in backupsDir.list(recursive: false)) {
+        if (entity is! Directory) continue;
+
+        final files = await entity
+            .list(recursive: false)
+            .where(
+              (item) =>
+                  item is File && item.path.endsWith(MainConstants.dbExtension),
+            )
+            .toList();
+
+        if (files.isEmpty) continue;
+
+        final dbFile = File(files.first.path);
+        final stat = await dbFile.stat();
+        final dirName = p.basename(entity.path);
+
+        storages.add(
+          StorageInfo(
+            name: dirName,
+            path: dbFile.path,
+            modifiedAt: stat.modified,
+            size: stat.size,
+            fromHistory: false,
+            description: 'Бэкап',
+          ),
+        );
+      }
+
+      return storages;
+    } catch (e, stackTrace) {
+      logError(
+        'Error scanning backups folder: $e',
         stackTrace: stackTrace,
         tag: 'OpenStoreForm',
       );
