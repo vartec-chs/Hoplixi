@@ -338,6 +338,26 @@ Use logging functions everywhere instead of `print()`:
 - `logFatal()` - Log fatal errors
 - `logCrash()` - Write crash reports to file
 
+To avoid repeating `tag` in every call, create a tagged logger once per class:
+
+- `loggerWithTag('ArchiveNotifier')` - returns `TaggedLogger` with fixed tag
+- `AppLogger.instance.withTag('ArchiveNotifier')` - equivalent factory method
+
+Example:
+
+```dart
+class ArchiveNotifier {
+  final _log = loggerWithTag('ArchiveNotifier');
+
+  void exportError(Object error, StackTrace stackTrace) {
+    _log.error(
+      'Ошибка при выборе пути экспорта: $error',
+      stackTrace: stackTrace,
+    );
+  }
+}
+```
+
 All logs are buffered to JSONL files with session tracking. Crash reports are
 stored separately with device info.
 

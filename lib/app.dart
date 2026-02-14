@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/core/theme/theme_window_sync_service.dart';
+import 'package:hoplixi/main_store/provider/decrypted_files_guard_provider.dart';
 import 'package:hoplixi/routing/router.dart';
 import 'package:hoplixi/shared/widgets/desktop_shell.dart';
 import 'package:hoplixi/shared/widgets/watchers/lifecycle/app_lifecycle_observer.dart';
@@ -32,6 +33,10 @@ class _AppState extends ConsumerState<App> {
   void initState() {
     super.initState();
 
+    Future<void>(() {
+      ref.read(decryptedFilesGuardProvider);
+    });
+
     unawaited(
       ThemeWindowSyncService.instance.bindMainNotifier(
         ref.read(themeProvider.notifier),
@@ -43,7 +48,9 @@ class _AppState extends ConsumerState<App> {
       (previous, next) {
         final mode = next.value;
         if (mode == null) return;
-        if (ThemeWindowSyncService.instance.consumeSuppressedOutboundFlag(mode)) {
+        if (ThemeWindowSyncService.instance.consumeSuppressedOutboundFlag(
+          mode,
+        )) {
           return;
         }
         unawaited(ThemeWindowSyncService.instance.broadcastFromMain(mode));

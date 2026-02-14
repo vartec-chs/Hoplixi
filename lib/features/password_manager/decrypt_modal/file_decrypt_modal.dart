@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/index.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/main_store/models/dto/file_dto.dart';
+import 'package:hoplixi/main_store/provider/decrypted_files_guard_provider.dart';
 import 'package:hoplixi/main_store/provider/service_providers.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/notification_card.dart';
@@ -52,17 +53,35 @@ class _FileDecryptContentState extends ConsumerState<_FileDecryptContent> {
   String? _decryptedFilePath;
   String? _error;
   StreamSubscription<WatchEvent>? _fileWatcher;
+  late final DecryptedFilesGuardNotifier _decryptedFilesGuardNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _decryptedFilesGuardNotifier = ref.read(
+      decryptedFilesGuardProvider.notifier,
+    );
+  }
 
   @override
   void dispose() {
     _fileWatcher?.cancel();
-    _deleteDecryptedFile();
+    _deleteDecryptedFile(fromDispose: true);
     super.dispose();
   }
 
-  Future<void> _deleteDecryptedFile() async {
+  Future<void> _deleteDecryptedFile({bool fromDispose = false}) async {
     if (_decryptedFilePath != null) {
-      final file = File(_decryptedFilePath!);
+      final decryptedPath = _decryptedFilePath!;
+      if (fromDispose) {
+        Future<void>(() {
+          _decryptedFilesGuardNotifier.unregisterFileInUse(decryptedPath);
+        });
+      } else {
+        _decryptedFilesGuardNotifier.unregisterFileInUse(decryptedPath);
+      }
+
+      final file = File(decryptedPath);
       if (await file.exists()) {
         try {
           await file.delete();
@@ -103,9 +122,17 @@ class _FileDecryptContentState extends ConsumerState<_FileDecryptContent> {
 
       if (mounted) {
         setState(() {
+          if (_decryptedFilePath != null) {
+            _decryptedFilesGuardNotifier.unregisterFileInUse(
+              _decryptedFilePath!,
+            );
+          }
           _decryptedFilePath = decryptedFilePath;
           _isDecrypting = false;
         });
+
+        _decryptedFilesGuardNotifier.registerFileInUse(decryptedFilePath);
+
         _setupFileWatcher(decryptedFilePath);
         Toaster.success(title: 'Файл успешно расшифрован');
       }
@@ -194,7 +221,7 @@ class _FileDecryptContentState extends ConsumerState<_FileDecryptContent> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const NotificationCard(
-            type: .warning,
+            type: NotificationType.warning,
             text:
                 'Не закрывайте это окно, пока не закончите работу с расшифрованным файлом для безопасности. В противном случае временный файл будет принудительно удален.',
           ),
@@ -271,7 +298,7 @@ class _FileDecryptContentState extends ConsumerState<_FileDecryptContent> {
                       const Divider(),
                       const SizedBox(height: 8),
                       const NotificationCard(
-                        type: .info,
+                        type: NotificationType.info,
                         text:
                             'Файл был изменен. Протяните "Обновить файл", чтобы сохранить изменения в хранилище.',
                       ),

@@ -7,6 +7,7 @@ import 'package:hoplixi/core/logger/index.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/main_store/models/dto/document_dto.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/main_store/provider/decrypted_files_guard_provider.dart';
 import 'package:hoplixi/main_store/provider/service_providers.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/notification_card.dart';
@@ -654,23 +655,43 @@ class _DocumentDecryptContentState
   int _totalToDecrypt = 0;
 
   final Map<String, StreamSubscription<WatchEvent>?> _fileWatchers = {};
+  late final DecryptedFilesGuardNotifier _decryptedFilesGuardNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _decryptedFilesGuardNotifier = ref.read(
+      decryptedFilesGuardProvider.notifier,
+    );
+  }
 
   @override
   void dispose() {
     for (final subscription in _fileWatchers.values) {
       subscription?.cancel();
     }
-    _deleteAllDecryptedFiles();
+    _deleteAllDecryptedFiles(fromDispose: true);
     super.dispose();
   }
 
-  Future<void> _deleteAllDecryptedFiles() async {
+  Future<void> _deleteAllDecryptedFiles({bool fromDispose = false}) async {
     for (final info in _decryptedPages.values) {
-      await _deleteDecryptedFile(info.decryptedPath);
+      await _deleteDecryptedFile(info.decryptedPath, fromDispose: fromDispose);
     }
   }
 
-  Future<void> _deleteDecryptedFile(String path) async {
+  Future<void> _deleteDecryptedFile(
+    String path, {
+    bool fromDispose = false,
+  }) async {
+    if (fromDispose) {
+      Future<void>(() {
+        _decryptedFilesGuardNotifier.unregisterFileInUse(path);
+      });
+    } else {
+      _decryptedFilesGuardNotifier.unregisterFileInUse(path);
+    }
+
     final file = File(path);
     if (await file.exists()) {
       try {
@@ -724,6 +745,8 @@ class _DocumentDecryptContentState
               isModified: false,
             );
           });
+
+          _decryptedFilesGuardNotifier.registerFileInUse(decryptedPath);
 
           _setupFileWatcher(pageId, decryptedPath);
         }

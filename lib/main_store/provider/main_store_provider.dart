@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
@@ -89,6 +90,27 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   /// Получить текущее значение состояния или дефолтное
   DatabaseState get _currentState {
     return state.value ?? const DatabaseState(status: DatabaseStatus.idle);
+  }
+
+  Future<void> _cleanupDecryptedAttachmentsDir(String? dirPath) async {
+    if (dirPath == null || dirPath.isEmpty) return;
+
+    final directory = Directory(dirPath);
+    if (!await directory.exists()) return;
+
+    await for (final entity in directory.list(recursive: false)) {
+      try {
+        await entity.delete(recursive: true);
+      } catch (e) {
+        logWarning(
+          'Failed to delete decrypted entity: ${entity.path}',
+
+          tag: _logTag,
+        );
+      }
+    }
+
+    logInfo('Decrypted attachments directory cleaned: $dirPath', tag: _logTag);
   }
 
   /// Установить новое состояние
@@ -304,6 +326,8 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         return false;
       }
 
+      final decryptedPathBeforeClose = await getDecryptedAttachmentsPath();
+
       // Устанавливаем состояние загрузки
       _setState(
         _currentState.copyWith(status: DatabaseStatus.loading, error: null),
@@ -312,25 +336,28 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       // Вызываем закрытие хранилища
       final result = await _manager.closeStore();
 
-      return result.fold(
-        (_) {
-          // Успех - переводим в idle состояние
-          _setState(const DatabaseState(status: DatabaseStatus.closed));
-          _setState(const DatabaseState(status: DatabaseStatus.idle));
+      final isClosed = result.fold((_) => true, (error) {
+        // Ошибка - возвращаем предыдущее состояние с ошибкой и автосбросом
+        _setErrorState(
+          _currentState.copyWith(status: DatabaseStatus.error, error: error),
+        );
 
-          logInfo('Store closed successfully', tag: _logTag);
-          return true;
-        },
-        (error) {
-          // Ошибка - возвращаем предыдущее состояние с ошибкой и автосбросом
-          _setErrorState(
-            _currentState.copyWith(status: DatabaseStatus.error, error: error),
-          );
+        logError('Failed to close store: ${error.message}', tag: _logTag);
+        return false;
+      });
 
-          logError('Failed to close store: ${error.message}', tag: _logTag);
-          return false;
-        },
-      );
+      if (!isClosed) {
+        return false;
+      }
+
+      await _cleanupDecryptedAttachmentsDir(decryptedPathBeforeClose);
+
+      // Успех - переводим в idle состояние
+      _setState(const DatabaseState(status: DatabaseStatus.closed));
+      _setState(const DatabaseState(status: DatabaseStatus.idle));
+
+      logInfo('Store closed successfully', tag: _logTag);
+      return true;
     } catch (e, stackTrace) {
       logError(
         'Unexpected error closing store: $e',
@@ -370,9 +397,20 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
 
     final currentPath = _currentState.path;
     final currentName = _currentState.name;
+    final decryptedPathBeforeLock = await getDecryptedAttachmentsPath();
 
     // Закрываем соединение
-    await _manager.closeStore();
+    final closeResult = await _manager.closeStore();
+
+    closeResult.fold((_) => null, (error) {
+      logError(
+        'Failed to close store during lock: ${error.message}',
+        tag: _logTag,
+      );
+      return null;
+    });
+
+    await _cleanupDecryptedAttachmentsDir(decryptedPathBeforeLock);
 
     _setState(
       _currentState.copyWith(
@@ -704,6 +742,35 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     } catch (e, stackTrace) {
       logError(
         'Unexpected error getting attachments path: $e',
+        stackTrace: stackTrace,
+        tag: _logTag,
+      );
+      return null;
+    }
+  }
+
+  Future<String?> getDecryptedAttachmentsPath() async {
+    try {
+      if (!_currentState.isOpen) {
+        logWarning(
+          'Store is not open, cannot get decrypted attachments path',
+          tag: _logTag,
+        );
+        return null;
+      }
+
+      final result = await _manager.getDecryptedAttachmentsDirPath();
+
+      return result.fold((path) => path, (error) {
+        logError(
+          'Failed to get decrypted attachments path: ${error.message}',
+          tag: _logTag,
+        );
+        return null;
+      });
+    } catch (e, stackTrace) {
+      logError(
+        'Unexpected error getting decrypted attachments path: $e',
         stackTrace: stackTrace,
         tag: _logTag,
       );
