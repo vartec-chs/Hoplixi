@@ -5,7 +5,7 @@ class MainConstants {
   static const bool isProduction = bool.fromEnvironment('dart.vm.product');
   static const String appFolderName = 'hoplixi';
 
-  static const Size defaultWindowSize = Size(650, 720);
+  static const Size defaultWindowSize = Size(650, 740);
   static const Size minWindowSize = Size(400, 500);
   static const Size maxWindowSize = Size(1920, 1080);
 

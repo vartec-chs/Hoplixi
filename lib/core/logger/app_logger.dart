@@ -25,6 +25,8 @@ class AppLogger {
   LoggerConfig get config => _config;
   Session get currentSession => _currentSession;
 
+  TaggedLogger withTag(String tag) => TaggedLogger._(this, tag);
+
   Future<void> initialize({
     LoggerConfig? config,
     bool isSubWindow = false,
@@ -306,6 +308,65 @@ class AppLogger {
     );
   }
 }
+
+class TaggedLogger {
+  TaggedLogger._(this._logger, this._tag);
+
+  final AppLogger _logger;
+  final String _tag;
+
+  void debug(String message, {Map<String, dynamic>? data}) {
+    _logger.debug(message, tag: _tag, data: data);
+  }
+
+  void infoWithSecretData(String message, {Map<String, dynamic>? data}) {
+    _logger.infoWithSecretData(message, tag: _tag, data: data);
+  }
+
+  void info(String message, {Map<String, dynamic>? data}) {
+    _logger.info(message, tag: _tag, data: data);
+  }
+
+  void warning(String message, {Map<String, dynamic>? data}) {
+    _logger.warning(message, tag: _tag, data: data);
+  }
+
+  void trace(String message, {Map<String, dynamic>? data}) {
+    _logger.trace(message, tag: _tag, data: data);
+  }
+
+  void fatal(
+    String message, {
+    Map<String, dynamic>? data,
+    dynamic error,
+    StackTrace? stackTrace,
+  }) {
+    _logger.fatal(
+      message,
+      tag: _tag,
+      data: data,
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
+
+  void error(
+    String message, {
+    dynamic error,
+    StackTrace? stackTrace,
+    Map<String, dynamic>? data,
+  }) {
+    _logger.error(
+      message,
+      error: error,
+      stackTrace: stackTrace,
+      tag: _tag,
+      data: data,
+    );
+  }
+}
+
+TaggedLogger loggerWithTag(String tag) => AppLogger.instance.withTag(tag);
 
 void logError(
   String message, {
