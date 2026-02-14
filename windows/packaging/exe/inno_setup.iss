@@ -1,6 +1,4 @@
 ; Пользовательский шаблон Inno Setup для Windows EXE.
-; fastforge будет использовать этот файл при наличии script_template в make_config.yaml.
-; При необходимости скорректируйте значения ниже под ваш релизный процесс.
 
 #define MyAppName "Hoplixi"
 #define MyAppVersion "1.0.0"
@@ -9,6 +7,9 @@
 #define MyAppExeName "hoplixi.exe"
 #define MyAppId "c6d1c972-acc4-46af-996d-936b9a1f43d8"
 #define ProjectRoot "..\\.."
+
+#define MyFileExt ".hplxdb"
+#define MyProgId "Hoplixi.File"
 
 [Setup]
 AppId={#MyAppId}
@@ -40,5 +41,32 @@ Source: "{#ProjectRoot}\\build\\windows\\x64\\runner\\Release\\*"; DestDir: "{ap
 Name: "{autoprograms}\\{#MyAppName}"; Filename: "{app}\\{#MyAppExeName}"
 Name: "{autodesktop}\\{#MyAppName}"; Filename: "{app}\\{#MyAppExeName}"; Tasks: desktopicon
 
+; ================= FILE ASSOCIATION =================
+
+[Registry]
+
+; .hplxdb -> Hoplixi.File
+Root: HKCU; Subkey: "Software\Classes\{#MyFileExt}"; ValueType: string; ValueData: "{#MyProgId}"; Flags: uninsdeletevalue
+
+; ProgID
+Root: HKCU; Subkey: "Software\Classes\{#MyProgId}"; ValueType: string; ValueData: "Hoplixi Vault Database"; Flags: uninsdeletekey
+
+; Icon
+Root: HKCU; Subkey: "Software\Classes\{#MyProgId}\DefaultIcon"; ValueType: string; ValueData: "{app}\{#MyAppExeName},0"
+
+; Open command
+Root: HKCU; Subkey: "Software\Classes\{#MyProgId}\shell\open\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" ""%1"""
+
+; ================================================
+
 [Run]
 Filename: "{app}\\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName,'&','&&')}}"; Flags: nowait postinstall skipifsilent
+
+[Code]
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  ErrorCode: Integer;
+begin
+  if CurStep = ssPostInstall then
+    Exec('ie4uinit.exe', '-show', '', SW_HIDE, ewWaitUntilTerminated, ErrorCode);
+end;
