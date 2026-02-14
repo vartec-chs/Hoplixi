@@ -1,0 +1,8 @@
+app_id: com.hoplixi.app
+display_name: Hoplixi
+publisher_name: Hoplixi
+create_desktop_icon: true
+launch_at_startup: false
+locales:
+  - ru
+script_template: inno_setup.iss

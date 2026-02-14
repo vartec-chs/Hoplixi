@@ -1,11 +1,10 @@
 import 'dart:io';
 
 import 'package:hoplixi/core/constants/main_constants.dart';
-
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_store/models/store_folder_info.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 class AppPaths {
   static Future<String> get appStoragePath async =>
@@ -21,7 +20,7 @@ class AppPaths {
       await _getExportStoragesPath();
   static Future<String> get cloudSyncFilePath async =>
       await _getCloudSyncFilePath();
-    
+
   static Future<String> get backupsPath async => await _getBackupsPath();
 
   /// Получение списка всех папок хранилищ
@@ -40,7 +39,12 @@ Future<Directory> _getAppPath() async {
   } else {
     appDir = await getApplicationDocumentsDirectory();
   }
-  final basePath = p.join(appDir.path, MainConstants.appFolderName);
+  final basePath = p.join(
+    appDir.path,
+    MainConstants.isProduction
+        ? MainConstants.appFolderName
+        : '${MainConstants.appFolderName}-dev',
+  );
 
   // Создаем директорию если её нет
   final directory = Directory(basePath);
