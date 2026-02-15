@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/global_key.dart';
 import 'package:hoplixi/shared/widgets/status_bar.dart';
+
 import 'titlebar.dart';
 
 class DesktopShell extends StatelessWidget {
@@ -89,6 +90,7 @@ class RootBarsOverlay extends StatefulWidget {
 class _RootBarsOverlayState extends State<RootBarsOverlay> {
   OverlayEntry? _entry;
   bool _inserted = false;
+  bool _retryScheduled = false;
 
   @override
   void initState() {
@@ -130,7 +132,15 @@ class _RootBarsOverlayState extends State<RootBarsOverlay> {
     if (_inserted || !mounted) return;
 
     final overlay = navigatorKey.currentState?.overlay;
-    if (overlay == null) return;
+    if (overlay == null) {
+      if (_retryScheduled) return;
+      _retryScheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _retryScheduled = false;
+        _insertIntoRootOverlay();
+      });
+      return;
+    }
 
     _entry ??= _createEntry();
     overlay.insert(_entry!);

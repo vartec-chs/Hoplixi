@@ -81,8 +81,6 @@ class _TitleBarState extends ConsumerState<TitleBar> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // final isDatabaseOpen = ref.watch(isDatabaseOpenProvider);
-    // final closeDbTimer = ref.watch(appInactivityTimeoutProvider);
     final titlebarState = ref.watch(titlebarStateProvider);
     final isStoreOpen = ref
         .watch(mainStoreProvider)

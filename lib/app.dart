@@ -6,12 +6,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/core/app_preferences/app_preferences.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
+import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
 import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/core/theme/theme_window_sync_service.dart';
+import 'package:hoplixi/di_init.dart';
 import 'package:hoplixi/main_store/provider/decrypted_files_guard_provider.dart';
 import 'package:hoplixi/routing/router.dart';
+import 'package:hoplixi/shared/widgets/app_loading_screen.dart';
 import 'package:hoplixi/shared/widgets/desktop_shell.dart';
 import 'package:hoplixi/shared/widgets/watchers/lifecycle/app_lifecycle_observer.dart';
 import 'package:hoplixi/shared/widgets/watchers/shortcut_watcher.dart';
@@ -29,10 +33,29 @@ class App extends ConsumerStatefulWidget {
 
 class _AppState extends ConsumerState<App> {
   ProviderSubscription<AsyncValue<ThemeMode>>? _themeSyncSubscription;
+  late final Future<ThemeMode> _initialThemeModeFuture;
+
+  ThemeMode _parseThemeMode(String? value) {
+    switch (value) {
+      case 'light':
+        return ThemeMode.light;
+      case 'dark':
+        return ThemeMode.dark;
+      case 'system':
+      default:
+        return ThemeMode.system;
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+
+    _initialThemeModeFuture = () async {
+      final storage = getIt.get<AppStorageService>();
+      final savedMode = await storage.get(AppKeys.themeMode);
+      return _parseThemeMode(savedMode);
+    }();
 
     Future<void>(() {
       ref.read(launchDbPathProvider.notifier).setPath(widget.filePath);
@@ -70,42 +93,46 @@ class _AppState extends ConsumerState<App> {
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
-    final theme = ref.read(themeProvider);
-
-    final themeMode = theme.value ?? ThemeMode.system;
 
     return ShortcutWatcher(
       child: TrayWatcher(
         child: AppLifecycleObserver(
-          child: animated_theme.ThemeProvider(
-            initTheme: themeMode == ThemeMode.light
-                ? AppTheme.light(context)
-                : themeMode == ThemeMode.dark
-                ? AppTheme.dark(context)
-                : MediaQuery.of(context).platformBrightness == Brightness.dark
-                ? AppTheme.dark(context)
-                : AppTheme.light(context),
-            child: MaterialApp.router(
-              title: MainConstants.appName,
-              routerConfig: router,
-              theme: AppTheme.light(context),
-              darkTheme: AppTheme.dark(context),
-              themeMode: themeMode,
-              localizationsDelegates: const [
-                GlobalMaterialLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                FlutterQuillLocalizations.delegate,
-              ],
-              debugShowCheckedModeBanner: false,
-              builder: (context, child) {
-                return animated_theme.ThemeSwitchingArea(
-                  child: UniversalPlatform.isDesktop
-                      ? RootBarsOverlay(child: child!)
-                      : child!,
-                );
-              },
-            ),
+          child: FutureBuilder<ThemeMode>(
+            future: _initialThemeModeFuture,
+            builder: (context, asyncSnapshot) {
+              if (!asyncSnapshot.hasData) {
+                return const AppLoadingScreen();
+              }
+
+              final themeMode = asyncSnapshot.requireData;
+              logTrace('App build with theme mode: $themeMode');
+              return animated_theme.ThemeProvider(
+                initTheme: themeMode == ThemeMode.light
+                    ? AppTheme.light(context)
+                    : AppTheme.dark(context),
+                child: MaterialApp.router(
+                  title: MainConstants.appName,
+                  routerConfig: router,
+                  theme: AppTheme.light(context),
+                  darkTheme: AppTheme.dark(context),
+                  themeMode: themeMode,
+                  localizationsDelegates: const [
+                    GlobalMaterialLocalizations.delegate,
+                    GlobalCupertinoLocalizations.delegate,
+                    GlobalWidgetsLocalizations.delegate,
+                    FlutterQuillLocalizations.delegate,
+                  ],
+                  debugShowCheckedModeBanner: false,
+                  builder: (context, child) {
+                    return animated_theme.ThemeSwitchingArea(
+                      child: UniversalPlatform.isDesktop
+                          ? RootBarsOverlay(child: child!)
+                          : child!,
+                    );
+                  },
+                ),
+              );
+            },
           ),
         ),
       ),
