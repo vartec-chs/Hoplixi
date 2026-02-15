@@ -1,10 +1,10 @@
 @echo off
 
-echo Выберите платформу для сборки:
+echo Choose the platform to build for:
 echo 1. Windows (exe)
 echo 2. Android (apk)
 
-set /p choice="Введите 1 или 2: "
+set /p choice="Choose 1 or 2: "
 
 if "%choice%"=="1" (
     fastforge package --platform windows --targets exe
@@ -12,7 +12,7 @@ if "%choice%"=="1" (
     call cider bump build || exit /b
     flutter build apk --flavor prod --release
 ) else (
-    echo Неверный выбор.
+    echo Invalid choice.
 )
 
 pause
