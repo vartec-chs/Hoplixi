@@ -94,7 +94,7 @@ Future<void> _runGuiMode(String? filePath) async {
   final bool firstInstance = await FlutterSingleInstance().isFirstInstance();
   if (!firstInstance) {
     try {
-      await WindowManager.focus();
+      await FlutterSingleInstance().focus();
     } catch (_) {
       // ignore focus failures
     }
