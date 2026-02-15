@@ -5,9 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_single_instance/flutter_single_instance.dart';
+import 'package:hoplixi/core/app_preferences/app_preference_keys.dart';
+import 'package:hoplixi/core/app_preferences/app_storage_service.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/index.dart';
 import 'package:hoplixi/core/logger/rust_log_bridge.dart';
+import 'package:hoplixi/core/services/services.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/core/utils/window_manager.dart';
 import 'package:hoplixi/run_sub_window_entry.dart';
@@ -134,6 +137,7 @@ Future<void> _runGuiMode(String? filePath) async {
   }
 
   await setupDI();
+  await _syncLaunchAtStartupPreference();
   if (UniversalPlatform.isDesktop) {
     await setupTray();
   }
@@ -146,6 +150,47 @@ Future<void> _runGuiMode(String? filePath) async {
   );
 
   runApp(app);
+}
+
+Future<void> _syncLaunchAtStartupPreference() async {
+  if (!UniversalPlatform.isDesktop) {
+    return;
+  }
+
+  try {
+    final appStorageService = getIt<AppStorageService>();
+    final launchAtStartupService = getIt<LaunchAtStartupService>();
+
+    await launchAtStartupService.setup();
+    final systemEnabled = await launchAtStartupService.isEnabled();
+
+    final hasStoredValue = await appStorageService.containsKey(
+      AppKeys.launchAtStartupEnabled,
+    );
+
+    if (!hasStoredValue) {
+      await appStorageService.setBool(
+        AppKeys.launchAtStartupEnabled,
+        systemEnabled,
+      );
+      return;
+    }
+
+    final desiredValue = await appStorageService.getOrDefault(
+      AppKeys.launchAtStartupEnabled,
+      false,
+    );
+
+    if (desiredValue != systemEnabled) {
+      await launchAtStartupService.setEnabled(desiredValue);
+    }
+  } catch (error, stackTrace) {
+    logError(
+      'Не удалось синхронизировать настройку автозапуска',
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
 }
 
 void _handleUncaughtError(Object error, StackTrace stackTrace) {

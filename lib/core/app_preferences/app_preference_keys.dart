@@ -26,6 +26,13 @@ class AppKeys {
     isHiddenUI: false,
   );
 
+  static const launchAtStartupEnabled = AppKey<bool>(
+    'launch_at_startup_enabled',
+    category: PrefCategory.general,
+    editable: true,
+    isHiddenUI: false,
+  );
+
   static const isFirstLaunch = AppKey<bool>(
     'is_first_launch',
     category: PrefCategory.system,
@@ -139,6 +146,7 @@ class AppKeys {
       // Обычные настройки
       themeMode,
       language,
+      launchAtStartupEnabled,
       isFirstLaunch,
       setupCompleted,
       autoLockTimeout,

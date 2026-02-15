@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_preferences/app_preference_keys.dart';
+import 'package:hoplixi/core/services/services.dart';
 import 'package:hoplixi/core/theme/theme_switcher.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/di_init.dart';
 import 'package:hoplixi/features/settings/providers/settings_provider.dart';
 import 'package:hoplixi/features/settings/ui/widgets/settings_section_card.dart';
 import 'package:hoplixi/features/settings/ui/widgets/settings_tile.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
+import 'package:universal_platform/universal_platform.dart';
 
 /// Секция настроек внешнего вида
 class AppearanceSettingsSection extends ConsumerWidget {
@@ -29,8 +32,11 @@ class GeneralSettingsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
+    final launchAtStartupService = getIt<LaunchAtStartupService>();
 
     final language = settings[AppKeys.language.key] as String? ?? 'ru';
+    final launchAtStartupEnabled =
+        settings[AppKeys.launchAtStartupEnabled.key] as bool? ?? false;
 
     return SettingsSectionCard(
       title: 'Общие',
@@ -42,6 +48,33 @@ class GeneralSettingsSection extends ConsumerWidget {
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
           onTap: () => _showLanguageDialog(context, ref, notifier),
         ),
+        if (UniversalPlatform.isDesktop) ...[
+          const Divider(height: 1),
+          SettingsSwitchTile(
+            title: 'Запускать при старте системы',
+            subtitle: 'Автоматически запускать приложение при входе в систему',
+            leading: const Icon(Icons.rocket_launch_outlined),
+            value: launchAtStartupEnabled,
+            onChanged: (value) async {
+              final appliedValue = await launchAtStartupService.setEnabled(
+                value,
+              );
+
+              if (appliedValue != value) {
+                Toaster.error(
+                  title: 'Не удалось обновить автозапуск',
+                  description: 'Проверьте права и настройки системы',
+                );
+                return;
+              }
+
+              await notifier.setBool(AppKeys.launchAtStartupEnabled.key, value);
+              Toaster.success(
+                title: value ? 'Автозапуск включен' : 'Автозапуск выключен',
+              );
+            },
+          ),
+        ],
       ],
     );
   }

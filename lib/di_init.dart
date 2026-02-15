@@ -32,6 +32,10 @@ Future<void> setupDI() async {
   final databaseHistoryService = DatabaseHistoryService();
   await databaseHistoryService.initialize();
   getIt.registerSingleton<DatabaseHistoryService>(databaseHistoryService);
+
+  getIt.registerLazySingleton<LaunchAtStartupService>(
+    LaunchAtStartupService.new,
+  );
 }
 
 FlutterSecureStorage setupSecureStorage() {
