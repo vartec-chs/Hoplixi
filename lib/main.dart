@@ -10,9 +10,11 @@ import 'package:hoplixi/core/app_preferences/app_storage_service.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/index.dart';
 import 'package:hoplixi/core/logger/rust_log_bridge.dart';
+import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
 import 'package:hoplixi/core/services/services.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/core/utils/window_manager.dart';
+import 'package:hoplixi/global_key.dart';
 import 'package:hoplixi/run_sub_window_entry.dart';
 import 'package:hoplixi/rust/frb_generated.dart';
 import 'package:hoplixi/setup_error_handling.dart';
@@ -92,17 +94,31 @@ Future<void> _runGuardedApp(List<String> args) async {
 }
 
 Future<void> _runGuiMode(String? filePath) async {
-  await WindowManager.initialize();
+  _configureSingleInstanceFocusHandler();
 
-  final bool firstInstance = await FlutterSingleInstance().isFirstInstance();
+  final singleInstance = FlutterSingleInstance();
+  final bool firstInstance = await singleInstance.isFirstInstance();
   if (!firstInstance) {
     try {
-      await FlutterSingleInstance().focus();
-    } catch (_) {
-      // ignore focus failures
+      final focusError = await singleInstance.focus(
+        _buildFocusMetadata(filePath),
+      );
+      if (focusError != null) {
+        logWarning(
+          'Не удалось сфокусировать запущенный экземпляр: $focusError',
+        );
+      }
+    } catch (error, stackTrace) {
+      logError(
+        'Ошибка при фокусировке запущенного экземпляра',
+        error: error,
+        stackTrace: stackTrace,
+      );
     }
     exit(0);
   }
+
+  await WindowManager.initialize();
 
   await RustLib.init();
   await dotenv.load(fileName: '.env');
@@ -150,6 +166,54 @@ Future<void> _runGuiMode(String? filePath) async {
   );
 
   runApp(app);
+}
+
+Map<String, dynamic> _buildFocusMetadata(String? filePath) {
+  final metadata = <String, dynamic>{};
+  final normalized = filePath?.trim();
+  if (normalized != null && normalized.isNotEmpty) {
+    metadata['filePath'] = normalized;
+  }
+  return metadata;
+}
+
+String? _extractIncomingFilePath(Map<String, dynamic> metadata) {
+  final rawFilePath = metadata['filePath'];
+  if (rawFilePath is! String) {
+    return null;
+  }
+
+  final normalized = rawFilePath.trim();
+  if (normalized.isEmpty) {
+    return null;
+  }
+
+  return normalized;
+}
+
+void _configureSingleInstanceFocusHandler() {
+  FlutterSingleInstance.onFocus = (metadata) async {
+    if (UniversalPlatform.isDesktop) {
+      await WindowManager.show();
+    }
+
+    final filePath = _extractIncomingFilePath(metadata);
+    if (filePath == null) {
+      return;
+    }
+
+    final context = navigatorKey.currentContext;
+    if (context == null) {
+      logWarning(
+        'Не удалось обработать путь запуска: контекст навигатора недоступен',
+      );
+      return;
+    }
+
+    final container = ProviderScope.containerOf(context, listen: false);
+    container.read(launchDbPathProvider.notifier).setPath(filePath);
+    logInfo('Получен путь файла из второго экземпляра: $filePath');
+  };
 }
 
 Future<void> _syncLaunchAtStartupPreference() async {
