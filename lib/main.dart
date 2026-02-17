@@ -273,8 +273,9 @@ Future<void> _syncLaunchAtStartupPreference() async {
       false,
     );
 
-    if (desiredValue != systemEnabled) {
-      await launchAtStartupService.setEnabled(desiredValue);
+    final appliedValue = await launchAtStartupService.setEnabled(desiredValue);
+    if (appliedValue != desiredValue) {
+      logWarning('Не удалось применить состояние автозапуска');
     }
   } catch (error, stackTrace) {
     logError(
