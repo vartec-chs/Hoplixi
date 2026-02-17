@@ -5,7 +5,7 @@ import 'package:universal_platform/universal_platform.dart';
 import 'package:window_manager/window_manager.dart';
 
 class WindowManager {
-  static Future<void> initialize() async {
+  static Future<void> initialize({bool showOnInit = true}) async {
     if (UniversalPlatform.isWindows) {
       await windowManager.ensureInitialized();
       WindowOptions windowOptions = const WindowOptions(
@@ -20,8 +20,10 @@ class WindowManager {
       );
 
       await windowManager.waitUntilReadyToShow(windowOptions).then((_) async {
-        await windowManager.show();
-        await windowManager.focus();
+        if (showOnInit) {
+          await windowManager.show();
+          await windowManager.focus();
+        }
       });
 
       windowManager.addListener(_AppWindowListener());

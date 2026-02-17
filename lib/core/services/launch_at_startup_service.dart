@@ -7,6 +7,7 @@ import '../logger/index.dart';
 
 class LaunchAtStartupService {
   final _log = loggerWithTag('LaunchAtStartupService');
+  static const String startInTrayArg = '--start-in-tray';
 
   bool _isConfigured = false;
 
@@ -26,6 +27,7 @@ class LaunchAtStartupService {
         appName: packageInfo.appName,
         appPath: Platform.resolvedExecutable,
         packageName: packageInfo.packageName,
+        args: const [startInTrayArg],
       );
 
       _isConfigured = true;

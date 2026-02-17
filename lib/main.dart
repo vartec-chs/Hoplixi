@@ -11,6 +11,7 @@ import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/index.dart';
 import 'package:hoplixi/core/logger/rust_log_bridge.dart';
 import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
+import 'package:hoplixi/core/services/launch_at_startup_service.dart';
 import 'package:hoplixi/core/services/services.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/core/utils/window_manager.dart';
@@ -70,12 +71,36 @@ Future<bool> _handleSubWindowStartup() async {
   return false;
 }
 
-String? _parseLaunchFilePath(List<String> args) {
+class _LaunchContext {
+  const _LaunchContext({this.filePath, required this.startInTray});
+
+  final String? filePath;
+  final bool startInTray;
+}
+
+_LaunchContext _parseLaunchContext(List<String> args) {
   if (args.isEmpty) {
-    return null;
+    return const _LaunchContext(filePath: null, startInTray: false);
   }
 
-  return args.first;
+  bool startInTray = false;
+  String? filePath;
+
+  for (final rawArg in args) {
+    final arg = rawArg.trim();
+    if (arg.isEmpty) {
+      continue;
+    }
+
+    if (arg == LaunchAtStartupService.startInTrayArg) {
+      startInTray = true;
+      continue;
+    }
+
+    filePath ??= arg;
+  }
+
+  return _LaunchContext(filePath: filePath, startInTray: startInTray);
 }
 
 Future<void> _runGuardedApp(List<String> args) async {
@@ -87,13 +112,13 @@ Future<void> _runGuardedApp(List<String> args) async {
       return;
     }
 
-    final String? filePath = _parseLaunchFilePath(args);
+    final launchContext = _parseLaunchContext(args);
 
-    await _runGuiMode(filePath);
+    await _runGuiMode(launchContext);
   }, _handleUncaughtError);
 }
 
-Future<void> _runGuiMode(String? filePath) async {
+Future<void> _runGuiMode(_LaunchContext launchContext) async {
   _configureSingleInstanceFocusHandler();
 
   final singleInstance = FlutterSingleInstance();
@@ -101,7 +126,7 @@ Future<void> _runGuiMode(String? filePath) async {
   if (!firstInstance) {
     try {
       final focusError = await singleInstance.focus(
-        _buildFocusMetadata(filePath),
+        _buildFocusMetadata(launchContext.filePath),
       );
       if (focusError != null) {
         logWarning(
@@ -118,7 +143,7 @@ Future<void> _runGuiMode(String? filePath) async {
     exit(0);
   }
 
-  await WindowManager.initialize();
+  await WindowManager.initialize(showOnInit: !launchContext.startInTray);
 
   await RustLib.init();
   await dotenv.load(fileName: '.env');
@@ -158,11 +183,14 @@ Future<void> _runGuiMode(String? filePath) async {
     await setupTray();
   }
 
-  logInfo('Starting app with file path: $filePath');
+  if (launchContext.startInTray) {
+    logInfo('Приложение запущено в режиме автозапуска: старт в трей');
+  }
+  logInfo('Starting app with file path: ${launchContext.filePath}');
 
   final app = ProviderScope(
     observers: [LoggingProviderObserver()],
-    child: setupToastificationWrapper(App(filePath: filePath)),
+    child: setupToastificationWrapper(App(filePath: launchContext.filePath)),
   );
 
   runApp(app);
