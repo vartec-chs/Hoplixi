@@ -5,5 +5,4 @@ create_desktop_icon: true
 launch_at_startup: false
 locales:
   - ru
-  - en
 script_template: inno_setup.iss

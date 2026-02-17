@@ -2,7 +2,7 @@
 
 #define MyAppName "Hoplixi"
 #define MyAppVersion "1.0.0"
-#define MyAppBuild "6"
+#define MyAppBuild "1"
 #define MyAppPublisher "Hoplixi"
 #define MyAppExeName "hoplixi.exe"
 #define MyAppId "c6d1c972-acc4-46af-996d-936b9a1f43d8"
