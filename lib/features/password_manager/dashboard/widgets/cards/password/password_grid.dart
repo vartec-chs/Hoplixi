@@ -88,7 +88,8 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard>
     } else {
       Toaster.error(title: 'Не удалось получить пароль');
     }
-    await passwordDao.incrementUsage(widget.password.id);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    await vaultItemDao.incrementUsage(widget.password.id);
   }
 
   Future<void> _copyLogin() async {
@@ -102,8 +103,8 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard>
         if (mounted) setState(() => _loginCopied = false);
       });
     }
-    final passwordDao = await ref.read(passwordDaoProvider.future);
-    await passwordDao.incrementUsage(widget.password.id);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    await vaultItemDao.incrementUsage(widget.password.id);
   }
 
   @override

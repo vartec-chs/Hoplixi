@@ -21,7 +21,7 @@ class PasswordViewScreen extends ConsumerStatefulWidget {
 
 class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
   bool _obscurePassword = true;
-  PasswordsData? _password;
+  (VaultItemsData, PasswordItemsData)? _password;
   bool _isLoading = true;
   String? _categoryName;
   List<String> _tagNames = [];
@@ -36,14 +36,14 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
   Future<void> _loadPassword() async {
     try {
       final dao = await ref.read(passwordDaoProvider.future);
-      final password = await dao.getPasswordById(widget.passwordId);
+      final record = await dao.getById(widget.passwordId);
 
-      if (password != null && mounted) {
+      if (record != null && mounted) {
         setState(() {
-          _password = password;
+          _password = record;
           _isLoading = false;
         });
-        await _loadRelatedData(password);
+        await _loadRelatedData(record);
       } else if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -52,32 +52,37 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
     }
   }
 
-  Future<void> _loadRelatedData(PasswordsData password) async {
-    if (password.categoryId != null) {
+  Future<void> _loadRelatedData(
+    (VaultItemsData, PasswordItemsData) record,
+  ) async {
+    final (vault, pw) = record;
+    if (vault.categoryId != null) {
       final catDao = await ref.read(categoryDaoProvider.future);
-      final cat = await catDao.getCategoryById(password.categoryId!);
+      final cat = await catDao.getCategoryById(vault.categoryId!);
       if (mounted && cat != null) setState(() => _categoryName = cat.name);
     }
 
-    final dao = await ref.read(passwordDaoProvider.future);
-    final tagIds = await dao.getPasswordTagIds(widget.passwordId);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    final tagIds = await vaultItemDao.getTagIds(widget.passwordId);
     if (tagIds.isNotEmpty) {
       final tagDao = await ref.read(tagDaoProvider.future);
       final tags = await tagDao.getTagsByIds(tagIds);
       if (mounted) setState(() => _tagNames = tags.map((t) => t.name).toList());
     }
 
-    if (password.noteId != null) {
+    if (vault.noteId != null) {
       final noteDao = await ref.read(noteDaoProvider.future);
-      final note = await noteDao.getNoteById(password.noteId!);
-      if (mounted && note != null) setState(() => _noteName = note.title);
+      final noteRecord = await noteDao.getById(vault.noteId!);
+      if (mounted && noteRecord != null) {
+        setState(() => _noteName = noteRecord.$1.name);
+      }
     }
   }
 
   Future<void> _copy(String v, String f) async {
     Clipboard.setData(ClipboardData(text: v));
     Toaster.success(title: 'Скопировано', description: '$f скопирован');
-    final dao = await ref.read(passwordDaoProvider.future);
+    final dao = await ref.read(vaultItemDaoProvider.future);
     await dao.incrementUsage(widget.passwordId);
   }
 
@@ -90,7 +95,7 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(_password?.name ?? 'Пароль'),
+        title: Text(_password?.$1.name ?? 'Пароль'),
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.pencil),
@@ -110,43 +115,43 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
                   theme,
                   LucideIcons.tag,
                   'Название',
-                  _password!.name,
-                  () => _copy(_password!.name, 'Название'),
+                  _password!.$1.name,
+                  () => _copy(_password!.$1.name, 'Название'),
                 ),
                 _passwordField(theme),
-                if (_password!.login?.isNotEmpty ?? false)
+                if (_password!.$2.login?.isNotEmpty ?? false)
                   _info(
                     theme,
                     LucideIcons.user,
                     'Логин',
-                    _password!.login!,
-                    () => _copy(_password!.login!, 'Логин'),
+                    _password!.$2.login!,
+                    () => _copy(_password!.$2.login!, 'Логин'),
                   ),
-                if (_password!.email?.isNotEmpty ?? false)
+                if (_password!.$2.email?.isNotEmpty ?? false)
                   _info(
                     theme,
                     LucideIcons.mail,
                     'Email',
-                    _password!.email!,
-                    () => _copy(_password!.email!, 'Email'),
+                    _password!.$2.email!,
+                    () => _copy(_password!.$2.email!, 'Email'),
                   ),
-                if (_password!.url?.isNotEmpty ?? false)
+                if (_password!.$2.url?.isNotEmpty ?? false)
                   _info(
                     theme,
                     LucideIcons.globe,
                     'URL',
-                    _password!.url!,
-                    () => _copy(_password!.url!, 'URL'),
+                    _password!.$2.url!,
+                    () => _copy(_password!.$2.url!, 'URL'),
                   ),
                 if (_categoryName != null)
                   _info(theme, LucideIcons.folder, 'Категория', _categoryName!),
                 if (_tagNames.isNotEmpty) _tags(theme),
-                if (_password!.description?.isNotEmpty ?? false)
+                if (_password!.$1.description?.isNotEmpty ?? false)
                   _info(
                     theme,
                     LucideIcons.fileText,
                     'Описание',
-                    _password!.description!,
+                    _password!.$1.description!,
                   ),
                 if (_noteName != null)
                   _info(theme, LucideIcons.stickyNote, 'Заметка', _noteName!),
@@ -168,7 +173,7 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
         leading: Icon(LucideIcons.lock, color: t.colorScheme.primary),
         title: Text('Пароль', style: t.textTheme.bodySmall),
         subtitle: Text(
-          _obscurePassword ? '••••••••••••' : _password!.password,
+          _obscurePassword ? '••••••••••••' : _password!.$2.password,
           style: t.textTheme.bodyLarge,
         ),
         trailing: Row(
@@ -183,7 +188,7 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
             ),
             IconButton(
               icon: const Icon(LucideIcons.copy),
-              onPressed: () => _copy(_password!.password, 'Пароль'),
+              onPressed: () => _copy(_password!.$2.password, 'Пароль'),
             ),
           ],
         ),

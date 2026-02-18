@@ -122,11 +122,11 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
         noteDao.when(
           data: (dao) {
             // Загружаем асинхронно
-            dao.getNoteById(widget.selectedNoteId!).then((note) {
-              if (note != null && _resolvedNoteName != note.title) {
+            dao.getById(widget.selectedNoteId!).then((note) {
+              if (note != null && _resolvedNoteName != note.$1.name) {
                 if (mounted) {
                   setState(() {
-                    _resolvedNoteName = note.title;
+                    _resolvedNoteName = note.$1.name;
                   });
                 }
               }

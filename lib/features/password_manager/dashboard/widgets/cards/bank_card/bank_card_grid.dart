@@ -141,8 +141,8 @@ class _BankCardGridCardState extends ConsumerState<BankCardGridCard>
       if (mounted) setState(() => _cardNumberCopied = false);
     });
 
-    final bankCardDao = await ref.read(bankCardDaoProvider.future);
-    await bankCardDao.incrementUsage(widget.bankCard.id);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    await vaultItemDao.incrementUsage(widget.bankCard.id);
   }
 
   @override

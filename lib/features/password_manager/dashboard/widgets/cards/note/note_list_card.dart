@@ -107,8 +107,8 @@ class _NoteListCardState extends ConsumerState<NoteListCard>
       if (mounted) setState(() => _titleCopied = false);
     });
 
-    final noteDao = await ref.read(noteDaoProvider.future);
-    await noteDao.incrementUsage(widget.note.id);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    await vaultItemDao.incrementUsage(widget.note.id);
   }
 
   List<CardActionItem> _buildCopyActions(BuildContext context) {

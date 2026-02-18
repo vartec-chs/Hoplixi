@@ -23,7 +23,7 @@ class DocumentViewScreen extends ConsumerStatefulWidget {
 }
 
 class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
-  DocumentsData? _document;
+  (VaultItemsData, DocumentItemsData)? _document;
   bool _isLoading = true;
   String? _categoryName;
   List<String> _tagNames = [];
@@ -37,13 +37,13 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
   Future<void> _loadDocument() async {
     try {
       final dao = await ref.read(documentDaoProvider.future);
-      final doc = await dao.getDocumentById(widget.documentId);
-      if (doc != null && mounted) {
+      final record = await dao.getById(widget.documentId);
+      if (record != null && mounted) {
         setState(() {
-          _document = doc;
+          _document = record;
           _isLoading = false;
         });
-        await _loadRelatedData(doc);
+        await _loadRelatedData(record);
       } else if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -52,15 +52,18 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
     }
   }
 
-  Future<void> _loadRelatedData(DocumentsData doc) async {
-    if (doc.categoryId != null) {
+  Future<void> _loadRelatedData(
+    (VaultItemsData, DocumentItemsData) record,
+  ) async {
+    final vault = record.$1;
+    if (vault.categoryId != null) {
       final catDao = await ref.read(categoryDaoProvider.future);
-      final cat = await catDao.getCategoryById(doc.categoryId!);
+      final cat = await catDao.getCategoryById(vault.categoryId!);
       if (mounted && cat != null) setState(() => _categoryName = cat.name);
     }
 
-    final dao = await ref.read(documentDaoProvider.future);
-    final tagIds = await dao.getDocumentTagIds(widget.documentId);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    final tagIds = await vaultItemDao.getTagIds(widget.documentId);
     if (tagIds.isNotEmpty) {
       final tagDao = await ref.read(tagDaoProvider.future);
       final tags = await tagDao.getTagsByIds(tagIds);
@@ -71,8 +74,8 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
   Future<void> _copy(String v, String f) async {
     Clipboard.setData(ClipboardData(text: v));
     Toaster.success(title: 'Скопировано', description: '$f скопирован');
-    final dao = await ref.read(documentDaoProvider.future);
-    await dao.incrementUsage(widget.documentId);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    await vaultItemDao.incrementUsage(widget.documentId);
   }
 
   void _edit() => context.go(
@@ -81,17 +84,17 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
 
   DocumentCardDto _createDocumentDto() {
     return DocumentCardDto(
-      id: _document!.id,
-      title: _document!.title,
-      documentType: _document!.documentType,
-      description: _document!.description,
-      pageCount: _document!.pageCount,
-      isFavorite: _document!.isFavorite,
-      isPinned: _document!.isPinned,
-      isArchived: _document!.isArchived,
-      isDeleted: _document!.isDeleted,
-      usedCount: _document!.usedCount,
-      modifiedAt: _document!.modifiedAt,
+      id: _document!.$1.id,
+      title: _document!.$1.name,
+      documentType: _document!.$2.documentType,
+      description: _document!.$1.description,
+      pageCount: _document!.$2.pageCount,
+      isFavorite: _document!.$1.isFavorite,
+      isPinned: _document!.$1.isPinned,
+      isArchived: _document!.$1.isArchived,
+      isDeleted: _document!.$1.isDeleted,
+      usedCount: _document!.$1.usedCount,
+      modifiedAt: _document!.$1.modifiedAt,
       category: null,
       tags: null,
     );
@@ -102,7 +105,7 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
-    final title = _document?.title ?? 'Документ';
+    final title = _document?.$1.name ?? 'Документ';
 
     return Scaffold(
       appBar: AppBar(
@@ -136,7 +139,7 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
                       Icon(LucideIcons.fileText, size: 64, color: cs.primary),
                       const SizedBox(height: 12),
                       Text(
-                        '${_document!.pageCount} стр.',
+                        '${_document!.$2.pageCount} стр.',
                         style: theme.textTheme.titleMedium?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
@@ -145,36 +148,36 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                if (_document!.title != null)
+                if (_document!.$1.name.isNotEmpty)
                   _info(
                     theme,
                     LucideIcons.tag,
                     'Название',
-                    _document!.title!,
-                    () => _copy(_document!.title!, 'Название'),
+                    _document!.$1.name,
+                    () => _copy(_document!.$1.name, 'Название'),
                   ),
-                if (_document!.documentType != null)
+                if (_document!.$2.documentType != null)
                   _info(
                     theme,
                     LucideIcons.file,
                     'Тип',
-                    _document!.documentType!,
+                    _document!.$2.documentType!,
                   ),
                 _info(
                   theme,
                   LucideIcons.layers,
                   'Страниц',
-                  '${_document!.pageCount}',
+                  '${_document!.$2.pageCount}',
                 ),
                 if (_categoryName != null)
                   _info(theme, LucideIcons.folder, 'Категория', _categoryName!),
                 if (_tagNames.isNotEmpty) _tags(theme),
-                if (_document!.description?.isNotEmpty ?? false)
+                if (_document!.$1.description?.isNotEmpty ?? false)
                   _info(
                     theme,
                     LucideIcons.fileText,
                     'Описание',
-                    _document!.description!,
+                    _document!.$1.description!,
                   ),
                 const SizedBox(height: 24),
                 FilledButton.icon(

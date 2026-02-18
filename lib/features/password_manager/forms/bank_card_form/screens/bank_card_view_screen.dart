@@ -22,7 +22,7 @@ class BankCardViewScreen extends ConsumerStatefulWidget {
 
 class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
   bool _showBackView = false;
-  BankCardsData? _bankCard;
+  (VaultItemsData, BankCardItemsData)? _bankCard;
   bool _isLoading = true;
   String? _categoryName;
   List<String> _tagNames = [];
@@ -36,14 +36,14 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
   Future<void> _loadBankCard() async {
     try {
       final dao = await ref.read(bankCardDaoProvider.future);
-      final card = await dao.getBankCardById(widget.bankCardId);
+      final record = await dao.getById(widget.bankCardId);
 
-      if (card != null && mounted) {
+      if (record != null && mounted) {
         setState(() {
-          _bankCard = card;
+          _bankCard = record;
           _isLoading = false;
         });
-        await _loadRelatedData(card);
+        await _loadRelatedData(record);
       } else if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -52,15 +52,18 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
     }
   }
 
-  Future<void> _loadRelatedData(BankCardsData card) async {
-    if (card.categoryId != null) {
+  Future<void> _loadRelatedData(
+    (VaultItemsData, BankCardItemsData) record,
+  ) async {
+    final vault = record.$1;
+    if (vault.categoryId != null) {
       final catDao = await ref.read(categoryDaoProvider.future);
-      final cat = await catDao.getCategoryById(card.categoryId!);
+      final cat = await catDao.getCategoryById(vault.categoryId!);
       if (mounted && cat != null) setState(() => _categoryName = cat.name);
     }
 
-    final dao = await ref.read(bankCardDaoProvider.future);
-    final tagIds = await dao.getBankCardTagIds(widget.bankCardId);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    final tagIds = await vaultItemDao.getTagIds(widget.bankCardId);
     if (tagIds.isNotEmpty) {
       final tagDao = await ref.read(tagDaoProvider.future);
       final tags = await tagDao.getTagsByIds(tagIds);
@@ -71,8 +74,8 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
   Future<void> _copy(String v, String f) async {
     Clipboard.setData(ClipboardData(text: v));
     Toaster.success(title: 'Скопировано', description: '$f скопирован');
-    final dao = await ref.read(bankCardDaoProvider.future);
-    await dao.incrementUsage(widget.bankCardId);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    await vaultItemDao.incrementUsage(widget.bankCardId);
   }
 
   void _edit() => context.go(
@@ -90,8 +93,8 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
   }
 
   String _getExpiryDate() {
-    final month = _bankCard?.expiryMonth ?? '';
-    final year = _bankCard?.expiryYear ?? '';
+    final month = _bankCard?.$2.expiryMonth ?? '';
+    final year = _bankCard?.$2.expiryYear ?? '';
     if (month.isEmpty && year.isEmpty) return '';
     final shortYear = year.length >= 2 ? year.substring(year.length - 2) : year;
     return '$month/$shortYear';
@@ -104,7 +107,7 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_bankCard?.name ?? 'Карта'),
+        title: Text(_bankCard?.$1.name ?? 'Карта'),
         actions: [
           IconButton(icon: const Icon(LucideIcons.pencil), onPressed: _edit),
         ],
@@ -119,13 +122,13 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
                 GestureDetector(
                   onTap: () => setState(() => _showBackView = !_showBackView),
                   child: CreditCardWidget(
-                    cardNumber: _formatCardNumber(_bankCard!.cardNumber),
+                    cardNumber: _formatCardNumber(_bankCard!.$2.cardNumber),
                     expiryDate: _getExpiryDate(),
-                    cardHolderName: _bankCard!.cardholderName.toUpperCase(),
-                    cvvCode: _bankCard?.cvv ?? '',
+                    cardHolderName: _bankCard!.$2.cardholderName.toUpperCase(),
+                    cvvCode: _bankCard?.$2.cvv ?? '',
                     showBackView: _showBackView,
                     onCreditCardWidgetChange: (_) {},
-                    bankName: _bankCard!.bankName,
+                    bankName: _bankCard!.$2.bankName,
                     cardBgColor: cs.primary,
                     obscureCardNumber: false,
                     obscureCardCvv: true,
@@ -152,22 +155,22 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
                   theme,
                   LucideIcons.tag,
                   'Название',
-                  _bankCard!.name,
-                  () => _copy(_bankCard!.name, 'Название'),
+                  _bankCard!.$1.name,
+                  () => _copy(_bankCard!.$1.name, 'Название'),
                 ),
                 _info(
                   theme,
                   LucideIcons.creditCard,
                   'Номер карты',
-                  _formatCardNumber(_bankCard!.cardNumber),
-                  () => _copy(_bankCard!.cardNumber, 'Номер'),
+                  _formatCardNumber(_bankCard!.$2.cardNumber),
+                  () => _copy(_bankCard!.$2.cardNumber, 'Номер'),
                 ),
                 _info(
                   theme,
                   LucideIcons.user,
                   'Владелец',
-                  _bankCard!.cardholderName,
-                  () => _copy(_bankCard!.cardholderName, 'Владелец'),
+                  _bankCard!.$2.cardholderName,
+                  () => _copy(_bankCard!.$2.cardholderName, 'Владелец'),
                 ),
                 if (_getExpiryDate().isNotEmpty)
                   _info(
@@ -177,30 +180,30 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
                     _getExpiryDate(),
                     () => _copy(_getExpiryDate(), 'Срок'),
                   ),
-                if (_bankCard!.cvv?.isNotEmpty ?? false)
+                if (_bankCard!.$2.cvv?.isNotEmpty ?? false)
                   _info(
                     theme,
                     LucideIcons.shield,
                     'CVV',
                     '•••',
-                    () => _copy(_bankCard!.cvv!, 'CVV'),
+                    () => _copy(_bankCard!.$2.cvv!, 'CVV'),
                   ),
-                if (_bankCard!.bankName?.isNotEmpty ?? false)
+                if (_bankCard!.$2.bankName?.isNotEmpty ?? false)
                   _info(
                     theme,
                     LucideIcons.building,
                     'Банк',
-                    _bankCard!.bankName!,
+                    _bankCard!.$2.bankName!,
                   ),
                 if (_categoryName != null)
                   _info(theme, LucideIcons.folder, 'Категория', _categoryName!),
                 if (_tagNames.isNotEmpty) _tags(theme),
-                if (_bankCard!.description?.isNotEmpty ?? false)
+                if (_bankCard!.$1.description?.isNotEmpty ?? false)
                   _info(
                     theme,
                     LucideIcons.fileText,
                     'Описание',
-                    _bankCard!.description!,
+                    _bankCard!.$1.description!,
                   ),
                 const SizedBox(height: 24),
                 FilledButton.icon(

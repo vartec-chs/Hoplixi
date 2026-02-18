@@ -176,8 +176,8 @@ class _BankCardListCardState extends ConsumerState<BankCardListCard>
       if (mounted) setState(() => _cardNumberCopied = false);
     });
 
-    final bankCardDao = await ref.read(bankCardDaoProvider.future);
-    await bankCardDao.incrementUsage(widget.bankCard.id);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    await vaultItemDao.incrementUsage(widget.bankCard.id);
   }
 
   Future<void> _copyHolderName() async {
@@ -191,8 +191,8 @@ class _BankCardListCardState extends ConsumerState<BankCardListCard>
       if (mounted) setState(() => _holderNameCopied = false);
     });
 
-    final bankCardDao = await ref.read(bankCardDaoProvider.future);
-    await bankCardDao.incrementUsage(widget.bankCard.id);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    await vaultItemDao.incrementUsage(widget.bankCard.id);
   }
 
   Future<void> _copyExpiry() async {
@@ -206,8 +206,8 @@ class _BankCardListCardState extends ConsumerState<BankCardListCard>
       if (mounted) setState(() => _expiryCopied = false);
     });
 
-    final bankCardDao = await ref.read(bankCardDaoProvider.future);
-    await bankCardDao.incrementUsage(widget.bankCard.id);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    await vaultItemDao.incrementUsage(widget.bankCard.id);
   }
 
   List<CardActionItem> _buildCopyActions() {

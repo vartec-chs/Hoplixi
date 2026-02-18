@@ -48,7 +48,7 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
       final tagRecords = await tagDao.getTagsByIds(tagIds);
 
       final otpDao = await ref.read(otpDaoProvider.future);
-      final linkedOtp = await otpDao.getOtpByPasswordId(passwordId);
+      final linkedOtp = await otpDao.getByPasswordItemId(passwordId);
 
       state = PasswordFormState(
         isEditMode: true,
@@ -63,10 +63,8 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
         categoryId: vault.categoryId,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
-        otpId: linkedOtp?.id,
-        otpName: linkedOtp != null
-            ? (linkedOtp.issuer ?? linkedOtp.accountName)
-            : null,
+        otpId: linkedOtp?.$1.id,
+        otpName: linkedOtp?.$1.name ?? linkedOtp?.$2.accountName,
         isLoading: false,
       );
     } catch (e, stack) {
@@ -338,12 +336,12 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     try {
       final otpDao = await ref.read(otpDaoProvider.future);
       // 1. Найти текущие привязки
-      final currentLinkedOtps = await otpDao.getOtpsByPasswordId(passwordId);
+      final currentLinkedOtp = await otpDao.getByPasswordItemId(passwordId);
 
       // 2. Отвязать лишние
-      for (final otp in currentLinkedOtps) {
-        if (otp.id != state.otpId) {
-          await otpDao.updateOtpLink(otp.id, null);
+      if (currentLinkedOtp != null) {
+        if (currentLinkedOtp.$1.id != state.otpId) {
+          await otpDao.updateOtpLink(currentLinkedOtp.$1.id, null);
         }
       }
 

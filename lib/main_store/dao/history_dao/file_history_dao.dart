@@ -70,15 +70,30 @@ class FileHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   /// Получить полные записи истории файла
-  Future<List<VaultItemHistoryData>> getFileHistoryByOriginalId(String fileId) {
-    return (select(vaultItemHistory)
+  Future<List<(VaultItemHistoryData, FileHistoryData?)>>
+  getFileHistoryByOriginalId(String fileId) async {
+    final query =
+        select(vaultItemHistory).join([
+            leftOuterJoin(
+              fileHistory,
+              fileHistory.historyId.equalsExp(vaultItemHistory.id),
+            ),
+          ])
           ..where(
-            (h) =>
-                h.itemId.equals(fileId) &
-                h.type.equalsValue(VaultItemType.file),
+            vaultItemHistory.itemId.equals(fileId) &
+                vaultItemHistory.type.equalsValue(VaultItemType.file),
           )
-          ..orderBy([(h) => OrderingTerm.desc(h.actionAt)]))
-        .get();
+          ..orderBy([OrderingTerm.desc(vaultItemHistory.actionAt)]);
+
+    final rows = await query.get();
+    return rows
+        .map(
+          (row) => (
+            row.readTable(vaultItemHistory),
+            row.readTableOrNull(fileHistory),
+          ),
+        )
+        .toList();
   }
 
   /// Получить историю по действию

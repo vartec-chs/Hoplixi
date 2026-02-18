@@ -82,16 +82,11 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
   }
 
   Future<void> _loadNoteName(String noteId) async {
-    final noteDao = ref.read(noteDaoProvider);
-    final asyncValue = noteDao;
-
-    // Ждём данные из AsyncValue
-    if (!asyncValue.hasValue) return;
-
-    final note = await asyncValue.value!.getNoteById(noteId);
+    final noteDao = await ref.read(noteDaoProvider.future);
+    final record = await noteDao.getById(noteId);
     if (mounted) {
       setState(() {
-        _noteName = note?.title;
+        _noteName = record?.$1.name;
       });
     }
   }

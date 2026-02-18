@@ -23,7 +23,7 @@ class FileViewScreen extends ConsumerStatefulWidget {
 }
 
 class _FileViewScreenState extends ConsumerState<FileViewScreen> {
-  FilesData? _file;
+  (VaultItemsData, FileItemsData)? _file;
   FileMetadataData? _metadata;
   bool _isLoading = true;
   String? _categoryName;
@@ -38,14 +38,15 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
   Future<void> _loadFile() async {
     try {
       final dao = await ref.read(fileDaoProvider.future);
-      final file = await dao.getFileById(widget.fileId);
-      if (file != null && mounted) {
+      final record = await dao.getById(widget.fileId);
+
+      if (record != null && mounted) {
         setState(() {
-          _file = file;
+          _file = record;
           _isLoading = false;
         });
-        await _loadMetadata(file, dao);
-        await _loadRelatedData(file);
+        await _loadMetadata(record.$2, dao);
+        await _loadRelatedData(record);
       } else if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -54,22 +55,23 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
     }
   }
 
-  Future<void> _loadMetadata(FilesData file, dynamic dao) async {
+  Future<void> _loadMetadata(FileItemsData file, dynamic dao) async {
     if (file.metadataId != null) {
       final meta = await dao.getFileMetadataById(file.metadataId!);
       if (mounted && meta != null) setState(() => _metadata = meta);
     }
   }
 
-  Future<void> _loadRelatedData(FilesData file) async {
-    if (file.categoryId != null) {
+  Future<void> _loadRelatedData((VaultItemsData, FileItemsData) record) async {
+    final vault = record.$1;
+    if (vault.categoryId != null) {
       final catDao = await ref.read(categoryDaoProvider.future);
-      final cat = await catDao.getCategoryById(file.categoryId!);
+      final cat = await catDao.getCategoryById(vault.categoryId!);
       if (mounted && cat != null) setState(() => _categoryName = cat.name);
     }
 
-    final dao = await ref.read(fileDaoProvider.future);
-    final tagIds = await dao.getFileTagIds(widget.fileId);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    final tagIds = await vaultItemDao.getTagIds(widget.fileId);
     if (tagIds.isNotEmpty) {
       final tagDao = await ref.read(tagDaoProvider.future);
       final tags = await tagDao.getTagsByIds(tagIds);
@@ -80,8 +82,8 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
   Future<void> _copy(String v, String f) async {
     Clipboard.setData(ClipboardData(text: v));
     Toaster.success(title: 'Скопировано', description: '$f скопирован');
-    final dao = await ref.read(fileDaoProvider.future);
-    await dao.incrementUsage(widget.fileId);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    await vaultItemDao.incrementUsage(widget.fileId);
   }
 
   void _edit() => context.go(
@@ -90,18 +92,18 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
 
   FileCardDto _createFileDto() {
     return FileCardDto(
-      id: _file!.id,
-      name: _file!.name,
-      metadataId: _file!.metadataId,
+      id: _file!.$1.id,
+      name: _file!.$1.name,
+      metadataId: _file!.$2.metadataId,
       fileName: _metadata?.fileName,
       fileExtension: _metadata?.fileExtension,
       fileSize: _metadata?.fileSize,
-      isFavorite: _file!.isFavorite,
-      isPinned: _file!.isPinned,
-      isArchived: _file!.isArchived,
-      isDeleted: _file!.isDeleted,
-      usedCount: _file!.usedCount,
-      modifiedAt: _file!.modifiedAt,
+      isFavorite: _file!.$1.isFavorite,
+      isPinned: _file!.$1.isPinned,
+      isArchived: _file!.$1.isArchived,
+      isDeleted: _file!.$1.isDeleted,
+      usedCount: _file!.$1.usedCount,
+      modifiedAt: _file!.$1.modifiedAt,
       category: null,
       tags: null,
     );
@@ -152,7 +154,7 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_file?.name ?? 'Файл'),
+        title: Text(_file?.$1.name ?? 'Файл'),
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.lockOpen),
@@ -195,8 +197,8 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
                   theme,
                   LucideIcons.tag,
                   'Название',
-                  _file!.name,
-                  () => _copy(_file!.name, 'Название'),
+                  _file!.$1.name,
+                  () => _copy(_file!.$1.name, 'Название'),
                 ),
                 if (_metadata?.fileName != null)
                   _info(
@@ -217,12 +219,12 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
                 if (_categoryName != null)
                   _info(theme, LucideIcons.folder, 'Категория', _categoryName!),
                 if (_tagNames.isNotEmpty) _tags(theme),
-                if (_file!.description?.isNotEmpty ?? false)
+                if (_file!.$1.description?.isNotEmpty ?? false)
                   _info(
                     theme,
                     LucideIcons.fileText,
                     'Описание',
-                    _file!.description!,
+                    _file!.$1.description!,
                   ),
                 const SizedBox(height: 24),
                 FilledButton.icon(
