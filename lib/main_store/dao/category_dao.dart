@@ -12,54 +12,19 @@ part 'category_dao.g.dart';
 class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
   CategoryDao(super.db);
 
-  /// Подсчитать количество элементов в категории
+  /// Подсчитать количество элементов в категории.
+  ///
+  /// Использует единую таблицу [VaultItems] с фильтрацией
+  /// по [categoryId] и [isDeleted].
   Future<int> countItemsInCategory(String categoryId) async {
-    // Подсчитываем элементы во всех таблицах, которые используют categoryId
-    final passwordsCount =
-        await (selectOnly(db.passwords)
-              ..addColumns([db.passwords.id.count()])
-              ..where(db.passwords.categoryId.equals(categoryId))
-              ..where(db.passwords.isDeleted.equals(false)))
-            .getSingle()
-            .then((row) => row.read(db.passwords.id.count()) ?? 0);
+    final countExpr = db.vaultItems.id.count();
+    final query = selectOnly(db.vaultItems)
+      ..addColumns([countExpr])
+      ..where(db.vaultItems.categoryId.equals(categoryId))
+      ..where(db.vaultItems.isDeleted.equals(false));
 
-    final notesCount =
-        await (selectOnly(db.notes)
-              ..addColumns([db.notes.id.count()])
-              ..where(db.notes.categoryId.equals(categoryId))
-              ..where(db.notes.isDeleted.equals(false)))
-            .getSingle()
-            .then((row) => row.read(db.notes.id.count()) ?? 0);
-
-    final filesCount =
-        await (selectOnly(db.files)
-              ..addColumns([db.files.id.count()])
-              ..where(db.files.categoryId.equals(categoryId))
-              ..where(db.files.isDeleted.equals(false)))
-            .getSingle()
-            .then((row) => row.read(db.files.id.count()) ?? 0);
-
-    final bankCardsCount =
-        await (selectOnly(db.bankCards)
-              ..addColumns([db.bankCards.id.count()])
-              ..where(db.bankCards.categoryId.equals(categoryId))
-              ..where(db.bankCards.isDeleted.equals(false)))
-            .getSingle()
-            .then((row) => row.read(db.bankCards.id.count()) ?? 0);
-
-    final otpsCount =
-        await (selectOnly(db.otps)
-              ..addColumns([db.otps.id.count()])
-              ..where(db.otps.categoryId.equals(categoryId))
-              ..where(db.otps.isDeleted.equals(false)))
-            .getSingle()
-            .then((row) => row.read(db.otps.id.count()) ?? 0);
-
-    return passwordsCount +
-        notesCount +
-        filesCount +
-        bankCardsCount +
-        otpsCount;
+    final row = await query.getSingle();
+    return row.read(countExpr) ?? 0;
   }
 
   /// Получить все категории

@@ -109,7 +109,7 @@ class DocumentStorageService {
         final pageFile = pageFiles[i];
         final pageNumber = startPageNumber + i;
 
-        final document = await _db.documentDao.getDocumentById(documentId);
+        final document = await _db.documentDao.getById(documentId);
         if (document == null) {
           throw Exception('Document not found');
         }
@@ -181,7 +181,7 @@ class DocumentStorageService {
       await _fileStorageService.deleteFileFromDisk(page.metadataId!);
 
       // Удаляем запись файла из БД
-      await _db.fileDao.permanentDelete(page.metadataId!);
+      await _db.vaultItemDao.permanentDelete(page.metadataId!);
 
       // Удаляем запись страницы
       final result = await (_db.delete(
@@ -265,7 +265,7 @@ class DocumentStorageService {
       // Удаляем каждую страницу (файлы и записи)
       for (final page in pages) {
         await _fileStorageService.deleteFileFromDisk(page.metadataId!);
-        await _db.fileDao.permanentDelete(page.metadataId!);
+        await _db.vaultItemDao.permanentDelete(page.metadataId!);
       }
 
       // Удаляем все записи страниц
@@ -274,7 +274,7 @@ class DocumentStorageService {
       )..where((p) => p.documentId.equals(documentId))).go();
 
       // Удаляем документ
-      final result = await _db.documentDao.permanentDelete(documentId);
+      final result = await _db.vaultItemDao.permanentDelete(documentId);
 
       if (result) {
         logInfo(

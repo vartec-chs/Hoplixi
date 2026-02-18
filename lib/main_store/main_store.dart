@@ -6,6 +6,7 @@ import 'package:hoplixi/main_store/dao/category_dao.dart';
 import 'package:hoplixi/main_store/dao/document_dao.dart';
 import 'package:hoplixi/main_store/dao/file_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/bank_card_history_dao.dart';
+import 'package:hoplixi/main_store/dao/history_dao/document_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/file_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/note_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/otp_history_dao.dart';
@@ -16,6 +17,7 @@ import 'package:hoplixi/main_store/dao/note_link_dao.dart';
 import 'package:hoplixi/main_store/dao/otp_dao.dart';
 import 'package:hoplixi/main_store/dao/password_dao.dart';
 import 'package:hoplixi/main_store/dao/store_meta_dao.dart';
+import 'package:hoplixi/main_store/dao/vault_item_dao.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:hoplixi/main_store/tables/index.dart';
 import 'package:hoplixi/main_store/triggers/index.dart';
@@ -28,32 +30,36 @@ part 'main_store.g.dart';
 @DriftDatabase(
   tables: [
     StoreMetaTable,
-    Passwords,
-    PasswordsHistory,
-    Otps,
-    OtpsHistory,
-    Notes,
-    NotesHistory,
+    // --- Базовая таблица ---
+    VaultItems,
+    // --- Type-specific таблицы ---
+    PasswordItems,
+    OtpItems,
+    NoteItems,
     NoteLinks,
-    BankCards,
-    BankCardsHistory,
-    Files,
+    BankCardItems,
+    FileItems,
     FileMetadata,
-    FilesTags,
-    FilesHistory,
+    DocumentItems,
+    DocumentPages,
+    // --- Теги (единая таблица) ---
+    ItemTags,
+    // --- Вспомогательные ---
     Categories,
     Tags,
     Icons,
-    PasswordsTags,
-    OtpsTags,
-    NotesTags,
-    BankCardsTags,
-    Documents,
-    DocumentPages,
-    DocumentsTags,
+    // --- История (Table-Per-Type) ---
+    VaultItemHistory,
+    PasswordHistory,
+    OtpHistory,
+    NoteHistory,
+    BankCardHistory,
+    FileHistory,
+    DocumentHistory,
   ],
   daos: [
     StoreMetaDao,
+    VaultItemDao,
     PasswordDao,
     PasswordHistoryDao,
     OtpDao,
@@ -65,6 +71,8 @@ part 'main_store.g.dart';
     BankCardHistoryDao,
     FileDao,
     FileHistoryDao,
+    DocumentDao,
+    DocumentHistoryDao,
     CategoryDao,
     IconDao,
     BankCardFilterDao,
@@ -72,7 +80,6 @@ part 'main_store.g.dart';
     NoteFilterDao,
     OtpFilterDao,
     PasswordFilterDao,
-    DocumentDao,
   ],
 )
 class MainStore extends _$MainStore {
@@ -91,22 +98,12 @@ class MainStore extends _$MainStore {
       },
       beforeOpen: (details) async {
         await customStatement('PRAGMA foreign_keys = ON');
-
-        // Переустановка триггеров при каждом открытии БД
-        // (на случай если они были удалены или изменены)
-        // await _installHistoryTriggers();
       },
       onUpgrade: (Migrator m, int from, int to) async {
         logInfo(
           'Migrating database from version $from to $to',
           tag: '${_logTag}Migration',
         );
-
-        // // Миграция до версии 5: добавление таблицы связей между заметками
-        // if (from < 5) {
-        //   await m.createTable(noteLinks);
-        //   logInfo('Created note_links table', tag: '${_logTag}Migration');
-        // }
 
         logInfo('Migration completed', tag: '${_logTag}Migration');
       },
@@ -116,43 +113,34 @@ class MainStore extends _$MainStore {
   @override
   int get schemaVersion => MainConstants.databaseSchemaVersion;
 
-  /// Поток для отслеживания изменений в данных
+  /// Поток для отслеживания изменений в данных.
   ///
-  /// Эмитирует событие каждый раз при изменении данных в любой таблице
+  /// Эмитирует событие каждый раз при изменении данных
+  /// в любой из основных таблиц.
   Stream<void> watchDataChanged() {
     return customSelect(
-      'SELECT 1', // данные нам не нужны
+      'SELECT 1',
       readsFrom: {
-        passwords,
-        passwordsHistory,
-        otps,
-        otpsHistory,
-        notes,
-        notesHistory,
+        vaultItems,
+        passwordItems,
+        otpItems,
+        noteItems,
         noteLinks,
-        bankCards,
-        bankCardsHistory,
-        files,
-        filesHistory,
+        bankCardItems,
+        fileItems,
+        documentItems,
+        documentPages,
+        itemTags,
         categories,
         tags,
         icons,
-        passwordsTags,
-        otpsTags,
-        notesTags,
-        bankCardsTags,
-        filesTags,
-        documents,
-        documentPages,
-        documentsTags,
-      }, // отслеживаем все основные таблицы
-    ).watch().map((_) {
-      return;
-    }); // превращаем в Stream<void>
+        vaultItemHistory,
+      },
+    ).watch().map((_) => null);
   }
 
-  /// Установка триггеров для автоматической записи истории изменений
-  /// и управления временными метками
+  /// Установка триггеров для автоматической записи истории
+  /// изменений и управления временными метками.
   Future<void> _installHistoryTriggers() async {
     logInfo('Installing triggers...', tag: _logTag);
 
@@ -201,7 +189,7 @@ class MainStore extends _$MainStore {
         await customStatement(trigger);
       }
 
-      // Создаём триггеры для обновления store_meta при изменениях в таблицах
+      // Создаём триггеры для обновления store_meta
       for (final trigger in allMetaTouchCreateTriggers) {
         await customStatement(trigger);
       }

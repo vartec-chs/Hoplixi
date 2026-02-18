@@ -1,17 +1,20 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
-import 'documents.dart';
 import 'file_metadata.dart';
+import 'vault_items.dart';
 
+/// Страницы документа (one-to-many: document → pages).
+///
+/// Теперь documentId ссылается на vault_items.id.
 @DataClassName('DocumentPagesData')
 class DocumentPages extends Table {
   /// UUID страницы
   TextColumn get id => text().clientDefault(() => const Uuid().v4())();
 
-  /// Документ-владелец
+  /// Документ-владелец (FK → vault_items.id)
   TextColumn get documentId =>
-      text().references(Documents, #id, onDelete: KeyAction.cascade)();
+      text().references(VaultItems, #id, onDelete: KeyAction.cascade)();
 
   /// Метаданные файла страницы
   TextColumn get metadataId => text().nullable().references(
@@ -33,19 +36,16 @@ class DocumentPages extends Table {
   BoolColumn get isPrimary => boolean().withDefault(const Constant(false))();
 
   /// Системные поля
-  IntColumn get usedCount =>
-      integer().withDefault(const Constant(0))(); // Usage count
+  IntColumn get usedCount => integer().withDefault(const Constant(0))();
   DateTimeColumn get createdAt =>
       dateTime().clientDefault(() => DateTime.now())();
   DateTimeColumn get modifiedAt =>
       dateTime().clientDefault(() => DateTime.now())();
-  DateTimeColumn get lastUsedAt =>
-      dateTime().nullable()(); // For filters and UX
+  DateTimeColumn get lastUsedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
 
-  /// Запрещаем дублирование номеров страниц в документе
   @override
   List<Set<Column>> get uniqueKeys => [
     {documentId, pageNumber},

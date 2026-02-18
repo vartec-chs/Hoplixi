@@ -6,55 +6,66 @@ import 'package:hoplixi/main_store/models/dto/file_dto.dart';
 import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_store/models/filter/base_filter.dart';
 import 'package:hoplixi/main_store/models/filter/files_filter.dart';
-import 'package:hoplixi/main_store/tables/index.dart';
+import 'package:hoplixi/main_store/tables/categories.dart';
+import 'package:hoplixi/main_store/tables/file_items.dart';
+import 'package:hoplixi/main_store/tables/file_metadata.dart';
+import 'package:hoplixi/main_store/tables/item_tags.dart';
+import 'package:hoplixi/main_store/tables/note_items.dart';
+import 'package:hoplixi/main_store/tables/tags.dart';
+import 'package:hoplixi/main_store/tables/vault_items.dart';
 
 part 'file_filter_dao.g.dart';
 
-@DriftAccessor(tables: [Files, FileMetadata, Categories, FilesTags, Tags])
+@DriftAccessor(
+  tables: [
+    VaultItems,
+    FileItems,
+    FileMetadata,
+    Categories,
+    Tags,
+    ItemTags,
+    NoteItems,
+  ],
+)
 class FileFilterDao extends DatabaseAccessor<MainStore>
     with _$FileFilterDaoMixin
     implements FilterDao<FilesFilter, FileCardDto> {
   FileFilterDao(super.db);
 
-  /// Получить отфильтрованные файлы
   @override
   Future<List<FileCardDto>> getFiltered(FilesFilter filter) async {
-    final query = select(files).join([
-      leftOuterJoin(categories, categories.id.equalsExp(files.categoryId)),
-      leftOuterJoin(fileMetadata, fileMetadata.id.equalsExp(files.metadataId)),
+    final query = select(vaultItems).join([
+      innerJoin(fileItems, fileItems.itemId.equalsExp(vaultItems.id)),
+      leftOuterJoin(
+        fileMetadata,
+        fileMetadata.id.equalsExp(fileItems.metadataId),
+      ),
+      leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
+      leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
 
-    final whereExpression = _buildWhereExpression(filter, hasNotesJoin: true);
-    if (whereExpression != null) {
-      query.where(whereExpression);
-    }
-
+    query.where(_buildWhereExpression(filter));
     query.orderBy(_buildOrderBy(filter));
 
-    if (filter.base.limit != null) {
+    if (filter.base.limit != null && filter.base.limit! > 0) {
       query.limit(filter.base.limit!, offset: filter.base.offset);
     }
 
     final results = await query.get();
 
-    // Собираем ID всех файлов для загрузки тегов
-    final fileIds = results.map((row) => row.readTable(files).id).toList();
-
-    // Загружаем теги для всех файлов (максимум 10 на файл)
-    final tagsMap = await _loadTagsForFiles(fileIds);
+    final itemIds = results.map((row) => row.readTable(vaultItems).id).toList();
+    final tagsMap = await _loadTagsForItems(itemIds);
 
     return results.map((row) {
-      final file = row.readTable(files);
+      final item = row.readTable(vaultItems);
+      final fi = row.readTable(fileItems);
       final category = row.readTableOrNull(categories);
       final metadata = row.readTableOrNull(fileMetadata);
 
-      // Получаем теги для текущего файла
-      final fileTags = tagsMap[file.id] ?? [];
-
       return FileCardDto(
-        id: file.id,
-        name: file.name,
-        metadataId: file.metadataId,
+        id: item.id,
+        name: item.name,
+        metadataId: fi.metadataId,
         fileName: metadata?.fileName,
         fileExtension: metadata?.fileExtension,
         fileSize: metadata?.fileSize,
@@ -67,367 +78,293 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
                 iconId: category.iconId,
               )
             : null,
-        isFavorite: file.isFavorite,
-        isPinned: file.isPinned,
-        isArchived: file.isArchived,
-        isDeleted: file.isDeleted,
-        usedCount: file.usedCount,
-        modifiedAt: file.modifiedAt,
-        tags: fileTags,
+        isFavorite: item.isFavorite,
+        isPinned: item.isPinned,
+        isArchived: item.isArchived,
+        isDeleted: item.isDeleted,
+        usedCount: item.usedCount,
+        modifiedAt: item.modifiedAt,
+        tags: tagsMap[item.id] ?? [],
       );
     }).toList();
   }
 
-  /// Подсчитывает количество отфильтрованных файлов
   @override
   Future<int> countFiltered(FilesFilter filter) async {
-    // Создаем запрос для подсчета с join
-    final query = select(files).join([
-      leftOuterJoin(categories, categories.id.equalsExp(files.categoryId)),
-      leftOuterJoin(notes, notes.id.equalsExp(files.noteId)),
-      leftOuterJoin(fileMetadata, fileMetadata.id.equalsExp(files.metadataId)),
+    final query = select(vaultItems).join([
+      innerJoin(fileItems, fileItems.itemId.equalsExp(vaultItems.id)),
+      leftOuterJoin(
+        fileMetadata,
+        fileMetadata.id.equalsExp(fileItems.metadataId),
+      ),
     ]);
-
-    // Применяем те же фильтры
-    final whereExpression = _buildWhereExpression(filter, hasNotesJoin: true);
-    if (whereExpression != null) {
-      query.where(whereExpression);
-    }
-
-    // Выполняем запрос и считаем
+    query.where(_buildWhereExpression(filter));
     final results = await query.get();
     return results.length;
   }
 
-  /// Построить WHERE выражение на основе фильтра
-  Expression<bool>? _buildWhereExpression(
-    FilesFilter filter, {
-    bool hasNotesJoin = false,
-  }) {
-    final expressions = <Expression<bool>>[];
-
-    // Применяем базовые фильтры
-    _applyBaseFilters(filter.base, expressions, hasNotesJoin: hasNotesJoin);
-
-    // Применяем специфичные для файлов фильтры
-    _applyFileSpecificFilters(filter, expressions);
-
-    if (expressions.isEmpty) return null;
-
-    return expressions.reduce((a, b) => a & b);
+  Expression<bool> _buildWhereExpression(FilesFilter filter) {
+    Expression<bool> expr = const Constant(true);
+    expr = expr & _applyBaseFilters(filter.base);
+    expr = expr & _applyFileSpecificFilters(filter);
+    return expr;
   }
 
-  /// Применить базовые фильтры из BaseFilter
-  void _applyBaseFilters(
-    BaseFilter base,
-    List<Expression<bool>> expressions, {
-    bool hasNotesJoin = false,
-  }) {
-    // Фильтр по поисковому запросу
+  Expression<bool> _applyBaseFilters(BaseFilter base) {
+    Expression<bool> expr = const Constant(true);
+
     if (base.query.isNotEmpty) {
-      final queryLower = base.query.toLowerCase();
-      Expression<bool> searchExpression =
-          files.name.lower().like('%$queryLower%') |
-          files.description.lower().like('%$queryLower%') |
-          fileMetadata.fileName.lower().like('%$queryLower%');
-      if (hasNotesJoin) {
-        searchExpression =
-            searchExpression | notes.content.lower().like('%$queryLower%');
-      }
-      expressions.add(searchExpression);
+      final q = base.query.toLowerCase();
+      Expression<bool> searchExpr =
+          vaultItems.name.lower().like('%$q%') |
+          vaultItems.description.lower().like('%$q%') |
+          fileMetadata.fileName.lower().like('%$q%');
+      searchExpr = searchExpr | noteItems.content.lower().like('%$q%');
+      expr = expr & searchExpr;
     }
 
-    // Фильтр по категориям
     if (base.categoryIds.isNotEmpty) {
-      expressions.add(files.categoryId.isIn(base.categoryIds));
+      expr = expr & vaultItems.categoryId.isIn(base.categoryIds);
     }
 
-    // Фильтр по тегам (EXISTS subquery)
     if (base.tagIds.isNotEmpty) {
-      final tagFilter = existsQuery(
-        select(filesTags)..where(
-          (t) => t.fileId.equalsExp(files.id) & t.tagId.isIn(base.tagIds),
+      final tagExists = existsQuery(
+        select(itemTags)..where(
+          (t) => t.itemId.equalsExp(vaultItems.id) & t.tagId.isIn(base.tagIds),
         ),
       );
-      expressions.add(tagFilter);
+      expr = expr & tagExists;
     }
 
-    // Фильтр по дате создания
-    if (base.createdAfter != null) {
-      expressions.add(files.createdAt.isBiggerOrEqualValue(base.createdAfter!));
-    }
-    if (base.createdBefore != null) {
-      expressions.add(
-        files.createdAt.isSmallerOrEqualValue(base.createdBefore!),
-      );
-    }
-
-    // Фильтр по дате модификации
-    if (base.modifiedAfter != null) {
-      expressions.add(
-        files.modifiedAt.isBiggerOrEqualValue(base.modifiedAfter!),
-      );
-    }
-    if (base.modifiedBefore != null) {
-      expressions.add(
-        files.modifiedAt.isSmallerOrEqualValue(base.modifiedBefore!),
-      );
-    }
-
-    // Фильтр по дате последнего доступа
-    if (base.lastUsedAfter != null) {
-      expressions.add(
-        files.lastUsedAt.isBiggerOrEqualValue(base.lastUsedAfter!) |
-            files.lastUsedAt.isNull(),
-      );
-    }
-    if (base.lastUsedBefore != null) {
-      expressions.add(
-        files.lastUsedAt.isSmallerOrEqualValue(base.lastUsedBefore!) |
-            files.lastUsedAt.isNull(),
-      );
-    }
-
-    // Фильтр по избранным
     if (base.isFavorite != null) {
-      expressions.add(files.isFavorite.equals(base.isFavorite!));
+      expr = expr & vaultItems.isFavorite.equals(base.isFavorite!);
     }
 
-    // Фильтр по закрепленным
     if (base.isPinned != null) {
-      expressions.add(files.isPinned.equals(base.isPinned!));
+      expr = expr & vaultItems.isPinned.equals(base.isPinned!);
     }
 
-    // Фильтр по архивным
     if (base.isArchived != null) {
-      expressions.add(files.isArchived.equals(base.isArchived!));
+      expr = expr & vaultItems.isArchived.equals(base.isArchived!);
     } else {
-      // По умолчанию исключаем архивные
-      expressions.add(files.isArchived.equals(false));
+      expr = expr & vaultItems.isArchived.equals(false);
     }
 
-    // Фильтр по удаленным
     if (base.isDeleted != null) {
-      expressions.add(files.isDeleted.equals(base.isDeleted!));
+      expr = expr & vaultItems.isDeleted.equals(base.isDeleted!);
     } else {
-      // По умолчанию исключаем удаленные
-      expressions.add(files.isDeleted.equals(false));
-    }
-
-    // Фильтр по заметкам
-    if (base.noteIds.isNotEmpty) {
-      expressions.add(files.noteId.isIn(base.noteIds));
+      expr = expr & vaultItems.isDeleted.equals(false);
     }
 
     if (base.hasNotes != null) {
-      if (base.hasNotes!) {
-        expressions.add(files.noteId.isNotNull());
-      } else {
-        expressions.add(files.noteId.isNull());
-      }
+      expr =
+          expr &
+          (base.hasNotes!
+              ? vaultItems.noteId.isNotNull()
+              : vaultItems.noteId.isNull());
     }
+
+    if (base.noteIds.isNotEmpty) {
+      expr = expr & vaultItems.noteId.isIn(base.noteIds);
+    }
+
+    if (base.createdAfter != null) {
+      expr =
+          expr & vaultItems.createdAt.isBiggerOrEqualValue(base.createdAfter!);
+    }
+    if (base.createdBefore != null) {
+      expr =
+          expr &
+          vaultItems.createdAt.isSmallerOrEqualValue(base.createdBefore!);
+    }
+    if (base.modifiedAfter != null) {
+      expr =
+          expr &
+          vaultItems.modifiedAt.isBiggerOrEqualValue(base.modifiedAfter!);
+    }
+    if (base.modifiedBefore != null) {
+      expr =
+          expr &
+          vaultItems.modifiedAt.isSmallerOrEqualValue(base.modifiedBefore!);
+    }
+    if (base.lastUsedAfter != null) {
+      expr =
+          expr &
+          vaultItems.lastUsedAt.isBiggerOrEqualValue(base.lastUsedAfter!);
+    }
+    if (base.lastUsedBefore != null) {
+      expr =
+          expr &
+          vaultItems.lastUsedAt.isSmallerOrEqualValue(base.lastUsedBefore!);
+    }
+    if (base.minUsedCount != null) {
+      expr =
+          expr & vaultItems.usedCount.isBiggerOrEqualValue(base.minUsedCount!);
+    }
+    if (base.maxUsedCount != null) {
+      expr =
+          expr & vaultItems.usedCount.isSmallerOrEqualValue(base.maxUsedCount!);
+    }
+    return expr;
   }
 
-  /// Применить фильтры, специфичные для файлов
-  void _applyFileSpecificFilters(
-    FilesFilter filter,
-    List<Expression<bool>> expressions,
-  ) {
-    // Фильтр по расширениям файлов
+  Expression<bool> _applyFileSpecificFilters(FilesFilter filter) {
+    Expression<bool> expr = const Constant(true);
+
     if (filter.fileExtensions.isNotEmpty) {
-      Expression<bool>? extensionExpression;
+      Expression<bool>? extExpr;
       for (final ext in filter.fileExtensions) {
-        final condition = fileMetadata.fileExtension.lower().equals(
+        final cond = fileMetadata.fileExtension.lower().equals(
           ext.toLowerCase(),
         );
-        extensionExpression = extensionExpression == null
-            ? condition
-            : (extensionExpression | condition);
+        extExpr = extExpr == null ? cond : (extExpr | cond);
       }
-      if (extensionExpression != null) {
-        expressions.add(extensionExpression);
+      if (extExpr != null) {
+        expr = expr & extExpr;
       }
     }
 
-    // Фильтр по MIME типам
     if (filter.mimeTypes.isNotEmpty) {
-      Expression<bool>? mimeExpression;
+      Expression<bool>? mimeExpr;
       for (final mime in filter.mimeTypes) {
-        final condition = fileMetadata.mimeType.lower().equals(
-          mime.toLowerCase(),
-        );
-        mimeExpression = mimeExpression == null
-            ? condition
-            : (mimeExpression | condition);
+        final cond = fileMetadata.mimeType.lower().equals(mime.toLowerCase());
+        mimeExpr = mimeExpr == null ? cond : (mimeExpr | cond);
       }
-      if (mimeExpression != null) {
-        expressions.add(mimeExpression);
+      if (mimeExpr != null) {
+        expr = expr & mimeExpr;
       }
     }
 
-    // Фильтр по имени файла
     if (filter.fileName != null && filter.fileName!.isNotEmpty) {
-      final fileNameLower = filter.fileName!.toLowerCase();
-      expressions.add(fileMetadata.fileName.lower().like('%$fileNameLower%'));
+      expr =
+          expr &
+          fileMetadata.fileName.lower().like(
+            '%${filter.fileName!.toLowerCase()}%',
+          );
     }
 
-    // Фильтр по минимальному размеру файла
     if (filter.minFileSize != null) {
-      expressions.add(
-        fileMetadata.fileSize.isBiggerOrEqualValue(filter.minFileSize!),
-      );
+      expr =
+          expr &
+          fileMetadata.fileSize.isBiggerOrEqualValue(filter.minFileSize!);
     }
-
-    // Фильтр по максимальному размеру файла
     if (filter.maxFileSize != null) {
-      expressions.add(
-        fileMetadata.fileSize.isSmallerOrEqualValue(filter.maxFileSize!),
-      );
+      expr =
+          expr &
+          fileMetadata.fileSize.isSmallerOrEqualValue(filter.maxFileSize!);
     }
+    return expr;
   }
 
-  /// Вычисляет динамический score для сортировки по активности
-  /// Формула: recent_score * exp(-(current_time - last_used_at) / window_days)
   Expression<double> _calculateDynamicScore(int windowDays) {
     final now = DateTime.now();
-    final nowSeconds = now.millisecondsSinceEpoch ~/ 1000; // в секундах
-    final windowSeconds = windowDays * 24 * 60 * 60;
+    final nowSec = now.millisecondsSinceEpoch ~/ 1000;
+    final windowSec = windowDays * 24 * 60 * 60;
 
-    // Строим всё выражение как единый CustomExpression
-    // recent_score * exp(-(now - last_used_at) / window_seconds)
-    // Drift хранит DateTime как Unix timestamp в секундах
-    // Если last_used_at == null, используем created_at
     return CustomExpression<double>(
-      'CAST(COALESCE("files"."recent_score", 1) AS REAL) * '
-      'exp(-($nowSeconds - COALESCE("files"."last_used_at", "files"."created_at")) / $windowSeconds.0)',
+      'CAST(COALESCE("vault_items"."recent_score",'
+      ' 1) AS REAL) * '
+      'exp(-($nowSec - COALESCE('
+      '"vault_items"."last_used_at",'
+      ' "vault_items"."created_at")) / '
+      '$windowSec.0)',
     );
   }
 
-  /// Построить ORDER BY выражение
   List<OrderingTerm> _buildOrderBy(FilesFilter filter) {
-    final orderTerms = <OrderingTerm>[];
-
-    // Закрепленные записи всегда сверху
-    orderTerms.add(
-      OrderingTerm(expression: files.isPinned, mode: OrderingMode.desc),
+    final terms = <OrderingTerm>[];
+    terms.add(
+      OrderingTerm(expression: vaultItems.isPinned, mode: OrderingMode.desc),
     );
 
-    // Сортировка
-    final sortDirection = filter.base.sortDirection;
-    final mode = sortDirection == SortDirection.asc
+    final mode = filter.base.sortDirection == SortDirection.asc
         ? OrderingMode.asc
         : OrderingMode.desc;
 
-    // Если установлен фильтр по часто используемым, применяем динамическую сортировку
     if (filter.base.isFrequentlyUsed == true) {
-      final windowDays = filter.base.frequencyWindowDays ?? 7;
-      final scoreExpr = _calculateDynamicScore(windowDays);
-      orderTerms.add(OrderingTerm(expression: scoreExpr, mode: mode));
-      return orderTerms;
+      final wd = filter.base.frequencyWindowDays ?? 7;
+      terms.add(
+        OrderingTerm(expression: _calculateDynamicScore(wd), mode: mode),
+      );
+      return terms;
     }
 
     if (filter.sortField != null) {
-      // Используем специфичное поле для файлов
       switch (filter.sortField!) {
         case FilesSortField.name:
-          orderTerms.add(OrderingTerm(expression: files.name, mode: mode));
-          break;
+          terms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
         case FilesSortField.fileName:
-          orderTerms.add(
+          terms.add(
             OrderingTerm(expression: fileMetadata.fileName, mode: mode),
           );
-          break;
         case FilesSortField.fileSize:
-          orderTerms.add(
+          terms.add(
             OrderingTerm(expression: fileMetadata.fileSize, mode: mode),
           );
-          break;
         case FilesSortField.fileExtension:
-          orderTerms.add(
+          terms.add(
             OrderingTerm(expression: fileMetadata.fileExtension, mode: mode),
           );
-          break;
         case FilesSortField.mimeType:
-          orderTerms.add(
+          terms.add(
             OrderingTerm(expression: fileMetadata.mimeType, mode: mode),
           );
-          break;
         case FilesSortField.createdAt:
-          orderTerms.add(OrderingTerm(expression: files.createdAt, mode: mode));
-          break;
+          terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
         case FilesSortField.modifiedAt:
-          orderTerms.add(
-            OrderingTerm(expression: files.modifiedAt, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
           );
-          break;
         case FilesSortField.lastAccessed:
-          orderTerms.add(
-            OrderingTerm(expression: files.lastUsedAt, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
           );
-          break;
       }
     } else {
-      // Используем базовый sortBy из BaseFilter
       switch (filter.base.sortBy) {
         case SortBy.createdAt:
-          orderTerms.add(OrderingTerm(expression: files.createdAt, mode: mode));
-          break;
+          terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
         case SortBy.modifiedAt:
-          orderTerms.add(
-            OrderingTerm(expression: files.modifiedAt, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
           );
-          break;
         case SortBy.lastUsedAt:
-          orderTerms.add(
-            OrderingTerm(expression: files.lastUsedAt, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
           );
-          break;
         case SortBy.recentScore:
-          final windowDays = filter.base.frequencyWindowDays ?? 7;
-          final scoreExpr = _calculateDynamicScore(windowDays);
-          orderTerms.add(OrderingTerm(expression: scoreExpr, mode: mode));
-          break;
+          final wd = filter.base.frequencyWindowDays ?? 7;
+          terms.add(
+            OrderingTerm(expression: _calculateDynamicScore(wd), mode: mode),
+          );
       }
     }
-
-    return orderTerms;
+    return terms;
   }
 
-  /// Загружает теги для списка файлов (максимум 10 тегов на файл)
-  Future<Map<String, List<TagInCardDto>>> _loadTagsForFiles(
-    List<String> fileIds,
+  Future<Map<String, List<TagInCardDto>>> _loadTagsForItems(
+    List<String> itemIds,
   ) async {
-    if (fileIds.isEmpty) return {};
+    if (itemIds.isEmpty) return {};
 
-    // Запрос для получения тегов со связями
-    final query = select(filesTags).join([
-      innerJoin(tags, tags.id.equalsExp(filesTags.tagId)),
-    ])..where(filesTags.fileId.isIn(fileIds));
+    final query = select(itemTags).join([
+      innerJoin(tags, tags.id.equalsExp(itemTags.tagId)),
+    ])..where(itemTags.itemId.isIn(itemIds));
 
-    // Группируем теги по fileId
+    final results = await query.get();
     final tagsMap = <String, List<TagInCardDto>>{};
 
-    // Обрабатываем результаты
-    final results = await query.get();
-
     for (final row in results) {
-      final fileTag = row.readTable(filesTags);
+      final it = row.readTable(itemTags);
       final tag = row.readTable(tags);
 
-      final fileId = fileTag.fileId;
-
-      if (!tagsMap.containsKey(fileId)) {
-        tagsMap[fileId] = [];
-      }
-
-      // Ограничиваем максимум 10 тегами
-      if (tagsMap[fileId]!.length < 10) {
-        tagsMap[fileId]!.add(
+      tagsMap.putIfAbsent(it.itemId, () => []);
+      if (tagsMap[it.itemId]!.length < 10) {
+        tagsMap[it.itemId]!.add(
           TagInCardDto(id: tag.id, name: tag.name, color: tag.color),
         );
       }
     }
-
     return tagsMap;
   }
 }

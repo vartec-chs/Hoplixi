@@ -102,19 +102,19 @@ class FileStorageService {
     required String fileId,
     void Function(int, int)? onProgress,
   }) async {
-    final fileData = await _db.fileDao.getFileById(fileId);
-    if (fileData == null) {
+    final record = await _db.fileDao.getById(fileId);
+    if (record == null) {
       throw Exception('File not found in database');
     }
+    final (_, fileItem) = record;
 
-    // Получаем FileMetadata через metadataId
-    if (fileData.metadataId == null) {
+    if (fileItem.metadataId == null) {
       throw Exception('File has no metadata');
     }
 
     final metadata = await (_db.select(
       _db.fileMetadata,
-    )..where((m) => m.id.equals(fileData.metadataId!))).getSingleOrNull();
+    )..where((m) => m.id.equals(fileItem.metadataId!))).getSingleOrNull();
 
     if (metadata == null) {
       throw Exception('File metadata not found');
@@ -173,17 +173,18 @@ class FileStorageService {
     required File newFile,
     void Function(int, int)? onProgress,
   }) async {
-    final currentFile = await _db.fileDao.getFileById(fileId);
-    if (currentFile == null) throw Exception('File not found');
+    final record = await _db.fileDao.getById(fileId);
+    if (record == null) throw Exception('File not found');
+    final (currentVault, currentFileItem) = record;
 
-    // Получаем FileMetadata
-    if (currentFile.metadataId == null) {
+    if (currentFileItem.metadataId == null) {
       throw Exception('File has no metadata');
     }
 
-    final currentMetadata = await (_db.select(
-      _db.fileMetadata,
-    )..where((m) => m.id.equals(currentFile.metadataId!))).getSingleOrNull();
+    final currentMetadata =
+        await (_db.select(_db.fileMetadata)
+              ..where((m) => m.id.equals(currentFileItem.metadataId!)))
+            .getSingleOrNull();
 
     if (currentMetadata == null) {
       throw Exception('File metadata not found');
@@ -191,28 +192,28 @@ class FileStorageService {
 
     // 1. Создаем запись в истории
     String? categoryName;
-    if (currentFile.categoryId != null) {
+    if (currentVault.categoryId != null) {
       final cat = await _db.categoryDao.getCategoryById(
-        currentFile.categoryId!,
+        currentVault.categoryId!,
       );
       categoryName = cat?.name;
     }
 
     final historyDto = CreateFileHistoryDto(
-      originalFileId: currentFile.id,
+      originalFileId: currentVault.id,
       action: ActionInHistory.modified.value,
-      metadataId: currentFile.metadataId!,
-      name: currentFile.name,
-      description: currentFile.description,
+      metadataId: currentFileItem.metadataId!,
+      name: currentVault.name,
+      description: currentVault.description,
       categoryName: categoryName,
-      usedCount: currentFile.usedCount,
-      isFavorite: currentFile.isFavorite,
-      isArchived: currentFile.isArchived,
-      isPinned: currentFile.isPinned,
-      isDeleted: currentFile.isDeleted,
-      originalCreatedAt: currentFile.createdAt,
-      originalModifiedAt: currentFile.modifiedAt,
-      originalLastAccessedAt: currentFile.lastUsedAt,
+      usedCount: currentVault.usedCount,
+      isFavorite: currentVault.isFavorite,
+      isArchived: currentVault.isArchived,
+      isPinned: currentVault.isPinned,
+      isDeleted: currentVault.isDeleted,
+      originalCreatedAt: currentVault.createdAt,
+      originalModifiedAt: currentVault.modifiedAt,
+      originalLastAccessedAt: currentVault.lastUsedAt,
     );
     await _db.fileHistoryDao.createFileHistory(historyDto);
 
@@ -240,7 +241,7 @@ class FileStorageService {
     final newMimeType =
         lookupMimeType(newFile.path) ?? 'application/octet-stream';
 
-    // 4. Создаем новую запись FileMetadata
+    // 4. Создаём новую запись FileMetadata
     final newMetadataId = const Uuid().v4();
     await _db
         .into(_db.fileMetadata)
@@ -256,15 +257,9 @@ class FileStorageService {
           ),
         );
 
-    // 5. Обновляем запись в таблице Files
-    final updateQuery = _db.update(_db.files)
-      ..where((f) => f.id.equals(fileId));
-    await updateQuery.write(
-      FilesCompanion(
-        metadataId: Value(newMetadataId),
-        modifiedAt: Value(DateTime.now()),
-      ),
-    );
+    // 5. Обновляем запись в таблице FileItems
+    await (_db.update(_db.fileItems)..where((f) => f.itemId.equals(fileId)))
+        .write(FileItemsCompanion(metadataId: Value(newMetadataId)));
   }
 
   /// Импортировать файл страницы (только метаданные)
@@ -454,14 +449,15 @@ class FileStorageService {
 
   /// Удалить файл с диска (используется при удалении из БД)
   Future<bool> deleteFileFromDisk(String fileId) async {
-    final fileData = await _db.fileDao.getFileById(fileId);
-    if (fileData == null) return false;
+    final record = await _db.fileDao.getById(fileId);
+    if (record == null) return false;
+    final (_, fileItem) = record;
 
-    if (fileData.metadataId == null) return false;
+    if (fileItem.metadataId == null) return false;
 
     final metadata = await (_db.select(
       _db.fileMetadata,
-    )..where((m) => m.id.equals(fileData.metadataId!))).getSingleOrNull();
+    )..where((m) => m.id.equals(fileItem.metadataId!))).getSingleOrNull();
 
     if (metadata == null) return false;
 

@@ -1,10 +1,54 @@
+/// Тип элемента хранилища (vault item).
+///
+/// Определяет, какая type-specific таблица содержит
+/// дополнительные поля для данного элемента.
+enum VaultItemType { password, otp, note, bankCard, document, file }
+
+extension VaultItemTypeX on VaultItemType {
+  String get value {
+    switch (this) {
+      case VaultItemType.password:
+        return 'password';
+      case VaultItemType.otp:
+        return 'otp';
+      case VaultItemType.note:
+        return 'note';
+      case VaultItemType.bankCard:
+        return 'bankCard';
+      case VaultItemType.document:
+        return 'document';
+      case VaultItemType.file:
+        return 'file';
+    }
+  }
+
+  static VaultItemType fromString(String value) {
+    switch (value) {
+      case 'password':
+        return VaultItemType.password;
+      case 'otp':
+        return VaultItemType.otp;
+      case 'note':
+        return VaultItemType.note;
+      case 'bankCard':
+        return VaultItemType.bankCard;
+      case 'document':
+        return VaultItemType.document;
+      case 'file':
+        return VaultItemType.file;
+      default:
+        throw ArgumentError('Invalid VaultItemType value: $value');
+    }
+  }
+}
+
 enum CategoryType { note, password, totp, bankCard, file, document, mixed }
 
 enum TagType { note, password, totp, bankCard, file, document, mixed }
 
 enum OtpType { totp, hotp }
 
-enum ActionInHistory { deleted, modified }
+enum ActionInHistory { created, deleted, modified }
 
 enum IconType { png, jpg, svg, gif, bmp, webp }
 
@@ -28,6 +72,8 @@ enum CardNetwork {
 extension ActionInHistoryX on ActionInHistory {
   String get value {
     switch (this) {
+      case ActionInHistory.created:
+        return 'created';
       case ActionInHistory.deleted:
         return 'deleted';
       case ActionInHistory.modified:
@@ -37,6 +83,8 @@ extension ActionInHistoryX on ActionInHistory {
 
   static ActionInHistory fromString(String value) {
     switch (value) {
+      case 'created':
+        return ActionInHistory.created;
       case 'deleted':
         return ActionInHistory.deleted;
       case 'modified':

@@ -38,20 +38,22 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
 
     try {
       final dao = await ref.read(otpDaoProvider.future);
-      final otp = await dao.getOtpById(otpId);
+      final record = await dao.getById(otpId);
 
-      if (otp == null) {
+      if (record == null) {
         logWarning('OTP not found: $otpId', tag: _logTag);
         state = state.copyWith(isLoading: false);
         return;
       }
 
-      final tagIds = await dao.getOtpTagIds(otpId);
+      final (vault, otpItem) = record;
+      final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+      final tagIds = await vaultItemDao.getTagIds(otpId);
       final tagDao = await ref.read(tagDaoProvider.future);
       final tagRecords = await tagDao.getTagsByIds(tagIds);
 
       // Декодируем секрет из bytes обратно в base32 для отображения
-      final secretBytes = otp.secret;
+      final secretBytes = otpItem.secret;
       final secretBase32 =
           _smartConverter.toBase32(
             String.fromCharCodes(secretBytes),
@@ -61,17 +63,17 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
       state = OtpFormState(
         isEditMode: true,
         editingOtpId: otpId,
-        otpType: OtpTypeX.fromString(otp.type.name),
-        issuer: otp.issuer ?? '',
-        accountName: otp.accountName ?? '',
+        otpType: OtpTypeX.fromString(otpItem.type.name),
+        issuer: otpItem.issuer ?? '',
+        accountName: otpItem.accountName ?? '',
         secret: secretBase32,
-        noteId: otp.noteId,
-        algorithm: AlgorithmOtpX.fromString(otp.algorithm.name),
-        digits: otp.digits,
-        period: otp.period,
-        counter: otp.counter,
-        categoryId: otp.categoryId,
-        passwordId: otp.passwordId,
+        noteId: vault.noteId,
+        algorithm: AlgorithmOtpX.fromString(otpItem.algorithm.name),
+        digits: otpItem.digits,
+        period: otpItem.period,
+        counter: otpItem.counter,
+        categoryId: vault.categoryId,
+        passwordId: otpItem.passwordItemId,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
         isLoading: false,
@@ -278,7 +280,8 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
         final success = await dao.updateOtp(state.editingOtpId!, dto);
 
         if (success) {
-          await dao.syncOtpTags(state.editingOtpId!, state.tagIds);
+          final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+          await vaultItemDao.syncTags(state.editingOtpId!, state.tagIds);
 
           logInfo('OTP updated: ${state.editingOtpId}', tag: _logTag);
           state = state.copyWith(isSaving: false, isSaved: true);

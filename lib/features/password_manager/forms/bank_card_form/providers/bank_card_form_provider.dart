@@ -34,35 +34,37 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
 
     try {
       final dao = await ref.read(bankCardDaoProvider.future);
-      final bankCard = await dao.getBankCardById(bankCardId);
+      final record = await dao.getById(bankCardId);
 
-      if (bankCard == null) {
+      if (record == null) {
         logWarning('Bank card not found: $bankCardId', tag: _logTag);
         state = state.copyWith(isLoading: false);
         return;
       }
 
-      final tagIds = await dao.getBankCardTagIds(bankCardId);
+      final (vault, cardItem) = record;
+      final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+      final tagIds = await vaultItemDao.getTagIds(bankCardId);
       final tagDao = await ref.read(tagDaoProvider.future);
       final tagRecords = await tagDao.getTagsByIds(tagIds);
 
       state = BankCardFormState(
         isEditMode: true,
         editingBankCardId: bankCardId,
-        name: bankCard.name,
-        cardholderName: bankCard.cardholderName,
-        cardNumber: bankCard.cardNumber,
-        expiryMonth: bankCard.expiryMonth,
-        expiryYear: bankCard.expiryYear,
-        cvv: bankCard.cvv ?? '',
-        bankName: bankCard.bankName ?? '',
-        accountNumber: bankCard.accountNumber ?? '',
-        routingNumber: bankCard.routingNumber ?? '',
-        description: bankCard.description ?? '',
-        noteId: bankCard.noteId,
-        cardType: bankCard.cardType?.value,
-        cardNetwork: bankCard.cardNetwork?.value,
-        categoryId: bankCard.categoryId,
+        name: vault.name,
+        cardholderName: cardItem.cardholderName,
+        cardNumber: cardItem.cardNumber,
+        expiryMonth: cardItem.expiryMonth,
+        expiryYear: cardItem.expiryYear,
+        cvv: cardItem.cvv ?? '',
+        bankName: cardItem.bankName ?? '',
+        accountNumber: cardItem.accountNumber ?? '',
+        routingNumber: cardItem.routingNumber ?? '',
+        description: vault.description ?? '',
+        noteId: vault.noteId,
+        cardType: cardItem.cardType?.value,
+        cardNetwork: cardItem.cardNetwork?.value,
+        categoryId: vault.categoryId,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
         isLoading: false,
@@ -308,7 +310,8 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
         final success = await dao.updateBankCard(state.editingBankCardId!, dto);
 
         if (success) {
-          await dao.syncBankCardTags(state.editingBankCardId!, state.tagIds);
+          final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+          await vaultItemDao.syncTags(state.editingBankCardId!, state.tagIds);
 
           logInfo(
             'Bank card updated: ${state.editingBankCardId}',
@@ -365,7 +368,8 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
 
         // Синхронизация тегов для новой карты
         if (state.tagIds.isNotEmpty) {
-          await dao.syncBankCardTags(bankCardId, state.tagIds);
+          final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+          await vaultItemDao.syncTags(bankCardId, state.tagIds);
         }
 
         logInfo('Bank card created: $bankCardId', tag: _logTag);

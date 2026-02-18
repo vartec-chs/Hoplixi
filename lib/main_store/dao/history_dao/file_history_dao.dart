@@ -2,221 +2,244 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/dto/file_history_dto.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
-import 'package:hoplixi/main_store/tables/files_history.dart';
-import 'package:uuid/uuid.dart';
+import 'package:hoplixi/main_store/tables/file_history.dart';
+import 'package:hoplixi/main_store/tables/vault_item_history.dart';
 
 part 'file_history_dao.g.dart';
 
-@DriftAccessor(tables: [FilesHistory])
+/// DAO для управления историей файлов.
+///
+/// Table-Per-Type: общие поля в [VaultItemHistory],
+/// type-specific — в [FileHistory].
+@DriftAccessor(tables: [VaultItemHistory, FileHistory])
 class FileHistoryDao extends DatabaseAccessor<MainStore>
     with _$FileHistoryDaoMixin {
   FileHistoryDao(super.db);
 
-  /// Получить всю историю файлов
-  Future<List<FilesHistoryData>> getAllFileHistory() {
-    return select(filesHistory).get();
-  }
+  // ============================================
+  // Чтение
+  // ============================================
 
-  /// Получить запись истории по ID
-  Future<FilesHistoryData?> getFileHistoryById(String id) {
-    return (select(
-      filesHistory,
-    )..where((fh) => fh.id.equals(id))).getSingleOrNull();
-  }
-
-  /// Получить историю файлов в виде карточек
-  Future<List<FileHistoryCardDto>> getAllFileHistoryCards() {
-    return (select(filesHistory)
-          ..orderBy([(fh) => OrderingTerm.desc(fh.actionAt)]))
-        .map(
-          (fh) => FileHistoryCardDto(
-            id: fh.id,
-            originalFileId: fh.originalFileId,
-            action: fh.action.value,
-            name: fh.name ?? '',
-            actionAt: fh.actionAt,
-          ),
-        )
-        .get();
-  }
-
-  /// Смотреть всю историю файлов с автообновлением
-  Stream<List<FilesHistoryData>> watchAllFileHistory() {
-    return (select(
-      filesHistory,
-    )..orderBy([(fh) => OrderingTerm.desc(fh.actionAt)])).watch();
-  }
-
-  /// Смотреть историю файлов карточки с автообновлением
-  Stream<List<FileHistoryCardDto>> watchFileHistoryCards() {
-    return (select(
-      filesHistory,
-    )..orderBy([(fh) => OrderingTerm.desc(fh.actionAt)])).watch().map(
-      (history) => history
-          .map(
-            (fh) => FileHistoryCardDto(
-              id: fh.id,
-              originalFileId: fh.originalFileId,
-              action: fh.action.value,
-              name: fh.name ?? '',
-              actionAt: fh.actionAt,
+  /// Получить все записи истории файлов
+  Future<List<FileHistoryCardDto>> getAllFileHistoryCards() async {
+    final query =
+        select(vaultItemHistory).join([
+            leftOuterJoin(
+              fileHistory,
+              fileHistory.historyId.equalsExp(vaultItemHistory.id),
             ),
-          )
-          .toList(),
-    );
+          ])
+          ..where(vaultItemHistory.type.equalsValue(VaultItemType.file))
+          ..orderBy([OrderingTerm.desc(vaultItemHistory.actionAt)]);
+
+    final results = await query.get();
+    return results.map(_mapToCard).toList();
+  }
+
+  /// Смотреть всю историю файлов
+  Stream<List<FileHistoryCardDto>> watchFileHistoryCards() {
+    final query =
+        select(vaultItemHistory).join([
+            leftOuterJoin(
+              fileHistory,
+              fileHistory.historyId.equalsExp(vaultItemHistory.id),
+            ),
+          ])
+          ..where(vaultItemHistory.type.equalsValue(VaultItemType.file))
+          ..orderBy([OrderingTerm.desc(vaultItemHistory.actionAt)]);
+
+    return query.watch().map((rows) => rows.map(_mapToCard).toList());
   }
 
   /// Получить историю для конкретного файла
   Stream<List<FileHistoryCardDto>> watchFileHistoryByOriginalId(String fileId) {
-    return (select(filesHistory)
-          ..where((fh) => fh.originalFileId.equals(fileId))
-          ..orderBy([(fh) => OrderingTerm.desc(fh.actionAt)]))
-        .watch()
-        .map(
-          (history) => history
-              .map(
-                (fh) => FileHistoryCardDto(
-                  id: fh.id,
-                  originalFileId: fh.originalFileId,
-                  action: fh.action.value,
-                  name: fh.name ?? '',
-                  actionAt: fh.actionAt,
-                ),
-              )
-              .toList(),
-        );
+    final query =
+        select(vaultItemHistory).join([
+            leftOuterJoin(
+              fileHistory,
+              fileHistory.historyId.equalsExp(vaultItemHistory.id),
+            ),
+          ])
+          ..where(
+            vaultItemHistory.itemId.equals(fileId) &
+                vaultItemHistory.type.equalsValue(VaultItemType.file),
+          )
+          ..orderBy([OrderingTerm.desc(vaultItemHistory.actionAt)]);
+
+    return query.watch().map((rows) => rows.map(_mapToCard).toList());
   }
 
-  /// Получить все записи истории для файла (с полными данными включая filePath)
-  Future<List<FilesHistoryData>> getFileHistoryByOriginalId(String fileId) {
-    return (select(filesHistory)
-          ..where((fh) => fh.originalFileId.equals(fileId))
-          ..orderBy([(fh) => OrderingTerm.desc(fh.actionAt)]))
+  /// Получить полные записи истории файла
+  Future<List<VaultItemHistoryData>> getFileHistoryByOriginalId(String fileId) {
+    return (select(vaultItemHistory)
+          ..where(
+            (h) =>
+                h.itemId.equals(fileId) &
+                h.type.equalsValue(VaultItemType.file),
+          )
+          ..orderBy([(h) => OrderingTerm.desc(h.actionAt)]))
         .get();
   }
 
   /// Получить историю по действию
   Stream<List<FileHistoryCardDto>> watchFileHistoryByAction(String action) {
-    return (select(filesHistory)
-          ..where((fh) => fh.action.equals(action))
-          ..orderBy([(fh) => OrderingTerm.desc(fh.actionAt)]))
-        .watch()
-        .map(
-          (history) => history
-              .map(
-                (fh) => FileHistoryCardDto(
-                  id: fh.id,
-                  originalFileId: fh.originalFileId,
-                  action: fh.action.value,
-                  name: fh.name ?? '',
-                  actionAt: fh.actionAt,
-                ),
-              )
-              .toList(),
-        );
+    final query =
+        select(vaultItemHistory).join([
+            leftOuterJoin(
+              fileHistory,
+              fileHistory.historyId.equalsExp(vaultItemHistory.id),
+            ),
+          ])
+          ..where(
+            vaultItemHistory.action.equals(action) &
+                vaultItemHistory.type.equalsValue(VaultItemType.file),
+          )
+          ..orderBy([OrderingTerm.desc(vaultItemHistory.actionAt)]);
+
+    return query.watch().map((rows) => rows.map(_mapToCard).toList());
   }
 
-  /// Создать запись истории
-  Future<String> createFileHistory(CreateFileHistoryDto dto) {
-    final uuid = const Uuid().v4();
-    final companion = FilesHistoryCompanion.insert(
-      id: Value(uuid),
-      originalFileId: dto.originalFileId,
-      action: ActionInHistoryX.fromString(dto.action),
-      metadataId: Value(dto.metadataId),
-      name: Value(dto.name),
-      description: Value(dto.description),
-      categoryName: Value(dto.categoryName),
-      usedCount: Value(dto.usedCount),
-      isFavorite: Value(dto.isFavorite),
-      isArchived: Value(dto.isArchived),
-      isPinned: Value(dto.isPinned),
-      isDeleted: Value(dto.isDeleted),
-      originalCreatedAt: Value(dto.originalCreatedAt),
-      originalModifiedAt: Value(dto.originalModifiedAt),
-      originalLastUsedAt: Value(dto.originalLastAccessedAt),
-    );
-
-    return into(filesHistory).insert(companion).then((_) => uuid);
-  }
-
-  /// Удалить историю для файла
-  Future<int> deleteFileHistoryByFileId(String fileId) {
-    return (delete(
-      filesHistory,
-    )..where((fh) => fh.originalFileId.equals(fileId))).go();
-  }
-
-  /// Удалить старую историю (старше N дней)
-  Future<int> deleteOldFileHistory(Duration olderThan) {
-    final cutoffDate = DateTime.now().subtract(olderThan);
-    return (delete(
-      filesHistory,
-    )..where((fh) => fh.actionAt.isSmallerThanValue(cutoffDate))).go();
-  }
-
-  // ============================================
-  // Методы для пагинации и поиска
-  // ============================================
-
-  /// Получить историю по ID оригинального файла с пагинацией и поиском
+  /// Получить карточки с пагинацией и поиском
   Future<List<FileHistoryCardDto>> getFileHistoryCardsByOriginalId(
     String fileId,
     int offset,
     int limit,
     String? searchQuery,
   ) async {
-    var query = select(filesHistory)
-      ..where((fh) => fh.originalFileId.equals(fileId))
-      ..orderBy([(fh) => OrderingTerm.desc(fh.actionAt)])
-      ..limit(limit, offset: offset);
+    final query = select(vaultItemHistory).join([
+      leftOuterJoin(
+        fileHistory,
+        fileHistory.historyId.equalsExp(vaultItemHistory.id),
+      ),
+    ]);
+
+    Expression<bool> where =
+        vaultItemHistory.itemId.equals(fileId) &
+        vaultItemHistory.type.equalsValue(VaultItemType.file);
 
     if (searchQuery != null && searchQuery.isNotEmpty) {
-      final search = '%$searchQuery%';
-      query = query
-        ..where((fh) => fh.name.like(search) | fh.description.like(search));
+      final q = '%$searchQuery%';
+      where =
+          where &
+          (vaultItemHistory.name.like(q) |
+              vaultItemHistory.description.like(q));
     }
 
+    query
+      ..where(where)
+      ..orderBy([OrderingTerm.desc(vaultItemHistory.actionAt)])
+      ..limit(limit, offset: offset);
+
     final results = await query.get();
-    return results
-        .map(
-          (fh) => FileHistoryCardDto(
-            id: fh.id,
-            originalFileId: fh.originalFileId,
-            action: fh.action.value,
-            name: fh.name ?? '',
-            actionAt: fh.actionAt,
-          ),
-        )
-        .toList();
+    return results.map(_mapToCard).toList();
   }
 
-  /// Подсчитать количество записей истории для файла
+  /// Подсчитать количество записей
   Future<int> countFileHistoryByOriginalId(
     String fileId,
     String? searchQuery,
   ) async {
-    var query = selectOnly(filesHistory)
-      ..addColumns([filesHistory.id.count()])
-      ..where(filesHistory.originalFileId.equals(fileId));
+    final countExpr = vaultItemHistory.id.count();
+    final query = selectOnly(vaultItemHistory)
+      ..addColumns([countExpr])
+      ..where(
+        vaultItemHistory.itemId.equals(fileId) &
+            vaultItemHistory.type.equalsValue(VaultItemType.file),
+      );
 
     if (searchQuery != null && searchQuery.isNotEmpty) {
-      final search = '%$searchQuery%';
-      query = query
-        ..where(
-          filesHistory.name.like(search) |
-              filesHistory.description.like(search),
-        );
+      final q = '%$searchQuery%';
+      query.where(
+        vaultItemHistory.name.like(q) | vaultItemHistory.description.like(q),
+      );
     }
 
-    final result = await query
-        .map((row) => row.read(filesHistory.id.count()))
-        .getSingle();
+    final result = await query.map((row) => row.read(countExpr)).getSingle();
     return result ?? 0;
+  }
+
+  // ============================================
+  // Запись
+  // ============================================
+
+  /// Создать запись истории файла
+  Future<String> createFileHistory(CreateFileHistoryDto dto) async {
+    return await db.transaction(() async {
+      final companion = VaultItemHistoryCompanion.insert(
+        itemId: dto.originalFileId,
+        type: VaultItemType.file,
+        action: ActionInHistoryX.fromString(dto.action),
+        name: dto.name,
+        description: Value(dto.description),
+        categoryName: Value(dto.categoryName),
+        usedCount: Value(dto.usedCount),
+        isFavorite: Value(dto.isFavorite),
+        isArchived: Value(dto.isArchived),
+        isPinned: Value(dto.isPinned),
+        isDeleted: Value(dto.isDeleted),
+        lastUsedAt: Value(dto.originalLastAccessedAt),
+        originalCreatedAt: Value(dto.originalCreatedAt),
+        originalModifiedAt: Value(dto.originalModifiedAt),
+      );
+
+      await into(vaultItemHistory).insert(companion);
+      final historyId = companion.id.value;
+
+      await into(fileHistory).insert(
+        FileHistoryCompanion.insert(
+          historyId: historyId,
+          metadataId: Value(dto.metadataId),
+        ),
+      );
+
+      return historyId;
+    });
+  }
+
+  // ============================================
+  // Удаление
+  // ============================================
+
+  /// Удалить историю для конкретного файла
+  Future<int> deleteFileHistoryByFileId(String fileId) {
+    return (delete(vaultItemHistory)..where(
+          (h) =>
+              h.itemId.equals(fileId) & h.type.equalsValue(VaultItemType.file),
+        ))
+        .go();
+  }
+
+  /// Удалить старую историю (старше N дней)
+  Future<int> deleteOldFileHistory(Duration olderThan) {
+    final cutoff = DateTime.now().subtract(olderThan);
+    return (delete(vaultItemHistory)..where(
+          (h) =>
+              h.actionAt.isSmallerThanValue(cutoff) &
+              h.type.equalsValue(VaultItemType.file),
+        ))
+        .go();
   }
 
   /// Удалить запись истории по ID
   Future<int> deleteFileHistoryById(String historyId) {
-    return (delete(filesHistory)..where((fh) => fh.id.equals(historyId))).go();
+    return (delete(
+      vaultItemHistory,
+    )..where((h) => h.id.equals(historyId))).go();
+  }
+
+  // ============================================
+  // Маппинг
+  // ============================================
+
+  FileHistoryCardDto _mapToCard(TypedResult row) {
+    final h = row.readTable(vaultItemHistory);
+
+    return FileHistoryCardDto(
+      id: h.id,
+      originalFileId: h.itemId,
+      action: h.action.value,
+      name: h.name,
+      actionAt: h.actionAt,
+    );
   }
 }
