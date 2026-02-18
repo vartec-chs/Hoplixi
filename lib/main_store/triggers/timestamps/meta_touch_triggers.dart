@@ -5,156 +5,60 @@
 /// Это позволяет отслеживать последнее изменение во всей базе данных.
 library;
 
-/// Триггеры для обновления store_meta при изменениях в таблице passwords.
-const List<String> passwordsMetaTouchTriggers = [
+/// Триггеры для обновления store_meta при изменениях в таблице vault_items.
+///
+/// Заменяет отдельные триггеры для passwords, notes, bank_cards, otps,
+/// files, documents — теперь все сущности хранятся в vault_items.
+const List<String> vaultItemsMetaTouchTriggers = [
   '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_passwords_insert
-    AFTER INSERT ON passwords
+    CREATE TRIGGER IF NOT EXISTS touch_meta_on_vault_items_insert
+    AFTER INSERT ON vault_items
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
+      SET modified_at = strftime('%s','now')
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
   '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_passwords_update
-    AFTER UPDATE ON passwords
+    CREATE TRIGGER IF NOT EXISTS touch_meta_on_vault_items_update
+    AFTER UPDATE ON vault_items
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
+      SET modified_at = strftime('%s','now')
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
   '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_passwords_delete
-    AFTER DELETE ON passwords
+    CREATE TRIGGER IF NOT EXISTS touch_meta_on_vault_items_delete
+    AFTER DELETE ON vault_items
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
-      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
-    END;
-  ''',
-];
-
-/// Триггеры для обновления store_meta при изменениях в таблице otps.
-const List<String> otpsMetaTouchTriggers = [
-  '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_otps_insert
-    AFTER INSERT ON otps
-    BEGIN
-      UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
-      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
-    END;
-  ''',
-  '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_otps_update
-    AFTER UPDATE ON otps
-    BEGIN
-      UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
-      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
-    END;
-  ''',
-  '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_otps_delete
-    AFTER DELETE ON otps
-    BEGIN
-      UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
+      SET modified_at = strftime('%s','now')
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
 ];
 
-/// Триггеры для обновления store_meta при изменениях в таблице notes.
-const List<String> notesMetaTouchTriggers = [
+/// Триггеры для обновления store_meta при изменениях в таблице item_tags.
+///
+/// Заменяет отдельные триггеры для password_tags, otp_tags, notes_tags,
+/// files_tags, bank_cards_tags — теперь все теги хранятся в item_tags.
+const List<String> itemTagsMetaTouchTriggers = [
   '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_notes_insert
-    AFTER INSERT ON notes
+    CREATE TRIGGER IF NOT EXISTS touch_meta_on_item_tags_insert
+    AFTER INSERT ON item_tags
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
+      SET modified_at = strftime('%s','now')
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
   '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_notes_update
-    AFTER UPDATE ON notes
+    CREATE TRIGGER IF NOT EXISTS touch_meta_on_item_tags_delete
+    AFTER DELETE ON item_tags
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
-      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
-    END;
-  ''',
-  '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_notes_delete
-    AFTER DELETE ON notes
-    BEGIN
-      UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
-      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
-    END;
-  ''',
-];
-
-/// Триггеры для обновления store_meta при изменениях в таблице files.
-const List<String> filesMetaTouchTriggers = [
-  '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_files_insert
-    AFTER INSERT ON files
-    BEGIN
-      UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
-      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
-    END;
-  ''',
-  '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_files_update
-    AFTER UPDATE ON files
-    BEGIN
-      UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
-      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
-    END;
-  ''',
-  '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_files_delete
-    AFTER DELETE ON files
-    BEGIN
-      UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
-      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
-    END;
-  ''',
-];
-
-/// Триггеры для обновления store_meta при изменениях в таблице bank_cards.
-const List<String> bankCardsMetaTouchTriggers = [
-  '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_bank_cards_insert
-    AFTER INSERT ON bank_cards
-    BEGIN
-      UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
-      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
-    END;
-  ''',
-  '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_bank_cards_update
-    AFTER UPDATE ON bank_cards
-    BEGIN
-      UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
-      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
-    END;
-  ''',
-  '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_bank_cards_delete
-    AFTER DELETE ON bank_cards
-    BEGIN
-      UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
+      SET modified_at = strftime('%s','now')
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -167,7 +71,7 @@ const List<String> categoriesMetaTouchTriggers = [
     AFTER INSERT ON categories
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
+      SET modified_at = strftime('%s','now')
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -176,7 +80,7 @@ const List<String> categoriesMetaTouchTriggers = [
     AFTER UPDATE ON categories
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
+      SET modified_at = strftime('%s','now')
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -185,7 +89,7 @@ const List<String> categoriesMetaTouchTriggers = [
     AFTER DELETE ON categories
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
+      SET modified_at = strftime('%s','now')
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -198,7 +102,7 @@ const List<String> tagsMetaTouchTriggers = [
     AFTER INSERT ON tags
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
+      SET modified_at = strftime('%s','now')
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -207,7 +111,7 @@ const List<String> tagsMetaTouchTriggers = [
     AFTER UPDATE ON tags
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
+      SET modified_at = strftime('%s','now')
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -216,7 +120,7 @@ const List<String> tagsMetaTouchTriggers = [
     AFTER DELETE ON tags
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
+      SET modified_at = strftime('%s','now')
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -229,7 +133,7 @@ const List<String> iconsMetaTouchTriggers = [
     AFTER INSERT ON icons
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
+      SET modified_at = strftime('%s','now')
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -238,7 +142,7 @@ const List<String> iconsMetaTouchTriggers = [
     AFTER UPDATE ON icons
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
+      SET modified_at = strftime('%s','now')
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -247,7 +151,7 @@ const List<String> iconsMetaTouchTriggers = [
     AFTER DELETE ON icons
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
+      SET modified_at = strftime('%s','now')
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -260,7 +164,7 @@ const List<String> noteLinksMetaTouchTriggers = [
     AFTER INSERT ON note_links
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
+      SET modified_at = strftime('%s','now')
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -269,7 +173,7 @@ const List<String> noteLinksMetaTouchTriggers = [
     AFTER UPDATE ON note_links
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
+      SET modified_at = strftime('%s','now')
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -278,117 +182,7 @@ const List<String> noteLinksMetaTouchTriggers = [
     AFTER DELETE ON note_links
     BEGIN
       UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
-      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
-    END;
-  ''',
-];
-
-/// Триггеры для обновления store_meta при изменениях в таблице password_tags.
-const List<String> passwordTagsMetaTouchTriggers = [
-  '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_password_tags_insert
-    AFTER INSERT ON password_tags
-    BEGIN
-      UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
-      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
-    END;
-  ''',
-  '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_password_tags_delete
-    AFTER DELETE ON password_tags
-    BEGIN
-      UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
-      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
-    END;
-  ''',
-];
-
-/// Триггеры для обновления store_meta при изменениях в таблице otp_tags.
-const List<String> otpTagsMetaTouchTriggers = [
-  '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_otp_tags_insert
-    AFTER INSERT ON otp_tags
-    BEGIN
-      UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
-      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
-    END;
-  ''',
-  '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_otp_tags_delete
-    AFTER DELETE ON otp_tags
-    BEGIN
-      UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
-      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
-    END;
-  ''',
-];
-
-/// Триггеры для обновления store_meta при изменениях в таблице note_tags.
-const List<String> noteTagsMetaTouchTriggers = [
-  '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_note_tags_insert
-    AFTER INSERT ON notes_tags
-    BEGIN
-      UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
-      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
-    END;
-  ''',
-  '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_note_tags_delete
-    AFTER DELETE ON notes_tags
-    BEGIN
-      UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
-      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
-    END;
-  ''',
-];
-
-/// Триггеры для обновления store_meta при изменениях в таблице file_tags.
-const List<String> fileTagsMetaTouchTriggers = [
-  '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_file_tags_insert
-    AFTER INSERT ON files_tags
-    BEGIN
-      UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
-      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
-    END;
-  ''',
-  '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_file_tags_delete
-    AFTER DELETE ON files_tags
-    BEGIN
-      UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
-      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
-    END;
-  ''',
-];
-
-/// Триггеры для обновления store_meta при изменениях в таблице bank_cards_tags.
-const List<String> bankCardsTagsMetaTouchTriggers = [
-  '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_bank_cards_tags_insert
-    AFTER INSERT ON bank_cards_tags
-    BEGIN
-      UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
-      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
-    END;
-  ''',
-  '''
-    CREATE TRIGGER IF NOT EXISTS touch_meta_on_bank_cards_tags_delete
-    AFTER DELETE ON bank_cards_tags
-    BEGIN
-      UPDATE store_meta
-      SET modified_at = strftime('%s','now')  
+      SET modified_at = strftime('%s','now')
       WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
     END;
   ''',
@@ -396,75 +190,69 @@ const List<String> bankCardsTagsMetaTouchTriggers = [
 
 /// Все триггеры для обновления store_meta при изменениях.
 const List<String> allMetaTouchCreateTriggers = [
-  // Основные таблицы
-  ...passwordsMetaTouchTriggers,
-  ...otpsMetaTouchTriggers,
-  ...notesMetaTouchTriggers,
-  ...filesMetaTouchTriggers,
-  ...bankCardsMetaTouchTriggers,
+  // Vault Items (все сущности: passwords, notes, otps, bank cards, files, docs)
+  ...vaultItemsMetaTouchTriggers,
+  // Item Tags (единая таблица тегов)
+  ...itemTagsMetaTouchTriggers,
+  // Вспомогательные таблицы
   ...categoriesMetaTouchTriggers,
   ...tagsMetaTouchTriggers,
   ...iconsMetaTouchTriggers,
   ...noteLinksMetaTouchTriggers,
-  // Связующие таблицы тегов
-  ...passwordTagsMetaTouchTriggers,
-  ...otpTagsMetaTouchTriggers,
-  ...noteTagsMetaTouchTriggers,
-  ...fileTagsMetaTouchTriggers,
-  ...bankCardsTagsMetaTouchTriggers,
 ];
 
 /// Операторы для удаления триггеров обновления store_meta.
+///
+/// Включает DROP для старых триггеров (из предыдущей схемы) для корректной
+/// миграции, а также DROP для новых триггеров.
 const List<String> allMetaTouchDropTriggers = [
-  // Passwords
+  // Vault Items (новые)
+  'DROP TRIGGER IF EXISTS touch_meta_on_vault_items_insert;',
+  'DROP TRIGGER IF EXISTS touch_meta_on_vault_items_update;',
+  'DROP TRIGGER IF EXISTS touch_meta_on_vault_items_delete;',
+  // Item Tags (новые)
+  'DROP TRIGGER IF EXISTS touch_meta_on_item_tags_insert;',
+  'DROP TRIGGER IF EXISTS touch_meta_on_item_tags_delete;',
+  // Устаревшие триггеры старой схемы (для миграции)
   'DROP TRIGGER IF EXISTS touch_meta_on_passwords_insert;',
   'DROP TRIGGER IF EXISTS touch_meta_on_passwords_update;',
   'DROP TRIGGER IF EXISTS touch_meta_on_passwords_delete;',
-  // OTPs
   'DROP TRIGGER IF EXISTS touch_meta_on_otps_insert;',
   'DROP TRIGGER IF EXISTS touch_meta_on_otps_update;',
   'DROP TRIGGER IF EXISTS touch_meta_on_otps_delete;',
-  // Notes
   'DROP TRIGGER IF EXISTS touch_meta_on_notes_insert;',
   'DROP TRIGGER IF EXISTS touch_meta_on_notes_update;',
   'DROP TRIGGER IF EXISTS touch_meta_on_notes_delete;',
-  // Files
   'DROP TRIGGER IF EXISTS touch_meta_on_files_insert;',
   'DROP TRIGGER IF EXISTS touch_meta_on_files_update;',
   'DROP TRIGGER IF EXISTS touch_meta_on_files_delete;',
-  // Bank Cards
   'DROP TRIGGER IF EXISTS touch_meta_on_bank_cards_insert;',
   'DROP TRIGGER IF EXISTS touch_meta_on_bank_cards_update;',
   'DROP TRIGGER IF EXISTS touch_meta_on_bank_cards_delete;',
-  // Categories
+  'DROP TRIGGER IF EXISTS touch_meta_on_documents_insert;',
+  'DROP TRIGGER IF EXISTS touch_meta_on_documents_update;',
+  'DROP TRIGGER IF EXISTS touch_meta_on_documents_delete;',
+  'DROP TRIGGER IF EXISTS touch_meta_on_password_tags_insert;',
+  'DROP TRIGGER IF EXISTS touch_meta_on_password_tags_delete;',
+  'DROP TRIGGER IF EXISTS touch_meta_on_otp_tags_insert;',
+  'DROP TRIGGER IF EXISTS touch_meta_on_otp_tags_delete;',
+  'DROP TRIGGER IF EXISTS touch_meta_on_note_tags_insert;',
+  'DROP TRIGGER IF EXISTS touch_meta_on_note_tags_delete;',
+  'DROP TRIGGER IF EXISTS touch_meta_on_file_tags_insert;',
+  'DROP TRIGGER IF EXISTS touch_meta_on_file_tags_delete;',
+  'DROP TRIGGER IF EXISTS touch_meta_on_bank_cards_tags_insert;',
+  'DROP TRIGGER IF EXISTS touch_meta_on_bank_cards_tags_delete;',
+  // Текущие вспомогательные таблицы
   'DROP TRIGGER IF EXISTS touch_meta_on_categories_insert;',
   'DROP TRIGGER IF EXISTS touch_meta_on_categories_update;',
   'DROP TRIGGER IF EXISTS touch_meta_on_categories_delete;',
-  // Tags
   'DROP TRIGGER IF EXISTS touch_meta_on_tags_insert;',
   'DROP TRIGGER IF EXISTS touch_meta_on_tags_update;',
   'DROP TRIGGER IF EXISTS touch_meta_on_tags_delete;',
-  // Icons
   'DROP TRIGGER IF EXISTS touch_meta_on_icons_insert;',
   'DROP TRIGGER IF EXISTS touch_meta_on_icons_update;',
   'DROP TRIGGER IF EXISTS touch_meta_on_icons_delete;',
-  // Note Links
   'DROP TRIGGER IF EXISTS touch_meta_on_note_links_insert;',
   'DROP TRIGGER IF EXISTS touch_meta_on_note_links_update;',
   'DROP TRIGGER IF EXISTS touch_meta_on_note_links_delete;',
-  // Password Tags
-  'DROP TRIGGER IF EXISTS touch_meta_on_password_tags_insert;',
-  'DROP TRIGGER IF EXISTS touch_meta_on_password_tags_delete;',
-  // OTP Tags
-  'DROP TRIGGER IF EXISTS touch_meta_on_otp_tags_insert;',
-  'DROP TRIGGER IF EXISTS touch_meta_on_otp_tags_delete;',
-  // Note Tags
-  'DROP TRIGGER IF EXISTS touch_meta_on_note_tags_insert;',
-  'DROP TRIGGER IF EXISTS touch_meta_on_note_tags_delete;',
-  // File Tags
-  'DROP TRIGGER IF EXISTS touch_meta_on_file_tags_insert;',
-  'DROP TRIGGER IF EXISTS touch_meta_on_file_tags_delete;',
-  // Bank Cards Tags
-  'DROP TRIGGER IF EXISTS touch_meta_on_bank_cards_tags_insert;',
-  'DROP TRIGGER IF EXISTS touch_meta_on_bank_cards_tags_delete;',
 ];

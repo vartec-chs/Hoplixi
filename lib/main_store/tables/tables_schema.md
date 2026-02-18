@@ -2,152 +2,277 @@
 
 This document describes the schema of all tables in the Hoplixi database.
 
-## Table: passwords
+The database uses a **normalized EAV-like architecture**: all vault entities
+share a common base table (`vault_items`) and a common history table
+(`vault_item_history`). Type-specific fields are stored in separate child tables
+that reference the base table via `item_id → vault_items.id ON DELETE CASCADE`.
+
+---
+
+## Table: vault_items
+
+Base table for all vault entities (passwords, notes, OTPs, bank cards, files,
+documents). Contains only the common fields shared by every entity type.
 
 | Column      | Type     | Constraints                             | Description            |
 | ----------- | -------- | --------------------------------------- | ---------------------- |
 | id          | Text     | Primary Key, UUID v4                    | Unique identifier      |
-| name        | Text     | min: 1, max: 255                        | Password name          |
+| type        | Text     | enum: VaultItemType                     | Entity type            |
+| name        | Text     | min: 1, max: 255                        | Display name           |
 | description | Text     | nullable                                | Description            |
-| password    | Text     | -                                       | Encrypted password     |
-| url         | Text     | nullable                                | Associated URL         |
-| notes       | Text     | nullable                                | Additional notes       |
-| login       | Text     | nullable                                | Username               |
-| email       | Text     | nullable                                | Email                  |
 | categoryId  | Text     | nullable, FK to categories.id (setNull) | Category reference     |
+| noteId      | Text     | nullable                                | Linked note reference  |
 | usedCount   | Int      | default: 0                              | Usage count            |
-| isDeleted   | Bool     | default: false                          | Soft delete flag       |
+| isFavorite  | Bool     | default: false                          | Favorite flag          |
 | isArchived  | Bool     | default: false                          | Archived flag          |
 | isPinned    | Bool     | default: false                          | Pinned flag            |
-| isFavorite  | Bool     | default: false                          | Favorite flag          |
+| isDeleted   | Bool     | default: false                          | Soft delete flag       |
 | createdAt   | DateTime | default: now                            | Creation timestamp     |
 | modifiedAt  | DateTime | default: now                            | Modification timestamp |
 | recentScore | Real     | nullable                                | EWMA for sorting       |
 | lastUsedAt  | DateTime | nullable                                | Last used timestamp    |
 
+**VaultItemType enum values:** `password`, `note`, `otp`, `bankCard`, `file`,
+`document`
+
+---
+
+## Table: vault_item_history
+
+Base history table. Stores a snapshot of `vault_items` common fields at the
+moment of each action. Type-specific history tables reference this table via
+`history_id → vault_item_history.id ON DELETE CASCADE`.
+
+| Column             | Type     | Constraints           | Description                  |
+| ------------------ | -------- | --------------------- | ---------------------------- |
+| id                 | Text     | Primary Key, UUID v4  | Unique identifier            |
+| itemId             | Text     | -                     | ID of original vault item    |
+| type               | Text     | enum: VaultItemType   | Entity type snapshot         |
+| name               | Text     | min: 1, max: 255      | Name snapshot                |
+| description        | Text     | nullable              | Description snapshot         |
+| categoryId         | Text     | nullable              | Category ID snapshot         |
+| categoryName       | Text     | nullable              | Category name at action time |
+| action             | Text     | enum: ActionInHistory | Action performed             |
+| usedCount          | Int      | default: 0            | Usage count snapshot         |
+| isFavorite         | Bool     | default: false        | Favorite flag snapshot       |
+| isArchived         | Bool     | default: false        | Archived flag snapshot       |
+| isPinned           | Bool     | default: false        | Pinned flag snapshot         |
+| isDeleted          | Bool     | default: false        | Deleted flag snapshot        |
+| recentScore        | Real     | nullable              | EWMA snapshot                |
+| lastUsedAt         | DateTime | nullable              | Last used snapshot           |
+| originalCreatedAt  | DateTime | nullable              | Original creation time       |
+| originalModifiedAt | DateTime | nullable              | Original modification time   |
+| actionAt           | DateTime | default: now          | Action timestamp             |
+
+**ActionInHistory enum values:** `created`, `modified`, `deleted`
+
+---
+
+## Table: password_items
+
+Type-specific table for passwords. Contains only password-specific fields.
+Common fields (name, categoryId, isFavorite, etc.) are stored in `vault_items`.
+
+| Column   | Type | Constraints                                 | Description        |
+| -------- | ---- | ------------------------------------------- | ------------------ |
+| itemId   | Text | Primary Key, FK to vault_items.id (cascade) | Vault item ref     |
+| login    | Text | nullable                                    | Username           |
+| email    | Text | nullable                                    | Email              |
+| password | Text | -                                           | Encrypted password |
+| url      | Text | nullable                                    | Associated URL     |
+
 **Constraints:** CHECK (login IS NOT NULL OR email IS NOT NULL)
 
-## Table: passwords_history
+---
 
-| Column             | Type     | Constraints           | Description                               |
-| ------------------ | -------- | --------------------- | ----------------------------------------- |
-| id                 | Text     | Primary Key, UUID v4  | Unique identifier                         |
-| originalPasswordId | Text     | -                     | ID of original password                   |
-| action             | Text     | enum: ActionInHistory | Action performed (deleted, modified)      |
-| name               | Text     | min: 1, max: 255      | Name snapshot                             |
-| description        | Text     | nullable              | Description snapshot                      |
-| password           | Text     | nullable              | Encrypted password (nullable for privacy) |
-| url                | Text     | nullable              | URL snapshot                              |
-| notes              | Text     | nullable              | Notes snapshot                            |
-| login              | Text     | nullable              | Login snapshot                            |
-| email              | Text     | nullable              | Email snapshot                            |
-| categoryId         | Text     | nullable              | Category ID snapshot                      |
-| categoryName       | Text     | nullable              | Category name at action time              |
-| tags               | Text     | nullable              | JSON array of tag names                   |
-| usedCount          | Int      | default: 0            | Usage count snapshot                      |
-| isArchived         | Bool     | default: false        | Archived flag snapshot                    |
-| isPinned           | Bool     | default: false        | Pinned flag snapshot                      |
-| isFavorite         | Bool     | default: false        | Favorite flag snapshot                    |
-| recentScore        | Real     | nullable              | EWMA snapshot                             |
-| lastUsedAt         | DateTime | nullable              | Last used snapshot                        |
-| isDeleted          | Bool     | default: false        | Deleted flag snapshot                     |
-| otpId              | Text     | nullable              | ID of associated OTP                      |
-| otpType            | Text     | nullable              | Type: TOTP or HOTP                        |
-| otpIssuer          | Text     | nullable              | Service name                              |
-| otpAccountName     | Text     | nullable              | Account identifier                        |
-| otpSecret          | Blob     | nullable              | Encrypted OTP secret                      |
-| otpSecretEncoding  | Text     | nullable              | Encoding of the secret                    |
-| otpAlgorithm       | Text     | nullable              | HMAC algorithm                            |
-| otpDigits          | Int      | nullable              | Number of digits in OTP code              |
-| otpPeriod          | Int      | nullable              | Time period in seconds for TOTP           |
-| otpCounter         | Int      | nullable              | Counter for HOTP                          |
-| originalCreatedAt  | DateTime | nullable              | Original creation time                    |
-| originalModifiedAt | DateTime | nullable              | Original modification time                |
-| originalLastUsedAt | DateTime | nullable              | Original last used time                   |
-| actionAt           | DateTime | default: now          | Action timestamp                          |
+## Table: password_history
 
-## Table: passwords_tags
+History table for password-specific fields. Each record is linked to
+`vault_item_history` via `history_id → vault_item_history.id ON DELETE CASCADE`.
 
-| Column     | Type     | Constraints                  | Description        |
-| ---------- | -------- | ---------------------------- | ------------------ |
-| passwordId | Text     | FK to passwords.id (cascade) | Password reference |
-| tagId      | Text     | FK to tags.id (cascade)      | Tag reference      |
-| createdAt  | DateTime | default: now                 | Creation timestamp |
+| Column    | Type | Constraints                                        | Description                               |
+| --------- | ---- | -------------------------------------------------- | ----------------------------------------- |
+| historyId | Text | Primary Key, FK to vault_item_history.id (cascade) | History record ref                        |
+| login     | Text | nullable                                           | Login snapshot                            |
+| email     | Text | nullable                                           | Email snapshot                            |
+| password  | Text | nullable                                           | Encrypted password (nullable for privacy) |
+| url       | Text | nullable                                           | URL snapshot                              |
 
-**Primary Key:** {passwordId, tagId}
+---
 
-## Table: bank_cards
+## Table: note_items
 
-| Column         | Type     | Constraints                             | Description            |
-| -------------- | -------- | --------------------------------------- | ---------------------- |
-| id             | Text     | Primary Key, UUID v4                    | Unique identifier      |
-| name           | Text     | min: 1, max: 255                        | Card name              |
-| cardholderName | Text     | min: 1, max: 255                        | Cardholder name        |
-| cardNumber     | Text     | -                                       | Encrypted card number  |
-| cardType       | Text     | enum: CardType, default: debit          | Card type              |
-| cardNetwork    | Text     | enum: CardNetwork, default: other       | Card network           |
-| expiryMonth    | Text     | min: 2, max: 2                          | Expiry month (MM)      |
-| expiryYear     | Text     | min: 4, max: 4                          | Expiry year (YYYY)     |
-| cvv            | Text     | nullable                                | Encrypted CVV          |
-| bankName       | Text     | nullable                                | Bank name              |
-| accountNumber  | Text     | nullable                                | Account number         |
-| routingNumber  | Text     | nullable                                | Routing number         |
-| description    | Text     | nullable                                | Description            |
-| notes          | Text     | nullable                                | Notes                  |
-| categoryId     | Text     | nullable, FK to categories.id (setNull) | Category reference     |
-| usedCount      | Int      | default: 0                              | Usage count            |
-| isFavorite     | Bool     | default: false                          | Favorite flag          |
-| isArchived     | Bool     | default: false                          | Archived flag          |
-| isPinned       | Bool     | default: false                          | Pinned flag            |
-| isDeleted      | Bool     | default: false                          | Soft delete flag       |
-| createdAt      | DateTime | default: now                            | Creation timestamp     |
-| modifiedAt     | DateTime | default: now                            | Modification timestamp |
-| recentScore    | Real     | nullable                                | EWMA for sorting       |
-| lastUsedAt     | DateTime | nullable                                | Last used timestamp    |
+Type-specific table for notes. The note title is stored in `vault_items.name`.
 
-## Table: bank_cards_history
+| Column    | Type | Constraints                                 | Description                     |
+| --------- | ---- | ------------------------------------------- | ------------------------------- |
+| itemId    | Text | Primary Key, FK to vault_items.id (cascade) | Vault item ref                  |
+| deltaJson | Text | -                                           | Quill Delta JSON representation |
+| content   | Text | -                                           | Plain text content              |
 
-| Column             | Type     | Constraints                 | Description                                  |
-| ------------------ | -------- | --------------------------- | -------------------------------------------- |
-| id                 | Text     | Primary Key, UUID v4        | Unique identifier                            |
-| originalCardId     | Text     | -                           | ID of original card                          |
-| action             | Text     | enum: ActionInHistory       | Action performed                             |
-| name               | Text     | min: 1, max: 255            | Name snapshot                                |
-| cardholderName     | Text     | min: 1, max: 255            | Cardholder name snapshot                     |
-| cardNumber         | Text     | nullable                    | Encrypted card number (nullable for privacy) |
-| cardType           | Text     | enum: CardType, nullable    | Card type snapshot                           |
-| cardNetwork        | Text     | enum: CardNetwork, nullable | Card network snapshot                        |
-| expiryMonth        | Text     | nullable                    | Expiry month snapshot                        |
-| expiryYear         | Text     | nullable                    | Expiry year snapshot                         |
-| cvv                | Text     | nullable                    | Encrypted CVV (nullable for privacy)         |
-| bankName           | Text     | nullable                    | Bank name snapshot                           |
-| accountNumber      | Text     | nullable                    | Account number snapshot                      |
-| routingNumber      | Text     | nullable                    | Routing number snapshot                      |
-| description        | Text     | nullable                    | Description snapshot                         |
-| notes              | Text     | nullable                    | Notes snapshot                               |
-| categoryId         | Text     | nullable                    | Category ID snapshot                         |
-| categoryName       | Text     | nullable                    | Category name at action time                 |
-| usedCount          | Int      | default: 0                  | Usage count snapshot                         |
-| isFavorite         | Bool     | default: false              | Favorite flag snapshot                       |
-| isArchived         | Bool     | default: false              | Archived flag snapshot                       |
-| isPinned           | Bool     | default: false              | Pinned flag snapshot                         |
-| recentScore        | Real     | nullable                    | EWMA snapshot                                |
-| lastUsedAt         | DateTime | nullable                    | Last used snapshot                           |
-| isDeleted          | Bool     | default: false              | Deleted flag snapshot                        |
-| originalCreatedAt  | DateTime | nullable                    | Original creation time                       |
-| originalModifiedAt | DateTime | nullable                    | Original modification time                   |
-| originalLastUsedAt | DateTime | nullable                    | Original last used time                      |
-| actionAt           | DateTime | default: now                | Action timestamp                             |
+---
 
-## Table: bank_cards_tags
+## Table: note_history
 
-| Column    | Type     | Constraints                   | Description        |
-| --------- | -------- | ----------------------------- | ------------------ |
-| cardId    | Text     | FK to bank_cards.id (cascade) | Card reference     |
-| tagId     | Text     | FK to tags.id (cascade)       | Tag reference      |
-| createdAt | DateTime | default: now                  | Creation timestamp |
+History table for note-specific fields.
 
-**Primary Key:** {cardId, tagId}
+| Column    | Type | Constraints                                        | Description               |
+| --------- | ---- | -------------------------------------------------- | ------------------------- |
+| historyId | Text | Primary Key, FK to vault_item_history.id (cascade) | History record ref        |
+| deltaJson | Text | -                                                  | Quill Delta JSON snapshot |
+| content   | Text | -                                                  | Content snapshot          |
+
+---
+
+## Table: otp_items
+
+Type-specific table for OTP codes.
+
+| Column         | Type | Constraints                                 | Description                     |
+| -------------- | ---- | ------------------------------------------- | ------------------------------- |
+| itemId         | Text | Primary Key, FK to vault_items.id (cascade) | Vault item ref                  |
+| passwordItemId | Text | nullable, FK to vault_items.id (setNull)    | Linked password reference       |
+| type           | Text | enum: OtpType, default: 'totp'              | Type: TOTP or HOTP              |
+| issuer         | Text | nullable                                    | Service name                    |
+| accountName    | Text | nullable                                    | Account identifier              |
+| secret         | Blob | -                                           | Encrypted secret key            |
+| secretEncoding | Text | enum: SecretEncoding, default: 'BASE32'     | Encoding of the secret          |
+| algorithm      | Text | enum: AlgorithmOtp, default: 'SHA1'         | HMAC algorithm                  |
+| digits         | Int  | default: 6                                  | Number of digits                |
+| period         | Int  | default: 30                                 | Time period in seconds for TOTP |
+| counter        | Int  | nullable                                    | Counter for HOTP                |
+
+**Constraints:** CHECK ((type = 'hotp' AND counter IS NOT NULL) OR (type =
+'totp' AND counter IS NULL))
+
+---
+
+## Table: otp_history
+
+History table for OTP-specific fields.
+
+| Column         | Type | Constraints                                        | Description              |
+| -------------- | ---- | -------------------------------------------------- | ------------------------ |
+| historyId      | Text | Primary Key, FK to vault_item_history.id (cascade) | History record ref       |
+| passwordItemId | Text | nullable                                           | Linked password snapshot |
+| type           | Text | enum: OtpType, default: 'totp'                     | Type snapshot            |
+| issuer         | Text | nullable                                           | Issuer snapshot          |
+| accountName    | Text | nullable                                           | Account name snapshot    |
+| secret         | Blob | -                                                  | Secret snapshot          |
+| secretEncoding | Text | enum: SecretEncoding, default: 'BASE32'            | Encoding snapshot        |
+| algorithm      | Text | enum: AlgorithmOtp, default: 'SHA1'                | Algorithm snapshot       |
+| digits         | Int  | default: 6                                         | Digits snapshot          |
+| period         | Int  | default: 30                                        | Period snapshot          |
+| counter        | Int  | nullable                                           | Counter snapshot         |
+
+---
+
+## Table: bank_card_items
+
+Type-specific table for bank cards.
+
+| Column         | Type | Constraints                                 | Description           |
+| -------------- | ---- | ------------------------------------------- | --------------------- |
+| itemId         | Text | Primary Key, FK to vault_items.id (cascade) | Vault item ref        |
+| cardholderName | Text | min: 1, max: 255                            | Cardholder name       |
+| cardNumber     | Text | -                                           | Encrypted card number |
+| cardType       | Text | enum: CardType, nullable, default: debit    | Card type             |
+| cardNetwork    | Text | enum: CardNetwork, nullable, default: other | Card network          |
+| expiryMonth    | Text | min: 2, max: 2                              | Expiry month (MM)     |
+| expiryYear     | Text | min: 4, max: 4                              | Expiry year (YYYY)    |
+| cvv            | Text | nullable                                    | Encrypted CVV         |
+| bankName       | Text | nullable                                    | Bank name             |
+| accountNumber  | Text | nullable                                    | Account number        |
+| routingNumber  | Text | nullable                                    | Routing number        |
+
+---
+
+## Table: bank_card_history
+
+History table for bank card-specific fields.
+
+| Column         | Type | Constraints                                        | Description                                  |
+| -------------- | ---- | -------------------------------------------------- | -------------------------------------------- |
+| historyId      | Text | Primary Key, FK to vault_item_history.id (cascade) | History record ref                           |
+| cardholderName | Text | min: 1, max: 255                                   | Cardholder name snapshot                     |
+| cardNumber     | Text | nullable                                           | Encrypted card number (nullable for privacy) |
+| cardType       | Text | enum: CardType, nullable                           | Card type snapshot                           |
+| cardNetwork    | Text | enum: CardNetwork, nullable                        | Card network snapshot                        |
+| expiryMonth    | Text | nullable                                           | Expiry month snapshot                        |
+| expiryYear     | Text | nullable                                           | Expiry year snapshot                         |
+| cvv            | Text | nullable                                           | Encrypted CVV (nullable for privacy)         |
+| bankName       | Text | nullable                                           | Bank name snapshot                           |
+| accountNumber  | Text | nullable                                           | Account number snapshot                      |
+| routingNumber  | Text | nullable                                           | Routing number snapshot                      |
+
+---
+
+## Table: file_items
+
+Type-specific table for files.
+
+| Column     | Type | Constraints                                 | Description             |
+| ---------- | ---- | ------------------------------------------- | ----------------------- |
+| itemId     | Text | Primary Key, FK to vault_items.id (cascade) | Vault item ref          |
+| metadataId | Text | nullable, FK to file_metadata.id (setNull)  | File metadata reference |
+
+---
+
+## Table: file_history
+
+History table for file-specific fields.
+
+| Column     | Type | Constraints                                        | Description               |
+| ---------- | ---- | -------------------------------------------------- | ------------------------- |
+| historyId  | Text | Primary Key, FK to vault_item_history.id (cascade) | History record ref        |
+| metadataId | Text | nullable                                           | File metadata ID snapshot |
+
+---
+
+## Table: document_items
+
+Type-specific table for documents. The document title is stored in
+`vault_items.name`.
+
+| Column         | Type | Constraints                                 | Description                      |
+| -------------- | ---- | ------------------------------------------- | -------------------------------- |
+| itemId         | Text | Primary Key, FK to vault_items.id (cascade) | Vault item ref                   |
+| documentType   | Text | min: 1, max: 64, nullable                   | Document type                    |
+| aggregatedText | Text | nullable                                    | Aggregated OCR text of all pages |
+| aggregateHash  | Text | nullable                                    | Hash of document version         |
+| pageCount      | Int  | default: 0                                  | Number of pages                  |
+
+---
+
+## Table: document_history
+
+History table for document-specific fields.
+
+| Column         | Type | Constraints                                        | Description                  |
+| -------------- | ---- | -------------------------------------------------- | ---------------------------- |
+| historyId      | Text | Primary Key, FK to vault_item_history.id (cascade) | History record ref           |
+| documentType   | Text | nullable                                           | Document type snapshot       |
+| aggregatedText | Text | nullable                                           | Aggregated OCR text snapshot |
+| aggregateHash  | Text | nullable                                           | Hash snapshot                |
+| pageCount      | Int  | default: 0                                         | Page count snapshot          |
+
+---
+
+## Table: item_tags
+
+Unified join table linking vault items to tags. Replaces the previous separate
+tables (`password_tags`, `note_tags`, `otp_tags`, `bank_cards_tags`,
+`files_tags`, `documents_tags`).
+
+| Column    | Type     | Constraints                    | Description        |
+| --------- | -------- | ------------------------------ | ------------------ |
+| itemId    | Text     | FK to vault_items.id (cascade) | Vault item ref     |
+| tagId     | Text     | FK to tags.id (cascade)        | Tag reference      |
+| createdAt | DateTime | default: now                   | Creation timestamp |
+
+**Primary Key:** {itemId, tagId}
+
+---
 
 ## Table: categories
 
@@ -162,25 +287,33 @@ This document describes the schema of all tables in the Hoplixi database.
 | createdAt   | DateTime | default: now                       | Creation timestamp                           |
 | modifiedAt  | DateTime | default: now                       | Modification timestamp                       |
 
-## Table: files
+---
 
-| Column      | Type     | Constraints                                | Description             |
-| ----------- | -------- | ------------------------------------------ | ----------------------- |
-| id          | Text     | Primary Key, UUID v4                       | Unique identifier       |
-| metadataId  | Text     | nullable, FK to file_metadata.id (setNull) | File metadata reference |
-| name        | Text     | min: 1, max: 255                           | Display name            |
-| description | Text     | nullable                                   | Description             |
-| categoryId  | Text     | nullable, FK to categories.id (setNull)    | Category reference      |
-| noteId      | Text     | nullable, FK to notes.id (setNull)         | Note reference          |
-| usedCount   | Int      | default: 0                                 | Usage count             |
-| isFavorite  | Bool     | default: false                             | Favorite flag           |
-| isArchived  | Bool     | default: false                             | Archived flag           |
-| isPinned    | Bool     | default: false                             | Pinned flag             |
-| isDeleted   | Bool     | default: false                             | Soft delete flag        |
-| createdAt   | DateTime | default: now                               | Creation timestamp      |
-| modifiedAt  | DateTime | default: now                               | Modification timestamp  |
-| recentScore | Real     | nullable                                   | EWMA for sorting        |
-| lastUsedAt  | DateTime | nullable                                   | Last used timestamp     |
+## Table: tags
+
+| Column     | Type     | Constraints          | Description                             |
+| ---------- | -------- | -------------------- | --------------------------------------- |
+| id         | Text     | Primary Key, UUID v4 | Unique identifier                       |
+| name       | Text     | unique               | Tag name                                |
+| color      | Text     | default: 'FFFFFF'    | Hex color code                          |
+| type       | Text     | enum: TagType        | Tag type (notes, password, totp, mixed) |
+| createdAt  | DateTime | default: now         | Creation timestamp                      |
+| modifiedAt | DateTime | default: now         | Modification timestamp                  |
+
+---
+
+## Table: icons
+
+| Column     | Type     | Constraints          | Description                     |
+| ---------- | -------- | -------------------- | ------------------------------- |
+| id         | Text     | Primary Key, UUID v4 | Unique identifier               |
+| name       | Text     | min: 1, max: 255     | Icon name                       |
+| type       | Text     | enum: IconType       | MIME type (png, jpg, svg, etc.) |
+| data       | Blob     | -                    | Binary image data               |
+| createdAt  | DateTime | default: now         | Creation timestamp              |
+| modifiedAt | DateTime | default: now         | Modification timestamp          |
+
+---
 
 ## Table: file_metadata
 
@@ -194,187 +327,46 @@ This document describes the schema of all tables in the Hoplixi database.
 | fileSize      | Int  | -                    | File size in bytes                 |
 | fileHash      | Text | nullable             | SHA256 hash for integrity          |
 
-## Table: files_history
+---
 
-| Column             | Type     | Constraints           | Description                  |
-| ------------------ | -------- | --------------------- | ---------------------------- |
-| id                 | Text     | Primary Key, UUID v4  | Unique identifier            |
-| originalFileId     | Text     | -                     | ID of original file          |
-| action             | Text     | enum: ActionInHistory | Action performed             |
-| metadataId         | Text     | nullable              | File metadata ID snapshot    |
-| name               | Text     | nullable              | Display name snapshot        |
-| description        | Text     | nullable              | Description snapshot         |
-| categoryId         | Text     | nullable              | Category ID snapshot         |
-| categoryName       | Text     | nullable              | Category name at action time |
-| noteId             | Text     | nullable              | Note ID snapshot             |
-| usedCount          | Int      | default: 0            | Usage count snapshot         |
-| isFavorite         | Bool     | default: false        | Favorite flag snapshot       |
-| isArchived         | Bool     | default: false        | Archived flag snapshot       |
-| isPinned           | Bool     | default: false        | Pinned flag snapshot         |
-| recentScore        | Real     | nullable              | EWMA snapshot                |
-| lastUsedAt         | DateTime | nullable              | Last used snapshot           |
-| isDeleted          | Bool     | default: false        | Deleted flag snapshot        |
-| originalCreatedAt  | DateTime | nullable              | Original creation time       |
-| originalModifiedAt | DateTime | nullable              | Original modification time   |
-| originalLastUsedAt | DateTime | nullable              | Original last used time      |
-| actionAt           | DateTime | default: now          | Action timestamp             |
+## Table: document_pages
 
-## Table: files_tags
+Pages of a document (one-to-many: document → pages). `documentId` references
+`vault_items.id` (the document vault item).
 
-| Column    | Type     | Constraints              | Description        |
-| --------- | -------- | ------------------------ | ------------------ |
-| fileId    | Text     | FK to files.id (cascade) | File reference     |
-| tagId     | Text     | FK to tags.id (cascade)  | Tag reference      |
-| createdAt | DateTime | default: now             | Creation timestamp |
+| Column        | Type     | Constraints                                | Description             |
+| ------------- | -------- | ------------------------------------------ | ----------------------- |
+| id            | Text     | Primary Key, UUID v4                       | Unique identifier       |
+| documentId    | Text     | FK to vault_items.id (cascade)             | Document owner          |
+| metadataId    | Text     | nullable, FK to file_metadata.id (setNull) | File metadata reference |
+| pageNumber    | Int      | -                                          | Page number (1..N)      |
+| extractedText | Text     | nullable                                   | OCR text of the page    |
+| pageHash      | Text     | nullable                                   | Hash of the page        |
+| isPrimary     | Bool     | default: false                             | Primary page (cover)    |
+| usedCount     | Int      | default: 0                                 | Usage count             |
+| createdAt     | DateTime | default: now                               | Creation timestamp      |
+| modifiedAt    | DateTime | default: now                               | Modification timestamp  |
+| lastUsedAt    | DateTime | nullable                                   | Last used timestamp     |
 
-**Primary Key:** {fileId, tagId}
+**Constraints:** UNIQUE {documentId, pageNumber}
 
-## Table: icons
-
-| Column     | Type     | Constraints          | Description                     |
-| ---------- | -------- | -------------------- | ------------------------------- |
-| id         | Text     | Primary Key, UUID v4 | Unique identifier               |
-| name       | Text     | min: 1, max: 255     | Icon name                       |
-| type       | Text     | enum: IconType       | MIME type (png, jpg, svg, etc.) |
-| data       | Blob     | -                    | Binary image data               |
-| createdAt  | DateTime | default: now         | Creation timestamp              |
-| modifiedAt | DateTime | default: now         | Modification timestamp          |
+---
 
 ## Table: note_links
 
-| Column       | Type     | Constraints              | Description           |
-| ------------ | -------- | ------------------------ | --------------------- |
-| id           | Text     | Primary Key, UUID v4     | Unique identifier     |
-| sourceNoteId | Text     | FK to notes.id (cascade) | Source note reference |
-| targetNoteId | Text     | FK to notes.id (cascade) | Target note reference |
-| createdAt    | DateTime | default: now             | Creation timestamp    |
+Many-to-many links between notes. Both `sourceNoteId` and `targetNoteId`
+reference `vault_items.id`.
+
+| Column       | Type     | Constraints                    | Description           |
+| ------------ | -------- | ------------------------------ | --------------------- |
+| id           | Text     | Primary Key, UUID v4           | Unique identifier     |
+| sourceNoteId | Text     | FK to vault_items.id (cascade) | Source note reference |
+| targetNoteId | Text     | FK to vault_items.id (cascade) | Target note reference |
+| createdAt    | DateTime | default: now                   | Creation timestamp    |
 
 **Unique Keys:** {sourceNoteId, targetNoteId}
 
-## Table: notes
-
-| Column      | Type     | Constraints                             | Description                     |
-| ----------- | -------- | --------------------------------------- | ------------------------------- |
-| id          | Text     | Primary Key, UUID v4                    | Unique identifier               |
-| title       | Text     | min: 1, max: 255                        | Note title                      |
-| description | Text     | nullable                                | Description                     |
-| deltaJson   | Text     | -                                       | Quill Delta JSON representation |
-| content     | Text     | -                                       | Main content                    |
-| categoryId  | Text     | nullable, FK to categories.id (setNull) | Category reference              |
-| usedCount   | Int      | default: 0                              | Usage count                     |
-| isFavorite  | Bool     | default: false                          | Favorite flag                   |
-| isDeleted   | Bool     | default: false                          | Soft delete flag                |
-| isArchived  | Bool     | default: false                          | Archived flag                   |
-| isPinned    | Bool     | default: false                          | Pinned flag                     |
-| createdAt   | DateTime | default: now                            | Creation timestamp              |
-| modifiedAt  | DateTime | default: now                            | Modification timestamp          |
-| recentScore | Real     | nullable                                | EWMA for sorting                |
-| lastUsedAt  | DateTime | nullable                                | Last used timestamp             |
-
-## Table: notes_history
-
-| Column                 | Type     | Constraints           | Description                  |
-| ---------------------- | -------- | --------------------- | ---------------------------- |
-| id                     | Text     | Primary Key, UUID v4  | Unique identifier            |
-| originalNoteId         | Text     | -                     | ID of original note          |
-| action                 | Text     | enum: ActionInHistory | Action performed             |
-| title                  | Text     | min: 1, max: 255      | Title snapshot               |
-| description            | Text     | nullable              | Description snapshot         |
-| deltaJson              | Text     | -                     | Quill Delta JSON snapshot    |
-| content                | Text     | -                     | Content snapshot             |
-| categoryId             | Text     | nullable              | Category ID snapshot         |
-| categoryName           | Text     | nullable              | Category name at action time |
-| usedCount              | Int      | default: 0            | Usage count snapshot         |
-| isFavorite             | Bool     | default: false        | Favorite flag snapshot       |
-| isDeleted              | Bool     | default: false        | Deleted flag snapshot        |
-| isArchived             | Bool     | default: false        | Archived flag snapshot       |
-| isPinned               | Bool     | default: false        | Pinned flag snapshot         |
-| recentScore            | Real     | nullable              | EWMA snapshot                |
-| lastUsedAt             | DateTime | nullable              | Last used snapshot           |
-| originalCreatedAt      | DateTime | nullable              | Original creation time       |
-| originalModifiedAt     | DateTime | nullable              | Original modification time   |
-| originalLastAccessedAt | DateTime | nullable              | Original last access time    |
-| actionAt               | DateTime | default: now          | Action timestamp             |
-
-## Table: notes_tags
-
-| Column    | Type     | Constraints              | Description        |
-| --------- | -------- | ------------------------ | ------------------ |
-| noteId    | Text     | FK to notes.id (cascade) | Note reference     |
-| tagId     | Text     | FK to tags.id (cascade)  | Tag reference      |
-| createdAt | DateTime | default: now             | Creation timestamp |
-
-**Primary Key:** {noteId, tagId}
-
-## Table: otps
-
-| Column         | Type     | Constraints                             | Description                     |
-| -------------- | -------- | --------------------------------------- | ------------------------------- |
-| id             | Text     | Primary Key, UUID v4                    | Unique identifier               |
-| passwordId     | Text     | nullable, FK to passwords.id (setNull)  | Password reference              |
-| categoryId     | Text     | nullable, FK to categories.id (setNull) | Category reference              |
-| type           | Text     | enum: OtpType, default: 'totp'          | Type: TOTP or HOTP              |
-| issuer         | Text     | nullable                                | Service name                    |
-| accountName    | Text     | nullable                                | Account identifier              |
-| secret         | Blob     | -                                       | Secret key                      |
-| secretEncoding | Text     | enum: SecretEncoding, default: 'BASE32' | Encoding of the secret          |
-| notes          | Text     | nullable                                | Notes                           |
-| algorithm      | Text     | enum: AlgorithmOtp, default: 'SHA1'     | HMAC algorithm                  |
-| digits         | Int      | default: 6                              | Number of digits                |
-| period         | Int      | default: 30                             | Time period in seconds for TOTP |
-| counter        | Int      | nullable                                | Counter for HOTP                |
-| usedCount      | Int      | default: 0                              | Usage count                     |
-| isDeleted      | Bool     | default: false                          | Soft delete flag                |
-| isFavorite     | Bool     | default: false                          | Favorite flag                   |
-| isPinned       | Bool     | default: false                          | Pinned flag                     |
-| isArchived     | Bool     | default: false                          | Archived flag                   |
-| createdAt      | DateTime | default: now                            | Creation timestamp              |
-| modifiedAt     | DateTime | default: now                            | Modification timestamp          |
-| recentScore    | Real     | nullable                                | EWMA for sorting                |
-| lastUsedAt     | DateTime | nullable                                | Last used timestamp             |
-
-**Constraints:** CHECK ((type = 'hotp' AND counter IS NOT NULL) OR (type =
-'totp' AND counter IS NULL))
-
-## Table: otps_history
-
-| Column             | Type     | Constraints                             | Description                  |
-| ------------------ | -------- | --------------------------------------- | ---------------------------- |
-| id                 | Text     | Primary Key, UUID v4                    | Unique identifier            |
-| originalOtpId      | Text     | -                                       | ID of original OTP           |
-| action             | Text     | enum: ActionInHistory                   | Action performed             |
-| type               | Text     | enum: OtpType, default: 'totp'          | Type snapshot                |
-| issuer             | Text     | nullable                                | Issuer snapshot              |
-| accountName        | Text     | nullable                                | Account name snapshot        |
-| secret             | Blob     | -                                       | Secret snapshot              |
-| secretEncoding     | Text     | enum: SecretEncoding, default: 'BASE32' | Encoding snapshot            |
-| notes              | Text     | nullable                                | Notes snapshot               |
-| algorithm          | Text     | enum: AlgorithmOtp, default: 'SHA1'     | Algorithm snapshot           |
-| digits             | Int      | default: 6                              | Digits snapshot              |
-| period             | Int      | default: 30                             | Period snapshot              |
-| counter            | Int      | nullable                                | Counter snapshot             |
-| passwordId         | Text     | nullable                                | Password ID snapshot         |
-| categoryId         | Text     | nullable                                | Category ID snapshot         |
-| categoryName       | Text     | nullable                                | Category name at action time |
-| usedCount          | Int      | default: 0                              | Usage count snapshot         |
-| isFavorite         | Bool     | default: false                          | Favorite flag snapshot       |
-| isPinned           | Bool     | default: false                          | Pinned flag snapshot         |
-| recentScore        | Real     | nullable                                | EWMA snapshot                |
-| lastUsedAt         | DateTime | nullable                                | Last used snapshot           |
-| originalCreatedAt  | DateTime | nullable                                | Original creation time       |
-| originalModifiedAt | DateTime | nullable                                | Original modification time   |
-| originalLastUsedAt | DateTime | nullable                                | Original last used time      |
-| actionAt           | DateTime | default: now                            | Action timestamp             |
-
-## Table: otp_tags
-
-| Column    | Type     | Constraints             | Description        |
-| --------- | -------- | ----------------------- | ------------------ |
-| otpId     | Text     | FK to otps.id (cascade) | OTP reference      |
-| tagId     | Text     | FK to tags.id (cascade) | Tag reference      |
-| createdAt | DateTime | default: now            | Creation timestamp |
-
-**Primary Key:** {otpId, tagId}
+---
 
 ## Table: store_meta
 
@@ -391,64 +383,41 @@ This document describes the schema of all tables in the Hoplixi database.
 | lastOpenedAt  | DateTime | default: now         | Last opened timestamp  |
 | version       | Text     | default: '1.0.0'     | Version                |
 
-## Table: tags
+---
 
-| Column     | Type     | Constraints          | Description                             |
-| ---------- | -------- | -------------------- | --------------------------------------- |
-| id         | Text     | Primary Key, UUID v4 | Unique identifier                       |
-| name       | Text     | unique               | Tag name                                |
-| color      | Text     | default: 'FFFFFF'    | Hex color code                          |
-| type       | Text     | enum: TagType        | Tag type (notes, password, totp, mixed) |
-| createdAt  | DateTime | default: now         | Creation timestamp                      |
-| modifiedAt | DateTime | default: now         | Modification timestamp                  |
+## Architecture Notes
 
-## Table: documents
+### Entity Hierarchy
 
-| Column         | Type     | Constraints                             | Description                      |
-| -------------- | -------- | --------------------------------------- | -------------------------------- |
-| id             | Text     | Primary Key, UUID v4                    | Unique identifier                |
-| title          | Text     | min: 1, max: 255, nullable              | Display name                     |
-| documentType   | Text     | min: 1, max: 64, nullable               | Document type                    |
-| description    | Text     | nullable                                | Description / notes              |
-| aggregatedText | Text     | nullable                                | Aggregated OCR text of all pages |
-| aggregateHash  | Text     | nullable                                | Hash of document version         |
-| pageCount      | Int      | default: 0                              | Number of pages                  |
-| categoryId     | Text     | nullable, FK to categories.id (setNull) | Category reference               |
-| isFavorite     | Bool     | default: false                          | Favorite flag                    |
-| isArchived     | Bool     | default: false                          | Archived flag                    |
-| isPinned       | Bool     | default: false                          | Pinned flag                      |
-| isDeleted      | Bool     | default: false                          | Soft delete flag                 |
-| usedCount      | Int      | default: 0                              | Usage count                      |
-| createdAt      | DateTime | default: now                            | Creation timestamp               |
-| modifiedAt     | DateTime | default: now                            | Modification timestamp           |
-| recentScore    | Real     | nullable                                | EWMA score for sorting           |
-| lastUsedAt     | DateTime | nullable                                | Last used timestamp              |
+```text
+vault_items (base)
+├── password_items   (itemId → vault_items.id CASCADE)
+├── note_items       (itemId → vault_items.id CASCADE)
+├── otp_items        (itemId → vault_items.id CASCADE)
+├── bank_card_items  (itemId → vault_items.id CASCADE)
+├── file_items       (itemId → vault_items.id CASCADE)
+└── document_items   (itemId → vault_items.id CASCADE)
 
-## Table: document_pages
+vault_item_history (base history)
+├── password_history  (historyId → vault_item_history.id CASCADE)
+├── note_history      (historyId → vault_item_history.id CASCADE)
+├── otp_history       (historyId → vault_item_history.id CASCADE)
+├── bank_card_history (historyId → vault_item_history.id CASCADE)
+├── file_history      (historyId → vault_item_history.id CASCADE)
+└── document_history  (historyId → vault_item_history.id CASCADE)
 
-| Column        | Type     | Constraints                                | Description             |
-| ------------- | -------- | ------------------------------------------ | ----------------------- |
-| id            | Text     | Primary Key, UUID v4                       | Unique identifier       |
-| documentId    | Text     | FK to documents.id (cascade)               | Document owner          |
-| fileId        | Text     | FK to files.id (restrict)                  | File page               |
-| metadataId    | Text     | nullable, FK to file_metadata.id (setNull) | File metadata reference |
-| pageNumber    | Int      | -                                          | Page number (1..N)      |
-| extractedText | Text     | nullable                                   | OCR text of the page    |
-| pageHash      | Text     | nullable                                   | Hash of the page        |
-| isPrimary     | Bool     | default: false                             | Primary page (cover)    |
-| usedCount     | Int      | default: 0                                 | Usage count             |
-| createdAt     | DateTime | default: now                               | Creation timestamp      |
-| modifiedAt    | DateTime | default: now                               | Modification timestamp  |
-| lastUsedAt    | DateTime | nullable                                   | Last used timestamp     |
+item_tags (unified tags join)
+└── itemId → vault_items.id CASCADE
+└── tagId  → tags.id CASCADE
+```
 
-**Constraints:** UNIQUE {documentId, pageNumber}
+### Triggers
 
-## Table: documents_tags
+History triggers fire on `vault_items` UPDATE/DELETE and insert into
+`vault_item_history` + the corresponding type-specific history table.
 
-| Column     | Type     | Constraints                  | Description        |
-| ---------- | -------- | ---------------------------- | ------------------ |
-| documentId | Text     | FK to documents.id (cascade) | Document reference |
-| tagId      | Text     | FK to tags.id (cascade)      | Tag reference      |
-| createdAt  | DateTime | default: now                 | Creation timestamp |
+Timestamp triggers maintain `created_at` / `modified_at` on `vault_items`,
+`document_pages`, `categories`, `tags`, `icons`, and `store_meta`.
 
-**Primary Key:** {documentId, tagId}
+`store_meta.modified_at` is touched by meta-touch triggers on every INSERT /
+UPDATE / DELETE in `vault_items` and `item_tags`.

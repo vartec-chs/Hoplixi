@@ -174,6 +174,7 @@ class MainStore extends _$MainStore {
         ...notesHistoryCreateTriggers,
         ...filesHistoryCreateTriggers,
         ...bankCardsHistoryCreateTriggers,
+        ...documentsHistoryCreateTriggers,
         ...documentsTriggers,
       ]) {
         await customStatement(trigger);

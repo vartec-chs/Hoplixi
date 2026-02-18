@@ -1,148 +1,168 @@
 /// SQL триггеры для записи истории изменений OTP-кодов.
 ///
-/// Эти триггеры автоматически создают записи в таблице `otps_history`
-/// при обновлении или удалении OTP-кодов.
+/// Триггеры срабатывают на таблице `vault_items` (для строк с type = 'otp')
+/// и вставляют записи в `vault_item_history` + `otp_history`.
 const List<String> otpsHistoryCreateTriggers = [
   // Триггер для записи истории при обновлении OTP
   '''
     CREATE TRIGGER IF NOT EXISTS otp_update_history
-    AFTER UPDATE ON otps
+    AFTER UPDATE ON vault_items
     FOR EACH ROW
-    WHEN OLD.id = NEW.id AND (
-      OLD.type != NEW.type OR
-      OLD.issuer != NEW.issuer OR
-      OLD.account_name != NEW.account_name OR
-      OLD.secret != NEW.secret OR
-      OLD.secret_encoding != NEW.secret_encoding OR
-      OLD.note_id != NEW.note_id OR
-      OLD.algorithm != NEW.algorithm OR
-      OLD.digits != NEW.digits OR
-      OLD.period != NEW.period OR
-      OLD.counter != NEW.counter OR
-      OLD.password_id != NEW.password_id OR
-      OLD.category_id != NEW.category_id OR
+    WHEN NEW.type = 'otp' AND OLD.id = NEW.id AND (
+      OLD.name != NEW.name OR
+      OLD.description IS NOT NEW.description OR
+      OLD.category_id IS NOT NEW.category_id OR
       OLD.is_favorite != NEW.is_favorite OR
       OLD.is_deleted != NEW.is_deleted OR
       OLD.is_archived != NEW.is_archived OR
       OLD.is_pinned != NEW.is_pinned OR
-      OLD.recent_score != NEW.recent_score OR
-      OLD.last_used_at != NEW.last_used_at
+      OLD.recent_score IS NOT NEW.recent_score OR
+      OLD.last_used_at IS NOT NEW.last_used_at
     )
     BEGIN
-      INSERT INTO otps_history (
+      INSERT INTO vault_item_history (
         id,
-        original_otp_id,
+        item_id,
+        type,
+        name,
+        description,
+        category_id,
+        category_name,
         action,
+        used_count,
+        is_favorite,
+        is_archived,
+        is_pinned,
+        is_deleted,
+        recent_score,
+        last_used_at,
+        original_created_at,
+        original_modified_at,
+        action_at
+      ) VALUES (
+        lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
+        OLD.id,
+        OLD.type,
+        OLD.name,
+        OLD.description,
+        OLD.category_id,
+        (SELECT name FROM categories WHERE id = OLD.category_id),
+        'modified',
+        OLD.used_count,
+        OLD.is_favorite,
+        OLD.is_archived,
+        OLD.is_pinned,
+        OLD.is_deleted,
+        OLD.recent_score,
+        OLD.last_used_at,
+        OLD.created_at,
+        OLD.modified_at,
+        strftime('%s','now')
+      );
+      INSERT INTO otp_history (
+        history_id,
+        password_item_id,
         type,
         issuer,
         account_name,
         secret,
         secret_encoding,
-        note_id,
         algorithm,
         digits,
         period,
-        counter,
-        password_id,
-        category_id,
-        category_name,
-        used_count,
-        is_favorite,
-        is_pinned,
-        recent_score,
-        last_used_at,
-        original_created_at,
-        original_modified_at,
-        original_last_used_at,
-        action_at
-      ) VALUES (
-        lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
-        OLD.id,
-        'modified',
-        OLD.type,
-        OLD.issuer,
-        OLD.account_name,
-        OLD.secret,
-        OLD.secret_encoding,
-        OLD.note_id,
-        OLD.algorithm,
-        OLD.digits,
-        OLD.period,
-        OLD.counter,
-        OLD.password_id,
-        OLD.category_id,
-        (SELECT name FROM categories WHERE id = OLD.category_id),
-        OLD.used_count,
-        OLD.is_favorite,
-        OLD.is_pinned,
-        OLD.recent_score,
-        OLD.last_used_at,
-        OLD.created_at,
-        OLD.modified_at,
-        OLD.last_used_at,
-        strftime('%s','now')  
-      );
+        counter
+      )
+      SELECT
+        (SELECT id FROM vault_item_history
+         WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        oi.password_item_id,
+        oi.type,
+        oi.issuer,
+        oi.account_name,
+        oi.secret,
+        oi.secret_encoding,
+        oi.algorithm,
+        oi.digits,
+        oi.period,
+        oi.counter
+      FROM otp_items oi
+      WHERE oi.item_id = OLD.id;
     END;
   ''',
   // Триггер для записи истории при удалении OTP
   '''
     CREATE TRIGGER IF NOT EXISTS otp_delete_history
-    BEFORE DELETE ON otps
+    BEFORE DELETE ON vault_items
     FOR EACH ROW
+    WHEN OLD.type = 'otp'
     BEGIN
-      INSERT INTO otps_history (
+      INSERT INTO vault_item_history (
         id,
-        original_otp_id,
+        item_id,
+        type,
+        name,
+        description,
+        category_id,
+        category_name,
         action,
+        used_count,
+        is_favorite,
+        is_archived,
+        is_pinned,
+        is_deleted,
+        recent_score,
+        last_used_at,
+        original_created_at,
+        original_modified_at,
+        action_at
+      ) VALUES (
+        lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
+        OLD.id,
+        OLD.type,
+        OLD.name,
+        OLD.description,
+        OLD.category_id,
+        (SELECT name FROM categories WHERE id = OLD.category_id),
+        'deleted',
+        OLD.used_count,
+        OLD.is_favorite,
+        OLD.is_archived,
+        OLD.is_pinned,
+        OLD.is_deleted,
+        OLD.recent_score,
+        OLD.last_used_at,
+        OLD.created_at,
+        OLD.modified_at,
+        strftime('%s','now')
+      );
+      INSERT INTO otp_history (
+        history_id,
+        password_item_id,
         type,
         issuer,
         account_name,
         secret,
         secret_encoding,
-        note_id,
         algorithm,
         digits,
         period,
-        counter,
-        password_id,
-        category_id,
-        category_name,
-        used_count,
-        is_favorite,
-        is_pinned,
-        recent_score,
-        last_used_at,
-        original_created_at,
-        original_modified_at,
-        original_last_used_at,
-        action_at
-      ) VALUES (
-        lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
-        OLD.id,
-        'deleted',
-        OLD.type,
-        OLD.issuer,
-        OLD.account_name,
-        OLD.secret,
-        OLD.secret_encoding,
-        OLD.note_id,
-        OLD.algorithm,
-        OLD.digits,
-        OLD.period,
-        OLD.counter,
-        OLD.password_id,
-        OLD.category_id,
-        (SELECT name FROM categories WHERE id = OLD.category_id),
-        OLD.used_count,
-        OLD.is_favorite,
-        OLD.is_pinned,
-        OLD.recent_score,
-        OLD.last_used_at,
-        OLD.created_at,
-        OLD.modified_at,
-        OLD.last_used_at,
-        strftime('%s','now')  
-      );
+        counter
+      )
+      SELECT
+        (SELECT id FROM vault_item_history
+         WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        oi.password_item_id,
+        oi.type,
+        oi.issuer,
+        oi.account_name,
+        oi.secret,
+        oi.secret_encoding,
+        oi.algorithm,
+        oi.digits,
+        oi.period,
+        oi.counter
+      FROM otp_items oi
+      WHERE oi.item_id = OLD.id;
     END;
   ''',
 ];

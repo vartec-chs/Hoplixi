@@ -180,7 +180,9 @@ class _FilterTabsState extends ConsumerState<FilterTabs>
           borderRadius: widget.borderRadius,
         ),
         labelColor: labelColor,
-        unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.7),
+        unselectedLabelColor: theme.colorScheme.onSurface.withValues(
+          alpha: 0.7,
+        ),
         splashFactory: InkRipple.splashFactory,
         dividerColor: Colors.transparent,
 
@@ -188,8 +190,8 @@ class _FilterTabsState extends ConsumerState<FilterTabs>
         labelStyle: theme.textTheme.bodyMedium?.copyWith(
           fontWeight: FontWeight.w500,
         ),
-        overlayColor: MaterialStateProperty.all(
-          theme.colorScheme.onSurface.withOpacity(0.05),
+        overlayColor: WidgetStateProperty.all(
+          theme.colorScheme.onSurface.withValues(alpha: 0.05),
         ),
 
         indicatorPadding: const EdgeInsets.all(2),
