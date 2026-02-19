@@ -24,6 +24,9 @@ class PasswordHistory extends Table {
   /// URL (snapshot)
   TextColumn get url => text().nullable()();
 
+  /// Дата истечения (snapshot)
+  DateTimeColumn get expireAt => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {historyId};
 

@@ -25,6 +25,9 @@ class PasswordItems extends Table {
   /// URL сервиса
   TextColumn get url => text().nullable()();
 
+  /// Дата истечения срока действия пароля
+  DateTimeColumn get expireAt => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {itemId};
 

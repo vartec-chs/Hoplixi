@@ -73,13 +73,14 @@ moment of each action. Type-specific history tables reference this table via
 Type-specific table for passwords. Contains only password-specific fields.
 Common fields (name, categoryId, isFavorite, etc.) are stored in `vault_items`.
 
-| Column   | Type | Constraints                                 | Description        |
-| -------- | ---- | ------------------------------------------- | ------------------ |
-| itemId   | Text | Primary Key, FK to vault_items.id (cascade) | Vault item ref     |
-| login    | Text | nullable                                    | Username           |
-| email    | Text | nullable                                    | Email              |
-| password | Text | -                                           | Encrypted password |
-| url      | Text | nullable                                    | Associated URL     |
+| Column   | Type     | Constraints                                 | Description              |
+| -------- | -------- | ------------------------------------------- | ------------------------ |
+| itemId   | Text     | Primary Key, FK to vault_items.id (cascade) | Vault item ref           |
+| login    | Text     | nullable                                    | Username                 |
+| email    | Text     | nullable                                    | Email                    |
+| password | Text     | -                                           | Encrypted password       |
+| url      | Text     | nullable                                    | Associated URL           |
+| expireAt | DateTime | nullable                                    | Password expiration date |
 
 **Constraints:** CHECK (login IS NOT NULL OR email IS NOT NULL)
 
@@ -90,13 +91,14 @@ Common fields (name, categoryId, isFavorite, etc.) are stored in `vault_items`.
 History table for password-specific fields. Each record is linked to
 `vault_item_history` via `history_id → vault_item_history.id ON DELETE CASCADE`.
 
-| Column    | Type | Constraints                                        | Description                               |
-| --------- | ---- | -------------------------------------------------- | ----------------------------------------- |
-| historyId | Text | Primary Key, FK to vault_item_history.id (cascade) | History record ref                        |
-| login     | Text | nullable                                           | Login snapshot                            |
-| email     | Text | nullable                                           | Email snapshot                            |
-| password  | Text | nullable                                           | Encrypted password (nullable for privacy) |
-| url       | Text | nullable                                           | URL snapshot                              |
+| Column    | Type     | Constraints                                        | Description                               |
+| --------- | -------- | -------------------------------------------------- | ----------------------------------------- |
+| historyId | Text     | Primary Key, FK to vault_item_history.id (cascade) | History record ref                        |
+| login     | Text     | nullable                                           | Login snapshot                            |
+| email     | Text     | nullable                                           | Email snapshot                            |
+| password  | Text     | nullable                                           | Encrypted password (nullable for privacy) |
+| url       | Text     | nullable                                           | URL snapshot                              |
+| expireAt  | DateTime | nullable                                           | Expiration date snapshot                  |
 
 ---
 
