@@ -831,6 +831,7 @@ class MainStoreManager {
               'not available!',
             );
           }
+          rawDb.config.doubleQuotedStringLiterals = false;
 
           // Регистрация функции exp для SQLite для сортировки по времени
           rawDb.createFunction(

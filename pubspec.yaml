@@ -48,7 +48,7 @@ dependencies:
   json_annotation: ^4.10.0
   sqlcipher_flutter_libs: ^0.6.8
   drift: ^2.31.0
-  google_fonts: ^8.0.1
+  google_fonts: ^8.0.2
   font_awesome_flutter: ^10.12.0
   go_router: ^17.1.0
   toastification: ^3.0.3
@@ -80,7 +80,7 @@ dependencies:
   infinite_scroll_pagination: ^5.1.1
   pinput: ^6.0.2
   flutter_colorpicker: ^1.1.0
-  image: ^4.7.2
+  image: ^4.8.0
   flutter_expandable_fab: ^2.5.2
   sliver_tools: ^0.2.12
   screen_protector: ^1.5.1
@@ -90,7 +90,7 @@ dependencies:
   otp: ^3.2.0
   zxing2: ^0.2.4
   image_cropper: ^11.0.0
-  mobile_scanner: ^7.1.4
+  mobile_scanner: ^7.2.0
   crop_image: ^1.0.17
   pasteboard: ^0.4.0
   cryptography: ^2.9.0
