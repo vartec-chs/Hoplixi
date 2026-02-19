@@ -25,7 +25,8 @@ const List<String> passwordsHistoryCreateTriggers = [
           pi.login IS NOT (SELECT login FROM password_items WHERE item_id = OLD.id) OR
           pi.email IS NOT (SELECT email FROM password_items WHERE item_id = OLD.id) OR
           pi.password != (SELECT password FROM password_items WHERE item_id = OLD.id) OR
-          pi.url IS NOT (SELECT url FROM password_items WHERE item_id = OLD.id)
+          pi.url IS NOT (SELECT url FROM password_items WHERE item_id = OLD.id) OR
+          pi.expire_at IS NOT (SELECT expire_at FROM password_items WHERE item_id = OLD.id)
         )
       )
     )
@@ -74,7 +75,8 @@ const List<String> passwordsHistoryCreateTriggers = [
         login,
         email,
         password,
-        url
+        url,
+        expire_at
       )
       SELECT
         (SELECT id FROM vault_item_history
@@ -82,7 +84,8 @@ const List<String> passwordsHistoryCreateTriggers = [
         pi.login,
         pi.email,
         pi.password,
-        pi.url
+        pi.url,
+        pi.expire_at
       FROM password_items pi
       WHERE pi.item_id = OLD.id;
     END;
@@ -138,7 +141,8 @@ const List<String> passwordsHistoryCreateTriggers = [
         login,
         email,
         password,
-        url
+        url,
+        expire_at
       )
       SELECT
         (SELECT id FROM vault_item_history
@@ -146,7 +150,8 @@ const List<String> passwordsHistoryCreateTriggers = [
         pi.login,
         pi.email,
         pi.password,
-        pi.url
+        pi.url,
+        pi.expire_at
       FROM password_items pi
       WHERE pi.item_id = OLD.id;
     END;

@@ -7,7 +7,11 @@ share a common base table (`vault_items`) and a common history table
 (`vault_item_history`). Type-specific fields are stored in separate child tables
 that reference the base table via `item_id → vault_items.id ON DELETE CASCADE`.
 
----
+## Important
+
+When changing tables, check and update triggers in `main_store.dart` to ensure
+history tracking and timestamp maintenance. Triggers folder
+./lib/main_store/triggers.
 
 ## Table: vault_items
 

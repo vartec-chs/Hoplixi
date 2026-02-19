@@ -241,6 +241,11 @@ class MainStore extends _$MainStore {
         'CREATE INDEX IF NOT EXISTS idx_item_tags_tag_id '
             'ON item_tags (tag_id)',
 
+        // --- password_items ---
+        // WHERE expire_at IS NOT NULL ORDER BY expire_at ASC (поиск истекающих паролей)
+        'CREATE INDEX IF NOT EXISTS idx_password_items_expire_at '
+            'ON password_items (expire_at) WHERE expire_at IS NOT NULL',
+
         // --- vault_item_history ---
         // WHERE item_id = ? AND type = ? ORDER BY action_at DESC
         'CREATE INDEX IF NOT EXISTS idx_vih_item_type_action_at '
