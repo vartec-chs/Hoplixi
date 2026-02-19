@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
@@ -12,6 +13,7 @@ import 'package:hoplixi/main_store/models/db_errors.dart';
 import 'package:hoplixi/main_store/models/db_state.dart';
 import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_store/provider/db_history_provider.dart';
+import 'package:hoplixi/main_store/services/db_key_derivation_service.dart';
 import 'package:path/path.dart' as p;
 
 enum BackupScope { databaseOnly, encryptedFilesOnly, full }
@@ -32,7 +34,9 @@ class BackupResult {
 
 final _mainStoreManagerProvider = FutureProvider<MainStoreManager>((ref) async {
   final dbHistoryService = await ref.read(dbHistoryProvider.future);
-  final manager = MainStoreManager(dbHistoryService);
+  const secureStorage = FlutterSecureStorage();
+  final keyService = DbKeyDerivationService(secureStorage);
+  final manager = MainStoreManager(dbHistoryService, keyService);
 
   // Cleanup on dispose
   ref.onDispose(() {
@@ -280,11 +284,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         await dir.delete(recursive: true);
         logInfo('Old backup removed by retention: ${dir.path}', tag: _logTag);
       } catch (e) {
-        logWarning(
-          'Failed to remove old backup: ${dir.path}',
-     
-          tag: _logTag,
-        );
+        logWarning('Failed to remove old backup: ${dir.path}', tag: _logTag);
       }
     }
   }

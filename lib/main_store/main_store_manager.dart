@@ -13,7 +13,9 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/db_errors.dart';
 import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
+import 'package:hoplixi/main_store/models/store_key_config.dart';
 import 'package:hoplixi/main_store/services/db_history_services.dart';
+import 'package:hoplixi/main_store/services/db_key_derivation_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:result_dart/result_dart.dart';
 import 'package:sqlcipher_flutter_libs/sqlcipher_flutter_libs.dart';
@@ -37,12 +39,13 @@ class MainStoreManager {
   static const String _decryptedAttachmentsFolder = 'attachments_decrypted';
 
   final DatabaseHistoryService _dbHistoryService;
+  final DbKeyDerivationService _keyService;
   final _uuid = const Uuid();
 
   MainStore? _currentStore;
   String? _currentStorePath;
 
-  MainStoreManager(this._dbHistoryService);
+  MainStoreManager(this._dbHistoryService, this._keyService);
 
   /// Проверка, открыто ли хранилище
   bool get isStoreOpen => _currentStore != null && _currentStorePath != null;
@@ -106,21 +109,40 @@ class MainStoreManager {
       await attachmentsDir.create(recursive: true);
       logInfo('Created attachments directory', tag: _logTag);
 
-      // Генерация соли и хеширование пароля
+      // Генерация соли и хеширование пароля (для верификации на открытии)
       final salt = _uuid.v4();
       final passwordHash = _hashPassword(dto.password, salt);
 
       // Генерация криптографически безопасного случайного ключа для шифрования attachments
       final attachmentKey = _generateSecureKey();
 
+      // --- Argon2-деривация ключа для SQLCipher ---
+      // Генерация уникальной Argon2-соли для этого хранилища
+      final argon2Salt = DbKeyDerivationService.generateSalt();
+
+      // Сохранение конфига ключа рядом с файлом БД (до создания соединения)
+      final keyConfig = StoreKeyConfig(
+        argon2Salt: argon2Salt,
+        useDeviceKey: dto.useDeviceKey,
+      );
+      await keyConfig.writeTo(storageDir.path);
+      logInfo(
+        'Wrote store_key.json (useDeviceKey=${dto.useDeviceKey})',
+        tag: _logTag,
+      );
+
+      // Деривация PRAGMA key: masterKey=Argon2(pwd,salt) [→ HKDF(masterKey,device)]
+      final pragmaKey = await _keyService.derivePragmaKey(
+        dto.password,
+        argon2Salt,
+        useDeviceKey: dto.useDeviceKey,
+      );
+
       // Путь к файлу БД
       final dbFilePath = _getDbFilePath(storageDir.path, normalizedName);
 
       // Создание соединения с БД
-      final dbResult = await _createDatabaseConnection(
-        dbFilePath,
-        dto.password,
-      );
+      final dbResult = await _createDatabaseConnection(dbFilePath, pragmaKey);
 
       if (dbResult.isError()) {
         // Удаляем созданную папку при ошибке
@@ -244,11 +266,32 @@ class MainStoreManager {
 
       logInfo('Found database file: $dbFilePath', tag: _logTag);
 
+      // --- Деривация PRAGMA key ---
+      // Читаем store_key.json (null → старое хранилище без Argon2)
+      final keyConfig = await StoreKeyConfig.readFrom(actualStoragePath);
+      final String pragmaKey;
+      if (keyConfig != null) {
+        // Новый формат: Argon2 [+ HKDF device key]
+        pragmaKey = await _keyService.derivePragmaKey(
+          dto.password,
+          keyConfig.argon2Salt,
+          useDeviceKey: keyConfig.useDeviceKey,
+        );
+        logInfo(
+          'Derived Argon2 PRAGMA key (useDeviceKey=${keyConfig.useDeviceKey})',
+          tag: _logTag,
+        );
+      } else {
+        // Обратная совместимость: сырой пароль как раньше
+        pragmaKey = dto.password;
+        logInfo(
+          'No store_key.json found — using raw password (legacy mode)',
+          tag: _logTag,
+        );
+      }
+
       // Создание соединения с БД
-      final dbResult = await _createDatabaseConnection(
-        dbFilePath,
-        dto.password,
-      );
+      final dbResult = await _createDatabaseConnection(dbFilePath, pragmaKey);
 
       if (dbResult.isError()) {
         return dbResult.fold(
@@ -807,9 +850,12 @@ class MainStoreManager {
   }
 
   /// Создать соединение с БД с шифрованием
+  ///
+  /// [pragmaKey] — либо строка `x'<hex>'` (Argon2-деривация), либо
+  /// сырой пароль (обратная совместимость со старыми БД).
   AsyncResultDart<MainStore, DatabaseError> _createDatabaseConnection(
     String dbFilePath,
-    String password,
+    String pragmaKey,
   ) async {
     try {
       logInfo('Creating database connection', tag: _logTag);
@@ -864,8 +910,14 @@ class MainStoreManager {
               }
             },
           );
-          final escapedPassword = password.replaceAll("'", "''");
-          rawDb.execute("PRAGMA key = '$escapedPassword';");
+          // Raw hex key (Argon2): PRAGMA key = "x'<hex>'";
+          // Legacy текстовый пароль:  PRAGMA key = '<escaped>';
+          if (pragmaKey.startsWith("x'")) {
+            rawDb.execute('PRAGMA key = "$pragmaKey";');
+          } else {
+            final escaped = pragmaKey.replaceAll("'", "''");
+            rawDb.execute("PRAGMA key = '$escaped';");
+          }
         },
       );
 

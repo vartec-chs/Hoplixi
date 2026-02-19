@@ -12,6 +12,13 @@ sealed class CreateStoreDto with _$CreateStoreDto {
     required String path,
     String? description,
     @Default(false) bool saveMasterPassword,
+
+    /// Привязать ключ шифрования к текущему устройству через HKDF.
+    ///
+    /// Если `true`, секрет устройства генерируется при создании
+    /// и сохраняется в [FlutterSecureStorage]. При открытии БД на
+    /// другом устройстве потребуется экспорт/импорт секрета.
+    @Default(false) bool useDeviceKey,
   }) = _CreateStoreDto;
 
   factory CreateStoreDto.fromJson(Map<String, dynamic> json) =>
