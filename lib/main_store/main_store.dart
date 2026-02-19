@@ -93,6 +93,9 @@ class MainStore extends _$MainStore {
       onCreate: (Migrator m) async {
         await m.createAll();
 
+        // Установка индексов для оптимизации запросов
+        await _installIndexes();
+
         // Установка триггеров для записи истории изменений
         await _installHistoryTriggers();
       },
@@ -199,6 +202,80 @@ class MainStore extends _$MainStore {
     } catch (e, stackTrace) {
       logError(
         'Failed to install triggers',
+        error: e,
+        stackTrace: stackTrace,
+        tag: _logTag,
+      );
+      rethrow;
+    }
+  }
+
+  /// Создание индексов для оптимизации запросов.
+  ///
+  /// Вызывается один раз при [onCreate] после [createAll].
+  Future<void> _installIndexes() async {
+    logInfo('Installing indexes...', tag: _logTag);
+
+    try {
+      const indexes = [
+        // --- vault_items ---
+        // Покрывает обязательный WHERE (is_deleted, is_archived) + дефолтный ORDER BY
+        'CREATE INDEX IF NOT EXISTS idx_vi_active_pinned_modified '
+            'ON vault_items (is_deleted, is_archived, is_pinned DESC, modified_at DESC)',
+        // Фильтрация по категории
+        'CREATE INDEX IF NOT EXISTS idx_vi_active_category '
+            'ON vault_items (is_deleted, is_archived, category_id)',
+        // Фильтрация избранного
+        'CREATE INDEX IF NOT EXISTS idx_vi_active_favorite '
+            'ON vault_items (is_deleted, is_archived, is_favorite)',
+        // Сортировка по дате создания
+        'CREATE INDEX IF NOT EXISTS idx_vi_active_created_at '
+            'ON vault_items (is_deleted, is_archived, created_at)',
+        // Сортировка по последнему использованию
+        'CREATE INDEX IF NOT EXISTS idx_vi_active_last_used '
+            'ON vault_items (is_deleted, is_archived, last_used_at)',
+
+        // --- item_tags ---
+        // Обратный поиск всех элементов по тегу (EXISTS-subquery в filter DAO).
+        // Поиск по itemId покрыт левым префиксом составного PK (itemId, tagId).
+        'CREATE INDEX IF NOT EXISTS idx_item_tags_tag_id '
+            'ON item_tags (tag_id)',
+
+        // --- vault_item_history ---
+        // WHERE item_id = ? AND type = ? ORDER BY action_at DESC
+        'CREATE INDEX IF NOT EXISTS idx_vih_item_type_action_at '
+            'ON vault_item_history (item_id, type, action_at DESC)',
+
+        // --- note_links ---
+        // Входящие ссылки на заметку. Исходящие покрыты UNIQUE (source_note_id, target_note_id).
+        'CREATE INDEX IF NOT EXISTS idx_note_links_target '
+            'ON note_links (target_note_id)',
+
+        // --- document_pages ---
+        // WHERE document_id = ? AND is_primary = 1 (получение обложки).
+        // UNIQUE (document_id, page_number) не покрывает is_primary.
+        'CREATE INDEX IF NOT EXISTS idx_doc_pages_primary '
+            'ON document_pages (document_id, is_primary)',
+
+        // --- categories ---
+        // WHERE type IN (...) в category DAO
+        'CREATE INDEX IF NOT EXISTS idx_categories_type '
+            'ON categories (type)',
+
+        // --- tags ---
+        // WHERE type IN (...) в tag DAO
+        'CREATE INDEX IF NOT EXISTS idx_tags_type '
+            'ON tags (type)',
+      ];
+
+      for (final sql in indexes) {
+        await customStatement(sql);
+      }
+
+      logInfo('All indexes installed successfully', tag: _logTag);
+    } catch (e, stackTrace) {
+      logError(
+        'Failed to install indexes',
         error: e,
         stackTrace: stackTrace,
         tag: _logTag,
