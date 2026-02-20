@@ -6,59 +6,55 @@ import 'package:hoplixi/main_store/models/dto/document_dto.dart';
 import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_store/models/filter/base_filter.dart';
 import 'package:hoplixi/main_store/models/filter/documents_filter.dart';
-import 'package:hoplixi/main_store/tables/index.dart';
+import 'package:hoplixi/main_store/tables/categories.dart';
+import 'package:hoplixi/main_store/tables/document_items.dart';
+import 'package:hoplixi/main_store/tables/item_tags.dart';
+import 'package:hoplixi/main_store/tables/note_items.dart';
+import 'package:hoplixi/main_store/tables/tags.dart';
+import 'package:hoplixi/main_store/tables/vault_items.dart';
 
 part 'document_filter_dao.g.dart';
 
-@DriftAccessor(tables: [Documents, Categories, DocumentsTags, Tags, Notes])
+@DriftAccessor(
+  tables: [VaultItems, DocumentItems, Categories, Tags, ItemTags, NoteItems],
+)
 class DocumentFilterDao extends DatabaseAccessor<MainStore>
     with _$DocumentFilterDaoMixin
     implements FilterDao<DocumentsFilter, DocumentCardDto> {
   DocumentFilterDao(super.db);
 
-  /// Получить отфильтрованные документы
   @override
   Future<List<DocumentCardDto>> getFiltered(DocumentsFilter filter) async {
-    final query = select(documents).join([
-      leftOuterJoin(categories, categories.id.equalsExp(documents.categoryId)),
-      leftOuterJoin(notes, notes.id.equalsExp(documents.noteId)),
+    final query = select(vaultItems).join([
+      innerJoin(documentItems, documentItems.itemId.equalsExp(vaultItems.id)),
+      leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
+      leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
 
-    final whereExpression = _buildWhereExpression(filter);
-    if (whereExpression != null) {
-      query.where(whereExpression);
-    }
-
+    query.where(_buildWhereExpression(filter));
     query.orderBy(_buildOrderBy(filter));
 
-    if (filter.base.limit != null) {
+    if (filter.base.limit != null && filter.base.limit! > 0) {
       query.limit(filter.base.limit!, offset: filter.base.offset);
     }
 
     final results = await query.get();
 
-    // Собираем ID всех документов для загрузки тегов
-    final documentIds = results
-        .map((row) => row.readTable(documents).id)
-        .toList();
-
-    // Загружаем теги для всех документов (максимум 10 на документ)
-    final tagsMap = await _loadTagsForDocuments(documentIds);
+    final itemIds = results.map((row) => row.readTable(vaultItems).id).toList();
+    final tagsMap = await _loadTagsForItems(itemIds);
 
     return results.map((row) {
-      final document = row.readTable(documents);
+      final item = row.readTable(vaultItems);
+      final doc = row.readTable(documentItems);
       final category = row.readTableOrNull(categories);
-      final note = row.readTableOrNull(notes);
-
-      // Получаем теги для текущего документа
-      final documentTags = tagsMap[document.id] ?? [];
+      final note = row.readTableOrNull(noteItems);
 
       return DocumentCardDto(
-        id: document.id,
-        title: document.title,
-        documentType: document.documentType,
-        description: document.description,
-        pageCount: document.pageCount,
+        id: item.id,
+        title: item.name,
+        documentType: doc.documentType,
+        description: item.description,
+        pageCount: doc.pageCount,
         category: category != null
             ? CategoryInCardDto(
                 id: category.id,
@@ -68,330 +64,273 @@ class DocumentFilterDao extends DatabaseAccessor<MainStore>
                 iconId: category.iconId,
               )
             : null,
-        noteId: note?.id,
-        noteName: note?.title,
-        tags: documentTags,
-        isFavorite: document.isFavorite,
-        isArchived: document.isArchived,
-        isPinned: document.isPinned,
-        isDeleted: document.isDeleted,
-        usedCount: document.usedCount,
-        modifiedAt: document.modifiedAt,
+        noteId: item.noteId,
+        noteName: note != null ? item.name : null,
+        tags: tagsMap[item.id] ?? [],
+        isFavorite: item.isFavorite,
+        isArchived: item.isArchived,
+        isPinned: item.isPinned,
+        isDeleted: item.isDeleted,
+        usedCount: item.usedCount,
+        modifiedAt: item.modifiedAt,
       );
     }).toList();
   }
 
-  /// Подсчитывает количество отфильтрованных документов
   @override
   Future<int> countFiltered(DocumentsFilter filter) async {
-    // Создаем запрос для подсчета с join
-    final query = select(documents).join([
-      leftOuterJoin(categories, categories.id.equalsExp(documents.categoryId)),
-      leftOuterJoin(notes, notes.id.equalsExp(documents.noteId)),
+    final query = select(vaultItems).join([
+      innerJoin(documentItems, documentItems.itemId.equalsExp(vaultItems.id)),
     ]);
-
-    // Применяем те же фильтры
-    final whereExpression = _buildWhereExpression(filter);
-    if (whereExpression != null) {
-      query.where(whereExpression);
-    }
-
-    // Выполняем запрос и считаем
+    query.where(_buildWhereExpression(filter));
     final results = await query.get();
     return results.length;
   }
 
-  /// Построить WHERE выражение на основе фильтра
-  Expression<bool>? _buildWhereExpression(DocumentsFilter filter) {
-    final expressions = <Expression<bool>>[];
-
-    // Применяем базовые фильтры
-    _applyBaseFilters(filter.base, expressions);
-
-    // Применяем специфичные для документов фильтры
-    _applyDocumentSpecificFilters(filter, expressions);
-
-    if (expressions.isEmpty) return null;
-
-    return expressions.reduce((a, b) => a & b);
+  Expression<bool> _buildWhereExpression(DocumentsFilter filter) {
+    Expression<bool> expr = const Constant(true);
+    expr = expr & _applyBaseFilters(filter.base);
+    expr = expr & _applyDocumentSpecificFilters(filter);
+    return expr;
   }
 
-  /// Применить базовые фильтры из BaseFilter
-  void _applyBaseFilters(BaseFilter base, List<Expression<bool>> expressions) {
-    // Фильтр по поисковому запросу
+  Expression<bool> _applyBaseFilters(BaseFilter base) {
+    Expression<bool> expr = const Constant(true);
+
     if (base.query.isNotEmpty) {
-      final queryLower = base.query.toLowerCase();
-      Expression<bool> searchExpression =
-          documents.title.lower().like('%$queryLower%') |
-          documents.description.lower().like('%$queryLower%') |
-          documents.aggregatedText.lower().like('%$queryLower%');
-      expressions.add(searchExpression);
+      final q = base.query.toLowerCase();
+      expr =
+          expr &
+          (vaultItems.name.lower().like('%$q%') |
+              vaultItems.description.lower().like('%$q%') |
+              documentItems.aggregatedText.lower().like('%$q%'));
     }
 
-    // Фильтр по категориям
     if (base.categoryIds.isNotEmpty) {
-      expressions.add(documents.categoryId.isIn(base.categoryIds));
+      expr = expr & vaultItems.categoryId.isIn(base.categoryIds);
     }
 
-    // Фильтр по тегам (EXISTS subquery)
     if (base.tagIds.isNotEmpty) {
-      final tagFilter = existsQuery(
-        select(documentsTags)..where(
-          (row) =>
-              row.documentId.equalsExp(documents.id) &
-              row.tagId.isIn(base.tagIds),
+      final tagExists = existsQuery(
+        select(itemTags)..where(
+          (t) => t.itemId.equalsExp(vaultItems.id) & t.tagId.isIn(base.tagIds),
         ),
       );
-      expressions.add(tagFilter);
+      expr = expr & tagExists;
     }
 
-    // Фильтр по дате создания
+    if (base.isFavorite != null) {
+      expr = expr & vaultItems.isFavorite.equals(base.isFavorite!);
+    }
+
+    if (base.isPinned != null) {
+      expr = expr & vaultItems.isPinned.equals(base.isPinned!);
+    }
+
+    if (base.isArchived != null) {
+      expr = expr & vaultItems.isArchived.equals(base.isArchived!);
+    } else {
+      expr = expr & vaultItems.isArchived.equals(false);
+    }
+
+    if (base.isDeleted != null) {
+      expr = expr & vaultItems.isDeleted.equals(base.isDeleted!);
+    } else {
+      expr = expr & vaultItems.isDeleted.equals(false);
+    }
+
     if (base.createdAfter != null) {
-      expressions.add(
-        documents.createdAt.isBiggerOrEqualValue(base.createdAfter!),
-      );
+      expr =
+          expr & vaultItems.createdAt.isBiggerOrEqualValue(base.createdAfter!);
     }
     if (base.createdBefore != null) {
-      expressions.add(
-        documents.createdAt.isSmallerOrEqualValue(base.createdBefore!),
-      );
+      expr =
+          expr &
+          vaultItems.createdAt.isSmallerOrEqualValue(base.createdBefore!);
     }
-
-    // Фильтр по дате модификации
     if (base.modifiedAfter != null) {
-      expressions.add(
-        documents.modifiedAt.isBiggerOrEqualValue(base.modifiedAfter!),
-      );
+      expr =
+          expr &
+          vaultItems.modifiedAt.isBiggerOrEqualValue(base.modifiedAfter!);
     }
     if (base.modifiedBefore != null) {
-      expressions.add(
-        documents.modifiedAt.isSmallerOrEqualValue(base.modifiedBefore!),
-      );
+      expr =
+          expr &
+          vaultItems.modifiedAt.isSmallerOrEqualValue(base.modifiedBefore!);
     }
-
-    // Фильтр по дате последнего доступа
     if (base.lastUsedAfter != null) {
-      expressions.add(
-        documents.lastUsedAt.isBiggerOrEqualValue(base.lastUsedAfter!),
-      );
+      expr =
+          expr &
+          vaultItems.lastUsedAt.isBiggerOrEqualValue(base.lastUsedAfter!);
     }
     if (base.lastUsedBefore != null) {
-      expressions.add(
-        documents.lastUsedAt.isSmallerOrEqualValue(base.lastUsedBefore!),
-      );
+      expr =
+          expr &
+          vaultItems.lastUsedAt.isSmallerOrEqualValue(base.lastUsedBefore!);
     }
-
-    // Фильтр по избранным
-    if (base.isFavorite != null) {
-      expressions.add(documents.isFavorite.equals(base.isFavorite!));
+    if (base.minUsedCount != null) {
+      expr =
+          expr & vaultItems.usedCount.isBiggerOrEqualValue(base.minUsedCount!);
     }
-
-    // Фильтр по закрепленным
-    if (base.isPinned != null) {
-      expressions.add(documents.isPinned.equals(base.isPinned!));
+    if (base.maxUsedCount != null) {
+      expr =
+          expr & vaultItems.usedCount.isSmallerOrEqualValue(base.maxUsedCount!);
     }
-
-    // Фильтр по архивным
-    if (base.isArchived != null) {
-      expressions.add(documents.isArchived.equals(base.isArchived!));
-    } else {
-      // По умолчанию исключаем архивные
-      expressions.add(documents.isArchived.equals(false));
-    }
-
-    // Фильтр по удаленным
-    if (base.isDeleted != null) {
-      expressions.add(documents.isDeleted.equals(base.isDeleted!));
-    } else {
-      // По умолчанию исключаем удаленные
-      expressions.add(documents.isDeleted.equals(false));
-    }
+    return expr;
   }
 
-  /// Применить фильтры, специфичные для документов
-  void _applyDocumentSpecificFilters(
-    DocumentsFilter filter,
-    List<Expression<bool>> expressions,
-  ) {
-    // Фильтр по типам документов
+  Expression<bool> _applyDocumentSpecificFilters(DocumentsFilter filter) {
+    Expression<bool> expr = const Constant(true);
+
     if (filter.documentTypes.isNotEmpty) {
-      Expression<bool>? typeExpression;
+      Expression<bool>? typeExpr;
       for (final type in filter.documentTypes) {
-        final condition = documents.documentType.lower().equals(type);
-        if (typeExpression == null) {
-          typeExpression = condition;
-        } else {
-          typeExpression = typeExpression | condition;
-        }
+        final cond = documentItems.documentType.lower().equals(type);
+        typeExpr = typeExpr == null ? cond : (typeExpr | cond);
       }
-      if (typeExpression != null) {
-        expressions.add(typeExpression);
+      if (typeExpr != null) {
+        expr = expr & typeExpr;
       }
     }
 
-    // Фильтр по названию документа
     if (filter.titleQuery != null && filter.titleQuery!.isNotEmpty) {
-      final titleLower = filter.titleQuery!.toLowerCase();
-      expressions.add(documents.title.lower().like('%$titleLower%'));
+      expr =
+          expr &
+          vaultItems.name.lower().like('%${filter.titleQuery!.toLowerCase()}%');
     }
 
-    // Фильтр по описанию
     if (filter.descriptionQuery != null &&
         filter.descriptionQuery!.isNotEmpty) {
-      final descriptionLower = filter.descriptionQuery!.toLowerCase();
-      expressions.add(
-        documents.description.lower().like('%$descriptionLower%'),
-      );
+      expr =
+          expr &
+          vaultItems.description.lower().like(
+            '%${filter.descriptionQuery!.toLowerCase()}%',
+          );
     }
 
-    // Фильтр по агрегированному тексту (OCR)
     if (filter.aggregatedTextQuery != null &&
         filter.aggregatedTextQuery!.isNotEmpty) {
-      final textLower = filter.aggregatedTextQuery!.toLowerCase();
-      expressions.add(documents.aggregatedText.lower().like('%$textLower%'));
+      expr =
+          expr &
+          documentItems.aggregatedText.lower().like(
+            '%${filter.aggregatedTextQuery!.toLowerCase()}%',
+          );
     }
 
-    // Фильтр по минимальному количеству страниц
     if (filter.minPageCount != null) {
-      expressions.add(
-        documents.pageCount.isBiggerOrEqualValue(filter.minPageCount!),
-      );
+      expr =
+          expr &
+          documentItems.pageCount.isBiggerOrEqualValue(filter.minPageCount!);
     }
-
-    // Фильтр по максимальному количеству страниц
     if (filter.maxPageCount != null) {
-      expressions.add(
-        documents.pageCount.isSmallerOrEqualValue(filter.maxPageCount!),
-      );
+      expr =
+          expr &
+          documentItems.pageCount.isSmallerOrEqualValue(filter.maxPageCount!);
     }
+    return expr;
   }
 
-  /// Вычисляет динамический score для сортировки по активности
-  /// Формула: recent_score * exp(-(current_time - last_used_at) / window_days)
   Expression<double> _calculateDynamicScore(int windowDays) {
     final now = DateTime.now();
-    final nowSeconds = now.millisecondsSinceEpoch ~/ 1000; // в секундах
-    final windowSeconds = windowDays * 24 * 60 * 60;
+    final nowSec = now.millisecondsSinceEpoch ~/ 1000;
+    final windowSec = windowDays * 24 * 60 * 60;
 
-    // Строим всё выражение как единый CustomExpression
-    // recent_score * exp(-(now - last_used_at) / window_seconds)
-    // Drift хранит DateTime как Unix timestamp в секундах
-    // Если last_used_at == null, используем created_at
     return CustomExpression<double>(
-      'CAST(COALESCE("documents"."recent_score", 1) AS REAL) * '
-      'exp(-($nowSeconds - COALESCE("documents"."last_used_at", "documents"."created_at")) / $windowSeconds.0)',
+      'CAST(COALESCE("vault_items"."recent_score",'
+      ' 1) AS REAL) * '
+      'exp(-($nowSec - COALESCE('
+      '"vault_items"."last_used_at",'
+      ' "vault_items"."created_at")) / '
+      '$windowSec.0)',
     );
   }
 
-  /// Построить ORDER BY выражение
   List<OrderingTerm> _buildOrderBy(DocumentsFilter filter) {
-    final orderTerms = <OrderingTerm>[];
-
-    // Закрепленные записи всегда сверху
-    orderTerms.add(
-      OrderingTerm(expression: documents.isPinned, mode: OrderingMode.desc),
+    final terms = <OrderingTerm>[];
+    terms.add(
+      OrderingTerm(expression: vaultItems.isPinned, mode: OrderingMode.desc),
     );
 
-    // Сортировка
-    final sortDirection = filter.base.sortDirection;
-    final mode = sortDirection == SortDirection.asc
+    final mode = filter.base.sortDirection == SortDirection.asc
         ? OrderingMode.asc
         : OrderingMode.desc;
 
-    // Если установлен фильтр по часто используемым, применяем динамическую сортировку
     if (filter.base.isFrequentlyUsed == true) {
-      final windowDays = filter.base.frequencyWindowDays ?? 7;
-      final scoreExpr = _calculateDynamicScore(windowDays);
-      orderTerms.add(OrderingTerm(expression: scoreExpr, mode: mode));
-      return orderTerms;
+      final wd = filter.base.frequencyWindowDays ?? 7;
+      terms.add(
+        OrderingTerm(expression: _calculateDynamicScore(wd), mode: mode),
+      );
+      return terms;
     }
 
     if (filter.sortField != null) {
-      // Используем специфичное поле для документов
       switch (filter.sortField!) {
         case DocumentsSortField.title:
-          orderTerms.add(OrderingTerm(expression: documents.title, mode: mode));
+          terms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
         case DocumentsSortField.documentType:
-          orderTerms.add(
-            OrderingTerm(expression: documents.documentType, mode: mode),
+          terms.add(
+            OrderingTerm(expression: documentItems.documentType, mode: mode),
           );
         case DocumentsSortField.pageCount:
-          orderTerms.add(
-            OrderingTerm(expression: documents.pageCount, mode: mode),
+          terms.add(
+            OrderingTerm(expression: documentItems.pageCount, mode: mode),
           );
         case DocumentsSortField.createdAt:
-          orderTerms.add(
-            OrderingTerm(expression: documents.createdAt, mode: mode),
-          );
+          terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
         case DocumentsSortField.modifiedAt:
-          orderTerms.add(
-            OrderingTerm(expression: documents.modifiedAt, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
           );
         case DocumentsSortField.lastUsedAt:
-          orderTerms.add(
-            OrderingTerm(expression: documents.lastUsedAt, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
           );
       }
     } else {
-      // Используем базовый sortBy из BaseFilter
       switch (filter.base.sortBy) {
         case SortBy.createdAt:
-          orderTerms.add(
-            OrderingTerm(expression: documents.createdAt, mode: mode),
-          );
+          terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
         case SortBy.modifiedAt:
-          orderTerms.add(
-            OrderingTerm(expression: documents.modifiedAt, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
           );
         case SortBy.lastUsedAt:
-          orderTerms.add(
-            OrderingTerm(expression: documents.lastUsedAt, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
           );
         case SortBy.recentScore:
-          orderTerms.add(
-            OrderingTerm(expression: documents.recentScore, mode: mode),
+          final wd = filter.base.frequencyWindowDays ?? 7;
+          terms.add(
+            OrderingTerm(expression: _calculateDynamicScore(wd), mode: mode),
           );
       }
     }
-
-    return orderTerms;
+    return terms;
   }
 
-  /// Загружает теги для списка документов (максимум 10 тегов на документ)
-  Future<Map<String, List<TagInCardDto>>> _loadTagsForDocuments(
-    List<String> documentIds,
+  Future<Map<String, List<TagInCardDto>>> _loadTagsForItems(
+    List<String> itemIds,
   ) async {
-    if (documentIds.isEmpty) return {};
+    if (itemIds.isEmpty) return {};
 
-    // Запрос для получения тегов со связями
-    final query = select(documentsTags).join([
-      innerJoin(tags, tags.id.equalsExp(documentsTags.tagId)),
-    ])..where(documentsTags.documentId.isIn(documentIds));
+    final query = select(itemTags).join([
+      innerJoin(tags, tags.id.equalsExp(itemTags.tagId)),
+    ])..where(itemTags.itemId.isIn(itemIds));
 
-    // Группируем теги по documentId
+    final results = await query.get();
     final tagsMap = <String, List<TagInCardDto>>{};
 
-    // Обрабатываем результаты
-    final results = await query.get();
-
     for (final row in results) {
-      final documentTag = row.readTable(documentsTags);
+      final it = row.readTable(itemTags);
       final tag = row.readTable(tags);
 
-      final documentId = documentTag.documentId;
-
-      if (!tagsMap.containsKey(documentId)) {
-        tagsMap[documentId] = [];
-      }
-
-      // Ограничиваем максимум 10 тегами
-      if (tagsMap[documentId]!.length < 10) {
-        tagsMap[documentId]!.add(
+      tagsMap.putIfAbsent(it.itemId, () => []);
+      if (tagsMap[it.itemId]!.length < 10) {
+        tagsMap[it.itemId]!.add(
           TagInCardDto(id: tag.id, name: tag.name, color: tag.color),
         );
       }
     }
-
     return tagsMap;
   }
 }

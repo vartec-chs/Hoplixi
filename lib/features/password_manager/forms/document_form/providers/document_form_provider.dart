@@ -43,35 +43,34 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
 
     try {
       final dao = await ref.read(documentDaoProvider.future);
-      final document = await dao.getDocumentById(documentId);
+      final record = await dao.getById(documentId);
 
-      if (document == null) {
+      if (record == null) {
         logWarning('Document not found: $documentId', tag: _logTag);
         state = state.copyWith(isLoading: false);
         return;
       }
 
-      // Получаем теги документа
+      final (vault, docItem) = record;
+      final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+      final tagIds = await vaultItemDao.getTagIds(documentId);
       final tagDao = await ref.read(tagDaoProvider.future);
-      final tagIds = await dao.getDocumentTagIds(documentId);
       final tagRecords = await tagDao.getTagsByIds(tagIds);
 
       // Получаем категорию документа
       String? categoryName;
-      if (document.categoryId != null) {
+      if (vault.categoryId != null) {
         final categoryDao = await ref.read(categoryDaoProvider.future);
-        final category = await categoryDao.getCategoryById(
-          document.categoryId!,
-        );
+        final category = await categoryDao.getCategoryById(vault.categoryId!);
         categoryName = category?.name;
       }
 
       // Получаем заметку документа
       String? noteName;
-      if (document.noteId != null) {
+      if (vault.noteId != null) {
         final noteDao = await ref.read(noteDaoProvider.future);
-        final note = await noteDao.getNoteById(document.noteId!);
-        noteName = note?.title;
+        final noteRecord = await noteDao.getById(vault.noteId!);
+        noteName = noteRecord?.$1.name;
       }
 
       // Получаем страницы документа
@@ -85,21 +84,26 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
       for (final pageData in pagesData) {
         // Получаем информацию о файле страницы
         final fileDao = await ref.read(fileDaoProvider.future);
-        final fileInfo = await fileDao.getFileById(pageData.metadataId!);
+        final fileRecord = await fileDao.getById(pageData.metadataId!);
 
         String fileName = 'Страница ${pageData.pageNumber}';
         int fileSize = 0;
         String? mimeType;
 
-        if (fileInfo != null && fileInfo.metadataId != null) {
-          final metadata = await (fileDao.attachedDatabase.select(
-            fileDao.attachedDatabase.fileMetadata,
-          )..where((m) => m.id.equals(fileInfo.metadataId!))).getSingleOrNull();
+        if (fileRecord != null) {
+          final (_, fileItem) = fileRecord;
+          if (fileItem.metadataId != null) {
+            final metadata =
+                await (fileDao.attachedDatabase.select(
+                      fileDao.attachedDatabase.fileMetadata,
+                    )..where((m) => m.id.equals(fileItem.metadataId!)))
+                    .getSingleOrNull();
 
-          if (metadata != null) {
-            fileName = metadata.fileName;
-            fileSize = metadata.fileSize;
-            mimeType = metadata.mimeType;
+            if (metadata != null) {
+              fileName = metadata.fileName;
+              fileSize = metadata.fileSize;
+              mimeType = metadata.mimeType;
+            }
           }
         }
 
@@ -120,15 +124,15 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
       state = DocumentFormState(
         isEditMode: true,
         editingDocumentId: documentId,
-        title: document.title ?? '',
-        documentType: document.documentType,
-        description: document.description ?? '',
+        title: vault.name,
+        documentType: docItem.documentType,
+        description: vault.description ?? '',
         pages: pages,
-        categoryId: document.categoryId,
+        categoryId: vault.categoryId,
         categoryName: categoryName,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
-        noteId: document.noteId,
+        noteId: vault.noteId,
         noteName: noteName,
         isLoading: false,
       );

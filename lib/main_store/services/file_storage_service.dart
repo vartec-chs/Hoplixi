@@ -7,8 +7,7 @@ import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/dto/file_dto.dart';
-import 'package:hoplixi/main_store/models/dto/file_history_dto.dart';
-import 'package:hoplixi/main_store/models/enums/index.dart';
+import 'package:hoplixi/main_store/models/store_settings_keys.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
@@ -102,19 +101,19 @@ class FileStorageService {
     required String fileId,
     void Function(int, int)? onProgress,
   }) async {
-    final fileData = await _db.fileDao.getFileById(fileId);
-    if (fileData == null) {
+    final record = await _db.fileDao.getById(fileId);
+    if (record == null) {
       throw Exception('File not found in database');
     }
+    final (_, fileItem) = record;
 
-    // Получаем FileMetadata через metadataId
-    if (fileData.metadataId == null) {
+    if (fileItem.metadataId == null) {
       throw Exception('File has no metadata');
     }
 
     final metadata = await (_db.select(
       _db.fileMetadata,
-    )..where((m) => m.id.equals(fileData.metadataId!))).getSingleOrNull();
+    )..where((m) => m.id.equals(fileItem.metadataId!))).getSingleOrNull();
 
     if (metadata == null) {
       throw Exception('File metadata not found');
@@ -173,48 +172,31 @@ class FileStorageService {
     required File newFile,
     void Function(int, int)? onProgress,
   }) async {
-    final currentFile = await _db.fileDao.getFileById(fileId);
-    if (currentFile == null) throw Exception('File not found');
+    final record = await _db.fileDao.getById(fileId);
+    if (record == null) throw Exception('File not found');
+    final (currentVault, currentFileItem) = record;
 
-    // Получаем FileMetadata
-    if (currentFile.metadataId == null) {
+    if (currentFileItem.metadataId == null) {
       throw Exception('File has no metadata');
     }
 
-    final currentMetadata = await (_db.select(
-      _db.fileMetadata,
-    )..where((m) => m.id.equals(currentFile.metadataId!))).getSingleOrNull();
+    final currentMetadata =
+        await (_db.select(_db.fileMetadata)
+              ..where((m) => m.id.equals(currentFileItem.metadataId!)))
+            .getSingleOrNull();
 
     if (currentMetadata == null) {
       throw Exception('File metadata not found');
     }
 
-    // 1. Создаем запись в истории
-    String? categoryName;
-    if (currentFile.categoryId != null) {
-      final cat = await _db.categoryDao.getCategoryById(
-        currentFile.categoryId!,
-      );
-      categoryName = cat?.name;
-    }
-
-    final historyDto = CreateFileHistoryDto(
-      originalFileId: currentFile.id,
-      action: ActionInHistory.modified.value,
-      metadataId: currentFile.metadataId!,
-      name: currentFile.name,
-      description: currentFile.description,
-      categoryName: categoryName,
-      usedCount: currentFile.usedCount,
-      isFavorite: currentFile.isFavorite,
-      isArchived: currentFile.isArchived,
-      isPinned: currentFile.isPinned,
-      isDeleted: currentFile.isDeleted,
-      originalCreatedAt: currentFile.createdAt,
-      originalModifiedAt: currentFile.modifiedAt,
-      originalLastAccessedAt: currentFile.lastUsedAt,
-    );
-    await _db.fileHistoryDao.createFileHistory(historyDto);
+    // Историю пишет SQL-триггер file_content_update_history автоматически
+    // при обновлении metadata_id в file_items (когда история включена).
+    final historyEnabledStr =
+        await (_db.select(_db.storeSettings)
+              ..where((s) => s.key.equals(StoreSettingsKeys.historyEnabled)))
+            .getSingleOrNull();
+    final isHistoryEnabled =
+        historyEnabledStr == null || historyEnabledStr.value == 'true';
 
     // 2. Шифруем новый файл
     final key = await _getAttachmentKey();
@@ -240,7 +222,7 @@ class FileStorageService {
     final newMimeType =
         lookupMimeType(newFile.path) ?? 'application/octet-stream';
 
-    // 4. Создаем новую запись FileMetadata
+    // 4. Создаём новую запись FileMetadata
     final newMetadataId = const Uuid().v4();
     await _db
         .into(_db.fileMetadata)
@@ -256,15 +238,26 @@ class FileStorageService {
           ),
         );
 
-    // 5. Обновляем запись в таблице Files
-    final updateQuery = _db.update(_db.files)
-      ..where((f) => f.id.equals(fileId));
-    await updateQuery.write(
-      FilesCompanion(
-        metadataId: Value(newMetadataId),
-        modifiedAt: Value(DateTime.now()),
-      ),
-    );
+    // 5. Обновляем запись в таблице FileItems
+    // (триггер file_content_update_history сработает и запишет историю)
+    await (_db.update(_db.fileItems)..where((f) => f.itemId.equals(fileId)))
+        .write(FileItemsCompanion(metadataId: Value(newMetadataId)));
+
+    if (!isHistoryEnabled) {
+      // 6. История выключена — удаляем старый физический файл и метаданные
+      final oldEncryptedFilePath = p.join(
+        attachmentsPath,
+        currentMetadata.filePath,
+      );
+      final oldFile = File(oldEncryptedFilePath);
+      if (await oldFile.exists()) {
+        await oldFile.delete();
+      }
+
+      await (_db.delete(
+        _db.fileMetadata,
+      )..where((m) => m.id.equals(currentFileItem.metadataId!))).go();
+    }
   }
 
   /// Импортировать файл страницы (только метаданные)
@@ -454,14 +447,15 @@ class FileStorageService {
 
   /// Удалить файл с диска (используется при удалении из БД)
   Future<bool> deleteFileFromDisk(String fileId) async {
-    final fileData = await _db.fileDao.getFileById(fileId);
-    if (fileData == null) return false;
+    final record = await _db.fileDao.getById(fileId);
+    if (record == null) return false;
+    final (_, fileItem) = record;
 
-    if (fileData.metadataId == null) return false;
+    if (fileItem.metadataId == null) return false;
 
     final metadata = await (_db.select(
       _db.fileMetadata,
-    )..where((m) => m.id.equals(fileData.metadataId!))).getSingleOrNull();
+    )..where((m) => m.id.equals(fileItem.metadataId!))).getSingleOrNull();
 
     if (metadata == null) return false;
 
@@ -489,5 +483,75 @@ class FileStorageService {
     }
     logDebug('History file not found: $encryptedFilePath');
     return false;
+  }
+
+  /// Очистить физические файлы и метаданные, на которые больше нет ссылок
+  Future<int> cleanupOrphanedFiles() async {
+    int deletedCount = 0;
+    try {
+      // 1. Выбираем file_metadata, которые не используются
+      final String sql = '''
+        SELECT id, file_path 
+        FROM file_metadata 
+        WHERE id NOT IN (SELECT metadata_id FROM file_items WHERE metadata_id IS NOT NULL)
+          AND id NOT IN (SELECT metadata_id FROM file_history WHERE metadata_id IS NOT NULL)
+          AND id NOT IN (SELECT metadata_id FROM document_pages WHERE metadata_id IS NOT NULL)
+      ''';
+
+      final rows = await _db.customSelect(sql).get();
+
+      final attachmentsPath = await _getAttachmentsPath();
+
+      for (final row in rows) {
+        final String id = row.read<String>('id');
+        final String filePath = row.read<String>('file_path');
+
+        // Удаляем физический файл
+        final encryptedFilePath = p.join(attachmentsPath, filePath);
+        final file = File(encryptedFilePath);
+
+        if (await file.exists()) {
+          await file.delete();
+        }
+
+        // Удаляем метаданные из БД
+        await (_db.delete(
+          _db.fileMetadata,
+        )..where((m) => m.id.equals(id))).go();
+        deletedCount++;
+      }
+
+      // 2. Ищем файлы на диске, которых нет в таблице file_metadata вообще (рассинхронизация)
+      final dir = Directory(attachmentsPath);
+      if (await dir.exists()) {
+        final entities = dir.listSync();
+        for (final entity in entities) {
+          if (entity is File) {
+            final fileName = p.basename(entity.path);
+            final exists = await (_db.select(
+              _db.fileMetadata,
+            )..where((m) => m.filePath.equals(fileName))).getSingleOrNull();
+            if (exists == null) {
+              await entity.delete();
+              deletedCount++;
+            }
+          }
+        }
+      }
+
+      if (deletedCount > 0) {
+        logInfo(
+          'Cleaned up $deletedCount orphaned files',
+          tag: 'FileStorageService',
+        );
+      }
+    } catch (e, s) {
+      logError(
+        'Error cleaning up orphaned files: $e',
+        stackTrace: s,
+        tag: 'FileStorageService',
+      );
+    }
+    return deletedCount;
   }
 }

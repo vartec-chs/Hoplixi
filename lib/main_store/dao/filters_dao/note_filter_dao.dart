@@ -6,55 +6,47 @@ import 'package:hoplixi/main_store/models/dto/note_dto.dart';
 import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_store/models/filter/base_filter.dart';
 import 'package:hoplixi/main_store/models/filter/notes_filter.dart';
-import 'package:hoplixi/main_store/tables/index.dart';
+import 'package:hoplixi/main_store/tables/categories.dart';
+import 'package:hoplixi/main_store/tables/item_tags.dart';
+import 'package:hoplixi/main_store/tables/note_items.dart';
+import 'package:hoplixi/main_store/tables/tags.dart';
+import 'package:hoplixi/main_store/tables/vault_items.dart';
 
 part 'note_filter_dao.g.dart';
 
-@DriftAccessor(tables: [Notes, Categories, NotesTags, Tags])
+@DriftAccessor(tables: [VaultItems, NoteItems, Categories, Tags, ItemTags])
 class NoteFilterDao extends DatabaseAccessor<MainStore>
     with _$NoteFilterDaoMixin
     implements FilterDao<NotesFilter, NoteCardDto> {
   NoteFilterDao(super.db);
 
-  /// Основной метод для получения отфильтрованных заметок
   @override
   Future<List<NoteCardDto>> getFiltered(NotesFilter filter) async {
-    // Создаем базовый запрос с join к категориям
-    final query = select(notes).join([
-      leftOuterJoin(categories, categories.id.equalsExp(notes.categoryId)),
+    final query = select(vaultItems).join([
+      innerJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.id)),
+      leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
     ]);
 
-    // Применяем все фильтры
     query.where(_buildWhereExpression(filter));
-
-    // Применяем сортировку
     query.orderBy(_buildOrderBy(filter));
 
-    // Применяем limit и offset
     if (filter.base.limit != null && filter.base.limit! > 0) {
       query.limit(filter.base.limit!, offset: filter.base.offset);
     }
 
-    // Выполняем запрос и маппим результаты
     final results = await query.get();
 
-    // Собираем ID всех заметок для загрузки тегов
-    final noteIds = results.map((row) => row.readTable(notes).id).toList();
-
-    // Загружаем теги для всех заметок (максимум 10 на заметку)
-    final tagsMap = await _loadTagsForNotes(noteIds);
+    final itemIds = results.map((row) => row.readTable(vaultItems).id).toList();
+    final tagsMap = await _loadTagsForItems(itemIds);
 
     return results.map((row) {
-      final note = row.readTable(notes);
+      final item = row.readTable(vaultItems);
       final category = row.readTableOrNull(categories);
 
-      // Получаем теги для текущей заметки (максимум 10)
-      final noteTags = tagsMap[note.id] ?? [];
-
       return NoteCardDto(
-        id: note.id,
-        title: note.title,
-        description: note.description,
+        id: item.id,
+        title: item.name,
+        description: item.description,
         category: category != null
             ? CategoryInCardDto(
                 id: category.id,
@@ -64,342 +56,266 @@ class NoteFilterDao extends DatabaseAccessor<MainStore>
                 iconId: category.iconId,
               )
             : null,
-        isFavorite: note.isFavorite,
-        isPinned: note.isPinned,
-        isArchived: note.isArchived,
-        isDeleted: note.isDeleted,
-        usedCount: note.usedCount,
-        modifiedAt: note.modifiedAt,
-        tags: noteTags,
+        isFavorite: item.isFavorite,
+        isPinned: item.isPinned,
+        isArchived: item.isArchived,
+        isDeleted: item.isDeleted,
+        usedCount: item.usedCount,
+        modifiedAt: item.modifiedAt,
+        tags: tagsMap[item.id] ?? [],
       );
     }).toList();
   }
 
-  /// Подсчитывает количество отфильтрованных заметок
   @override
   Future<int> countFiltered(NotesFilter filter) async {
-    final query = selectOnly(notes)..addColumns([notes.id.count()]);
-
-    // Применяем все фильтры
+    final query = select(
+      vaultItems,
+    ).join([innerJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.id))]);
     query.where(_buildWhereExpression(filter));
-
-    // Выполняем запрос
-    final result = await query.getSingle();
-    return result.read(notes.id.count()) ?? 0;
+    final results = await query.get();
+    return results.length;
   }
 
-  /// Строит WHERE выражение на основе всех фильтров
   Expression<bool> _buildWhereExpression(NotesFilter filter) {
-    Expression<bool> expression = const Constant(true);
-
-    // Применяем базовые фильтры
-    expression = expression & _applyBaseFilters(filter.base);
-
-    // Применяем специфичные фильтры для заметок
-    expression = expression & _applyNoteSpecificFilters(filter);
-
-    return expression;
+    Expression<bool> expr = const Constant(true);
+    expr = expr & _applyBaseFilters(filter.base);
+    expr = expr & _applyNoteSpecificFilters(filter);
+    return expr;
   }
 
-  /// Применяет базовые фильтры из BaseFilter
   Expression<bool> _applyBaseFilters(BaseFilter base) {
-    Expression<bool> expression = const Constant(true);
+    Expression<bool> expr = const Constant(true);
 
-    // Поисковый запрос по нескольким полям
     if (base.query.isNotEmpty) {
-      final query = base.query.toLowerCase();
-      expression =
-          expression &
-          (notes.title.lower().like('%$query%') |
-              notes.description.lower().like('%$query%') |
-              notes.content.lower().like('%$query%'));
+      final q = base.query.toLowerCase();
+      expr =
+          expr &
+          (vaultItems.name.lower().like('%$q%') |
+              vaultItems.description.lower().like('%$q%') |
+              noteItems.content.lower().like('%$q%'));
     }
 
-    // Фильтр по категориям
     if (base.categoryIds.isNotEmpty) {
-      expression = expression & notes.categoryId.isIn(base.categoryIds);
+      expr = expr & vaultItems.categoryId.isIn(base.categoryIds);
     }
 
-    // Фильтр по тегам (требует подзапрос)
     if (base.tagIds.isNotEmpty) {
-      // Используем EXISTS для проверки наличия тегов
       final tagExists = existsQuery(
-        select(notesTags)..where(
-          (nt) => nt.noteId.equalsExp(notes.id) & nt.tagId.isIn(base.tagIds),
+        select(itemTags)..where(
+          (t) => t.itemId.equalsExp(vaultItems.id) & t.tagId.isIn(base.tagIds),
         ),
       );
-
-      expression = expression & tagExists;
+      expr = expr & tagExists;
     }
 
-    // Булевы флаги
     if (base.isFavorite != null) {
-      expression = expression & notes.isFavorite.equals(base.isFavorite!);
+      expr = expr & vaultItems.isFavorite.equals(base.isFavorite!);
     }
 
     if (base.isArchived != null) {
-      expression = expression & notes.isArchived.equals(base.isArchived!);
+      expr = expr & vaultItems.isArchived.equals(base.isArchived!);
     } else {
-      // По умолчанию исключаем архивные
-      expression = expression & notes.isArchived.equals(false);
+      expr = expr & vaultItems.isArchived.equals(false);
     }
 
     if (base.isDeleted != null) {
-      expression = expression & notes.isDeleted.equals(base.isDeleted!);
+      expr = expr & vaultItems.isDeleted.equals(base.isDeleted!);
     } else {
-      // По умолчанию исключаем удалённые
-      expression = expression & notes.isDeleted.equals(false);
+      expr = expr & vaultItems.isDeleted.equals(false);
     }
 
     if (base.isPinned != null) {
-      expression = expression & notes.isPinned.equals(base.isPinned!);
+      expr = expr & vaultItems.isPinned.equals(base.isPinned!);
     }
 
-    if (base.hasNotes != null) {
-      // Для заметок этот фильтр не применим, так как все записи - это заметки
-      // Но оставляем для совместимости с BaseFilter
-    }
-
-    // Диапазоны дат создания
     if (base.createdAfter != null) {
-      expression =
-          expression & notes.createdAt.isBiggerOrEqualValue(base.createdAfter!);
+      expr =
+          expr & vaultItems.createdAt.isBiggerOrEqualValue(base.createdAfter!);
     }
-
     if (base.createdBefore != null) {
-      expression =
-          expression &
-          notes.createdAt.isSmallerOrEqualValue(base.createdBefore!);
+      expr =
+          expr &
+          vaultItems.createdAt.isSmallerOrEqualValue(base.createdBefore!);
     }
-
-    // Диапазоны дат модификации
     if (base.modifiedAfter != null) {
-      expression =
-          expression &
-          notes.modifiedAt.isBiggerOrEqualValue(base.modifiedAfter!);
+      expr =
+          expr &
+          vaultItems.modifiedAt.isBiggerOrEqualValue(base.modifiedAfter!);
     }
-
     if (base.modifiedBefore != null) {
-      expression =
-          expression &
-          notes.modifiedAt.isSmallerOrEqualValue(base.modifiedBefore!);
+      expr =
+          expr &
+          vaultItems.modifiedAt.isSmallerOrEqualValue(base.modifiedBefore!);
     }
-
-    // Диапазоны дат последнего доступа
     if (base.lastUsedAfter != null) {
-      expression =
-          expression &
-          notes.lastUsedAt.isBiggerOrEqualValue(base.lastUsedAfter!);
+      expr =
+          expr &
+          vaultItems.lastUsedAt.isBiggerOrEqualValue(base.lastUsedAfter!);
     }
-
     if (base.lastUsedBefore != null) {
-      expression =
-          expression &
-          notes.lastUsedAt.isSmallerOrEqualValue(base.lastUsedBefore!);
+      expr =
+          expr &
+          vaultItems.lastUsedAt.isSmallerOrEqualValue(base.lastUsedBefore!);
     }
-
-    // Диапазоны счетчика использований
     if (base.minUsedCount != null) {
-      expression =
-          expression & notes.usedCount.isBiggerOrEqualValue(base.minUsedCount!);
+      expr =
+          expr & vaultItems.usedCount.isBiggerOrEqualValue(base.minUsedCount!);
     }
-
     if (base.maxUsedCount != null) {
-      expression =
-          expression &
-          notes.usedCount.isSmallerOrEqualValue(base.maxUsedCount!);
+      expr =
+          expr & vaultItems.usedCount.isSmallerOrEqualValue(base.maxUsedCount!);
     }
-
-    return expression;
+    return expr;
   }
 
-  /// Применяет специфичные фильтры для заметок
   Expression<bool> _applyNoteSpecificFilters(NotesFilter filter) {
-    Expression<bool> expression = const Constant(true);
+    Expression<bool> expr = const Constant(true);
 
-    // Фильтр по заголовку
     if (filter.title != null) {
-      expression =
-          expression &
-          notes.title.lower().like('%${filter.title!.toLowerCase()}%');
+      expr =
+          expr &
+          vaultItems.name.lower().like('%${filter.title!.toLowerCase()}%');
     }
-
-    // Фильтр по содержимому
     if (filter.content != null) {
-      expression =
-          expression &
-          notes.content.lower().like('%${filter.content!.toLowerCase()}%');
+      expr =
+          expr &
+          noteItems.content.lower().like('%${filter.content!.toLowerCase()}%');
     }
-
-    // Наличие описания
     if (filter.hasDescription != null) {
-      expression =
-          expression &
+      expr =
+          expr &
           (filter.hasDescription!
-              ? notes.description.isNotNull()
-              : notes.description.isNull());
+              ? vaultItems.description.isNotNull()
+              : vaultItems.description.isNull());
     }
-
-    // Наличие deltaJson (Quill формат)
     if (filter.hasDeltaJson != null) {
-      expression =
-          expression &
+      expr =
+          expr &
           (filter.hasDeltaJson!
-              ? notes.deltaJson.isNotNull()
-              : notes.deltaJson.isNull());
+              ? noteItems.deltaJson.isNotNull()
+              : noteItems.deltaJson.isNull());
     }
-
-    // Фильтр по длине контента
     if (filter.minContentLength != null) {
-      expression =
-          expression &
-          notes.content.length.isBiggerOrEqualValue(filter.minContentLength!);
+      expr =
+          expr &
+          noteItems.content.length.isBiggerOrEqualValue(
+            filter.minContentLength!,
+          );
     }
-
     if (filter.maxContentLength != null) {
-      expression =
-          expression &
-          notes.content.length.isSmallerOrEqualValue(filter.maxContentLength!);
+      expr =
+          expr &
+          noteItems.content.length.isSmallerOrEqualValue(
+            filter.maxContentLength!,
+          );
     }
-
-    return expression;
+    return expr;
   }
 
-  /// Вычисляет динамический score для сортировки по активности
-  /// Формула: recent_score * exp(-(current_time - last_used_at) / window_days)
   Expression<double> _calculateDynamicScore(int windowDays) {
     final now = DateTime.now();
-    final nowSeconds = now.millisecondsSinceEpoch ~/ 1000; // в секундах
-    final windowSeconds = windowDays * 24 * 60 * 60;
+    final nowSec = now.millisecondsSinceEpoch ~/ 1000;
+    final windowSec = windowDays * 24 * 60 * 60;
 
-    // Строим всё выражение как единый CustomExpression
-    // recent_score * exp(-(now - last_used_at) / window_seconds)
-    // Drift хранит DateTime как Unix timestamp в секундах
-    // Если last_used_at == null, используем created_at
     return CustomExpression<double>(
-      'CAST(COALESCE("notes"."recent_score", 1) AS REAL) * '
-      'exp(-($nowSeconds - COALESCE("notes"."last_used_at", "notes"."created_at")) / $windowSeconds.0)',
+      'CAST(COALESCE("vault_items"."recent_score",'
+      ' 1) AS REAL) * '
+      'exp(-($nowSec - COALESCE('
+      '"vault_items"."last_used_at",'
+      ' "vault_items"."created_at")) / '
+      '$windowSec.0)',
     );
   }
 
-  /// Строит список OrderingTerm для сортировки
   List<OrderingTerm> _buildOrderBy(NotesFilter filter) {
-    final orderingTerms = <OrderingTerm>[];
-
-    // Закрепленные записи всегда сверху
-    orderingTerms.add(
-      OrderingTerm(expression: notes.isPinned, mode: OrderingMode.desc),
+    final terms = <OrderingTerm>[];
+    terms.add(
+      OrderingTerm(expression: vaultItems.isPinned, mode: OrderingMode.desc),
     );
 
-    // Основная сортировка
     final mode = filter.base.sortDirection == SortDirection.asc
         ? OrderingMode.asc
         : OrderingMode.desc;
 
-    // Если установлен фильтр по часто используемым, применяем динамическую сортировку
     if (filter.base.isFrequentlyUsed == true) {
-      final windowDays = filter.base.frequencyWindowDays ?? 7;
-      final scoreExpr = _calculateDynamicScore(windowDays);
-      orderingTerms.add(OrderingTerm(expression: scoreExpr, mode: mode));
-      return orderingTerms;
+      final wd = filter.base.frequencyWindowDays ?? 7;
+      terms.add(
+        OrderingTerm(expression: _calculateDynamicScore(wd), mode: mode),
+      );
+      return terms;
     }
 
     if (filter.sortField != null) {
-      // Используем специфичное поле для заметок
       switch (filter.sortField!) {
         case NotesSortField.title:
-          orderingTerms.add(OrderingTerm(expression: notes.title, mode: mode));
-          break;
+          terms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
         case NotesSortField.description:
-          orderingTerms.add(
-            OrderingTerm(expression: notes.description, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.description, mode: mode),
           );
-          break;
         case NotesSortField.contentLength:
-          orderingTerms.add(
-            OrderingTerm(expression: notes.content.length, mode: mode),
+          terms.add(
+            OrderingTerm(expression: noteItems.content.length, mode: mode),
           );
-          break;
         case NotesSortField.createdAt:
-          orderingTerms.add(
-            OrderingTerm(expression: notes.createdAt, mode: mode),
-          );
-          break;
+          terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
         case NotesSortField.modifiedAt:
-          orderingTerms.add(
-            OrderingTerm(expression: notes.modifiedAt, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
           );
-          break;
         case NotesSortField.lastAccessed:
-          orderingTerms.add(
-            OrderingTerm(expression: notes.lastUsedAt, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
           );
-          break;
       }
     } else {
-      // Используем базовый sortBy из BaseFilter
       switch (filter.base.sortBy) {
         case SortBy.createdAt:
-          orderingTerms.add(
-            OrderingTerm(expression: notes.createdAt, mode: mode),
-          );
-          break;
+          terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
         case SortBy.modifiedAt:
-          orderingTerms.add(
-            OrderingTerm(expression: notes.modifiedAt, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
           );
-          break;
         case SortBy.lastUsedAt:
-          orderingTerms.add(
-            OrderingTerm(expression: notes.lastUsedAt, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
           );
-          break;
         case SortBy.recentScore:
-          final windowDays = filter.base.frequencyWindowDays ?? 7;
-          final scoreExpr = _calculateDynamicScore(windowDays);
-          orderingTerms.add(OrderingTerm(expression: scoreExpr, mode: mode));
-          break;
+          final wd = filter.base.frequencyWindowDays ?? 7;
+          terms.add(
+            OrderingTerm(expression: _calculateDynamicScore(wd), mode: mode),
+          );
       }
     }
-
-    return orderingTerms;
+    return terms;
   }
 
-  /// Загружает теги для списка заметок (максимум 10 тегов на заметку)
-  Future<Map<String, List<TagInCardDto>>> _loadTagsForNotes(
-    List<String> noteIds,
+  Future<Map<String, List<TagInCardDto>>> _loadTagsForItems(
+    List<String> itemIds,
   ) async {
-    if (noteIds.isEmpty) return {};
+    if (itemIds.isEmpty) return {};
 
-    // Запрос для получения тегов со связями
-    final query = select(notesTags).join([
-      innerJoin(tags, tags.id.equalsExp(notesTags.tagId)),
-    ])..where(notesTags.noteId.isIn(noteIds));
+    final query = select(itemTags).join([
+      innerJoin(tags, tags.id.equalsExp(itemTags.tagId)),
+    ])..where(itemTags.itemId.isIn(itemIds));
 
-    // Группируем теги по noteId
+    final results = await query.get();
     final tagsMap = <String, List<TagInCardDto>>{};
 
-    // Обрабатываем результаты с учетом лимита
-    final results = await query.get();
-
     for (final row in results) {
-      final noteTag = row.readTable(notesTags);
+      final it = row.readTable(itemTags);
       final tag = row.readTable(tags);
-
-      final noteId = noteTag.noteId;
-
-      if (!tagsMap.containsKey(noteId)) {
-        tagsMap[noteId] = [];
+      final id = it.itemId;
+      if (!tagsMap.containsKey(id)) {
+        tagsMap[id] = [];
       }
-
-      // Ограничиваем максимум 10 тегами
-      if (tagsMap[noteId]!.length < 10) {
-        tagsMap[noteId]!.add(
+      if (tagsMap[id]!.length < 10) {
+        tagsMap[id]!.add(
           TagInCardDto(id: tag.id, name: tag.name, color: tag.color),
         );
       }
     }
-
     return tagsMap;
   }
 }

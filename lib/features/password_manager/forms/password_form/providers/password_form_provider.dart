@@ -33,38 +33,38 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
 
     try {
       final dao = await ref.read(passwordDaoProvider.future);
-      final password = await dao.getPasswordById(passwordId);
+      final record = await dao.getById(passwordId);
 
-      if (password == null) {
+      if (record == null) {
         logWarning('Password not found: $passwordId', tag: _logTag);
         state = state.copyWith(isLoading: false);
         return;
       }
 
-      final tagIds = await dao.getPasswordTagIds(passwordId);
+      final (vault, pwItem) = record;
+      final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+      final tagIds = await vaultItemDao.getTagIds(passwordId);
       final tagDao = await ref.read(tagDaoProvider.future);
       final tagRecords = await tagDao.getTagsByIds(tagIds);
 
       final otpDao = await ref.read(otpDaoProvider.future);
-      final linkedOtp = await otpDao.getOtpByPasswordId(passwordId);
+      final linkedOtp = await otpDao.getByPasswordItemId(passwordId);
 
       state = PasswordFormState(
         isEditMode: true,
         editingPasswordId: passwordId,
-        name: password.name,
-        password: password.password,
-        login: password.login ?? '',
-        email: password.email ?? '',
-        url: password.url ?? '',
-        description: password.description ?? '',
-        noteId: password.noteId,
-        categoryId: password.categoryId,
+        name: vault.name,
+        password: pwItem.password,
+        login: pwItem.login ?? '',
+        email: pwItem.email ?? '',
+        url: pwItem.url ?? '',
+        description: vault.description ?? '',
+        noteId: vault.noteId,
+        categoryId: vault.categoryId,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
-        otpId: linkedOtp?.id,
-        otpName: linkedOtp != null
-            ? (linkedOtp.issuer ?? linkedOtp.accountName)
-            : null,
+        otpId: linkedOtp?.$1.id,
+        otpName: linkedOtp?.$1.name ?? linkedOtp?.$2.accountName,
         isLoading: false,
       );
     } catch (e, stack) {
@@ -261,7 +261,8 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
         final success = await dao.updatePassword(state.editingPasswordId!, dto);
 
         if (success) {
-          await dao.syncPasswordTags(state.editingPasswordId!, state.tagIds);
+          final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+          await vaultItemDao.syncTags(state.editingPasswordId!, state.tagIds);
           await _updateOtpLink(state.editingPasswordId!);
 
           logInfo('Password updated: ${state.editingPasswordId}', tag: _logTag);
@@ -335,12 +336,12 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     try {
       final otpDao = await ref.read(otpDaoProvider.future);
       // 1. Найти текущие привязки
-      final currentLinkedOtps = await otpDao.getOtpsByPasswordId(passwordId);
+      final currentLinkedOtp = await otpDao.getByPasswordItemId(passwordId);
 
       // 2. Отвязать лишние
-      for (final otp in currentLinkedOtps) {
-        if (otp.id != state.otpId) {
-          await otpDao.updateOtpLink(otp.id, null);
+      if (currentLinkedOtp != null) {
+        if (currentLinkedOtp.$1.id != state.otpId) {
+          await otpDao.updateOtpLink(currentLinkedOtp.$1.id, null);
         }
       }
 

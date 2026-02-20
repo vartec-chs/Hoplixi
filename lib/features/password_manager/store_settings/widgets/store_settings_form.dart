@@ -17,6 +17,9 @@ class StoreSettingsForm extends ConsumerStatefulWidget {
 class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _historyLimitController = TextEditingController();
+  final _historyMaxAgeDaysController = TextEditingController();
+  final _historyCleanupIntervalController = TextEditingController();
 
   @override
   void initState() {
@@ -28,6 +31,9 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
+    _historyLimitController.dispose();
+    _historyMaxAgeDaysController.dispose();
+    _historyCleanupIntervalController.dispose();
     super.dispose();
   }
 
@@ -58,6 +64,10 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
     final state = ref.read(storeSettingsProvider);
     _nameController.text = state.newName;
     _descriptionController.text = state.newDescription ?? '';
+    _historyLimitController.text = state.newHistoryLimit.toString();
+    _historyMaxAgeDaysController.text = state.newHistoryMaxAgeDays.toString();
+    _historyCleanupIntervalController.text = state.newHistoryCleanupIntervalDays
+        .toString();
   }
 
   @override
@@ -70,6 +80,26 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
     }
     if (_descriptionController.text != (state.newDescription ?? '')) {
       _descriptionController.text = state.newDescription ?? '';
+    }
+
+    final limitString = state.newHistoryLimit.toString();
+    final currentLimit = int.tryParse(_historyLimitController.text);
+    if (currentLimit != state.newHistoryLimit) {
+      _historyLimitController.text = limitString;
+    }
+
+    final ageString = state.newHistoryMaxAgeDays.toString();
+    final currentAge = int.tryParse(_historyMaxAgeDaysController.text);
+    if (currentAge != state.newHistoryMaxAgeDays) {
+      _historyMaxAgeDaysController.text = ageString;
+    }
+
+    final intervalString = state.newHistoryCleanupIntervalDays.toString();
+    final currentInterval = int.tryParse(
+      _historyCleanupIntervalController.text,
+    );
+    if (currentInterval != state.newHistoryCleanupIntervalDays) {
+      _historyCleanupIntervalController.text = intervalString;
     }
 
     return Padding(
@@ -122,6 +152,87 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
               ref.read(storeSettingsProvider.notifier).updateDescription(value);
             },
           ),
+
+          const SizedBox(height: 16),
+          const Divider(),
+          const SizedBox(height: 16),
+          Text(
+            'История изменений',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+
+          SwitchListTile(
+            title: const Text('Сохранять историю изменений'),
+            value: state.newHistoryEnabled,
+            onChanged: state.isSaving
+                ? null
+                : (value) {
+                    ref
+                        .read(storeSettingsProvider.notifier)
+                        .updateHistoryEnabled(value);
+                  },
+            contentPadding: EdgeInsets.zero,
+          ),
+
+          if (state.newHistoryEnabled) ...[
+            const SizedBox(height: 16),
+            TextField(
+              controller: _historyLimitController,
+              enabled: !state.isSaving,
+              keyboardType: TextInputType.number,
+              decoration: primaryInputDecoration(
+                context,
+                labelText: 'Лимит записей в истории (макс. на элемент)',
+                hintText: 'Например, 100',
+              ),
+              onChanged: (value) {
+                final limit = int.tryParse(value) ?? 100;
+                ref
+                    .read(storeSettingsProvider.notifier)
+                    .updateHistoryLimit(limit);
+              },
+            ),
+
+            const SizedBox(height: 16),
+            TextField(
+              controller: _historyMaxAgeDaysController,
+              enabled: !state.isSaving,
+              keyboardType: TextInputType.number,
+              decoration: primaryInputDecoration(
+                context,
+                labelText: 'Максимальный возраст записей истории (в днях)',
+                hintText: 'Например, 30',
+              ),
+              onChanged: (value) {
+                final days = int.tryParse(value) ?? 30;
+                ref
+                    .read(storeSettingsProvider.notifier)
+                    .updateHistoryMaxAgeDays(days);
+              },
+            ),
+
+            const SizedBox(height: 16),
+            TextField(
+              controller: _historyCleanupIntervalController,
+              enabled: !state.isSaving,
+              keyboardType: TextInputType.number,
+              decoration: primaryInputDecoration(
+                context,
+                labelText:
+                    'Периодичность очистки истории (в днях, работает фоново при входе)',
+                hintText: 'Например, 7',
+              ),
+              onChanged: (value) {
+                final interval = int.tryParse(value) ?? 7;
+                ref
+                    .read(storeSettingsProvider.notifier)
+                    .updateHistoryCleanupIntervalDays(interval);
+              },
+            ),
+          ],
 
           const SizedBox(height: 24),
 

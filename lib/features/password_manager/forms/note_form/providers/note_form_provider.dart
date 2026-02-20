@@ -36,36 +36,35 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
 
     try {
       final dao = await ref.read(noteDaoProvider.future);
-      final note = await dao.getNoteById(noteId);
+      final record = await dao.getById(noteId);
 
-      if (note == null) {
+      if (record == null) {
         logWarning('Note not found: $noteId', tag: _logTag);
         state = state.copyWith(isLoading: false);
         return;
       }
 
-      // Получить теги заметки
-      final tagIds = await dao.getNoteTagIds(noteId);
+      final (vault, noteItem) = record;
+      final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+      final tagIds = await vaultItemDao.getTagIds(noteId);
       final tagDao = await ref.read(tagDaoProvider.future);
       final tagRecords = await tagDao.getTagsByIds(tagIds);
 
       state = NoteFormState(
         isEditMode: true,
         editingNoteId: noteId,
-        title: note.title,
-        content: note.content,
-        deltaJson: note.deltaJson,
-        description: note.description ?? '',
-        categoryId: note.categoryId,
-        // categoryName: ..., // TODO: Получить имя категории
+        title: vault.name,
+        content: noteItem.content,
+        deltaJson: noteItem.deltaJson,
+        description: vault.description ?? '',
+        categoryId: vault.categoryId,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
         isLoading: false,
-        // Сохраняем исходные данные для отслеживания изменений
-        originalTitle: note.title,
-        originalDeltaJson: note.deltaJson,
-        originalDescription: note.description ?? '',
-        originalCategoryId: note.categoryId,
+        originalTitle: vault.name,
+        originalDeltaJson: noteItem.deltaJson,
+        originalDescription: vault.description ?? '',
+        originalCategoryId: vault.categoryId,
         originalTagIds: tagIds,
         edited: false,
       );
@@ -251,7 +250,8 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
 
         if (success) {
           // Синхронизация тегов
-          await dao.syncNoteTags(state.editingNoteId!, state.tagIds);
+          final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+          await vaultItemDao.syncTags(state.editingNoteId!, state.tagIds);
 
           logInfo('Note updated: ${state.editingNoteId}', tag: _logTag);
           state = state.copyWith(

@@ -23,7 +23,7 @@ class NoteViewScreen extends ConsumerStatefulWidget {
 }
 
 class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
-  NotesData? _note;
+  (VaultItemsData, NoteItemsData)? _note;
   bool _isLoading = true;
   String? _categoryName;
   List<String> _tagNames = [];
@@ -44,15 +44,15 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
   Future<void> _loadNote() async {
     try {
       final dao = await ref.read(noteDaoProvider.future);
-      final note = await dao.getNoteById(widget.noteId);
+      final record = await dao.getById(widget.noteId);
 
-      if (note != null && mounted) {
+      if (record != null && mounted) {
         setState(() {
-          _note = note;
+          _note = record;
           _isLoading = false;
         });
-        _initQuillController(note);
-        await _loadRelatedData(note);
+        _initQuillController(record.$2);
+        await _loadRelatedData(record);
       } else if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -61,7 +61,7 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
     }
   }
 
-  void _initQuillController(NotesData note) {
+  void _initQuillController(NoteItemsData note) {
     if (note.deltaJson.isNotEmpty) {
       try {
         final deltaJson = jsonDecode(note.deltaJson) as List<dynamic>;
@@ -81,15 +81,16 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
     setState(() {});
   }
 
-  Future<void> _loadRelatedData(NotesData note) async {
-    if (note.categoryId != null) {
+  Future<void> _loadRelatedData((VaultItemsData, NoteItemsData) record) async {
+    final (vault, _) = record;
+    if (vault.categoryId != null) {
       final catDao = await ref.read(categoryDaoProvider.future);
-      final cat = await catDao.getCategoryById(note.categoryId!);
+      final cat = await catDao.getCategoryById(vault.categoryId!);
       if (mounted && cat != null) setState(() => _categoryName = cat.name);
     }
 
-    final noteDao = await ref.read(noteDaoProvider.future);
-    final tagIds = await noteDao.getNoteTagIds(widget.noteId);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    final tagIds = await vaultItemDao.getTagIds(widget.noteId);
     if (tagIds.isNotEmpty) {
       final tagDao = await ref.read(tagDaoProvider.future);
       final tags = await tagDao.getTagsByIds(tagIds);
@@ -102,7 +103,7 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
       final text = _quillController!.document.toPlainText();
       Clipboard.setData(ClipboardData(text: text));
       Toaster.success(title: 'Скопировано', description: 'Текст скопирован');
-      final dao = await ref.read(noteDaoProvider.future);
+      final dao = await ref.read(vaultItemDaoProvider.future);
       await dao.incrementUsage(widget.noteId);
     }
   }
@@ -117,7 +118,7 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_note?.title ?? 'Заметка'),
+        title: Text(_note?.$1.name ?? 'Заметка'),
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.copy),

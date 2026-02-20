@@ -76,17 +76,18 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
 
   Future<void> _loadNoteName(String noteId) async {
     final dao = await ref.read(noteDaoProvider.future);
-    final note = await dao.getNoteById(noteId);
+    final record = await dao.getById(noteId);
     if (mounted) {
-      setState(() => _noteName = note?.title);
+      setState(() => _noteName = record?.$1.name);
     }
   }
 
   Future<void> _loadOtpName(String otpId) async {
     final dao = await ref.read(otpDaoProvider.future);
-    final otp = await dao.getOtpById(otpId);
-    if (mounted) {
-      setState(() => _otpName = otp?.issuer ?? otp?.accountName);
+    final record = await dao.getById(otpId);
+    if (mounted && record != null) {
+      final (vault, otp) = record;
+      setState(() => _otpName = otp.issuer ?? otp.accountName ?? vault.name);
     }
   }
 

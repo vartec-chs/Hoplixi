@@ -77,8 +77,8 @@ class _NoteGridCardState extends ConsumerState<NoteGridCard>
       if (mounted) setState(() => _titleCopied = false);
     });
 
-    final noteDao = await ref.read(noteDaoProvider.future);
-    await noteDao.incrementUsage(widget.note.id);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    await vaultItemDao.incrementUsage(widget.note.id);
   }
 
   @override

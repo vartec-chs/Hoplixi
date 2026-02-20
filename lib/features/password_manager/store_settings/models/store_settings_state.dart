@@ -21,7 +21,31 @@ sealed class StoreSettingsState with _$StoreSettingsState {
     /// Ошибка валидации имени
     String? nameError,
 
-    /// Новый пароль
+    /// Лимит истории
+    @Default(100) int historyLimit,
+
+    /// Максимальный возраст истории в днях
+    @Default(30) int historyMaxAgeDays,
+
+    /// Включена ли история
+    @Default(true) bool historyEnabled,
+
+    /// Новый лимит истории (в процессе редактирования)
+    @Default(100) int newHistoryLimit,
+
+    /// Новый максимальный возраст истории в днях (в процессе редактирования)
+    @Default(30) int newHistoryMaxAgeDays,
+
+    /// Новое состояние включения истории (в процессе редактирования)
+    @Default(true) bool newHistoryEnabled,
+
+    /// Интервал очистки истории в днях
+    @Default(7) int historyCleanupIntervalDays,
+
+    /// Новый интервал очистки истории в днях (в процессе редактирования)
+    @Default(7) int newHistoryCleanupIntervalDays,
+
+    /// Ошибка валидации нового пароля
     @Default('') String newPassword,
 
     /// Подтверждение нового пароля
@@ -53,7 +77,12 @@ sealed class StoreSettingsState with _$StoreSettingsState {
       !isSaving &&
       newName.trim().isNotEmpty &&
       nameError == null &&
-      (newName.trim() != name || newDescription != description);
+      (newName.trim() != name ||
+          newDescription != description ||
+          newHistoryLimit != historyLimit ||
+          newHistoryMaxAgeDays != historyMaxAgeDays ||
+          newHistoryEnabled != historyEnabled ||
+          newHistoryCleanupIntervalDays != historyCleanupIntervalDays);
 
   /// Проверка возможности смены пароля
   bool get canChangePassword =>

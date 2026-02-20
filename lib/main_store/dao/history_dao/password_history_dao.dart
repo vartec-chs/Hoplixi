@@ -2,66 +2,55 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/dto/password_history_dto.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
-import 'package:hoplixi/main_store/tables/passwords_history.dart';
+import 'package:hoplixi/main_store/tables/password_history.dart';
+import 'package:hoplixi/main_store/tables/vault_item_history.dart';
 
 part 'password_history_dao.g.dart';
 
-@DriftAccessor(tables: [PasswordsHistory])
+/// DAO для управления историей паролей.
+///
+/// Использует Table-Per-Type: общие поля хранятся
+/// в [VaultItemHistory], type-specific —
+/// в [PasswordHistory].
+@DriftAccessor(tables: [VaultItemHistory, PasswordHistory])
 class PasswordHistoryDao extends DatabaseAccessor<MainStore>
     with _$PasswordHistoryDaoMixin {
   PasswordHistoryDao(super.db);
 
-  /// Получить всю историю паролей
-  Future<List<PasswordsHistoryData>> getAllPasswordHistory() {
-    return select(passwordsHistory).get();
-  }
+  // ============================================
+  // Чтение
+  // ============================================
 
-  /// Получить запись истории по ID
-  Future<PasswordsHistoryData?> getPasswordHistoryById(String id) {
-    return (select(
-      passwordsHistory,
-    )..where((ph) => ph.id.equals(id))).getSingleOrNull();
-  }
+  /// Получить все записи истории паролей
+  Future<List<PasswordHistoryCardDto>> getAllPasswordHistoryCards() async {
+    final query =
+        select(vaultItemHistory).join([
+            innerJoin(
+              passwordHistory,
+              passwordHistory.historyId.equalsExp(vaultItemHistory.id),
+            ),
+          ])
+          ..where(vaultItemHistory.type.equalsValue(VaultItemType.password))
+          ..orderBy([OrderingTerm.desc(vaultItemHistory.actionAt)]);
 
-  /// Получить историю паролей в виде карточек
-  Future<List<PasswordHistoryCardDto>> getAllPasswordHistoryCards() {
-    return (select(passwordsHistory)
-          ..orderBy([(ph) => OrderingTerm.desc(ph.actionAt)]))
-        .map(
-          (ph) => PasswordHistoryCardDto(
-            id: ph.id,
-            originalPasswordId: ph.originalPasswordId,
-            action: ph.action.value,
-            name: ph.name,
-            actionAt: ph.actionAt,
-          ),
-        )
-        .get();
+    final results = await query.get();
+    return results.map(_mapToPasswordHistoryCard).toList();
   }
 
   /// Смотреть всю историю паролей с автообновлением
-  Stream<List<PasswordsHistoryData>> watchAllPasswordHistory() {
-    return (select(
-      passwordsHistory,
-    )..orderBy([(ph) => OrderingTerm.desc(ph.actionAt)])).watch();
-  }
-
-  /// Смотреть историю паролей карточки с автообновлением
   Stream<List<PasswordHistoryCardDto>> watchPasswordHistoryCards() {
-    return (select(
-      passwordsHistory,
-    )..orderBy([(ph) => OrderingTerm.desc(ph.actionAt)])).watch().map(
-      (history) => history
-          .map(
-            (ph) => PasswordHistoryCardDto(
-              id: ph.id,
-              originalPasswordId: ph.originalPasswordId,
-              action: ph.action.value,
-              name: ph.name,
-              actionAt: ph.actionAt,
+    final query =
+        select(vaultItemHistory).join([
+            innerJoin(
+              passwordHistory,
+              passwordHistory.historyId.equalsExp(vaultItemHistory.id),
             ),
-          )
-          .toList(),
+          ])
+          ..where(vaultItemHistory.type.equalsValue(VaultItemType.password))
+          ..orderBy([OrderingTerm.desc(vaultItemHistory.actionAt)]);
+
+    return query.watch().map(
+      (rows) => rows.map(_mapToPasswordHistoryCard).toList(),
     );
   }
 
@@ -69,168 +58,209 @@ class PasswordHistoryDao extends DatabaseAccessor<MainStore>
   Stream<List<PasswordHistoryCardDto>> watchPasswordHistoryByOriginalId(
     String passwordId,
   ) {
-    return (select(passwordsHistory)
-          ..where((ph) => ph.originalPasswordId.equals(passwordId))
-          ..orderBy([(ph) => OrderingTerm.desc(ph.actionAt)]))
-        .watch()
-        .map(
-          (history) => history
-              .map(
-                (ph) => PasswordHistoryCardDto(
-                  id: ph.id,
-                  originalPasswordId: ph.originalPasswordId,
-                  action: ph.action.value,
-                  name: ph.name,
-                  actionAt: ph.actionAt,
-                ),
-              )
-              .toList(),
-        );
+    final query =
+        select(vaultItemHistory).join([
+            innerJoin(
+              passwordHistory,
+              passwordHistory.historyId.equalsExp(vaultItemHistory.id),
+            ),
+          ])
+          ..where(
+            vaultItemHistory.itemId.equals(passwordId) &
+                vaultItemHistory.type.equalsValue(VaultItemType.password),
+          )
+          ..orderBy([OrderingTerm.desc(vaultItemHistory.actionAt)]);
+
+    return query.watch().map(
+      (rows) => rows.map(_mapToPasswordHistoryCard).toList(),
+    );
   }
 
   /// Получить историю по действию
   Stream<List<PasswordHistoryCardDto>> watchPasswordHistoryByAction(
     String action,
   ) {
-    return (select(passwordsHistory)
-          ..where((ph) => ph.action.equals(action))
-          ..orderBy([(ph) => OrderingTerm.desc(ph.actionAt)]))
-        .watch()
-        .map(
-          (history) => history
-              .map(
-                (ph) => PasswordHistoryCardDto(
-                  id: ph.id,
-                  originalPasswordId: ph.originalPasswordId,
-                  action: ph.action.value,
-                  name: ph.name,
-                  actionAt: ph.actionAt,
-                ),
-              )
-              .toList(),
-        );
-  }
+    final query =
+        select(vaultItemHistory).join([
+            innerJoin(
+              passwordHistory,
+              passwordHistory.historyId.equalsExp(vaultItemHistory.id),
+            ),
+          ])
+          ..where(
+            vaultItemHistory.action.equals(action) &
+                vaultItemHistory.type.equalsValue(VaultItemType.password),
+          )
+          ..orderBy([OrderingTerm.desc(vaultItemHistory.actionAt)]);
 
-  /// Создать запись истории
-  Future<String> createPasswordHistory(CreatePasswordHistoryDto dto) {
-    final companion = PasswordsHistoryCompanion.insert(
-      originalPasswordId: dto.originalPasswordId,
-      action: ActionInHistoryX.fromString(dto.action),
-      name: dto.name,
-      password: Value(dto.password),
-      login: Value(dto.login),
-      email: Value(dto.email),
-      url: Value(dto.url),
-      description: Value(dto.description),
-      noteId: Value(dto.noteId),
-      categoryName: Value(dto.categoryName),
-      tags: Value(dto.tags),
-      usedCount: Value(dto.usedCount ?? 0),
-      isArchived: Value(dto.isArchived ?? false),
-      isPinned: Value(dto.isPinned ?? false),
-      isFavorite: Value(dto.isFavorite ?? false),
-      lastUsedAt: Value(dto.lastAccessedAt),
-      isDeleted: Value(dto.isDeleted ?? false),
-      originalCreatedAt: Value(dto.originalCreatedAt),
-      originalModifiedAt: Value(dto.originalModifiedAt),
+    return query.watch().map(
+      (rows) => rows.map(_mapToPasswordHistoryCard).toList(),
     );
-    return into(passwordsHistory).insert(companion).then((id) {
-      return (select(passwordsHistory)
-            ..where((ph) => ph.id.equals(id.toString())))
-          .map((ph) => ph.id)
-          .getSingle();
-    });
   }
 
-  /// Удалить историю для пароля
-  Future<int> deletePasswordHistoryByPasswordId(String passwordId) {
-    return (delete(
-      passwordsHistory,
-    )..where((ph) => ph.originalPasswordId.equals(passwordId))).go();
-  }
-
-  /// Удалить старую историю (старше N дней)
-  Future<int> deleteOldPasswordHistory(Duration olderThan) {
-    final cutoffDate = DateTime.now().subtract(olderThan);
-    return (delete(
-      passwordsHistory,
-    )..where((ph) => ph.actionAt.isSmallerThanValue(cutoffDate))).go();
-  }
-
-  // ============================================
-  // Методы для пагинации и поиска
-  // ============================================
-
-  /// Получить историю по ID оригинального пароля с пагинацией и поиском
+  /// Получить историю с пагинацией и поиском
   Future<List<PasswordHistoryCardDto>> getPasswordHistoryCardsByOriginalId(
     String passwordId,
     int offset,
     int limit,
     String? searchQuery,
   ) async {
-    var query = select(passwordsHistory)
-      ..where((ph) => ph.originalPasswordId.equals(passwordId))
-      ..orderBy([(ph) => OrderingTerm.desc(ph.actionAt)])
-      ..limit(limit, offset: offset);
+    final query = select(vaultItemHistory).join([
+      innerJoin(
+        passwordHistory,
+        passwordHistory.historyId.equalsExp(vaultItemHistory.id),
+      ),
+    ]);
+
+    Expression<bool> where =
+        vaultItemHistory.itemId.equals(passwordId) &
+        vaultItemHistory.type.equalsValue(VaultItemType.password);
 
     if (searchQuery != null && searchQuery.isNotEmpty) {
-      final search = '%$searchQuery%';
-      query = query
-        ..where(
-          (ph) =>
-              ph.name.like(search) |
-              ph.login.like(search) |
-              ph.email.like(search) |
-              ph.url.like(search),
-        );
+      final q = '%$searchQuery%';
+      where =
+          where &
+          (vaultItemHistory.name.like(q) |
+              passwordHistory.login.like(q) |
+              passwordHistory.email.like(q) |
+              passwordHistory.url.like(q));
     }
 
+    query
+      ..where(where)
+      ..orderBy([OrderingTerm.desc(vaultItemHistory.actionAt)])
+      ..limit(limit, offset: offset);
+
     final results = await query.get();
-    return results
-        .map(
-          (ph) => PasswordHistoryCardDto(
-            id: ph.id,
-            originalPasswordId: ph.originalPasswordId,
-            action: ph.action.value,
-            name: ph.name,
-            login: ph.login,
-            email: ph.email,
-            actionAt: ph.actionAt,
-          ),
-        )
-        .toList();
+    return results.map(_mapToPasswordHistoryCard).toList();
   }
 
-  /// Подсчитать количество записей истории для пароля
+  /// Подсчитать количество записей истории
   Future<int> countPasswordHistoryByOriginalId(
     String passwordId,
     String? searchQuery,
   ) async {
-    var query = selectOnly(passwordsHistory)
-      ..addColumns([passwordsHistory.id.count()])
-      ..where(passwordsHistory.originalPasswordId.equals(passwordId));
+    final countExpr = vaultItemHistory.id.count();
+    final query = selectOnly(vaultItemHistory)
+      ..join([
+        innerJoin(
+          passwordHistory,
+          passwordHistory.historyId.equalsExp(vaultItemHistory.id),
+        ),
+      ])
+      ..addColumns([countExpr])
+      ..where(
+        vaultItemHistory.itemId.equals(passwordId) &
+            vaultItemHistory.type.equalsValue(VaultItemType.password),
+      );
 
     if (searchQuery != null && searchQuery.isNotEmpty) {
-      final search = '%$searchQuery%';
-      query = query
-        ..where(
-          passwordsHistory.name.like(search) |
-              passwordsHistory.login.like(search) |
-              passwordsHistory.email.like(search) |
-              passwordsHistory.url.like(search),
-        );
+      final q = '%$searchQuery%';
+      query.where(
+        vaultItemHistory.name.like(q) |
+            passwordHistory.login.like(q) |
+            passwordHistory.email.like(q) |
+            passwordHistory.url.like(q),
+      );
     }
 
-    final result = await query
-        .map((row) => row.read(passwordsHistory.id.count()))
-        .getSingle();
+    final result = await query.map((row) => row.read(countExpr)).getSingle();
     return result ?? 0;
+  }
+
+  // ============================================
+  // Запись
+  // ============================================
+
+  /// Создать запись истории пароля
+  Future<String> createPasswordHistory(CreatePasswordHistoryDto dto) async {
+    return await db.transaction(() async {
+      final companion = VaultItemHistoryCompanion.insert(
+        itemId: dto.originalPasswordId,
+        type: VaultItemType.password,
+        action: ActionInHistoryX.fromString(dto.action),
+        name: dto.name,
+        description: Value(dto.description),
+        categoryName: Value(dto.categoryName),
+        usedCount: Value(dto.usedCount ?? 0),
+        isArchived: Value(dto.isArchived ?? false),
+        isPinned: Value(dto.isPinned ?? false),
+        isFavorite: Value(dto.isFavorite ?? false),
+        isDeleted: Value(dto.isDeleted ?? false),
+        lastUsedAt: Value(dto.lastAccessedAt),
+        originalCreatedAt: Value(dto.originalCreatedAt),
+        originalModifiedAt: Value(dto.originalModifiedAt),
+      );
+
+      // Вставляем базовую запись истории
+      await into(vaultItemHistory).insert(companion);
+
+      // Получаем id из companion
+      // (clientDefault уже сгенерировал UUID)
+      final historyId = companion.id.value;
+
+      await into(passwordHistory).insert(
+        PasswordHistoryCompanion.insert(
+          historyId: historyId,
+          password: Value(dto.password),
+          login: Value(dto.login),
+          email: Value(dto.email),
+          url: Value(dto.url),
+        ),
+      );
+
+      return historyId;
+    });
+  }
+
+  // ============================================
+  // Удаление
+  // ============================================
+
+  /// Удалить историю для конкретного пароля
+  Future<int> deletePasswordHistoryByPasswordId(String passwordId) {
+    return (delete(vaultItemHistory)..where(
+          (h) =>
+              h.itemId.equals(passwordId) &
+              h.type.equalsValue(VaultItemType.password),
+        ))
+        .go();
+  }
+
+  /// Удалить старую историю (старше N дней)
+  Future<int> deleteOldPasswordHistory(Duration olderThan) {
+    final cutoff = DateTime.now().subtract(olderThan);
+    return (delete(vaultItemHistory)..where(
+          (h) =>
+              h.actionAt.isSmallerThanValue(cutoff) &
+              h.type.equalsValue(VaultItemType.password),
+        ))
+        .go();
   }
 
   /// Удалить запись истории по ID
   Future<int> deletePasswordHistoryById(String historyId) {
     return (delete(
-      passwordsHistory,
-    )..where((ph) => ph.id.equals(historyId))).go();
+      vaultItemHistory,
+    )..where((h) => h.id.equals(historyId))).go();
+  }
+
+  // ============================================
+  // Маппинг
+  // ============================================
+
+  PasswordHistoryCardDto _mapToPasswordHistoryCard(TypedResult row) {
+    final h = row.readTable(vaultItemHistory);
+    final pw = row.readTable(passwordHistory);
+
+    return PasswordHistoryCardDto(
+      id: h.id,
+      originalPasswordId: h.itemId,
+      action: h.action.value,
+      name: h.name,
+      login: pw.login,
+      email: pw.email,
+      actionAt: h.actionAt,
+    );
   }
 }

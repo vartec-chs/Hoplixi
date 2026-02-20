@@ -173,10 +173,10 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
     // Ждём данные из AsyncValue
     if (!asyncValue.hasValue) return;
 
-    final note = await asyncValue.value!.getNoteById(noteId);
+    final record = await asyncValue.value!.getById(noteId);
     if (mounted) {
       setState(() {
-        _noteName = note?.title;
+        _noteName = record?.$1.name;
       });
     }
   }

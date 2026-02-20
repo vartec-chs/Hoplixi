@@ -29,21 +29,14 @@ export 'store_meta_timestamps.dart';
 export 'tags_timestamps.dart';
 
 /// Все триггеры для установки временных меток при вставке.
+///
+/// Включает единый триггер для vault_items (заменяет отдельные триггеры
+/// для passwords, notes, bank_cards, otps, files, documents).
 final List<String> allInsertTimestampTriggers = [
   // Store Meta
   ...storeMetaInsertTimestampTriggers,
-  // Passwords
-  ...passwordsInsertTimestampTriggers,
-  // OTPs
-  ...otpsInsertTimestampTriggers,
-  // Notes
-  ...notesInsertTimestampTriggers,
-  // Files
-  ...filesInsertTimestampTriggers,
-  // Bank Cards
-  ...bankCardsInsertTimestampTriggers,
-  // Documents
-  ...documentsInsertTimestampTriggers,
+  // Vault Items (все сущности: passwords, notes, otps, bank cards, files, docs)
+  ...vaultItemsInsertTimestampTriggers,
   // Document Pages
   ...documentPagesInsertTimestampTriggers,
   // Categories
@@ -58,18 +51,8 @@ final List<String> allInsertTimestampTriggers = [
 final List<String> allModifiedAtTriggers = [
   // Store Meta
   ...storeMetaModifiedAtTriggers,
-  // Passwords
-  ...passwordsModifiedAtTriggers,
-  // OTPs
-  ...otpsModifiedAtTriggers,
-  // Notes
-  ...notesModifiedAtTriggers,
-  // Files
-  ...filesModifiedAtTriggers,
-  // Bank Cards
-  ...bankCardsModifiedAtTriggers,
-  // Documents
-  ...documentsModifiedAtTriggers,
+  // Vault Items (все сущности)
+  ...vaultItemsModifiedAtTriggers,
   // Document Pages
   ...documentPagesModifiedAtTriggers,
   // Categories
@@ -81,20 +64,20 @@ final List<String> allModifiedAtTriggers = [
 ];
 
 /// Все операторы для удаления триггеров временных меток.
+///
+/// Включает DROP для старых триггеров (из предыдущей схемы) для корректной
+/// миграции, а также DROP для новых триггеров.
 final List<String> allTimestampDropTriggers = [
   // Store Meta
   ...storeMetaTimestampDropTriggers,
-  // Passwords
+  // Vault Items (новые)
+  ...vaultItemsTimestampDropTriggers,
+  // Устаревшие триггеры старой схемы (для миграции)
   ...passwordsTimestampDropTriggers,
-  // OTPs
-  ...otpsTimestampDropTriggers,
-  // Notes
   ...notesTimestampDropTriggers,
-  // Files
-  ...filesTimestampDropTriggers,
-  // Bank Cards
   ...bankCardsTimestampDropTriggers,
-  // Documents
+  ...otpsTimestampDropTriggers,
+  ...filesTimestampDropTriggers,
   ...documentsTimestampDropTriggers,
   // Document Pages
   ...documentPagesTimestampDropTriggers,

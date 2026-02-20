@@ -3,15 +3,20 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/main_store/dao/index.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/main_store_manager.dart';
 import 'package:hoplixi/main_store/models/db_errors.dart';
 import 'package:hoplixi/main_store/models/db_state.dart';
 import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_store/provider/db_history_provider.dart';
+import 'package:hoplixi/main_store/services/db_key_derivation_service.dart';
+import 'package:hoplixi/main_store/services/file_storage_service.dart';
+import 'package:hoplixi/main_store/services/store_cleanup_service.dart';
 import 'package:path/path.dart' as p;
 
 enum BackupScope { databaseOnly, encryptedFilesOnly, full }
@@ -32,7 +37,9 @@ class BackupResult {
 
 final _mainStoreManagerProvider = FutureProvider<MainStoreManager>((ref) async {
   final dbHistoryService = await ref.read(dbHistoryProvider.future);
-  final manager = MainStoreManager(dbHistoryService);
+  const secureStorage = FlutterSecureStorage();
+  final keyService = DbKeyDerivationService(secureStorage);
+  final manager = MainStoreManager(dbHistoryService, keyService);
 
   // Cleanup on dispose
   ref.onDispose(() {
@@ -280,11 +287,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         await dir.delete(recursive: true);
         logInfo('Old backup removed by retention: ${dir.path}', tag: _logTag);
       } catch (e) {
-        logWarning(
-          'Failed to remove old backup: ${dir.path}',
-     
-          tag: _logTag,
-        );
+        logWarning('Failed to remove old backup: ${dir.path}', tag: _logTag);
       }
     }
   }
@@ -485,6 +488,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
             'Store created successfully: ${storeInfo.name}',
             tag: _logTag,
           );
+          unawaited(_runStartupCleanup());
           return true;
         },
         (error) {
@@ -554,6 +558,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
           );
 
           logInfo('Store opened successfully: ${storeInfo.name}', tag: _logTag);
+          unawaited(_runStartupCleanup());
           return true;
         },
         (error) {
@@ -710,6 +715,40 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     _setState(const DatabaseState(status: DatabaseStatus.idle));
   }
 
+  /// Выполнить стартовую чистку
+  Future<void> _runStartupCleanup() async {
+    try {
+      // Создаём StoreCleanupService напрямую, минуя цепочку провайдеров,
+      // чтобы избежать CircularDependencyError: mainStoreProvider →
+      // storeCleanupServiceProvider → mainStoreManagerProvider → mainStoreProvider.
+      final store = _manager.currentStore;
+      if (store == null) return;
+
+      final attachmentsPathResult = await _manager.getAttachmentsPath();
+      final attachmentsPath = attachmentsPathResult.getOrNull();
+      if (attachmentsPath == null) return;
+
+      final decryptedPathResult = await _manager
+          .getDecryptedAttachmentsDirPath();
+      final decryptedPath = decryptedPathResult.getOrNull() ?? '';
+
+      final fileStorageService = FileStorageService(
+        store,
+        attachmentsPath,
+        decryptedPath,
+      );
+      final settingsDao = StoreSettingsDao(store);
+      final cleanupService = StoreCleanupService(
+        settingsDao,
+        fileStorageService,
+      );
+
+      await cleanupService.performFullCleanup(ignoreInterval: false);
+    } catch (e, s) {
+      logError('Startup cleanup failed: $e', stackTrace: s, tag: _logTag);
+    }
+  }
+
   /// Разблокировать хранилище
   ///
   /// [password] - пароль для разблокировки
@@ -762,6 +801,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
           );
 
           logInfo('Store unlocked successfully', tag: _logTag);
+          unawaited(_runStartupCleanup());
           return true;
         },
         (error) {

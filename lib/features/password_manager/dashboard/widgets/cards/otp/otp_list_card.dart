@@ -236,8 +236,8 @@ class _TotpListCardState extends ConsumerState<TotpListCard>
       if (mounted) setState(() => _codeCopied = false);
     });
 
-    final otpDao = await ref.read(otpDaoProvider.future);
-    await otpDao.incrementUsage(widget.otp.id);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    await vaultItemDao.incrementUsage(widget.otp.id);
   }
 
   /// Форматирует код с разделением (например: "123 456")

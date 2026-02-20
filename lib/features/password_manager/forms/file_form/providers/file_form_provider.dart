@@ -39,17 +39,18 @@ class FileFormNotifier extends Notifier<FileFormState> {
 
     try {
       final dao = await ref.read(fileDaoProvider.future);
-      final file = await dao.getFileById(fileId);
+      final record = await dao.getById(fileId);
 
-      if (file == null) {
+      if (record == null) {
         logWarning('File not found: $fileId', tag: _logTag);
         state = state.copyWith(isLoading: false);
         return;
       }
 
-      // Получаем теги файла
+      final (vault, fileItem) = record;
+      final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+      final tagIds = await vaultItemDao.getTagIds(fileId);
       final tagDao = await ref.read(tagDaoProvider.future);
-      final tagIds = await dao.getFileTagIds(fileId);
       final tagRecords = await tagDao.getTagsByIds(tagIds);
 
       // Получаем FileMetadata через metadataId
@@ -57,10 +58,10 @@ class FileFormNotifier extends Notifier<FileFormState> {
       int? existingFileSize;
       String? existingFileExtension;
 
-      if (file.metadataId != null) {
+      if (fileItem.metadataId != null) {
         final metadata = await (dao.attachedDatabase.select(
           dao.attachedDatabase.fileMetadata,
-        )..where((m) => m.id.equals(file.metadataId!))).getSingleOrNull();
+        )..where((m) => m.id.equals(fileItem.metadataId!))).getSingleOrNull();
 
         if (metadata != null) {
           existingFileName = metadata.fileName;
@@ -72,13 +73,13 @@ class FileFormNotifier extends Notifier<FileFormState> {
       state = FileFormState(
         isEditMode: true,
         editingFileId: fileId,
-        name: file.name,
-        description: file.description ?? '',
+        name: vault.name,
+        description: vault.description ?? '',
         existingFileName: existingFileName,
         existingFileSize: existingFileSize,
         existingFileExtension: existingFileExtension,
-        categoryId: file.categoryId,
-        noteId: file.noteId,
+        categoryId: vault.categoryId,
+        noteId: vault.noteId,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
         isLoading: false,

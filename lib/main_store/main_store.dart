@@ -6,6 +6,7 @@ import 'package:hoplixi/main_store/dao/category_dao.dart';
 import 'package:hoplixi/main_store/dao/document_dao.dart';
 import 'package:hoplixi/main_store/dao/file_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/bank_card_history_dao.dart';
+import 'package:hoplixi/main_store/dao/history_dao/document_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/file_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/note_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/otp_history_dao.dart';
@@ -16,6 +17,8 @@ import 'package:hoplixi/main_store/dao/note_link_dao.dart';
 import 'package:hoplixi/main_store/dao/otp_dao.dart';
 import 'package:hoplixi/main_store/dao/password_dao.dart';
 import 'package:hoplixi/main_store/dao/store_meta_dao.dart';
+import 'package:hoplixi/main_store/dao/store_settings_dao.dart';
+import 'package:hoplixi/main_store/dao/vault_item_dao.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:hoplixi/main_store/tables/index.dart';
 import 'package:hoplixi/main_store/triggers/index.dart';
@@ -28,32 +31,38 @@ part 'main_store.g.dart';
 @DriftDatabase(
   tables: [
     StoreMetaTable,
-    Passwords,
-    PasswordsHistory,
-    Otps,
-    OtpsHistory,
-    Notes,
-    NotesHistory,
+    StoreSettings,
+    // --- Базовая таблица ---
+    VaultItems,
+    // --- Type-specific таблицы ---
+    PasswordItems,
+    OtpItems,
+    NoteItems,
     NoteLinks,
-    BankCards,
-    BankCardsHistory,
-    Files,
+    BankCardItems,
+    FileItems,
     FileMetadata,
-    FilesTags,
-    FilesHistory,
+    DocumentItems,
+    DocumentPages,
+    // --- Теги (единая таблица) ---
+    ItemTags,
+    // --- Вспомогательные ---
     Categories,
     Tags,
     Icons,
-    PasswordsTags,
-    OtpsTags,
-    NotesTags,
-    BankCardsTags,
-    Documents,
-    DocumentPages,
-    DocumentsTags,
+    // --- История (Table-Per-Type) ---
+    VaultItemHistory,
+    PasswordHistory,
+    OtpHistory,
+    NoteHistory,
+    BankCardHistory,
+    FileHistory,
+    DocumentHistory,
   ],
   daos: [
     StoreMetaDao,
+    StoreSettingsDao,
+    VaultItemDao,
     PasswordDao,
     PasswordHistoryDao,
     OtpDao,
@@ -65,6 +74,8 @@ part 'main_store.g.dart';
     BankCardHistoryDao,
     FileDao,
     FileHistoryDao,
+    DocumentDao,
+    DocumentHistoryDao,
     CategoryDao,
     IconDao,
     BankCardFilterDao,
@@ -72,7 +83,6 @@ part 'main_store.g.dart';
     NoteFilterDao,
     OtpFilterDao,
     PasswordFilterDao,
-    DocumentDao,
   ],
 )
 class MainStore extends _$MainStore {
@@ -86,27 +96,20 @@ class MainStore extends _$MainStore {
       onCreate: (Migrator m) async {
         await m.createAll();
 
+        // Установка индексов для оптимизации запросов
+        await _installIndexes();
+
         // Установка триггеров для записи истории изменений
         await _installHistoryTriggers();
       },
       beforeOpen: (details) async {
         await customStatement('PRAGMA foreign_keys = ON');
-
-        // Переустановка триггеров при каждом открытии БД
-        // (на случай если они были удалены или изменены)
-        // await _installHistoryTriggers();
       },
       onUpgrade: (Migrator m, int from, int to) async {
         logInfo(
           'Migrating database from version $from to $to',
           tag: '${_logTag}Migration',
         );
-
-        // // Миграция до версии 5: добавление таблицы связей между заметками
-        // if (from < 5) {
-        //   await m.createTable(noteLinks);
-        //   logInfo('Created note_links table', tag: '${_logTag}Migration');
-        // }
 
         logInfo('Migration completed', tag: '${_logTag}Migration');
       },
@@ -116,43 +119,34 @@ class MainStore extends _$MainStore {
   @override
   int get schemaVersion => MainConstants.databaseSchemaVersion;
 
-  /// Поток для отслеживания изменений в данных
+  /// Поток для отслеживания изменений в данных.
   ///
-  /// Эмитирует событие каждый раз при изменении данных в любой таблице
+  /// Эмитирует событие каждый раз при изменении данных
+  /// в любой из основных таблиц.
   Stream<void> watchDataChanged() {
     return customSelect(
-      'SELECT 1', // данные нам не нужны
+      'SELECT 1',
       readsFrom: {
-        passwords,
-        passwordsHistory,
-        otps,
-        otpsHistory,
-        notes,
-        notesHistory,
+        vaultItems,
+        passwordItems,
+        otpItems,
+        noteItems,
         noteLinks,
-        bankCards,
-        bankCardsHistory,
-        files,
-        filesHistory,
+        bankCardItems,
+        fileItems,
+        documentItems,
+        documentPages,
+        itemTags,
         categories,
         tags,
         icons,
-        passwordsTags,
-        otpsTags,
-        notesTags,
-        bankCardsTags,
-        filesTags,
-        documents,
-        documentPages,
-        documentsTags,
-      }, // отслеживаем все основные таблицы
-    ).watch().map((_) {
-      return;
-    }); // превращаем в Stream<void>
+        vaultItemHistory,
+      },
+    ).watch().map((_) => null);
   }
 
-  /// Установка триггеров для автоматической записи истории изменений
-  /// и управления временными метками
+  /// Установка триггеров для автоматической записи истории
+  /// изменений и управления временными метками.
   Future<void> _installHistoryTriggers() async {
     logInfo('Installing triggers...', tag: _logTag);
 
@@ -186,6 +180,7 @@ class MainStore extends _$MainStore {
         ...notesHistoryCreateTriggers,
         ...filesHistoryCreateTriggers,
         ...bankCardsHistoryCreateTriggers,
+        ...documentsHistoryCreateTriggers,
         ...documentsTriggers,
       ]) {
         await customStatement(trigger);
@@ -201,7 +196,7 @@ class MainStore extends _$MainStore {
         await customStatement(trigger);
       }
 
-      // Создаём триггеры для обновления store_meta при изменениях в таблицах
+      // Создаём триггеры для обновления store_meta
       for (final trigger in allMetaTouchCreateTriggers) {
         await customStatement(trigger);
       }
@@ -210,6 +205,85 @@ class MainStore extends _$MainStore {
     } catch (e, stackTrace) {
       logError(
         'Failed to install triggers',
+        error: e,
+        stackTrace: stackTrace,
+        tag: _logTag,
+      );
+      rethrow;
+    }
+  }
+
+  /// Создание индексов для оптимизации запросов.
+  ///
+  /// Вызывается один раз при [onCreate] после [createAll].
+  Future<void> _installIndexes() async {
+    logInfo('Installing indexes...', tag: _logTag);
+
+    try {
+      const indexes = [
+        // --- vault_items ---
+        // Покрывает обязательный WHERE (is_deleted, is_archived) + дефолтный ORDER BY
+        'CREATE INDEX IF NOT EXISTS idx_vi_active_pinned_modified '
+            'ON vault_items (is_deleted, is_archived, is_pinned DESC, modified_at DESC)',
+        // Фильтрация по категории
+        'CREATE INDEX IF NOT EXISTS idx_vi_active_category '
+            'ON vault_items (is_deleted, is_archived, category_id)',
+        // Фильтрация избранного
+        'CREATE INDEX IF NOT EXISTS idx_vi_active_favorite '
+            'ON vault_items (is_deleted, is_archived, is_favorite)',
+        // Сортировка по дате создания
+        'CREATE INDEX IF NOT EXISTS idx_vi_active_created_at '
+            'ON vault_items (is_deleted, is_archived, created_at)',
+        // Сортировка по последнему использованию
+        'CREATE INDEX IF NOT EXISTS idx_vi_active_last_used '
+            'ON vault_items (is_deleted, is_archived, last_used_at)',
+
+        // --- item_tags ---
+        // Обратный поиск всех элементов по тегу (EXISTS-subquery в filter DAO).
+        // Поиск по itemId покрыт левым префиксом составного PK (itemId, tagId).
+        'CREATE INDEX IF NOT EXISTS idx_item_tags_tag_id '
+            'ON item_tags (tag_id)',
+
+        // --- password_items ---
+        // WHERE expire_at IS NOT NULL ORDER BY expire_at ASC (поиск истекающих паролей)
+        'CREATE INDEX IF NOT EXISTS idx_password_items_expire_at '
+            'ON password_items (expire_at) WHERE expire_at IS NOT NULL',
+
+        // --- vault_item_history ---
+        // WHERE item_id = ? AND type = ? ORDER BY action_at DESC
+        'CREATE INDEX IF NOT EXISTS idx_vih_item_type_action_at '
+            'ON vault_item_history (item_id, type, action_at DESC)',
+
+        // --- note_links ---
+        // Входящие ссылки на заметку. Исходящие покрыты UNIQUE (source_note_id, target_note_id).
+        'CREATE INDEX IF NOT EXISTS idx_note_links_target '
+            'ON note_links (target_note_id)',
+
+        // --- document_pages ---
+        // WHERE document_id = ? AND is_primary = 1 (получение обложки).
+        // UNIQUE (document_id, page_number) не покрывает is_primary.
+        'CREATE INDEX IF NOT EXISTS idx_doc_pages_primary '
+            'ON document_pages (document_id, is_primary)',
+
+        // --- categories ---
+        // WHERE type IN (...) в category DAO
+        'CREATE INDEX IF NOT EXISTS idx_categories_type '
+            'ON categories (type)',
+
+        // --- tags ---
+        // WHERE type IN (...) в tag DAO
+        'CREATE INDEX IF NOT EXISTS idx_tags_type '
+            'ON tags (type)',
+      ];
+
+      for (final sql in indexes) {
+        await customStatement(sql);
+      }
+
+      logInfo('All indexes installed successfully', tag: _logTag);
+    } catch (e, stackTrace) {
+      logError(
+        'Failed to install indexes',
         error: e,
         stackTrace: stackTrace,
         tag: _logTag,

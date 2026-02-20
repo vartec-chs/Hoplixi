@@ -6,63 +6,58 @@ import 'package:hoplixi/main_store/models/dto/password_dto.dart';
 import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_store/models/filter/base_filter.dart';
 import 'package:hoplixi/main_store/models/filter/passwords_filter.dart';
-import 'package:hoplixi/main_store/tables/index.dart';
+import 'package:hoplixi/main_store/tables/categories.dart';
+import 'package:hoplixi/main_store/tables/item_tags.dart';
+import 'package:hoplixi/main_store/tables/note_items.dart';
+import 'package:hoplixi/main_store/tables/password_items.dart';
+import 'package:hoplixi/main_store/tables/tags.dart';
+import 'package:hoplixi/main_store/tables/vault_items.dart';
 
 part 'password_filter_dao.g.dart';
 
-@DriftAccessor(tables: [Passwords, Categories, Tags, PasswordsTags])
+@DriftAccessor(
+  tables: [VaultItems, PasswordItems, Categories, Tags, ItemTags, NoteItems],
+)
 class PasswordFilterDao extends DatabaseAccessor<MainStore>
     with _$PasswordFilterDaoMixin
     implements FilterDao<PasswordsFilter, PasswordCardDto> {
   PasswordFilterDao(super.db);
 
-  /// Основной метод для получения отфильтрованных паролей
   @override
   Future<List<PasswordCardDto>> getFiltered(PasswordsFilter filter) async {
-    // Создаем базовый запрос с join к категориям и заметкам
-    final query = select(passwords).join([
-      leftOuterJoin(categories, categories.id.equalsExp(passwords.categoryId)),
-      leftOuterJoin(notes, notes.id.equalsExp(passwords.noteId)),
+    final query = select(vaultItems).join([
+      innerJoin(passwordItems, passwordItems.itemId.equalsExp(vaultItems.id)),
+      leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
+      leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
 
-    // Применяем все фильтры
-    query.where(_buildWhereExpression(filter, hasNotesJoin: true));
-
-    // Применяем сортировку
+    query.where(_buildWhereExpression(filter));
     query.orderBy(_buildOrderBy(filter));
 
-    // Применяем limit и offset
     if (filter.base.limit != null && filter.base.limit! > 0) {
       query.limit(filter.base.limit!, offset: filter.base.offset);
     }
 
-    // Выполняем запрос и маппим результаты
     final results = await query.get();
 
-    // Собираем ID всех паролей для загрузки тегов
-    final passwordIds = results
-        .map((row) => row.readTable(passwords).id)
-        .toList();
-
-    // Загружаем теги для всех паролей (максимум 10 на пароль)
-    final tagsMap = await _loadTagsForPasswords(passwordIds);
+    final itemIds = results.map((row) => row.readTable(vaultItems).id).toList();
+    final tagsMap = await _loadTagsForItems(itemIds);
 
     return results.map((row) {
-      final password = row.readTable(passwords);
+      final item = row.readTable(vaultItems);
+      final pw = row.readTable(passwordItems);
       final category = row.readTableOrNull(categories);
-
-      // Получаем теги для текущего пароля (максимум 10)
-      final passwordTags = tagsMap[password.id] ?? [];
+      final itemTags = tagsMap[item.id] ?? [];
 
       return PasswordCardDto(
-        id: password.id,
-        name: password.name,
-        login: password.login,
-        email: password.email,
-        url: password.url,
-        isArchived: password.isArchived,
-        description: password.description,
-        isDeleted: password.isDeleted,
+        id: item.id,
+        name: item.name,
+        login: pw.login,
+        email: pw.email,
+        url: pw.url,
+        isArchived: item.isArchived,
+        description: item.description,
+        isDeleted: item.isDeleted,
         category: category != null
             ? CategoryInCardDto(
                 id: category.id,
@@ -72,403 +67,298 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
                 iconId: category.iconId,
               )
             : null,
-        isFavorite: password.isFavorite,
-        isPinned: password.isPinned,
-        usedCount: password.usedCount,
-        modifiedAt: password.modifiedAt,
-        createdAt: password.createdAt,
-        tags: passwordTags,
+        isFavorite: item.isFavorite,
+        isPinned: item.isPinned,
+        usedCount: item.usedCount,
+        modifiedAt: item.modifiedAt,
+        createdAt: item.createdAt,
+        tags: itemTags,
       );
     }).toList();
   }
 
-  /// Подсчитывает количество отфильтрованных паролей
   @override
   Future<int> countFiltered(PasswordsFilter filter) async {
-    // Создаем запрос для подсчета с join
-    final query = select(passwords).join([
-      leftOuterJoin(categories, categories.id.equalsExp(passwords.categoryId)),
-      leftOuterJoin(notes, notes.id.equalsExp(passwords.noteId)),
+    final query = select(vaultItems).join([
+      innerJoin(passwordItems, passwordItems.itemId.equalsExp(vaultItems.id)),
+      leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
+      leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
-
-    // Применяем те же фильтры
-    query.where(_buildWhereExpression(filter, hasNotesJoin: true));
-
-    // Выполняем запрос и считаем
+    query.where(_buildWhereExpression(filter));
     final results = await query.get();
     return results.length;
   }
 
-  /// Строит WHERE выражение на основе всех фильтров
-  Expression<bool> _buildWhereExpression(
-    PasswordsFilter filter, {
-    bool hasNotesJoin = false,
-  }) {
-    Expression<bool> expression = const Constant(true);
-
-    // Применяем базовые фильтры
-    expression =
-        expression & _applyBaseFilters(filter.base, hasNotesJoin: hasNotesJoin);
-
-    // Применяем специфичные фильтры для паролей
-    expression = expression & _applyPasswordSpecificFilters(filter);
-
-    return expression;
+  Expression<bool> _buildWhereExpression(PasswordsFilter filter) {
+    Expression<bool> expr = const Constant(true);
+    expr = expr & _applyBaseFilters(filter.base);
+    expr = expr & _applyPasswordSpecificFilters(filter);
+    return expr;
   }
 
-  /// Применяет базовые фильтры из BaseFilter
-  Expression<bool> _applyBaseFilters(
-    BaseFilter base, {
-    bool hasNotesJoin = false,
-  }) {
-    Expression<bool> expression = const Constant(true);
+  Expression<bool> _applyBaseFilters(BaseFilter base) {
+    Expression<bool> expr = const Constant(true);
 
-    // Если не указан явный фильтр по isDeleted, исключаем удалённые
     if (base.isDeleted == null) {
-      expression = expression & passwords.isDeleted.equals(false);
+      expr = expr & vaultItems.isDeleted.equals(false);
     }
 
-    // Поисковый запрос по нескольким полям
     if (base.query.isNotEmpty) {
-      final query = base.query.toLowerCase();
-      Expression<bool> searchExpression =
-          passwords.name.lower().like('%$query%') |
-          passwords.login.lower().like('%$query%') |
-          passwords.email.lower().like('%$query%') |
-          passwords.url.lower().like('%$query%') |
-          passwords.description.lower().like('%$query%');
-      if (hasNotesJoin) {
-        searchExpression =
-            searchExpression | notes.content.lower().like('%$query%');
-      }
-      expression = expression & searchExpression;
+      final q = base.query.toLowerCase();
+      Expression<bool> searchExpr =
+          vaultItems.name.lower().like('%$q%') |
+          passwordItems.login.lower().like('%$q%') |
+          passwordItems.email.lower().like('%$q%') |
+          passwordItems.url.lower().like('%$q%') |
+          vaultItems.description.lower().like('%$q%') |
+          noteItems.content.lower().like('%$q%');
+      expr = expr & searchExpr;
     }
 
-    // Фильтр по категориям
     if (base.categoryIds.isNotEmpty) {
-      expression = expression & passwords.categoryId.isIn(base.categoryIds);
+      expr = expr & vaultItems.categoryId.isIn(base.categoryIds);
     }
 
-    // Фильтр по тегам (требует подзапрос)
     if (base.tagIds.isNotEmpty) {
-      // Используем EXISTS для проверки наличия тегов
       final tagExists = existsQuery(
-        select(passwordsTags)..where(
-          (pt) =>
-              pt.passwordId.equalsExp(passwords.id) &
-              pt.tagId.isIn(base.tagIds),
+        select(itemTags)..where(
+          (t) => t.itemId.equalsExp(vaultItems.id) & t.tagId.isIn(base.tagIds),
         ),
       );
-
-      expression = expression & tagExists;
+      expr = expr & tagExists;
     }
 
-    // Булевы флаги
     if (base.isFavorite != null) {
-      expression = expression & passwords.isFavorite.equals(base.isFavorite!);
+      expr = expr & vaultItems.isFavorite.equals(base.isFavorite!);
     }
 
     if (base.isArchived != null) {
-      expression = expression & passwords.isArchived.equals(base.isArchived!);
+      expr = expr & vaultItems.isArchived.equals(base.isArchived!);
     } else {
-      // По умолчанию исключаем архивные
-      expression = expression & passwords.isArchived.equals(false);
+      expr = expr & vaultItems.isArchived.equals(false);
     }
 
     if (base.isDeleted != null) {
-      expression = expression & passwords.isDeleted.equals(base.isDeleted!);
+      expr = expr & vaultItems.isDeleted.equals(base.isDeleted!);
     }
-
-    // isPinned фильтр игнорируется - закрепленные записи всегда показываются первыми
 
     if (base.hasNotes != null) {
-      expression =
-          expression &
+      expr =
+          expr &
           (base.hasNotes!
-              ? passwords.noteId.isNotNull()
-              : passwords.noteId.isNull());
+              ? vaultItems.noteId.isNotNull()
+              : vaultItems.noteId.isNull());
     }
 
-    // Фильтр по заметкам
     if (base.noteIds.isNotEmpty) {
-      expression = expression & passwords.noteId.isIn(base.noteIds);
+      expr = expr & vaultItems.noteId.isIn(base.noteIds);
     }
 
-    // Диапазоны дат создания
     if (base.createdAfter != null) {
-      expression =
-          expression &
-          passwords.createdAt.isBiggerOrEqualValue(base.createdAfter!);
+      expr =
+          expr & vaultItems.createdAt.isBiggerOrEqualValue(base.createdAfter!);
     }
-
     if (base.createdBefore != null) {
-      expression =
-          expression &
-          passwords.createdAt.isSmallerOrEqualValue(base.createdBefore!);
+      expr =
+          expr &
+          vaultItems.createdAt.isSmallerOrEqualValue(base.createdBefore!);
     }
-
-    // Диапазоны дат модификации
     if (base.modifiedAfter != null) {
-      expression =
-          expression &
-          passwords.modifiedAt.isBiggerOrEqualValue(base.modifiedAfter!);
+      expr =
+          expr &
+          vaultItems.modifiedAt.isBiggerOrEqualValue(base.modifiedAfter!);
     }
-
     if (base.modifiedBefore != null) {
-      expression =
-          expression &
-          passwords.modifiedAt.isSmallerOrEqualValue(base.modifiedBefore!);
+      expr =
+          expr &
+          vaultItems.modifiedAt.isSmallerOrEqualValue(base.modifiedBefore!);
     }
-
-    // Диапазоны дат последнего доступа
     if (base.lastUsedAfter != null) {
-      expression =
-          expression &
-          passwords.lastUsedAt.isBiggerOrEqualValue(base.lastUsedAfter!);
+      expr =
+          expr &
+          vaultItems.lastUsedAt.isBiggerOrEqualValue(base.lastUsedAfter!);
     }
-
     if (base.lastUsedBefore != null) {
-      expression =
-          expression &
-          passwords.lastUsedAt.isSmallerOrEqualValue(base.lastUsedBefore!);
+      expr =
+          expr &
+          vaultItems.lastUsedAt.isSmallerOrEqualValue(base.lastUsedBefore!);
     }
-
-    // Диапазоны счетчика использований
     if (base.minUsedCount != null) {
-      expression =
-          expression &
-          passwords.usedCount.isBiggerOrEqualValue(base.minUsedCount!);
+      expr =
+          expr & vaultItems.usedCount.isBiggerOrEqualValue(base.minUsedCount!);
     }
-
     if (base.maxUsedCount != null) {
-      expression =
-          expression &
-          passwords.usedCount.isSmallerOrEqualValue(base.maxUsedCount!);
+      expr =
+          expr & vaultItems.usedCount.isSmallerOrEqualValue(base.maxUsedCount!);
     }
-
-    return expression;
+    return expr;
   }
 
-  /// Применяет специфичные фильтры для паролей
   Expression<bool> _applyPasswordSpecificFilters(PasswordsFilter filter) {
-    Expression<bool> expression = const Constant(true);
+    Expression<bool> expr = const Constant(true);
 
-    // Фильтр по имени
     if (filter.name != null) {
-      expression =
-          expression &
-          passwords.name.lower().like('%${filter.name!.toLowerCase()}%');
+      expr =
+          expr &
+          vaultItems.name.lower().like('%${filter.name!.toLowerCase()}%');
     }
-
-    // Фильтр по логину
     if (filter.login != null) {
-      expression =
-          expression &
-          passwords.login.lower().like('%${filter.login!.toLowerCase()}%');
+      expr =
+          expr &
+          passwordItems.login.lower().like('%${filter.login!.toLowerCase()}%');
     }
-
-    // Фильтр по email
     if (filter.email != null) {
-      expression =
-          expression &
-          passwords.email.lower().like('%${filter.email!.toLowerCase()}%');
+      expr =
+          expr &
+          passwordItems.email.lower().like('%${filter.email!.toLowerCase()}%');
     }
-
-    // Фильтр по URL
     if (filter.url != null) {
-      expression =
-          expression &
-          passwords.url.lower().like('%${filter.url!.toLowerCase()}%');
+      expr =
+          expr &
+          passwordItems.url.lower().like('%${filter.url!.toLowerCase()}%');
     }
-
-    // Наличие описания
     if (filter.hasDescription != null) {
-      expression =
-          expression &
+      expr =
+          expr &
           (filter.hasDescription!
-              ? passwords.description.isNotNull()
-              : passwords.description.isNull());
+              ? vaultItems.description.isNotNull()
+              : vaultItems.description.isNull());
     }
-
-    // Наличие заметок
     if (filter.hasNotes != null) {
-      expression =
-          expression &
+      expr =
+          expr &
           (filter.hasNotes!
-              ? passwords.noteId.isNotNull()
-              : passwords.noteId.isNull());
+              ? vaultItems.noteId.isNotNull()
+              : vaultItems.noteId.isNull());
     }
-
-    // Наличие URL
     if (filter.hasUrl != null) {
-      expression =
-          expression &
-          (filter.hasUrl! ? passwords.url.isNotNull() : passwords.url.isNull());
+      expr =
+          expr &
+          (filter.hasUrl!
+              ? passwordItems.url.isNotNull()
+              : passwordItems.url.isNull());
     }
-
-    // Наличие логина
     if (filter.hasLogin != null) {
-      expression =
-          expression &
+      expr =
+          expr &
           (filter.hasLogin!
-              ? passwords.login.isNotNull()
-              : passwords.login.isNull());
+              ? passwordItems.login.isNotNull()
+              : passwordItems.login.isNull());
     }
-
-    // Наличие email
     if (filter.hasEmail != null) {
-      expression =
-          expression &
+      expr =
+          expr &
           (filter.hasEmail!
-              ? passwords.email.isNotNull()
-              : passwords.email.isNull());
+              ? passwordItems.email.isNotNull()
+              : passwordItems.email.isNull());
     }
-
-    return expression;
+    return expr;
   }
 
-  /// Вычисляет динамический score для сортировки по активности
-  /// Формула: recent_score * exp(-(current_time - last_used_at) / window_days)
   Expression<double> _calculateDynamicScore(int windowDays) {
     final now = DateTime.now();
-    final nowSeconds = now.millisecondsSinceEpoch ~/ 1000; // в секундах
-    final windowSeconds = windowDays * 24 * 60 * 60;
+    final nowSec = now.millisecondsSinceEpoch ~/ 1000;
+    final windowSec = windowDays * 24 * 60 * 60;
 
-    // Строим всё выражение как единый CustomExpression
-    // recent_score * exp(-(now - last_used_at) / window_seconds)
-    // Drift хранит DateTime как Unix timestamp в секундах
-    // Если last_used_at == null, используем created_at
     return CustomExpression<double>(
-      'CAST(COALESCE("passwords"."recent_score", 1) AS REAL) * '
-      'exp(-($nowSeconds - COALESCE("passwords"."last_used_at", "passwords"."created_at")) / $windowSeconds.0)',
+      'CAST(COALESCE("vault_items"."recent_score",'
+      ' 1) AS REAL) * '
+      'exp(-($nowSec - COALESCE('
+      '"vault_items"."last_used_at",'
+      ' "vault_items"."created_at")) / '
+      '$windowSec.0)',
     );
   }
 
-  /// Строит список OrderingTerm для сортировки
   List<OrderingTerm> _buildOrderBy(PasswordsFilter filter) {
-    final orderingTerms = <OrderingTerm>[];
-
-    // Закрепленные записи всегда сверху
-    orderingTerms.add(
-      OrderingTerm(expression: passwords.isPinned, mode: OrderingMode.desc),
+    final terms = <OrderingTerm>[];
+    terms.add(
+      OrderingTerm(expression: vaultItems.isPinned, mode: OrderingMode.desc),
     );
 
-    // Основная сортировка
     final mode = filter.base.sortDirection == SortDirection.asc
         ? OrderingMode.asc
         : OrderingMode.desc;
 
-    // Если установлен фильтр по часто используемым, применяем динамическую сортировку
     if (filter.base.isFrequentlyUsed == true) {
       final windowDays = filter.base.frequencyWindowDays ?? 7;
-      final scoreExpr = _calculateDynamicScore(windowDays);
-      orderingTerms.add(OrderingTerm(expression: scoreExpr, mode: mode));
-      return orderingTerms;
+      terms.add(
+        OrderingTerm(
+          expression: _calculateDynamicScore(windowDays),
+          mode: mode,
+        ),
+      );
+      return terms;
     }
 
-    // Используем sortBy из BaseFilter, если sortField не указан
     if (filter.sortField != null) {
       switch (filter.sortField!) {
         case PasswordsSortField.name:
-          orderingTerms.add(
-            OrderingTerm(expression: passwords.name, mode: mode),
-          );
-          break;
+          terms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
         case PasswordsSortField.login:
-          orderingTerms.add(
-            OrderingTerm(expression: passwords.login, mode: mode),
-          );
-          break;
+          terms.add(OrderingTerm(expression: passwordItems.login, mode: mode));
         case PasswordsSortField.email:
-          orderingTerms.add(
-            OrderingTerm(expression: passwords.email, mode: mode),
-          );
-          break;
+          terms.add(OrderingTerm(expression: passwordItems.email, mode: mode));
         case PasswordsSortField.url:
-          orderingTerms.add(
-            OrderingTerm(expression: passwords.url, mode: mode),
-          );
-          break;
+          terms.add(OrderingTerm(expression: passwordItems.url, mode: mode));
         case PasswordsSortField.createdAt:
-          orderingTerms.add(
-            OrderingTerm(expression: passwords.createdAt, mode: mode),
-          );
-          break;
+          terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
         case PasswordsSortField.modifiedAt:
-          orderingTerms.add(
-            OrderingTerm(expression: passwords.modifiedAt, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
           );
-          break;
         case PasswordsSortField.lastAccessed:
-          orderingTerms.add(
-            OrderingTerm(expression: passwords.lastUsedAt, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
           );
-          break;
       }
     } else {
-      // Используем sortBy из BaseFilter
       switch (filter.base.sortBy) {
         case SortBy.createdAt:
-          orderingTerms.add(
-            OrderingTerm(expression: passwords.createdAt, mode: mode),
-          );
-          break;
+          terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
         case SortBy.modifiedAt:
-          orderingTerms.add(
-            OrderingTerm(expression: passwords.modifiedAt, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
           );
-          break;
         case SortBy.lastUsedAt:
-          orderingTerms.add(
-            OrderingTerm(expression: passwords.lastUsedAt, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
           );
-          break;
         case SortBy.recentScore:
-          final windowDays = filter.base.frequencyWindowDays ?? 7;
-          final scoreExpr = _calculateDynamicScore(windowDays);
-          orderingTerms.add(OrderingTerm(expression: scoreExpr, mode: mode));
-          break;
+          final wd = filter.base.frequencyWindowDays ?? 7;
+          terms.add(
+            OrderingTerm(expression: _calculateDynamicScore(wd), mode: mode),
+          );
       }
     }
-
-    return orderingTerms;
+    return terms;
   }
 
-  /// Загружает теги для списка паролей (максимум 10 тегов на пароль)
-  Future<Map<String, List<TagInCardDto>>> _loadTagsForPasswords(
-    List<String> passwordIds,
+  Future<Map<String, List<TagInCardDto>>> _loadTagsForItems(
+    List<String> itemIds,
   ) async {
-    if (passwordIds.isEmpty) return {};
+    if (itemIds.isEmpty) return {};
 
-    // Запрос для получения тегов со связями с LIMIT 10 на пароль
-    final query = select(passwordsTags).join([
-      innerJoin(tags, tags.id.equalsExp(passwordsTags.tagId)),
-    ])..where(passwordsTags.passwordId.isIn(passwordIds));
+    final query = select(itemTags).join([
+      innerJoin(tags, tags.id.equalsExp(itemTags.tagId)),
+    ])..where(itemTags.itemId.isIn(itemIds));
 
-    // Группируем теги по passwordId
+    final results = await query.get();
     final tagsMap = <String, List<TagInCardDto>>{};
 
-    // Обрабатываем результаты с учетом лимита
-    final results = await query.get();
-
     for (final row in results) {
-      final passwordTag = row.readTable(passwordsTags);
+      final it = row.readTable(itemTags);
       final tag = row.readTable(tags);
-
-      final passwordId = passwordTag.passwordId;
-
-      if (!tagsMap.containsKey(passwordId)) {
-        tagsMap[passwordId] = [];
+      final id = it.itemId;
+      if (!tagsMap.containsKey(id)) {
+        tagsMap[id] = [];
       }
-
-      // Ограничиваем максимум 10 тегами
-      if (tagsMap[passwordId]!.length < 10) {
-        tagsMap[passwordId]!.add(
+      if (tagsMap[id]!.length < 10) {
+        tagsMap[id]!.add(
           TagInCardDto(id: tag.id, name: tag.name, color: tag.color),
         );
       }
     }
-
     return tagsMap;
   }
 }

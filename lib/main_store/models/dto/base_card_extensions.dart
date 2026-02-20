@@ -43,6 +43,13 @@ extension BaseCardDtoExtension on BaseCardDto {
         isArchived: isArchived ?? self.isArchived,
         isDeleted: isDeleted ?? self.isDeleted,
       );
+    } else if (self is DocumentCardDto) {
+      return self.copyWith(
+        isFavorite: isFavorite ?? self.isFavorite,
+        isPinned: isPinned ?? self.isPinned,
+        isArchived: isArchived ?? self.isArchived,
+        isDeleted: isDeleted ?? self.isDeleted,
+      );
     }
     return self;
   }

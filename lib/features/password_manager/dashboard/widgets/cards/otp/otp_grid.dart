@@ -204,8 +204,8 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard>
         if (mounted) setState(() => _codeCopied = false);
       });
 
-      final otpDao = await ref.read(otpDaoProvider.future);
-      await otpDao.incrementUsage(widget.otp.id);
+      final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+      await vaultItemDao.incrementUsage(widget.otp.id);
     }
   }
 

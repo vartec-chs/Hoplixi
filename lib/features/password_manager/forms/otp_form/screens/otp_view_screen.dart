@@ -25,7 +25,7 @@ class OtpViewScreen extends ConsumerStatefulWidget {
 }
 
 class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
-  OtpsData? _otp;
+  (VaultItemsData, OtpItemsData)? _otp;
   bool _isLoading = true;
   String? _categoryName;
   List<String> _tagNames = [];
@@ -48,14 +48,14 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
   Future<void> _loadOtp() async {
     try {
       final dao = await ref.read(otpDaoProvider.future);
-      final otp = await dao.getOtpById(widget.otpId);
-      if (otp != null && mounted) {
+      final record = await dao.getById(widget.otpId);
+      if (record != null && mounted) {
         setState(() {
-          _otp = otp;
+          _otp = record;
           _isLoading = false;
         });
         _startCodeGeneration();
-        await _loadRelatedData(otp);
+        await _loadRelatedData(record);
       } else if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -64,15 +64,16 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
     }
   }
 
-  Future<void> _loadRelatedData(OtpsData otp) async {
-    if (otp.categoryId != null) {
+  Future<void> _loadRelatedData((VaultItemsData, OtpItemsData) record) async {
+    final vault = record.$1;
+    if (vault.categoryId != null) {
       final catDao = await ref.read(categoryDaoProvider.future);
-      final cat = await catDao.getCategoryById(otp.categoryId!);
+      final cat = await catDao.getCategoryById(vault.categoryId!);
       if (mounted && cat != null) setState(() => _categoryName = cat.name);
     }
 
-    final dao = await ref.read(otpDaoProvider.future);
-    final tagIds = await dao.getOtpTagIds(widget.otpId);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    final tagIds = await vaultItemDao.getTagIds(widget.otpId);
     if (tagIds.isNotEmpty) {
       final tagDao = await ref.read(tagDaoProvider.future);
       final tags = await tagDao.getTagsByIds(tagIds);
@@ -88,27 +89,27 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
   void _generateCode() {
     if (_otp == null) return;
 
-    final secretBytes = _otp!.secret;
+    final secretBytes = _otp!.$2.secret;
     if (secretBytes.isEmpty) return;
 
     // Decode secret based on encoding
     String secretString;
     try {
-      secretString = _decodeSecret(secretBytes, _otp!.secretEncoding);
+      secretString = _decodeSecret(secretBytes, _otp!.$2.secretEncoding);
     } catch (_) {
       return;
     }
 
-    final period = _otp!.period;
+    final period = _otp!.$2.period;
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     final remaining = period - (now % period);
 
     final code = OTP.generateTOTPCodeString(
       secretString,
       DateTime.now().millisecondsSinceEpoch,
-      length: _otp!.digits,
+      length: _otp!.$2.digits,
       interval: period,
-      algorithm: _getAlgorithm(_otp!.algorithm),
+      algorithm: _getAlgorithm(_otp!.$2.algorithm),
     );
 
     if (mounted) {
@@ -144,8 +145,8 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
   Future<void> _copyCode() async {
     Clipboard.setData(ClipboardData(text: _currentCode));
     Toaster.success(title: 'Скопировано', description: 'OTP код скопирован');
-    final dao = await ref.read(otpDaoProvider.future);
-    await dao.incrementUsage(widget.otpId);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    await vaultItemDao.incrementUsage(widget.otpId);
   }
 
   void _edit() => context.go(
@@ -159,7 +160,7 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_otp?.issuer ?? 'OTP'),
+        title: Text(_otp?.$1.name ?? 'OTP'),
         actions: [
           IconButton(icon: const Icon(LucideIcons.pencil), onPressed: _edit),
         ],
@@ -196,7 +197,7 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
                                 width: 24,
                                 height: 24,
                                 child: CircularProgressIndicator(
-                                  value: _remainingSeconds / _otp!.period,
+                                  value: _remainingSeconds / _otp!.$2.period,
                                   strokeWidth: 3,
                                   color: _remainingSeconds <= 5
                                       ? cs.error
@@ -224,22 +225,27 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
                   theme,
                   LucideIcons.building,
                   'Издатель',
-                  _otp!.issuer ?? '-',
+                  _otp!.$2.issuer ?? '-',
                 ),
                 _info(
                   theme,
                   LucideIcons.user,
                   'Аккаунт',
-                  _otp!.accountName ?? '-',
+                  _otp!.$2.accountName ?? '-',
                 ),
                 _info(
                   theme,
                   LucideIcons.timer,
                   'Период',
-                  '${_otp!.period} сек',
+                  '${_otp!.$2.period} сек',
                 ),
-                _info(theme, LucideIcons.hash, 'Цифр', '${_otp!.digits}'),
-                _info(theme, LucideIcons.cpu, 'Алгоритм', _otp!.algorithm.name),
+                _info(theme, LucideIcons.hash, 'Цифр', '${_otp!.$2.digits}'),
+                _info(
+                  theme,
+                  LucideIcons.cpu,
+                  'Алгоритм',
+                  _otp!.$2.algorithm.name,
+                ),
                 if (_categoryName != null)
                   _info(theme, LucideIcons.folder, 'Категория', _categoryName!),
                 if (_tagNames.isNotEmpty) _tags(theme),

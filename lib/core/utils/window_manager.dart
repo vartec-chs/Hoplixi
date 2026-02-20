@@ -23,6 +23,8 @@ class WindowManager {
         if (showOnInit) {
           await windowManager.show();
           await windowManager.focus();
+        } else {
+          await windowManager.hide();
         }
       });
 

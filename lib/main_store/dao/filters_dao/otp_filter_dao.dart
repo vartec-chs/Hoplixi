@@ -6,51 +6,50 @@ import 'package:hoplixi/main_store/models/dto/otp_dto.dart';
 import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_store/models/filter/base_filter.dart';
 import 'package:hoplixi/main_store/models/filter/otps_filter.dart';
-import 'package:hoplixi/main_store/tables/index.dart';
+import 'package:hoplixi/main_store/tables/categories.dart';
+import 'package:hoplixi/main_store/tables/item_tags.dart';
+import 'package:hoplixi/main_store/tables/note_items.dart';
+import 'package:hoplixi/main_store/tables/otp_items.dart';
+import 'package:hoplixi/main_store/tables/tags.dart';
+import 'package:hoplixi/main_store/tables/vault_items.dart';
 
 part 'otp_filter_dao.g.dart';
 
-@DriftAccessor(tables: [Otps, Categories, OtpsTags, Tags])
+@DriftAccessor(
+  tables: [VaultItems, OtpItems, Categories, Tags, ItemTags, NoteItems],
+)
 class OtpFilterDao extends DatabaseAccessor<MainStore>
     with _$OtpFilterDaoMixin
     implements FilterDao<OtpsFilter, OtpCardDto> {
   OtpFilterDao(super.db);
 
-  /// Основной метод для получения отфильтрованных OTP записей
   @override
   Future<List<OtpCardDto>> getFiltered(OtpsFilter filter) async {
-    // Создаем базовый запрос с join к категориям и заметкам
-    final query = select(otps).join([
-      leftOuterJoin(categories, categories.id.equalsExp(otps.categoryId)),
-      leftOuterJoin(notes, notes.id.equalsExp(otps.noteId)),
+    final query = select(vaultItems).join([
+      innerJoin(otpItems, otpItems.itemId.equalsExp(vaultItems.id)),
+      leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
+      leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
 
-    // Применяем все фильтры
-    query.where(_buildWhereExpression(filter, hasNotesJoin: true));
-
-    // Применяем сортировку
+    query.where(_buildWhereExpression(filter));
     query.orderBy(_buildOrderBy(filter));
 
-    // Применяем limit и offset
     if (filter.base.limit != null && filter.base.limit! > 0) {
       query.limit(filter.base.limit!, offset: filter.base.offset);
     }
 
-    // Выполняем запрос и маппим результаты
     final results = await query.get();
 
-    // Собираем ID всех OTP для загрузки тегов
-    final otpIds = results.map((row) => row.readTable(otps).id).toList();
-
-    // Загружаем теги для всех OTP одним запросом
-    final tagsMap = await _loadTagsForOtps(otpIds);
+    final itemIds = results.map((row) => row.readTable(vaultItems).id).toList();
+    final tagsMap = await _loadTagsForItems(itemIds);
 
     return results.map((row) {
-      final otp = row.readTable(otps);
+      final item = row.readTable(vaultItems);
+      final otp = row.readTable(otpItems);
       final category = row.readTableOrNull(categories);
 
       return OtpCardDto(
-        id: otp.id,
+        id: item.id,
         issuer: otp.issuer,
         accountName: otp.accountName,
         type: otp.type.name,
@@ -65,379 +64,294 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
                 iconId: category.iconId,
               )
             : null,
-        tags: tagsMap[otp.id] ?? [],
-        isFavorite: otp.isFavorite,
-        isPinned: otp.isPinned,
-        isArchived: otp.isArchived,
-        isDeleted: otp.isDeleted,
-        usedCount: otp.usedCount,
-        modifiedAt: otp.modifiedAt,
+        tags: tagsMap[item.id] ?? [],
+        isFavorite: item.isFavorite,
+        isPinned: item.isPinned,
+        isArchived: item.isArchived,
+        isDeleted: item.isDeleted,
+        usedCount: item.usedCount,
+        modifiedAt: item.modifiedAt,
       );
     }).toList();
   }
 
-  /// Загружает теги для списка OTP одним запросом
-  Future<Map<String, List<TagInCardDto>>> _loadTagsForOtps(
-    List<String> otpIds,
-  ) async {
-    if (otpIds.isEmpty) return {};
-
-    final query = select(otpsTags).join([
-      innerJoin(tags, tags.id.equalsExp(otpsTags.tagId)),
-    ])..where(otpsTags.otpId.isIn(otpIds));
-
-    final results = await query.get();
-
-    final Map<String, List<TagInCardDto>> tagsMap = {};
-
-    for (final row in results) {
-      final otpTag = row.readTable(otpsTags);
-      final tag = row.readTable(tags);
-
-      final tagDto = TagInCardDto(id: tag.id, name: tag.name, color: tag.color);
-
-      tagsMap.putIfAbsent(otpTag.otpId, () => []).add(tagDto);
-    }
-
-    return tagsMap;
-  }
-
-  /// Подсчитывает количество отфильтрованных паролей
   @override
   Future<int> countFiltered(OtpsFilter filter) async {
-    // Создаем запрос для подсчета с join
-    final query = select(otps).join([
-      leftOuterJoin(categories, categories.id.equalsExp(otps.categoryId)),
-      leftOuterJoin(notes, notes.id.equalsExp(otps.noteId)),
+    final query = select(vaultItems).join([
+      innerJoin(otpItems, otpItems.itemId.equalsExp(vaultItems.id)),
+      leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
+      leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
-
-    // Применяем те же фильтры
-    query.where(_buildWhereExpression(filter, hasNotesJoin: true));
-
-    // Выполняем запрос и считаем
+    query.where(_buildWhereExpression(filter));
     final results = await query.get();
     return results.length;
   }
 
-  /// Строит WHERE выражение на основе всех фильтров
-  Expression<bool> _buildWhereExpression(
-    OtpsFilter filter, {
-    bool hasNotesJoin = false,
-  }) {
-    Expression<bool> expression = const Constant(true);
-
-    // Применяем базовые фильтры
-    expression =
-        expression & _applyBaseFilters(filter.base, hasNotesJoin: hasNotesJoin);
-
-    // Применяем специфичные фильтры для OTP
-    expression = expression & _applyOtpSpecificFilters(filter);
-
-    return expression;
+  Expression<bool> _buildWhereExpression(OtpsFilter filter) {
+    Expression<bool> expr = const Constant(true);
+    expr = expr & _applyBaseFilters(filter.base);
+    expr = expr & _applyOtpSpecificFilters(filter);
+    return expr;
   }
 
-  /// Применяет базовые фильтры из BaseFilter
-  Expression<bool> _applyBaseFilters(
-    BaseFilter base, {
-    bool hasNotesJoin = false,
-  }) {
-    Expression<bool> expression = const Constant(true);
+  Expression<bool> _applyBaseFilters(BaseFilter base) {
+    Expression<bool> expr = const Constant(true);
 
-    // Поисковый запрос по нескольким полям
     if (base.query.isNotEmpty) {
-      final query = base.query.toLowerCase();
-      Expression<bool> searchExpression =
-          otps.issuer.lower().like('%$query%') |
-          otps.accountName.lower().like('%$query%');
-      if (hasNotesJoin) {
-        searchExpression =
-            searchExpression | notes.content.lower().like('%$query%');
-      }
-      expression = expression & searchExpression;
+      final q = base.query.toLowerCase();
+      Expression<bool> searchExpr =
+          otpItems.issuer.lower().like('%$q%') |
+          otpItems.accountName.lower().like('%$q%');
+      searchExpr = searchExpr | noteItems.content.lower().like('%$q%');
+      expr = expr & searchExpr;
     }
 
-    // Фильтр по категориям
     if (base.categoryIds.isNotEmpty) {
-      expression = expression & otps.categoryId.isIn(base.categoryIds);
+      expr = expr & vaultItems.categoryId.isIn(base.categoryIds);
     }
 
-    // Фильтр по тегам (требует подзапрос)
     if (base.tagIds.isNotEmpty) {
-      // Используем EXISTS для проверки наличия тегов
       final tagExists = existsQuery(
-        select(otpsTags)..where(
-          (ot) => ot.otpId.equalsExp(otps.id) & ot.tagId.isIn(base.tagIds),
+        select(itemTags)..where(
+          (t) => t.itemId.equalsExp(vaultItems.id) & t.tagId.isIn(base.tagIds),
         ),
       );
-
-      expression = expression & tagExists;
+      expr = expr & tagExists;
     }
 
-    // Булевы флаги
     if (base.isFavorite != null) {
-      expression = expression & otps.isFavorite.equals(base.isFavorite!);
+      expr = expr & vaultItems.isFavorite.equals(base.isFavorite!);
     }
 
     if (base.isArchived != null) {
-      expression = expression & otps.isArchived.equals(base.isArchived!);
+      expr = expr & vaultItems.isArchived.equals(base.isArchived!);
     } else {
-      // По умолчанию исключаем архивные
-      expression = expression & otps.isArchived.equals(false);
+      expr = expr & vaultItems.isArchived.equals(false);
     }
 
     if (base.isDeleted != null) {
-      expression = expression & otps.isDeleted.equals(base.isDeleted!);
+      expr = expr & vaultItems.isDeleted.equals(base.isDeleted!);
     } else {
-      // По умолчанию исключаем удалённые
-      expression = expression & otps.isDeleted.equals(false);
+      expr = expr & vaultItems.isDeleted.equals(false);
     }
 
     if (base.isPinned != null) {
-      expression = expression & otps.isPinned.equals(base.isPinned!);
+      expr = expr & vaultItems.isPinned.equals(base.isPinned!);
     }
 
     if (base.hasNotes != null) {
-      expression =
-          expression &
-          (base.hasNotes! ? otps.noteId.isNotNull() : otps.noteId.isNull());
+      expr =
+          expr &
+          (base.hasNotes!
+              ? vaultItems.noteId.isNotNull()
+              : vaultItems.noteId.isNull());
     }
 
-    // Фильтр по заметкам
     if (base.noteIds.isNotEmpty) {
-      expression = expression & otps.noteId.isIn(base.noteIds);
+      expr = expr & vaultItems.noteId.isIn(base.noteIds);
     }
 
-    // Диапазоны дат создания
     if (base.createdAfter != null) {
-      expression =
-          expression & otps.createdAt.isBiggerOrEqualValue(base.createdAfter!);
+      expr =
+          expr & vaultItems.createdAt.isBiggerOrEqualValue(base.createdAfter!);
     }
-
     if (base.createdBefore != null) {
-      expression =
-          expression &
-          otps.createdAt.isSmallerOrEqualValue(base.createdBefore!);
+      expr =
+          expr &
+          vaultItems.createdAt.isSmallerOrEqualValue(base.createdBefore!);
     }
-
-    // Диапазоны дат модификации
     if (base.modifiedAfter != null) {
-      expression =
-          expression &
-          otps.modifiedAt.isBiggerOrEqualValue(base.modifiedAfter!);
+      expr =
+          expr &
+          vaultItems.modifiedAt.isBiggerOrEqualValue(base.modifiedAfter!);
     }
-
     if (base.modifiedBefore != null) {
-      expression =
-          expression &
-          otps.modifiedAt.isSmallerOrEqualValue(base.modifiedBefore!);
+      expr =
+          expr &
+          vaultItems.modifiedAt.isSmallerOrEqualValue(base.modifiedBefore!);
     }
-
-    // Диапазоны дат последнего доступа
     if (base.lastUsedAfter != null) {
-      expression =
-          expression &
-          otps.lastUsedAt.isBiggerOrEqualValue(base.lastUsedAfter!);
+      expr =
+          expr &
+          vaultItems.lastUsedAt.isBiggerOrEqualValue(base.lastUsedAfter!);
     }
-
     if (base.lastUsedBefore != null) {
-      expression =
-          expression &
-          otps.lastUsedAt.isSmallerOrEqualValue(base.lastUsedBefore!);
+      expr =
+          expr &
+          vaultItems.lastUsedAt.isSmallerOrEqualValue(base.lastUsedBefore!);
     }
-
-    // Диапазоны счетчика использований
     if (base.minUsedCount != null) {
-      expression =
-          expression & otps.usedCount.isBiggerOrEqualValue(base.minUsedCount!);
+      expr =
+          expr & vaultItems.usedCount.isBiggerOrEqualValue(base.minUsedCount!);
     }
-
     if (base.maxUsedCount != null) {
-      expression =
-          expression & otps.usedCount.isSmallerOrEqualValue(base.maxUsedCount!);
+      expr =
+          expr & vaultItems.usedCount.isSmallerOrEqualValue(base.maxUsedCount!);
     }
-
-    return expression;
+    return expr;
   }
 
-  /// Применяет специфичные фильтры для OTP
   Expression<bool> _applyOtpSpecificFilters(OtpsFilter filter) {
-    Expression<bool> expression = const Constant(true);
+    Expression<bool> expr = const Constant(true);
 
-    // Фильтр по типам OTP (TOTP, HOTP)
     if (filter.types.isNotEmpty) {
-      final typeExpressions = filter.types
-          .map((type) => otps.type.equals(type.name))
+      final typeExprs = filter.types
+          .map((type) => otpItems.type.equals(type.name))
           .reduce((a, b) => a | b);
-      expression = expression & typeExpressions;
+      expr = expr & typeExprs;
     }
 
-    // Фильтр по алгоритмам
     if (filter.algorithms.isNotEmpty) {
-      final algorithmExpressions = filter.algorithms
-          .map((algorithm) => otps.algorithm.equals(algorithm.name))
+      final algExprs = filter.algorithms
+          .map((alg) => otpItems.algorithm.equals(alg.name))
           .reduce((a, b) => a | b);
-      expression = expression & algorithmExpressions;
+      expr = expr & algExprs;
     }
 
-    // Фильтр по издателю (issuer)
     if (filter.issuer != null) {
-      expression =
-          expression &
-          otps.issuer.lower().like('%${filter.issuer!.toLowerCase()}%');
+      expr =
+          expr &
+          otpItems.issuer.lower().like('%${filter.issuer!.toLowerCase()}%');
     }
-
-    // Фильтр по имени аккаунта
     if (filter.accountName != null) {
-      expression =
-          expression &
-          otps.accountName.lower().like(
+      expr =
+          expr &
+          otpItems.accountName.lower().like(
             '%${filter.accountName!.toLowerCase()}%',
           );
     }
-
-    // Фильтр по количеству цифр
     if (filter.digits.isNotEmpty) {
-      expression = expression & otps.digits.isIn(filter.digits);
+      expr = expr & otpItems.digits.isIn(filter.digits);
     }
-
-    // Фильтр по периоду
     if (filter.periods.isNotEmpty) {
-      expression = expression & otps.period.isIn(filter.periods);
+      expr = expr & otpItems.period.isIn(filter.periods);
     }
-
-    // Фильтр по кодировке секрета
     if (filter.secretEncodings.isNotEmpty) {
-      final encodingExpressions = filter.secretEncodings
-          .map((encoding) => otps.secretEncoding.equals(encoding.name))
+      final encExprs = filter.secretEncodings
+          .map((enc) => otpItems.secretEncoding.equals(enc.name))
           .reduce((a, b) => a | b);
-      expression = expression & encodingExpressions;
+      expr = expr & encExprs;
     }
-
-    // Наличие связи с паролем
     if (filter.hasPasswordLink != null) {
-      expression =
-          expression &
+      expr =
+          expr &
           (filter.hasPasswordLink!
-              ? otps.passwordId.isNotNull()
-              : otps.passwordId.isNull());
+              ? otpItems.passwordItemId.isNotNull()
+              : otpItems.passwordItemId.isNull());
     }
-
-    // Наличие заметок
     if (filter.hasNotes != null) {
-      expression =
-          expression &
-          (filter.hasNotes! ? otps.noteId.isNotNull() : otps.noteId.isNull());
+      expr =
+          expr &
+          (filter.hasNotes!
+              ? vaultItems.noteId.isNotNull()
+              : vaultItems.noteId.isNull());
     }
-
-    return expression;
+    return expr;
   }
 
-  /// Вычисляет динамический score для сортировки по активности
-  /// Формула: recent_score * exp(-(current_time - last_used_at) / window_days)
   Expression<double> _calculateDynamicScore(int windowDays) {
     final now = DateTime.now();
-    final nowSeconds = now.millisecondsSinceEpoch ~/ 1000; // в секундах
-    final windowSeconds = windowDays * 24 * 60 * 60;
+    final nowSec = now.millisecondsSinceEpoch ~/ 1000;
+    final windowSec = windowDays * 24 * 60 * 60;
 
-    // Строим всё выражение как единый CustomExpression
-    // recent_score * exp(-(now - last_used_at) / window_seconds)
-    // Drift хранит DateTime как Unix timestamp в секундах
-    // Если last_used_at == null, используем created_at
     return CustomExpression<double>(
-      'CAST(COALESCE("otps"."recent_score", 1) AS REAL) * '
-      'exp(-($nowSeconds - COALESCE("otps"."last_used_at", "otps"."created_at")) / $windowSeconds.0)',
+      'CAST(COALESCE("vault_items"."recent_score",'
+      ' 1) AS REAL) * '
+      'exp(-($nowSec - COALESCE('
+      '"vault_items"."last_used_at",'
+      ' "vault_items"."created_at")) / '
+      '$windowSec.0)',
     );
   }
 
-  /// Строит список OrderingTerm для сортировки
   List<OrderingTerm> _buildOrderBy(OtpsFilter filter) {
-    final orderingTerms = <OrderingTerm>[];
-
-    // Закрепленные записи всегда сверху
-    orderingTerms.add(
-      OrderingTerm(expression: otps.isPinned, mode: OrderingMode.desc),
+    final terms = <OrderingTerm>[];
+    terms.add(
+      OrderingTerm(expression: vaultItems.isPinned, mode: OrderingMode.desc),
     );
 
-    // Основная сортировка
     final mode = filter.base.sortDirection == SortDirection.asc
         ? OrderingMode.asc
         : OrderingMode.desc;
 
-    // Если установлен фильтр по часто используемым, применяем динамическую сортировку
     if (filter.base.isFrequentlyUsed == true) {
-      final windowDays = filter.base.frequencyWindowDays ?? 7;
-      final scoreExpr = _calculateDynamicScore(windowDays);
-      orderingTerms.add(OrderingTerm(expression: scoreExpr, mode: mode));
-      return orderingTerms;
+      final wd = filter.base.frequencyWindowDays ?? 7;
+      terms.add(
+        OrderingTerm(expression: _calculateDynamicScore(wd), mode: mode),
+      );
+      return terms;
     }
 
     if (filter.sortField != null) {
-      // Используем специфичное поле для OTP
       switch (filter.sortField!) {
         case OtpsSortField.issuer:
-          orderingTerms.add(OrderingTerm(expression: otps.issuer, mode: mode));
-          break;
+          terms.add(OrderingTerm(expression: otpItems.issuer, mode: mode));
         case OtpsSortField.accountName:
-          orderingTerms.add(
-            OrderingTerm(expression: otps.accountName, mode: mode),
-          );
-          break;
+          terms.add(OrderingTerm(expression: otpItems.accountName, mode: mode));
         case OtpsSortField.type:
-          orderingTerms.add(OrderingTerm(expression: otps.type, mode: mode));
-          break;
+          terms.add(OrderingTerm(expression: otpItems.type, mode: mode));
         case OtpsSortField.algorithm:
-          orderingTerms.add(
-            OrderingTerm(expression: otps.algorithm, mode: mode),
-          );
-          break;
+          terms.add(OrderingTerm(expression: otpItems.algorithm, mode: mode));
         case OtpsSortField.digits:
-          orderingTerms.add(OrderingTerm(expression: otps.digits, mode: mode));
-          break;
+          terms.add(OrderingTerm(expression: otpItems.digits, mode: mode));
         case OtpsSortField.period:
-          orderingTerms.add(OrderingTerm(expression: otps.period, mode: mode));
-          break;
+          terms.add(OrderingTerm(expression: otpItems.period, mode: mode));
         case OtpsSortField.createdAt:
-          orderingTerms.add(
-            OrderingTerm(expression: otps.createdAt, mode: mode),
-          );
-          break;
+          terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
         case OtpsSortField.modifiedAt:
-          orderingTerms.add(
-            OrderingTerm(expression: otps.modifiedAt, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
           );
-          break;
         case OtpsSortField.lastAccessed:
-          orderingTerms.add(
-            OrderingTerm(expression: otps.lastUsedAt, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
           );
-          break;
       }
     } else {
-      // Используем базовый sortBy из BaseFilter
       switch (filter.base.sortBy) {
         case SortBy.createdAt:
-          orderingTerms.add(
-            OrderingTerm(expression: otps.createdAt, mode: mode),
-          );
-          break;
+          terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
         case SortBy.modifiedAt:
-          orderingTerms.add(
-            OrderingTerm(expression: otps.modifiedAt, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
           );
-          break;
         case SortBy.lastUsedAt:
-          orderingTerms.add(
-            OrderingTerm(expression: otps.lastUsedAt, mode: mode),
+          terms.add(
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
           );
-          break;
         case SortBy.recentScore:
-          final windowDays = filter.base.frequencyWindowDays ?? 7;
-          final scoreExpr = _calculateDynamicScore(windowDays);
-          orderingTerms.add(OrderingTerm(expression: scoreExpr, mode: mode));
-          break;
+          final wd = filter.base.frequencyWindowDays ?? 7;
+          terms.add(
+            OrderingTerm(expression: _calculateDynamicScore(wd), mode: mode),
+          );
       }
     }
+    return terms;
+  }
 
-    return orderingTerms;
+  Future<Map<String, List<TagInCardDto>>> _loadTagsForItems(
+    List<String> itemIds,
+  ) async {
+    if (itemIds.isEmpty) return {};
+
+    final query = select(itemTags).join([
+      innerJoin(tags, tags.id.equalsExp(itemTags.tagId)),
+    ])..where(itemTags.itemId.isIn(itemIds));
+
+    final results = await query.get();
+    final tagsMap = <String, List<TagInCardDto>>{};
+
+    for (final row in results) {
+      final it = row.readTable(itemTags);
+      final tag = row.readTable(tags);
+
+      tagsMap.putIfAbsent(it.itemId, () => []);
+      if (tagsMap[it.itemId]!.length < 10) {
+        tagsMap[it.itemId]!.add(
+          TagInCardDto(id: tag.id, name: tag.name, color: tag.color),
+        );
+      }
+    }
+    return tagsMap;
   }
 }

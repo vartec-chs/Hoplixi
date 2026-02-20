@@ -53,7 +53,7 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
   late final Animation<double> _iconsAnimation;
 
   // TOTP state
-  OtpsData? _linkedOtp;
+  (VaultItemsData, OtpItemsData)? _linkedOtp;
   Uint8List? _secret;
   String? _currentCode;
   int _remainingSeconds = 0;
@@ -109,11 +109,12 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
 
     try {
       final otpDao = await ref.read(otpDaoProvider.future);
-      final otp = await otpDao.getOtpByPasswordId(widget.password.id);
+      final otp = await otpDao.getByPasswordItemId(widget.password.id);
 
       if (otp != null && mounted) {
         _linkedOtp = otp;
-        final secretBytes = await otpDao.getOtpSecretById(otp.id);
+        final (_, otpItem) = otp;
+        final secretBytes = await otpDao.getOtpSecretById(otpItem.itemId);
 
         if (secretBytes != null && mounted) {
           setState(() {
@@ -160,7 +161,8 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
 
       _updateRemainingSeconds();
 
-      if (_remainingSeconds == _linkedOtp!.period || _remainingSeconds == 0) {
+      final (_, linkedOtpItem) = _linkedOtp!;
+      if (_remainingSeconds == linkedOtpItem.period || _remainingSeconds == 0) {
         _generateCode();
       }
     });
@@ -169,7 +171,8 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
   void _updateRemainingSeconds() {
     if (_linkedOtp == null) return;
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-    final period = _linkedOtp!.period;
+    final (_, linkedOtpItem) = _linkedOtp!;
+    final period = linkedOtpItem.period;
     setState(() {
       _remainingSeconds = period - (now % period);
     });
@@ -177,6 +180,7 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
 
   void _generateCode() {
     if (_secret == null || _linkedOtp == null) return;
+    final (_, linkedOtp) = _linkedOtp!;
 
     try {
       final secretBase32 = String.fromCharCodes(_secret!);
@@ -184,8 +188,8 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
       final code = OTP.generateTOTPCodeString(
         secretBase32,
         DateTime.now().millisecondsSinceEpoch,
-        length: _linkedOtp!.digits,
-        interval: _linkedOtp!.period,
+        length: linkedOtp.digits,
+        interval: linkedOtp.period,
         isGoogle: true,
         algorithm: Algorithm.SHA1,
       );
@@ -212,8 +216,9 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
 
     // Инкрементируем использование связанного OTP
     if (_linkedOtp != null) {
-      final otpDao = await ref.read(otpDaoProvider.future);
-      await otpDao.incrementUsage(_linkedOtp!.id);
+      final (vaultOtp, _) = _linkedOtp!;
+      final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+      await vaultItemDao.incrementUsage(vaultOtp.id);
     }
   }
 
@@ -254,7 +259,8 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
       Toaster.error(title: 'Не удалось получить пароль');
     }
 
-    await passwordDao.incrementUsage(widget.password.id);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    await vaultItemDao.incrementUsage(widget.password.id);
   }
 
   Future<void> _copyLogin() async {
@@ -269,8 +275,8 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
       });
     }
 
-    final passwordDao = await ref.read(passwordDaoProvider.future);
-    await passwordDao.incrementUsage(widget.password.id);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    await vaultItemDao.incrementUsage(widget.password.id);
   }
 
   Future<void> _copyUrl() async {
@@ -285,8 +291,8 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
       });
     }
 
-    final passwordDao = await ref.read(passwordDaoProvider.future);
-    await passwordDao.incrementUsage(widget.password.id);
+    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+    await vaultItemDao.incrementUsage(widget.password.id);
   }
 
   List<CardActionItem> _buildCopyActions() {
@@ -624,7 +630,8 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
 
     if (_linkedOtp == null) return const SizedBox.shrink();
 
-    final progress = _remainingSeconds / _linkedOtp!.period;
+    final (_, linkedOtpForProgress) = _linkedOtp!;
+    final progress = _remainingSeconds / linkedOtpForProgress.period;
     final isLowTime = _remainingSeconds <= 5;
 
     return Container(

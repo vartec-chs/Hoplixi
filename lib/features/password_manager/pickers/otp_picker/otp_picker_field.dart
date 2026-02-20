@@ -123,9 +123,10 @@ class _OtpPickerFieldState extends ConsumerState<OtpPickerField> {
         otpDao.when(
           data: (dao) {
             // Загружаем асинхронно
-            dao.getOtpById(widget.selectedOtpId!).then((otp) {
+            dao.getById(widget.selectedOtpId!).then((otp) {
               if (otp != null) {
-                final name = otp.issuer ?? otp.accountName ?? 'Без названия';
+                final name =
+                    otp.$2.issuer ?? otp.$2.accountName ?? 'Без названия';
                 if (_resolvedOtpName != name) {
                   if (mounted) {
                     setState(() {

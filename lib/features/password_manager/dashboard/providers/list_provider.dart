@@ -6,7 +6,6 @@ import 'package:hoplixi/features/password_manager/dashboard/models/list_state.da
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/index.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_tab_provider.dart';
 import 'package:hoplixi/main_store/dao/filters_dao/filter.dart';
-import 'package:hoplixi/main_store/models/base_main_entity_dao.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/models/filter/index.dart';
 import 'package:hoplixi/main_store/provider/index.dart';
@@ -224,24 +223,6 @@ class PaginatedListNotifier
     }
   }
 
-  /// Выбор CRUD DAO по type для обновлений
-  Future<BaseMainEntityDao> _crudDaoForType() {
-    switch (entityType) {
-      case EntityType.password:
-        return ref.read(passwordDaoProvider.future);
-      case EntityType.note:
-        return ref.read(noteDaoProvider.future);
-      case EntityType.bankCard:
-        return ref.read(bankCardDaoProvider.future);
-      case EntityType.file:
-        return ref.read(fileDaoProvider.future);
-      case EntityType.otp:
-        return ref.read(otpDaoProvider.future);
-      case EntityType.document:
-        return ref.read(documentDaoProvider.future);
-    }
-  }
-
   /// Если нужен специфичный фильтр (например PasswordFilter) — строим его условно.
   /// Возвращаем общий BaseFilter или конкретный фильтр для DAO.getFilteredX
   dynamic _buildFilter({int page = 1}) {
@@ -442,7 +423,7 @@ class PaginatedListNotifier
     state = AsyncValue.data(cur.copyWith(items: updated));
 
     try {
-      final dao = await _crudDaoForType();
+      final dao = await ref.read(vaultItemDaoProvider.future);
       bool success = false;
       success = await dao.toggleFavorite(id, newFav);
 
@@ -482,7 +463,7 @@ class PaginatedListNotifier
     state = AsyncValue.data(cur.copyWith(items: updated));
 
     try {
-      final dao = await _crudDaoForType();
+      final dao = await ref.read(vaultItemDaoProvider.future);
       bool success = false;
       success = await dao.togglePin(id, newPin);
 
@@ -528,7 +509,7 @@ class PaginatedListNotifier
     );
 
     try {
-      final dao = await _crudDaoForType();
+      final dao = await ref.read(vaultItemDaoProvider.future);
       bool success = false;
       success = await dao.toggleArchive(id, newArchive);
 
@@ -574,7 +555,7 @@ class PaginatedListNotifier
     );
 
     try {
-      final dao = await _crudDaoForType();
+      final dao = await ref.read(vaultItemDaoProvider.future);
       bool success = false;
       success = await dao.softDelete(id);
 
@@ -615,7 +596,7 @@ class PaginatedListNotifier
     );
 
     try {
-      final dao = await _crudDaoForType();
+      final dao = await ref.read(vaultItemDaoProvider.future);
       bool success = false;
       success = await dao.restoreFromDeleted(id);
 
@@ -655,7 +636,7 @@ class PaginatedListNotifier
     );
 
     try {
-      final dao = await _crudDaoForType();
+      final dao = await ref.read(vaultItemDaoProvider.future);
       bool success = false;
       if (entityType == EntityType.file) {
         // Для файлов сначала удаляем все файлы истории, затем основной файл
@@ -668,13 +649,15 @@ class PaginatedListNotifier
         );
 
         // Удаляем файлы истории с диска
-        for (final record in historyRecords) {
+        for (final (_, fileRecord) in historyRecords) {
           // Получаем filePath из FileMetadata через metadataId
-          if (record.metadataId != null) {
+          if (fileRecord?.metadataId != null) {
             final fileDao = await ref.read(fileDaoProvider.future);
-            final metadata = await (fileDao.attachedDatabase.select(
-              fileDao.attachedDatabase.fileMetadata,
-            )..where((m) => m.id.equals(record.metadataId!))).getSingleOrNull();
+            final metadata =
+                await (fileDao.attachedDatabase.select(
+                      fileDao.attachedDatabase.fileMetadata,
+                    )..where((m) => m.id.equals(fileRecord!.metadataId!)))
+                    .getSingleOrNull();
 
             if (metadata != null && metadata.filePath != null) {
               await fileService.deleteHistoryFileFromDisk(metadata.filePath!);
@@ -694,7 +677,7 @@ class PaginatedListNotifier
           );
         }
 
-        // Удаляем запись из БД
+        // Удаляем запись из БД через общий DAO
         success = await dao.permanentDelete(id);
       } else {
         // Для остальных типов используем permanentDelete

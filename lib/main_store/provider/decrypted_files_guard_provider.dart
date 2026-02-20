@@ -195,7 +195,7 @@ class DecryptedFilesGuardNotifier extends Notifier<DecryptedFilesGuardState> {
       } catch (e, st) {
         logWarning(
           'Failed to delete decrypted entity: ${entity.path}',
-   
+
           tag: _logTag,
         );
       }

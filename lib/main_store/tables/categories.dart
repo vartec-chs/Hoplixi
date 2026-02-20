@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:uuid/uuid.dart';
+
 import 'icons.dart';
 
 @DataClassName('CategoriesData')

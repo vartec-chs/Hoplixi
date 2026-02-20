@@ -4,9 +4,11 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/password_manager/store_settings/models/store_settings_state.dart';
+import 'package:hoplixi/main_store/models/store_settings_keys.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/main_store/provider/db_history_provider.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
+import 'package:hoplixi/main_store/provider/service_providers.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
@@ -32,12 +34,48 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       final daoResult = await ref.read(storeMetaDaoProvider.future);
       final meta = await daoResult.getStoreMeta();
 
+      final settingsDao = await ref.read(storeSettingsDaoProvider.future);
+
+      final historyLimitStr = await settingsDao.getSetting(
+        StoreSettingsKeys.historyLimit,
+      );
+      final historyMaxAgeDaysStr = await settingsDao.getSetting(
+        StoreSettingsKeys.historyMaxAgeDays,
+      );
+      final historyEnabledStr = await settingsDao.getSetting(
+        StoreSettingsKeys.historyEnabled,
+      );
+      final historyCleanupIntervalDaysStr = await settingsDao.getSetting(
+        StoreSettingsKeys.historyCleanupIntervalDays,
+      );
+
+      final historyLimit = historyLimitStr != null
+          ? int.tryParse(historyLimitStr) ?? 100
+          : 100;
+      final historyMaxAgeDays = historyMaxAgeDaysStr != null
+          ? int.tryParse(historyMaxAgeDaysStr) ?? 30
+          : 30;
+      final historyEnabled = historyEnabledStr != null
+          ? historyEnabledStr == 'true'
+          : true;
+      final historyCleanupIntervalDays = historyCleanupIntervalDaysStr != null
+          ? int.tryParse(historyCleanupIntervalDaysStr) ?? 7
+          : 7;
+
       if (meta != null) {
         state = state.copyWith(
           name: meta.name,
           description: meta.description,
           newName: meta.name,
           newDescription: meta.description,
+          historyLimit: historyLimit,
+          historyMaxAgeDays: historyMaxAgeDays,
+          historyEnabled: historyEnabled,
+          historyCleanupIntervalDays: historyCleanupIntervalDays,
+          newHistoryLimit: historyLimit,
+          newHistoryMaxAgeDays: historyMaxAgeDays,
+          newHistoryEnabled: historyEnabled,
+          newHistoryCleanupIntervalDays: historyCleanupIntervalDays,
         );
       }
     } catch (e, s) {
@@ -66,6 +104,42 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
   void updateDescription(String? description) {
     state = state.copyWith(
       newDescription: description,
+      saveError: null,
+      successMessage: null,
+    );
+  }
+
+  /// Обновить лимит истории
+  void updateHistoryLimit(int limit) {
+    state = state.copyWith(
+      newHistoryLimit: limit,
+      saveError: null,
+      successMessage: null,
+    );
+  }
+
+  /// Обновить возраст истории
+  void updateHistoryMaxAgeDays(int days) {
+    state = state.copyWith(
+      newHistoryMaxAgeDays: days,
+      saveError: null,
+      successMessage: null,
+    );
+  }
+
+  /// Обновить состояние истории
+  void updateHistoryEnabled(bool enabled) {
+    state = state.copyWith(
+      newHistoryEnabled: enabled,
+      saveError: null,
+      successMessage: null,
+    );
+  }
+
+  /// Обновить интервал очистки истории
+  void updateHistoryCleanupIntervalDays(int days) {
+    state = state.copyWith(
+      newHistoryCleanupIntervalDays: days,
       saveError: null,
       successMessage: null,
     );
@@ -112,11 +186,54 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         }
       }
 
+      final settingsDao = await ref.read(storeSettingsDaoProvider.future);
+      bool shouldCleanupHistory = false;
+
+      if (state.newHistoryLimit != state.historyLimit) {
+        await settingsDao.setSetting(
+          StoreSettingsKeys.historyLimit,
+          state.newHistoryLimit.toString(),
+        );
+        shouldCleanupHistory = true;
+      }
+      if (state.newHistoryMaxAgeDays != state.historyMaxAgeDays) {
+        await settingsDao.setSetting(
+          StoreSettingsKeys.historyMaxAgeDays,
+          state.newHistoryMaxAgeDays.toString(),
+        );
+        shouldCleanupHistory = true;
+      }
+      if (state.newHistoryEnabled != state.historyEnabled) {
+        await settingsDao.setSetting(
+          StoreSettingsKeys.historyEnabled,
+          state.newHistoryEnabled.toString(),
+        );
+        shouldCleanupHistory = true;
+      }
+      if (state.newHistoryCleanupIntervalDays !=
+          state.historyCleanupIntervalDays) {
+        await settingsDao.setSetting(
+          StoreSettingsKeys.historyCleanupIntervalDays,
+          state.newHistoryCleanupIntervalDays.toString(),
+        );
+      }
+
+      if (shouldCleanupHistory) {
+        final cleanupService = await ref.read(
+          storeCleanupServiceProvider.future,
+        );
+        await cleanupService.performFullCleanup(ignoreInterval: true);
+      }
+
       // Обновляем состояние успешно
       state = state.copyWith(
         isSaving: false,
         name: state.newName.trim(),
         description: state.newDescription,
+        historyLimit: state.newHistoryLimit,
+        historyMaxAgeDays: state.newHistoryMaxAgeDays,
+        historyEnabled: state.newHistoryEnabled,
+        historyCleanupIntervalDays: state.newHistoryCleanupIntervalDays,
         successMessage: 'Настройки успешно сохранены',
       );
 
@@ -144,6 +261,9 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
     state = state.copyWith(
       newName: state.name,
       newDescription: state.description,
+      newHistoryLimit: state.historyLimit,
+      newHistoryMaxAgeDays: state.historyMaxAgeDays,
+      newHistoryEnabled: state.historyEnabled,
       nameError: null,
       saveError: null,
       successMessage: null,

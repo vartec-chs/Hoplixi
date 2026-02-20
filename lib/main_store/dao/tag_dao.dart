@@ -12,84 +12,25 @@ part 'tag_dao.g.dart';
 class TagDao extends DatabaseAccessor<MainStore> with _$TagDaoMixin {
   TagDao(super.db);
 
-  /// Подсчитать количество элементов с данным тегом
+  /// Подсчитать количество элементов с данным тегом.
+  ///
+  /// Использует единую таблицу [ItemTags] с JOIN на [VaultItems]
+  /// для фильтрации удалённых элементов.
   Future<int> countItemsInTag(String tagId) async {
-    // Подсчитываем элементы через таблицы связей many-to-many
-    final passwordsCount =
-        await (selectOnly(db.passwordsTags)
-              ..addColumns([db.passwordsTags.passwordId.count()])
-              ..where(db.passwordsTags.tagId.equals(tagId))
-              ..join([
-                innerJoin(
-                  db.passwords,
-                  db.passwords.id.equalsExp(db.passwordsTags.passwordId) &
-                      db.passwords.isDeleted.equals(false),
-                ),
-              ]))
-            .getSingle()
-            .then((row) => row.read(db.passwordsTags.passwordId.count()) ?? 0);
+    final countExpr = db.itemTags.itemId.count();
+    final query = selectOnly(db.itemTags)
+      ..addColumns([countExpr])
+      ..where(db.itemTags.tagId.equals(tagId))
+      ..join([
+        innerJoin(
+          db.vaultItems,
+          db.vaultItems.id.equalsExp(db.itemTags.itemId) &
+              db.vaultItems.isDeleted.equals(false),
+        ),
+      ]);
 
-    final notesCount =
-        await (selectOnly(db.notesTags)
-              ..addColumns([db.notesTags.noteId.count()])
-              ..where(db.notesTags.tagId.equals(tagId))
-              ..join([
-                innerJoin(
-                  db.notes,
-                  db.notes.id.equalsExp(db.notesTags.noteId) &
-                      db.notes.isDeleted.equals(false),
-                ),
-              ]))
-            .getSingle()
-            .then((row) => row.read(db.notesTags.noteId.count()) ?? 0);
-
-    final filesCount =
-        await (selectOnly(db.filesTags)
-              ..addColumns([db.filesTags.fileId.count()])
-              ..where(db.filesTags.tagId.equals(tagId))
-              ..join([
-                innerJoin(
-                  db.files,
-                  db.files.id.equalsExp(db.filesTags.fileId) &
-                      db.files.isDeleted.equals(false),
-                ),
-              ]))
-            .getSingle()
-            .then((row) => row.read(db.filesTags.fileId.count()) ?? 0);
-
-    final bankCardsCount =
-        await (selectOnly(db.bankCardsTags)
-              ..addColumns([db.bankCardsTags.cardId.count()])
-              ..where(db.bankCardsTags.tagId.equals(tagId))
-              ..join([
-                innerJoin(
-                  db.bankCards,
-                  db.bankCards.id.equalsExp(db.bankCardsTags.cardId) &
-                      db.bankCards.isDeleted.equals(false),
-                ),
-              ]))
-            .getSingle()
-            .then((row) => row.read(db.bankCardsTags.cardId.count()) ?? 0);
-
-    final otpsCount =
-        await (selectOnly(db.otpsTags)
-              ..addColumns([db.otpsTags.otpId.count()])
-              ..where(db.otpsTags.tagId.equals(tagId))
-              ..join([
-                innerJoin(
-                  db.otps,
-                  db.otps.id.equalsExp(db.otpsTags.otpId) &
-                      db.otps.isDeleted.equals(false),
-                ),
-              ]))
-            .getSingle()
-            .then((row) => row.read(db.otpsTags.otpId.count()) ?? 0);
-
-    return passwordsCount +
-        notesCount +
-        filesCount +
-        bankCardsCount +
-        otpsCount;
+    final row = await query.getSingle();
+    return row.read(countExpr) ?? 0;
   }
 
   /// Получить все теги
