@@ -2,8 +2,10 @@
 ///
 /// Триггеры срабатывают на таблице `vault_items` (для строк с type = 'password')
 /// и вставляют записи в `vault_item_history` + `password_history`.
+/// Дополнительный триггер на `password_items` отслеживает изменения
+/// специфичных полей: login, email, password, url, expire_at.
 const List<String> passwordsHistoryCreateTriggers = [
-  // Триггер для записи истории при обновлении пароля
+  // Триггер для записи истории при обновлении общих полей пароля
   '''
     CREATE TRIGGER IF NOT EXISTS password_update_history
     AFTER UPDATE ON vault_items
@@ -18,17 +20,7 @@ const List<String> passwordsHistoryCreateTriggers = [
       OLD.is_archived != NEW.is_archived OR
       OLD.is_pinned != NEW.is_pinned OR
       OLD.recent_score IS NOT NEW.recent_score OR
-      OLD.last_used_at IS NOT NEW.last_used_at OR
-      EXISTS (
-        SELECT 1 FROM password_items pi
-        WHERE pi.item_id = OLD.id AND (
-          pi.login IS NOT (SELECT login FROM password_items WHERE item_id = OLD.id) OR
-          pi.email IS NOT (SELECT email FROM password_items WHERE item_id = OLD.id) OR
-          pi.password != (SELECT password FROM password_items WHERE item_id = OLD.id) OR
-          pi.url IS NOT (SELECT url FROM password_items WHERE item_id = OLD.id) OR
-          pi.expire_at IS NOT (SELECT expire_at FROM password_items WHERE item_id = OLD.id)
-        )
-      )
+      OLD.last_used_at IS NOT NEW.last_used_at
     ) AND COALESCE((SELECT value FROM store_settings WHERE key = 'history_enabled'), 'true') = 'true'
     BEGIN
       INSERT INTO vault_item_history (
@@ -90,6 +82,82 @@ const List<String> passwordsHistoryCreateTriggers = [
       WHERE pi.item_id = OLD.id;
     END;
   ''',
+
+  // Триггер для записи истории при изменении специфичных полей пароля
+  // (login, email, password, url, expire_at) — срабатывает на password_items
+  '''
+    CREATE TRIGGER IF NOT EXISTS password_fields_update_history
+    AFTER UPDATE ON password_items
+    FOR EACH ROW
+    WHEN (
+      OLD.login IS NOT NEW.login OR
+      OLD.email IS NOT NEW.email OR
+      OLD.password != NEW.password OR
+      OLD.url IS NOT NEW.url OR
+      OLD.expire_at IS NOT NEW.expire_at
+    ) AND COALESCE((SELECT value FROM store_settings WHERE key = 'history_enabled'), 'true') = 'true'
+    BEGIN
+      INSERT INTO vault_item_history (
+        id,
+        item_id,
+        type,
+        name,
+        description,
+        category_id,
+        category_name,
+        action,
+        used_count,
+        is_favorite,
+        is_archived,
+        is_pinned,
+        is_deleted,
+        recent_score,
+        last_used_at,
+        original_created_at,
+        original_modified_at,
+        action_at
+      )
+      SELECT
+        lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
+        v.id,
+        v.type,
+        v.name,
+        v.description,
+        v.category_id,
+        (SELECT name FROM categories WHERE id = v.category_id),
+        'modified',
+        v.used_count,
+        v.is_favorite,
+        v.is_archived,
+        v.is_pinned,
+        v.is_deleted,
+        v.recent_score,
+        v.last_used_at,
+        v.created_at,
+        v.modified_at,
+        strftime('%s','now')
+      FROM vault_items v
+      WHERE v.id = OLD.item_id;
+
+      INSERT INTO password_history (
+        history_id,
+        login,
+        email,
+        password,
+        url,
+        expire_at
+      ) VALUES (
+        (SELECT id FROM vault_item_history
+         WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
+        OLD.login,
+        OLD.email,
+        OLD.password,
+        OLD.url,
+        OLD.expire_at
+      );
+    END;
+  ''',
+
   // Триггер для записи истории при удалении пароля
   '''
     CREATE TRIGGER IF NOT EXISTS password_delete_history
@@ -161,5 +229,6 @@ const List<String> passwordsHistoryCreateTriggers = [
 /// Операторы для удаления триггеров истории паролей.
 const List<String> passwordsHistoryDropTriggers = [
   'DROP TRIGGER IF EXISTS password_update_history;',
+  'DROP TRIGGER IF EXISTS password_fields_update_history;',
   'DROP TRIGGER IF EXISTS password_delete_history;',
 ];

@@ -2,9 +2,10 @@
 ///
 /// Включает:
 /// - Триггеры истории изменений (vault_items → vault_item_history + document_history)
+/// - Триггер на document_items для детекта изменений специфичных полей
 /// - Каскадные триггеры для очистки метаданных страниц документа
 const List<String> documentsHistoryCreateTriggers = [
-  // Триггер для записи истории при обновлении документа
+  // Триггер для записи истории при обновлении общих полей документа
   '''
     CREATE TRIGGER IF NOT EXISTS document_update_history
     AFTER UPDATE ON vault_items
@@ -78,6 +79,79 @@ const List<String> documentsHistoryCreateTriggers = [
       WHERE di.item_id = OLD.id;
     END;
   ''',
+
+  // Триггер для записи истории при изменении специфичных полей документа
+  // (document_type, aggregated_text, aggregate_hash, page_count)
+  '''
+    CREATE TRIGGER IF NOT EXISTS document_fields_update_history
+    AFTER UPDATE ON document_items
+    FOR EACH ROW
+    WHEN (
+      OLD.document_type IS NOT NEW.document_type OR
+      OLD.aggregated_text IS NOT NEW.aggregated_text OR
+      OLD.aggregate_hash IS NOT NEW.aggregate_hash OR
+      OLD.page_count != NEW.page_count
+    ) AND COALESCE((SELECT value FROM store_settings WHERE key = 'history_enabled'), 'true') = 'true'
+    BEGIN
+      INSERT INTO vault_item_history (
+        id,
+        item_id,
+        type,
+        name,
+        description,
+        category_id,
+        category_name,
+        action,
+        used_count,
+        is_favorite,
+        is_archived,
+        is_pinned,
+        is_deleted,
+        recent_score,
+        last_used_at,
+        original_created_at,
+        original_modified_at,
+        action_at
+      )
+      SELECT
+        lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
+        v.id,
+        v.type,
+        v.name,
+        v.description,
+        v.category_id,
+        (SELECT name FROM categories WHERE id = v.category_id),
+        'modified',
+        v.used_count,
+        v.is_favorite,
+        v.is_archived,
+        v.is_pinned,
+        v.is_deleted,
+        v.recent_score,
+        v.last_used_at,
+        v.created_at,
+        v.modified_at,
+        strftime('%s','now')
+      FROM vault_items v
+      WHERE v.id = OLD.item_id;
+
+      INSERT INTO document_history (
+        history_id,
+        document_type,
+        aggregated_text,
+        aggregate_hash,
+        page_count
+      ) VALUES (
+        (SELECT id FROM vault_item_history
+         WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
+        OLD.document_type,
+        OLD.aggregated_text,
+        OLD.aggregate_hash,
+        OLD.page_count
+      );
+    END;
+  ''',
+
   // Триггер для записи истории при удалении документа
   '''
     CREATE TRIGGER IF NOT EXISTS document_delete_history
@@ -179,6 +253,7 @@ const List<String> documentsTriggers = [
 /// Операторы для удаления триггеров документов.
 const List<String> documentsDropTriggers = [
   'DROP TRIGGER IF EXISTS document_update_history;',
+  'DROP TRIGGER IF EXISTS document_fields_update_history;',
   'DROP TRIGGER IF EXISTS document_delete_history;',
   'DROP TRIGGER IF EXISTS document_page_delete_cleanup;',
   'DROP TRIGGER IF EXISTS document_page_update_cleanup;',
