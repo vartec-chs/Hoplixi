@@ -7,14 +7,16 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/main_store/dao/index.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/main_store_manager.dart';
 import 'package:hoplixi/main_store/models/db_errors.dart';
 import 'package:hoplixi/main_store/models/db_state.dart';
 import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_store/provider/db_history_provider.dart';
-import 'package:hoplixi/main_store/provider/service_providers.dart';
 import 'package:hoplixi/main_store/services/db_key_derivation_service.dart';
+import 'package:hoplixi/main_store/services/file_storage_service.dart';
+import 'package:hoplixi/main_store/services/store_cleanup_service.dart';
 import 'package:path/path.dart' as p;
 
 enum BackupScope { databaseOnly, encryptedFilesOnly, full }
@@ -716,7 +718,31 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   /// Выполнить стартовую чистку
   Future<void> _runStartupCleanup() async {
     try {
-      final cleanupService = await ref.read(storeCleanupServiceProvider.future);
+      // Создаём StoreCleanupService напрямую, минуя цепочку провайдеров,
+      // чтобы избежать CircularDependencyError: mainStoreProvider →
+      // storeCleanupServiceProvider → mainStoreManagerProvider → mainStoreProvider.
+      final store = _manager.currentStore;
+      if (store == null) return;
+
+      final attachmentsPathResult = await _manager.getAttachmentsPath();
+      final attachmentsPath = attachmentsPathResult.getOrNull();
+      if (attachmentsPath == null) return;
+
+      final decryptedPathResult = await _manager
+          .getDecryptedAttachmentsDirPath();
+      final decryptedPath = decryptedPathResult.getOrNull() ?? '';
+
+      final fileStorageService = FileStorageService(
+        store,
+        attachmentsPath,
+        decryptedPath,
+      );
+      final settingsDao = StoreSettingsDao(store);
+      final cleanupService = StoreCleanupService(
+        settingsDao,
+        fileStorageService,
+      );
+
       await cleanupService.performFullCleanup(ignoreInterval: false);
     } catch (e, s) {
       logError('Startup cleanup failed: $e', stackTrace: s, tag: _logTag);

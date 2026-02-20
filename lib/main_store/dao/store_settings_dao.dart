@@ -43,7 +43,7 @@ class StoreSettingsDao extends DatabaseAccessor<MainStore>
       await db.customStatement(
         '''
         DELETE FROM vault_item_history
-        WHERE action_at < datetime('now', '-? days')
+        WHERE action_at < datetime('now', '-' || ? || ' days')
         ''',
         [maxAgeDays],
       );

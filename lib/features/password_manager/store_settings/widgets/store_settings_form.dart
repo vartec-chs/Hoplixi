@@ -84,17 +84,13 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
 
     final limitString = state.newHistoryLimit.toString();
     final currentLimit = int.tryParse(_historyLimitController.text);
-    if (_historyLimitController.text.isEmpty) {
-      // allow empty string during typing
-    } else if (currentLimit != state.newHistoryLimit) {
+    if (currentLimit != state.newHistoryLimit) {
       _historyLimitController.text = limitString;
     }
 
     final ageString = state.newHistoryMaxAgeDays.toString();
     final currentAge = int.tryParse(_historyMaxAgeDaysController.text);
-    if (_historyMaxAgeDaysController.text.isEmpty) {
-      // allow empty string during typing
-    } else if (currentAge != state.newHistoryMaxAgeDays) {
+    if (currentAge != state.newHistoryMaxAgeDays) {
       _historyMaxAgeDaysController.text = ageString;
     }
 
@@ -102,9 +98,7 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
     final currentInterval = int.tryParse(
       _historyCleanupIntervalController.text,
     );
-    if (_historyCleanupIntervalController.text.isEmpty) {
-      // allow empty string
-    } else if (currentInterval != state.newHistoryCleanupIntervalDays) {
+    if (currentInterval != state.newHistoryCleanupIntervalDays) {
       _historyCleanupIntervalController.text = intervalString;
     }
 
