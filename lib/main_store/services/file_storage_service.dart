@@ -486,4 +486,74 @@ class FileStorageService {
     logDebug('History file not found: $encryptedFilePath');
     return false;
   }
+
+  /// Очистить физические файлы и метаданные, на которые больше нет ссылок
+  Future<int> cleanupOrphanedFiles() async {
+    int deletedCount = 0;
+    try {
+      // 1. Выбираем file_metadata, которые не используются
+      final String sql = '''
+        SELECT id, file_path 
+        FROM file_metadata 
+        WHERE id NOT IN (SELECT metadata_id FROM file_items WHERE metadata_id IS NOT NULL)
+          AND id NOT IN (SELECT metadata_id FROM file_history WHERE metadata_id IS NOT NULL)
+          AND id NOT IN (SELECT metadata_id FROM document_pages WHERE metadata_id IS NOT NULL)
+      ''';
+
+      final rows = await _db.customSelect(sql).get();
+
+      final attachmentsPath = await _getAttachmentsPath();
+
+      for (final row in rows) {
+        final String id = row.read<String>('id');
+        final String filePath = row.read<String>('file_path');
+
+        // Удаляем физический файл
+        final encryptedFilePath = p.join(attachmentsPath, filePath);
+        final file = File(encryptedFilePath);
+
+        if (await file.exists()) {
+          await file.delete();
+        }
+
+        // Удаляем метаданные из БД
+        await (_db.delete(
+          _db.fileMetadata,
+        )..where((m) => m.id.equals(id))).go();
+        deletedCount++;
+      }
+
+      // 2. Ищем файлы на диске, которых нет в таблице file_metadata вообще (рассинхронизация)
+      final dir = Directory(attachmentsPath);
+      if (await dir.exists()) {
+        final entities = dir.listSync();
+        for (final entity in entities) {
+          if (entity is File) {
+            final fileName = p.basename(entity.path);
+            final exists = await (_db.select(
+              _db.fileMetadata,
+            )..where((m) => m.filePath.equals(fileName))).getSingleOrNull();
+            if (exists == null) {
+              await entity.delete();
+              deletedCount++;
+            }
+          }
+        }
+      }
+
+      if (deletedCount > 0) {
+        logInfo(
+          'Cleaned up $deletedCount orphaned files',
+          tag: 'FileStorageService',
+        );
+      }
+    } catch (e, s) {
+      logError(
+        'Error cleaning up orphaned files: $e',
+        stackTrace: s,
+        tag: 'FileStorageService',
+      );
+    }
+    return deletedCount;
+  }
 }

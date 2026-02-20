@@ -8,6 +8,7 @@ import 'package:hoplixi/main_store/models/store_settings_keys.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/main_store/provider/db_history_provider.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
+import 'package:hoplixi/main_store/provider/service_providers.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
@@ -169,24 +170,35 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       }
 
       final settingsDao = await ref.read(storeSettingsDaoProvider.future);
+      bool shouldCleanupHistory = false;
 
       if (state.newHistoryLimit != state.historyLimit) {
         await settingsDao.setSetting(
           StoreSettingsKeys.historyLimit,
           state.newHistoryLimit.toString(),
         );
+        shouldCleanupHistory = true;
       }
       if (state.newHistoryMaxAgeDays != state.historyMaxAgeDays) {
         await settingsDao.setSetting(
           StoreSettingsKeys.historyMaxAgeDays,
           state.newHistoryMaxAgeDays.toString(),
         );
+        shouldCleanupHistory = true;
       }
       if (state.newHistoryEnabled != state.historyEnabled) {
         await settingsDao.setSetting(
           StoreSettingsKeys.historyEnabled,
           state.newHistoryEnabled.toString(),
         );
+        shouldCleanupHistory = true;
+      }
+
+      if (shouldCleanupHistory) {
+        final cleanupService = await ref.read(
+          storeCleanupServiceProvider.future,
+        );
+        await cleanupService.performFullCleanup();
       }
 
       // Обновляем состояние успешно

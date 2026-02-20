@@ -35,4 +35,40 @@ class StoreSettingsDao extends DatabaseAccessor<MainStore>
     final records = await select(storeSettings).get();
     return {for (var r in records) r.key: r.value};
   }
+
+  /// Устаревшие записи истории
+  Future<void> cleanupHistory({int? maxAgeDays, int? maxRecordsPerItem}) async {
+    // 1. Сначала удаляем записи старше history_max_age_days
+    if (maxAgeDays != null && maxAgeDays > 0) {
+      await db.customStatement(
+        '''
+        DELETE FROM vault_item_history
+        WHERE action_at < datetime('now', '-? days')
+        ''',
+        [maxAgeDays],
+      );
+    }
+
+    // 2. Оставляем только `maxRecordsPerItem` записей для каждого itemId
+    if (maxRecordsPerItem != null && maxRecordsPerItem > 0) {
+      await db.customStatement(
+        '''
+        DELETE FROM vault_item_history
+        WHERE id IN (
+          SELECT id FROM (
+            SELECT 
+              id, 
+              ROW_NUMBER() OVER (
+                PARTITION BY item_id 
+                ORDER BY action_at DESC
+              ) as rn
+            FROM vault_item_history
+          ) 
+          WHERE rn > ?
+        )
+        ''',
+        [maxRecordsPerItem],
+      );
+    }
+  }
 }
