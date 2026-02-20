@@ -9,6 +9,7 @@ import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/dto/file_dto.dart';
 import 'package:hoplixi/main_store/models/dto/file_history_dto.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
+import 'package:hoplixi/main_store/models/store_settings_keys.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
@@ -190,36 +191,47 @@ class FileStorageService {
       throw Exception('File metadata not found');
     }
 
-    // 1. Создаем запись в истории
-    String? categoryName;
-    if (currentVault.categoryId != null) {
-      final cat = await _db.categoryDao.getCategoryById(
-        currentVault.categoryId!,
-      );
-      categoryName = cat?.name;
-    }
+    // Читаем настройку истории
+    final historyEnabledStr =
+        await (_db.select(_db.storeSettings)
+              ..where((s) => s.key.equals(StoreSettingsKeys.historyEnabled)))
+            .getSingleOrNull();
+    final isHistoryEnabled =
+        historyEnabledStr == null || historyEnabledStr.value == 'true';
 
-    final historyDto = CreateFileHistoryDto(
-      originalFileId: currentVault.id,
-      action: ActionInHistory.modified.value,
-      metadataId: currentFileItem.metadataId!,
-      name: currentVault.name,
-      description: currentVault.description,
-      categoryName: categoryName,
-      usedCount: currentVault.usedCount,
-      isFavorite: currentVault.isFavorite,
-      isArchived: currentVault.isArchived,
-      isPinned: currentVault.isPinned,
-      isDeleted: currentVault.isDeleted,
-      originalCreatedAt: currentVault.createdAt,
-      originalModifiedAt: currentVault.modifiedAt,
-      originalLastAccessedAt: currentVault.lastUsedAt,
-    );
-    await _db.fileHistoryDao.createFileHistory(historyDto);
+    final attachmentsPath = await _getAttachmentsPath();
+
+    if (isHistoryEnabled) {
+      // 1. Создаем запись в истории
+      String? categoryName;
+      if (currentVault.categoryId != null) {
+        final cat = await _db.categoryDao.getCategoryById(
+          currentVault.categoryId!,
+        );
+        categoryName = cat?.name;
+      }
+
+      final historyDto = CreateFileHistoryDto(
+        originalFileId: currentVault.id,
+        action: ActionInHistory.modified.value,
+        metadataId: currentFileItem.metadataId!,
+        name: currentVault.name,
+        description: currentVault.description,
+        categoryName: categoryName,
+        usedCount: currentVault.usedCount,
+        isFavorite: currentVault.isFavorite,
+        isArchived: currentVault.isArchived,
+        isPinned: currentVault.isPinned,
+        isDeleted: currentVault.isDeleted,
+        originalCreatedAt: currentVault.createdAt,
+        originalModifiedAt: currentVault.modifiedAt,
+        originalLastAccessedAt: currentVault.lastUsedAt,
+      );
+      await _db.fileHistoryDao.createFileHistory(historyDto);
+    }
 
     // 2. Шифруем новый файл
     final key = await _getAttachmentKey();
-    final attachmentsPath = await _getAttachmentsPath();
     final newFilePathUuid = const Uuid().v4();
     final newEncryptedFileName =
         '$newFilePathUuid${MainConstants.encryptedFileExtension}';
@@ -260,6 +272,22 @@ class FileStorageService {
     // 5. Обновляем запись в таблице FileItems
     await (_db.update(_db.fileItems)..where((f) => f.itemId.equals(fileId)))
         .write(FileItemsCompanion(metadataId: Value(newMetadataId)));
+
+    if (!isHistoryEnabled) {
+      // 6. История выключена - удаляем старый физический файл и старые метаданные
+      final oldEncryptedFilePath = p.join(
+        attachmentsPath,
+        currentMetadata.filePath,
+      );
+      final oldFile = File(oldEncryptedFilePath);
+      if (await oldFile.exists()) {
+        await oldFile.delete();
+      }
+
+      await (_db.delete(
+        _db.fileMetadata,
+      )..where((m) => m.id.equals(currentFileItem.metadataId!))).go();
+    }
   }
 
   /// Импортировать файл страницы (только метаданные)
