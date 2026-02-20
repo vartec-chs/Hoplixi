@@ -18,7 +18,7 @@ const List<String> notesHistoryCreateTriggers = [
       OLD.is_pinned != NEW.is_pinned OR
       OLD.recent_score IS NOT NEW.recent_score OR
       OLD.last_used_at IS NOT NEW.last_used_at
-    )
+    ) AND COALESCE((SELECT value FROM store_settings WHERE key = 'history_enabled'), 'true') = 'true'
     BEGIN
       INSERT INTO vault_item_history (
         id,
@@ -78,7 +78,7 @@ const List<String> notesHistoryCreateTriggers = [
     CREATE TRIGGER IF NOT EXISTS note_delete_history
     BEFORE DELETE ON vault_items
     FOR EACH ROW
-    WHEN OLD.type = 'note'
+    WHEN OLD.type = 'note' AND COALESCE((SELECT value FROM store_settings WHERE key = 'history_enabled'), 'true') = 'true'
     BEGIN
       INSERT INTO vault_item_history (
         id,

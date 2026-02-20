@@ -18,7 +18,7 @@ const List<String> otpsHistoryCreateTriggers = [
       OLD.is_pinned != NEW.is_pinned OR
       OLD.recent_score IS NOT NEW.recent_score OR
       OLD.last_used_at IS NOT NEW.last_used_at
-    )
+    ) AND COALESCE((SELECT value FROM store_settings WHERE key = 'history_enabled'), 'true') = 'true'
     BEGIN
       INSERT INTO vault_item_history (
         id,
@@ -94,7 +94,7 @@ const List<String> otpsHistoryCreateTriggers = [
     CREATE TRIGGER IF NOT EXISTS otp_delete_history
     BEFORE DELETE ON vault_items
     FOR EACH ROW
-    WHEN OLD.type = 'otp'
+    WHEN OLD.type = 'otp' AND COALESCE((SELECT value FROM store_settings WHERE key = 'history_enabled'), 'true') = 'true'
     BEGIN
       INSERT INTO vault_item_history (
         id,

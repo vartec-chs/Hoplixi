@@ -19,7 +19,7 @@ const List<String> filesHistoryCreateTriggers = [
       OLD.is_pinned != NEW.is_pinned OR
       OLD.recent_score IS NOT NEW.recent_score OR
       OLD.last_used_at IS NOT NEW.last_used_at
-    )
+    ) AND COALESCE((SELECT value FROM store_settings WHERE key = 'history_enabled'), 'true') = 'true'
     BEGIN
       INSERT INTO vault_item_history (
         id,
@@ -77,7 +77,7 @@ const List<String> filesHistoryCreateTriggers = [
     CREATE TRIGGER IF NOT EXISTS file_delete_history
     BEFORE DELETE ON vault_items
     FOR EACH ROW
-    WHEN OLD.type = 'file'
+    WHEN OLD.type = 'file' AND COALESCE((SELECT value FROM store_settings WHERE key = 'history_enabled'), 'true') = 'true'
     BEGIN
       INSERT INTO vault_item_history (
         id,

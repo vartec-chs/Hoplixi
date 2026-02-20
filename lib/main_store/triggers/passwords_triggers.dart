@@ -29,7 +29,7 @@ const List<String> passwordsHistoryCreateTriggers = [
           pi.expire_at IS NOT (SELECT expire_at FROM password_items WHERE item_id = OLD.id)
         )
       )
-    )
+    ) AND COALESCE((SELECT value FROM store_settings WHERE key = 'history_enabled'), 'true') = 'true'
     BEGIN
       INSERT INTO vault_item_history (
         id,
@@ -95,7 +95,7 @@ const List<String> passwordsHistoryCreateTriggers = [
     CREATE TRIGGER IF NOT EXISTS password_delete_history
     BEFORE DELETE ON vault_items
     FOR EACH ROW
-    WHEN OLD.type = 'password'
+    WHEN OLD.type = 'password' AND COALESCE((SELECT value FROM store_settings WHERE key = 'history_enabled'), 'true') = 'true'
     BEGIN
       INSERT INTO vault_item_history (
         id,
