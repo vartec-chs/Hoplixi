@@ -39,6 +39,12 @@ sealed class StoreSettingsState with _$StoreSettingsState {
     /// Новое состояние включения истории (в процессе редактирования)
     @Default(true) bool newHistoryEnabled,
 
+    /// Интервал очистки истории в днях
+    @Default(7) int historyCleanupIntervalDays,
+
+    /// Новый интервал очистки истории в днях (в процессе редактирования)
+    @Default(7) int newHistoryCleanupIntervalDays,
+
     /// Ошибка валидации нового пароля
     @Default('') String newPassword,
 
@@ -75,7 +81,8 @@ sealed class StoreSettingsState with _$StoreSettingsState {
           newDescription != description ||
           newHistoryLimit != historyLimit ||
           newHistoryMaxAgeDays != historyMaxAgeDays ||
-          newHistoryEnabled != historyEnabled);
+          newHistoryEnabled != historyEnabled ||
+          newHistoryCleanupIntervalDays != historyCleanupIntervalDays);
 
   /// Проверка возможности смены пароля
   bool get canChangePassword =>

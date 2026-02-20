@@ -112,4 +112,4 @@ final vaultItemDaoProvider = FutureProvider<VaultItemDao>(
 
 final storeSettingsDaoProvider = FutureProvider<StoreSettingsDao>(
   (ref) => _ensureDao(ref, (store) => StoreSettingsDao(store)),
-);  
+);

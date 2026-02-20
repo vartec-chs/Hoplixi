@@ -14,8 +14,36 @@ class StoreCleanupService {
   /// Включает:
   /// - чистку устаревших записей истории в БД
   /// - удаление сиротских файлов и их метаданных, ссылки на которые пропали из базы
-  Future<void> performFullCleanup() async {
+  /// [ignoreInterval] - игнорировать проверку периода очистки (по умолчанию false)
+  Future<void> performFullCleanup({bool ignoreInterval = false}) async {
     try {
+      if (!ignoreInterval) {
+        final lastCleanupStr = await _settingsDao.getSetting(
+          StoreSettingsKeys.historyLastCleanupTimestamp,
+        );
+        final intervalStr = await _settingsDao.getSetting(
+          StoreSettingsKeys.historyCleanupIntervalDays,
+        );
+
+        final intervalDays = intervalStr != null
+            ? int.tryParse(intervalStr) ?? 7
+            : 7;
+
+        if (lastCleanupStr != null) {
+          final lastCleanup = DateTime.tryParse(lastCleanupStr);
+          if (lastCleanup != null) {
+            final diff = DateTime.now().difference(lastCleanup);
+            if (diff.inDays < intervalDays) {
+              logInfo(
+                'Skip cleanup: interval ($intervalDays days) not reached yet (last cleanup: $lastCleanup).',
+                tag: 'StoreCleanupService',
+              );
+              return;
+            }
+          }
+        }
+      }
+
       logInfo('Starting full store cleanup...', tag: 'StoreCleanupService');
 
       // 1. Очистка истории
@@ -59,6 +87,12 @@ class StoreCleanupService {
       logInfo(
         'Orphaned files cleanup completed. Deleted $deletedFilesCount files.',
         tag: 'StoreCleanupService',
+      );
+
+      // Обновляем метку времени последней очистки
+      await _settingsDao.setSetting(
+        StoreSettingsKeys.historyLastCleanupTimestamp,
+        DateTime.now().toIso8601String(),
       );
 
       logInfo(

@@ -45,6 +45,9 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       final historyEnabledStr = await settingsDao.getSetting(
         StoreSettingsKeys.historyEnabled,
       );
+      final historyCleanupIntervalDaysStr = await settingsDao.getSetting(
+        StoreSettingsKeys.historyCleanupIntervalDays,
+      );
 
       final historyLimit = historyLimitStr != null
           ? int.tryParse(historyLimitStr) ?? 100
@@ -55,6 +58,9 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       final historyEnabled = historyEnabledStr != null
           ? historyEnabledStr == 'true'
           : true;
+      final historyCleanupIntervalDays = historyCleanupIntervalDaysStr != null
+          ? int.tryParse(historyCleanupIntervalDaysStr) ?? 7
+          : 7;
 
       if (meta != null) {
         state = state.copyWith(
@@ -65,9 +71,11 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
           historyLimit: historyLimit,
           historyMaxAgeDays: historyMaxAgeDays,
           historyEnabled: historyEnabled,
+          historyCleanupIntervalDays: historyCleanupIntervalDays,
           newHistoryLimit: historyLimit,
           newHistoryMaxAgeDays: historyMaxAgeDays,
           newHistoryEnabled: historyEnabled,
+          newHistoryCleanupIntervalDays: historyCleanupIntervalDays,
         );
       }
     } catch (e, s) {
@@ -123,6 +131,15 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
   void updateHistoryEnabled(bool enabled) {
     state = state.copyWith(
       newHistoryEnabled: enabled,
+      saveError: null,
+      successMessage: null,
+    );
+  }
+
+  /// Обновить интервал очистки истории
+  void updateHistoryCleanupIntervalDays(int days) {
+    state = state.copyWith(
+      newHistoryCleanupIntervalDays: days,
       saveError: null,
       successMessage: null,
     );
@@ -193,12 +210,19 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         );
         shouldCleanupHistory = true;
       }
+      if (state.newHistoryCleanupIntervalDays !=
+          state.historyCleanupIntervalDays) {
+        await settingsDao.setSetting(
+          StoreSettingsKeys.historyCleanupIntervalDays,
+          state.newHistoryCleanupIntervalDays.toString(),
+        );
+      }
 
       if (shouldCleanupHistory) {
         final cleanupService = await ref.read(
           storeCleanupServiceProvider.future,
         );
-        await cleanupService.performFullCleanup();
+        await cleanupService.performFullCleanup(ignoreInterval: true);
       }
 
       // Обновляем состояние успешно
@@ -209,6 +233,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         historyLimit: state.newHistoryLimit,
         historyMaxAgeDays: state.newHistoryMaxAgeDays,
         historyEnabled: state.newHistoryEnabled,
+        historyCleanupIntervalDays: state.newHistoryCleanupIntervalDays,
         successMessage: 'Настройки успешно сохранены',
       );
 

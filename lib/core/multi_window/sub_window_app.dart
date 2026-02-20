@@ -52,7 +52,9 @@ class _SubWindowAppState extends ConsumerState<SubWindowApp> {
       (previous, next) {
         final mode = next.value;
         if (mode == null) return;
-        if (ThemeWindowSyncService.instance.consumeSuppressedOutboundFlag(mode)) {
+        if (ThemeWindowSyncService.instance.consumeSuppressedOutboundFlag(
+          mode,
+        )) {
           return;
         }
         unawaited(ThemeWindowSyncService.instance.broadcastFromSub(mode));

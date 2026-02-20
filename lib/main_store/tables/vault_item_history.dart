@@ -72,5 +72,4 @@ class VaultItemHistory extends Table {
 
   @override
   String get tableName => 'vault_item_history';
-
 }

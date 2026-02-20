@@ -13,6 +13,7 @@ import 'package:hoplixi/main_store/models/db_errors.dart';
 import 'package:hoplixi/main_store/models/db_state.dart';
 import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_store/provider/db_history_provider.dart';
+import 'package:hoplixi/main_store/provider/service_providers.dart';
 import 'package:hoplixi/main_store/services/db_key_derivation_service.dart';
 import 'package:path/path.dart' as p;
 
@@ -485,6 +486,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
             'Store created successfully: ${storeInfo.name}',
             tag: _logTag,
           );
+          unawaited(_runStartupCleanup());
           return true;
         },
         (error) {
@@ -554,6 +556,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
           );
 
           logInfo('Store opened successfully: ${storeInfo.name}', tag: _logTag);
+          unawaited(_runStartupCleanup());
           return true;
         },
         (error) {
@@ -710,6 +713,16 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     _setState(const DatabaseState(status: DatabaseStatus.idle));
   }
 
+  /// Выполнить стартовую чистку
+  Future<void> _runStartupCleanup() async {
+    try {
+      final cleanupService = await ref.read(storeCleanupServiceProvider.future);
+      await cleanupService.performFullCleanup(ignoreInterval: false);
+    } catch (e, s) {
+      logError('Startup cleanup failed: $e', stackTrace: s, tag: _logTag);
+    }
+  }
+
   /// Разблокировать хранилище
   ///
   /// [password] - пароль для разблокировки
@@ -762,6 +775,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
           );
 
           logInfo('Store unlocked successfully', tag: _logTag);
+          unawaited(_runStartupCleanup());
           return true;
         },
         (error) {

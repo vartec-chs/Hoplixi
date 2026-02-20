@@ -19,6 +19,7 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
   final _descriptionController = TextEditingController();
   final _historyLimitController = TextEditingController();
   final _historyMaxAgeDaysController = TextEditingController();
+  final _historyCleanupIntervalController = TextEditingController();
 
   @override
   void initState() {
@@ -32,6 +33,7 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
     _descriptionController.dispose();
     _historyLimitController.dispose();
     _historyMaxAgeDaysController.dispose();
+    _historyCleanupIntervalController.dispose();
     super.dispose();
   }
 
@@ -64,6 +66,8 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
     _descriptionController.text = state.newDescription ?? '';
     _historyLimitController.text = state.newHistoryLimit.toString();
     _historyMaxAgeDaysController.text = state.newHistoryMaxAgeDays.toString();
+    _historyCleanupIntervalController.text = state.newHistoryCleanupIntervalDays
+        .toString();
   }
 
   @override
@@ -92,6 +96,16 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
       // allow empty string during typing
     } else if (currentAge != state.newHistoryMaxAgeDays) {
       _historyMaxAgeDaysController.text = ageString;
+    }
+
+    final intervalString = state.newHistoryCleanupIntervalDays.toString();
+    final currentInterval = int.tryParse(
+      _historyCleanupIntervalController.text,
+    );
+    if (_historyCleanupIntervalController.text.isEmpty) {
+      // allow empty string
+    } else if (currentInterval != state.newHistoryCleanupIntervalDays) {
+      _historyCleanupIntervalController.text = intervalString;
     }
 
     return Padding(
@@ -203,6 +217,25 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
                 ref
                     .read(storeSettingsProvider.notifier)
                     .updateHistoryMaxAgeDays(days);
+              },
+            ),
+
+            const SizedBox(height: 16),
+            TextField(
+              controller: _historyCleanupIntervalController,
+              enabled: !state.isSaving,
+              keyboardType: TextInputType.number,
+              decoration: primaryInputDecoration(
+                context,
+                labelText:
+                    'Периодичность очистки истории (в днях, работает фоново при входе)',
+                hintText: 'Например, 7',
+              ),
+              onChanged: (value) {
+                final interval = int.tryParse(value) ?? 7;
+                ref
+                    .read(storeSettingsProvider.notifier)
+                    .updateHistoryCleanupIntervalDays(interval);
               },
             ),
           ],

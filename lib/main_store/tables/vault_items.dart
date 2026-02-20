@@ -68,5 +68,4 @@ class VaultItems extends Table {
 
   @override
   String get tableName => 'vault_items';
-
 }

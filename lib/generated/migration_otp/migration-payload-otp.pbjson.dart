@@ -18,14 +18,25 @@ import 'dart:typed_data' as $typed_data;
 const MigrationPayload$json = {
   '1': 'MigrationPayload',
   '2': [
-    {'1': 'otp_parameters', '3': 1, '4': 3, '5': 11, '6': '.MigrationPayload.OtpParameters', '10': 'otpParameters'},
+    {
+      '1': 'otp_parameters',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.MigrationPayload.OtpParameters',
+      '10': 'otpParameters'
+    },
     {'1': 'version', '3': 2, '4': 1, '5': 5, '10': 'version'},
     {'1': 'batch_size', '3': 3, '4': 1, '5': 5, '10': 'batchSize'},
     {'1': 'batch_index', '3': 4, '4': 1, '5': 5, '10': 'batchIndex'},
     {'1': 'batch_id', '3': 5, '4': 1, '5': 5, '10': 'batchId'},
   ],
   '3': [MigrationPayload_OtpParameters$json],
-  '4': [MigrationPayload_Algorithm$json, MigrationPayload_DigitCount$json, MigrationPayload_OtpType$json],
+  '4': [
+    MigrationPayload_Algorithm$json,
+    MigrationPayload_DigitCount$json,
+    MigrationPayload_OtpType$json
+  ],
 };
 
 @$core.Deprecated('Use migrationPayloadDescriptor instead')
@@ -35,9 +46,30 @@ const MigrationPayload_OtpParameters$json = {
     {'1': 'secret', '3': 1, '4': 1, '5': 12, '10': 'secret'},
     {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
     {'1': 'issuer', '3': 3, '4': 1, '5': 9, '10': 'issuer'},
-    {'1': 'algorithm', '3': 4, '4': 1, '5': 14, '6': '.MigrationPayload.Algorithm', '10': 'algorithm'},
-    {'1': 'digits', '3': 5, '4': 1, '5': 14, '6': '.MigrationPayload.DigitCount', '10': 'digits'},
-    {'1': 'type', '3': 6, '4': 1, '5': 14, '6': '.MigrationPayload.OtpType', '10': 'type'},
+    {
+      '1': 'algorithm',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.MigrationPayload.Algorithm',
+      '10': 'algorithm'
+    },
+    {
+      '1': 'digits',
+      '3': 5,
+      '4': 1,
+      '5': 14,
+      '6': '.MigrationPayload.DigitCount',
+      '10': 'digits'
+    },
+    {
+      '1': 'type',
+      '3': 6,
+      '4': 1,
+      '5': 14,
+      '6': '.MigrationPayload.OtpType',
+      '10': 'type'
+    },
     {'1': 'counter', '3': 7, '4': 1, '5': 3, '10': 'counter'},
   ],
 };
@@ -90,4 +122,3 @@ final $typed_data.Uint8List migrationPayloadDescriptor = $convert.base64Decode(
     'RDb3VudBIbChdESUdJVF9DT1VOVF9VTlNQRUNJRklFRBAAEhMKD0RJR0lUX0NPVU5UX1NJWBAB'
     'EhUKEURJR0lUX0NPVU5UX0VJR0hUEAIiSQoHT3RwVHlwZRIYChRPVFBfVFlQRV9VTlNQRUNJRk'
     'lFRBAAEhEKDU9UUF9UWVBFX0hPVFAQARIRCg1PVFBfVFlQRV9UT1RQEAI=');
-
