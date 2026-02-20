@@ -15,5 +15,6 @@ export 'note_link_dao.dart';
 export 'otp_dao.dart';
 export 'password_dao.dart';
 export 'store_meta_dao.dart';
+export 'store_settings_dao.dart';
 export 'tag_dao.dart';
 export 'vault_item_dao.dart';

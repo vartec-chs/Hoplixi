@@ -22,6 +22,7 @@ export 'otp_items.dart';
 export 'password_history.dart';
 export 'password_items.dart';
 export 'store_meta_table.dart';
+export 'store_settings.dart';
 export 'tags.dart';
 // --- История ---
 export 'vault_item_history.dart';

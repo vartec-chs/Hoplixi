@@ -17,6 +17,7 @@ import 'package:hoplixi/main_store/dao/note_link_dao.dart';
 import 'package:hoplixi/main_store/dao/otp_dao.dart';
 import 'package:hoplixi/main_store/dao/password_dao.dart';
 import 'package:hoplixi/main_store/dao/store_meta_dao.dart';
+import 'package:hoplixi/main_store/dao/store_settings_dao.dart';
 import 'package:hoplixi/main_store/dao/vault_item_dao.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:hoplixi/main_store/tables/index.dart';
@@ -30,6 +31,7 @@ part 'main_store.g.dart';
 @DriftDatabase(
   tables: [
     StoreMetaTable,
+    StoreSettings,
     // --- Базовая таблица ---
     VaultItems,
     // --- Type-specific таблицы ---
@@ -59,6 +61,7 @@ part 'main_store.g.dart';
   ],
   daos: [
     StoreMetaDao,
+    StoreSettingsDao,
     VaultItemDao,
     PasswordDao,
     PasswordHistoryDao,

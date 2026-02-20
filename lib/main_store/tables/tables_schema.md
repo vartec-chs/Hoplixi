@@ -391,6 +391,23 @@ reference `vault_items.id`.
 
 ---
 
+## Table: store_settings
+
+Table for storing configurable settings per store instance.
+
+| Column | Type | Constraints | Description          |
+| ------ | ---- | ----------- | -------------------- |
+| key    | Text | Primary Key | Key of the setting   |
+| value  | Text | -           | Value of the setting |
+
+**Default Keys:**
+
+- `history_limit`
+- `history_max_age_days`
+- `history_enabled`
+
+---
+
 ## Architecture Notes
 
 ### Entity Hierarchy
