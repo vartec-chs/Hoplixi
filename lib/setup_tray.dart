@@ -12,12 +12,10 @@ Future<void> setupTray() async {
   Menu menu = Menu(
     items: [
       MenuItem(key: 'show_window', label: 'Показать окно'),
-      MenuItem.separator(),
       MenuItem(key: 'password_generator', label: 'Генератор паролей'),
       MenuItem.separator(),
-      MenuItem(key: 'exit_app', label: 'Выход из приложения'),
-      MenuItem.separator(),
       MenuItem(key: 'path_launcher', label: 'Открыть папку приложения'),
+      MenuItem(key: 'exit_app', label: 'Выход из приложения'),
     ],
   );
 

@@ -204,7 +204,7 @@ class _DashboardDrawerContentState
                       Expanded(
                         child: SmoothButton(
                           label: 'Бэкап',
-                          size: .small,
+                          size: SmoothButtonSize.small,
                           icon: const Icon(Icons.backup),
                           onPressed: isStoreOpen ? _createBackupNow : null,
                           type: SmoothButtonType.filled,
@@ -304,10 +304,30 @@ class _CategorySectionState extends ConsumerState<_CategorySection> {
     }
   }
 
+  /// Строим дерево из плоского списка категорий
+  List<_CategoryTreeEntry> _buildTree(List<CategoryCardDto> cats) {
+    final map = <String, _CategoryTreeEntry>{};
+    final roots = <_CategoryTreeEntry>[];
+
+    for (final c in cats) {
+      map[c.id] = _CategoryTreeEntry(category: c);
+    }
+    for (final c in cats) {
+      final entry = map[c.id]!;
+      if (c.parentId != null && map.containsKey(c.parentId)) {
+        map[c.parentId]!.children.add(entry);
+      } else {
+        roots.add(entry);
+      }
+    }
+    return roots;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final notifier = ref.read(drawerFilterProvider(widget.entityType).notifier);
+    final tree = _buildTree(widget.categories);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,8 +345,8 @@ class _CategorySectionState extends ConsumerState<_CategorySection> {
                     SmoothButton(
                       onPressed: () => notifier.clearCategories(),
                       label: 'Очистить',
-                      size: .small,
-                      type: .text,
+                      size: SmoothButtonSize.small,
+                      type: SmoothButtonType.text,
                     ),
                   IconButton(
                     icon: const Icon(Icons.refresh),
@@ -354,51 +374,142 @@ class _CategorySectionState extends ConsumerState<_CategorySection> {
         ),
         const SizedBox(height: 8.0),
 
-        // Список категорий
+        // Дерево категорий
         Container(
-          constraints: const BoxConstraints(maxHeight: 300),
-          child: ListView.builder(
+          constraints: const BoxConstraints(maxHeight: 350),
+          child: SingleChildScrollView(
             controller: _scrollController,
-            shrinkWrap: true,
-            itemCount: widget.categories.length + (widget.hasMore ? 1 : 0),
-            itemBuilder: (context, index) {
-              if (index == widget.categories.length) {
-                return widget.isLoading
-                    ? const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: CircularProgressIndicator(),
+            child: Column(
+              children: [
+                for (final root in tree)
+                  _CategoryTreeTile(
+                    entry: root,
+                    selectedIds: widget.selectedIds,
+                    onToggle: (id) => notifier.toggleCategory(id),
+                    depth: 0,
+                  ),
+                if (widget.isLoading)
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                if (widget.categories.isEmpty && !widget.isLoading)
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Center(
+                      child: Text(
+                        'Категории не найдены',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
-                      )
-                    : const SizedBox.shrink();
-              }
-
-              final category = widget.categories[index];
-              final isSelected = widget.selectedIds.contains(category.id);
-
-              return CheckboxListTile(
-                value: isSelected,
-                onChanged: (_) => notifier.toggleCategory(category.id),
-                title: Text(category.name),
-                subtitle: category.itemsCount > 0
-                    ? Text('${category.itemsCount} элементов')
-                    : null,
-                secondary: category.color != null
-                    ? Icon(
-                        Icons.folder,
-                        size: 18,
-                        color: parseColor(category.color, context),
-                      )
-                    : null,
-                dense: true,
-
-                contentPadding: EdgeInsets.zero,
-              );
-            },
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ],
     );
+  }
+}
+
+/// Модель узла дерева для драйвера
+class _CategoryTreeEntry {
+  _CategoryTreeEntry({required this.category});
+
+  final CategoryCardDto category;
+  final List<_CategoryTreeEntry> children = [];
+
+  bool get hasChildren => children.isNotEmpty;
+}
+
+/// Виджет одного узла дерева в drawer
+class _CategoryTreeTile extends StatelessWidget {
+  const _CategoryTreeTile({
+    required this.entry,
+    required this.selectedIds,
+    required this.onToggle,
+    required this.depth,
+  });
+
+  final _CategoryTreeEntry entry;
+  final List<String> selectedIds;
+  final ValueChanged<String> onToggle;
+  final int depth;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final category = entry.category;
+    final isSelected = selectedIds.contains(category.id);
+    final color = _parseColor(category.color, theme.colorScheme.primary);
+    final indent = depth * 16.0;
+
+    if (entry.hasChildren) {
+      // Выбор всего поддерева — показываем ExpansionTile с checkbox
+      return Theme(
+        data: theme.copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.only(left: indent, right: 8),
+          leading: Checkbox(
+            value: isSelected,
+            onChanged: (_) => onToggle(category.id),
+            fillColor: WidgetStateProperty.resolveWith(
+              (s) => s.contains(WidgetState.selected) ? color : null,
+            ),
+          ),
+          title: Text(
+            category.name,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+          subtitle: Text(
+            '${category.itemsCount} эл.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          children: entry.children
+              .map(
+                (child) => _CategoryTreeTile(
+                  entry: child,
+                  selectedIds: selectedIds,
+                  onToggle: onToggle,
+                  depth: depth + 1,
+                ),
+              )
+              .toList(),
+        ),
+      );
+    }
+
+    // Листовой узел
+    return CheckboxListTile(
+      contentPadding: EdgeInsets.only(left: indent, right: 8),
+      value: isSelected,
+      onChanged: (_) => onToggle(category.id),
+      fillColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? color : null,
+      ),
+      title: Text(
+        category.name,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+        ),
+      ),
+      subtitle: category.itemsCount > 0
+          ? Text('${category.itemsCount} элементов')
+          : null,
+      dense: true,
+    );
+  }
+
+  Color _parseColor(String? hex, Color fallback) {
+    if (hex == null || hex.isEmpty) return fallback;
+    final value = int.tryParse(hex.replaceFirst('#', ''), radix: 16);
+    return value != null ? Color(0xFF000000 | value) : fallback;
   }
 }
 
@@ -467,8 +578,8 @@ class _TagSectionState extends ConsumerState<_TagSection> {
                     SmoothButton(
                       onPressed: () => notifier.clearTags(),
                       label: 'Очистить',
-                      size: .small,
-                      type: .text,
+                      size: SmoothButtonSize.small,
+                      type: SmoothButtonType.text,
                     ),
                   IconButton(
                     icon: const Icon(Icons.refresh),

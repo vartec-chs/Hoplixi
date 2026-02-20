@@ -1,9 +1,11 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
+import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/icon_picker/icon_picker_button.dart';
 import 'package:hoplixi/main_store/models/dto/category_dto.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
@@ -35,6 +37,8 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
   Color? _selectedColor;
   String? _iconId;
   late CategoryType _selectedType;
+  String? _parentId;
+  String? _parentName;
   bool _isLoading = false;
   bool _isDataLoading = true;
 
@@ -52,13 +56,22 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
         final categoryDao = await ref.read(categoryDaoProvider.future);
         final category = await categoryDao.getCategoryById(widget.categoryId!);
         if (category != null) {
+          // Если есть parentId, загружаем имя родителя
+          String? parentName;
+          if (category.parentId != null) {
+            final parent = await categoryDao.getCategoryById(
+              category.parentId!,
+            );
+            parentName = parent?.name;
+          }
           setState(() {
             _name = category.name;
             _description = category.description;
             _iconId = category.iconId;
             _selectedType = category.type;
+            _parentId = category.parentId;
+            _parentName = parentName;
 
-            // Конвертируем HEX строку в Color если есть
             if (category.color.isNotEmpty) {
               try {
                 final hexColor = category.color.replaceAll('#', '');
@@ -78,11 +91,12 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
         }
       }
     } else {
-      // Режим создания - значения по умолчанию
       _name = '';
       _description = null;
       _iconId = null;
       _selectedColor = null;
+      _parentId = null;
+      _parentName = null;
       _selectedType = _convertEntityTypeToCategoryType(widget.forEntity);
     }
     setState(() {
@@ -207,7 +221,6 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
 
                   // Тип категории
                   if (_isEditMode)
-                    // В режиме редактирования - только для чтения
                     TextFormField(
                       initialValue: _getCategoryTypeLabel(_selectedType),
                       decoration: primaryInputDecoration(
@@ -217,7 +230,6 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                       enabled: false,
                     )
                   else
-                    // В режиме создания - dropdown
                     DropdownButtonFormField<CategoryType>(
                       initialValue: _selectedType,
                       decoration: primaryInputDecoration(
@@ -238,6 +250,21 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                         }
                       },
                     ),
+                  const SizedBox(height: 16),
+
+                  // Родительская категория
+                  CategoryPickerField(
+                    label: 'Родительская категория',
+                    hintText: 'Выберите родителя (необязательно)',
+                    selectedCategoryId: _parentId,
+                    selectedCategoryName: _parentName,
+                    onCategorySelected: (id, name) {
+                      setState(() {
+                        _parentId = id;
+                        _parentName = name;
+                      });
+                    },
+                  ),
                   const SizedBox(height: 16),
 
                   // Описание
@@ -311,7 +338,6 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
     try {
       final categoryDao = await ref.read(categoryDaoProvider.future);
 
-      // Конвертируем Color в HEX строку без альфа-канала
       String? colorHex;
       if (_selectedColor != null) {
         colorHex = _selectedColor!
@@ -322,17 +348,16 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
       }
 
       if (_isEditMode) {
-        // Режим редактирования
         final dto = UpdateCategoryDto(
           name: _name.trim(),
           description: _description,
           color: colorHex,
           iconId: _iconId,
+          parentId: Value(_parentId),
         );
 
         await categoryDao.updateCategory(widget.categoryId!, dto);
 
-        // Уведомляем об обновлении категории
         ref
             .read(managerRefreshTriggerProvider.notifier)
             .triggerCategoryRefresh();
@@ -343,18 +368,17 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
           Navigator.of(context).pop(true);
         }
       } else {
-        // Режим создания
         final dto = CreateCategoryDto(
           name: _name.trim(),
           type: _selectedType.value,
           description: _description,
           color: colorHex,
           iconId: _iconId,
+          parentId: _parentId,
         );
 
         await categoryDao.createCategory(dto);
 
-        // Уведомляем о создании категории
         ref
             .read(managerRefreshTriggerProvider.notifier)
             .triggerCategoryRefresh();

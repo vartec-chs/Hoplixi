@@ -5,43 +5,21 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/dto/category_dto.dart';
-import 'package:hoplixi/main_store/models/filter/categories_filter.dart';
+import 'package:hoplixi/main_store/models/dto/category_tree_node.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
-import 'package:hoplixi/shared/ui/text_field.dart';
 
-import '../providers/category_filter_provider.dart';
-import '../providers/category_pagination_provider.dart';
-import '../widgets/category_card.dart';
+import '../providers/category_tree_provider.dart';
 
-class CategoryManagerScreen extends ConsumerStatefulWidget {
+class CategoryManagerScreen extends ConsumerWidget {
   const CategoryManagerScreen({super.key, required this.entity});
 
   final EntityType entity;
 
   @override
-  ConsumerState<CategoryManagerScreen> createState() =>
-      _CategoryManagerScreenState();
-}
-
-class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // Инициализация или загрузка данных, если необходимо
-  }
-
-  bool _isMobileLayout(BuildContext context) {
-    return MediaQuery.sizeOf(context).width > 700.0;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final currentSortField = ref.watch(
-      categoryFilterProvider.select((filter) => filter.sortField),
-    );
-    final categoryState = ref.watch(categoryListProvider);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final treeAsync = ref.watch(categoryTreeProvider);
 
     return Scaffold(
       body: CustomScrollView(
@@ -51,189 +29,37 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
             pinned: true,
             snap: false,
             title: const Text('Категории'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: () {
-                  final searchQuery = ref.read(categoryFilterProvider).query;
-                  showSearchDialog(
-                    context,
-                    initialValue: searchQuery,
-                    onSearch: (value) {
-                      ref
-                          .read(categoryFilterProvider.notifier)
-                          .updateQuery(value);
-                    },
-                  );
-                },
-                tooltip: 'Поиск',
-              ),
-              PopupMenuButton<CategoriesSortField>(
-                icon: const Icon(Icons.sort),
-                tooltip: 'Сортировка',
-                onSelected: (sortField) async {
-                  if (sortField != currentSortField) {
-                    await ref
-                        .read(categoryFilterProvider.notifier)
-                        .updateSortField(sortField);
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: CategoriesSortField.name,
-                    child: Row(
-                      children: [
-                        if (currentSortField == CategoriesSortField.name)
-                          const Icon(Icons.check, size: 20),
-                        if (currentSortField == CategoriesSortField.name)
-                          const SizedBox(width: 8),
-                        const Text('По названию'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: CategoriesSortField.type,
-                    child: Row(
-                      children: [
-                        if (currentSortField == CategoriesSortField.type)
-                          const Icon(Icons.check, size: 20),
-                        if (currentSortField == CategoriesSortField.type)
-                          const SizedBox(width: 8),
-                        const Text('По типу'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: CategoriesSortField.createdAt,
-                    child: Row(
-                      children: [
-                        if (currentSortField == CategoriesSortField.createdAt)
-                          const Icon(Icons.check, size: 20),
-                        if (currentSortField == CategoriesSortField.createdAt)
-                          const SizedBox(width: 8),
-                        const Text('По дате создания'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: CategoriesSortField.modifiedAt,
-                    child: Row(
-                      children: [
-                        if (currentSortField == CategoriesSortField.modifiedAt)
-                          const Icon(Icons.check, size: 20),
-                        if (currentSortField == CategoriesSortField.modifiedAt)
-                          const SizedBox(width: 8),
-                        const Text('По дате изменения'),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
           ),
-
-          // SliverToBoxAdapter(child: CategoryPickerField(isFilter: true)),
-          categoryState.when(
-            data: (state) {
-              if (state.items.isEmpty) {
+          treeAsync.when(
+            data: (tree) {
+              if (tree.isEmpty) {
                 return const SliverFillRemaining(
                   child: Center(child: Text('Категории не найдены')),
                 );
               }
               return SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: SliverLayoutBuilder(
-                  builder: (context, constraints) {
-                    // Адаптивное количество колонок в зависимости от ширины
-                    final width = constraints.crossAxisExtent;
-                    final crossAxisCount = width < 400
-                        ? 1
-                        : width < 600
-                        ? 2
-                        : width < 900
-                        ? 3
-                        : 4;
-
-                    return SliverGrid(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        mainAxisSpacing: 16,
-                        crossAxisSpacing: 16,
-                        childAspectRatio: 1.1,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          if (index == state.items.length && state.hasMore) {
-                            // Загружаем следующую страницу при достижении конца
-                            Future.microtask(
-                              () => ref
-                                  .read(categoryListProvider.notifier)
-                                  .loadMore(),
-                            );
-                            return const Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(16),
-                                child: CircularProgressIndicator(),
-                              ),
-                            );
-                          }
-                          if (index >= state.items.length) {
-                            return null;
-                          }
-                          final category = state.items[index];
-                          return CategoryCard(
-                            category: category,
-                            onTap: () {
-                              context
-                                  .push<bool>(
-                                    AppRoutesPaths.categoryEditWithId(
-                                      widget.entity,
-                                      category.id,
-                                    ),
-                                  )
-                                  .then((updated) {
-                                    if (updated == true) {
-                                      ref
-                                          .read(categoryListProvider.notifier)
-                                          .refresh();
-                                    }
-                                  });
-                            },
-                            onEdit: () async {
-                              final result = await context.push<bool>(
-                                AppRoutesPaths.categoryEditWithId(
-                                  widget.entity,
-                                  category.id,
-                                ),
-                              );
-                              if (result == true) {
-                                ref
-                                    .read(categoryListProvider.notifier)
-                                    .refresh();
-                              }
-                            },
-                            onDelete: () => _handleDeleteCategory(
-                              context,
-                              category,
-                              () => ref
-                                  .read(categoryListProvider.notifier)
-                                  .refresh(),
-                            ),
-                          );
-                        },
-                        childCount: state.hasMore
-                            ? state.items.length + 1
-                            : state.items.length,
-                      ),
-                    );
-                  },
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => _CategoryTreeSection(
+                      node: tree[index],
+                      entity: entity,
+                      depth: 0,
+                      onRefresh: () =>
+                          ref.read(categoryTreeProvider.notifier).refresh(),
+                    ),
+                    childCount: tree.length,
+                  ),
                 ),
               );
             },
             loading: () => const SliverFillRemaining(
               child: Center(child: CircularProgressIndicator()),
             ),
-            error: (error, stack) => SliverFillRemaining(
+            error: (error, _) => SliverFillRemaining(
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -242,7 +68,7 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () =>
-                          ref.read(categoryListProvider.notifier).refresh(),
+                          ref.read(categoryTreeProvider.notifier).refresh(),
                       child: const Text('Повторить'),
                     ),
                   ],
@@ -252,85 +78,244 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
           ),
         ],
       ),
-      floatingActionButton: _isMobileLayout(context)
-          ? FloatingActionButton(
-              heroTag: 'categoryManagerFab',
-              onPressed: () {
-                final result = context.push<bool>(
-                  AppRoutesPaths.categoryAdd(widget.entity),
-                );
-
-                result.then((created) {
-                  if (created == true) {
-                    ref.read(categoryListProvider.notifier).refresh();
-                  }
-                });
-              },
-              child: const Icon(Icons.add),
-            )
-          : null,
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'categoryManagerFab',
+        onPressed: () {
+          context.push<bool>(AppRoutesPaths.categoryAdd(entity)).then((
+            created,
+          ) {
+            if (created == true) {
+              ref.read(categoryTreeProvider.notifier).refresh();
+            }
+          });
+        },
+        child: const Icon(Icons.add),
+      ),
     );
   }
+}
 
-  static void showSearchDialog(
-    BuildContext context, {
-    required String initialValue,
-    required Function(String) onSearch,
-  }) {
-    final controller = TextEditingController(text: initialValue);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Поиск категорий'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: primaryInputDecoration(
-            context,
-            labelText: 'Введите название...',
+// ---------------------------------------------------------------------------
+// Секция узла дерева (корневого уровня)
+// ---------------------------------------------------------------------------
+
+class _CategoryTreeSection extends ConsumerWidget {
+  const _CategoryTreeSection({
+    required this.node,
+    required this.entity,
+    required this.depth,
+    required this.onRefresh,
+  });
+
+  final CategoryTreeNode node;
+  final EntityType entity;
+  final int depth;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final category = node.category;
+    final color = _parseColor(category.color, colorScheme.primary);
+
+    if (node.hasChildren) {
+      return Padding(
+        padding: EdgeInsets.only(left: depth * 16.0, bottom: 4),
+        child: Card(
+          margin: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Theme(
+            data: theme.copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              initiallyExpanded: true,
+              leading: _CategoryColorDot(color: color),
+              title: Text(
+                category.name,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              subtitle: Text(
+                '${category.itemsCount} эл. • ${node.children.length} подкатегорий',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              trailing: _CategoryActions(
+                category: category,
+                entity: entity,
+                onRefresh: onRefresh,
+              ),
+              children: [
+                ...node.children.map(
+                  (child) => _CategoryTreeSection(
+                    node: child,
+                    entity: entity,
+                    depth: depth + 1,
+                    onRefresh: onRefresh,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        actions: [
-          SmoothButton(
-            onPressed: () => Navigator.pop(context),
-            label: 'Отмена',
-            variant: .error,
-            type: .text,
+      );
+    }
+
+    // Листовая категория
+    return Padding(
+      padding: EdgeInsets.only(left: depth * 16.0, bottom: 4),
+      child: Card(
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ListTile(
+          leading: _CategoryColorDot(color: color),
+          title: Text(
+            category.name,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
-          SmoothButton(
-            onPressed: () {
-              onSearch(controller.text);
-              Navigator.pop(context);
-            },
-            label: 'Поиск',
+          subtitle: Text(
+            '${category.itemsCount} элементов',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
-        ],
+          onTap: () => context
+              .push<bool>(
+                AppRoutesPaths.categoryEditWithId(entity, category.id),
+              )
+              .then((updated) {
+                if (updated == true) onRefresh();
+              }),
+          trailing: _CategoryActions(
+            category: category,
+            entity: entity,
+            onRefresh: onRefresh,
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
+        ),
       ),
     );
   }
 
-  Future<void> _handleDeleteCategory(
-    BuildContext context,
-    CategoryCardDto category,
-    VoidCallback onRefresh,
-  ) async {
+  Color _parseColor(String? hex, Color fallback) {
+    if (hex == null || hex.isEmpty) return fallback;
+    final value = int.tryParse(hex.replaceFirst('#', ''), radix: 16);
+    return value != null ? Color(0xFF000000 | value) : fallback;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Цветной кружок категории
+// ---------------------------------------------------------------------------
+
+class _CategoryColorDot extends StatelessWidget {
+  const _CategoryColorDot({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 36,
+    height: 36,
+    decoration: BoxDecoration(
+      color: color.withOpacity(0.18),
+      shape: BoxShape.circle,
+      border: Border.all(color: color.withOpacity(0.5), width: 1.5),
+    ),
+    child: Center(child: Icon(Icons.folder_outlined, color: color, size: 18)),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Меню действий над категорией
+// ---------------------------------------------------------------------------
+
+class _CategoryActions extends ConsumerWidget {
+  const _CategoryActions({
+    required this.category,
+    required this.entity,
+    required this.onRefresh,
+  });
+
+  final CategoryCardDto category;
+  final EntityType entity;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return PopupMenuButton<String>(
+      icon: Icon(
+        Icons.more_vert,
+        color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+        size: 20,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      offset: const Offset(0, 40),
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'edit',
+          child: Row(
+            children: [
+              Icon(Icons.edit_outlined, size: 18, color: colorScheme.primary),
+              const SizedBox(width: 12),
+              const Text('Редактировать'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'delete',
+          child: Row(
+            children: [
+              Icon(Icons.delete_outline, size: 18, color: colorScheme.error),
+              const SizedBox(width: 12),
+              Text('Удалить', style: TextStyle(color: colorScheme.error)),
+            ],
+          ),
+        ),
+      ],
+      onSelected: (value) {
+        if (value == 'edit') {
+          context
+              .push<bool>(
+                AppRoutesPaths.categoryEditWithId(entity, category.id),
+              )
+              .then((updated) {
+                if (updated == true) onRefresh();
+              });
+        } else if (value == 'delete') {
+          _handleDelete(context, ref);
+        }
+      },
+    );
+  }
+
+  Future<void> _handleDelete(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Удалить категорию?'),
-        content: Text(
-          'Вы уверены, что хотите удалить категорию "${category.name}"?',
-        ),
+        content: Text('Вы уверены, что хотите удалить «${category.name}»?'),
         actions: [
           SmoothButton(
             onPressed: () => Navigator.pop(context, false),
             label: 'Отмена',
-            variant: .normal,
-            type: .text,
+            variant: SmoothButtonVariant.normal,
+            type: SmoothButtonType.text,
           ),
           SmoothButton(
             onPressed: () => Navigator.pop(context, true),
-            variant: .error,
+            variant: SmoothButtonVariant.error,
             label: 'Удалить',
           ),
         ],
@@ -339,10 +324,9 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
 
     if (confirmed == true && context.mounted) {
       try {
-        final categoryDao = await ref.read(categoryDaoProvider.future);
-        await categoryDao.deleteCategory(category.id);
+        final dao = await ref.read(categoryDaoProvider.future);
+        await dao.deleteCategory(category.id);
 
-        // Уведомляем об удалении категории
         ref
             .read(managerRefreshTriggerProvider.notifier)
             .triggerCategoryRefresh();
@@ -350,7 +334,7 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
         if (context.mounted) {
           Toaster.success(
             title: 'Категория удалена',
-            description: 'Категория "${category.name}" успешно удалена.',
+            description: '«${category.name}» успешно удалена.',
           );
           onRefresh();
         }
@@ -358,8 +342,7 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
         if (context.mounted) {
           Toaster.error(
             title: 'Ошибка удаления',
-            description:
-                'Не удалось удалить категорию "${category.name}". Попробуйте еще раз.',
+            description: 'Не удалось удалить «${category.name}».',
           );
         }
       }

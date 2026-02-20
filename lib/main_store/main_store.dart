@@ -111,6 +111,22 @@ class MainStore extends _$MainStore {
           tag: '${_logTag}Migration',
         );
 
+        // v2 → v3: добавляем поддержку подкатегорий
+        if (from < 3) {
+          await customStatement(
+            'ALTER TABLE categories ADD COLUMN parent_id TEXT '
+            'REFERENCES categories(id) ON DELETE SET NULL',
+          );
+          await customStatement(
+            'CREATE INDEX IF NOT EXISTS idx_categories_parent_id '
+            'ON categories (parent_id)',
+          );
+          logInfo(
+            'v2→v3: added parent_id to categories',
+            tag: '${_logTag}Migration',
+          );
+        }
+
         logInfo('Migration completed', tag: '${_logTag}Migration');
       },
     );
@@ -269,6 +285,10 @@ class MainStore extends _$MainStore {
         // WHERE type IN (...) в category DAO
         'CREATE INDEX IF NOT EXISTS idx_categories_type '
             'ON categories (type)',
+
+        // Фильтрация по родительской категории (иерархия)
+        'CREATE INDEX IF NOT EXISTS idx_categories_parent_id '
+            'ON categories (parent_id)',
 
         // --- tags ---
         // WHERE type IN (...) в tag DAO

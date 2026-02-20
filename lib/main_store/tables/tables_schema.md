@@ -282,16 +282,17 @@ tables (`password_tags`, `note_tags`, `otp_tags`, `bank_cards_tags`,
 
 ## Table: categories
 
-| Column      | Type     | Constraints                        | Description                                  |
-| ----------- | -------- | ---------------------------------- | -------------------------------------------- |
-| id          | Text     | Primary Key, UUID v4               | Unique identifier                            |
-| name        | Text     | unique, min: 1, max: 100           | Category name                                |
-| description | Text     | nullable                           | Description                                  |
-| iconId      | Text     | nullable, FK to icons.id (setNull) | Icon reference                               |
-| color       | Text     | default: 'FFFFFF'                  | Hex color code                               |
-| type        | Text     | enum: CategoryType                 | Category type (notes, password, totp, mixed) |
-| createdAt   | DateTime | default: now                       | Creation timestamp                           |
-| modifiedAt  | DateTime | default: now                       | Modification timestamp                       |
+| Column      | Type     | Constraints                             | Description                                  |
+| ----------- | -------- | --------------------------------------- | -------------------------------------------- |
+| id          | Text     | Primary Key, UUID v4                    | Unique identifier                            |
+| name        | Text     | unique, min: 1, max: 100                | Category name                                |
+| description | Text     | nullable                                | Description                                  |
+| iconId      | Text     | nullable, FK to icons.id (setNull)      | Icon reference                               |
+| color       | Text     | default: 'FFFFFF'                       | Hex color code                               |
+| type        | Text     | enum: CategoryType                      | Category type (notes, password, totp, mixed) |
+| parentId    | Text     | nullable, FK to categories.id (setNull) | Parent category (subcategory support)        |
+| createdAt   | DateTime | default: now                            | Creation timestamp                           |
+| modifiedAt  | DateTime | default: now                            | Modification timestamp                       |
 
 ---
 

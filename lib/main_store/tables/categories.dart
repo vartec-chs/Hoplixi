@@ -19,6 +19,11 @@ class Categories extends Table {
       text().withDefault(const Constant('FFFFFF'))(); // Hex color code
   TextColumn get type =>
       textEnum<CategoryType>()(); // notes, password, totp, mixed
+  TextColumn get parentId => text().nullable().references(
+    Categories,
+    #id,
+    onDelete: KeyAction.setNull,
+  )(); // Self-referential FK for subcategory support
   DateTimeColumn get createdAt =>
       dateTime().clientDefault(() => DateTime.now())();
   DateTimeColumn get modifiedAt =>

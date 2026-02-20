@@ -13,7 +13,7 @@ class MainConstants {
   static const Size defaultDashboardSize = Size(1080, 750);
   static const bool isCenter = true;
 
-  static const int databaseSchemaVersion = 2;
+  static const int databaseSchemaVersion = 3;
   static const String dbExtension = '.hplxdb';
   static const String encryptedFileExtension = '.hplxenc';
 

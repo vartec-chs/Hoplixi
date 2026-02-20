@@ -4,6 +4,7 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/providers/category_picker_provider.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_filters.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_item.dart';
+import 'package:hoplixi/main_store/models/dto/category_dto.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
@@ -117,6 +118,53 @@ class CategoryPickerModal {
   }
 }
 
+class _ListItemMeta {
+  const _ListItemMeta({
+    required this.category,
+    required this.depth,
+    this.parentName,
+  });
+
+  final CategoryCardDto category;
+  final int depth;
+  final String? parentName;
+}
+
+/// Разворачивает плоский список категорий в иерархически-упорядоченный
+/// плоский список с метаданными о глубине.
+List<_ListItemMeta> _flattenTree(List<CategoryCardDto> cats) {
+  final map = <String, CategoryCardDto>{};
+  for (final c in cats) {
+    map[c.id] = c;
+  }
+
+  final childrenMap = <String, List<CategoryCardDto>>{};
+  final roots = <CategoryCardDto>[];
+  for (final c in cats) {
+    if (c.parentId != null && map.containsKey(c.parentId)) {
+      childrenMap.putIfAbsent(c.parentId!, () => []).add(c);
+    } else {
+      roots.add(c);
+    }
+  }
+
+  final result = <_ListItemMeta>[];
+  void visit(CategoryCardDto cat, int depth, String? parentName) {
+    result.add(
+      _ListItemMeta(category: cat, depth: depth, parentName: parentName),
+    );
+    final children = childrenMap[cat.id] ?? [];
+    for (final child in children) {
+      visit(child, depth + 1, cat.name);
+    }
+  }
+
+  for (final root in roots) {
+    visit(root, 0, null);
+  }
+  return result;
+}
+
 /// Список категорий с анимацией (одиночный выбор)
 class _CategoryListView extends ConsumerStatefulWidget {
   const _CategoryListView({
@@ -128,6 +176,7 @@ class _CategoryListView extends ConsumerStatefulWidget {
   final String? currentCategoryId;
   final Function(String categoryId, String categoryName) onCategorySelected;
   final List<String>? filterByType;
+
   @override
   ConsumerState<_CategoryListView> createState() => _CategoryListViewState();
 }
@@ -135,7 +184,7 @@ class _CategoryListView extends ConsumerStatefulWidget {
 class _CategoryListViewState extends ConsumerState<_CategoryListView> {
   final GlobalKey<SliverAnimatedListState> _listKey =
       GlobalKey<SliverAnimatedListState>();
-  List<dynamic> _items = [];
+  List<_ListItemMeta> _items = [];
   bool _showLoadingIndicator = false;
 
   /// Кэшированный список типов для провайдера
@@ -144,7 +193,6 @@ class _CategoryListViewState extends ConsumerState<_CategoryListView> {
   @override
   void initState() {
     super.initState();
-    // Преобразуем типы один раз при инициализации
     _cachedTypes =
         widget.filterByType != null && widget.filterByType!.isNotEmpty
         ? widget.filterByType!
@@ -153,19 +201,18 @@ class _CategoryListViewState extends ConsumerState<_CategoryListView> {
         : <CategoryType?>[];
   }
 
-  void _updateItems(List<dynamic> newItems) {
+  void _updateItems(List<CategoryCardDto> newCats) {
     if (!mounted) return;
 
+    final newItems = _flattenTree(newCats);
     final oldLength = _items.length;
     final newLength = newItems.length;
 
-    // Если список пустой, просто заменяем
     if (oldLength == 0) {
       setState(() {
-        _items = List.from(newItems);
+        _items = newItems;
         _showLoadingIndicator = false;
       });
-      // Анимируем добавление всех элементов
       for (int i = 0; i < newLength; i++) {
         _listKey.currentState?.insertItem(
           i,
@@ -175,7 +222,6 @@ class _CategoryListViewState extends ConsumerState<_CategoryListView> {
       return;
     }
 
-    // Удаляем лишние элементы
     if (newLength < oldLength) {
       for (int i = oldLength - 1; i >= newLength; i--) {
         final item = _items[i];
@@ -187,7 +233,6 @@ class _CategoryListViewState extends ConsumerState<_CategoryListView> {
       }
     }
 
-    // Добавляем новые элементы
     if (newLength > oldLength) {
       for (int i = oldLength; i < newLength; i++) {
         _listKey.currentState?.insertItem(
@@ -198,13 +243,13 @@ class _CategoryListViewState extends ConsumerState<_CategoryListView> {
     }
 
     setState(() {
-      _items = List.from(newItems);
+      _items = newItems;
       _showLoadingIndicator = false;
     });
   }
 
   Widget _buildAnimatedItem(
-    dynamic category,
+    _ListItemMeta meta,
     Animation<double> animation,
     bool isSelected,
   ) {
@@ -213,10 +258,12 @@ class _CategoryListViewState extends ConsumerState<_CategoryListView> {
       child: FadeTransition(
         opacity: animation,
         child: CategoryPickerItem(
-          category: category,
+          category: meta.category,
           isSelected: isSelected,
+          depth: meta.depth,
+          parentName: meta.parentName,
           onTap: () {
-            widget.onCategorySelected(category.id, category.name);
+            widget.onCategorySelected(meta.category.id, meta.category.name);
             Navigator.of(context).pop();
           },
         ),
@@ -226,16 +273,14 @@ class _CategoryListViewState extends ConsumerState<_CategoryListView> {
 
   @override
   Widget build(BuildContext context) {
-    // Используем кэшированные типы
     final categoriesState = ref.watch(categoryPickerListProvider(_cachedTypes));
 
     return categoriesState.when(
       data: (state) {
-        // Обновляем список при получении новых данных
         if (state.items.length != _items.length ||
             (state.items.isNotEmpty &&
                 _items.isNotEmpty &&
-                state.items.first.id != _items.first.id)) {
+                state.items.first.id != _items.first.category.id)) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _updateItems(state.items);
           });
@@ -277,10 +322,10 @@ class _CategoryListViewState extends ConsumerState<_CategoryListView> {
               return const SizedBox.shrink();
             }
 
-            final category = _items[index];
-            final isSelected = category.id == widget.currentCategoryId;
+            final meta = _items[index];
+            final isSelected = meta.category.id == widget.currentCategoryId;
 
-            return _buildAnimatedItem(category, animation, isSelected);
+            return _buildAnimatedItem(meta, animation, isSelected);
           },
         );
       },
@@ -348,7 +393,7 @@ class _MultipleCategoryPickerContentState
   late List<String> _selectedCategoryIds;
   final GlobalKey<SliverAnimatedListState> _listKey =
       GlobalKey<SliverAnimatedListState>();
-  List<dynamic> _items = [];
+  List<_ListItemMeta> _items = [];
 
   /// Кэшированный список типов для провайдера
   late final List<CategoryType?> _cachedTypes;
@@ -366,16 +411,17 @@ class _MultipleCategoryPickerContentState
         : <CategoryType?>[];
   }
 
-  void _updateItems(List<dynamic> newItems) {
+  void _updateItems(List<CategoryCardDto> newCats) {
     if (!mounted) return;
 
+    final newItems = _flattenTree(newCats);
     final oldLength = _items.length;
     final newLength = newItems.length;
 
     // Если список пустой, просто заменяем
     if (oldLength == 0) {
       setState(() {
-        _items = List.from(newItems);
+        _items = newItems;
       });
       // Анимируем добавление всех элементов
       for (int i = 0; i < newLength; i++) {
@@ -391,7 +437,7 @@ class _MultipleCategoryPickerContentState
     if (newLength < oldLength) {
       for (int i = oldLength - 1; i >= newLength; i--) {
         final item = _items[i];
-        final isSelected = _selectedCategoryIds.contains(item.id);
+        final isSelected = _selectedCategoryIds.contains(item.category.id);
         _listKey.currentState?.removeItem(
           i,
           (context, animation) =>
@@ -412,12 +458,12 @@ class _MultipleCategoryPickerContentState
     }
 
     setState(() {
-      _items = List.from(newItems);
+      _items = newItems;
     });
   }
 
   Widget _buildAnimatedItem(
-    dynamic category,
+    _ListItemMeta meta,
     Animation<double> animation,
     bool isSelected,
   ) {
@@ -426,9 +472,12 @@ class _MultipleCategoryPickerContentState
       child: FadeTransition(
         opacity: animation,
         child: CategoryPickerItem(
-          category: category,
+          category: meta.category,
           isSelected: isSelected,
-          onTap: () => _toggleCategory(category.id, category.name, _items),
+          depth: meta.depth,
+          parentName: meta.parentName,
+          onTap: () =>
+              _toggleCategory(meta.category.id, meta.category.name, _items),
         ),
       ),
     );
@@ -437,7 +486,7 @@ class _MultipleCategoryPickerContentState
   void _toggleCategory(
     String categoryId,
     String categoryName,
-    List<dynamic> allCategories,
+    List<_ListItemMeta> allMetas,
   ) {
     setState(() {
       if (_selectedCategoryIds.contains(categoryId)) {
@@ -451,12 +500,12 @@ class _MultipleCategoryPickerContentState
 
     // Собираем имена для выбранных категорий
     final selectedCategoryNames = <String>[];
-    for (final categoryId in _selectedCategoryIds) {
+    for (final id in _selectedCategoryIds) {
       try {
-        final selectedCategory = allCategories.firstWhere(
-          (c) => c.id == categoryId,
+        final selectedCategory = allMetas.firstWhere(
+          (m) => m.category.id == id,
         );
-        selectedCategoryNames.add(selectedCategory.name as String);
+        selectedCategoryNames.add(selectedCategory.category.name);
       } catch (e) {
         // Категория не найдена в списке, пропускаем
         continue;
@@ -477,7 +526,7 @@ class _MultipleCategoryPickerContentState
         if (state.items.length != _items.length ||
             (state.items.isNotEmpty &&
                 _items.isNotEmpty &&
-                state.items.first.id != _items.first.id)) {
+                state.items.first.id != _items.first.category.id)) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _updateItems(state.items);
           });
@@ -533,10 +582,12 @@ class _MultipleCategoryPickerContentState
                   return const SizedBox.shrink();
                 }
 
-                final category = _items[index];
-                final isSelected = _selectedCategoryIds.contains(category.id);
+                final meta = _items[index];
+                final isSelected = _selectedCategoryIds.contains(
+                  meta.category.id,
+                );
 
-                return _buildAnimatedItem(category, animation, isSelected);
+                return _buildAnimatedItem(meta, animation, isSelected);
               },
             ),
             if (state.hasMore)

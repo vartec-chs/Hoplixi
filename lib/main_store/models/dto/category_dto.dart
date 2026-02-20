@@ -1,4 +1,6 @@
+import 'package:drift/drift.dart' as drift;
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:json_annotation/json_annotation.dart';
 
 part 'category_dto.freezed.dart';
 part 'category_dto.g.dart';
@@ -13,6 +15,7 @@ sealed class CreateCategoryDto with _$CreateCategoryDto {
     String? description,
     String? color,
     String? iconId,
+    String? parentId,
   }) = _CreateCategoryDto;
 
   factory CreateCategoryDto.fromJson(Map<String, dynamic> json) =>
@@ -29,6 +32,7 @@ sealed class GetCategoryDto with _$GetCategoryDto {
     String? description,
     String? color,
     String? iconId,
+    String? parentId,
     required int itemsCount,
     required DateTime createdAt,
     required DateTime modifiedAt,
@@ -47,6 +51,7 @@ sealed class CategoryCardDto with _$CategoryCardDto {
     required String type,
     String? color,
     String? iconId,
+    String? parentId,
     required int itemsCount,
   }) = _CategoryCardDto;
 
@@ -68,16 +73,42 @@ sealed class CategoryInCardDto with _$CategoryInCardDto {
       _$CategoryInCardDtoFromJson(json);
 }
 
-/// DTO для обновления категории
-@freezed
-sealed class UpdateCategoryDto with _$UpdateCategoryDto {
-  const factory UpdateCategoryDto({
+/// DTO для обновления категории.
+///
+/// [parentId] использует тип [Value] чтобы отличить
+/// «поле не тронуто» ([Value.absent()]) от «сбросить в null» ([Value(null)]).
+/// Не использует freezed т.к. [Value] несовместим с json_serializable.
+class UpdateCategoryDto {
+  const UpdateCategoryDto({
+    this.name,
+    this.description,
+    this.color,
+    this.iconId,
+    this.parentId = const drift.Value.absent(),
+  });
+
+  final String? name;
+  final String? description;
+  final String? color;
+  final String? iconId;
+
+  /// Использует [Value] для семантики Drift:
+  /// - [Value.absent()] — не обновлять поле
+  /// - [Value(null)] — установить в NULL
+  /// - [Value('id')] — установить значение
+  final drift.Value<String?> parentId;
+
+  UpdateCategoryDto copyWith({
     String? name,
     String? description,
     String? color,
     String? iconId,
-  }) = _UpdateCategoryDto;
-
-  factory UpdateCategoryDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateCategoryDtoFromJson(json);
+    drift.Value<String?>? parentId,
+  }) => UpdateCategoryDto(
+    name: name ?? this.name,
+    description: description ?? this.description,
+    color: color ?? this.color,
+    iconId: iconId ?? this.iconId,
+    parentId: parentId ?? this.parentId,
+  );
 }
