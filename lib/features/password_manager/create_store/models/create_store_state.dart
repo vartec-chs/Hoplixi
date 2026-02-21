@@ -34,6 +34,7 @@ sealed class CreateStoreFormState with _$CreateStoreFormState {
     // Шаг 3: Пароль
     @Default('') String password,
     @Default('') String passwordConfirmation,
+    @Default(false) bool useDeviceKey,
 
     // Валидация
     String? nameError,

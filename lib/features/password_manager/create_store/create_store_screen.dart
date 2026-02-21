@@ -205,6 +205,7 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen>
             : formState.description,
         password: formState.password,
         path: formState.finalPath ?? '',
+        useDeviceKey: formState.useDeviceKey,
       );
 
       final success = await storeNotifier.createStore(dto);

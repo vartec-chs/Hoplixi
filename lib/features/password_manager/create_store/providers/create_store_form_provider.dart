@@ -61,6 +61,11 @@ class CreateStoreFormNotifier extends Notifier<CreateStoreFormState> {
     );
   }
 
+  /// Установить использование ключа устройства
+  void setUseDeviceKey(bool value) {
+    state = state.copyWith(useDeviceKey: value);
+  }
+
   /// Перейти к следующему шагу
   void nextStep() {
     if (!state.canProceed) return;
@@ -103,8 +108,8 @@ class CreateStoreFormNotifier extends Notifier<CreateStoreFormState> {
     if (name.trim().isEmpty) {
       return 'Имя хранилища не может быть пустым';
     }
-    if (name.trim().length < 3) {
-      return 'Имя должно содержать минимум 3 символа';
+    if (name.trim().length < 4) {
+      return 'Имя должно содержать минимум 4 символа';
     }
     if (name.trim().length > 50) {
       return 'Имя не может быть длиннее 50 символов';

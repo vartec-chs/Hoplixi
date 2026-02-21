@@ -119,6 +119,19 @@ class Step4Confirmation extends ConsumerWidget {
                     size: 20,
                   ),
                 ),
+                if (state.useDeviceKey) ...[
+                  const Divider(height: 24),
+                  const _InfoRow(
+                    icon: Icons.phonelink_lock,
+                    label: 'Ключ устройства',
+                    value: 'Включено',
+                    trailing: Icon(
+                      Icons.check_circle,
+                      color: Colors.green,
+                      size: 20,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
