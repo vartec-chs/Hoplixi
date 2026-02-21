@@ -11,7 +11,6 @@ import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/index.dart';
 import 'package:hoplixi/core/logger/rust_log_bridge.dart';
 import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
-import 'package:hoplixi/core/services/launch_at_startup_service.dart';
 import 'package:hoplixi/core/services/services.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/core/utils/window_manager.dart';
@@ -178,6 +177,7 @@ Future<void> _runGuiMode(_LaunchContext launchContext) async {
   }
 
   await setupDI();
+  await _applyInstallConfig();
   await _syncLaunchAtStartupPreference();
   if (UniversalPlatform.isDesktop) {
     await setupTray();
@@ -242,6 +242,25 @@ void _configureSingleInstanceFocusHandler() {
     container.read(launchDbPathProvider.notifier).setPath(filePath);
     logInfo('Получен путь файла из второго экземпляра: $filePath');
   };
+}
+
+Future<void> _applyInstallConfig() async {
+  if (!UniversalPlatform.isDesktop) {
+    return;
+  }
+
+  try {
+    await InstallConfigService.applyIfPresent(
+      storage: getIt<AppStorageService>(),
+      launchAtStartupService: getIt<LaunchAtStartupService>(),
+    );
+  } catch (error, stackTrace) {
+    logError(
+      'Ошибка при применении конфигурации установщика',
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
 }
 
 Future<void> _syncLaunchAtStartupPreference() async {

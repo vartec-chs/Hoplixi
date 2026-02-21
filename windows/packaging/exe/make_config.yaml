@@ -2,7 +2,8 @@ app_id: c6d1c972-acc4-46af-996d-936b9a1f43d8
 display_name: Hoplixi
 publisher_name: Hoplixi
 create_desktop_icon: true
-launch_at_startup: false
+launch_at_startup: true
 locales:
+  - en
   - ru
 script_template: inno_setup.iss

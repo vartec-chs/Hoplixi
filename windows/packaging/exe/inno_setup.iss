@@ -4,7 +4,7 @@
 #define MyAppVersion "1.0.0"
 #define MyAppBuild "1"
 #define MyAppPublisher "Hoplixi"
-#define MyAppExeName "hoplixi.exe"
+#define MyAppExeName "Hoplixi.exe"
 #define MyAppId "c6d1c972-acc4-46af-996d-936b9a1f43d8"
 #define ProjectRoot "..\\.."
 
@@ -33,6 +33,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "autorun"; Description: "Запускать приложение вместе с Windows"; Flags: unchecked
 
 [Files]
 Source: "{#ProjectRoot}\\build\\windows\\x64\\runner\\Release\\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -66,7 +67,23 @@ Filename: "{app}\\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChan
 procedure CurStepChanged(CurStep: TSetupStep);
 var
   ErrorCode: Integer;
+  ConfigPath: string;
+  Content: string;
 begin
   if CurStep = ssPostInstall then
+  begin
+    // --- Записываем install_config.json рядом с exe ---
+    ConfigPath := ExpandConstant('{app}\install_config.json');
+
+    Content :=
+      '{' + #13#10 +
+      '  "lang": "' + ActiveLanguage() + '",' + #13#10 +
+      '  "autorun": ' + IntToStr(Ord(IsTaskSelected('autorun'))) + #13#10 +
+      '}';
+
+    SaveStringToFile(ConfigPath, Content, False);
+
+    // --- Обновляем иконки в проводнике ---
     Exec('ie4uinit.exe', '-show', '', SW_HIDE, ewWaitUntilTerminated, ErrorCode);
+  end;
 end;

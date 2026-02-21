@@ -95,7 +95,7 @@ class GeneralSettingsSection extends ConsumerWidget {
     WidgetRef ref,
     SettingsNotifier notifier,
   ) async {
-    final languages = {'ru': 'Русский'};
+    final languages = {'ru': 'Русский', 'en': 'English'};
 
     final result = await showDialog<String>(
       context: context,
