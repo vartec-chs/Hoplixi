@@ -8,23 +8,38 @@ class WindowManager {
   static Future<void> initialize({bool showOnInit = true}) async {
     if (UniversalPlatform.isWindows) {
       await windowManager.ensureInitialized();
-      WindowOptions windowOptions = const WindowOptions(
+      WindowOptions windowOptions = WindowOptions(
         title: MainConstants.appName,
-        minimumSize: MainConstants.minWindowSize, // Минимальный размер окна
-        maximumSize: MainConstants.maxWindowSize, // Максимальный размер окна
-        size: MainConstants.defaultWindowSize, // Начальный размер окна
-        center: MainConstants.isCenter, // Центрировать окно при
-        titleBarStyle:
-            TitleBarStyle.hidden, // Скрыть стандартную панель заголовка
-        skipTaskbar: false,
+        minimumSize: MainConstants.minWindowSize,
+        maximumSize: MainConstants.maxWindowSize,
+        size: MainConstants.defaultWindowSize,
+        center: MainConstants.isCenter,
+        titleBarStyle: TitleBarStyle.hidden,
+        skipTaskbar:
+            !showOnInit, // Скрываем с панели задач, если стартуем в фоне
       );
 
-      await windowManager.waitUntilReadyToShow(windowOptions).then((_) async {
+      await windowManager.waitUntilReadyToShow(windowOptions, () async {
         if (showOnInit) {
           await windowManager.show();
           await windowManager.focus();
         } else {
+          // Устанавливаем нулевую прозрачность до того, как окно станет видимым,
+          // чтобы избежать "мигания".
+          await windowManager.setOpacity(0.0);
           await windowManager.hide();
+
+          // Вызываем hide() несколько раз, так как нативный движок может попытаться
+          // всё равно показать окно на первых кадрах.
+          for (int i = 1; i <= 5; i++) {
+            Future.delayed(Duration(milliseconds: i * 200), () async {
+              await windowManager.hide();
+              // Когда точно знаем, что окно скрыто, возвращаем прозрачность
+              if (i == 5) {
+                await windowManager.setOpacity(1.0);
+              }
+            });
+          }
         }
       });
 
@@ -34,6 +49,7 @@ class WindowManager {
 
   static Future<void> show() async {
     if (UniversalPlatform.isWindows) {
+      await windowManager.setSkipTaskbar(false);
       await windowManager.show();
       await windowManager.focus();
     }
@@ -42,6 +58,9 @@ class WindowManager {
   static Future<void> hide() async {
     if (UniversalPlatform.isWindows) {
       await windowManager.hide();
+      await windowManager.setSkipTaskbar(
+        true,
+      ); // Спрятать с панели при закрытии
     }
   }
 

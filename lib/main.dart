@@ -86,12 +86,13 @@ _LaunchContext _parseLaunchContext(List<String> args) {
   String? filePath;
 
   for (final rawArg in args) {
-    final arg = rawArg.trim();
+    var arg = rawArg.trim().replaceAll('"', '').replaceAll("'", "");
     if (arg.isEmpty) {
       continue;
     }
 
-    if (arg == LaunchAtStartupService.startInTrayArg) {
+    if (arg == LaunchAtStartupService.startInTrayArg ||
+        arg.contains(LaunchAtStartupService.startInTrayArg)) {
       startInTray = true;
       continue;
     }
