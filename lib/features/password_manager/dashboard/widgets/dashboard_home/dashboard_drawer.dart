@@ -610,44 +610,56 @@ class _TagSectionState extends ConsumerState<_TagSection> {
         // Список тегов
         Container(
           constraints: const BoxConstraints(maxHeight: 300),
-          child: ListView.builder(
-            controller: _scrollController,
-            shrinkWrap: true,
-            itemCount: widget.tags.length + (widget.hasMore ? 1 : 0),
-            itemBuilder: (context, index) {
-              if (index == widget.tags.length) {
-                return widget.isLoading
-                    ? const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: CircularProgressIndicator(),
-                        ),
-                      )
-                    : const SizedBox.shrink();
-              }
+          child: widget.tags.isEmpty && !widget.isLoading
+              ? Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Center(
+                    child: Text(
+                      'Теги не найдены',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                )
+              : ListView.builder(
+                  controller: _scrollController,
+                  shrinkWrap: true,
+                  itemCount: widget.tags.length + (widget.hasMore ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == widget.tags.length) {
+                      return widget.isLoading
+                          ? const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(16.0),
+                                child: CircularProgressIndicator(),
+                              ),
+                            )
+                          : const SizedBox.shrink();
+                    }
 
-              final tag = widget.tags[index];
-              final isSelected = widget.selectedIds.contains(tag.id);
+                    final tag = widget.tags[index];
+                    final isSelected = widget.selectedIds.contains(tag.id);
 
-              return CheckboxListTile(
-                value: isSelected,
-                onChanged: (_) => notifier.toggleTag(tag.id),
-                title: Text(tag.name),
-                subtitle: tag.itemsCount > 0
-                    ? Text('${tag.itemsCount} элементов')
-                    : null,
-                secondary: tag.color != null
-                    ? Icon(
-                        Icons.tag,
-                        size: 18,
-                        color: parseColor(tag.color, context),
-                      )
-                    : null,
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-              );
-            },
-          ),
+                    return CheckboxListTile(
+                      value: isSelected,
+                      onChanged: (_) => notifier.toggleTag(tag.id),
+                      title: Text(tag.name),
+                      subtitle: tag.itemsCount > 0
+                          ? Text('${tag.itemsCount} элементов')
+                          : null,
+                      secondary: tag.color != null
+                          ? Icon(
+                              Icons.tag,
+                              size: 18,
+                              color: parseColor(tag.color, context),
+                            )
+                          : null,
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                    );
+                  },
+                ),
         ),
       ],
     );
