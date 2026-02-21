@@ -77,7 +77,17 @@
 1. Добавь новые таблицы в `@DriftDatabase(tables: [...])`.
 2. Добавь DAO в `@DriftDatabase(daos: [...])`.
 3. При необходимости добавь `watchDataChanged` readsFrom.
-4. Добавь/обнови индексы в `_installIndexes()` под типичные `WHERE`/`ORDER BY`.
+4. Добавь/обнови индексы под типичные `WHERE`/`ORDER BY`, но SQL индексы храни в
+   отдельном файле (рекомендуемо: `lib/main_store/indexes/index.dart`), а в
+   `_installIndexes()` только разворачивай общий список (например
+   `for (final sql in allMainStoreIndexes)`).
+
+> Рекомендация по структуре:
+>
+> - `lib/main_store/indexes/index.dart` — exports
+> - `lib/main_store/indexes/main_store_indexes.dart` —
+>   `const List<String> allMainStoreIndexes`
+> - `main_store.dart` — только выполнение SQL из списка
 
 Если это миграция существующей БД:
 
@@ -91,6 +101,11 @@
 Пример-референс: `lib/main_store/dao/password_dao.dart`
 
 Создай `lib/main_store/dao/<entity>_dao.dart`:
+
+- DAO должен `implements BaseMainEntityDao`
+  (`lib/main_store/models/base_main_entity_dao.dart`)
+- обязательно реализуй: `softDelete`, `restoreFromDeleted`, `permanentDelete`,
+  `toggleFavorite`, `togglePin`, `toggleArchive`, `incrementUsage`
 
 - `getAll...()` (JOIN `vault_items` + `<entity>_items`)
 - `getById()`
@@ -107,7 +122,8 @@
 Подключи DAO в:
 
 - `lib/main_store/dao/index.dart`
-- `lib/main_store/provider/dao_providers.dart`
+- `lib/main_store/provider/dao_providers.dart` (обязательно добавить
+  `FutureProvider` для CRUD DAO, history DAO и filter DAO)
 
 ---
 
@@ -192,6 +208,14 @@
 - tab-фильтры `_getTabFilter(...)`
 - операции действий (`toggle/delete/restore/permanentDelete`) через сервисы
 
+### Переключение типа сущности в UI
+
+Обязательно подключи новый тип к выпадающему выбору:
+
+- `lib/features/password_manager/dashboard/widgets/dashboard_home/entity_type_dropdown.dart`
+  - `EntityTypeCompactDropdown`
+  - `EntityTypeFullDropdown` (описание нового типа)
+
 ---
 
 ## Этап 8. Карточки для общего списка (grid/list)
@@ -227,8 +251,12 @@
 Что обязательно:
 
 - `initForCreate`, `initForEdit`, `save`
-- валидация полей в provider
-- toast-уведомления успех/ошибка
+- валидация полей в provider + вывод ошибок в `TextFormField`/полях формы
+- общие ошибки сохранения/операций показывать через `Toaster.error(...)`
+- View-экран должен быть максимально информативным
+- секретные поля в View не грузить автоматически в открытом виде: получать
+  отдельным DAO-запросом по явному действию пользователя (например, тап/кнопка
+  «Показать» или «Скопировать»)
 - `dataRefreshTriggerProvider` после create/update/delete
 
 Интеграция роутинга-обёрток:
@@ -250,6 +278,13 @@
 - секции entity-specific полей
 - маппинг `CategoryType` и `TagType`
 
+Отдельно проверь экспорт и секцию UI для новой сущности:
+
+- `lib/features/password_manager/dashboard/widgets/dashboard_home/filter_sections/filter_sections.dart`
+  - добавь export новой секции
+- создай отдельный виджет секции специфичных фильтров (по шаблону
+  `password_filter_section.dart`)
+
 ---
 
 ## Этап 11. History (рекомендуется для parity с password/otp)
@@ -262,10 +297,15 @@
 2. Экспортируй триггеры:
 
 - `lib/main_store/triggers/index.dart`
+  - обязательно отдельно держи history-trigger файлы и timestamps-trigger файлы,
+    и экспортируй оба набора
 
 3. Подключи в `MainStore._installHistoryTriggers()`:
 
 - drop + create в общие списки
+- убедись, что параллельно подключены списки timestamps-триггеров
+  (`allTimestampDropTriggers`, `allInsertTimestampTriggers`,
+  `allModifiedAtTriggers`) и триггеры обновления meta (`allMetaTouch...`)
 
 4. Реализуй history DAO:
 
@@ -276,6 +316,10 @@
 5. Подключи history UI/list provider при необходимости:
 
 - `lib/features/password_manager/history/providers/history_list_provider.dart`
+- `lib/features/password_manager/history/ui/widgets/history_item_card.dart`
+  - карточка `HistoryItemCard` должна быть максимально информативной: действие,
+    заголовок, ключевые изменённые поля, метки времени, визуальные статусы
+    (created/modified/deleted)
 
 ---
 
@@ -304,16 +348,22 @@ dart run build_runner build --delete-conflicting-outputs
 - [ ] Добавлен новый `VaultItemType` и `EntityType`
 - [ ] Созданы `<entity>_items` и `<entity>_history`
 - [ ] Подключены в `tables/index.dart` и `main_store.dart`
+- [ ] SQL-индексы вынесены в отдельный файл и подключены единым списком в
+      `main_store.dart`
 - [ ] Реализован `<Entity>Dao` (CRUD)
+- [ ] `<Entity>Dao` реализует `BaseMainEntityDao`
 - [ ] Реализован `<Entity>FilterDao` + `<Entities>Filter`
 - [ ] Созданы DTO (`Create/Update/Card/...`)
-- [ ] Добавлены provider-ы DAO и фильтров
+- [ ] Добавлены provider-ы DAO (CRUD/history/filter) в `dao_providers.dart`
 - [ ] Интегрировано в `list_provider.dart`
 - [ ] Добавлены list/grid карточки
-- [ ] Добавлены form/view экраны
+- [ ] Добавлены form/view экраны (View с ленивой загрузкой секретных полей)
 - [ ] Обновлены `entity_add_edit.dart` и `entity_view.dart`
-- [ ] Обновлён `filter_modal.dart`
+- [ ] Обновлён `filter_modal.dart` и добавлена секция в `filter_sections.dart`
+- [ ] Обновлён `EntityTypeCompactDropdown`/`EntityTypeFullDropdown`
 - [ ] (Опционально, но желательно) history triggers + history dao
+- [ ] Подключены history + timestamps trigger наборы в MainStore
+- [ ] `HistoryItemCard` информативно отображает изменения
 - [ ] Сгенерирован код `build_runner`
 - [ ] Пройдены smoke-проверки UI + фильтрации
 
