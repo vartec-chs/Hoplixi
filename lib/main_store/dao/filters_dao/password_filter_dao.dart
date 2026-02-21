@@ -73,6 +73,7 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
         modifiedAt: item.modifiedAt,
         createdAt: item.createdAt,
         tags: itemTags,
+        expireAt: pw.expireAt,
       );
     }).toList();
   }

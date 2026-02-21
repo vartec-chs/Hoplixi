@@ -311,7 +311,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                             controller: TextEditingController(
                               text: state.expireAt != null
                                   ? DateFormat(
-                                      'dd.MM.yyyy',
+                                      'dd.MM.yyyy HH:mm',
                                     ).format(state.expireAt!)
                                   : '',
                             ),
@@ -319,7 +319,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                             decoration: primaryInputDecoration(
                               context,
                               labelText: 'Срок действия',
-                              hintText: 'Выберите дату',
+                              hintText: 'Выберите дату и время',
                               prefixIcon: const Icon(LucideIcons.calendar),
                               suffixIcon: state.expireAt != null
                                   ? IconButton(
@@ -333,16 +333,33 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                                   : null,
                             ),
                             onTap: () async {
+                              final initialDate =
+                                  state.expireAt ?? DateTime.now();
                               final date = await showDatePicker(
                                 context: context,
-                                initialDate: state.expireAt ?? DateTime.now(),
+                                initialDate: initialDate,
                                 firstDate: DateTime(2000),
                                 lastDate: DateTime(DateTime.now().year + 150),
                               );
-                              if (date != null) {
-                                ref
-                                    .read(passwordFormProvider.notifier)
-                                    .setExpireAt(date);
+                              if (date != null && context.mounted) {
+                                final time = await showTimePicker(
+                                  context: context,
+                                  initialTime: TimeOfDay.fromDateTime(
+                                    initialDate,
+                                  ),
+                                );
+                                if (time != null) {
+                                  final finalDateTime = DateTime(
+                                    date.year,
+                                    date.month,
+                                    date.day,
+                                    time.hour,
+                                    time.minute,
+                                  );
+                                  ref
+                                      .read(passwordFormProvider.notifier)
+                                      .setExpireAt(finalDateTime);
+                                }
                               }
                             },
                           ),

@@ -8,7 +8,6 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:otp/otp.dart';
 
 /// Карточка пароля для режима списка (переписана с shared компонентами)
@@ -381,6 +380,8 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
           isPinned: password.isPinned,
           isFavorite: password.isFavorite,
           isArchived: password.isArchived,
+          isExpired: isExpired,
+          isExpiringSoon: isExpiringSoon,
         ).buildPositionedWidgets(),
       ],
     );
@@ -463,25 +464,6 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
                   ],
                 ),
               ),
-              // Иконки предупреждения об истечении
-              if (isExpired)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Icon(
-                    LucideIcons.clockAlert,
-                    size: 18,
-                    color: theme.colorScheme.error,
-                  ),
-                )
-              else if (isExpiringSoon)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Icon(
-                    LucideIcons.clock,
-                    size: 18,
-                    color: Colors.orange,
-                  ),
-                ),
               // Действия
               _buildHeaderActions(theme),
             ],

@@ -9,7 +9,6 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Карточка пароля для режима сетки
 /// Минимальная ширина: 240px для предотвращения чрезмерного сжатия
@@ -203,24 +202,6 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard>
                                         color: Colors.deepOrange,
                                       ),
                                     ),
-                                  if (isExpired)
-                                    Padding(
-                                      padding: const EdgeInsets.only(right: 4),
-                                      child: Icon(
-                                        LucideIcons.clockAlert,
-                                        size: isMobile ? 14 : 16,
-                                        color: theme.colorScheme.error,
-                                      ),
-                                    )
-                                  else if (isExpiringSoon)
-                                    Padding(
-                                      padding: const EdgeInsets.only(right: 4),
-                                      child: Icon(
-                                        LucideIcons.clock,
-                                        size: isMobile ? 14 : 16,
-                                        color: Colors.orange,
-                                      ),
-                                    ),
                                 ],
                               ),
                             ),
@@ -408,6 +389,8 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard>
             isPinned: password.isPinned,
             isFavorite: password.isFavorite,
             isArchived: password.isArchived,
+            isExpired: isExpired,
+            isExpiringSoon: isExpiringSoon,
           ).buildPositionedWidgets(),
         ],
       ),
