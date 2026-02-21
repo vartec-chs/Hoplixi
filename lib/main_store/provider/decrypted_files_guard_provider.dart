@@ -150,7 +150,7 @@ class DecryptedFilesGuardNotifier extends Notifier<DecryptedFilesGuardState> {
             await entity.delete();
             logInfo('Deleted stale decrypted file: $filePath', tag: _logTag);
           }
-        } catch (e, st) {
+        } catch (e) {
           logWarning(
             'Failed to process decrypted file: $filePath',
 
@@ -192,7 +192,7 @@ class DecryptedFilesGuardNotifier extends Notifier<DecryptedFilesGuardState> {
     await for (final entity in directory.list(recursive: false)) {
       try {
         await entity.delete(recursive: true);
-      } catch (e, st) {
+      } catch (e) {
         logWarning(
           'Failed to delete decrypted entity: ${entity.path}',
 

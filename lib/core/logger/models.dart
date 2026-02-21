@@ -86,7 +86,7 @@ class DeviceInfo {
   /// PID процесса, тип окна и платформу.
   factory DeviceInfo.subWindow({required String windowType}) {
     return DeviceInfo(
-      deviceId: 'sub_window_${pid}',
+      deviceId: 'sub_window_$pid',
       platform: Platform.operatingSystem,
       platformVersion: '',
       deviceModel: '',

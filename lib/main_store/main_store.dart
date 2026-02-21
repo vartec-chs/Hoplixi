@@ -158,7 +158,7 @@ class MainStore extends _$MainStore {
         icons,
         vaultItemHistory,
       },
-    ).watch().map((_) => null);
+    ).watch().map((_) {});
   }
 
   /// Установка триггеров для автоматической записи истории

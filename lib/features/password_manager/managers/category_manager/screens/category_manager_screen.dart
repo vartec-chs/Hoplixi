@@ -24,11 +24,11 @@ class CategoryManagerScreen extends ConsumerWidget {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
+          const SliverAppBar(
             floating: true,
             pinned: true,
             snap: false,
-            title: const Text('Категории'),
+            title: Text('Категории'),
           ),
           treeAsync.when(
             data: (tree) {

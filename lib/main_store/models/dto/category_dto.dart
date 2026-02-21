@@ -1,6 +1,5 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:json_annotation/json_annotation.dart';
 
 part 'category_dto.freezed.dart';
 part 'category_dto.g.dart';
