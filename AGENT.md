@@ -22,6 +22,10 @@ securely store and manage their passwords.
 
 - See [docs-ai/flutter-rules.md](docs-ai/flutter-rules.md) for the coding
   standards and best practices followed in this project.
+- See
+  [docs-ai/add-new-vault-entity-guide.md](docs-ai/add-new-vault-entity-guide.md)
+  for step-by-step instructions on adding a new vault entity (tables, DAO,
+  filters, DTO, UI forms, cards, and integration points).
 
 ## Technologies Used
 
@@ -488,6 +492,11 @@ detailed navigation recipes and examples.
 ## Main Store (`lib/main_store/`)
 
 Manages SQLCipher-encrypted Drift database for password manager data:
+
+See
+[docs-ai/add-new-vault-entity-guide.md](docs-ai/add-new-vault-entity-guide.md)
+for the full step-by-step flow to add a new storage entity (schema, DAO,
+filters, DTO, UI forms/cards, and integration points).
 
 ### Core Files
 
