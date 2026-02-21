@@ -8,6 +8,7 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:otp/otp.dart';
 
 /// Карточка пароля для режима списка (переписана с shared компонентами)
@@ -341,6 +342,15 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
     final displayLogin = password.email ?? password.login;
     final hostUrl = CardUtils.extractHost(password.url);
 
+    // Вычисление состояния истечения срока действия
+    final DateTime now = DateTime.now();
+    final bool isExpired =
+        password.expireAt != null && password.expireAt!.isBefore(now);
+    final bool isExpiringSoon =
+        !isExpired &&
+        password.expireAt != null &&
+        password.expireAt!.difference(now).inDays <= 30; // 30 дней до истечения
+
     return Stack(
       children: [
         Card(
@@ -354,7 +364,13 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
           child: Column(
             children: [
               // Основная часть карточки (заголовок)
-              _buildHeader(theme, displayLogin, hostUrl),
+              _buildHeader(
+                theme,
+                displayLogin,
+                hostUrl,
+                isExpired,
+                isExpiringSoon,
+              ),
               // Развернутый контент
               _buildExpandedContent(theme),
             ],
@@ -370,7 +386,13 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
     );
   }
 
-  Widget _buildHeader(ThemeData theme, String? displayLogin, String hostUrl) {
+  Widget _buildHeader(
+    ThemeData theme,
+    String? displayLogin,
+    String hostUrl,
+    bool isExpired,
+    bool isExpiringSoon,
+  ) {
     final password = widget.password;
 
     return MouseRegion(
@@ -441,6 +463,25 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard>
                   ],
                 ),
               ),
+              // Иконки предупреждения об истечении
+              if (isExpired)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Icon(
+                    LucideIcons.clockAlert,
+                    size: 18,
+                    color: theme.colorScheme.error,
+                  ),
+                )
+              else if (isExpiringSoon)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Icon(
+                    LucideIcons.clock,
+                    size: 18,
+                    color: Colors.orange,
+                  ),
+                ),
               // Действия
               _buildHeaderActions(theme),
             ],

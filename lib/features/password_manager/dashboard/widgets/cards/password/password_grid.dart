@@ -9,6 +9,7 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Карточка пароля для режима сетки
 /// Минимальная ширина: 240px для предотвращения чрезмерного сжатия
@@ -118,6 +119,15 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard>
     final cardPadding = isMobile ? 8.0 : 12.0;
     final minCardWidth = isMobile ? 160.0 : 240.0;
 
+    // Вычисление состояния истечения срока действия
+    final DateTime now = DateTime.now();
+    final bool isExpired =
+        password.expireAt != null && password.expireAt!.isBefore(now);
+    final bool isExpiringSoon =
+        !isExpired &&
+        password.expireAt != null &&
+        password.expireAt!.difference(now).inDays <= 30; // 30 дней до истечения
+
     return ConstrainedBox(
       constraints: BoxConstraints(minWidth: minCardWidth),
       child: Stack(
@@ -191,6 +201,24 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard>
                                         Icons.local_fire_department,
                                         size: isMobile ? 14 : 16,
                                         color: Colors.deepOrange,
+                                      ),
+                                    ),
+                                  if (isExpired)
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 4),
+                                      child: Icon(
+                                        LucideIcons.clockAlert,
+                                        size: isMobile ? 14 : 16,
+                                        color: theme.colorScheme.error,
+                                      ),
+                                    )
+                                  else if (isExpiringSoon)
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 4),
+                                      child: Icon(
+                                        LucideIcons.clock,
+                                        size: isMobile ? 14 : 16,
+                                        color: Colors.orange,
                                       ),
                                     ),
                                 ],
