@@ -61,6 +61,7 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
         description: vault.description ?? '',
         noteId: vault.noteId,
         categoryId: vault.categoryId,
+        expireAt: pwItem.expireAt,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
         otpId: linkedOtp?.$1.id,
@@ -135,6 +136,11 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
   /// Обновить теги
   void setTags(List<String> tagIds, List<String> tagNames) {
     state = state.copyWith(tagIds: tagIds, tagNames: tagNames);
+  }
+
+  /// Обновить expireAt
+  void setExpireAt(DateTime? value) {
+    state = state.copyWith(expireAt: value);
   }
 
   /// Валидация имени
@@ -256,6 +262,7 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
               : state.description.trim(),
           noteId: state.noteId,
           categoryId: state.categoryId,
+          expireAt: state.expireAt,
         );
 
         final success = await dao.updatePassword(state.editingPasswordId!, dto);
@@ -299,6 +306,7 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
           noteId: state.noteId,
           categoryId: state.categoryId,
           tagsIds: state.tagIds.isEmpty ? null : state.tagIds,
+          expireAt: state.expireAt,
         );
 
         final passwordId = await dao.createPassword(dto);

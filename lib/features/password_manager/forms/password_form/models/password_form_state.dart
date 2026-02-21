@@ -20,6 +20,7 @@ sealed class PasswordFormState with _$PasswordFormState {
     String? noteId,
     String? otpId,
     String? otpName,
+    DateTime? expireAt,
 
     // Связи
     String? categoryId,

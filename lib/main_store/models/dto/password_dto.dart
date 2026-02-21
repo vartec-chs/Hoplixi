@@ -18,6 +18,7 @@ sealed class CreatePasswordDto with _$CreatePasswordDto {
     String? noteId,
     String? categoryId,
     List<String>? tagsIds,
+    DateTime? expireAt,
   }) = _CreatePasswordDto;
 
   factory CreatePasswordDto.fromJson(Map<String, dynamic> json) =>
@@ -47,6 +48,7 @@ sealed class GetPasswordDto with _$GetPasswordDto {
     required DateTime modifiedAt,
     DateTime? lastAccessedAt,
     required List<String> tags,
+    DateTime? expireAt,
   }) = _GetPasswordDto;
 
   factory GetPasswordDto.fromJson(Map<String, dynamic> json) =>
@@ -73,6 +75,7 @@ sealed class PasswordCardDto with _$PasswordCardDto implements BaseCardDto {
     required DateTime modifiedAt,
     required DateTime createdAt,
     List<TagInCardDto>? tags,
+    DateTime? expireAt,
   }) = _PasswordCardDto;
 
   factory PasswordCardDto.fromJson(Map<String, dynamic> json) =>
@@ -95,6 +98,7 @@ sealed class UpdatePasswordDto with _$UpdatePasswordDto {
     bool? isArchived,
     bool? isPinned,
     List<String>? tagsIds,
+    DateTime? expireAt,
   }) = _UpdatePasswordDto;
 
   factory UpdatePasswordDto.fromJson(Map<String, dynamic> json) =>

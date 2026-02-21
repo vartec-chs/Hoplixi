@@ -11,6 +11,7 @@ import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../providers/password_form_provider.dart';
@@ -301,6 +302,48 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                               ref
                                   .read(passwordFormProvider.notifier)
                                   .setUrl(value);
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Срок действия
+                          TextField(
+                            controller: TextEditingController(
+                              text: state.expireAt != null
+                                  ? DateFormat(
+                                      'dd.MM.yyyy',
+                                    ).format(state.expireAt!)
+                                  : '',
+                            ),
+                            readOnly: true,
+                            decoration: primaryInputDecoration(
+                              context,
+                              labelText: 'Срок действия',
+                              hintText: 'Выберите дату',
+                              prefixIcon: const Icon(LucideIcons.calendar),
+                              suffixIcon: state.expireAt != null
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear, size: 20),
+                                      onPressed: () {
+                                        ref
+                                            .read(passwordFormProvider.notifier)
+                                            .setExpireAt(null);
+                                      },
+                                    )
+                                  : null,
+                            ),
+                            onTap: () async {
+                              final date = await showDatePicker(
+                                context: context,
+                                initialDate: state.expireAt ?? DateTime.now(),
+                                firstDate: DateTime(2000),
+                                lastDate: DateTime(DateTime.now().year + 150),
+                              );
+                              if (date != null) {
+                                ref
+                                    .read(passwordFormProvider.notifier)
+                                    .setExpireAt(date);
+                              }
                             },
                           ),
                           const SizedBox(height: 16),

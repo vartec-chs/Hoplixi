@@ -68,6 +68,7 @@ class PasswordDao extends DatabaseAccessor<MainStore> with _$PasswordDaoMixin {
           login: Value(dto.login),
           email: Value(dto.email),
           url: Value(dto.url),
+          expireAt: Value(dto.expireAt),
         ),
       );
       await db.vaultItemDao.insertTags(uuid, dto.tagsIds);
@@ -107,6 +108,9 @@ class PasswordDao extends DatabaseAccessor<MainStore> with _$PasswordDaoMixin {
         login: Value(dto.login),
         email: Value(dto.email),
         url: Value(dto.url),
+        expireAt: dto.expireAt != null
+            ? Value(dto.expireAt!)
+            : const Value.absent(),
       );
       await (update(
         passwordItems,
