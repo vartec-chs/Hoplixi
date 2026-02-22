@@ -718,6 +718,20 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenHistory: () {
+            if (location !=
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.contact,
+                  item.id,
+                )) {
+              context.push(
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.contact,
+                  item.id,
+                ),
+              );
+            }
+          },
         );
         break;
       case EntityType.sshKey:

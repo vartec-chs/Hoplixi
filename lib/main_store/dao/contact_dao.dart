@@ -75,7 +75,6 @@ class ContactDao extends DatabaseAccessor<MainStore>
           website: Value(dto.website),
           birthday: Value(dto.birthday),
           isEmergencyContact: Value(dto.isEmergencyContact ?? false),
-          notes: Value(dto.notes),
         ),
       );
 
@@ -118,7 +117,6 @@ class ContactDao extends DatabaseAccessor<MainStore>
         isEmergencyContact: dto.isEmergencyContact != null
             ? Value(dto.isEmergencyContact!)
             : const Value.absent(),
-        notes: Value(dto.notes),
       );
 
       await (update(

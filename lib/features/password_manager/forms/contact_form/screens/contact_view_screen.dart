@@ -27,7 +27,6 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
   String? _address;
   String? _website;
   DateTime? _birthday;
-  String? _notes;
   String? _description;
   bool _isEmergencyContact = false;
 
@@ -58,7 +57,6 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
         _address = details.address;
         _website = details.website;
         _birthday = details.birthday;
-        _notes = details.notes;
         _description = item.description;
         _isEmergencyContact = details.isEmergencyContact;
       });
@@ -162,12 +160,6 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Дата рождения'),
                     subtitle: Text(_formatDate(_birthday!)),
-                  ),
-                if (_notes?.isNotEmpty == true)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Заметки'),
-                    subtitle: Text(_notes!),
                   ),
                 if (_description?.isNotEmpty == true)
                   ListTile(

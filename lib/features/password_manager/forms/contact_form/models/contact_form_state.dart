@@ -15,7 +15,6 @@ sealed class ContactFormState with _$ContactFormState {
     @Default('') String address,
     @Default('') String website,
     DateTime? birthday,
-    @Default('') String notes,
     @Default('') String description,
     @Default(false) bool isEmergencyContact,
     String? noteId,

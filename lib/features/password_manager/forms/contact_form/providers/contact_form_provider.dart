@@ -48,7 +48,6 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
       address: details.address ?? '',
       website: details.website ?? '',
       birthday: details.birthday,
-      notes: details.notes ?? '',
       description: item.description ?? '',
       isEmergencyContact: details.isEmergencyContact,
       noteId: item.noteId,
@@ -94,10 +93,6 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
 
   void setBirthday(DateTime? value) {
     _update((s) => s.copyWith(birthday: value));
-  }
-
-  void setNotes(String value) {
-    _update((s) => s.copyWith(notes: value));
   }
 
   void setDescription(String value) {
@@ -170,7 +165,6 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
             address: norm(current.address),
             website: norm(current.website),
             birthday: current.birthday,
-            notes: norm(current.notes),
             description: norm(current.description),
             noteId: current.noteId,
             categoryId: current.categoryId,
@@ -201,7 +195,6 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
             address: norm(current.address),
             website: norm(current.website),
             birthday: current.birthday,
-            notes: norm(current.notes),
             description: norm(current.description),
             noteId: current.noteId,
             categoryId: current.categoryId,

@@ -28,7 +28,6 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
   late final TextEditingController _jobTitleController;
   late final TextEditingController _addressController;
   late final TextEditingController _websiteController;
-  late final TextEditingController _notesController;
   late final TextEditingController _descriptionController;
 
   @override
@@ -41,7 +40,6 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
     _jobTitleController = TextEditingController();
     _addressController = TextEditingController();
     _websiteController = TextEditingController();
-    _notesController = TextEditingController();
     _descriptionController = TextEditingController();
   }
 
@@ -54,7 +52,6 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
     _jobTitleController.dispose();
     _addressController.dispose();
     _websiteController.dispose();
-    _notesController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
@@ -138,9 +135,6 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
         }
         if (_websiteController.text != state.website) {
           _websiteController.text = state.website;
-        }
-        if (_notesController.text != state.notes) {
-          _notesController.text = state.notes;
         }
         if (_descriptionController.text != state.description) {
           _descriptionController.text = state.description;
@@ -305,19 +299,6 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                 onNoteSelected: ref
                     .read(contactFormProvider(widget.contactId).notifier)
                     .setNote,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _notesController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: 'Заметки',
-                ),
-                onChanged: ref
-                    .read(contactFormProvider(widget.contactId).notifier)
-                    .setNotes,
               ),
               const SizedBox(height: 12),
               TextField(

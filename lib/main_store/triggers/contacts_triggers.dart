@@ -65,8 +65,7 @@ const List<String> contactsHistoryCreateTriggers = [
         address,
         website,
         birthday,
-        is_emergency_contact,
-        notes
+        is_emergency_contact
       )
       SELECT
         (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
@@ -77,8 +76,7 @@ const List<String> contactsHistoryCreateTriggers = [
         c.address,
         c.website,
         c.birthday,
-        c.is_emergency_contact,
-        c.notes
+        c.is_emergency_contact
       FROM contact_items c
       WHERE c.item_id = OLD.id;
     END;
@@ -95,8 +93,7 @@ const List<String> contactsHistoryCreateTriggers = [
       OLD.address IS NOT NEW.address OR
       OLD.website IS NOT NEW.website OR
       OLD.birthday IS NOT NEW.birthday OR
-      OLD.is_emergency_contact != NEW.is_emergency_contact OR
-      OLD.notes IS NOT NEW.notes
+      OLD.is_emergency_contact != NEW.is_emergency_contact
     ) AND COALESCE((SELECT value FROM store_settings WHERE key = 'history_enabled'), 'true') = 'true'
     BEGIN
       INSERT INTO vault_item_history (
@@ -150,8 +147,7 @@ const List<String> contactsHistoryCreateTriggers = [
         address,
         website,
         birthday,
-        is_emergency_contact,
-        notes
+        is_emergency_contact
       ) VALUES (
         (SELECT id FROM vault_item_history WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
         OLD.phone,
@@ -161,8 +157,7 @@ const List<String> contactsHistoryCreateTriggers = [
         OLD.address,
         OLD.website,
         OLD.birthday,
-        OLD.is_emergency_contact,
-        OLD.notes
+        OLD.is_emergency_contact
       );
     END;
   ''',
@@ -221,8 +216,7 @@ const List<String> contactsHistoryCreateTriggers = [
         address,
         website,
         birthday,
-        is_emergency_contact,
-        notes
+        is_emergency_contact
       )
       SELECT
         (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
@@ -233,8 +227,7 @@ const List<String> contactsHistoryCreateTriggers = [
         c.address,
         c.website,
         c.birthday,
-        c.is_emergency_contact,
-        c.notes
+        c.is_emergency_contact
       FROM contact_items c
       WHERE c.item_id = OLD.id;
     END;

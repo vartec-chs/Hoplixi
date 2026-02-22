@@ -24,8 +24,6 @@ class ContactHistory extends Table {
   BoolColumn get isEmergencyContact =>
       boolean().withDefault(const Constant(false))();
 
-  TextColumn get notes => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {historyId};
 
