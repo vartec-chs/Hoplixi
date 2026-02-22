@@ -11,6 +11,7 @@ import 'package:hoplixi/features/password_manager/forms/license_key_form/screens
 import 'package:hoplixi/features/password_manager/forms/note_form/screens/note_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/otp_form/screens/otp_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/password_form/screens/password_form_screen.dart';
+import 'package:hoplixi/features/password_manager/forms/recovery_codes_form/screens/recovery_codes_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/ssh_key_form/screens/ssh_key_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/wifi_form/screens/wifi_form_screen.dart';
 
@@ -35,15 +36,6 @@ class EntityAddEdit extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget buildNotImplemented(String title) {
-      return Scaffold(
-        appBar: AppBar(title: Text(title)),
-        body: const Center(
-          child: Text('Форма для этой сущности будет добавлена позже'),
-        ),
-      );
-    }
-
     switch (entity) {
       case EntityType.password:
         return PasswordFormScreen(passwordId: id);
@@ -72,7 +64,7 @@ class EntityAddEdit extends StatelessWidget {
       case EntityType.licenseKey:
         return LicenseKeyFormScreen(licenseKeyId: id);
       case EntityType.recoveryCodes:
-        return buildNotImplemented('Коды восстановления');
+        return RecoveryCodesFormScreen(recoveryCodesId: id);
     }
   }
 }

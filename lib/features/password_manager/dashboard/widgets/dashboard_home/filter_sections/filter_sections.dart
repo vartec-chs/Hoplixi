@@ -12,5 +12,6 @@ export 'license_keys_filter_section.dart';
 export 'notes_filter_section.dart';
 export 'otps_filter_section.dart';
 export 'password_filter_section.dart';
+export 'recovery_codes_filter_section.dart';
 export 'ssh_keys_filter_section.dart';
 export 'wifis_filter_section.dart';

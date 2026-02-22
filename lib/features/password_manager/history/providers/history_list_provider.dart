@@ -311,7 +311,7 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
       case EntityType.licenseKey:
         return _fetchLicenseKeyHistory(offset, searchQuery);
       case EntityType.recoveryCodes:
-        return const [];
+        return _fetchRecoveryCodesHistory(offset, searchQuery);
     }
   }
 
@@ -641,6 +641,35 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         .toList();
   }
 
+  Future<List<HistoryItem>> _fetchRecoveryCodesHistory(
+    int offset,
+    String? searchQuery,
+  ) async {
+    final dao = await ref.read(recoveryCodesHistoryDaoProvider.future);
+    final cards = await dao.getRecoveryCodesHistoryCardsByOriginalId(
+      _params.entityId,
+      offset,
+      pageSize,
+      searchQuery,
+    );
+
+    return cards
+        .map(
+          (card) => HistoryItem(
+            id: card.id,
+            originalEntityId: card.originalRecoveryCodesId,
+            entityType: EntityType.recoveryCodes,
+            action: card.action,
+            title: card.name,
+            subtitle: card.oneTime == true
+                ? 'Одноразовые коды'
+                : 'Коды восстановления',
+            actionAt: card.actionAt,
+          ),
+        )
+        .toList();
+  }
+
   /// Получить общее количество записей
   Future<int> _getTotalCount({String? searchQuery}) async {
     switch (_params.entityType) {
@@ -707,7 +736,11 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
           searchQuery,
         );
       case EntityType.recoveryCodes:
-        return 0;
+        final dao = await ref.read(recoveryCodesHistoryDaoProvider.future);
+        return dao.countRecoveryCodesHistoryByOriginalId(
+          _params.entityId,
+          searchQuery,
+        );
     }
   }
 
@@ -753,7 +786,8 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         final dao = await ref.read(licenseKeyHistoryDaoProvider.future);
         return await dao.deleteLicenseKeyHistoryById(historyItemId) > 0;
       case EntityType.recoveryCodes:
-        return false;
+        final dao = await ref.read(recoveryCodesHistoryDaoProvider.future);
+        return await dao.deleteRecoveryCodesHistoryById(historyItemId) > 0;
     }
   }
 
@@ -811,7 +845,11 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
             ) >=
             0;
       case EntityType.recoveryCodes:
-        return false;
+        final dao = await ref.read(recoveryCodesHistoryDaoProvider.future);
+        return await dao.deleteRecoveryCodesHistoryByRecoveryCodesId(
+              _params.entityId,
+            ) >=
+            0;
     }
   }
 }

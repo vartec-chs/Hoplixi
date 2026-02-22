@@ -118,7 +118,7 @@
 - licenseNotes (Text).
 - supportContact (Text) — контакты продавца/поддержки.
 
-## RecoveryCodes
+## RecoveryCodes [ Добавлено ]
 
 - codesBlob (Text / Blob, encrypted) — обязательное, список кодов (строка/JSON)
   — хранить зашифрованно.

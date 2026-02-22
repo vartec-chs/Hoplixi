@@ -31,6 +31,8 @@ export 'otp_history.dart';
 export 'otp_items.dart';
 export 'password_history.dart';
 export 'password_items.dart';
+export 'recovery_codes_history.dart';
+export 'recovery_codes_items.dart';
 export 'ssh_key_history.dart';
 export 'ssh_key_items.dart';
 export 'store_meta_table.dart';

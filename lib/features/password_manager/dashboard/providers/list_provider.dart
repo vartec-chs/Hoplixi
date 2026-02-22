@@ -42,6 +42,7 @@ class PaginatedListNotifier
   ProviderSubscription<WifisFilter>? _wifiFilterSubscription;
   ProviderSubscription<IdentitiesFilter>? _identityFilterSubscription;
   ProviderSubscription<LicenseKeysFilter>? _licenseKeyFilterSubscription;
+  ProviderSubscription<RecoveryCodesFilter>? _recoveryCodesFilterSubscription;
   ProviderSubscription<DataRefreshState>? _passwordRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _noteRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _bankCardRefreshSubscription;
@@ -54,6 +55,7 @@ class PaginatedListNotifier
   ProviderSubscription<DataRefreshState>? _wifiRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _identityRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _licenseKeyRefreshSubscription;
+  ProviderSubscription<DataRefreshState>? _recoveryCodesRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _documentRefreshSubscription;
 
   int get pageSize {
@@ -63,7 +65,7 @@ class PaginatedListNotifier
 
   final String _logTag = 'DashboardListProvider: ';
 
-  bool get _isUnsupportedEntity => entityType == EntityType.recoveryCodes;
+  bool get _isUnsupportedEntity => false;
 
   @override
   Future<DashboardListState<BaseCardDto>> build() async {
@@ -313,6 +315,22 @@ class PaginatedListNotifier
         );
         break;
       case EntityType.recoveryCodes:
+        _recoveryCodesFilterSubscription = ref.listen(
+          recoveryCodesFilterProvider,
+          (prev, next) {
+            if (prev != next) {
+              _resetAndLoad();
+            }
+          },
+        );
+        _recoveryCodesRefreshSubscription = ref.listen<DataRefreshState>(
+          dataRefreshTriggerProvider,
+          (previous, next) {
+            if (_shouldHandleRefresh(next, EntityType.recoveryCodes)) {
+              _resetAndLoad();
+            }
+          },
+        );
         break;
     }
   }
@@ -346,6 +364,8 @@ class PaginatedListNotifier
     _identityFilterSubscription = null;
     _licenseKeyFilterSubscription?.close();
     _licenseKeyFilterSubscription = null;
+    _recoveryCodesFilterSubscription?.close();
+    _recoveryCodesFilterSubscription = null;
     _passwordRefreshSubscription?.close();
     _passwordRefreshSubscription = null;
     _noteRefreshSubscription?.close();
@@ -370,6 +390,8 @@ class PaginatedListNotifier
     _identityRefreshSubscription = null;
     _licenseKeyRefreshSubscription?.close();
     _licenseKeyRefreshSubscription = null;
+    _recoveryCodesRefreshSubscription?.close();
+    _recoveryCodesRefreshSubscription = null;
     _documentRefreshSubscription?.close();
     _documentRefreshSubscription = null;
   }
@@ -404,7 +426,7 @@ class PaginatedListNotifier
       case EntityType.licenseKey:
         return ref.read(licenseKeyFilterDaoProvider.future);
       case EntityType.recoveryCodes:
-        return Future.value(const _UnsupportedFilterDao());
+        return ref.read(recoveryCodesFilterDaoProvider.future);
     }
   }
 
@@ -585,7 +607,20 @@ class PaginatedListNotifier
         );
         return licenseKeysFilter.copyWith(base: base);
       case EntityType.recoveryCodes:
-        return BaseFilter.create(limit: limit, offset: offset);
+        final recoveryCodesFilter = ref.read(recoveryCodesFilterProvider);
+        final base = recoveryCodesFilter.base.copyWith(
+          isFavorite:
+              recoveryCodesFilter.base.isFavorite ?? tabFilter.isFavorite,
+          isArchived:
+              recoveryCodesFilter.base.isArchived ?? tabFilter.isArchived,
+          isDeleted: recoveryCodesFilter.base.isDeleted ?? tabFilter.isDeleted,
+          isFrequentlyUsed:
+              tabFilter.isFrequentlyUsed ??
+              recoveryCodesFilter.base.isFrequentlyUsed,
+          limit: limit,
+          offset: offset,
+        );
+        return recoveryCodesFilter.copyWith(base: base);
     }
   }
 
@@ -993,14 +1028,4 @@ class PaginatedListNotifier
     state = const AsyncValue.loading();
     ref.invalidateSelf();
   }
-}
-
-class _UnsupportedFilterDao implements FilterDao<BaseFilter, BaseCardDto> {
-  const _UnsupportedFilterDao();
-
-  @override
-  Future<int> countFiltered(BaseFilter filter) async => 0;
-
-  @override
-  Future<List<BaseCardDto>> getFiltered(BaseFilter filter) async => const [];
 }

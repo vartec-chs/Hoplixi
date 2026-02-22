@@ -28,6 +28,8 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/otp/ot
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/otp/otp_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/password/password_grid.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/password/password_list_card.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/recovery_codes/recovery_codes_grid_card.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/recovery_codes/recovery_codes_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/ssh_key/ssh_key_grid_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/ssh_key/ssh_key_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/wifi/wifi_grid_card.dart';
@@ -832,12 +834,26 @@ class DashboardHomeBuilders {
         );
         break;
       case EntityType.recoveryCodes:
-        return const Card(
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Text('Карточка для этой сущности пока не реализована'),
-          ),
+        if (item is! RecoveryCodesCardDto) return noCorrectType;
+        card = RecoveryCodesListCard(
+          recoveryCodes: item,
+          onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onOpenHistory: () {
+            if (location !=
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.recoveryCodes,
+                  item.id,
+                )) {
+              context.push(
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.recoveryCodes,
+                  item.id,
+                ),
+              );
+            }
+          },
         );
+        break;
     }
 
     // Обертка для долгого нажатия -> открытие view
@@ -1020,6 +1036,14 @@ class DashboardHomeBuilders {
             if (GoRouter.of(context).state.matchedLocation != path) {
               context.push(path);
             }
+          } else if (item is RecoveryCodesCardDto) {
+            final path = AppRoutesPaths.dashboardEntityEdit(
+              EntityType.recoveryCodes,
+              item.id,
+            );
+            if (GoRouter.of(context).state.matchedLocation != path) {
+              context.push(path);
+            }
           }
 
           return false;
@@ -1051,6 +1075,8 @@ class DashboardHomeBuilders {
           } else if (item is IdentityCardDto) {
             itemName = item.name;
           } else if (item is LicenseKeyCardDto) {
+            itemName = item.name;
+          } else if (item is RecoveryCodesCardDto) {
             itemName = item.name;
           }
 
@@ -1211,11 +1237,10 @@ class DashboardHomeBuilders {
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
         );
       case EntityType.recoveryCodes:
-        return const Card(
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Text('Grid-карточка для этой сущности пока не реализована'),
-          ),
+        if (item is! RecoveryCodesCardDto) return noCorrectType;
+        card = RecoveryCodesGridCard(
+          recoveryCodes: item,
+          onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
         );
     }
 

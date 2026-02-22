@@ -19,6 +19,7 @@ import 'package:hoplixi/main_store/dao/history_dao/license_key_history_dao.dart'
 import 'package:hoplixi/main_store/dao/history_dao/note_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/otp_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/password_history_dao.dart';
+import 'package:hoplixi/main_store/dao/history_dao/recovery_codes_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/ssh_key_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/wifi_history_dao.dart';
 import 'package:hoplixi/main_store/dao/icon_dao.dart';
@@ -28,6 +29,7 @@ import 'package:hoplixi/main_store/dao/note_dao.dart';
 import 'package:hoplixi/main_store/dao/note_link_dao.dart';
 import 'package:hoplixi/main_store/dao/otp_dao.dart';
 import 'package:hoplixi/main_store/dao/password_dao.dart';
+import 'package:hoplixi/main_store/dao/recovery_codes_dao.dart';
 import 'package:hoplixi/main_store/dao/ssh_key_dao.dart';
 import 'package:hoplixi/main_store/dao/store_meta_dao.dart';
 import 'package:hoplixi/main_store/dao/store_settings_dao.dart';
@@ -57,6 +59,7 @@ part 'main_store.g.dart';
     WifiItems,
     IdentityItems,
     LicenseKeyItems,
+    RecoveryCodesItems,
     OtpItems,
     NoteItems,
     NoteLinks,
@@ -81,6 +84,7 @@ part 'main_store.g.dart';
     WifiHistory,
     IdentityHistory,
     LicenseKeyHistory,
+    RecoveryCodesHistory,
     OtpHistory,
     NoteHistory,
     BankCardHistory,
@@ -107,6 +111,8 @@ part 'main_store.g.dart';
     IdentityHistoryDao,
     LicenseKeyDao,
     LicenseKeyHistoryDao,
+    RecoveryCodesDao,
+    RecoveryCodesHistoryDao,
     OtpDao,
     OtpHistoryDao,
     NoteDao,
@@ -132,6 +138,7 @@ part 'main_store.g.dart';
     WifiFilterDao,
     IdentityFilterDao,
     LicenseKeyFilterDao,
+    RecoveryCodesFilterDao,
   ],
 )
 class MainStore extends _$MainStore {
@@ -201,6 +208,7 @@ class MainStore extends _$MainStore {
         wifiItems,
         identityItems,
         licenseKeyItems,
+        recoveryCodesItems,
         otpItems,
         noteItems,
         noteLinks,
@@ -233,6 +241,7 @@ class MainStore extends _$MainStore {
         ...wifisHistoryDropTriggers,
         ...identitiesHistoryDropTriggers,
         ...licenseKeysHistoryDropTriggers,
+        ...recoveryCodesHistoryDropTriggers,
         ...otpsHistoryDropTriggers,
         ...notesHistoryDropTriggers,
         ...filesHistoryDropTriggers,
@@ -262,6 +271,7 @@ class MainStore extends _$MainStore {
         ...wifisHistoryCreateTriggers,
         ...identitiesHistoryCreateTriggers,
         ...licenseKeysHistoryCreateTriggers,
+        ...recoveryCodesHistoryCreateTriggers,
         ...otpsHistoryCreateTriggers,
         ...notesHistoryCreateTriggers,
         ...filesHistoryCreateTriggers,

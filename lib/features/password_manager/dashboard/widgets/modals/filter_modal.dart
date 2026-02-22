@@ -25,6 +25,7 @@ import '../../providers/filter_providers/license_keys_filter_provider.dart';
 import '../../providers/filter_providers/notes_filter_provider.dart';
 import '../../providers/filter_providers/otp_filter_provider.dart';
 import '../../providers/filter_providers/password_filter_provider.dart';
+import '../../providers/filter_providers/recovery_codes_filter_provider.dart';
 import '../../providers/filter_providers/ssh_keys_filter_provider.dart';
 import '../../providers/filter_providers/wifis_filter_provider.dart';
 // Секции фильтров
@@ -46,6 +47,7 @@ class _InitialFilterValues {
   final WifisFilter? wifisFilter;
   final IdentitiesFilter? identitiesFilter;
   final LicenseKeysFilter? licenseKeysFilter;
+  final RecoveryCodesFilter? recoveryCodesFilter;
 
   _InitialFilterValues({
     required this.baseFilter,
@@ -62,6 +64,7 @@ class _InitialFilterValues {
     this.wifisFilter,
     this.identitiesFilter,
     this.licenseKeysFilter,
+    this.recoveryCodesFilter,
   });
 }
 
@@ -267,6 +270,9 @@ class _FilterModalActions extends ConsumerWidget {
               .updateFilter(LicenseKeysFilter(base: emptyBaseFilter));
           break;
         case EntityType.recoveryCodes:
+          ref
+              .read(recoveryCodesFilterProvider.notifier)
+              .updateFilter(RecoveryCodesFilter(base: emptyBaseFilter));
           break;
       }
 
@@ -359,6 +365,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
   WifisFilter? _localWifisFilter;
   IdentitiesFilter? _localIdentitiesFilter;
   LicenseKeysFilter? _localLicenseKeysFilter;
+  RecoveryCodesFilter? _localRecoveryCodesFilter;
 
   // Типобезопасное хранение начальных значений для отката
   _InitialFilterValues? _initialValues;
@@ -422,6 +429,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         _localLicenseKeysFilter = ref.read(licenseKeysFilterProvider);
         break;
       case EntityType.recoveryCodes:
+        _localRecoveryCodesFilter = ref.read(recoveryCodesFilterProvider);
         break;
     }
 
@@ -544,7 +552,11 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         );
         break;
       case EntityType.recoveryCodes:
-        _initialValues = _InitialFilterValues(baseFilter: baseFilter);
+        final recoveryCodesFilter = ref.read(recoveryCodesFilterProvider);
+        _initialValues = _InitialFilterValues(
+          baseFilter: baseFilter,
+          recoveryCodesFilter: recoveryCodesFilter,
+        );
         break;
     }
 
@@ -782,6 +794,10 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
                   }
                   break;
                 case EntityType.recoveryCodes:
+                  if (_localRecoveryCodesFilter != null) {
+                    _localRecoveryCodesFilter = _localRecoveryCodesFilter!
+                        .copyWith(base: updatedFilter);
+                  }
                   break;
               }
             });
@@ -957,7 +973,17 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           },
         );
       case EntityType.recoveryCodes:
-        return const Text('Специфичные фильтры для этого типа пока недоступны');
+        return RecoveryCodesFilterSection(
+          filter:
+              _localRecoveryCodesFilter ??
+              RecoveryCodesFilter(base: _localBaseFilter),
+          onFilterChanged: (updatedFilter) {
+            setState(() {
+              _localRecoveryCodesFilter = updatedFilter;
+            });
+            logDebug('FilterModal: Обновлены фильтры recovery codes локально');
+          },
+        );
     }
   }
 
@@ -1226,6 +1252,14 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           }
           break;
         case EntityType.recoveryCodes:
+          if (_localRecoveryCodesFilter != null) {
+            final syncedFilter = _localRecoveryCodesFilter!.copyWith(
+              base: _localBaseFilter,
+            );
+            ref
+                .read(recoveryCodesFilterProvider.notifier)
+                .updateFilter(syncedFilter);
+          }
           break;
       }
 
@@ -1352,6 +1386,11 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           }
           break;
         case EntityType.recoveryCodes:
+          if (_initialValues!.recoveryCodesFilter != null) {
+            ref
+                .read(recoveryCodesFilterProvider.notifier)
+                .updateFilterDebounced(_initialValues!.recoveryCodesFilter!);
+          }
           break;
       }
 
@@ -1426,6 +1465,9 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           _localLicenseKeysFilter = LicenseKeysFilter(base: _localBaseFilter);
           break;
         case EntityType.recoveryCodes:
+          _localRecoveryCodesFilter = RecoveryCodesFilter(
+            base: _localBaseFilter,
+          );
           break;
       }
     });

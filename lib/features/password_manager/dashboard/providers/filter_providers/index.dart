@@ -12,5 +12,6 @@ export 'license_keys_filter_provider.dart';
 export 'notes_filter_provider.dart';
 export 'otp_filter_provider.dart';
 export 'password_filter_provider.dart';
+export 'recovery_codes_filter_provider.dart';
 export 'ssh_keys_filter_provider.dart';
 export 'wifis_filter_provider.dart';
