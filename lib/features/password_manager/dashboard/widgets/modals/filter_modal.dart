@@ -17,6 +17,7 @@ import '../../providers/filter_providers/api_keys_filter_provider.dart';
 import '../../providers/filter_providers/bank_cards_filter_provider.dart';
 import '../../providers/filter_providers/base_filter_provider.dart';
 import '../../providers/filter_providers/certificates_filter_provider.dart';
+import '../../providers/filter_providers/crypto_wallets_filter_provider.dart';
 import '../../providers/filter_providers/documents_filter_provider.dart';
 import '../../providers/filter_providers/files_filter_provider.dart';
 import '../../providers/filter_providers/notes_filter_provider.dart';
@@ -38,6 +39,7 @@ class _InitialFilterValues {
   final ApiKeysFilter? apiKeysFilter;
   final SshKeysFilter? sshKeysFilter;
   final CertificatesFilter? certificatesFilter;
+  final CryptoWalletsFilter? cryptoWalletsFilter;
 
   _InitialFilterValues({
     required this.baseFilter,
@@ -50,6 +52,7 @@ class _InitialFilterValues {
     this.apiKeysFilter,
     this.sshKeysFilter,
     this.certificatesFilter,
+    this.cryptoWalletsFilter,
   });
 }
 
@@ -235,6 +238,10 @@ class _FilterModalActions extends ConsumerWidget {
               .updateFilter(CertificatesFilter(base: emptyBaseFilter));
           break;
         case EntityType.cryptoWallet:
+          ref
+              .read(cryptoWalletsFilterProvider.notifier)
+              .updateFilter(CryptoWalletsFilter(base: emptyBaseFilter));
+          break;
         case EntityType.wifi:
         case EntityType.identity:
         case EntityType.licenseKey:
@@ -327,6 +334,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
   ApiKeysFilter? _localApiKeysFilter;
   SshKeysFilter? _localSshKeysFilter;
   CertificatesFilter? _localCertificatesFilter;
+  CryptoWalletsFilter? _localCryptoWalletsFilter;
 
   // Типобезопасное хранение начальных значений для отката
   _InitialFilterValues? _initialValues;
@@ -378,6 +386,8 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         _localCertificatesFilter = ref.read(certificatesFilterProvider);
         break;
       case EntityType.cryptoWallet:
+        _localCryptoWalletsFilter = ref.read(cryptoWalletsFilterProvider);
+        break;
       case EntityType.wifi:
       case EntityType.identity:
       case EntityType.licenseKey:
@@ -476,6 +486,12 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         );
         break;
       case EntityType.cryptoWallet:
+        final cryptoWalletsFilter = ref.read(cryptoWalletsFilterProvider);
+        _initialValues = _InitialFilterValues(
+          baseFilter: baseFilter,
+          cryptoWalletsFilter: cryptoWalletsFilter,
+        );
+        break;
       case EntityType.wifi:
       case EntityType.identity:
       case EntityType.licenseKey:
@@ -691,6 +707,11 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
                   }
                   break;
                 case EntityType.cryptoWallet:
+                  if (_localCryptoWalletsFilter != null) {
+                    _localCryptoWalletsFilter = _localCryptoWalletsFilter!
+                        .copyWith(base: updatedFilter);
+                  }
+                  break;
                 case EntityType.wifi:
                 case EntityType.identity:
                 case EntityType.licenseKey:
@@ -824,6 +845,17 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           },
         );
       case EntityType.cryptoWallet:
+        return CryptoWalletsFilterSection(
+          filter:
+              _localCryptoWalletsFilter ??
+              CryptoWalletsFilter(base: _localBaseFilter),
+          onFilterChanged: (updatedFilter) {
+            setState(() {
+              _localCryptoWalletsFilter = updatedFilter;
+            });
+            logDebug('FilterModal: Обновлены фильтры криптокошельков локально');
+          },
+        );
       case EntityType.wifi:
       case EntityType.identity:
       case EntityType.licenseKey:
@@ -1059,6 +1091,15 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           }
           break;
         case EntityType.cryptoWallet:
+          if (_localCryptoWalletsFilter != null) {
+            final syncedFilter = _localCryptoWalletsFilter!.copyWith(
+              base: _localBaseFilter,
+            );
+            ref
+                .read(cryptoWalletsFilterProvider.notifier)
+                .updateFilter(syncedFilter);
+          }
+          break;
         case EntityType.wifi:
         case EntityType.identity:
         case EntityType.licenseKey:
@@ -1161,6 +1202,12 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           }
           break;
         case EntityType.cryptoWallet:
+          if (_initialValues!.cryptoWalletsFilter != null) {
+            ref
+                .read(cryptoWalletsFilterProvider.notifier)
+                .updateFilterDebounced(_initialValues!.cryptoWalletsFilter!);
+          }
+          break;
         case EntityType.wifi:
         case EntityType.identity:
         case EntityType.licenseKey:
@@ -1225,6 +1272,10 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           _localCertificatesFilter = CertificatesFilter(base: _localBaseFilter);
           break;
         case EntityType.cryptoWallet:
+          _localCryptoWalletsFilter = CryptoWalletsFilter(
+            base: _localBaseFilter,
+          );
+          break;
         case EntityType.wifi:
         case EntityType.identity:
         case EntityType.licenseKey:

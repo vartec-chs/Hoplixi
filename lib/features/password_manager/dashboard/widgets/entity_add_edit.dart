@@ -3,6 +3,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/forms/api_key_form/screens/api_key_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/bank_card_form/screens/bank_card_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/certificate_form/screens/certificate_form_screen.dart';
+import 'package:hoplixi/features/password_manager/forms/crypto_wallet_form/screens/crypto_wallet_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/document_form/screens/document_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/file_form/screens/file_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/note_form/screens/note_form_screen.dart';
@@ -60,7 +61,7 @@ class EntityAddEdit extends StatelessWidget {
       case EntityType.certificate:
         return CertificateFormScreen(certificateId: id);
       case EntityType.cryptoWallet:
-        return buildNotImplemented('Криптокошельки');
+        return CryptoWalletFormScreen(cryptoWalletId: id);
       case EntityType.wifi:
         return buildNotImplemented('Wi-Fi');
       case EntityType.identity:

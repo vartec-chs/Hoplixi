@@ -38,6 +38,7 @@ class PaginatedListNotifier
   ProviderSubscription<ApiKeysFilter>? _apiKeyFilterSubscription;
   ProviderSubscription<SshKeysFilter>? _sshKeyFilterSubscription;
   ProviderSubscription<CertificatesFilter>? _certificateFilterSubscription;
+  ProviderSubscription<CryptoWalletsFilter>? _cryptoWalletFilterSubscription;
   ProviderSubscription<DataRefreshState>? _passwordRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _noteRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _bankCardRefreshSubscription;
@@ -46,6 +47,7 @@ class PaginatedListNotifier
   ProviderSubscription<DataRefreshState>? _apiKeyRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _sshKeyRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _certificateRefreshSubscription;
+  ProviderSubscription<DataRefreshState>? _cryptoWalletRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _documentRefreshSubscription;
 
   int get pageSize {
@@ -56,7 +58,6 @@ class PaginatedListNotifier
   final String _logTag = 'DashboardListProvider: ';
 
   bool get _isUnsupportedEntity =>
-      entityType == EntityType.cryptoWallet ||
       entityType == EntityType.wifi ||
       entityType == EntityType.identity ||
       entityType == EntityType.licenseKey ||
@@ -241,6 +242,23 @@ class PaginatedListNotifier
         );
         break;
       case EntityType.cryptoWallet:
+        _cryptoWalletFilterSubscription = ref.listen(
+          cryptoWalletsFilterProvider,
+          (prev, next) {
+            if (prev != next) {
+              _resetAndLoad();
+            }
+          },
+        );
+        _cryptoWalletRefreshSubscription = ref.listen<DataRefreshState>(
+          dataRefreshTriggerProvider,
+          (previous, next) {
+            if (_shouldHandleRefresh(next, EntityType.cryptoWallet)) {
+              _resetAndLoad();
+            }
+          },
+        );
+        break;
       case EntityType.wifi:
       case EntityType.identity:
       case EntityType.licenseKey:
@@ -270,6 +288,8 @@ class PaginatedListNotifier
     _sshKeyFilterSubscription = null;
     _certificateFilterSubscription?.close();
     _certificateFilterSubscription = null;
+    _cryptoWalletFilterSubscription?.close();
+    _cryptoWalletFilterSubscription = null;
     _passwordRefreshSubscription?.close();
     _passwordRefreshSubscription = null;
     _noteRefreshSubscription?.close();
@@ -286,6 +306,8 @@ class PaginatedListNotifier
     _sshKeyRefreshSubscription = null;
     _certificateRefreshSubscription?.close();
     _certificateRefreshSubscription = null;
+    _cryptoWalletRefreshSubscription?.close();
+    _cryptoWalletRefreshSubscription = null;
     _documentRefreshSubscription?.close();
     _documentRefreshSubscription = null;
   }
@@ -312,6 +334,7 @@ class PaginatedListNotifier
       case EntityType.certificate:
         return ref.read(certificateFilterDaoProvider.future);
       case EntityType.cryptoWallet:
+        return ref.read(cryptoWalletFilterDaoProvider.future);
       case EntityType.wifi:
       case EntityType.identity:
       case EntityType.licenseKey:
@@ -444,6 +467,20 @@ class PaginatedListNotifier
         );
         return certificatesFilter.copyWith(base: base);
       case EntityType.cryptoWallet:
+        final cryptoWalletsFilter = ref.read(cryptoWalletsFilterProvider);
+        final base = cryptoWalletsFilter.base.copyWith(
+          isFavorite:
+              cryptoWalletsFilter.base.isFavorite ?? tabFilter.isFavorite,
+          isArchived:
+              cryptoWalletsFilter.base.isArchived ?? tabFilter.isArchived,
+          isDeleted: cryptoWalletsFilter.base.isDeleted ?? tabFilter.isDeleted,
+          isFrequentlyUsed:
+              tabFilter.isFrequentlyUsed ??
+              cryptoWalletsFilter.base.isFrequentlyUsed,
+          limit: limit,
+          offset: offset,
+        );
+        return cryptoWalletsFilter.copyWith(base: base);
       case EntityType.wifi:
       case EntityType.identity:
       case EntityType.licenseKey:

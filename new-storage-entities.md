@@ -35,7 +35,7 @@
 - publicKeyFileId / privateKeyFileId (Text refs) — опционально, ссылки на
   файлы/attachments.
 
-## Certificate
+## Certificate [ Добавлено ]
 
 - certificatePem (Text / Blob, encrypted) — обязательное/рекомендуемое, PEM/DER
   сертификата.
@@ -55,7 +55,7 @@
 - autoRenew (Bool) — опционально, флаг автообновления/напоминания.
 - lastCheckedAt (DateTime) — опционально.
 
-## CryptoWallet
+## CryptoWallet [ Добавлено ]
 
 - walletType (Text) — обязательное/рекомендуемое, seed|private_key|hardware.
 - mnemonic (Text, encrypted, nullable) — если seed-based; шифровать обязательно.

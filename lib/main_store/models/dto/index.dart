@@ -9,6 +9,8 @@ export 'base_card_extensions.dart';
 export 'category_dto.dart';
 export 'certificate_dto.dart';
 export 'certificate_history_dto.dart';
+export 'crypto_wallet_dto.dart';
+export 'crypto_wallet_history_dto.dart';
 export 'document_dto.dart';
 export 'document_history_dto.dart';
 export 'file_dto.dart';

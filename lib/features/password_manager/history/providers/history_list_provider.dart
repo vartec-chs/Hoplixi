@@ -303,6 +303,7 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
       case EntityType.certificate:
         return _fetchCertificateHistory(offset, searchQuery);
       case EntityType.cryptoWallet:
+        return _fetchCryptoWalletHistory(offset, searchQuery);
       case EntityType.wifi:
       case EntityType.identity:
       case EntityType.licenseKey:
@@ -529,6 +530,33 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         .toList();
   }
 
+  Future<List<HistoryItem>> _fetchCryptoWalletHistory(
+    int offset,
+    String? searchQuery,
+  ) async {
+    final dao = await ref.read(cryptoWalletHistoryDaoProvider.future);
+    final cards = await dao.getCryptoWalletHistoryCardsByOriginalId(
+      _params.entityId,
+      offset,
+      pageSize,
+      searchQuery,
+    );
+
+    return cards
+        .map(
+          (card) => HistoryItem(
+            id: card.id,
+            originalEntityId: card.originalCryptoWalletId,
+            entityType: EntityType.cryptoWallet,
+            action: card.action,
+            title: card.name,
+            subtitle: card.network ?? card.walletType,
+            actionAt: card.actionAt,
+          ),
+        )
+        .toList();
+  }
+
   /// Получить общее количество записей
   Future<int> _getTotalCount({String? searchQuery}) async {
     switch (_params.entityType) {
@@ -574,6 +602,11 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
           searchQuery,
         );
       case EntityType.cryptoWallet:
+        final dao = await ref.read(cryptoWalletHistoryDaoProvider.future);
+        return dao.countCryptoWalletHistoryByOriginalId(
+          _params.entityId,
+          searchQuery,
+        );
       case EntityType.wifi:
       case EntityType.identity:
       case EntityType.licenseKey:
@@ -612,6 +645,8 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         final dao = await ref.read(certificateHistoryDaoProvider.future);
         return await dao.deleteCertificateHistoryById(historyItemId) > 0;
       case EntityType.cryptoWallet:
+        final dao = await ref.read(cryptoWalletHistoryDaoProvider.future);
+        return await dao.deleteCryptoWalletHistoryById(historyItemId) > 0;
       case EntityType.wifi:
       case EntityType.identity:
       case EntityType.licenseKey:
@@ -655,6 +690,11 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
             ) >=
             0;
       case EntityType.cryptoWallet:
+        final dao = await ref.read(cryptoWalletHistoryDaoProvider.future);
+        return await dao.deleteCryptoWalletHistoryByCryptoWalletId(
+              _params.entityId,
+            ) >=
+            0;
       case EntityType.wifi:
       case EntityType.identity:
       case EntityType.licenseKey:

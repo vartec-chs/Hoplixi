@@ -7,6 +7,7 @@ library;
 export 'api_keys_triggers.dart';
 export 'bank_cards_triggers.dart';
 export 'certificates_triggers.dart';
+export 'crypto_wallets_triggers.dart';
 export 'documents_triggers.dart';
 export 'files_triggers.dart';
 export 'notes_triggers.dart';

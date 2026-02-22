@@ -5,11 +5,13 @@ import 'package:hoplixi/main_store/dao/api_key_dao.dart';
 import 'package:hoplixi/main_store/dao/bank_card_dao.dart';
 import 'package:hoplixi/main_store/dao/category_dao.dart';
 import 'package:hoplixi/main_store/dao/certificate_dao.dart';
+import 'package:hoplixi/main_store/dao/crypto_wallet_dao.dart';
 import 'package:hoplixi/main_store/dao/document_dao.dart';
 import 'package:hoplixi/main_store/dao/file_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/api_key_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/bank_card_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/certificate_history_dao.dart';
+import 'package:hoplixi/main_store/dao/history_dao/crypto_wallet_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/document_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/file_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/note_history_dao.dart';
@@ -45,6 +47,7 @@ part 'main_store.g.dart';
     ApiKeyItems,
     SshKeyItems,
     CertificateItems,
+    CryptoWalletItems,
     OtpItems,
     NoteItems,
     NoteLinks,
@@ -65,6 +68,7 @@ part 'main_store.g.dart';
     ApiKeyHistory,
     SshKeyHistory,
     CertificateHistory,
+    CryptoWalletHistory,
     OtpHistory,
     NoteHistory,
     BankCardHistory,
@@ -83,6 +87,8 @@ part 'main_store.g.dart';
     SshKeyHistoryDao,
     CertificateDao,
     CertificateHistoryDao,
+    CryptoWalletDao,
+    CryptoWalletHistoryDao,
     OtpDao,
     OtpHistoryDao,
     NoteDao,
@@ -104,6 +110,7 @@ part 'main_store.g.dart';
     ApiKeyFilterDao,
     SshKeyFilterDao,
     CertificateFilterDao,
+    CryptoWalletFilterDao,
   ],
 )
 class MainStore extends _$MainStore {
@@ -169,6 +176,7 @@ class MainStore extends _$MainStore {
         apiKeyItems,
         sshKeyItems,
         certificateItems,
+        cryptoWalletItems,
         otpItems,
         noteItems,
         noteLinks,
@@ -197,6 +205,7 @@ class MainStore extends _$MainStore {
         ...apiKeysHistoryDropTriggers,
         ...sshKeysHistoryDropTriggers,
         ...certificatesHistoryDropTriggers,
+        ...cryptoWalletsHistoryDropTriggers,
         ...otpsHistoryDropTriggers,
         ...notesHistoryDropTriggers,
         ...filesHistoryDropTriggers,
@@ -222,6 +231,7 @@ class MainStore extends _$MainStore {
         ...apiKeysHistoryCreateTriggers,
         ...sshKeysHistoryCreateTriggers,
         ...certificatesHistoryCreateTriggers,
+        ...cryptoWalletsHistoryCreateTriggers,
         ...otpsHistoryCreateTriggers,
         ...notesHistoryCreateTriggers,
         ...filesHistoryCreateTriggers,
@@ -315,6 +325,12 @@ class MainStore extends _$MainStore {
             'ON certificate_items (fingerprint)',
         'CREATE INDEX IF NOT EXISTS idx_certificate_items_valid_to '
             'ON certificate_items (valid_to) WHERE valid_to IS NOT NULL',
+
+        // --- crypto_wallet_items ---
+        'CREATE INDEX IF NOT EXISTS idx_crypto_wallet_items_wallet_type '
+            'ON crypto_wallet_items (wallet_type)',
+        'CREATE INDEX IF NOT EXISTS idx_crypto_wallet_items_network '
+            'ON crypto_wallet_items (network)',
 
         // --- vault_item_history ---
         // WHERE item_id = ? AND type = ? ORDER BY action_at DESC
