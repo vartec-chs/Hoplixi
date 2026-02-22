@@ -296,26 +296,33 @@ class _OpenStoreScreenState extends ConsumerState<OpenStoreScreen> {
                       ),
                     ),
                     const Divider(height: 1),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-                      child: Row(
+                    Expanded(
+                      child: Column(
                         children: [
-                          Text(
-                            'Бэкапы',
-                            style: Theme.of(context).textTheme.titleMedium,
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Бэкапы',
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            child: StorageList(
+                              storages: backupStorages,
+                              selectedStorage: state.selectedStorage,
+                              onStorageSelected: notifier.selectStorage,
+                              onStorageDelete: (storage) =>
+                                  _handleDeleteBackup(storage, ref),
+                              showCreateButton: false,
+                            ),
                           ),
                         ],
-                      ),
-                    ),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxHeight: 320),
-                      child: StorageList(
-                        storages: backupStorages,
-                        selectedStorage: state.selectedStorage,
-                        onStorageSelected: notifier.selectStorage,
-                        onStorageDelete: (storage) =>
-                            _handleDeleteBackup(storage, ref),
-                        showCreateButton: false,
                       ),
                     ),
                   ],

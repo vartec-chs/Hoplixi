@@ -19,45 +19,10 @@ enum FilterTab {
   static List<FilterTab> getAvailableTabsForEntity(EntityType entityType) {
     switch (entityType) {
       case EntityType.password:
-        return [
-          FilterTab.all,
-          FilterTab.favorites,
-          FilterTab.frequent,
-          FilterTab.archived,
-          FilterTab.delete,
-        ];
       case EntityType.note:
-        return [
-          FilterTab.all,
-          FilterTab.favorites,
-          FilterTab.frequent,
-          FilterTab.archived,
-          FilterTab.delete,
-        ];
       case EntityType.otp:
-        return [
-          FilterTab.all,
-          FilterTab.favorites,
-          FilterTab.frequent,
-          FilterTab.archived,
-          FilterTab.delete,
-        ];
       case EntityType.bankCard:
-        return [
-          FilterTab.all,
-          FilterTab.favorites,
-          FilterTab.frequent,
-          FilterTab.archived,
-          FilterTab.delete,
-        ];
       case EntityType.file:
-        return [
-          FilterTab.all,
-          FilterTab.favorites,
-          FilterTab.frequent,
-          FilterTab.archived,
-          FilterTab.delete,
-        ];
       case EntityType.document:
       case EntityType.contact:
       case EntityType.apiKey:
