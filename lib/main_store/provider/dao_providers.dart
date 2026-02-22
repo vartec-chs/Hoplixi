@@ -37,6 +37,10 @@ final cryptoWalletDaoProvider = FutureProvider<CryptoWalletDao>(
   (ref) => _ensureDao(ref, (store) => CryptoWalletDao(store)),
 );
 
+final wifiDaoProvider = FutureProvider<WifiDao>(
+  (ref) => _ensureDao(ref, (store) => WifiDao(store)),
+);
+
 final passwordHistoryDaoProvider = FutureProvider<PasswordHistoryDao>(
   (ref) => _ensureDao(ref, (store) => PasswordHistoryDao(store)),
 );
@@ -55,6 +59,10 @@ final certificateHistoryDaoProvider = FutureProvider<CertificateHistoryDao>(
 
 final cryptoWalletHistoryDaoProvider = FutureProvider<CryptoWalletHistoryDao>(
   (ref) => _ensureDao(ref, (store) => CryptoWalletHistoryDao(store)),
+);
+
+final wifiHistoryDaoProvider = FutureProvider<WifiHistoryDao>(
+  (ref) => _ensureDao(ref, (store) => WifiHistoryDao(store)),
 );
 
 final otpDaoProvider = FutureProvider<OtpDao>(
@@ -119,6 +127,10 @@ final certificateFilterDaoProvider = FutureProvider<CertificateFilterDao>(
 
 final cryptoWalletFilterDaoProvider = FutureProvider<CryptoWalletFilterDao>(
   (ref) => _ensureDao(ref, (store) => CryptoWalletFilterDao(store)),
+);
+
+final wifiFilterDaoProvider = FutureProvider<WifiFilterDao>(
+  (ref) => _ensureDao(ref, (store) => WifiFilterDao(store)),
 );
 
 final otpFilterDaoProvider = FutureProvider<OtpFilterDao>(

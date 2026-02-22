@@ -39,6 +39,7 @@ class PaginatedListNotifier
   ProviderSubscription<SshKeysFilter>? _sshKeyFilterSubscription;
   ProviderSubscription<CertificatesFilter>? _certificateFilterSubscription;
   ProviderSubscription<CryptoWalletsFilter>? _cryptoWalletFilterSubscription;
+  ProviderSubscription<WifisFilter>? _wifiFilterSubscription;
   ProviderSubscription<DataRefreshState>? _passwordRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _noteRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _bankCardRefreshSubscription;
@@ -48,6 +49,7 @@ class PaginatedListNotifier
   ProviderSubscription<DataRefreshState>? _sshKeyRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _certificateRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _cryptoWalletRefreshSubscription;
+  ProviderSubscription<DataRefreshState>? _wifiRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _documentRefreshSubscription;
 
   int get pageSize {
@@ -58,7 +60,6 @@ class PaginatedListNotifier
   final String _logTag = 'DashboardListProvider: ';
 
   bool get _isUnsupportedEntity =>
-      entityType == EntityType.wifi ||
       entityType == EntityType.identity ||
       entityType == EntityType.licenseKey ||
       entityType == EntityType.recoveryCodes;
@@ -260,6 +261,20 @@ class PaginatedListNotifier
         );
         break;
       case EntityType.wifi:
+        _wifiFilterSubscription = ref.listen(wifisFilterProvider, (prev, next) {
+          if (prev != next) {
+            _resetAndLoad();
+          }
+        });
+        _wifiRefreshSubscription = ref.listen<DataRefreshState>(
+          dataRefreshTriggerProvider,
+          (previous, next) {
+            if (_shouldHandleRefresh(next, EntityType.wifi)) {
+              _resetAndLoad();
+            }
+          },
+        );
+        break;
       case EntityType.identity:
       case EntityType.licenseKey:
       case EntityType.recoveryCodes:
@@ -290,6 +305,8 @@ class PaginatedListNotifier
     _certificateFilterSubscription = null;
     _cryptoWalletFilterSubscription?.close();
     _cryptoWalletFilterSubscription = null;
+    _wifiFilterSubscription?.close();
+    _wifiFilterSubscription = null;
     _passwordRefreshSubscription?.close();
     _passwordRefreshSubscription = null;
     _noteRefreshSubscription?.close();
@@ -308,6 +325,8 @@ class PaginatedListNotifier
     _certificateRefreshSubscription = null;
     _cryptoWalletRefreshSubscription?.close();
     _cryptoWalletRefreshSubscription = null;
+    _wifiRefreshSubscription?.close();
+    _wifiRefreshSubscription = null;
     _documentRefreshSubscription?.close();
     _documentRefreshSubscription = null;
   }
@@ -336,6 +355,7 @@ class PaginatedListNotifier
       case EntityType.cryptoWallet:
         return ref.read(cryptoWalletFilterDaoProvider.future);
       case EntityType.wifi:
+        return ref.read(wifiFilterDaoProvider.future);
       case EntityType.identity:
       case EntityType.licenseKey:
       case EntityType.recoveryCodes:
@@ -482,6 +502,17 @@ class PaginatedListNotifier
         );
         return cryptoWalletsFilter.copyWith(base: base);
       case EntityType.wifi:
+        final wifisFilter = ref.read(wifisFilterProvider);
+        final base = wifisFilter.base.copyWith(
+          isFavorite: wifisFilter.base.isFavorite ?? tabFilter.isFavorite,
+          isArchived: wifisFilter.base.isArchived ?? tabFilter.isArchived,
+          isDeleted: wifisFilter.base.isDeleted ?? tabFilter.isDeleted,
+          isFrequentlyUsed:
+              tabFilter.isFrequentlyUsed ?? wifisFilter.base.isFrequentlyUsed,
+          limit: limit,
+          offset: offset,
+        );
+        return wifisFilter.copyWith(base: base);
       case EntityType.identity:
       case EntityType.licenseKey:
       case EntityType.recoveryCodes:

@@ -36,3 +36,5 @@ export 'tags.dart';
 export 'vault_item_history.dart';
 // --- Базовая таблица ---
 export 'vault_items.dart';
+export 'wifi_history.dart';
+export 'wifi_items.dart';

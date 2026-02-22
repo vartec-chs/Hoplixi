@@ -16,3 +16,4 @@ export 'passwords_triggers.dart';
 export 'ssh_keys_triggers.dart';
 // Триггеры временных меток
 export 'timestamps/index.dart';
+export 'wifis_triggers.dart';

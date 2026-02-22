@@ -10,6 +10,7 @@ import 'package:hoplixi/features/password_manager/forms/note_form/screens/note_v
 import 'package:hoplixi/features/password_manager/forms/otp_form/screens/otp_view_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/password_form/screens/password_view_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/ssh_key_form/screens/ssh_key_view_screen.dart';
+import 'package:hoplixi/features/password_manager/forms/wifi_form/screens/wifi_view_screen.dart';
 
 /// Виджет-обертка для просмотра сущностей
 /// Возвращает соответствующий экран просмотра в зависимости от типа сущности
@@ -55,7 +56,7 @@ class EntityView extends StatelessWidget {
       case EntityType.cryptoWallet:
         return CryptoWalletViewScreen(cryptoWalletId: id);
       case EntityType.wifi:
-        return buildNotImplemented('Wi-Fi');
+        return WifiViewScreen(wifiId: id);
       case EntityType.identity:
         return buildNotImplemented('Идентификация');
       case EntityType.licenseKey:

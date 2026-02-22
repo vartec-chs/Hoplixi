@@ -25,3 +25,5 @@ export 'password_dto.dart';
 export 'password_history_dto.dart';
 export 'ssh_key_dto.dart';
 export 'ssh_key_history_dto.dart';
+export 'wifi_dto.dart';
+export 'wifi_history_dto.dart';

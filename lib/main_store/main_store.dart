@@ -18,6 +18,7 @@ import 'package:hoplixi/main_store/dao/history_dao/note_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/otp_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/password_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/ssh_key_history_dao.dart';
+import 'package:hoplixi/main_store/dao/history_dao/wifi_history_dao.dart';
 import 'package:hoplixi/main_store/dao/icon_dao.dart';
 import 'package:hoplixi/main_store/dao/note_dao.dart';
 import 'package:hoplixi/main_store/dao/note_link_dao.dart';
@@ -27,6 +28,7 @@ import 'package:hoplixi/main_store/dao/ssh_key_dao.dart';
 import 'package:hoplixi/main_store/dao/store_meta_dao.dart';
 import 'package:hoplixi/main_store/dao/store_settings_dao.dart';
 import 'package:hoplixi/main_store/dao/vault_item_dao.dart';
+import 'package:hoplixi/main_store/dao/wifi_dao.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:hoplixi/main_store/tables/index.dart';
 import 'package:hoplixi/main_store/triggers/index.dart';
@@ -48,6 +50,7 @@ part 'main_store.g.dart';
     SshKeyItems,
     CertificateItems,
     CryptoWalletItems,
+    WifiItems,
     OtpItems,
     NoteItems,
     NoteLinks,
@@ -69,6 +72,7 @@ part 'main_store.g.dart';
     SshKeyHistory,
     CertificateHistory,
     CryptoWalletHistory,
+    WifiHistory,
     OtpHistory,
     NoteHistory,
     BankCardHistory,
@@ -89,6 +93,8 @@ part 'main_store.g.dart';
     CertificateHistoryDao,
     CryptoWalletDao,
     CryptoWalletHistoryDao,
+    WifiDao,
+    WifiHistoryDao,
     OtpDao,
     OtpHistoryDao,
     NoteDao,
@@ -111,6 +117,7 @@ part 'main_store.g.dart';
     SshKeyFilterDao,
     CertificateFilterDao,
     CryptoWalletFilterDao,
+    WifiFilterDao,
   ],
 )
 class MainStore extends _$MainStore {
@@ -177,6 +184,7 @@ class MainStore extends _$MainStore {
         sshKeyItems,
         certificateItems,
         cryptoWalletItems,
+        wifiItems,
         otpItems,
         noteItems,
         noteLinks,
@@ -206,6 +214,7 @@ class MainStore extends _$MainStore {
         ...sshKeysHistoryDropTriggers,
         ...certificatesHistoryDropTriggers,
         ...cryptoWalletsHistoryDropTriggers,
+        ...wifisHistoryDropTriggers,
         ...otpsHistoryDropTriggers,
         ...notesHistoryDropTriggers,
         ...filesHistoryDropTriggers,
@@ -232,6 +241,7 @@ class MainStore extends _$MainStore {
         ...sshKeysHistoryCreateTriggers,
         ...certificatesHistoryCreateTriggers,
         ...cryptoWalletsHistoryCreateTriggers,
+        ...wifisHistoryCreateTriggers,
         ...otpsHistoryCreateTriggers,
         ...notesHistoryCreateTriggers,
         ...filesHistoryCreateTriggers,
@@ -331,6 +341,12 @@ class MainStore extends _$MainStore {
             'ON crypto_wallet_items (wallet_type)',
         'CREATE INDEX IF NOT EXISTS idx_crypto_wallet_items_network '
             'ON crypto_wallet_items (network)',
+
+        // --- wifi_items ---
+        'CREATE INDEX IF NOT EXISTS idx_wifi_items_security_type '
+            'ON wifi_items (security_type)',
+        'CREATE INDEX IF NOT EXISTS idx_wifi_items_ssid '
+            'ON wifi_items (ssid)',
 
         // --- vault_item_history ---
         // WHERE item_id = ? AND type = ? ORDER BY action_at DESC

@@ -24,6 +24,7 @@ import '../../providers/filter_providers/notes_filter_provider.dart';
 import '../../providers/filter_providers/otp_filter_provider.dart';
 import '../../providers/filter_providers/password_filter_provider.dart';
 import '../../providers/filter_providers/ssh_keys_filter_provider.dart';
+import '../../providers/filter_providers/wifis_filter_provider.dart';
 // Секции фильтров
 import '../dashboard_home/filter_sections/filter_sections.dart';
 
@@ -40,6 +41,7 @@ class _InitialFilterValues {
   final SshKeysFilter? sshKeysFilter;
   final CertificatesFilter? certificatesFilter;
   final CryptoWalletsFilter? cryptoWalletsFilter;
+  final WifisFilter? wifisFilter;
 
   _InitialFilterValues({
     required this.baseFilter,
@@ -53,6 +55,7 @@ class _InitialFilterValues {
     this.sshKeysFilter,
     this.certificatesFilter,
     this.cryptoWalletsFilter,
+    this.wifisFilter,
   });
 }
 
@@ -243,6 +246,10 @@ class _FilterModalActions extends ConsumerWidget {
               .updateFilter(CryptoWalletsFilter(base: emptyBaseFilter));
           break;
         case EntityType.wifi:
+          ref
+              .read(wifisFilterProvider.notifier)
+              .updateFilter(WifisFilter(base: emptyBaseFilter));
+          break;
         case EntityType.identity:
         case EntityType.licenseKey:
         case EntityType.recoveryCodes:
@@ -335,6 +342,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
   SshKeysFilter? _localSshKeysFilter;
   CertificatesFilter? _localCertificatesFilter;
   CryptoWalletsFilter? _localCryptoWalletsFilter;
+  WifisFilter? _localWifisFilter;
 
   // Типобезопасное хранение начальных значений для отката
   _InitialFilterValues? _initialValues;
@@ -389,6 +397,8 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         _localCryptoWalletsFilter = ref.read(cryptoWalletsFilterProvider);
         break;
       case EntityType.wifi:
+        _localWifisFilter = ref.read(wifisFilterProvider);
+        break;
       case EntityType.identity:
       case EntityType.licenseKey:
       case EntityType.recoveryCodes:
@@ -493,6 +503,12 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         );
         break;
       case EntityType.wifi:
+        final wifisFilter = ref.read(wifisFilterProvider);
+        _initialValues = _InitialFilterValues(
+          baseFilter: baseFilter,
+          wifisFilter: wifisFilter,
+        );
+        break;
       case EntityType.identity:
       case EntityType.licenseKey:
       case EntityType.recoveryCodes:
@@ -713,6 +729,12 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
                   }
                   break;
                 case EntityType.wifi:
+                  if (_localWifisFilter != null) {
+                    _localWifisFilter = _localWifisFilter!.copyWith(
+                      base: updatedFilter,
+                    );
+                  }
+                  break;
                 case EntityType.identity:
                 case EntityType.licenseKey:
                 case EntityType.recoveryCodes:
@@ -857,6 +879,15 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           },
         );
       case EntityType.wifi:
+        return WifisFilterSection(
+          filter: _localWifisFilter ?? WifisFilter(base: _localBaseFilter),
+          onFilterChanged: (updatedFilter) {
+            setState(() {
+              _localWifisFilter = updatedFilter;
+            });
+            logDebug('FilterModal: Обновлены фильтры Wi-Fi локально');
+          },
+        );
       case EntityType.identity:
       case EntityType.licenseKey:
       case EntityType.recoveryCodes:
@@ -1101,6 +1132,13 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           }
           break;
         case EntityType.wifi:
+          if (_localWifisFilter != null) {
+            final syncedFilter = _localWifisFilter!.copyWith(
+              base: _localBaseFilter,
+            );
+            ref.read(wifisFilterProvider.notifier).updateFilter(syncedFilter);
+          }
+          break;
         case EntityType.identity:
         case EntityType.licenseKey:
         case EntityType.recoveryCodes:
@@ -1209,6 +1247,12 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           }
           break;
         case EntityType.wifi:
+          if (_initialValues!.wifisFilter != null) {
+            ref
+                .read(wifisFilterProvider.notifier)
+                .updateFilterDebounced(_initialValues!.wifisFilter!);
+          }
+          break;
         case EntityType.identity:
         case EntityType.licenseKey:
         case EntityType.recoveryCodes:
@@ -1277,6 +1321,8 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           );
           break;
         case EntityType.wifi:
+          _localWifisFilter = WifisFilter(base: _localBaseFilter);
+          break;
         case EntityType.identity:
         case EntityType.licenseKey:
         case EntityType.recoveryCodes:

@@ -70,7 +70,7 @@
 - watchOnly (Bool) — опционально.
 - derivationScheme (Text) — опционально (bip44/bip84/...).
 
-## Wifi
+## Wifi [ Добавлено ]
 
 - ssid (Text) — обязательное.
 - password (Text, encrypted, nullable) — опционально/для защищённых сетей.

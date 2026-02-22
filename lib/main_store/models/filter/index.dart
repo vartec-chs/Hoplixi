@@ -14,3 +14,4 @@ export 'otps_filter.dart';
 export 'passwords_filter.dart';
 export 'ssh_keys_filter.dart';
 export 'tags_filter.dart';
+export 'wifis_filter.dart';

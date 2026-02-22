@@ -26,6 +26,8 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/passwo
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/password/password_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/ssh_key/ssh_key_grid_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/ssh_key/ssh_key_list_card.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/wifi/wifi_grid_card.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/wifi/wifi_list_card.dart';
 import 'package:hoplixi/features/password_manager/decrypt_modal/document_decrypt_modal.dart';
 import 'package:hoplixi/features/password_manager/decrypt_modal/file_decrypt_modal.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
@@ -763,6 +765,26 @@ class DashboardHomeBuilders {
         );
         break;
       case EntityType.wifi:
+        if (item is! WifiCardDto) return noCorrectType;
+        card = WifiListCard(
+          wifi: item,
+          onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onOpenHistory: () {
+            if (location !=
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.wifi,
+                  item.id,
+                )) {
+              context.push(
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.wifi,
+                  item.id,
+                ),
+              );
+            }
+          },
+        );
+        break;
       case EntityType.identity:
       case EntityType.licenseKey:
       case EntityType.recoveryCodes:
@@ -930,6 +952,14 @@ class DashboardHomeBuilders {
             if (GoRouter.of(context).state.matchedLocation != path) {
               context.push(path);
             }
+          } else if (item is WifiCardDto) {
+            final path = AppRoutesPaths.dashboardEntityEdit(
+              EntityType.wifi,
+              item.id,
+            );
+            if (GoRouter.of(context).state.matchedLocation != path) {
+              context.push(path);
+            }
           }
 
           return false;
@@ -955,6 +985,8 @@ class DashboardHomeBuilders {
           } else if (item is CertificateCardDto) {
             itemName = item.name;
           } else if (item is CryptoWalletCardDto) {
+            itemName = item.name;
+          } else if (item is WifiCardDto) {
             itemName = item.name;
           }
 
@@ -1097,6 +1129,11 @@ class DashboardHomeBuilders {
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
         );
       case EntityType.wifi:
+        if (item is! WifiCardDto) return noCorrectType;
+        card = WifiGridCard(
+          wifi: item,
+          onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+        );
       case EntityType.identity:
       case EntityType.licenseKey:
       case EntityType.recoveryCodes:
