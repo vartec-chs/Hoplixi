@@ -11,8 +11,8 @@ enum SubWindowType {
   /// безопасных паролей.
   passwordGenerator(
     title: 'Генератор паролей',
-    size: Size(420, 560),
-    minSize: Size(360, 480),
+    size: Size(420, 500),
+    minSize: Size(360, 500),
   ),
 
   /// Окно авторизации — для входа в хранилище.

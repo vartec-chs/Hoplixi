@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/theme/constants.dart';
 import 'package:hoplixi/features/password_manager/create_store/providers/create_store_form_provider.dart';
+import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/shared/ui/notification_card.dart';
+import 'package:hoplixi/shared/ui/password_generator_widget.dart';
+import 'package:hoplixi/shared/ui/password_strength_indicator.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 /// Шаг 3: Мастер пароль
 class Step3MasterPassword extends ConsumerStatefulWidget {
@@ -18,6 +23,56 @@ class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
   late final TextEditingController _confirmationController;
   bool _obscurePassword = true;
   bool _obscureConfirmation = true;
+
+  Future<void> _openPasswordGeneratorModal() async {
+    final generatedPassword = await WoltModalSheet.show<String>(
+      context: context,
+      useSafeArea: true,
+      useRootNavigator: true,
+      pageListBuilder: (modalContext) => [
+        WoltModalSheetPage(
+          surfaceTintColor: Colors.transparent,
+          hasTopBarLayer: true,
+          isTopBarLayerAlwaysVisible: true,
+          topBarTitle: Text(
+            'Генератор пароля',
+            style: Theme.of(
+              modalContext,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          leadingNavBarWidget: Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: IconButton(
+              icon: const Icon(Icons.close),
+              tooltip: 'Закрыть',
+              onPressed: () => Navigator.of(modalContext).pop(),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: PasswordGeneratorWidget(
+              showRefreshButton: true,
+              showSubmitButton: true,
+              submitLabel: 'Использовать пароль',
+              onPasswordSubmitted: (password) {
+                Navigator.of(modalContext).pop(password);
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+
+    if (!mounted || generatedPassword == null || generatedPassword.isEmpty) {
+      return;
+    }
+
+    final notifier = ref.read(createStoreFormProvider.notifier);
+    _passwordController.text = generatedPassword;
+    _confirmationController.text = generatedPassword;
+    notifier.updatePassword(generatedPassword);
+    notifier.updatePasswordConfirmation(generatedPassword);
+  }
 
   @override
   void initState() {
@@ -90,7 +145,14 @@ class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
 
           // Индикатор сложности пароля
           if (state.password.isNotEmpty)
-            _PasswordStrengthIndicator(password: state.password),
+            PasswordStrengthIndicator(
+              password: state.password,
+              minHeight: 8,
+              labelStyle: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           const SizedBox(height: 24),
 
           // Поле подтверждения
@@ -119,6 +181,18 @@ class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
             onChanged: notifier.updatePasswordConfirmation,
             textInputAction: TextInputAction.done,
           ),
+          const SizedBox(height: 8),
+
+          Align(
+            alignment: Alignment.centerRight,
+            child: SmoothButton(
+              onPressed: _openPasswordGeneratorModal,
+              icon: const Icon(Icons.password, size: 18),
+              label: 'Сгенерировать пароль',
+              type: .text,
+              size: .small,
+            ),
+          ),
           const SizedBox(height: 24),
 
           // Переключатель использования ключа устройства
@@ -128,7 +202,7 @@ class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.secondary.withOpacity(0.3),
               ),
             ),
             child: Column(
@@ -192,7 +266,7 @@ class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Минусы: ключ устройства подмешивается к ключу хранилища. Без данного устройства будет невозможно открыть это хранилище (например, если скопировать файл БД на другой ПК).',
+                          'ВАЖНО: ключ устройства подмешивается к ключу хранилища. Без данного устройства будет невозможно открыть это хранилище (например, если скопировать файл БД на другой ПК).',
                           style: TextStyle(
                             color: Colors.orange.shade700,
                             fontSize: 13,
@@ -270,126 +344,14 @@ class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
           const SizedBox(height: 16),
 
           // Предупреждение
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(
-                context,
-              ).colorScheme.errorContainer.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.warning_amber_rounded,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'ВАЖНО: Запомните или надежно сохраните этот пароль. Восстановление невозможно!',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onErrorContainer,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          const NotificationCard(
+            type: .warning,
+            text:
+                'ВАЖНО: Запомните или надежно сохраните этот пароль. Восстановление невозможно!',
           ),
         ],
       ),
     );
-  }
-}
-
-/// Индикатор сложности пароля
-class _PasswordStrengthIndicator extends StatelessWidget {
-  final String password;
-
-  const _PasswordStrengthIndicator({required this.password});
-
-  @override
-  Widget build(BuildContext context) {
-    final strength = _calculateStrength();
-    final color = _getStrengthColor(context, strength);
-    final label = _getStrengthLabel(strength);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: strength / 4,
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest,
-                  color: color,
-                  minHeight: 8,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  int _calculateStrength() {
-    int strength = 0;
-    if (password.length >= 8) strength++;
-    if (password.contains(RegExp(r'[A-Z]'))) strength++;
-    if (password.contains(RegExp(r'[a-z]'))) strength++;
-    if (password.contains(RegExp(r'[0-9]'))) strength++;
-    if (password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) strength++;
-    if (password.length >= 12) strength++;
-    return strength.clamp(0, 4);
-  }
-
-  Color _getStrengthColor(BuildContext context, int strength) {
-    switch (strength) {
-      case 0:
-      case 1:
-        return Theme.of(context).colorScheme.error;
-      case 2:
-        return Colors.orange;
-      case 3:
-        return Colors.yellow.shade700;
-      case 4:
-        return Colors.green;
-      default:
-        return Theme.of(context).colorScheme.error;
-    }
-  }
-
-  String _getStrengthLabel(int strength) {
-    switch (strength) {
-      case 0:
-      case 1:
-        return 'Слабый';
-      case 2:
-        return 'Средний';
-      case 3:
-        return 'Хороший';
-      case 4:
-        return 'Отличный';
-      default:
-        return 'Слабый';
-    }
   }
 }
 
