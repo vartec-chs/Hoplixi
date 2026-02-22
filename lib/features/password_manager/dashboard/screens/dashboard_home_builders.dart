@@ -712,6 +712,10 @@ class DashboardHomeBuilders {
         card = SshKeyListCard(
           sshKey: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
           onOpenHistory: () {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -733,6 +737,10 @@ class DashboardHomeBuilders {
         card = CertificateListCard(
           certificate: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
           onOpenHistory: () {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -754,6 +762,10 @@ class DashboardHomeBuilders {
         card = CryptoWalletListCard(
           wallet: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
           onOpenHistory: () {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -775,6 +787,10 @@ class DashboardHomeBuilders {
         card = WifiListCard(
           wifi: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
           onOpenHistory: () {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -796,6 +812,10 @@ class DashboardHomeBuilders {
         card = IdentityListCard(
           identity: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
           onOpenHistory: () {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -817,6 +837,10 @@ class DashboardHomeBuilders {
         card = LicenseKeyListCard(
           license: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
           onOpenHistory: () {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -838,6 +862,10 @@ class DashboardHomeBuilders {
         card = RecoveryCodesListCard(
           recoveryCodes: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
           onOpenHistory: () {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -1205,42 +1233,70 @@ class DashboardHomeBuilders {
         card = SshKeyGridCard(
           sshKey: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
         );
       case EntityType.certificate:
         if (item is! CertificateCardDto) return noCorrectType;
         card = CertificateGridCard(
           certificate: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
         );
       case EntityType.cryptoWallet:
         if (item is! CryptoWalletCardDto) return noCorrectType;
         card = CryptoWalletGridCard(
           wallet: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
         );
       case EntityType.wifi:
         if (item is! WifiCardDto) return noCorrectType;
         card = WifiGridCard(
           wifi: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
         );
       case EntityType.identity:
         if (item is! IdentityCardDto) return noCorrectType;
         card = IdentityGridCard(
           identity: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
         );
       case EntityType.licenseKey:
         if (item is! LicenseKeyCardDto) return noCorrectType;
         card = LicenseKeyGridCard(
           license: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
         );
       case EntityType.recoveryCodes:
         if (item is! RecoveryCodesCardDto) return noCorrectType;
         card = RecoveryCodesGridCard(
           recoveryCodes: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
         );
     }
 
