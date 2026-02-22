@@ -9,6 +9,7 @@ export 'crypto_wallets_filter.dart';
 export 'documents_filter.dart';
 export 'files_filter.dart';
 export 'icons_filter.dart';
+export 'identities_filter.dart';
 export 'notes_filter.dart';
 export 'otps_filter.dart';
 export 'passwords_filter.dart';

@@ -6,6 +6,7 @@ import 'package:hoplixi/features/password_manager/forms/certificate_form/screens
 import 'package:hoplixi/features/password_manager/forms/crypto_wallet_form/screens/crypto_wallet_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/document_form/screens/document_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/file_form/screens/file_form_screen.dart';
+import 'package:hoplixi/features/password_manager/forms/identity_form/screens/identity_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/note_form/screens/note_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/otp_form/screens/otp_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/password_form/screens/password_form_screen.dart';
@@ -66,7 +67,7 @@ class EntityAddEdit extends StatelessWidget {
       case EntityType.wifi:
         return WifiFormScreen(wifiId: id);
       case EntityType.identity:
-        return buildNotImplemented('Идентификация');
+        return IdentityFormScreen(identityId: id);
       case EntityType.licenseKey:
         return buildNotImplemented('Лицензии');
       case EntityType.recoveryCodes:

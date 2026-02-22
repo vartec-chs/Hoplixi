@@ -18,6 +18,8 @@ export 'file_history.dart';
 export 'file_items.dart';
 export 'file_metadata.dart';
 export 'icons.dart';
+export 'identity_history.dart';
+export 'identity_items.dart';
 // --- Теги (единая таблица) ---
 export 'item_tags.dart';
 export 'note_history.dart';

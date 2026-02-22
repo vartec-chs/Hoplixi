@@ -7,6 +7,7 @@ export 'certificates_filter_section.dart';
 export 'crypto_wallets_filter_section.dart';
 export 'documents_filter_section.dart';
 export 'files_filter_section.dart';
+export 'identities_filter_section.dart';
 export 'notes_filter_section.dart';
 export 'otps_filter_section.dart';
 export 'password_filter_section.dart';

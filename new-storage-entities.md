@@ -85,7 +85,7 @@
 - notes (Text) — опционально.
 - qrCodePayload (Text) — опционально, строка для quick connect.
 
-## Identity (паспорт / ID / водительские и т.п.)
+## Identity (паспорт / ID / водительские и т.п.) [ Добавлено ]
 
 - idType (Text) — обязательное, passport|id_card|drivers_license|ssn и т.п.
 - idNumber (Text) — обязательное.

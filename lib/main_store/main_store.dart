@@ -14,12 +14,14 @@ import 'package:hoplixi/main_store/dao/history_dao/certificate_history_dao.dart'
 import 'package:hoplixi/main_store/dao/history_dao/crypto_wallet_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/document_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/file_history_dao.dart';
+import 'package:hoplixi/main_store/dao/history_dao/identity_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/note_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/otp_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/password_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/ssh_key_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/wifi_history_dao.dart';
 import 'package:hoplixi/main_store/dao/icon_dao.dart';
+import 'package:hoplixi/main_store/dao/identity_dao.dart';
 import 'package:hoplixi/main_store/dao/note_dao.dart';
 import 'package:hoplixi/main_store/dao/note_link_dao.dart';
 import 'package:hoplixi/main_store/dao/otp_dao.dart';
@@ -51,6 +53,7 @@ part 'main_store.g.dart';
     CertificateItems,
     CryptoWalletItems,
     WifiItems,
+    IdentityItems,
     OtpItems,
     NoteItems,
     NoteLinks,
@@ -73,6 +76,7 @@ part 'main_store.g.dart';
     CertificateHistory,
     CryptoWalletHistory,
     WifiHistory,
+    IdentityHistory,
     OtpHistory,
     NoteHistory,
     BankCardHistory,
@@ -95,6 +99,8 @@ part 'main_store.g.dart';
     CryptoWalletHistoryDao,
     WifiDao,
     WifiHistoryDao,
+    IdentityDao,
+    IdentityHistoryDao,
     OtpDao,
     OtpHistoryDao,
     NoteDao,
@@ -118,6 +124,7 @@ part 'main_store.g.dart';
     CertificateFilterDao,
     CryptoWalletFilterDao,
     WifiFilterDao,
+    IdentityFilterDao,
   ],
 )
 class MainStore extends _$MainStore {
@@ -185,6 +192,7 @@ class MainStore extends _$MainStore {
         certificateItems,
         cryptoWalletItems,
         wifiItems,
+        identityItems,
         otpItems,
         noteItems,
         noteLinks,
@@ -215,6 +223,7 @@ class MainStore extends _$MainStore {
         ...certificatesHistoryDropTriggers,
         ...cryptoWalletsHistoryDropTriggers,
         ...wifisHistoryDropTriggers,
+        ...identitiesHistoryDropTriggers,
         ...otpsHistoryDropTriggers,
         ...notesHistoryDropTriggers,
         ...filesHistoryDropTriggers,
@@ -242,6 +251,7 @@ class MainStore extends _$MainStore {
         ...certificatesHistoryCreateTriggers,
         ...cryptoWalletsHistoryCreateTriggers,
         ...wifisHistoryCreateTriggers,
+        ...identitiesHistoryCreateTriggers,
         ...otpsHistoryCreateTriggers,
         ...notesHistoryCreateTriggers,
         ...filesHistoryCreateTriggers,
@@ -344,9 +354,17 @@ class MainStore extends _$MainStore {
 
         // --- wifi_items ---
         'CREATE INDEX IF NOT EXISTS idx_wifi_items_security_type '
-            'ON wifi_items (security_type)',
+            'ON wifi_items (security)',
         'CREATE INDEX IF NOT EXISTS idx_wifi_items_ssid '
             'ON wifi_items (ssid)',
+
+        // --- identity_items ---
+        'CREATE INDEX IF NOT EXISTS idx_identity_items_id_type '
+            'ON identity_items (id_type)',
+        'CREATE INDEX IF NOT EXISTS idx_identity_items_id_number '
+            'ON identity_items (id_number)',
+        'CREATE INDEX IF NOT EXISTS idx_identity_items_expiry_date '
+            'ON identity_items (expiry_date) WHERE expiry_date IS NOT NULL',
 
         // --- vault_item_history ---
         // WHERE item_id = ? AND type = ? ORDER BY action_at DESC

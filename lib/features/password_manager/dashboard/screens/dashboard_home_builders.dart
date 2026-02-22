@@ -18,6 +18,8 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/docume
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/document/document_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/file/file_grid_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/file/file_list_card.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/identity/identity_grid_card.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/identity/identity_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/note/note_grid.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/note/note_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/otp/otp_grid.dart';
@@ -786,6 +788,26 @@ class DashboardHomeBuilders {
         );
         break;
       case EntityType.identity:
+        if (item is! IdentityCardDto) return noCorrectType;
+        card = IdentityListCard(
+          identity: item,
+          onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onOpenHistory: () {
+            if (location !=
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.identity,
+                  item.id,
+                )) {
+              context.push(
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.identity,
+                  item.id,
+                ),
+              );
+            }
+          },
+        );
+        break;
       case EntityType.licenseKey:
       case EntityType.recoveryCodes:
         return const Card(
@@ -960,6 +982,14 @@ class DashboardHomeBuilders {
             if (GoRouter.of(context).state.matchedLocation != path) {
               context.push(path);
             }
+          } else if (item is IdentityCardDto) {
+            final path = AppRoutesPaths.dashboardEntityEdit(
+              EntityType.identity,
+              item.id,
+            );
+            if (GoRouter.of(context).state.matchedLocation != path) {
+              context.push(path);
+            }
           }
 
           return false;
@@ -987,6 +1017,8 @@ class DashboardHomeBuilders {
           } else if (item is CryptoWalletCardDto) {
             itemName = item.name;
           } else if (item is WifiCardDto) {
+            itemName = item.name;
+          } else if (item is IdentityCardDto) {
             itemName = item.name;
           }
 
@@ -1135,6 +1167,11 @@ class DashboardHomeBuilders {
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
         );
       case EntityType.identity:
+        if (item is! IdentityCardDto) return noCorrectType;
+        card = IdentityGridCard(
+          identity: item,
+          onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+        );
       case EntityType.licenseKey:
       case EntityType.recoveryCodes:
         return const Card(

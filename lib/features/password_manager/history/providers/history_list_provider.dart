@@ -307,6 +307,7 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
       case EntityType.wifi:
         return _fetchWifiHistory(offset, searchQuery);
       case EntityType.identity:
+        return _fetchIdentityHistory(offset, searchQuery);
       case EntityType.licenseKey:
       case EntityType.recoveryCodes:
         return const [];
@@ -585,6 +586,33 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         .toList();
   }
 
+  Future<List<HistoryItem>> _fetchIdentityHistory(
+    int offset,
+    String? searchQuery,
+  ) async {
+    final dao = await ref.read(identityHistoryDaoProvider.future);
+    final cards = await dao.getIdentityHistoryCardsByOriginalId(
+      _params.entityId,
+      offset,
+      pageSize,
+      searchQuery,
+    );
+
+    return cards
+        .map(
+          (card) => HistoryItem(
+            id: card.id,
+            originalEntityId: card.originalIdentityId,
+            entityType: EntityType.identity,
+            action: card.action,
+            title: card.name,
+            subtitle: card.idNumber,
+            actionAt: card.actionAt,
+          ),
+        )
+        .toList();
+  }
+
   /// Получить общее количество записей
   Future<int> _getTotalCount({String? searchQuery}) async {
     switch (_params.entityType) {
@@ -639,6 +667,11 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         final dao = await ref.read(wifiHistoryDaoProvider.future);
         return dao.countWifiHistoryByOriginalId(_params.entityId, searchQuery);
       case EntityType.identity:
+        final dao = await ref.read(identityHistoryDaoProvider.future);
+        return dao.countIdentityHistoryByOriginalId(
+          _params.entityId,
+          searchQuery,
+        );
       case EntityType.licenseKey:
       case EntityType.recoveryCodes:
         return 0;
@@ -681,6 +714,8 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         final dao = await ref.read(wifiHistoryDaoProvider.future);
         return await dao.deleteWifiHistoryById(historyItemId) > 0;
       case EntityType.identity:
+        final dao = await ref.read(identityHistoryDaoProvider.future);
+        return await dao.deleteIdentityHistoryById(historyItemId) > 0;
       case EntityType.licenseKey:
       case EntityType.recoveryCodes:
         return false;
@@ -731,6 +766,9 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         final dao = await ref.read(wifiHistoryDaoProvider.future);
         return await dao.deleteWifiHistoryByWifiId(_params.entityId) >= 0;
       case EntityType.identity:
+        final dao = await ref.read(identityHistoryDaoProvider.future);
+        return await dao.deleteIdentityHistoryByIdentityId(_params.entityId) >=
+            0;
       case EntityType.licenseKey:
       case EntityType.recoveryCodes:
         return false;
