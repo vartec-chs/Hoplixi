@@ -8,3 +8,4 @@ export 'files_filter_section.dart';
 export 'notes_filter_section.dart';
 export 'otps_filter_section.dart';
 export 'password_filter_section.dart';
+export 'ssh_keys_filter_section.dart';

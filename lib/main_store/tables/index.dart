@@ -23,6 +23,8 @@ export 'otp_history.dart';
 export 'otp_items.dart';
 export 'password_history.dart';
 export 'password_items.dart';
+export 'ssh_key_history.dart';
+export 'ssh_key_items.dart';
 export 'store_meta_table.dart';
 export 'store_settings.dart';
 export 'tags.dart';

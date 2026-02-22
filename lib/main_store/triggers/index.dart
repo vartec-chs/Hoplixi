@@ -11,5 +11,6 @@ export 'files_triggers.dart';
 export 'notes_triggers.dart';
 export 'otps_triggers.dart';
 export 'passwords_triggers.dart';
+export 'ssh_keys_triggers.dart';
 // Триггеры временных меток
 export 'timestamps/index.dart';

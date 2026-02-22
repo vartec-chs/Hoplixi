@@ -20,6 +20,8 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/otp/ot
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/otp/otp_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/password/password_grid.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/password/password_list_card.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/ssh_key/ssh_key_grid_card.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/ssh_key/ssh_key_list_card.dart';
 import 'package:hoplixi/features/password_manager/decrypt_modal/document_decrypt_modal.dart';
 import 'package:hoplixi/features/password_manager/decrypt_modal/file_decrypt_modal.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
@@ -694,6 +696,26 @@ class DashboardHomeBuilders {
         );
         break;
       case EntityType.sshKey:
+        if (item is! SshKeyCardDto) return noCorrectType;
+        card = SshKeyListCard(
+          sshKey: item,
+          onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onOpenHistory: () {
+            if (location !=
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.sshKey,
+                  item.id,
+                )) {
+              context.push(
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.sshKey,
+                  item.id,
+                ),
+              );
+            }
+          },
+        );
+        break;
       case EntityType.certificate:
       case EntityType.cryptoWallet:
       case EntityType.wifi:
@@ -840,6 +862,14 @@ class DashboardHomeBuilders {
             if (GoRouter.of(context).state.matchedLocation != path) {
               context.push(path);
             }
+          } else if (item is SshKeyCardDto) {
+            final path = AppRoutesPaths.dashboardEntityEdit(
+              EntityType.sshKey,
+              item.id,
+            );
+            if (GoRouter.of(context).state.matchedLocation != path) {
+              context.push(path);
+            }
           }
 
           return false;
@@ -859,6 +889,8 @@ class DashboardHomeBuilders {
           } else if (item is DocumentCardDto) {
             itemName = item.title ?? 'Документ';
           } else if (item is ApiKeyCardDto) {
+            itemName = item.name;
+          } else if (item is SshKeyCardDto) {
             itemName = item.name;
           }
 
@@ -983,6 +1015,11 @@ class DashboardHomeBuilders {
           onRestore: () => callbacks.onRestore(item.id),
         );
       case EntityType.sshKey:
+        if (item is! SshKeyCardDto) return noCorrectType;
+        card = SshKeyGridCard(
+          sshKey: item,
+          onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+        );
       case EntityType.certificate:
       case EntityType.cryptoWallet:
       case EntityType.wifi:

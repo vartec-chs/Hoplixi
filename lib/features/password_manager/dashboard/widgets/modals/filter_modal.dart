@@ -21,6 +21,7 @@ import '../../providers/filter_providers/files_filter_provider.dart';
 import '../../providers/filter_providers/notes_filter_provider.dart';
 import '../../providers/filter_providers/otp_filter_provider.dart';
 import '../../providers/filter_providers/password_filter_provider.dart';
+import '../../providers/filter_providers/ssh_keys_filter_provider.dart';
 // Секции фильтров
 import '../dashboard_home/filter_sections/filter_sections.dart';
 
@@ -34,6 +35,7 @@ class _InitialFilterValues {
   final FilesFilter? filesFilter;
   final DocumentsFilter? documentsFilter;
   final ApiKeysFilter? apiKeysFilter;
+  final SshKeysFilter? sshKeysFilter;
 
   _InitialFilterValues({
     required this.baseFilter,
@@ -44,6 +46,7 @@ class _InitialFilterValues {
     this.filesFilter,
     this.documentsFilter,
     this.apiKeysFilter,
+    this.sshKeysFilter,
   });
 }
 
@@ -219,6 +222,10 @@ class _FilterModalActions extends ConsumerWidget {
               .updateFilter(ApiKeysFilter(base: emptyBaseFilter));
           break;
         case EntityType.sshKey:
+          ref
+              .read(sshKeysFilterProvider.notifier)
+              .updateFilter(SshKeysFilter(base: emptyBaseFilter));
+          break;
         case EntityType.certificate:
         case EntityType.cryptoWallet:
         case EntityType.wifi:
@@ -311,6 +318,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
   FilesFilter? _localFilesFilter;
   DocumentsFilter? _localDocumentsFilter;
   ApiKeysFilter? _localApiKeysFilter;
+  SshKeysFilter? _localSshKeysFilter;
 
   // Типобезопасное хранение начальных значений для отката
   _InitialFilterValues? _initialValues;
@@ -356,6 +364,8 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         _localApiKeysFilter = ref.read(apiKeysFilterProvider);
         break;
       case EntityType.sshKey:
+        _localSshKeysFilter = ref.read(sshKeysFilterProvider);
+        break;
       case EntityType.certificate:
       case EntityType.cryptoWallet:
       case EntityType.wifi:
@@ -442,6 +452,12 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         );
         break;
       case EntityType.sshKey:
+        final sshKeysFilter = ref.read(sshKeysFilterProvider);
+        _initialValues = _InitialFilterValues(
+          baseFilter: baseFilter,
+          sshKeysFilter: sshKeysFilter,
+        );
+        break;
       case EntityType.certificate:
       case EntityType.cryptoWallet:
       case EntityType.wifi:
@@ -646,6 +662,12 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
                   }
                   break;
                 case EntityType.sshKey:
+                  if (_localSshKeysFilter != null) {
+                    _localSshKeysFilter = _localSshKeysFilter!.copyWith(
+                      base: updatedFilter,
+                    );
+                  }
+                  break;
                 case EntityType.certificate:
                 case EntityType.cryptoWallet:
                 case EntityType.wifi:
@@ -759,6 +781,15 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           },
         );
       case EntityType.sshKey:
+        return SshKeysFilterSection(
+          filter: _localSshKeysFilter ?? SshKeysFilter(base: _localBaseFilter),
+          onFilterChanged: (updatedFilter) {
+            setState(() {
+              _localSshKeysFilter = updatedFilter;
+            });
+            logDebug('FilterModal: Обновлены фильтры SSH-ключей локально');
+          },
+        );
       case EntityType.certificate:
       case EntityType.cryptoWallet:
       case EntityType.wifi:
@@ -978,6 +1009,13 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           }
           break;
         case EntityType.sshKey:
+          if (_localSshKeysFilter != null) {
+            final syncedFilter = _localSshKeysFilter!.copyWith(
+              base: _localBaseFilter,
+            );
+            ref.read(sshKeysFilterProvider.notifier).updateFilter(syncedFilter);
+          }
+          break;
         case EntityType.certificate:
         case EntityType.cryptoWallet:
         case EntityType.wifi:
@@ -1068,6 +1106,12 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           }
           break;
         case EntityType.sshKey:
+          if (_initialValues!.sshKeysFilter != null) {
+            ref
+                .read(sshKeysFilterProvider.notifier)
+                .updateFilterDebounced(_initialValues!.sshKeysFilter!);
+          }
+          break;
         case EntityType.certificate:
         case EntityType.cryptoWallet:
         case EntityType.wifi:
@@ -1128,6 +1172,8 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           _localApiKeysFilter = ApiKeysFilter(base: _localBaseFilter);
           break;
         case EntityType.sshKey:
+          _localSshKeysFilter = SshKeysFilter(base: _localBaseFilter);
+          break;
         case EntityType.certificate:
         case EntityType.cryptoWallet:
         case EntityType.wifi:

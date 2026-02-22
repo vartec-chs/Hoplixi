@@ -19,7 +19,7 @@
 - metadata (Text / JSON) — опционально, произвольные данные (rate limits, owner
   id).
 
-## SshKey
+## SshKey [ Добавлено ]
 
 - publicKey (Text) — обязательное/рекомендуемое, открытая часть (ssh-rsa ...).
 - privateKey (Blob/Text, encrypted) — обязательное для хран. приватного ключа

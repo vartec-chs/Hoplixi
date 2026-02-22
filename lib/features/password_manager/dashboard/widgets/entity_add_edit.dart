@@ -7,6 +7,7 @@ import 'package:hoplixi/features/password_manager/forms/file_form/screens/file_f
 import 'package:hoplixi/features/password_manager/forms/note_form/screens/note_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/otp_form/screens/otp_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/password_form/screens/password_form_screen.dart';
+import 'package:hoplixi/features/password_manager/forms/ssh_key_form/screens/ssh_key_form_screen.dart';
 
 /// Виджет-обертка для создания/редактирования сущностей
 /// Возвращает соответствующий экран формы в зависимости от типа сущности
@@ -54,7 +55,7 @@ class EntityAddEdit extends StatelessWidget {
       case EntityType.apiKey:
         return ApiKeyFormScreen(apiKeyId: id);
       case EntityType.sshKey:
-        return buildNotImplemented('SSH-ключи');
+        return SshKeyFormScreen(sshKeyId: id);
       case EntityType.certificate:
         return buildNotImplemented('Сертификаты');
       case EntityType.cryptoWallet:

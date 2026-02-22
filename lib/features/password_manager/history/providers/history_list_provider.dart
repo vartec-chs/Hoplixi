@@ -299,6 +299,7 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
       case EntityType.apiKey:
         return _fetchApiKeyHistory(offset, searchQuery);
       case EntityType.sshKey:
+        return _fetchSshKeyHistory(offset, searchQuery);
       case EntityType.certificate:
       case EntityType.cryptoWallet:
       case EntityType.wifi:
@@ -473,6 +474,33 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         .toList();
   }
 
+  Future<List<HistoryItem>> _fetchSshKeyHistory(
+    int offset,
+    String? searchQuery,
+  ) async {
+    final dao = await ref.read(sshKeyHistoryDaoProvider.future);
+    final cards = await dao.getSshKeyHistoryCardsByOriginalId(
+      _params.entityId,
+      offset,
+      pageSize,
+      searchQuery,
+    );
+
+    return cards
+        .map(
+          (card) => HistoryItem(
+            id: card.id,
+            originalEntityId: card.originalSshKeyId,
+            entityType: EntityType.sshKey,
+            action: card.action,
+            title: card.name,
+            subtitle: card.fingerprint ?? card.keyType,
+            actionAt: card.actionAt,
+          ),
+        )
+        .toList();
+  }
+
   /// Получить общее количество записей
   Future<int> _getTotalCount({String? searchQuery}) async {
     switch (_params.entityType) {
@@ -506,6 +534,11 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
           searchQuery,
         );
       case EntityType.sshKey:
+        final dao = await ref.read(sshKeyHistoryDaoProvider.future);
+        return dao.countSshKeyHistoryByOriginalId(
+          _params.entityId,
+          searchQuery,
+        );
       case EntityType.certificate:
       case EntityType.cryptoWallet:
       case EntityType.wifi:
@@ -540,6 +573,8 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         final dao = await ref.read(apiKeyHistoryDaoProvider.future);
         return await dao.deleteApiKeyHistoryById(historyItemId) > 0;
       case EntityType.sshKey:
+        final dao = await ref.read(sshKeyHistoryDaoProvider.future);
+        return await dao.deleteSshKeyHistoryById(historyItemId) > 0;
       case EntityType.certificate:
       case EntityType.cryptoWallet:
       case EntityType.wifi:
@@ -576,6 +611,8 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         final dao = await ref.read(apiKeyHistoryDaoProvider.future);
         return await dao.deleteApiKeyHistoryByApiKeyId(_params.entityId) >= 0;
       case EntityType.sshKey:
+        final dao = await ref.read(sshKeyHistoryDaoProvider.future);
+        return await dao.deleteSshKeyHistoryBySshKeyId(_params.entityId) >= 0;
       case EntityType.certificate:
       case EntityType.cryptoWallet:
       case EntityType.wifi:
