@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/main_store/models/dto/index.dart';
-import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_button.dart';
+import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
+import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
+import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/main_store/models/enums/entity_types.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
+
+import '../providers/recovery_codes_form_provider.dart';
 
 class RecoveryCodesFormScreen extends ConsumerStatefulWidget {
   const RecoveryCodesFormScreen({super.key, this.recoveryCodesId});
 
   final String? recoveryCodesId;
-
-  bool get isEdit => recoveryCodesId != null;
 
   @override
   ConsumerState<RecoveryCodesFormScreen> createState() =>
@@ -19,63 +23,28 @@ class RecoveryCodesFormScreen extends ConsumerStatefulWidget {
 
 class _RecoveryCodesFormScreenState
     extends ConsumerState<RecoveryCodesFormScreen> {
-  final _formKey = GlobalKey<FormState>();
-
-  final _nameController = TextEditingController();
-  final _codesBlobController = TextEditingController();
-  final _codesCountController = TextEditingController();
-  final _usedCountController = TextEditingController();
-  final _perCodeStatusController = TextEditingController();
-  final _generatedAtController = TextEditingController();
-  final _notesController = TextEditingController();
-  final _displayHintController = TextEditingController();
-  final _descriptionController = TextEditingController();
-
-  bool _oneTime = false;
-  bool _loading = false;
-
-  DateTime? _parseDate(String raw) {
-    final value = raw.trim();
-    if (value.isEmpty) return null;
-    return DateTime.tryParse(value);
-  }
-
-  int? _parseInt(String raw) {
-    final value = raw.trim();
-    if (value.isEmpty) return null;
-    return int.tryParse(value);
-  }
+  late final TextEditingController _nameController;
+  late final TextEditingController _codesBlobController;
+  late final TextEditingController _codesCountController;
+  late final TextEditingController _usedCountController;
+  late final TextEditingController _perCodeStatusController;
+  late final TextEditingController _generatedAtController;
+  late final TextEditingController _notesController;
+  late final TextEditingController _displayHintController;
+  late final TextEditingController _descriptionController;
 
   @override
   void initState() {
     super.initState();
-    if (widget.isEdit) _loadData();
-  }
-
-  Future<void> _loadData() async {
-    setState(() => _loading = true);
-    try {
-      final dao = await ref.read(recoveryCodesDaoProvider.future);
-      final row = await dao.getById(widget.recoveryCodesId!);
-      if (row == null) return;
-      final item = row.$1;
-      final data = row.$2;
-
-      _nameController.text = item.name;
-      _codesBlobController.text = data.codesBlob;
-      _codesCountController.text = data.codesCount?.toString() ?? '';
-      _usedCountController.text = data.usedCount?.toString() ?? '';
-      _perCodeStatusController.text = data.perCodeStatus ?? '';
-      _generatedAtController.text = data.generatedAt?.toIso8601String() ?? '';
-      _notesController.text = data.notes ?? '';
-      _displayHintController.text = data.displayHint ?? '';
-      _descriptionController.text = item.description ?? '';
-      _oneTime = data.oneTime;
-    } catch (e) {
-      Toaster.error(title: 'Ошибка загрузки', description: '$e');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    _nameController = TextEditingController();
+    _codesBlobController = TextEditingController();
+    _codesCountController = TextEditingController();
+    _usedCountController = TextEditingController();
+    _perCodeStatusController = TextEditingController();
+    _generatedAtController = TextEditingController();
+    _notesController = TextEditingController();
+    _displayHintController = TextEditingController();
+    _descriptionController = TextEditingController();
   }
 
   @override
@@ -93,168 +62,229 @@ class _RecoveryCodesFormScreenState
   }
 
   Future<void> _save() async {
-    if (!(_formKey.currentState?.validate() ?? false)) {
-      Toaster.error(title: 'Проверьте поля формы');
-      return;
-    }
+    final success = await ref
+        .read(recoveryCodesFormProvider(widget.recoveryCodesId).notifier)
+        .save();
 
-    setState(() => _loading = true);
-    try {
-      final dao = await ref.read(recoveryCodesDaoProvider.future);
+    if (!mounted) return;
 
-      String? clean(TextEditingController controller) {
-        final value = controller.text.trim();
-        return value.isEmpty ? null : value;
-      }
-
-      final name = _nameController.text.trim();
-      final codesBlob = _codesBlobController.text.trim();
-
-      if (widget.isEdit) {
-        await dao.updateRecoveryCodes(
-          widget.recoveryCodesId!,
-          UpdateRecoveryCodesDto(
-            name: name,
-            codesBlob: codesBlob,
-            codesCount: _parseInt(_codesCountController.text),
-            usedCount: _parseInt(_usedCountController.text),
-            perCodeStatus: clean(_perCodeStatusController),
-            generatedAt: _parseDate(_generatedAtController.text),
-            notes: clean(_notesController),
-            oneTime: _oneTime,
-            displayHint: clean(_displayHintController),
-            description: clean(_descriptionController),
-          ),
-        );
-      } else {
-        await dao.createRecoveryCodes(
-          CreateRecoveryCodesDto(
-            name: name,
-            codesBlob: codesBlob,
-            codesCount: _parseInt(_codesCountController.text),
-            usedCount: _parseInt(_usedCountController.text),
-            perCodeStatus: clean(_perCodeStatusController),
-            generatedAt: _parseDate(_generatedAtController.text),
-            notes: clean(_notesController),
-            oneTime: _oneTime,
-            displayHint: clean(_displayHintController),
-            description: clean(_descriptionController),
-          ),
-        );
-      }
-
-      Toaster.success(
-        title: widget.isEdit
-            ? 'Коды восстановления обновлены'
-            : 'Коды восстановления созданы',
+    if (!success) {
+      Toaster.error(
+        title: 'Ошибка сохранения',
+        description: 'Проверьте поля формы и попробуйте снова',
       );
-      if (mounted) context.pop();
-    } catch (e) {
-      Toaster.error(title: 'Ошибка сохранения', description: '$e');
-    } finally {
-      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.isEdit
-              ? 'Редактировать коды восстановления'
-              : 'Новые коды восстановления',
+    final stateAsync = ref.watch(
+      recoveryCodesFormProvider(widget.recoveryCodesId),
+    );
+
+    ref.listen(recoveryCodesFormProvider(widget.recoveryCodesId), (prev, next) {
+      final wasSaved = prev?.value?.isSaved ?? false;
+      final isSaved = next.value?.isSaved ?? false;
+      if (!wasSaved && isSaved) {
+        Toaster.success(
+          title: widget.recoveryCodesId != null
+              ? 'Коды восстановления обновлены'
+              : 'Коды восстановления созданы',
+        );
+        ref
+            .read(recoveryCodesFormProvider(widget.recoveryCodesId).notifier)
+            .resetSaved();
+        if (context.mounted) context.pop(true);
+      }
+    });
+
+    return stateAsync.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (error, _) => Scaffold(
+        appBar: AppBar(
+          leading: const FormCloseButton(),
+          title: const Text('Ошибка формы'),
         ),
-        actions: [
-          TextButton(
-            onPressed: _loading ? null : _save,
-            child: const Text('Сохранить'),
-          ),
-        ],
+        body: Center(child: Text('$error')),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Название'),
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'Название обязательно'
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _codesBlobController,
-                    decoration: const InputDecoration(labelText: 'Codes blob'),
-                    minLines: 4,
-                    maxLines: 8,
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'Codes blob обязателен'
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _codesCountController,
-                    decoration: const InputDecoration(labelText: 'Всего кодов'),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _usedCountController,
-                    decoration: const InputDecoration(
-                      labelText: 'Использовано',
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _perCodeStatusController,
-                    decoration: const InputDecoration(
-                      labelText: 'Per-code status JSON',
-                    ),
-                    minLines: 2,
-                    maxLines: 4,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _generatedAtController,
-                    decoration: const InputDecoration(
-                      labelText: 'Generated at (ISO8601)',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _notesController,
-                    decoration: const InputDecoration(labelText: 'Заметки'),
-                    minLines: 2,
-                    maxLines: 4,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _displayHintController,
-                    decoration: const InputDecoration(
-                      labelText: 'Display hint',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _descriptionController,
-                    decoration: const InputDecoration(labelText: 'Описание'),
-                    minLines: 2,
-                    maxLines: 4,
-                  ),
-                  SwitchListTile(
-                    value: _oneTime,
-                    onChanged: (v) => setState(() => _oneTime = v),
-                    title: const Text('Одноразовые коды'),
-                  ),
-                ],
-              ),
+      data: (state) {
+        if (_nameController.text != state.name)
+          _nameController.text = state.name;
+        if (_codesBlobController.text != state.codesBlob)
+          _codesBlobController.text = state.codesBlob;
+        if (_codesCountController.text != state.codesCount)
+          _codesCountController.text = state.codesCount;
+        if (_usedCountController.text != state.usedCount)
+          _usedCountController.text = state.usedCount;
+        if (_perCodeStatusController.text != state.perCodeStatus)
+          _perCodeStatusController.text = state.perCodeStatus;
+        if (_generatedAtController.text != state.generatedAt)
+          _generatedAtController.text = state.generatedAt;
+        if (_notesController.text != state.notes)
+          _notesController.text = state.notes;
+        if (_displayHintController.text != state.displayHint)
+          _displayHintController.text = state.displayHint;
+        if (_descriptionController.text != state.description)
+          _descriptionController.text = state.description;
+
+        final notifier = ref.read(
+          recoveryCodesFormProvider(widget.recoveryCodesId).notifier,
+        );
+
+        return Scaffold(
+          appBar: AppBar(
+            leading: const FormCloseButton(),
+            title: Text(
+              state.isEditMode
+                  ? 'Редактировать коды восстановления'
+                  : 'Новые коды восстановления',
             ),
+            actions: [
+              if (state.isSaving)
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              else
+                IconButton(icon: const Icon(Icons.save), onPressed: _save),
+            ],
+          ),
+          body: ListView(
+            padding: formPadding,
+            children: [
+              TextField(
+                controller: _nameController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Название *',
+                  errorText: state.nameError,
+                ),
+                onChanged: notifier.setName,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _codesBlobController,
+                minLines: 4,
+                maxLines: 8,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Codes blob *',
+                  errorText: state.codesBlobError,
+                ),
+                onChanged: notifier.setCodesBlob,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _codesCountController,
+                keyboardType: TextInputType.number,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Всего кодов',
+                  errorText: state.codesCountError,
+                ),
+                onChanged: notifier.setCodesCount,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _usedCountController,
+                keyboardType: TextInputType.number,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Использовано',
+                  errorText: state.usedCountError,
+                ),
+                onChanged: notifier.setUsedCount,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _perCodeStatusController,
+                minLines: 2,
+                maxLines: 4,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Per-code status JSON',
+                ),
+                onChanged: notifier.setPerCodeStatus,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _generatedAtController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Generated at (ISO8601)',
+                  errorText: state.generatedAtError,
+                ),
+                onChanged: notifier.setGeneratedAt,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _notesController,
+                minLines: 2,
+                maxLines: 4,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Заметки',
+                ),
+                onChanged: notifier.setNotes,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _displayHintController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Display hint',
+                ),
+                onChanged: notifier.setDisplayHint,
+              ),
+              const SizedBox(height: 12),
+              CategoryPickerField(
+                selectedCategoryId: state.categoryId,
+                selectedCategoryName: state.categoryName,
+                filterByType: const [
+                  CategoryType.recoveryCodes,
+                  CategoryType.mixed,
+                ],
+                onCategorySelected: notifier.setCategory,
+              ),
+              const SizedBox(height: 12),
+              TagPickerField(
+                selectedTagIds: state.tagIds,
+                selectedTagNames: state.tagNames,
+                filterByType: const [TagType.recoveryCodes, TagType.mixed],
+                onTagsSelected: notifier.setTags,
+              ),
+              const SizedBox(height: 12),
+              NotePickerField(
+                selectedNoteId: state.noteId,
+                selectedNoteName: state.noteName,
+                onNoteSelected: notifier.setNote,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _descriptionController,
+                minLines: 2,
+                maxLines: 4,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Описание',
+                ),
+                onChanged: notifier.setDescription,
+              ),
+              const SizedBox(height: 8),
+              SwitchListTile(
+                value: state.oneTime,
+                onChanged: notifier.setOneTime,
+                title: const Text('Одноразовые коды'),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

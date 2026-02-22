@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hoplixi/core/theme/colors.dart';
 
+const EdgeInsets formPadding = EdgeInsets.all(12);
+
 class CustomOutlineInputBorder extends UnderlineInputBorder {
   const CustomOutlineInputBorder({super.borderRadius, super.borderSide});
 

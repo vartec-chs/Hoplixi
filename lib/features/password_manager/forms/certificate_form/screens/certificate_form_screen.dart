@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/main_store/models/dto/index.dart';
-import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_button.dart';
+import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
+import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
+import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/main_store/models/enums/entity_types.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
+
+import '../providers/certificate_form_provider.dart';
 
 class CertificateFormScreen extends ConsumerStatefulWidget {
   const CertificateFormScreen({super.key, this.certificateId});
 
   final String? certificateId;
-
-  bool get isEdit => certificateId != null;
 
   @override
   ConsumerState<CertificateFormScreen> createState() =>
@@ -18,52 +22,30 @@ class CertificateFormScreen extends ConsumerStatefulWidget {
 }
 
 class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
-  final _formKey = GlobalKey<FormState>();
-
-  final _nameController = TextEditingController();
-  final _certificatePemController = TextEditingController();
-  final _privateKeyController = TextEditingController();
-  final _serialController = TextEditingController();
-  final _issuerController = TextEditingController();
-  final _subjectController = TextEditingController();
-  final _fingerprintController = TextEditingController();
-  final _ocspController = TextEditingController();
-  final _crlController = TextEditingController();
-  final _descriptionController = TextEditingController();
-
-  bool _autoRenew = false;
-  bool _loading = false;
+  late final TextEditingController _nameController;
+  late final TextEditingController _certificatePemController;
+  late final TextEditingController _privateKeyController;
+  late final TextEditingController _serialController;
+  late final TextEditingController _issuerController;
+  late final TextEditingController _subjectController;
+  late final TextEditingController _fingerprintController;
+  late final TextEditingController _ocspController;
+  late final TextEditingController _crlController;
+  late final TextEditingController _descriptionController;
 
   @override
   void initState() {
     super.initState();
-    if (widget.isEdit) _loadData();
-  }
-
-  Future<void> _loadData() async {
-    setState(() => _loading = true);
-    try {
-      final dao = await ref.read(certificateDaoProvider.future);
-      final row = await dao.getById(widget.certificateId!);
-      if (row == null) return;
-      final item = row.$1;
-      final cert = row.$2;
-      _nameController.text = item.name;
-      _certificatePemController.text = cert.certificatePem;
-      _privateKeyController.text = cert.privateKey ?? '';
-      _serialController.text = cert.serialNumber ?? '';
-      _issuerController.text = cert.issuer ?? '';
-      _subjectController.text = cert.subject ?? '';
-      _fingerprintController.text = cert.fingerprint ?? '';
-      _ocspController.text = cert.ocspUrl ?? '';
-      _crlController.text = cert.crlUrl ?? '';
-      _descriptionController.text = item.description ?? '';
-      _autoRenew = cert.autoRenew;
-    } catch (e) {
-      Toaster.error(title: 'Ошибка загрузки', description: '$e');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    _nameController = TextEditingController();
+    _certificatePemController = TextEditingController();
+    _privateKeyController = TextEditingController();
+    _serialController = TextEditingController();
+    _issuerController = TextEditingController();
+    _subjectController = TextEditingController();
+    _fingerprintController = TextEditingController();
+    _ocspController = TextEditingController();
+    _crlController = TextEditingController();
+    _descriptionController = TextEditingController();
   }
 
   @override
@@ -82,166 +64,231 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
   }
 
   Future<void> _save() async {
-    if (!(_formKey.currentState?.validate() ?? false)) {
-      Toaster.error(title: 'Проверьте поля формы');
-      return;
-    }
+    final success = await ref
+        .read(certificateFormProvider(widget.certificateId).notifier)
+        .save();
 
-    setState(() => _loading = true);
-    try {
-      final dao = await ref.read(certificateDaoProvider.future);
+    if (!mounted) return;
 
-      final name = _nameController.text.trim();
-      final certificatePem = _certificatePemController.text.trim();
-      final privateKey = _privateKeyController.text.trim();
-      final serial = _serialController.text.trim();
-      final issuer = _issuerController.text.trim();
-      final subject = _subjectController.text.trim();
-      final fingerprint = _fingerprintController.text.trim();
-      final ocsp = _ocspController.text.trim();
-      final crl = _crlController.text.trim();
-      final description = _descriptionController.text.trim();
-
-      if (widget.isEdit) {
-        await dao.updateCertificate(
-          widget.certificateId!,
-          UpdateCertificateDto(
-            name: name,
-            certificatePem: certificatePem,
-            privateKey: privateKey.isEmpty ? null : privateKey,
-            serialNumber: serial.isEmpty ? null : serial,
-            issuer: issuer.isEmpty ? null : issuer,
-            subject: subject.isEmpty ? null : subject,
-            fingerprint: fingerprint.isEmpty ? null : fingerprint,
-            ocspUrl: ocsp.isEmpty ? null : ocsp,
-            crlUrl: crl.isEmpty ? null : crl,
-            description: description.isEmpty ? null : description,
-            autoRenew: _autoRenew,
-          ),
-        );
-      } else {
-        await dao.createCertificate(
-          CreateCertificateDto(
-            name: name,
-            certificatePem: certificatePem,
-            privateKey: privateKey.isEmpty ? null : privateKey,
-            serialNumber: serial.isEmpty ? null : serial,
-            issuer: issuer.isEmpty ? null : issuer,
-            subject: subject.isEmpty ? null : subject,
-            fingerprint: fingerprint.isEmpty ? null : fingerprint,
-            ocspUrl: ocsp.isEmpty ? null : ocsp,
-            crlUrl: crl.isEmpty ? null : crl,
-            description: description.isEmpty ? null : description,
-            autoRenew: _autoRenew,
-          ),
-        );
-      }
-
-      Toaster.success(
-        title: widget.isEdit ? 'Сертификат обновлен' : 'Сертификат создан',
+    if (!success) {
+      Toaster.error(
+        title: 'Ошибка сохранения',
+        description: 'Проверьте поля формы и попробуйте снова',
       );
-      if (mounted) context.pop();
-    } catch (e) {
-      Toaster.error(title: 'Ошибка сохранения', description: '$e');
-    } finally {
-      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.isEdit ? 'Редактировать сертификат' : 'Новый сертификат',
+    final stateAsync = ref.watch(certificateFormProvider(widget.certificateId));
+
+    ref.listen(certificateFormProvider(widget.certificateId), (prev, next) {
+      final wasSaved = prev?.value?.isSaved ?? false;
+      final isSaved = next.value?.isSaved ?? false;
+      if (!wasSaved && isSaved) {
+        Toaster.success(
+          title: widget.certificateId != null
+              ? 'Сертификат обновлен'
+              : 'Сертификат создан',
+        );
+        ref
+            .read(certificateFormProvider(widget.certificateId).notifier)
+            .resetSaved();
+        if (context.mounted) context.pop(true);
+      }
+    });
+
+    return stateAsync.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (error, _) => Scaffold(
+        appBar: AppBar(
+          leading: const FormCloseButton(),
+          title: const Text('Ошибка формы'),
         ),
-        actions: [
-          TextButton(
-            onPressed: _loading ? null : _save,
-            child: const Text('Сохранить'),
-          ),
-        ],
+        body: Center(child: Text('$error')),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Название'),
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'Название обязательно'
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _certificatePemController,
-                    decoration: const InputDecoration(
-                      labelText: 'Certificate PEM',
-                    ),
-                    minLines: 3,
-                    maxLines: 8,
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'Certificate PEM обязателен'
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _privateKeyController,
-                    decoration: const InputDecoration(labelText: 'Private key'),
-                    minLines: 2,
-                    maxLines: 6,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _serialController,
-                    decoration: const InputDecoration(
-                      labelText: 'Serial number',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _issuerController,
-                    decoration: const InputDecoration(labelText: 'Issuer'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _subjectController,
-                    decoration: const InputDecoration(labelText: 'Subject'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _fingerprintController,
-                    decoration: const InputDecoration(labelText: 'Fingerprint'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _ocspController,
-                    decoration: const InputDecoration(labelText: 'OCSP URL'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _crlController,
-                    decoration: const InputDecoration(labelText: 'CRL URL'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _descriptionController,
-                    decoration: const InputDecoration(labelText: 'Описание'),
-                    minLines: 2,
-                    maxLines: 4,
-                  ),
-                  SwitchListTile(
-                    value: _autoRenew,
-                    onChanged: (v) => setState(() => _autoRenew = v),
-                    title: const Text('Auto-renew'),
-                  ),
-                ],
-              ),
+      data: (state) {
+        if (_nameController.text != state.name)
+          _nameController.text = state.name;
+        if (_certificatePemController.text != state.certificatePem)
+          _certificatePemController.text = state.certificatePem;
+        if (_privateKeyController.text != state.privateKey)
+          _privateKeyController.text = state.privateKey;
+        if (_serialController.text != state.serialNumber)
+          _serialController.text = state.serialNumber;
+        if (_issuerController.text != state.issuer)
+          _issuerController.text = state.issuer;
+        if (_subjectController.text != state.subject)
+          _subjectController.text = state.subject;
+        if (_fingerprintController.text != state.fingerprint)
+          _fingerprintController.text = state.fingerprint;
+        if (_ocspController.text != state.ocspUrl)
+          _ocspController.text = state.ocspUrl;
+        if (_crlController.text != state.crlUrl)
+          _crlController.text = state.crlUrl;
+        if (_descriptionController.text != state.description)
+          _descriptionController.text = state.description;
+
+        final notifier = ref.read(
+          certificateFormProvider(widget.certificateId).notifier,
+        );
+
+        return Scaffold(
+          appBar: AppBar(
+            leading: const FormCloseButton(),
+            title: Text(
+              state.isEditMode
+                  ? 'Редактировать сертификат'
+                  : 'Новый сертификат',
             ),
+            actions: [
+              if (state.isSaving)
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              else
+                IconButton(icon: const Icon(Icons.save), onPressed: _save),
+            ],
+          ),
+          body: ListView(
+            padding: formPadding,
+            children: [
+              TextField(
+                controller: _nameController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Название *',
+                  errorText: state.nameError,
+                ),
+                onChanged: notifier.setName,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _certificatePemController,
+                minLines: 3,
+                maxLines: 8,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Certificate PEM *',
+                  errorText: state.certificatePemError,
+                ),
+                onChanged: notifier.setCertificatePem,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _privateKeyController,
+                minLines: 2,
+                maxLines: 6,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Private key',
+                ),
+                onChanged: notifier.setPrivateKey,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _serialController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Serial number',
+                ),
+                onChanged: notifier.setSerialNumber,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _issuerController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Issuer',
+                ),
+                onChanged: notifier.setIssuer,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _subjectController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Subject',
+                ),
+                onChanged: notifier.setSubject,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _fingerprintController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Fingerprint',
+                ),
+                onChanged: notifier.setFingerprint,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _ocspController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'OCSP URL',
+                ),
+                onChanged: notifier.setOcspUrl,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _crlController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'CRL URL',
+                ),
+                onChanged: notifier.setCrlUrl,
+              ),
+              const SizedBox(height: 12),
+              CategoryPickerField(
+                selectedCategoryId: state.categoryId,
+                selectedCategoryName: state.categoryName,
+                filterByType: const [
+                  CategoryType.certificate,
+                  CategoryType.mixed,
+                ],
+                onCategorySelected: notifier.setCategory,
+              ),
+              const SizedBox(height: 12),
+              TagPickerField(
+                selectedTagIds: state.tagIds,
+                selectedTagNames: state.tagNames,
+                filterByType: const [TagType.certificate, TagType.mixed],
+                onTagsSelected: notifier.setTags,
+              ),
+              const SizedBox(height: 12),
+              NotePickerField(
+                selectedNoteId: state.noteId,
+                selectedNoteName: state.noteName,
+                onNoteSelected: notifier.setNote,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _descriptionController,
+                minLines: 2,
+                maxLines: 4,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Описание',
+                ),
+                onChanged: notifier.setDescription,
+              ),
+              const SizedBox(height: 8),
+              SwitchListTile(
+                value: state.autoRenew,
+                onChanged: notifier.setAutoRenew,
+                title: const Text('Auto-renew'),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

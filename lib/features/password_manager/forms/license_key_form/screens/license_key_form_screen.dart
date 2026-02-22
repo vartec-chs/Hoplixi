@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/main_store/models/dto/index.dart';
-import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_button.dart';
+import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
+import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
+import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/main_store/models/enums/entity_types.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
+
+import '../providers/license_key_form_provider.dart';
 
 class LicenseKeyFormScreen extends ConsumerStatefulWidget {
   const LicenseKeyFormScreen({super.key, this.licenseKeyId});
 
   final String? licenseKeyId;
-
-  bool get isEdit => licenseKeyId != null;
 
   @override
   ConsumerState<LicenseKeyFormScreen> createState() =>
@@ -18,75 +22,40 @@ class LicenseKeyFormScreen extends ConsumerStatefulWidget {
 }
 
 class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
-  final _formKey = GlobalKey<FormState>();
-
-  final _nameController = TextEditingController();
-  final _productController = TextEditingController();
-  final _licenseKeyController = TextEditingController();
-  final _licenseTypeController = TextEditingController();
-  final _seatsController = TextEditingController();
-  final _maxActivationsController = TextEditingController();
-  final _activatedOnController = TextEditingController();
-  final _purchaseDateController = TextEditingController();
-  final _purchaseFromController = TextEditingController();
-  final _orderIdController = TextEditingController();
-  final _licenseFileIdController = TextEditingController();
-  final _expiresAtController = TextEditingController();
-  final _licenseNotesController = TextEditingController();
-  final _supportContactController = TextEditingController();
-  final _descriptionController = TextEditingController();
-
-  bool _loading = false;
-
-  DateTime? _parseDate(String raw) {
-    final value = raw.trim();
-    if (value.isEmpty) return null;
-    return DateTime.tryParse(value);
-  }
-
-  int? _parseInt(String raw) {
-    final value = raw.trim();
-    if (value.isEmpty) return null;
-    return int.tryParse(value);
-  }
+  late final TextEditingController _nameController;
+  late final TextEditingController _productController;
+  late final TextEditingController _licenseKeyController;
+  late final TextEditingController _licenseTypeController;
+  late final TextEditingController _seatsController;
+  late final TextEditingController _maxActivationsController;
+  late final TextEditingController _activatedOnController;
+  late final TextEditingController _purchaseDateController;
+  late final TextEditingController _purchaseFromController;
+  late final TextEditingController _orderIdController;
+  late final TextEditingController _licenseFileIdController;
+  late final TextEditingController _expiresAtController;
+  late final TextEditingController _licenseNotesController;
+  late final TextEditingController _supportContactController;
+  late final TextEditingController _descriptionController;
 
   @override
   void initState() {
     super.initState();
-    if (widget.isEdit) _loadData();
-  }
-
-  Future<void> _loadData() async {
-    setState(() => _loading = true);
-    try {
-      final dao = await ref.read(licenseKeyDaoProvider.future);
-      final row = await dao.getById(widget.licenseKeyId!);
-      if (row == null) return;
-      final item = row.$1;
-      final license = row.$2;
-
-      _nameController.text = item.name;
-      _productController.text = license.product;
-      _licenseKeyController.text = license.licenseKey;
-      _licenseTypeController.text = license.licenseType ?? '';
-      _seatsController.text = license.seats?.toString() ?? '';
-      _maxActivationsController.text = license.maxActivations?.toString() ?? '';
-      _activatedOnController.text =
-          license.activatedOn?.toIso8601String() ?? '';
-      _purchaseDateController.text =
-          license.purchaseDate?.toIso8601String() ?? '';
-      _purchaseFromController.text = license.purchaseFrom ?? '';
-      _orderIdController.text = license.orderId ?? '';
-      _licenseFileIdController.text = license.licenseFileId ?? '';
-      _expiresAtController.text = license.expiresAt?.toIso8601String() ?? '';
-      _licenseNotesController.text = license.licenseNotes ?? '';
-      _supportContactController.text = license.supportContact ?? '';
-      _descriptionController.text = item.description ?? '';
-    } catch (e) {
-      Toaster.error(title: 'Ошибка загрузки', description: '$e');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    _nameController = TextEditingController();
+    _productController = TextEditingController();
+    _licenseKeyController = TextEditingController();
+    _licenseTypeController = TextEditingController();
+    _seatsController = TextEditingController();
+    _maxActivationsController = TextEditingController();
+    _activatedOnController = TextEditingController();
+    _purchaseDateController = TextEditingController();
+    _purchaseFromController = TextEditingController();
+    _orderIdController = TextEditingController();
+    _licenseFileIdController = TextEditingController();
+    _expiresAtController = TextEditingController();
+    _licenseNotesController = TextEditingController();
+    _supportContactController = TextEditingController();
+    _descriptionController = TextEditingController();
   }
 
   @override
@@ -110,211 +79,284 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
   }
 
   Future<void> _save() async {
-    if (!(_formKey.currentState?.validate() ?? false)) {
-      Toaster.error(title: 'Проверьте поля формы');
-      return;
-    }
+    final success = await ref
+        .read(licenseKeyFormProvider(widget.licenseKeyId).notifier)
+        .save();
 
-    setState(() => _loading = true);
-    try {
-      final dao = await ref.read(licenseKeyDaoProvider.future);
+    if (!mounted) return;
 
-      String? clean(TextEditingController controller) {
-        final value = controller.text.trim();
-        return value.isEmpty ? null : value;
-      }
-
-      final name = _nameController.text.trim();
-      final product = _productController.text.trim();
-      final licenseKey = _licenseKeyController.text.trim();
-
-      if (widget.isEdit) {
-        await dao.updateLicenseKey(
-          widget.licenseKeyId!,
-          UpdateLicenseKeyDto(
-            name: name,
-            product: product,
-            licenseKey: licenseKey,
-            licenseType: clean(_licenseTypeController),
-            seats: _parseInt(_seatsController.text),
-            maxActivations: _parseInt(_maxActivationsController.text),
-            activatedOn: _parseDate(_activatedOnController.text),
-            purchaseDate: _parseDate(_purchaseDateController.text),
-            purchaseFrom: clean(_purchaseFromController),
-            orderId: clean(_orderIdController),
-            licenseFileId: clean(_licenseFileIdController),
-            expiresAt: _parseDate(_expiresAtController.text),
-            licenseNotes: clean(_licenseNotesController),
-            supportContact: clean(_supportContactController),
-            description: clean(_descriptionController),
-          ),
-        );
-      } else {
-        await dao.createLicenseKey(
-          CreateLicenseKeyDto(
-            name: name,
-            product: product,
-            licenseKey: licenseKey,
-            licenseType: clean(_licenseTypeController),
-            seats: _parseInt(_seatsController.text),
-            maxActivations: _parseInt(_maxActivationsController.text),
-            activatedOn: _parseDate(_activatedOnController.text),
-            purchaseDate: _parseDate(_purchaseDateController.text),
-            purchaseFrom: clean(_purchaseFromController),
-            orderId: clean(_orderIdController),
-            licenseFileId: clean(_licenseFileIdController),
-            expiresAt: _parseDate(_expiresAtController.text),
-            licenseNotes: clean(_licenseNotesController),
-            supportContact: clean(_supportContactController),
-            description: clean(_descriptionController),
-          ),
-        );
-      }
-
-      Toaster.success(
-        title: widget.isEdit ? 'Лицензия обновлена' : 'Лицензия создана',
+    if (!success) {
+      Toaster.error(
+        title: 'Ошибка сохранения',
+        description: 'Проверьте поля формы и попробуйте снова',
       );
-      if (mounted) context.pop();
-    } catch (e) {
-      Toaster.error(title: 'Ошибка сохранения', description: '$e');
-    } finally {
-      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.isEdit ? 'Редактировать лицензию' : 'Новая лицензия',
+    final stateAsync = ref.watch(licenseKeyFormProvider(widget.licenseKeyId));
+
+    ref.listen(licenseKeyFormProvider(widget.licenseKeyId), (prev, next) {
+      final wasSaved = prev?.value?.isSaved ?? false;
+      final isSaved = next.value?.isSaved ?? false;
+      if (!wasSaved && isSaved) {
+        Toaster.success(
+          title: widget.licenseKeyId != null
+              ? 'Лицензия обновлена'
+              : 'Лицензия создана',
+        );
+        ref
+            .read(licenseKeyFormProvider(widget.licenseKeyId).notifier)
+            .resetSaved();
+        if (context.mounted) context.pop(true);
+      }
+    });
+
+    return stateAsync.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (error, _) => Scaffold(
+        appBar: AppBar(
+          leading: const FormCloseButton(),
+          title: const Text('Ошибка формы'),
         ),
-        actions: [
-          TextButton(
-            onPressed: _loading ? null : _save,
-            child: const Text('Сохранить'),
-          ),
-        ],
+        body: Center(child: Text('$error')),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Название'),
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'Название обязательно'
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _productController,
-                    decoration: const InputDecoration(labelText: 'Продукт'),
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'Продукт обязателен'
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _licenseKeyController,
-                    decoration: const InputDecoration(
-                      labelText: 'Ключ лицензии',
-                    ),
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'Ключ обязателен'
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _licenseTypeController,
-                    decoration: const InputDecoration(
-                      labelText: 'Тип лицензии',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _seatsController,
-                    decoration: const InputDecoration(
-                      labelText: 'Количество мест',
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _maxActivationsController,
-                    decoration: const InputDecoration(
-                      labelText: 'Макс. активаций',
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _activatedOnController,
-                    decoration: const InputDecoration(
-                      labelText: 'Активировано (ISO8601)',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _purchaseDateController,
-                    decoration: const InputDecoration(
-                      labelText: 'Дата покупки (ISO8601)',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _purchaseFromController,
-                    decoration: const InputDecoration(labelText: 'Где куплено'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _orderIdController,
-                    decoration: const InputDecoration(labelText: 'Order ID'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _licenseFileIdController,
-                    decoration: const InputDecoration(
-                      labelText: 'ID файла лицензии',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _expiresAtController,
-                    decoration: const InputDecoration(
-                      labelText: 'Истекает (ISO8601)',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _licenseNotesController,
-                    decoration: const InputDecoration(
-                      labelText: 'Заметки по лицензии',
-                    ),
-                    minLines: 2,
-                    maxLines: 4,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _supportContactController,
-                    decoration: const InputDecoration(
-                      labelText: 'Контакт поддержки',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _descriptionController,
-                    decoration: const InputDecoration(labelText: 'Описание'),
-                    minLines: 2,
-                    maxLines: 4,
-                  ),
-                ],
-              ),
+      data: (state) {
+        if (_nameController.text != state.name)
+          _nameController.text = state.name;
+        if (_productController.text != state.product)
+          _productController.text = state.product;
+        if (_licenseKeyController.text != state.licenseKey)
+          _licenseKeyController.text = state.licenseKey;
+        if (_licenseTypeController.text != state.licenseType)
+          _licenseTypeController.text = state.licenseType;
+        if (_seatsController.text != state.seats)
+          _seatsController.text = state.seats;
+        if (_maxActivationsController.text != state.maxActivations)
+          _maxActivationsController.text = state.maxActivations;
+        if (_activatedOnController.text != state.activatedOn)
+          _activatedOnController.text = state.activatedOn;
+        if (_purchaseDateController.text != state.purchaseDate)
+          _purchaseDateController.text = state.purchaseDate;
+        if (_purchaseFromController.text != state.purchaseFrom)
+          _purchaseFromController.text = state.purchaseFrom;
+        if (_orderIdController.text != state.orderId)
+          _orderIdController.text = state.orderId;
+        if (_licenseFileIdController.text != state.licenseFileId)
+          _licenseFileIdController.text = state.licenseFileId;
+        if (_expiresAtController.text != state.expiresAt)
+          _expiresAtController.text = state.expiresAt;
+        if (_licenseNotesController.text != state.licenseNotes)
+          _licenseNotesController.text = state.licenseNotes;
+        if (_supportContactController.text != state.supportContact)
+          _supportContactController.text = state.supportContact;
+        if (_descriptionController.text != state.description)
+          _descriptionController.text = state.description;
+
+        final notifier = ref.read(
+          licenseKeyFormProvider(widget.licenseKeyId).notifier,
+        );
+
+        return Scaffold(
+          appBar: AppBar(
+            leading: const FormCloseButton(),
+            title: Text(
+              state.isEditMode ? 'Редактировать лицензию' : 'Новая лицензия',
             ),
+            actions: [
+              if (state.isSaving)
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              else
+                IconButton(icon: const Icon(Icons.save), onPressed: _save),
+            ],
+          ),
+          body: ListView(
+            padding: formPadding,
+            children: [
+              TextField(
+                controller: _nameController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Название *',
+                  errorText: state.nameError,
+                ),
+                onChanged: notifier.setName,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _productController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Продукт *',
+                  errorText: state.productError,
+                ),
+                onChanged: notifier.setProduct,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _licenseKeyController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Ключ лицензии *',
+                  errorText: state.licenseKeyError,
+                ),
+                onChanged: notifier.setLicenseKey,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _licenseTypeController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Тип лицензии',
+                ),
+                onChanged: notifier.setLicenseType,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _seatsController,
+                keyboardType: TextInputType.number,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Количество мест',
+                  errorText: state.seatsError,
+                ),
+                onChanged: notifier.setSeats,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _maxActivationsController,
+                keyboardType: TextInputType.number,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Макс. активаций',
+                  errorText: state.maxActivationsError,
+                ),
+                onChanged: notifier.setMaxActivations,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _activatedOnController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Активировано (ISO8601)',
+                  errorText: state.activatedOnError,
+                ),
+                onChanged: notifier.setActivatedOn,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _purchaseDateController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Дата покупки (ISO8601)',
+                  errorText: state.purchaseDateError,
+                ),
+                onChanged: notifier.setPurchaseDate,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _purchaseFromController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Где куплено',
+                ),
+                onChanged: notifier.setPurchaseFrom,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _orderIdController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Order ID',
+                ),
+                onChanged: notifier.setOrderId,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _licenseFileIdController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'ID файла лицензии',
+                ),
+                onChanged: notifier.setLicenseFileId,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _expiresAtController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Истекает (ISO8601)',
+                  errorText: state.expiresAtError,
+                ),
+                onChanged: notifier.setExpiresAt,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _licenseNotesController,
+                minLines: 2,
+                maxLines: 4,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Заметки по лицензии',
+                ),
+                onChanged: notifier.setLicenseNotes,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _supportContactController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Контакт поддержки',
+                ),
+                onChanged: notifier.setSupportContact,
+              ),
+              const SizedBox(height: 12),
+              CategoryPickerField(
+                selectedCategoryId: state.categoryId,
+                selectedCategoryName: state.categoryName,
+                filterByType: const [
+                  CategoryType.licenseKey,
+                  CategoryType.mixed,
+                ],
+                onCategorySelected: notifier.setCategory,
+              ),
+              const SizedBox(height: 12),
+              TagPickerField(
+                selectedTagIds: state.tagIds,
+                selectedTagNames: state.tagNames,
+                filterByType: const [TagType.licenseKey, TagType.mixed],
+                onTagsSelected: notifier.setTags,
+              ),
+              const SizedBox(height: 12),
+              NotePickerField(
+                selectedNoteId: state.noteId,
+                selectedNoteName: state.noteName,
+                onNoteSelected: notifier.setNote,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _descriptionController,
+                minLines: 2,
+                maxLines: 4,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Описание',
+                ),
+                onChanged: notifier.setDescription,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -2,85 +2,59 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/main_store/models/dto/index.dart';
-import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_button.dart';
+import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
+import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
+import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/main_store/models/enums/entity_types.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
+
+import '../providers/identity_form_provider.dart';
 
 class IdentityFormScreen extends ConsumerStatefulWidget {
   const IdentityFormScreen({super.key, this.identityId});
 
   final String? identityId;
 
-  bool get isEdit => identityId != null;
-
   @override
   ConsumerState<IdentityFormScreen> createState() => _IdentityFormScreenState();
 }
 
 class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
-  final _formKey = GlobalKey<FormState>();
-
-  final _nameController = TextEditingController();
-  final _idTypeController = TextEditingController();
-  final _idNumberController = TextEditingController();
-  final _fullNameController = TextEditingController();
-  final _dateOfBirthController = TextEditingController();
-  final _placeOfBirthController = TextEditingController();
-  final _nationalityController = TextEditingController();
-  final _issuingAuthorityController = TextEditingController();
-  final _issueDateController = TextEditingController();
-  final _expiryDateController = TextEditingController();
-  final _mrzController = TextEditingController();
-  final _scanAttachmentIdController = TextEditingController();
-  final _photoAttachmentIdController = TextEditingController();
-  final _notesController = TextEditingController();
-  final _descriptionController = TextEditingController();
-
-  bool _verified = false;
-  bool _loading = false;
-
-  DateTime? _parseDate(String raw) {
-    final value = raw.trim();
-    if (value.isEmpty) return null;
-    return DateTime.tryParse(value);
-  }
+  late final TextEditingController _nameController;
+  late final TextEditingController _idTypeController;
+  late final TextEditingController _idNumberController;
+  late final TextEditingController _fullNameController;
+  late final TextEditingController _dateOfBirthController;
+  late final TextEditingController _placeOfBirthController;
+  late final TextEditingController _nationalityController;
+  late final TextEditingController _issuingAuthorityController;
+  late final TextEditingController _issueDateController;
+  late final TextEditingController _expiryDateController;
+  late final TextEditingController _mrzController;
+  late final TextEditingController _scanAttachmentIdController;
+  late final TextEditingController _photoAttachmentIdController;
+  late final TextEditingController _notesController;
+  late final TextEditingController _descriptionController;
 
   @override
   void initState() {
     super.initState();
-    if (widget.isEdit) _loadData();
-  }
-
-  Future<void> _loadData() async {
-    setState(() => _loading = true);
-    try {
-      final dao = await ref.read(identityDaoProvider.future);
-      final row = await dao.getById(widget.identityId!);
-      if (row == null) return;
-      final item = row.$1;
-      final identity = row.$2;
-
-      _nameController.text = item.name;
-      _idTypeController.text = identity.idType;
-      _idNumberController.text = identity.idNumber;
-      _fullNameController.text = identity.fullName ?? '';
-      _dateOfBirthController.text =
-          identity.dateOfBirth?.toIso8601String() ?? '';
-      _placeOfBirthController.text = identity.placeOfBirth ?? '';
-      _nationalityController.text = identity.nationality ?? '';
-      _issuingAuthorityController.text = identity.issuingAuthority ?? '';
-      _issueDateController.text = identity.issueDate?.toIso8601String() ?? '';
-      _expiryDateController.text = identity.expiryDate?.toIso8601String() ?? '';
-      _mrzController.text = identity.mrz ?? '';
-      _scanAttachmentIdController.text = identity.scanAttachmentId ?? '';
-      _photoAttachmentIdController.text = identity.photoAttachmentId ?? '';
-      _notesController.text = identity.notes ?? '';
-      _descriptionController.text = item.description ?? '';
-      _verified = identity.verified;
-    } catch (e) {
-      Toaster.error(title: 'Ошибка загрузки', description: '$e');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    _nameController = TextEditingController();
+    _idTypeController = TextEditingController();
+    _idNumberController = TextEditingController();
+    _fullNameController = TextEditingController();
+    _dateOfBirthController = TextEditingController();
+    _placeOfBirthController = TextEditingController();
+    _nationalityController = TextEditingController();
+    _issuingAuthorityController = TextEditingController();
+    _issueDateController = TextEditingController();
+    _expiryDateController = TextEditingController();
+    _mrzController = TextEditingController();
+    _scanAttachmentIdController = TextEditingController();
+    _photoAttachmentIdController = TextEditingController();
+    _notesController = TextEditingController();
+    _descriptionController = TextEditingController();
   }
 
   @override
@@ -104,210 +78,276 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
   }
 
   Future<void> _save() async {
-    if (!(_formKey.currentState?.validate() ?? false)) {
-      Toaster.error(title: 'Проверьте поля формы');
-      return;
-    }
+    final success = await ref
+        .read(identityFormProvider(widget.identityId).notifier)
+        .save();
 
-    setState(() => _loading = true);
-    try {
-      final dao = await ref.read(identityDaoProvider.future);
+    if (!mounted) return;
 
-      String? clean(TextEditingController controller) {
-        final value = controller.text.trim();
-        return value.isEmpty ? null : value;
-      }
-
-      final name = _nameController.text.trim();
-      final idType = _idTypeController.text.trim();
-      final idNumber = _idNumberController.text.trim();
-
-      if (widget.isEdit) {
-        await dao.updateIdentity(
-          widget.identityId!,
-          UpdateIdentityDto(
-            name: name,
-            idType: idType,
-            idNumber: idNumber,
-            fullName: clean(_fullNameController),
-            dateOfBirth: _parseDate(_dateOfBirthController.text),
-            placeOfBirth: clean(_placeOfBirthController),
-            nationality: clean(_nationalityController),
-            issuingAuthority: clean(_issuingAuthorityController),
-            issueDate: _parseDate(_issueDateController.text),
-            expiryDate: _parseDate(_expiryDateController.text),
-            mrz: clean(_mrzController),
-            scanAttachmentId: clean(_scanAttachmentIdController),
-            photoAttachmentId: clean(_photoAttachmentIdController),
-            notes: clean(_notesController),
-            verified: _verified,
-            description: clean(_descriptionController),
-          ),
-        );
-      } else {
-        await dao.createIdentity(
-          CreateIdentityDto(
-            name: name,
-            idType: idType,
-            idNumber: idNumber,
-            fullName: clean(_fullNameController),
-            dateOfBirth: _parseDate(_dateOfBirthController.text),
-            placeOfBirth: clean(_placeOfBirthController),
-            nationality: clean(_nationalityController),
-            issuingAuthority: clean(_issuingAuthorityController),
-            issueDate: _parseDate(_issueDateController.text),
-            expiryDate: _parseDate(_expiryDateController.text),
-            mrz: clean(_mrzController),
-            scanAttachmentId: clean(_scanAttachmentIdController),
-            photoAttachmentId: clean(_photoAttachmentIdController),
-            notes: clean(_notesController),
-            verified: _verified,
-            description: clean(_descriptionController),
-          ),
-        );
-      }
-
-      Toaster.success(
-        title: widget.isEdit
-            ? 'Идентификация обновлена'
-            : 'Идентификация создана',
+    if (!success) {
+      Toaster.error(
+        title: 'Ошибка сохранения',
+        description: 'Проверьте поля формы и попробуйте снова',
       );
-      if (mounted) context.pop();
-    } catch (e) {
-      Toaster.error(title: 'Ошибка сохранения', description: '$e');
-    } finally {
-      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.isEdit ? 'Редактировать ID' : 'Новая идентификация'),
-        actions: [
-          TextButton(
-            onPressed: _loading ? null : _save,
-            child: const Text('Сохранить'),
-          ),
-        ],
+    final stateAsync = ref.watch(identityFormProvider(widget.identityId));
+
+    ref.listen(identityFormProvider(widget.identityId), (prev, next) {
+      final wasSaved = prev?.value?.isSaved ?? false;
+      final isSaved = next.value?.isSaved ?? false;
+      if (!wasSaved && isSaved) {
+        Toaster.success(
+          title: widget.identityId != null
+              ? 'Идентификация обновлена'
+              : 'Идентификация создана',
+        );
+        ref.read(identityFormProvider(widget.identityId).notifier).resetSaved();
+        if (context.mounted) context.pop(true);
+      }
+    });
+
+    return stateAsync.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (error, _) => Scaffold(
+        appBar: AppBar(
+          leading: const FormCloseButton(),
+          title: const Text('Ошибка формы'),
+        ),
+        body: Center(child: Text('$error')),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Название'),
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'Название обязательно'
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _idTypeController,
-                    decoration: const InputDecoration(
-                      labelText: 'Тип документа',
-                    ),
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'Тип обязателен'
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _idNumberController,
-                    decoration: const InputDecoration(
-                      labelText: 'Номер документа',
-                    ),
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'Номер обязателен'
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _fullNameController,
-                    decoration: const InputDecoration(labelText: 'ФИО'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _dateOfBirthController,
-                    decoration: const InputDecoration(
-                      labelText: 'Дата рождения (ISO8601)',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _placeOfBirthController,
-                    decoration: const InputDecoration(
-                      labelText: 'Место рождения',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _nationalityController,
-                    decoration: const InputDecoration(labelText: 'Гражданство'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _issuingAuthorityController,
-                    decoration: const InputDecoration(labelText: 'Кем выдан'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _issueDateController,
-                    decoration: const InputDecoration(
-                      labelText: 'Дата выдачи (ISO8601)',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _expiryDateController,
-                    decoration: const InputDecoration(
-                      labelText: 'Дата окончания (ISO8601)',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _mrzController,
-                    decoration: const InputDecoration(labelText: 'MRZ'),
-                    minLines: 2,
-                    maxLines: 4,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _scanAttachmentIdController,
-                    decoration: const InputDecoration(labelText: 'ID скана'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _photoAttachmentIdController,
-                    decoration: const InputDecoration(labelText: 'ID фото'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _notesController,
-                    decoration: const InputDecoration(labelText: 'Заметки'),
-                    minLines: 2,
-                    maxLines: 4,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _descriptionController,
-                    decoration: const InputDecoration(labelText: 'Описание'),
-                    minLines: 2,
-                    maxLines: 4,
-                  ),
-                  SwitchListTile(
-                    value: _verified,
-                    onChanged: (v) => setState(() => _verified = v),
-                    title: const Text('Верифицировано'),
-                  ),
-                ],
-              ),
+      data: (state) {
+        if (_nameController.text != state.name)
+          _nameController.text = state.name;
+        if (_idTypeController.text != state.idType)
+          _idTypeController.text = state.idType;
+        if (_idNumberController.text != state.idNumber)
+          _idNumberController.text = state.idNumber;
+        if (_fullNameController.text != state.fullName)
+          _fullNameController.text = state.fullName;
+        if (_dateOfBirthController.text != state.dateOfBirth)
+          _dateOfBirthController.text = state.dateOfBirth;
+        if (_placeOfBirthController.text != state.placeOfBirth)
+          _placeOfBirthController.text = state.placeOfBirth;
+        if (_nationalityController.text != state.nationality)
+          _nationalityController.text = state.nationality;
+        if (_issuingAuthorityController.text != state.issuingAuthority)
+          _issuingAuthorityController.text = state.issuingAuthority;
+        if (_issueDateController.text != state.issueDate)
+          _issueDateController.text = state.issueDate;
+        if (_expiryDateController.text != state.expiryDate)
+          _expiryDateController.text = state.expiryDate;
+        if (_mrzController.text != state.mrz) _mrzController.text = state.mrz;
+        if (_scanAttachmentIdController.text != state.scanAttachmentId)
+          _scanAttachmentIdController.text = state.scanAttachmentId;
+        if (_photoAttachmentIdController.text != state.photoAttachmentId)
+          _photoAttachmentIdController.text = state.photoAttachmentId;
+        if (_notesController.text != state.notes)
+          _notesController.text = state.notes;
+        if (_descriptionController.text != state.description)
+          _descriptionController.text = state.description;
+
+        final notifier = ref.read(
+          identityFormProvider(widget.identityId).notifier,
+        );
+
+        return Scaffold(
+          appBar: AppBar(
+            leading: const FormCloseButton(),
+            title: Text(
+              state.isEditMode ? 'Редактировать ID' : 'Новая идентификация',
             ),
+            actions: [
+              if (state.isSaving)
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              else
+                IconButton(icon: const Icon(Icons.save), onPressed: _save),
+            ],
+          ),
+          body: ListView(
+            padding: formPadding,
+            children: [
+              TextField(
+                controller: _nameController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Название *',
+                  errorText: state.nameError,
+                ),
+                onChanged: notifier.setName,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _idTypeController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Тип документа *',
+                  errorText: state.idTypeError,
+                ),
+                onChanged: notifier.setIdType,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _idNumberController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Номер документа *',
+                  errorText: state.idNumberError,
+                ),
+                onChanged: notifier.setIdNumber,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _fullNameController,
+                decoration: primaryInputDecoration(context, labelText: 'ФИО'),
+                onChanged: notifier.setFullName,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _dateOfBirthController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Дата рождения (ISO8601)',
+                  errorText: state.dateOfBirthError,
+                ),
+                onChanged: notifier.setDateOfBirth,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _placeOfBirthController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Место рождения',
+                ),
+                onChanged: notifier.setPlaceOfBirth,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _nationalityController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Гражданство',
+                ),
+                onChanged: notifier.setNationality,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _issuingAuthorityController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Кем выдан',
+                ),
+                onChanged: notifier.setIssuingAuthority,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _issueDateController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Дата выдачи (ISO8601)',
+                  errorText: state.issueDateError,
+                ),
+                onChanged: notifier.setIssueDate,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _expiryDateController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Дата окончания (ISO8601)',
+                  errorText: state.expiryDateError,
+                ),
+                onChanged: notifier.setExpiryDate,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _mrzController,
+                minLines: 2,
+                maxLines: 4,
+                decoration: primaryInputDecoration(context, labelText: 'MRZ'),
+                onChanged: notifier.setMrz,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _scanAttachmentIdController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'ID скана',
+                ),
+                onChanged: notifier.setScanAttachmentId,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _photoAttachmentIdController,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'ID фото',
+                ),
+                onChanged: notifier.setPhotoAttachmentId,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _notesController,
+                minLines: 2,
+                maxLines: 4,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Заметки',
+                ),
+                onChanged: notifier.setNotes,
+              ),
+              const SizedBox(height: 12),
+              CategoryPickerField(
+                selectedCategoryId: state.categoryId,
+                selectedCategoryName: state.categoryName,
+                filterByType: const [CategoryType.identity, CategoryType.mixed],
+                onCategorySelected: notifier.setCategory,
+              ),
+              const SizedBox(height: 12),
+              TagPickerField(
+                selectedTagIds: state.tagIds,
+                selectedTagNames: state.tagNames,
+                filterByType: const [TagType.identity, TagType.mixed],
+                onTagsSelected: notifier.setTags,
+              ),
+              const SizedBox(height: 12),
+              NotePickerField(
+                selectedNoteId: state.noteId,
+                selectedNoteName: state.noteName,
+                onNoteSelected: notifier.setNote,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _descriptionController,
+                minLines: 2,
+                maxLines: 4,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Описание',
+                ),
+                onChanged: notifier.setDescription,
+              ),
+              const SizedBox(height: 8),
+              SwitchListTile(
+                value: state.verified,
+                onChanged: notifier.setVerified,
+                title: const Text('Верифицировано'),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

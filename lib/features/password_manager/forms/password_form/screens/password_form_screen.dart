@@ -189,7 +189,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                     child: Form(
                       key: _formKey,
                       child: ListView(
-                        padding: const EdgeInsets.all(12),
+                        padding: formPadding,
                         children: [
                           // Название *
                           TextField(
