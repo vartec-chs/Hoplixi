@@ -115,8 +115,8 @@ class _TitleBarState extends ConsumerState<TitleBar> {
                       spacing: 4,
                       children: [
                         Container(
-                          width: 24,
-                          height: 24,
+                          width: 20,
+                          height: 20,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(4),
                           ),
@@ -130,8 +130,8 @@ class _TitleBarState extends ConsumerState<TitleBar> {
                             color: titlebarState.backgroundTransparent
                                 ? Colors.white
                                 : theme.colorScheme.onSurface,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            // fontWeight: FontWeight.bold,
                             fontStyle: FontStyle.normal,
                             letterSpacing: 0.0,
                             decoration: TextDecoration.none,
