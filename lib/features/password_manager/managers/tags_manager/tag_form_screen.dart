@@ -342,6 +342,8 @@ String _getTagTypeLabel(TagType type) {
       return 'Файлы';
     case TagType.document:
       return 'Документы';
+    case TagType.contact:
+      return 'Контакты';
     case TagType.apiKey:
       return 'API-ключи';
     case TagType.sshKey:
@@ -378,6 +380,8 @@ TagType _convertEntityTypeToTagType(EntityType entityType) {
       return TagType.totp;
     case EntityType.document:
       return TagType.document;
+    case EntityType.contact:
+      return TagType.contact;
     case EntityType.apiKey:
       return TagType.apiKey;
     case EntityType.sshKey:

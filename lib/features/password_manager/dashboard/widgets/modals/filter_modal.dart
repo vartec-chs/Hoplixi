@@ -17,6 +17,7 @@ import '../../providers/filter_providers/api_keys_filter_provider.dart';
 import '../../providers/filter_providers/bank_cards_filter_provider.dart';
 import '../../providers/filter_providers/base_filter_provider.dart';
 import '../../providers/filter_providers/certificates_filter_provider.dart';
+import '../../providers/filter_providers/contacts_filter_provider.dart';
 import '../../providers/filter_providers/crypto_wallets_filter_provider.dart';
 import '../../providers/filter_providers/documents_filter_provider.dart';
 import '../../providers/filter_providers/files_filter_provider.dart';
@@ -40,6 +41,7 @@ class _InitialFilterValues {
   final BankCardsFilter? bankCardsFilter;
   final FilesFilter? filesFilter;
   final DocumentsFilter? documentsFilter;
+  final ContactsFilter? contactsFilter;
   final ApiKeysFilter? apiKeysFilter;
   final SshKeysFilter? sshKeysFilter;
   final CertificatesFilter? certificatesFilter;
@@ -57,6 +59,7 @@ class _InitialFilterValues {
     this.bankCardsFilter,
     this.filesFilter,
     this.documentsFilter,
+    this.contactsFilter,
     this.apiKeysFilter,
     this.sshKeysFilter,
     this.certificatesFilter,
@@ -239,6 +242,11 @@ class _FilterModalActions extends ConsumerWidget {
               .read(apiKeysFilterProvider.notifier)
               .updateFilter(ApiKeysFilter(base: emptyBaseFilter));
           break;
+        case EntityType.contact:
+          ref
+              .read(contactsFilterProvider.notifier)
+              .updateFilter(ContactsFilter(base: emptyBaseFilter));
+          break;
         case EntityType.sshKey:
           ref
               .read(sshKeysFilterProvider.notifier)
@@ -358,6 +366,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
   BankCardsFilter? _localBankCardsFilter;
   FilesFilter? _localFilesFilter;
   DocumentsFilter? _localDocumentsFilter;
+  ContactsFilter? _localContactsFilter;
   ApiKeysFilter? _localApiKeysFilter;
   SshKeysFilter? _localSshKeysFilter;
   CertificatesFilter? _localCertificatesFilter;
@@ -409,6 +418,9 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         break;
       case EntityType.apiKey:
         _localApiKeysFilter = ref.read(apiKeysFilterProvider);
+        break;
+      case EntityType.contact:
+        _localContactsFilter = ref.read(contactsFilterProvider);
         break;
       case EntityType.sshKey:
         _localSshKeysFilter = ref.read(sshKeysFilterProvider);
@@ -507,6 +519,13 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         _initialValues = _InitialFilterValues(
           baseFilter: baseFilter,
           apiKeysFilter: apiKeysFilter,
+        );
+        break;
+      case EntityType.contact:
+        final contactsFilter = ref.read(contactsFilterProvider);
+        _initialValues = _InitialFilterValues(
+          baseFilter: baseFilter,
+          contactsFilter: contactsFilter,
         );
         break;
       case EntityType.sshKey:
@@ -753,6 +772,13 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
                     );
                   }
                   break;
+                case EntityType.contact:
+                  if (_localContactsFilter != null) {
+                    _localContactsFilter = _localContactsFilter!.copyWith(
+                      base: updatedFilter,
+                    );
+                  }
+                  break;
                 case EntityType.sshKey:
                   if (_localSshKeysFilter != null) {
                     _localSshKeysFilter = _localSshKeysFilter!.copyWith(
@@ -904,6 +930,17 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
             logDebug('FilterModal: Обновлены фильтры API-ключей локально');
           },
         );
+      case EntityType.contact:
+        return ContactsFilterSection(
+          filter:
+              _localContactsFilter ?? ContactsFilter(base: _localBaseFilter),
+          onFilterChanged: (updatedFilter) {
+            setState(() {
+              _localContactsFilter = updatedFilter;
+            });
+            logDebug('FilterModal: Обновлены фильтры контактов локально');
+          },
+        );
       case EntityType.sshKey:
         return SshKeysFilterSection(
           filter: _localSshKeysFilter ?? SshKeysFilter(base: _localBaseFilter),
@@ -1003,6 +1040,8 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         return CategoryType.totp;
       case EntityType.apiKey:
         return CategoryType.apiKey;
+      case EntityType.contact:
+        return CategoryType.contact;
       case EntityType.sshKey:
         return CategoryType.sshKey;
       case EntityType.certificate:
@@ -1036,6 +1075,8 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         return TagType.totp;
       case EntityType.apiKey:
         return TagType.apiKey;
+      case EntityType.contact:
+        return TagType.contact;
       case EntityType.sshKey:
         return TagType.sshKey;
       case EntityType.certificate:
@@ -1195,6 +1236,16 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
             ref.read(apiKeysFilterProvider.notifier).updateFilter(syncedFilter);
           }
           break;
+        case EntityType.contact:
+          if (_localContactsFilter != null) {
+            final syncedFilter = _localContactsFilter!.copyWith(
+              base: _localBaseFilter,
+            );
+            ref
+                .read(contactsFilterProvider.notifier)
+                .updateFilter(syncedFilter);
+          }
+          break;
         case EntityType.sshKey:
           if (_localSshKeysFilter != null) {
             final syncedFilter = _localSshKeysFilter!.copyWith(
@@ -1343,6 +1394,13 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
                 .updateFilterDebounced(_initialValues!.apiKeysFilter!);
           }
           break;
+        case EntityType.contact:
+          if (_initialValues!.contactsFilter != null) {
+            ref
+                .read(contactsFilterProvider.notifier)
+                .updateFilterDebounced(_initialValues!.contactsFilter!);
+          }
+          break;
         case EntityType.sshKey:
           if (_initialValues!.sshKeysFilter != null) {
             ref
@@ -1443,6 +1501,9 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           break;
         case EntityType.apiKey:
           _localApiKeysFilter = ApiKeysFilter(base: _localBaseFilter);
+          break;
+        case EntityType.contact:
+          _localContactsFilter = ContactsFilter(base: _localBaseFilter);
           break;
         case EntityType.sshKey:
           _localSshKeysFilter = SshKeysFilter(base: _localBaseFilter);

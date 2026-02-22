@@ -5,6 +5,7 @@ export 'bank_cards_filter.dart';
 export 'base_filter.dart';
 export 'categories_filter.dart';
 export 'certificates_filter.dart';
+export 'contacts_filter.dart';
 export 'crypto_wallets_filter.dart';
 export 'documents_filter.dart';
 export 'files_filter.dart';

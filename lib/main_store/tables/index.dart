@@ -9,6 +9,8 @@ export 'bank_card_items.dart';
 export 'categories.dart';
 export 'certificate_history.dart';
 export 'certificate_items.dart';
+export 'contact_history.dart';
+export 'contact_items.dart';
 export 'crypto_wallet_history.dart';
 export 'crypto_wallet_items.dart';
 export 'document_history.dart';

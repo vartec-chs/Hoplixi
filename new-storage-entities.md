@@ -131,3 +131,20 @@
 - oneTime (Bool) — опционально, true если каждый код одноразовый.
 - displayHint (Text) — опционально, как показывать пользователю (masking
   policy).
+
+## Contact
+
+- firstName (Text) — опционально, имя.
+- lastName (Text) — опционально, фамилия.
+- nickname (Text) — опционально, псевдоним / alias.
+- company (Text) — опционально, компания / организация.
+- jobTitle (Text) — опционально, должность.
+- phones (Text / JSON) — опционально, массив телефонов формат: { label, value }
+- emails (Text / JSON) — опционально, массив email адресов формат: { label,
+  value }
+- addresses (Text / JSON) — опционально, массив адресов формат: { label, street,
+  city, zip, country }
+- websites (Text / JSON) — опционально, сайты формат: { label, url }.
+- messengers (Text / JSON) — опционально, Telegram / Signal / etc формат: {
+  type, value }.
+- birthday (DateTime) — опционально, дата рождения.

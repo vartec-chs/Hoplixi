@@ -9,6 +9,7 @@ enum EntityType {
   file('files', 'Файлы', Icons.attach_file),
   otp('otps', 'OTP/2FA', Icons.security),
   document('documents', 'Документы', Icons.description),
+  contact('contacts', 'Контакты', Icons.contact_phone),
   apiKey('api_keys', 'API-ключи', Icons.vpn_key),
   sshKey('ssh_keys', 'SSH-ключи', Icons.key),
   certificate('certificates', 'Сертификаты', Icons.verified_user),
@@ -79,6 +80,8 @@ extension EntityTypeX on EntityType {
         return TagType.totp;
       case EntityType.document:
         return TagType.document;
+      case EntityType.contact:
+        return TagType.contact;
       case EntityType.apiKey:
         return TagType.apiKey;
       case EntityType.sshKey:
@@ -113,6 +116,8 @@ extension EntityTypeX on EntityType {
         return CategoryType.totp;
       case EntityType.document:
         return CategoryType.document;
+      case EntityType.contact:
+        return CategoryType.contact;
       case EntityType.apiKey:
         return CategoryType.apiKey;
       case EntityType.sshKey:

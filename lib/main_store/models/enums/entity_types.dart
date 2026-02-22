@@ -9,6 +9,7 @@ enum VaultItemType {
   bankCard,
   document,
   file,
+  contact,
   apiKey,
   sshKey,
   certificate,
@@ -34,6 +35,8 @@ extension VaultItemTypeX on VaultItemType {
         return 'document';
       case VaultItemType.file:
         return 'file';
+      case VaultItemType.contact:
+        return 'contact';
       case VaultItemType.apiKey:
         return 'apiKey';
       case VaultItemType.sshKey:
@@ -67,6 +70,8 @@ extension VaultItemTypeX on VaultItemType {
         return VaultItemType.document;
       case 'file':
         return VaultItemType.file;
+      case 'contact':
+        return VaultItemType.contact;
       case 'apiKey':
         return VaultItemType.apiKey;
       case 'sshKey':
@@ -96,6 +101,7 @@ enum CategoryType {
   bankCard,
   file,
   document,
+  contact,
   apiKey,
   sshKey,
   certificate,
@@ -114,6 +120,7 @@ enum TagType {
   bankCard,
   file,
   document,
+  contact,
   apiKey,
   sshKey,
   certificate,
@@ -189,6 +196,8 @@ extension CategoryTypeX on CategoryType {
         return 'file';
       case CategoryType.document:
         return 'document';
+      case CategoryType.contact:
+        return 'contact';
       case CategoryType.apiKey:
         return 'apiKey';
       case CategoryType.sshKey:
@@ -224,6 +233,8 @@ extension CategoryTypeX on CategoryType {
         return CategoryType.file;
       case 'document':
         return CategoryType.document;
+      case 'contact':
+        return CategoryType.contact;
       case 'apiKey':
         return CategoryType.apiKey;
       case 'sshKey':
@@ -263,6 +274,8 @@ extension TagTypeX on TagType {
         return 'file';
       case TagType.document:
         return 'document';
+      case TagType.contact:
+        return 'contact';
       case TagType.apiKey:
         return 'apiKey';
       case TagType.sshKey:
@@ -298,6 +311,8 @@ extension TagTypeX on TagType {
         return TagType.file;
       case 'document':
         return TagType.document;
+      case 'contact':
+        return TagType.contact;
       case 'apiKey':
         return TagType.apiKey;
       case 'sshKey':

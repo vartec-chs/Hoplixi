@@ -126,6 +126,8 @@ class EntityTypeFullDropdown extends StatelessWidget {
         return 'Коды двухфакторной аутентификации';
       case EntityType.document:
         return 'Сканированные и цифровые документы';
+      case EntityType.contact:
+        return 'Контакты и контактные данные';
       case EntityType.apiKey:
         return 'Ключи API и токены интеграций';
       case EntityType.sshKey:

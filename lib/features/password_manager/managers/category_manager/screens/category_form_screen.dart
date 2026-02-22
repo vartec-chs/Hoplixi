@@ -413,6 +413,8 @@ String _getCategoryTypeLabel(CategoryType type) {
       return 'Файлы';
     case CategoryType.document:
       return 'Документы';
+    case CategoryType.contact:
+      return 'Контакты';
     case CategoryType.apiKey:
       return 'API-ключи';
     case CategoryType.sshKey:
@@ -449,6 +451,8 @@ CategoryType _convertEntityTypeToCategoryType(EntityType entityType) {
       return CategoryType.totp;
     case EntityType.document:
       return CategoryType.document;
+    case EntityType.contact:
+      return CategoryType.contact;
     case EntityType.apiKey:
       return CategoryType.apiKey;
     case EntityType.sshKey:

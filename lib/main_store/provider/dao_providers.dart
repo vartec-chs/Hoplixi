@@ -25,6 +25,10 @@ final apiKeyDaoProvider = FutureProvider<ApiKeyDao>(
   (ref) => _ensureDao(ref, (store) => ApiKeyDao(store)),
 );
 
+final contactDaoProvider = FutureProvider<ContactDao>(
+  (ref) => _ensureDao(ref, (store) => ContactDao(store)),
+);
+
 final sshKeyDaoProvider = FutureProvider<SshKeyDao>(
   (ref) => _ensureDao(ref, (store) => SshKeyDao(store)),
 );
@@ -121,6 +125,14 @@ final fileHistoryDaoProvider = FutureProvider<FileHistoryDao>(
   (ref) => _ensureDao(ref, (store) => FileHistoryDao(store)),
 );
 
+final documentHistoryDaoProvider = FutureProvider<DocumentHistoryDao>(
+  (ref) => _ensureDao(ref, (store) => DocumentHistoryDao(store)),
+);
+
+final contactHistoryDaoProvider = FutureProvider<ContactHistoryDao>(
+  (ref) => _ensureDao(ref, (store) => ContactHistoryDao(store)),
+);
+
 final categoryDaoProvider = FutureProvider<CategoryDao>(
   (ref) => _ensureDao(ref, (store) => CategoryDao(store)),
 );
@@ -139,6 +151,10 @@ final passwordFilterDaoProvider = FutureProvider<PasswordFilterDao>(
 
 final apiKeyFilterDaoProvider = FutureProvider<ApiKeyFilterDao>(
   (ref) => _ensureDao(ref, (store) => ApiKeyFilterDao(store)),
+);
+
+final contactFilterDaoProvider = FutureProvider<ContactFilterDao>(
+  (ref) => _ensureDao(ref, (store) => ContactFilterDao(store)),
 );
 
 final sshKeyFilterDaoProvider = FutureProvider<SshKeyFilterDao>(

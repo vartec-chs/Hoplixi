@@ -3,6 +3,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/forms/api_key_form/screens/api_key_view_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/bank_card_form/screens/bank_card_view_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/certificate_form/screens/certificate_view_screen.dart';
+import 'package:hoplixi/features/password_manager/forms/contact_form/screens/contact_view_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/crypto_wallet_form/screens/crypto_wallet_view_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/document_form/screens/document_view_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/file_form/screens/file_view_screen.dart';
@@ -43,6 +44,8 @@ class EntityView extends StatelessWidget {
         return DocumentViewScreen(documentId: id);
       case EntityType.apiKey:
         return ApiKeyViewScreen(apiKeyId: id);
+      case EntityType.contact:
+        return ContactViewScreen(contactId: id);
       case EntityType.sshKey:
         return SshKeyViewScreen(sshKeyId: id);
       case EntityType.certificate:

@@ -36,6 +36,7 @@ class PaginatedListNotifier
   ProviderSubscription<FilesFilter>? _fileFilterSubscription;
   ProviderSubscription<OtpsFilter>? _otpFilterSubscription;
   ProviderSubscription<ApiKeysFilter>? _apiKeyFilterSubscription;
+  ProviderSubscription<ContactsFilter>? _contactsFilterSubscription;
   ProviderSubscription<SshKeysFilter>? _sshKeyFilterSubscription;
   ProviderSubscription<CertificatesFilter>? _certificateFilterSubscription;
   ProviderSubscription<CryptoWalletsFilter>? _cryptoWalletFilterSubscription;
@@ -49,6 +50,7 @@ class PaginatedListNotifier
   ProviderSubscription<DataRefreshState>? _fileRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _otpRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _apiKeyRefreshSubscription;
+  ProviderSubscription<DataRefreshState>? _contactsRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _sshKeyRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _certificateRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _cryptoWalletRefreshSubscription;
@@ -209,6 +211,24 @@ class PaginatedListNotifier
           },
         );
         break;
+      case EntityType.contact:
+        _contactsFilterSubscription = ref.listen(contactsFilterProvider, (
+          prev,
+          next,
+        ) {
+          if (prev != next) {
+            _resetAndLoad();
+          }
+        });
+        _contactsRefreshSubscription = ref.listen<DataRefreshState>(
+          dataRefreshTriggerProvider,
+          (previous, next) {
+            if (_shouldHandleRefresh(next, EntityType.contact)) {
+              _resetAndLoad();
+            }
+          },
+        );
+        break;
       case EntityType.sshKey:
         _sshKeyFilterSubscription = ref.listen(sshKeysFilterProvider, (
           prev,
@@ -352,6 +372,8 @@ class PaginatedListNotifier
     _otpFilterSubscription = null;
     _apiKeyFilterSubscription?.close();
     _apiKeyFilterSubscription = null;
+    _contactsFilterSubscription?.close();
+    _contactsFilterSubscription = null;
     _sshKeyFilterSubscription?.close();
     _sshKeyFilterSubscription = null;
     _certificateFilterSubscription?.close();
@@ -378,6 +400,8 @@ class PaginatedListNotifier
     _otpRefreshSubscription = null;
     _apiKeyRefreshSubscription?.close();
     _apiKeyRefreshSubscription = null;
+    _contactsRefreshSubscription?.close();
+    _contactsRefreshSubscription = null;
     _sshKeyRefreshSubscription?.close();
     _sshKeyRefreshSubscription = null;
     _certificateRefreshSubscription?.close();
@@ -413,6 +437,8 @@ class PaginatedListNotifier
         return ref.read(documentFilterDaoProvider.future);
       case EntityType.apiKey:
         return ref.read(apiKeyFilterDaoProvider.future);
+      case EntityType.contact:
+        return ref.read(contactFilterDaoProvider.future);
       case EntityType.sshKey:
         return ref.read(sshKeyFilterDaoProvider.future);
       case EntityType.certificate:
@@ -526,6 +552,19 @@ class PaginatedListNotifier
           offset: offset,
         );
         return apiKeysFilter.copyWith(base: base);
+      case EntityType.contact:
+        final contactsFilter = ref.read(contactsFilterProvider);
+        final base = contactsFilter.base.copyWith(
+          isFavorite: contactsFilter.base.isFavorite ?? tabFilter.isFavorite,
+          isArchived: contactsFilter.base.isArchived ?? tabFilter.isArchived,
+          isDeleted: contactsFilter.base.isDeleted ?? tabFilter.isDeleted,
+          isFrequentlyUsed:
+              tabFilter.isFrequentlyUsed ??
+              contactsFilter.base.isFrequentlyUsed,
+          limit: limit,
+          offset: offset,
+        );
+        return contactsFilter.copyWith(base: base);
       case EntityType.sshKey:
         final sshKeysFilter = ref.read(sshKeysFilterProvider);
         final base = sshKeysFilter.base.copyWith(

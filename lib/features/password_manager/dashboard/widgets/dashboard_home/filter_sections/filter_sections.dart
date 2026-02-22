@@ -4,6 +4,7 @@ export 'api_keys_filter_section.dart';
 export 'bank_cards_filter_section.dart';
 export 'base_filter_section.dart';
 export 'certificates_filter_section.dart';
+export 'contacts_filter_section.dart';
 export 'crypto_wallets_filter_section.dart';
 export 'documents_filter_section.dart';
 export 'files_filter_section.dart';

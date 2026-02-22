@@ -59,6 +59,7 @@ enum FilterTab {
           FilterTab.delete,
         ];
       case EntityType.document:
+      case EntityType.contact:
       case EntityType.apiKey:
       case EntityType.sshKey:
       case EntityType.certificate:

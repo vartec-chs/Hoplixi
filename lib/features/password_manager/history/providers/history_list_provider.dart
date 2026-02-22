@@ -295,7 +295,9 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
       case EntityType.otp:
         return _fetchOtpHistory(offset, searchQuery);
       case EntityType.document:
-        throw UnimplementedError('Document history fetching not implemented');
+        return _fetchDocumentHistory(offset, searchQuery);
+      case EntityType.contact:
+        return _fetchContactHistory(offset, searchQuery);
       case EntityType.apiKey:
         return _fetchApiKeyHistory(offset, searchQuery);
       case EntityType.sshKey:
@@ -446,6 +448,60 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
             action: card.action,
             title: card.issuer ?? 'OTP',
             subtitle: card.accountName,
+            actionAt: card.actionAt,
+          ),
+        )
+        .toList();
+  }
+
+  Future<List<HistoryItem>> _fetchDocumentHistory(
+    int offset,
+    String? searchQuery,
+  ) async {
+    final dao = await ref.read(documentHistoryDaoProvider.future);
+    final cards = await dao.getDocumentHistoryCardsByOriginalId(
+      _params.entityId,
+      offset,
+      pageSize,
+      searchQuery,
+    );
+
+    return cards
+        .map(
+          (card) => HistoryItem(
+            id: card.id,
+            originalEntityId: card.originalDocumentId,
+            entityType: EntityType.document,
+            action: card.action,
+            title: card.title,
+            subtitle: card.documentType,
+            actionAt: card.actionAt,
+          ),
+        )
+        .toList();
+  }
+
+  Future<List<HistoryItem>> _fetchContactHistory(
+    int offset,
+    String? searchQuery,
+  ) async {
+    final dao = await ref.read(contactHistoryDaoProvider.future);
+    final cards = await dao.getContactHistoryCardsByOriginalId(
+      _params.entityId,
+      offset,
+      pageSize,
+      searchQuery,
+    );
+
+    return cards
+        .map(
+          (card) => HistoryItem(
+            id: card.id,
+            originalEntityId: card.originalContactId,
+            entityType: EntityType.contact,
+            action: card.action,
+            title: card.name,
+            subtitle: card.phone ?? card.email ?? card.company,
             actionAt: card.actionAt,
           ),
         )
@@ -695,7 +751,17 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         final dao = await ref.read(otpHistoryDaoProvider.future);
         return dao.countOtpHistoryByOriginalId(_params.entityId, searchQuery);
       case EntityType.document:
-        throw UnimplementedError('Document history count not implemented');
+        final dao = await ref.read(documentHistoryDaoProvider.future);
+        return dao.countDocumentHistoryByOriginalId(
+          _params.entityId,
+          searchQuery,
+        );
+      case EntityType.contact:
+        final dao = await ref.read(contactHistoryDaoProvider.future);
+        return dao.countContactHistoryByOriginalId(
+          _params.entityId,
+          searchQuery,
+        );
       case EntityType.apiKey:
         final dao = await ref.read(apiKeyHistoryDaoProvider.future);
         return dao.countApiKeyHistoryByOriginalId(
@@ -763,7 +829,11 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         final dao = await ref.read(otpHistoryDaoProvider.future);
         return await dao.deleteOtpHistoryById(historyItemId) > 0;
       case EntityType.document:
-        throw UnimplementedError('Document history deletion not implemented');
+        final dao = await ref.read(documentHistoryDaoProvider.future);
+        return await dao.deleteDocumentHistoryById(historyItemId) > 0;
+      case EntityType.contact:
+        final dao = await ref.read(contactHistoryDaoProvider.future);
+        return await dao.deleteContactHistoryById(historyItemId) > 0;
       case EntityType.apiKey:
         final dao = await ref.read(apiKeyHistoryDaoProvider.future);
         return await dao.deleteApiKeyHistoryById(historyItemId) > 0;
@@ -812,7 +882,12 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         final dao = await ref.read(otpHistoryDaoProvider.future);
         return await dao.deleteOtpHistoryByOtpId(_params.entityId) >= 0;
       case EntityType.document:
-        throw UnimplementedError('Document history deletion not implemented');
+        final dao = await ref.read(documentHistoryDaoProvider.future);
+        return await dao.deleteDocumentHistoryByDocumentId(_params.entityId) >=
+            0;
+      case EntityType.contact:
+        final dao = await ref.read(contactHistoryDaoProvider.future);
+        return await dao.deleteContactHistoryByContactId(_params.entityId) >= 0;
       case EntityType.apiKey:
         final dao = await ref.read(apiKeyHistoryDaoProvider.future);
         return await dao.deleteApiKeyHistoryByApiKeyId(_params.entityId) >= 0;

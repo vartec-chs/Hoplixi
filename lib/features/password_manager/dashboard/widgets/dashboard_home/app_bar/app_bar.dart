@@ -144,6 +144,8 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
         return 'Поиск файлов по имени...';
       case EntityType.document:
         return 'Поиск документов по названию, типу...';
+      case EntityType.contact:
+        return 'Поиск контактов по имени, компании, телефону...';
       case EntityType.apiKey:
         return 'Поиск API-ключей по сервису, типу токена...';
       case EntityType.sshKey:

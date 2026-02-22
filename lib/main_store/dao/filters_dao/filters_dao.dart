@@ -3,6 +3,7 @@ library;
 export 'api_key_filter_dao.dart';
 export 'bank_card_filter_dao.dart';
 export 'certificate_filter_dao.dart';
+export 'contact_filter_dao.dart';
 export 'crypto_wallet_filter_dao.dart';
 export 'document_filter_dao.dart';
 export 'file_filter_dao.dart';

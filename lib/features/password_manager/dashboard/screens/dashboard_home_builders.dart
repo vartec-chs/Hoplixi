@@ -12,6 +12,8 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/bank_c
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/bank_card/bank_card_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/certificate/certificate_grid_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/certificate/certificate_list_card.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/contact/contact_grid_card.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/contact/contact_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/crypto_wallet/crypto_wallet_grid_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/crypto_wallet/crypto_wallet_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/document/document_grid_card.dart';
@@ -707,6 +709,17 @@ class DashboardHomeBuilders {
           },
         );
         break;
+      case EntityType.contact:
+        if (item is! ContactCardDto) return noCorrectType;
+        card = ContactListCard(
+          contact: item,
+          onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
+        );
+        break;
       case EntityType.sshKey:
         if (item is! SshKeyCardDto) return noCorrectType;
         card = SshKeyListCard(
@@ -1016,6 +1029,14 @@ class DashboardHomeBuilders {
             if (GoRouter.of(context).state.matchedLocation != path) {
               context.push(path);
             }
+          } else if (item is ContactCardDto) {
+            final path = AppRoutesPaths.dashboardEntityEdit(
+              EntityType.contact,
+              item.id,
+            );
+            if (GoRouter.of(context).state.matchedLocation != path) {
+              context.push(path);
+            }
           } else if (item is SshKeyCardDto) {
             final path = AppRoutesPaths.dashboardEntityEdit(
               EntityType.sshKey,
@@ -1091,6 +1112,8 @@ class DashboardHomeBuilders {
           } else if (item is DocumentCardDto) {
             itemName = item.title ?? 'Документ';
           } else if (item is ApiKeyCardDto) {
+            itemName = item.name;
+          } else if (item is ContactCardDto) {
             itemName = item.name;
           } else if (item is SshKeyCardDto) {
             itemName = item.name;
@@ -1222,6 +1245,16 @@ class DashboardHomeBuilders {
         if (item is! ApiKeyCardDto) return noCorrectType;
         card = ApiKeyGridCard(
           apiKey: item,
+          onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
+        );
+      case EntityType.contact:
+        if (item is! ContactCardDto) return noCorrectType;
+        card = ContactGridCard(
+          contact: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
           onTogglePin: () => callbacks.onTogglePin(item.id),
           onToggleArchive: () => callbacks.onToggleArchive(item.id),

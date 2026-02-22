@@ -5,12 +5,14 @@ import 'package:hoplixi/main_store/dao/api_key_dao.dart';
 import 'package:hoplixi/main_store/dao/bank_card_dao.dart';
 import 'package:hoplixi/main_store/dao/category_dao.dart';
 import 'package:hoplixi/main_store/dao/certificate_dao.dart';
+import 'package:hoplixi/main_store/dao/contact_dao.dart';
 import 'package:hoplixi/main_store/dao/crypto_wallet_dao.dart';
 import 'package:hoplixi/main_store/dao/document_dao.dart';
 import 'package:hoplixi/main_store/dao/file_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/api_key_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/bank_card_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/certificate_history_dao.dart';
+import 'package:hoplixi/main_store/dao/history_dao/contact_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/crypto_wallet_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/document_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/file_history_dao.dart';
@@ -55,6 +57,7 @@ part 'main_store.g.dart';
     ApiKeyItems,
     SshKeyItems,
     CertificateItems,
+    ContactItems,
     CryptoWalletItems,
     WifiItems,
     IdentityItems,
@@ -80,6 +83,7 @@ part 'main_store.g.dart';
     ApiKeyHistory,
     SshKeyHistory,
     CertificateHistory,
+    ContactHistory,
     CryptoWalletHistory,
     WifiHistory,
     IdentityHistory,
@@ -102,7 +106,9 @@ part 'main_store.g.dart';
     SshKeyDao,
     SshKeyHistoryDao,
     CertificateDao,
+    ContactDao,
     CertificateHistoryDao,
+    ContactHistoryDao,
     CryptoWalletDao,
     CryptoWalletHistoryDao,
     WifiDao,
@@ -134,6 +140,7 @@ part 'main_store.g.dart';
     ApiKeyFilterDao,
     SshKeyFilterDao,
     CertificateFilterDao,
+    ContactFilterDao,
     CryptoWalletFilterDao,
     WifiFilterDao,
     IdentityFilterDao,
@@ -167,21 +174,29 @@ class MainStore extends _$MainStore {
           tag: '${_logTag}Migration',
         );
 
-        // v2 → v3: добавляем поддержку подкатегорий
-        if (from < 3) {
-          await customStatement(
-            'ALTER TABLE categories ADD COLUMN parent_id TEXT '
-            'REFERENCES categories(id) ON DELETE SET NULL',
-          );
-          await customStatement(
-            'CREATE INDEX IF NOT EXISTS idx_categories_parent_id '
-            'ON categories (parent_id)',
-          );
-          logInfo(
-            'v2→v3: added parent_id to categories',
-            tag: '${_logTag}Migration',
-          );
+        logWarning(
+          'Development migration strategy: full schema recreation',
+          tag: '${_logTag}Migration',
+        );
+
+        await customStatement('PRAGMA foreign_keys = OFF');
+
+        final tableRows = await customSelect(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
+        ).get();
+
+        for (final row in tableRows) {
+          final name = row.read<String>('name');
+          if (name == null || name.isEmpty) continue;
+          final escapedName = name.replaceAll('"', '""');
+          await customStatement('DROP TABLE IF EXISTS "$escapedName"');
         }
+
+        await customStatement('PRAGMA foreign_keys = ON');
+
+        await m.createAll();
+        await _installIndexes();
+        await _installHistoryTriggers();
 
         logInfo('Migration completed', tag: '${_logTag}Migration');
       },
@@ -204,6 +219,7 @@ class MainStore extends _$MainStore {
         apiKeyItems,
         sshKeyItems,
         certificateItems,
+        contactItems,
         cryptoWalletItems,
         wifiItems,
         identityItems,
@@ -237,6 +253,7 @@ class MainStore extends _$MainStore {
         ...apiKeysHistoryDropTriggers,
         ...sshKeysHistoryDropTriggers,
         ...certificatesHistoryDropTriggers,
+        ...contactsHistoryDropTriggers,
         ...cryptoWalletsHistoryDropTriggers,
         ...wifisHistoryDropTriggers,
         ...identitiesHistoryDropTriggers,
@@ -267,6 +284,7 @@ class MainStore extends _$MainStore {
         ...apiKeysHistoryCreateTriggers,
         ...sshKeysHistoryCreateTriggers,
         ...certificatesHistoryCreateTriggers,
+        ...contactsHistoryCreateTriggers,
         ...cryptoWalletsHistoryCreateTriggers,
         ...wifisHistoryCreateTriggers,
         ...identitiesHistoryCreateTriggers,
