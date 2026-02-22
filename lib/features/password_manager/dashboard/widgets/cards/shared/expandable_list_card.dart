@@ -30,6 +30,7 @@ class ExpandableListCard extends StatefulWidget {
 
   final List<CardActionItem> copyActions;
   final Widget? customExpandedContent;
+  final ValueChanged<bool>? onExpandedChanged;
 
   const ExpandableListCard({
     super.key,
@@ -56,6 +57,7 @@ class ExpandableListCard extends StatefulWidget {
     this.onOpenHistory,
     required this.copyActions,
     this.customExpandedContent,
+    this.onExpandedChanged,
   });
 
   @override
@@ -103,6 +105,7 @@ class _ExpandableListCardState extends State<ExpandableListCard>
 
   void _toggleExpanded() {
     setState(() => _isExpanded = !_isExpanded);
+    widget.onExpandedChanged?.call(_isExpanded);
     if (_isExpanded) {
       _expandController.forward();
       _iconsController.forward();
