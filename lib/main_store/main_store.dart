@@ -4,10 +4,12 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_store/dao/api_key_dao.dart';
 import 'package:hoplixi/main_store/dao/bank_card_dao.dart';
 import 'package:hoplixi/main_store/dao/category_dao.dart';
+import 'package:hoplixi/main_store/dao/certificate_dao.dart';
 import 'package:hoplixi/main_store/dao/document_dao.dart';
 import 'package:hoplixi/main_store/dao/file_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/api_key_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/bank_card_history_dao.dart';
+import 'package:hoplixi/main_store/dao/history_dao/certificate_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/document_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/file_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/note_history_dao.dart';
@@ -42,6 +44,7 @@ part 'main_store.g.dart';
     PasswordItems,
     ApiKeyItems,
     SshKeyItems,
+    CertificateItems,
     OtpItems,
     NoteItems,
     NoteLinks,
@@ -61,6 +64,7 @@ part 'main_store.g.dart';
     PasswordHistory,
     ApiKeyHistory,
     SshKeyHistory,
+    CertificateHistory,
     OtpHistory,
     NoteHistory,
     BankCardHistory,
@@ -77,6 +81,8 @@ part 'main_store.g.dart';
     ApiKeyHistoryDao,
     SshKeyDao,
     SshKeyHistoryDao,
+    CertificateDao,
+    CertificateHistoryDao,
     OtpDao,
     OtpHistoryDao,
     NoteDao,
@@ -97,6 +103,7 @@ part 'main_store.g.dart';
     PasswordFilterDao,
     ApiKeyFilterDao,
     SshKeyFilterDao,
+    CertificateFilterDao,
   ],
 )
 class MainStore extends _$MainStore {
@@ -161,6 +168,7 @@ class MainStore extends _$MainStore {
         passwordItems,
         apiKeyItems,
         sshKeyItems,
+        certificateItems,
         otpItems,
         noteItems,
         noteLinks,
@@ -188,6 +196,7 @@ class MainStore extends _$MainStore {
         ...passwordsHistoryDropTriggers,
         ...apiKeysHistoryDropTriggers,
         ...sshKeysHistoryDropTriggers,
+        ...certificatesHistoryDropTriggers,
         ...otpsHistoryDropTriggers,
         ...notesHistoryDropTriggers,
         ...filesHistoryDropTriggers,
@@ -212,6 +221,7 @@ class MainStore extends _$MainStore {
         ...passwordsHistoryCreateTriggers,
         ...apiKeysHistoryCreateTriggers,
         ...sshKeysHistoryCreateTriggers,
+        ...certificatesHistoryCreateTriggers,
         ...otpsHistoryCreateTriggers,
         ...notesHistoryCreateTriggers,
         ...filesHistoryCreateTriggers,
@@ -297,6 +307,14 @@ class MainStore extends _$MainStore {
             'ON ssh_key_items (key_type)',
         'CREATE INDEX IF NOT EXISTS idx_ssh_key_items_fingerprint '
             'ON ssh_key_items (fingerprint)',
+
+        // --- certificate_items ---
+        'CREATE INDEX IF NOT EXISTS idx_certificate_items_issuer '
+            'ON certificate_items (issuer)',
+        'CREATE INDEX IF NOT EXISTS idx_certificate_items_fingerprint '
+            'ON certificate_items (fingerprint)',
+        'CREATE INDEX IF NOT EXISTS idx_certificate_items_valid_to '
+            'ON certificate_items (valid_to) WHERE valid_to IS NOT NULL',
 
         // --- vault_item_history ---
         // WHERE item_id = ? AND type = ? ORDER BY action_at DESC

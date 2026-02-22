@@ -29,6 +29,10 @@ final sshKeyDaoProvider = FutureProvider<SshKeyDao>(
   (ref) => _ensureDao(ref, (store) => SshKeyDao(store)),
 );
 
+final certificateDaoProvider = FutureProvider<CertificateDao>(
+  (ref) => _ensureDao(ref, (store) => CertificateDao(store)),
+);
+
 final passwordHistoryDaoProvider = FutureProvider<PasswordHistoryDao>(
   (ref) => _ensureDao(ref, (store) => PasswordHistoryDao(store)),
 );
@@ -39,6 +43,10 @@ final apiKeyHistoryDaoProvider = FutureProvider<ApiKeyHistoryDao>(
 
 final sshKeyHistoryDaoProvider = FutureProvider<SshKeyHistoryDao>(
   (ref) => _ensureDao(ref, (store) => SshKeyHistoryDao(store)),
+);
+
+final certificateHistoryDaoProvider = FutureProvider<CertificateHistoryDao>(
+  (ref) => _ensureDao(ref, (store) => CertificateHistoryDao(store)),
 );
 
 final otpDaoProvider = FutureProvider<OtpDao>(
@@ -95,6 +103,10 @@ final apiKeyFilterDaoProvider = FutureProvider<ApiKeyFilterDao>(
 
 final sshKeyFilterDaoProvider = FutureProvider<SshKeyFilterDao>(
   (ref) => _ensureDao(ref, (store) => SshKeyFilterDao(store)),
+);
+
+final certificateFilterDaoProvider = FutureProvider<CertificateFilterDao>(
+  (ref) => _ensureDao(ref, (store) => CertificateFilterDao(store)),
 );
 
 final otpFilterDaoProvider = FutureProvider<OtpFilterDao>(

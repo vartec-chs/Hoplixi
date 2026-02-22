@@ -10,6 +10,8 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/api_ke
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/api_key/api_key_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/bank_card/bank_card_grid.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/bank_card/bank_card_list_card.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/certificate/certificate_grid_card.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/certificate/certificate_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/document/document_grid_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/document/document_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/file/file_grid_card.dart';
@@ -717,6 +719,26 @@ class DashboardHomeBuilders {
         );
         break;
       case EntityType.certificate:
+        if (item is! CertificateCardDto) return noCorrectType;
+        card = CertificateListCard(
+          certificate: item,
+          onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onOpenHistory: () {
+            if (location !=
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.certificate,
+                  item.id,
+                )) {
+              context.push(
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.certificate,
+                  item.id,
+                ),
+              );
+            }
+          },
+        );
+        break;
       case EntityType.cryptoWallet:
       case EntityType.wifi:
       case EntityType.identity:
@@ -870,6 +892,14 @@ class DashboardHomeBuilders {
             if (GoRouter.of(context).state.matchedLocation != path) {
               context.push(path);
             }
+          } else if (item is CertificateCardDto) {
+            final path = AppRoutesPaths.dashboardEntityEdit(
+              EntityType.certificate,
+              item.id,
+            );
+            if (GoRouter.of(context).state.matchedLocation != path) {
+              context.push(path);
+            }
           }
 
           return false;
@@ -891,6 +921,8 @@ class DashboardHomeBuilders {
           } else if (item is ApiKeyCardDto) {
             itemName = item.name;
           } else if (item is SshKeyCardDto) {
+            itemName = item.name;
+          } else if (item is CertificateCardDto) {
             itemName = item.name;
           }
 
@@ -1021,6 +1053,11 @@ class DashboardHomeBuilders {
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
         );
       case EntityType.certificate:
+        if (item is! CertificateCardDto) return noCorrectType;
+        card = CertificateGridCard(
+          certificate: item,
+          onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+        );
       case EntityType.cryptoWallet:
       case EntityType.wifi:
       case EntityType.identity:

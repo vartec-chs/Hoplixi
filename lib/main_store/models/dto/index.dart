@@ -7,6 +7,8 @@ export 'bank_card_history_dto.dart';
 export 'base_card_dto.dart';
 export 'base_card_extensions.dart';
 export 'category_dto.dart';
+export 'certificate_dto.dart';
+export 'certificate_history_dto.dart';
 export 'document_dto.dart';
 export 'document_history_dto.dart';
 export 'file_dto.dart';

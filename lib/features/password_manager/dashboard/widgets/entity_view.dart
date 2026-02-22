@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/forms/api_key_form/screens/api_key_view_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/bank_card_form/screens/bank_card_view_screen.dart';
+import 'package:hoplixi/features/password_manager/forms/certificate_form/screens/certificate_view_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/document_form/screens/document_view_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/file_form/screens/file_view_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/note_form/screens/note_view_screen.dart';
@@ -49,7 +50,7 @@ class EntityView extends StatelessWidget {
       case EntityType.sshKey:
         return SshKeyViewScreen(sshKeyId: id);
       case EntityType.certificate:
-        return buildNotImplemented('Сертификаты');
+        return CertificateViewScreen(certificateId: id);
       case EntityType.cryptoWallet:
         return buildNotImplemented('Криптокошельки');
       case EntityType.wifi:

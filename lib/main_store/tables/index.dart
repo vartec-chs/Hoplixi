@@ -7,6 +7,8 @@ export 'bank_card_history.dart';
 export 'bank_card_items.dart';
 // --- Вспомогательные (без изменений) ---
 export 'categories.dart';
+export 'certificate_history.dart';
+export 'certificate_items.dart';
 export 'document_history.dart';
 export 'document_items.dart';
 export 'document_pages.dart';

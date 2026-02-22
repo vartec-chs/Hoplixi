@@ -1,11 +1,13 @@
 export 'api_key_dao.dart';
 export 'bank_card_dao.dart';
 export 'category_dao.dart';
+export 'certificate_dao.dart';
 export 'document_dao.dart';
 export 'file_dao.dart';
 export 'filters_dao/filters_dao.dart';
 export 'history_dao/api_key_history_dao.dart';
 export 'history_dao/bank_card_history_dao.dart';
+export 'history_dao/certificate_history_dao.dart';
 export 'history_dao/document_history_dao.dart';
 export 'history_dao/file_history_dao.dart';
 export 'history_dao/note_history_dao.dart';
