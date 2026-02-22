@@ -158,33 +158,45 @@ class _DashboardDrawerContentState
               ),
               const Divider(height: 1),
 
-              // Контент с прокруткой
+              // Контент: секции 50/50
               Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(12),
+                child: Column(
                   children: [
-                    // Блок категорий
-                    _CategorySection(
-                      entityType: widget.entityType,
-                      categories: drawerState.categories,
-                      selectedIds: drawerState.selectedCategoryIds,
-                      searchQuery: drawerState.categorySearchQuery,
-                      isLoading: drawerState.isCategoriesLoading,
-                      hasMore: drawerState.hasMoreCategories,
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12.0,
+                          vertical: 6,
+                        ),
+                        child: _CategorySection(
+                          entityType: widget.entityType,
+                          categories: drawerState.categories,
+                          selectedIds: drawerState.selectedCategoryIds,
+                          searchQuery: drawerState.categorySearchQuery,
+                          isLoading: drawerState.isCategoriesLoading,
+                          hasMore: drawerState.hasMoreCategories,
+                        ),
+                      ),
                     ),
 
                     const SizedBox(height: 8.0),
                     const Divider(height: 1),
-                    const SizedBox(height: 8.0),
-
-                    // Блок тегов
-                    _TagSection(
-                      entityType: widget.entityType,
-                      tags: drawerState.tags,
-                      selectedIds: drawerState.selectedTagIds,
-                      searchQuery: drawerState.tagSearchQuery,
-                      isLoading: drawerState.isTagsLoading,
-                      hasMore: drawerState.hasMoreTags,
+                    const SizedBox(height: 4.0),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12.0,
+                          vertical: 2,
+                        ),
+                        child: _TagSection(
+                          entityType: widget.entityType,
+                          tags: drawerState.tags,
+                          selectedIds: drawerState.selectedTagIds,
+                          searchQuery: drawerState.tagSearchQuery,
+                          isLoading: drawerState.isTagsLoading,
+                          hasMore: drawerState.hasMoreTags,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -375,39 +387,38 @@ class _CategorySectionState extends ConsumerState<_CategorySection> {
         const SizedBox(height: 8.0),
 
         // Дерево категорий
-        Container(
-          constraints: const BoxConstraints(maxHeight: 350),
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            child: Column(
-              children: [
-                for (final root in tree)
-                  _CategoryTreeTile(
-                    entry: root,
-                    selectedIds: widget.selectedIds,
-                    onToggle: (id) => notifier.toggleCategory(id),
-                    depth: 0,
-                  ),
-                if (widget.isLoading)
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                if (widget.categories.isEmpty && !widget.isLoading)
-                  Padding(
+        Expanded(
+          child: widget.categories.isEmpty && !widget.isLoading
+              ? Center(
+                  child: Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: Center(
-                      child: Text(
-                        'Категории не найдены',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
+                    child: Text(
+                      'Категории не найдены',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),
-              ],
-            ),
-          ),
+                )
+              : SingleChildScrollView(
+                  controller: _scrollController,
+                  child: Column(
+                    children: [
+                      for (final root in tree)
+                        _CategoryTreeTile(
+                          entry: root,
+                          selectedIds: widget.selectedIds,
+                          onToggle: (id) => notifier.toggleCategory(id),
+                          depth: 0,
+                        ),
+                      if (widget.isLoading)
+                        const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                    ],
+                  ),
+                ),
         ),
       ],
     );
@@ -608,8 +619,7 @@ class _TagSectionState extends ConsumerState<_TagSection> {
         const SizedBox(height: 8.0),
 
         // Список тегов
-        Container(
-          constraints: const BoxConstraints(maxHeight: 300),
+        Expanded(
           child: widget.tags.isEmpty && !widget.isLoading
               ? Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -624,7 +634,6 @@ class _TagSectionState extends ConsumerState<_TagSection> {
                 )
               : ListView.builder(
                   controller: _scrollController,
-                  shrinkWrap: true,
                   itemCount: widget.tags.length + (widget.hasMore ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index == widget.tags.length) {
