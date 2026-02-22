@@ -1,5 +1,7 @@
 library;
 
+export 'api_key_dto.dart';
+export 'api_key_history_dto.dart';
 export 'bank_card_dto.dart';
 export 'bank_card_history_dto.dart';
 export 'base_card_dto.dart';

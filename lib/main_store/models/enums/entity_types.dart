@@ -2,7 +2,22 @@
 ///
 /// Определяет, какая type-specific таблица содержит
 /// дополнительные поля для данного элемента.
-enum VaultItemType { password, otp, note, bankCard, document, file }
+enum VaultItemType {
+  password,
+  otp,
+  note,
+  bankCard,
+  document,
+  file,
+  apiKey,
+  sshKey,
+  certificate,
+  cryptoWallet,
+  wifi,
+  identity,
+  licenseKey,
+  recoveryCodes,
+}
 
 extension VaultItemTypeX on VaultItemType {
   String get value {
@@ -19,6 +34,22 @@ extension VaultItemTypeX on VaultItemType {
         return 'document';
       case VaultItemType.file:
         return 'file';
+      case VaultItemType.apiKey:
+        return 'apiKey';
+      case VaultItemType.sshKey:
+        return 'sshKey';
+      case VaultItemType.certificate:
+        return 'certificate';
+      case VaultItemType.cryptoWallet:
+        return 'cryptoWallet';
+      case VaultItemType.wifi:
+        return 'wifi';
+      case VaultItemType.identity:
+        return 'identity';
+      case VaultItemType.licenseKey:
+        return 'licenseKey';
+      case VaultItemType.recoveryCodes:
+        return 'recoveryCodes';
     }
   }
 
@@ -36,15 +67,63 @@ extension VaultItemTypeX on VaultItemType {
         return VaultItemType.document;
       case 'file':
         return VaultItemType.file;
+      case 'apiKey':
+        return VaultItemType.apiKey;
+      case 'sshKey':
+        return VaultItemType.sshKey;
+      case 'certificate':
+        return VaultItemType.certificate;
+      case 'cryptoWallet':
+        return VaultItemType.cryptoWallet;
+      case 'wifi':
+        return VaultItemType.wifi;
+      case 'identity':
+        return VaultItemType.identity;
+      case 'licenseKey':
+        return VaultItemType.licenseKey;
+      case 'recoveryCodes':
+        return VaultItemType.recoveryCodes;
       default:
         throw ArgumentError('Invalid VaultItemType value: $value');
     }
   }
 }
 
-enum CategoryType { note, password, totp, bankCard, file, document, mixed }
+enum CategoryType {
+  note,
+  password,
+  totp,
+  bankCard,
+  file,
+  document,
+  apiKey,
+  sshKey,
+  certificate,
+  cryptoWallet,
+  wifi,
+  identity,
+  licenseKey,
+  recoveryCodes,
+  mixed,
+}
 
-enum TagType { note, password, totp, bankCard, file, document, mixed }
+enum TagType {
+  note,
+  password,
+  totp,
+  bankCard,
+  file,
+  document,
+  apiKey,
+  sshKey,
+  certificate,
+  cryptoWallet,
+  wifi,
+  identity,
+  licenseKey,
+  recoveryCodes,
+  mixed,
+}
 
 enum OtpType { totp, hotp }
 
@@ -110,6 +189,22 @@ extension CategoryTypeX on CategoryType {
         return 'file';
       case CategoryType.document:
         return 'document';
+      case CategoryType.apiKey:
+        return 'apiKey';
+      case CategoryType.sshKey:
+        return 'sshKey';
+      case CategoryType.certificate:
+        return 'certificate';
+      case CategoryType.cryptoWallet:
+        return 'cryptoWallet';
+      case CategoryType.wifi:
+        return 'wifi';
+      case CategoryType.identity:
+        return 'identity';
+      case CategoryType.licenseKey:
+        return 'licenseKey';
+      case CategoryType.recoveryCodes:
+        return 'recoveryCodes';
       case CategoryType.mixed:
         return 'mixed';
     }
@@ -129,6 +224,22 @@ extension CategoryTypeX on CategoryType {
         return CategoryType.file;
       case 'document':
         return CategoryType.document;
+      case 'apiKey':
+        return CategoryType.apiKey;
+      case 'sshKey':
+        return CategoryType.sshKey;
+      case 'certificate':
+        return CategoryType.certificate;
+      case 'cryptoWallet':
+        return CategoryType.cryptoWallet;
+      case 'wifi':
+        return CategoryType.wifi;
+      case 'identity':
+        return CategoryType.identity;
+      case 'licenseKey':
+        return CategoryType.licenseKey;
+      case 'recoveryCodes':
+        return CategoryType.recoveryCodes;
       case 'mixed':
         return CategoryType.mixed;
       default:
@@ -152,6 +263,22 @@ extension TagTypeX on TagType {
         return 'file';
       case TagType.document:
         return 'document';
+      case TagType.apiKey:
+        return 'apiKey';
+      case TagType.sshKey:
+        return 'sshKey';
+      case TagType.certificate:
+        return 'certificate';
+      case TagType.cryptoWallet:
+        return 'cryptoWallet';
+      case TagType.wifi:
+        return 'wifi';
+      case TagType.identity:
+        return 'identity';
+      case TagType.licenseKey:
+        return 'licenseKey';
+      case TagType.recoveryCodes:
+        return 'recoveryCodes';
       case TagType.mixed:
         return 'mixed';
     }
@@ -171,6 +298,22 @@ extension TagTypeX on TagType {
         return TagType.file;
       case 'document':
         return TagType.document;
+      case 'apiKey':
+        return TagType.apiKey;
+      case 'sshKey':
+        return TagType.sshKey;
+      case 'certificate':
+        return TagType.certificate;
+      case 'cryptoWallet':
+        return TagType.cryptoWallet;
+      case 'wifi':
+        return TagType.wifi;
+      case 'identity':
+        return TagType.identity;
+      case 'licenseKey':
+        return TagType.licenseKey;
+      case 'recoveryCodes':
+        return TagType.recoveryCodes;
       case 'mixed':
         return TagType.mixed;
       default:

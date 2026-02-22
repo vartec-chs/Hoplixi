@@ -8,7 +8,19 @@ enum EntityType {
   bankCard('bank_cards', 'Банковские карты', Icons.credit_card),
   file('files', 'Файлы', Icons.attach_file),
   otp('otps', 'OTP/2FA', Icons.security),
-  document('documents', 'Документы', Icons.description);
+  document('documents', 'Документы', Icons.description),
+  apiKey('api_keys', 'API-ключи', Icons.vpn_key),
+  sshKey('ssh_keys', 'SSH-ключи', Icons.key),
+  certificate('certificates', 'Сертификаты', Icons.verified_user),
+  cryptoWallet(
+    'crypto_wallets',
+    'Криптокошельки',
+    Icons.account_balance_wallet,
+  ),
+  wifi('wifi', 'Wi-Fi', Icons.wifi),
+  identity('identities', 'Идентификация', Icons.badge),
+  licenseKey('license_keys', 'Лицензии', Icons.confirmation_number),
+  recoveryCodes('recovery_codes', 'Коды восстановления', Icons.password);
 
   const EntityType(this.id, this.label, this.icon);
 
@@ -67,6 +79,22 @@ extension EntityTypeX on EntityType {
         return TagType.totp;
       case EntityType.document:
         return TagType.document;
+      case EntityType.apiKey:
+        return TagType.apiKey;
+      case EntityType.sshKey:
+        return TagType.sshKey;
+      case EntityType.certificate:
+        return TagType.certificate;
+      case EntityType.cryptoWallet:
+        return TagType.cryptoWallet;
+      case EntityType.wifi:
+        return TagType.wifi;
+      case EntityType.identity:
+        return TagType.identity;
+      case EntityType.licenseKey:
+        return TagType.licenseKey;
+      case EntityType.recoveryCodes:
+        return TagType.recoveryCodes;
     }
   }
 
@@ -85,6 +113,22 @@ extension EntityTypeX on EntityType {
         return CategoryType.totp;
       case EntityType.document:
         return CategoryType.document;
+      case EntityType.apiKey:
+        return CategoryType.apiKey;
+      case EntityType.sshKey:
+        return CategoryType.sshKey;
+      case EntityType.certificate:
+        return CategoryType.certificate;
+      case EntityType.cryptoWallet:
+        return CategoryType.cryptoWallet;
+      case EntityType.wifi:
+        return CategoryType.wifi;
+      case EntityType.identity:
+        return CategoryType.identity;
+      case EntityType.licenseKey:
+        return CategoryType.licenseKey;
+      case EntityType.recoveryCodes:
+        return CategoryType.recoveryCodes;
     }
   }
 }

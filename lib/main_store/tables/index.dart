@@ -1,5 +1,7 @@
 library;
 
+export 'api_key_history.dart';
+export 'api_key_items.dart';
 export 'bank_card_history.dart';
 // --- Type-specific таблицы ---
 export 'bank_card_items.dart';

@@ -144,6 +144,22 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
         return 'Поиск файлов по имени...';
       case EntityType.document:
         return 'Поиск документов по названию, типу...';
+      case EntityType.apiKey:
+        return 'Поиск API-ключей по сервису, типу токена...';
+      case EntityType.sshKey:
+        return 'Поиск SSH-ключей по комментарию, отпечатку...';
+      case EntityType.certificate:
+        return 'Поиск сертификатов по issuer, subject...';
+      case EntityType.cryptoWallet:
+        return 'Поиск кошельков по сети, адресу...';
+      case EntityType.wifi:
+        return 'Поиск Wi-Fi по SSID, security...';
+      case EntityType.identity:
+        return 'Поиск ID по типу документа, номеру...';
+      case EntityType.licenseKey:
+        return 'Поиск лицензий по продукту, ключу...';
+      case EntityType.recoveryCodes:
+        return 'Поиск recovery codes по заметкам...';
     }
   }
 

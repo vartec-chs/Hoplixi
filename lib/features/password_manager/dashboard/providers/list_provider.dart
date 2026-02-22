@@ -35,11 +35,13 @@ class PaginatedListNotifier
   ProviderSubscription<BankCardsFilter>? _bankCardFilterSubscription;
   ProviderSubscription<FilesFilter>? _fileFilterSubscription;
   ProviderSubscription<OtpsFilter>? _otpFilterSubscription;
+  ProviderSubscription<ApiKeysFilter>? _apiKeyFilterSubscription;
   ProviderSubscription<DataRefreshState>? _passwordRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _noteRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _bankCardRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _fileRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _otpRefreshSubscription;
+  ProviderSubscription<DataRefreshState>? _apiKeyRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _documentRefreshSubscription;
 
   int get pageSize {
@@ -48,6 +50,15 @@ class PaginatedListNotifier
   }
 
   final String _logTag = 'DashboardListProvider: ';
+
+  bool get _isUnsupportedEntity =>
+      entityType == EntityType.sshKey ||
+      entityType == EntityType.certificate ||
+      entityType == EntityType.cryptoWallet ||
+      entityType == EntityType.wifi ||
+      entityType == EntityType.identity ||
+      entityType == EntityType.licenseKey ||
+      entityType == EntityType.recoveryCodes;
 
   @override
   Future<DashboardListState<BaseCardDto>> build() async {
@@ -173,6 +184,32 @@ class PaginatedListNotifier
           },
         );
         break;
+      case EntityType.apiKey:
+        _apiKeyFilterSubscription = ref.listen(apiKeysFilterProvider, (
+          prev,
+          next,
+        ) {
+          if (prev != next) {
+            _resetAndLoad();
+          }
+        });
+        _apiKeyRefreshSubscription = ref.listen<DataRefreshState>(
+          dataRefreshTriggerProvider,
+          (previous, next) {
+            if (_shouldHandleRefresh(next, EntityType.apiKey)) {
+              _resetAndLoad();
+            }
+          },
+        );
+        break;
+      case EntityType.sshKey:
+      case EntityType.certificate:
+      case EntityType.cryptoWallet:
+      case EntityType.wifi:
+      case EntityType.identity:
+      case EntityType.licenseKey:
+      case EntityType.recoveryCodes:
+        break;
     }
   }
 
@@ -191,6 +228,8 @@ class PaginatedListNotifier
     _fileFilterSubscription = null;
     _otpFilterSubscription?.close();
     _otpFilterSubscription = null;
+    _apiKeyFilterSubscription?.close();
+    _apiKeyFilterSubscription = null;
     _passwordRefreshSubscription?.close();
     _passwordRefreshSubscription = null;
     _noteRefreshSubscription?.close();
@@ -201,6 +240,8 @@ class PaginatedListNotifier
     _fileRefreshSubscription = null;
     _otpRefreshSubscription?.close();
     _otpRefreshSubscription = null;
+    _apiKeyRefreshSubscription?.close();
+    _apiKeyRefreshSubscription = null;
     _documentRefreshSubscription?.close();
     _documentRefreshSubscription = null;
   }
@@ -220,6 +261,16 @@ class PaginatedListNotifier
         return ref.read(otpFilterDaoProvider.future);
       case EntityType.document:
         return ref.read(documentFilterDaoProvider.future);
+      case EntityType.apiKey:
+        return ref.read(apiKeyFilterDaoProvider.future);
+      case EntityType.sshKey:
+      case EntityType.certificate:
+      case EntityType.cryptoWallet:
+      case EntityType.wifi:
+      case EntityType.identity:
+      case EntityType.licenseKey:
+      case EntityType.recoveryCodes:
+        return Future.value(const _UnsupportedFilterDao());
     }
   }
 
@@ -307,6 +358,26 @@ class PaginatedListNotifier
           offset: offset,
         );
         return documentsFilter.copyWith(base: base);
+      case EntityType.apiKey:
+        final apiKeysFilter = ref.read(apiKeysFilterProvider);
+        final base = apiKeysFilter.base.copyWith(
+          isFavorite: apiKeysFilter.base.isFavorite ?? tabFilter.isFavorite,
+          isArchived: apiKeysFilter.base.isArchived ?? tabFilter.isArchived,
+          isDeleted: apiKeysFilter.base.isDeleted ?? tabFilter.isDeleted,
+          isFrequentlyUsed:
+              tabFilter.isFrequentlyUsed ?? apiKeysFilter.base.isFrequentlyUsed,
+          limit: limit,
+          offset: offset,
+        );
+        return apiKeysFilter.copyWith(base: base);
+      case EntityType.sshKey:
+      case EntityType.certificate:
+      case EntityType.cryptoWallet:
+      case EntityType.wifi:
+      case EntityType.identity:
+      case EntityType.licenseKey:
+      case EntityType.recoveryCodes:
+        return BaseFilter.create(limit: limit, offset: offset);
     }
   }
 
@@ -408,6 +479,7 @@ class PaginatedListNotifier
 
   /// Примеры операций (toggleFavorite / delete) — делаем через _serviceForType и адаптацию DTO
   Future<void> toggleFavorite(String id) async {
+    if (_isUnsupportedEntity) return;
     final cur = state.value;
     if (cur == null) return;
 
@@ -448,6 +520,7 @@ class PaginatedListNotifier
   }
 
   Future<void> togglePin(String id) async {
+    if (_isUnsupportedEntity) return;
     final cur = state.value;
     if (cur == null) return;
 
@@ -484,6 +557,7 @@ class PaginatedListNotifier
   }
 
   Future<void> toggleArchive(String id) async {
+    if (_isUnsupportedEntity) return;
     final cur = state.value;
     if (cur == null) return;
 
@@ -540,6 +614,7 @@ class PaginatedListNotifier
   }
 
   Future<void> delete(String id) async {
+    if (_isUnsupportedEntity) return;
     final cur = state.value;
     if (cur == null) return;
 
@@ -581,6 +656,7 @@ class PaginatedListNotifier
   }
 
   Future<void> restoreFromDeleted(String id) async {
+    if (_isUnsupportedEntity) return;
     final cur = state.value;
     if (cur == null) return;
 
@@ -621,6 +697,7 @@ class PaginatedListNotifier
   }
 
   Future<void> permanentDelete(String id) async {
+    if (_isUnsupportedEntity) return;
     final cur = state.value;
     if (cur == null) return;
 
@@ -708,4 +785,14 @@ class PaginatedListNotifier
     state = const AsyncValue.loading();
     ref.invalidateSelf();
   }
+}
+
+class _UnsupportedFilterDao implements FilterDao<BaseFilter, BaseCardDto> {
+  const _UnsupportedFilterDao();
+
+  @override
+  Future<int> countFiltered(BaseFilter filter) async => 0;
+
+  @override
+  Future<List<BaseCardDto>> getFiltered(BaseFilter filter) async => const [];
 }

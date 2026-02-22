@@ -296,6 +296,16 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         return _fetchOtpHistory(offset, searchQuery);
       case EntityType.document:
         throw UnimplementedError('Document history fetching not implemented');
+      case EntityType.apiKey:
+        return _fetchApiKeyHistory(offset, searchQuery);
+      case EntityType.sshKey:
+      case EntityType.certificate:
+      case EntityType.cryptoWallet:
+      case EntityType.wifi:
+      case EntityType.identity:
+      case EntityType.licenseKey:
+      case EntityType.recoveryCodes:
+        return const [];
     }
   }
 
@@ -436,6 +446,33 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         .toList();
   }
 
+  Future<List<HistoryItem>> _fetchApiKeyHistory(
+    int offset,
+    String? searchQuery,
+  ) async {
+    final dao = await ref.read(apiKeyHistoryDaoProvider.future);
+    final cards = await dao.getApiKeyHistoryCardsByOriginalId(
+      _params.entityId,
+      offset,
+      pageSize,
+      searchQuery,
+    );
+
+    return cards
+        .map(
+          (card) => HistoryItem(
+            id: card.id,
+            originalEntityId: card.originalApiKeyId,
+            entityType: EntityType.apiKey,
+            action: card.action,
+            title: card.name,
+            subtitle: card.service,
+            actionAt: card.actionAt,
+          ),
+        )
+        .toList();
+  }
+
   /// Получить общее количество записей
   Future<int> _getTotalCount({String? searchQuery}) async {
     switch (_params.entityType) {
@@ -462,6 +499,20 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         return dao.countOtpHistoryByOriginalId(_params.entityId, searchQuery);
       case EntityType.document:
         throw UnimplementedError('Document history count not implemented');
+      case EntityType.apiKey:
+        final dao = await ref.read(apiKeyHistoryDaoProvider.future);
+        return dao.countApiKeyHistoryByOriginalId(
+          _params.entityId,
+          searchQuery,
+        );
+      case EntityType.sshKey:
+      case EntityType.certificate:
+      case EntityType.cryptoWallet:
+      case EntityType.wifi:
+      case EntityType.identity:
+      case EntityType.licenseKey:
+      case EntityType.recoveryCodes:
+        return 0;
     }
   }
 
@@ -485,6 +536,17 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         return await dao.deleteOtpHistoryById(historyItemId) > 0;
       case EntityType.document:
         throw UnimplementedError('Document history deletion not implemented');
+      case EntityType.apiKey:
+        final dao = await ref.read(apiKeyHistoryDaoProvider.future);
+        return await dao.deleteApiKeyHistoryById(historyItemId) > 0;
+      case EntityType.sshKey:
+      case EntityType.certificate:
+      case EntityType.cryptoWallet:
+      case EntityType.wifi:
+      case EntityType.identity:
+      case EntityType.licenseKey:
+      case EntityType.recoveryCodes:
+        return false;
     }
   }
 
@@ -510,6 +572,17 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         return await dao.deleteOtpHistoryByOtpId(_params.entityId) >= 0;
       case EntityType.document:
         throw UnimplementedError('Document history deletion not implemented');
+      case EntityType.apiKey:
+        final dao = await ref.read(apiKeyHistoryDaoProvider.future);
+        return await dao.deleteApiKeyHistoryByApiKeyId(_params.entityId) >= 0;
+      case EntityType.sshKey:
+      case EntityType.certificate:
+      case EntityType.cryptoWallet:
+      case EntityType.wifi:
+      case EntityType.identity:
+      case EntityType.licenseKey:
+      case EntityType.recoveryCodes:
+        return false;
     }
   }
 }

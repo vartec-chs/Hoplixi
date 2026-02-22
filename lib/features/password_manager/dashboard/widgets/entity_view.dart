@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/forms/api_key_form/screens/api_key_view_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/bank_card_form/screens/bank_card_view_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/document_form/screens/document_view_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/file_form/screens/file_view_screen.dart';
@@ -20,6 +21,15 @@ class EntityView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Widget buildNotImplemented(String title) {
+      return Scaffold(
+        appBar: AppBar(title: Text(title)),
+        body: const Center(
+          child: Text('Экран просмотра для этой сущности будет добавлен позже'),
+        ),
+      );
+    }
+
     switch (entity) {
       case EntityType.password:
         return PasswordViewScreen(passwordId: id);
@@ -33,6 +43,22 @@ class EntityView extends StatelessWidget {
         return OtpViewScreen(otpId: id);
       case EntityType.document:
         return DocumentViewScreen(documentId: id);
+      case EntityType.apiKey:
+        return ApiKeyViewScreen(apiKeyId: id);
+      case EntityType.sshKey:
+        return buildNotImplemented('SSH-ключи');
+      case EntityType.certificate:
+        return buildNotImplemented('Сертификаты');
+      case EntityType.cryptoWallet:
+        return buildNotImplemented('Криптокошельки');
+      case EntityType.wifi:
+        return buildNotImplemented('Wi-Fi');
+      case EntityType.identity:
+        return buildNotImplemented('Идентификация');
+      case EntityType.licenseKey:
+        return buildNotImplemented('Лицензии');
+      case EntityType.recoveryCodes:
+        return buildNotImplemented('Коды восстановления');
     }
   }
 }

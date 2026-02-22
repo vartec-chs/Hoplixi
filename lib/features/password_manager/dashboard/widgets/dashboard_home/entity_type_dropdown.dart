@@ -126,6 +126,22 @@ class EntityTypeFullDropdown extends StatelessWidget {
         return 'Коды двухфакторной аутентификации';
       case EntityType.document:
         return 'Сканированные и цифровые документы';
+      case EntityType.apiKey:
+        return 'Ключи API и токены интеграций';
+      case EntityType.sshKey:
+        return 'Публичные и приватные SSH-ключи';
+      case EntityType.certificate:
+        return 'TLS/SSL и другие цифровые сертификаты';
+      case EntityType.cryptoWallet:
+        return 'Секреты криптокошельков и seed-данные';
+      case EntityType.wifi:
+        return 'Параметры Wi-Fi сетей';
+      case EntityType.identity:
+        return 'Паспортные и идентификационные данные';
+      case EntityType.licenseKey:
+        return 'Лицензионные ключи и активации';
+      case EntityType.recoveryCodes:
+        return 'Резервные коды восстановления доступа';
     }
   }
 

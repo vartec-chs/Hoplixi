@@ -342,6 +342,22 @@ String _getTagTypeLabel(TagType type) {
       return 'Файлы';
     case TagType.document:
       return 'Документы';
+    case TagType.apiKey:
+      return 'API-ключи';
+    case TagType.sshKey:
+      return 'SSH-ключи';
+    case TagType.certificate:
+      return 'Сертификаты';
+    case TagType.cryptoWallet:
+      return 'Криптокошельки';
+    case TagType.wifi:
+      return 'Wi-Fi';
+    case TagType.identity:
+      return 'Идентификация';
+    case TagType.licenseKey:
+      return 'Лицензии';
+    case TagType.recoveryCodes:
+      return 'Коды восстановления';
     case TagType.mixed:
       return 'Смешанная';
   }
@@ -362,5 +378,21 @@ TagType _convertEntityTypeToTagType(EntityType entityType) {
       return TagType.totp;
     case EntityType.document:
       return TagType.document;
+    case EntityType.apiKey:
+      return TagType.apiKey;
+    case EntityType.sshKey:
+      return TagType.sshKey;
+    case EntityType.certificate:
+      return TagType.certificate;
+    case EntityType.cryptoWallet:
+      return TagType.cryptoWallet;
+    case EntityType.wifi:
+      return TagType.wifi;
+    case EntityType.identity:
+      return TagType.identity;
+    case EntityType.licenseKey:
+      return TagType.licenseKey;
+    case EntityType.recoveryCodes:
+      return TagType.recoveryCodes;
   }
 }

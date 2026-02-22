@@ -59,6 +59,14 @@ enum FilterTab {
           FilterTab.delete,
         ];
       case EntityType.document:
+      case EntityType.apiKey:
+      case EntityType.sshKey:
+      case EntityType.certificate:
+      case EntityType.cryptoWallet:
+      case EntityType.wifi:
+      case EntityType.identity:
+      case EntityType.licenseKey:
+      case EntityType.recoveryCodes:
         return [
           FilterTab.all,
           FilterTab.favorites,

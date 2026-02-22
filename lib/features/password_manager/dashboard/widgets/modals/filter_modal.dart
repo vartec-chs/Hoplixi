@@ -13,6 +13,7 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 // Модели и провайдеры
 import '../../models/entity_type.dart';
+import '../../providers/filter_providers/api_keys_filter_provider.dart';
 import '../../providers/filter_providers/bank_cards_filter_provider.dart';
 import '../../providers/filter_providers/base_filter_provider.dart';
 import '../../providers/filter_providers/documents_filter_provider.dart';
@@ -32,6 +33,7 @@ class _InitialFilterValues {
   final BankCardsFilter? bankCardsFilter;
   final FilesFilter? filesFilter;
   final DocumentsFilter? documentsFilter;
+  final ApiKeysFilter? apiKeysFilter;
 
   _InitialFilterValues({
     required this.baseFilter,
@@ -41,6 +43,7 @@ class _InitialFilterValues {
     this.bankCardsFilter,
     this.filesFilter,
     this.documentsFilter,
+    this.apiKeysFilter,
   });
 }
 
@@ -210,6 +213,19 @@ class _FilterModalActions extends ConsumerWidget {
               .read(documentsFilterProvider.notifier)
               .updateFilter(DocumentsFilter(base: emptyBaseFilter));
           break;
+        case EntityType.apiKey:
+          ref
+              .read(apiKeysFilterProvider.notifier)
+              .updateFilter(ApiKeysFilter(base: emptyBaseFilter));
+          break;
+        case EntityType.sshKey:
+        case EntityType.certificate:
+        case EntityType.cryptoWallet:
+        case EntityType.wifi:
+        case EntityType.identity:
+        case EntityType.licenseKey:
+        case EntityType.recoveryCodes:
+          break;
       }
 
       contentState.clearFields();
@@ -294,6 +310,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
   BankCardsFilter? _localBankCardsFilter;
   FilesFilter? _localFilesFilter;
   DocumentsFilter? _localDocumentsFilter;
+  ApiKeysFilter? _localApiKeysFilter;
 
   // Типобезопасное хранение начальных значений для отката
   _InitialFilterValues? _initialValues;
@@ -334,6 +351,17 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
 
       case EntityType.document:
         _localDocumentsFilter = ref.read(documentsFilterProvider);
+        break;
+      case EntityType.apiKey:
+        _localApiKeysFilter = ref.read(apiKeysFilterProvider);
+        break;
+      case EntityType.sshKey:
+      case EntityType.certificate:
+      case EntityType.cryptoWallet:
+      case EntityType.wifi:
+      case EntityType.identity:
+      case EntityType.licenseKey:
+      case EntityType.recoveryCodes:
         break;
     }
 
@@ -405,6 +433,22 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           baseFilter: baseFilter,
           filesFilter: filesFilter,
         );
+        break;
+      case EntityType.apiKey:
+        final apiKeysFilter = ref.read(apiKeysFilterProvider);
+        _initialValues = _InitialFilterValues(
+          baseFilter: baseFilter,
+          apiKeysFilter: apiKeysFilter,
+        );
+        break;
+      case EntityType.sshKey:
+      case EntityType.certificate:
+      case EntityType.cryptoWallet:
+      case EntityType.wifi:
+      case EntityType.identity:
+      case EntityType.licenseKey:
+      case EntityType.recoveryCodes:
+        _initialValues = _InitialFilterValues(baseFilter: baseFilter);
         break;
     }
 
@@ -594,6 +638,21 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
                     );
                   }
                   break;
+                case EntityType.apiKey:
+                  if (_localApiKeysFilter != null) {
+                    _localApiKeysFilter = _localApiKeysFilter!.copyWith(
+                      base: updatedFilter,
+                    );
+                  }
+                  break;
+                case EntityType.sshKey:
+                case EntityType.certificate:
+                case EntityType.cryptoWallet:
+                case EntityType.wifi:
+                case EntityType.identity:
+                case EntityType.licenseKey:
+                case EntityType.recoveryCodes:
+                  break;
               }
             });
             logDebug('FilterModal: Обновлены базовые фильтры локально');
@@ -689,6 +748,24 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
             logDebug('FilterModal: Обновлены фильтры документов локально');
           },
         );
+      case EntityType.apiKey:
+        return ApiKeysFilterSection(
+          filter: _localApiKeysFilter ?? ApiKeysFilter(base: _localBaseFilter),
+          onFilterChanged: (updatedFilter) {
+            setState(() {
+              _localApiKeysFilter = updatedFilter;
+            });
+            logDebug('FilterModal: Обновлены фильтры API-ключей локально');
+          },
+        );
+      case EntityType.sshKey:
+      case EntityType.certificate:
+      case EntityType.cryptoWallet:
+      case EntityType.wifi:
+      case EntityType.identity:
+      case EntityType.licenseKey:
+      case EntityType.recoveryCodes:
+        return const Text('Специфичные фильтры для этого типа пока недоступны');
     }
   }
 
@@ -706,6 +783,22 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         return CategoryType.file;
       case EntityType.otp:
         return CategoryType.totp;
+      case EntityType.apiKey:
+        return CategoryType.apiKey;
+      case EntityType.sshKey:
+        return CategoryType.sshKey;
+      case EntityType.certificate:
+        return CategoryType.certificate;
+      case EntityType.cryptoWallet:
+        return CategoryType.cryptoWallet;
+      case EntityType.wifi:
+        return CategoryType.wifi;
+      case EntityType.identity:
+        return CategoryType.identity;
+      case EntityType.licenseKey:
+        return CategoryType.licenseKey;
+      case EntityType.recoveryCodes:
+        return CategoryType.recoveryCodes;
     }
   }
 
@@ -723,6 +816,22 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         return TagType.file;
       case EntityType.otp:
         return TagType.totp;
+      case EntityType.apiKey:
+        return TagType.apiKey;
+      case EntityType.sshKey:
+        return TagType.sshKey;
+      case EntityType.certificate:
+        return TagType.certificate;
+      case EntityType.cryptoWallet:
+        return TagType.cryptoWallet;
+      case EntityType.wifi:
+        return TagType.wifi;
+      case EntityType.identity:
+        return TagType.identity;
+      case EntityType.licenseKey:
+        return TagType.licenseKey;
+      case EntityType.recoveryCodes:
+        return TagType.recoveryCodes;
     }
   }
 
@@ -860,6 +969,22 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
                 .updateFilter(syncedFilter);
           }
           break;
+        case EntityType.apiKey:
+          if (_localApiKeysFilter != null) {
+            final syncedFilter = _localApiKeysFilter!.copyWith(
+              base: _localBaseFilter,
+            );
+            ref.read(apiKeysFilterProvider.notifier).updateFilter(syncedFilter);
+          }
+          break;
+        case EntityType.sshKey:
+        case EntityType.certificate:
+        case EntityType.cryptoWallet:
+        case EntityType.wifi:
+        case EntityType.identity:
+        case EntityType.licenseKey:
+        case EntityType.recoveryCodes:
+          break;
       }
 
       logInfo('FilterModal: Локальные фильтры успешно применены к провайдерам');
@@ -935,6 +1060,21 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
                 .updateFilterDebounced(_initialValues!.documentsFilter!);
           }
           break;
+        case EntityType.apiKey:
+          if (_initialValues!.apiKeysFilter != null) {
+            ref
+                .read(apiKeysFilterProvider.notifier)
+                .updateFilterDebounced(_initialValues!.apiKeysFilter!);
+          }
+          break;
+        case EntityType.sshKey:
+        case EntityType.certificate:
+        case EntityType.cryptoWallet:
+        case EntityType.wifi:
+        case EntityType.identity:
+        case EntityType.licenseKey:
+        case EntityType.recoveryCodes:
+          break;
       }
 
       // Восстановление локального состояния
@@ -983,6 +1123,17 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
 
         case EntityType.document:
           _localDocumentsFilter = DocumentsFilter(base: _localBaseFilter);
+          break;
+        case EntityType.apiKey:
+          _localApiKeysFilter = ApiKeysFilter(base: _localBaseFilter);
+          break;
+        case EntityType.sshKey:
+        case EntityType.certificate:
+        case EntityType.cryptoWallet:
+        case EntityType.wifi:
+        case EntityType.identity:
+        case EntityType.licenseKey:
+        case EntityType.recoveryCodes:
           break;
       }
     });

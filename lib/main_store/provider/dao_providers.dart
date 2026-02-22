@@ -21,8 +21,16 @@ final passwordDaoProvider = FutureProvider<PasswordDao>(
   (ref) => _ensureDao(ref, (store) => PasswordDao(store)),
 );
 
+final apiKeyDaoProvider = FutureProvider<ApiKeyDao>(
+  (ref) => _ensureDao(ref, (store) => ApiKeyDao(store)),
+);
+
 final passwordHistoryDaoProvider = FutureProvider<PasswordHistoryDao>(
   (ref) => _ensureDao(ref, (store) => PasswordHistoryDao(store)),
+);
+
+final apiKeyHistoryDaoProvider = FutureProvider<ApiKeyHistoryDao>(
+  (ref) => _ensureDao(ref, (store) => ApiKeyHistoryDao(store)),
 );
 
 final otpDaoProvider = FutureProvider<OtpDao>(
@@ -71,6 +79,10 @@ final tagDaoProvider = FutureProvider<TagDao>(
 
 final passwordFilterDaoProvider = FutureProvider<PasswordFilterDao>(
   (ref) => _ensureDao(ref, (store) => PasswordFilterDao(store)),
+);
+
+final apiKeyFilterDaoProvider = FutureProvider<ApiKeyFilterDao>(
+  (ref) => _ensureDao(ref, (store) => ApiKeyFilterDao(store)),
 );
 
 final otpFilterDaoProvider = FutureProvider<OtpFilterDao>(

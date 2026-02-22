@@ -413,6 +413,22 @@ String _getCategoryTypeLabel(CategoryType type) {
       return 'Файлы';
     case CategoryType.document:
       return 'Документы';
+    case CategoryType.apiKey:
+      return 'API-ключи';
+    case CategoryType.sshKey:
+      return 'SSH-ключи';
+    case CategoryType.certificate:
+      return 'Сертификаты';
+    case CategoryType.cryptoWallet:
+      return 'Криптокошельки';
+    case CategoryType.wifi:
+      return 'Wi-Fi';
+    case CategoryType.identity:
+      return 'Идентификация';
+    case CategoryType.licenseKey:
+      return 'Лицензии';
+    case CategoryType.recoveryCodes:
+      return 'Коды восстановления';
     case CategoryType.mixed:
       return 'Смешанная';
   }
@@ -433,5 +449,21 @@ CategoryType _convertEntityTypeToCategoryType(EntityType entityType) {
       return CategoryType.totp;
     case EntityType.document:
       return CategoryType.document;
+    case EntityType.apiKey:
+      return CategoryType.apiKey;
+    case EntityType.sshKey:
+      return CategoryType.sshKey;
+    case EntityType.certificate:
+      return CategoryType.certificate;
+    case EntityType.cryptoWallet:
+      return CategoryType.cryptoWallet;
+    case EntityType.wifi:
+      return CategoryType.wifi;
+    case EntityType.identity:
+      return CategoryType.identity;
+    case EntityType.licenseKey:
+      return CategoryType.licenseKey;
+    case EntityType.recoveryCodes:
+      return CategoryType.recoveryCodes;
   }
 }

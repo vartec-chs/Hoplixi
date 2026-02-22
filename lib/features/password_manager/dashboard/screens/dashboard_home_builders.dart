@@ -6,6 +6,8 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/dashboard/models/list_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/current_view_mode_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/list_provider.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/api_key/api_key_grid_card.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/api_key/api_key_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/bank_card/bank_card_grid.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/bank_card/bank_card_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/document/document_grid_card.dart';
@@ -666,6 +668,44 @@ class DashboardHomeBuilders {
           },
         );
         break;
+      case EntityType.apiKey:
+        if (item is! ApiKeyCardDto) return noCorrectType;
+        card = ApiKeyListCard(
+          apiKey: item,
+          onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
+          onOpenHistory: () {
+            if (location !=
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.apiKey,
+                  item.id,
+                )) {
+              context.push(
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.apiKey,
+                  item.id,
+                ),
+              );
+            }
+          },
+        );
+        break;
+      case EntityType.sshKey:
+      case EntityType.certificate:
+      case EntityType.cryptoWallet:
+      case EntityType.wifi:
+      case EntityType.identity:
+      case EntityType.licenseKey:
+      case EntityType.recoveryCodes:
+        return const Card(
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Text('Карточка для этой сущности пока не реализована'),
+          ),
+        );
     }
 
     // Обертка для долгого нажатия -> открытие view
@@ -792,6 +832,14 @@ class DashboardHomeBuilders {
             if (GoRouter.of(context).state.matchedLocation != path) {
               context.push(path);
             }
+          } else if (item is ApiKeyCardDto) {
+            final path = AppRoutesPaths.dashboardEntityEdit(
+              EntityType.apiKey,
+              item.id,
+            );
+            if (GoRouter.of(context).state.matchedLocation != path) {
+              context.push(path);
+            }
           }
 
           return false;
@@ -810,6 +858,8 @@ class DashboardHomeBuilders {
             itemName = item.name;
           } else if (item is DocumentCardDto) {
             itemName = item.title ?? 'Документ';
+          } else if (item is ApiKeyCardDto) {
+            itemName = item.name;
           }
 
           final shouldDelete = await showDialog<bool>(
@@ -921,6 +971,29 @@ class DashboardHomeBuilders {
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
           onDecrypt: () => showDocumentDecryptModal(context, item),
+        );
+      case EntityType.apiKey:
+        if (item is! ApiKeyCardDto) return noCorrectType;
+        card = ApiKeyGridCard(
+          apiKey: item,
+          onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
+        );
+      case EntityType.sshKey:
+      case EntityType.certificate:
+      case EntityType.cryptoWallet:
+      case EntityType.wifi:
+      case EntityType.identity:
+      case EntityType.licenseKey:
+      case EntityType.recoveryCodes:
+        return const Card(
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Text('Grid-карточка для этой сущности пока не реализована'),
+          ),
         );
     }
 

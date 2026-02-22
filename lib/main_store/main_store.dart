@@ -1,10 +1,12 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/main_store/dao/api_key_dao.dart';
 import 'package:hoplixi/main_store/dao/bank_card_dao.dart';
 import 'package:hoplixi/main_store/dao/category_dao.dart';
 import 'package:hoplixi/main_store/dao/document_dao.dart';
 import 'package:hoplixi/main_store/dao/file_dao.dart';
+import 'package:hoplixi/main_store/dao/history_dao/api_key_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/bank_card_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/document_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/file_history_dao.dart';
@@ -36,6 +38,7 @@ part 'main_store.g.dart';
     VaultItems,
     // --- Type-specific таблицы ---
     PasswordItems,
+    ApiKeyItems,
     OtpItems,
     NoteItems,
     NoteLinks,
@@ -53,6 +56,7 @@ part 'main_store.g.dart';
     // --- История (Table-Per-Type) ---
     VaultItemHistory,
     PasswordHistory,
+    ApiKeyHistory,
     OtpHistory,
     NoteHistory,
     BankCardHistory,
@@ -65,6 +69,8 @@ part 'main_store.g.dart';
     VaultItemDao,
     PasswordDao,
     PasswordHistoryDao,
+    ApiKeyDao,
+    ApiKeyHistoryDao,
     OtpDao,
     OtpHistoryDao,
     NoteDao,
@@ -83,6 +89,7 @@ part 'main_store.g.dart';
     NoteFilterDao,
     OtpFilterDao,
     PasswordFilterDao,
+    ApiKeyFilterDao,
   ],
 )
 class MainStore extends _$MainStore {
@@ -145,6 +152,7 @@ class MainStore extends _$MainStore {
       readsFrom: {
         vaultItems,
         passwordItems,
+        apiKeyItems,
         otpItems,
         noteItems,
         noteLinks,
@@ -170,6 +178,7 @@ class MainStore extends _$MainStore {
       // Удаляем старые триггеры истории (если есть)
       for (final drop in [
         ...passwordsHistoryDropTriggers,
+        ...apiKeysHistoryDropTriggers,
         ...otpsHistoryDropTriggers,
         ...notesHistoryDropTriggers,
         ...filesHistoryDropTriggers,
@@ -192,6 +201,7 @@ class MainStore extends _$MainStore {
       // Создаём триггеры истории изменений
       for (final trigger in [
         ...passwordsHistoryCreateTriggers,
+        ...apiKeysHistoryCreateTriggers,
         ...otpsHistoryCreateTriggers,
         ...notesHistoryCreateTriggers,
         ...filesHistoryCreateTriggers,
@@ -264,6 +274,13 @@ class MainStore extends _$MainStore {
         // WHERE expire_at IS NOT NULL ORDER BY expire_at ASC (поиск истекающих паролей)
         'CREATE INDEX IF NOT EXISTS idx_password_items_expire_at '
             'ON password_items (expire_at) WHERE expire_at IS NOT NULL',
+
+        // --- api_key_items ---
+        // Для сортировки/фильтрации по истечению и сервису
+        'CREATE INDEX IF NOT EXISTS idx_api_key_items_expires_at '
+            'ON api_key_items (expires_at) WHERE expires_at IS NOT NULL',
+        'CREATE INDEX IF NOT EXISTS idx_api_key_items_service '
+            'ON api_key_items (service)',
 
         // --- vault_item_history ---
         // WHERE item_id = ? AND type = ? ORDER BY action_at DESC
