@@ -41,6 +41,7 @@ class PaginatedListNotifier
   ProviderSubscription<CryptoWalletsFilter>? _cryptoWalletFilterSubscription;
   ProviderSubscription<WifisFilter>? _wifiFilterSubscription;
   ProviderSubscription<IdentitiesFilter>? _identityFilterSubscription;
+  ProviderSubscription<LicenseKeysFilter>? _licenseKeyFilterSubscription;
   ProviderSubscription<DataRefreshState>? _passwordRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _noteRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _bankCardRefreshSubscription;
@@ -52,6 +53,7 @@ class PaginatedListNotifier
   ProviderSubscription<DataRefreshState>? _cryptoWalletRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _wifiRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _identityRefreshSubscription;
+  ProviderSubscription<DataRefreshState>? _licenseKeyRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _documentRefreshSubscription;
 
   int get pageSize {
@@ -61,9 +63,7 @@ class PaginatedListNotifier
 
   final String _logTag = 'DashboardListProvider: ';
 
-  bool get _isUnsupportedEntity =>
-      entityType == EntityType.licenseKey ||
-      entityType == EntityType.recoveryCodes;
+  bool get _isUnsupportedEntity => entityType == EntityType.recoveryCodes;
 
   @override
   Future<DashboardListState<BaseCardDto>> build() async {
@@ -295,6 +295,23 @@ class PaginatedListNotifier
         );
         break;
       case EntityType.licenseKey:
+        _licenseKeyFilterSubscription = ref.listen(licenseKeysFilterProvider, (
+          prev,
+          next,
+        ) {
+          if (prev != next) {
+            _resetAndLoad();
+          }
+        });
+        _licenseKeyRefreshSubscription = ref.listen<DataRefreshState>(
+          dataRefreshTriggerProvider,
+          (previous, next) {
+            if (_shouldHandleRefresh(next, EntityType.licenseKey)) {
+              _resetAndLoad();
+            }
+          },
+        );
+        break;
       case EntityType.recoveryCodes:
         break;
     }
@@ -327,6 +344,8 @@ class PaginatedListNotifier
     _wifiFilterSubscription = null;
     _identityFilterSubscription?.close();
     _identityFilterSubscription = null;
+    _licenseKeyFilterSubscription?.close();
+    _licenseKeyFilterSubscription = null;
     _passwordRefreshSubscription?.close();
     _passwordRefreshSubscription = null;
     _noteRefreshSubscription?.close();
@@ -349,6 +368,8 @@ class PaginatedListNotifier
     _wifiRefreshSubscription = null;
     _identityRefreshSubscription?.close();
     _identityRefreshSubscription = null;
+    _licenseKeyRefreshSubscription?.close();
+    _licenseKeyRefreshSubscription = null;
     _documentRefreshSubscription?.close();
     _documentRefreshSubscription = null;
   }
@@ -381,6 +402,7 @@ class PaginatedListNotifier
       case EntityType.identity:
         return ref.read(identityFilterDaoProvider.future);
       case EntityType.licenseKey:
+        return ref.read(licenseKeyFilterDaoProvider.future);
       case EntityType.recoveryCodes:
         return Future.value(const _UnsupportedFilterDao());
     }
@@ -550,6 +572,18 @@ class PaginatedListNotifier
         );
         return identitiesFilter.copyWith(base: base);
       case EntityType.licenseKey:
+        final licenseKeysFilter = ref.read(licenseKeysFilterProvider);
+        final base = licenseKeysFilter.base.copyWith(
+          isFavorite: licenseKeysFilter.base.isFavorite ?? tabFilter.isFavorite,
+          isArchived: licenseKeysFilter.base.isArchived ?? tabFilter.isArchived,
+          isDeleted: licenseKeysFilter.base.isDeleted ?? tabFilter.isDeleted,
+          isFrequentlyUsed:
+              tabFilter.isFrequentlyUsed ??
+              licenseKeysFilter.base.isFrequentlyUsed,
+          limit: limit,
+          offset: offset,
+        );
+        return licenseKeysFilter.copyWith(base: base);
       case EntityType.recoveryCodes:
         return BaseFilter.create(limit: limit, offset: offset);
     }

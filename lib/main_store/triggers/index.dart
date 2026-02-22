@@ -11,6 +11,7 @@ export 'crypto_wallets_triggers.dart';
 export 'documents_triggers.dart';
 export 'files_triggers.dart';
 export 'identities_triggers.dart';
+export 'license_keys_triggers.dart';
 export 'notes_triggers.dart';
 export 'otps_triggers.dart';
 export 'passwords_triggers.dart';

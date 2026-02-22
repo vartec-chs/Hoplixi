@@ -22,6 +22,8 @@ export 'identity_history.dart';
 export 'identity_items.dart';
 // --- Теги (единая таблица) ---
 export 'item_tags.dart';
+export 'license_key_history.dart';
+export 'license_key_items.dart';
 export 'note_history.dart';
 export 'note_items.dart';
 export 'note_links.dart';

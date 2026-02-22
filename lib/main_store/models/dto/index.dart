@@ -18,6 +18,8 @@ export 'file_history_dto.dart';
 export 'icon_dto.dart';
 export 'identity_dto.dart';
 export 'identity_history_dto.dart';
+export 'license_key_dto.dart';
+export 'license_key_history_dto.dart';
 export 'main_store_dto.dart';
 export 'note_dto.dart';
 export 'note_history_dto.dart';

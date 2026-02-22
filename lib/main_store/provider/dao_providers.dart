@@ -45,6 +45,10 @@ final identityDaoProvider = FutureProvider<IdentityDao>(
   (ref) => _ensureDao(ref, (store) => IdentityDao(store)),
 );
 
+final licenseKeyDaoProvider = FutureProvider<LicenseKeyDao>(
+  (ref) => _ensureDao(ref, (store) => LicenseKeyDao(store)),
+);
+
 final passwordHistoryDaoProvider = FutureProvider<PasswordHistoryDao>(
   (ref) => _ensureDao(ref, (store) => PasswordHistoryDao(store)),
 );
@@ -71,6 +75,10 @@ final wifiHistoryDaoProvider = FutureProvider<WifiHistoryDao>(
 
 final identityHistoryDaoProvider = FutureProvider<IdentityHistoryDao>(
   (ref) => _ensureDao(ref, (store) => IdentityHistoryDao(store)),
+);
+
+final licenseKeyHistoryDaoProvider = FutureProvider<LicenseKeyHistoryDao>(
+  (ref) => _ensureDao(ref, (store) => LicenseKeyHistoryDao(store)),
 );
 
 final otpDaoProvider = FutureProvider<OtpDao>(
@@ -143,6 +151,10 @@ final wifiFilterDaoProvider = FutureProvider<WifiFilterDao>(
 
 final identityFilterDaoProvider = FutureProvider<IdentityFilterDao>(
   (ref) => _ensureDao(ref, (store) => IdentityFilterDao(store)),
+);
+
+final licenseKeyFilterDaoProvider = FutureProvider<LicenseKeyFilterDao>(
+  (ref) => _ensureDao(ref, (store) => LicenseKeyFilterDao(store)),
 );
 
 final otpFilterDaoProvider = FutureProvider<OtpFilterDao>(

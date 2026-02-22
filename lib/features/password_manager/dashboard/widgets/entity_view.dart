@@ -7,6 +7,7 @@ import 'package:hoplixi/features/password_manager/forms/crypto_wallet_form/scree
 import 'package:hoplixi/features/password_manager/forms/document_form/screens/document_view_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/file_form/screens/file_view_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/identity_form/screens/identity_view_screen.dart';
+import 'package:hoplixi/features/password_manager/forms/license_key_form/screens/license_key_view_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/note_form/screens/note_view_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/otp_form/screens/otp_view_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/password_form/screens/password_view_screen.dart';
@@ -61,7 +62,7 @@ class EntityView extends StatelessWidget {
       case EntityType.identity:
         return IdentityViewScreen(identityId: id);
       case EntityType.licenseKey:
-        return buildNotImplemented('Лицензии');
+        return LicenseKeyViewScreen(licenseKeyId: id);
       case EntityType.recoveryCodes:
         return buildNotImplemented('Коды восстановления');
     }

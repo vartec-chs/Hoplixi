@@ -102,7 +102,7 @@
 - notes (Text).
 - verified (Bool) — опционально, флаг проверки/верификации.
 
-## LicenseKey
+## LicenseKey [ Добавлено ]
 
 - product (Text) — обязательное, наименование продукта.
 - licenseKey (Text, encrypted) — обязательное, сам ключ.

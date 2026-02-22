@@ -10,6 +10,7 @@ export 'documents_filter.dart';
 export 'files_filter.dart';
 export 'icons_filter.dart';
 export 'identities_filter.dart';
+export 'license_keys_filter.dart';
 export 'notes_filter.dart';
 export 'otps_filter.dart';
 export 'passwords_filter.dart';

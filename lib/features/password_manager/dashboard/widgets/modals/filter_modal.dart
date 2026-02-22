@@ -21,6 +21,7 @@ import '../../providers/filter_providers/crypto_wallets_filter_provider.dart';
 import '../../providers/filter_providers/documents_filter_provider.dart';
 import '../../providers/filter_providers/files_filter_provider.dart';
 import '../../providers/filter_providers/identities_filter_provider.dart';
+import '../../providers/filter_providers/license_keys_filter_provider.dart';
 import '../../providers/filter_providers/notes_filter_provider.dart';
 import '../../providers/filter_providers/otp_filter_provider.dart';
 import '../../providers/filter_providers/password_filter_provider.dart';
@@ -44,6 +45,7 @@ class _InitialFilterValues {
   final CryptoWalletsFilter? cryptoWalletsFilter;
   final WifisFilter? wifisFilter;
   final IdentitiesFilter? identitiesFilter;
+  final LicenseKeysFilter? licenseKeysFilter;
 
   _InitialFilterValues({
     required this.baseFilter,
@@ -59,6 +61,7 @@ class _InitialFilterValues {
     this.cryptoWalletsFilter,
     this.wifisFilter,
     this.identitiesFilter,
+    this.licenseKeysFilter,
   });
 }
 
@@ -259,6 +262,10 @@ class _FilterModalActions extends ConsumerWidget {
               .updateFilter(IdentitiesFilter(base: emptyBaseFilter));
           break;
         case EntityType.licenseKey:
+          ref
+              .read(licenseKeysFilterProvider.notifier)
+              .updateFilter(LicenseKeysFilter(base: emptyBaseFilter));
+          break;
         case EntityType.recoveryCodes:
           break;
       }
@@ -351,6 +358,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
   CryptoWalletsFilter? _localCryptoWalletsFilter;
   WifisFilter? _localWifisFilter;
   IdentitiesFilter? _localIdentitiesFilter;
+  LicenseKeysFilter? _localLicenseKeysFilter;
 
   // Типобезопасное хранение начальных значений для отката
   _InitialFilterValues? _initialValues;
@@ -411,6 +419,8 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         _localIdentitiesFilter = ref.read(identitiesFilterProvider);
         break;
       case EntityType.licenseKey:
+        _localLicenseKeysFilter = ref.read(licenseKeysFilterProvider);
+        break;
       case EntityType.recoveryCodes:
         break;
     }
@@ -527,6 +537,12 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         );
         break;
       case EntityType.licenseKey:
+        final licenseKeysFilter = ref.read(licenseKeysFilterProvider);
+        _initialValues = _InitialFilterValues(
+          baseFilter: baseFilter,
+          licenseKeysFilter: licenseKeysFilter,
+        );
+        break;
       case EntityType.recoveryCodes:
         _initialValues = _InitialFilterValues(baseFilter: baseFilter);
         break;
@@ -759,6 +775,12 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
                   }
                   break;
                 case EntityType.licenseKey:
+                  if (_localLicenseKeysFilter != null) {
+                    _localLicenseKeysFilter = _localLicenseKeysFilter!.copyWith(
+                      base: updatedFilter,
+                    );
+                  }
+                  break;
                 case EntityType.recoveryCodes:
                   break;
               }
@@ -923,6 +945,17 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           },
         );
       case EntityType.licenseKey:
+        return LicenseKeysFilterSection(
+          filter:
+              _localLicenseKeysFilter ??
+              LicenseKeysFilter(base: _localBaseFilter),
+          onFilterChanged: (updatedFilter) {
+            setState(() {
+              _localLicenseKeysFilter = updatedFilter;
+            });
+            logDebug('FilterModal: Обновлены фильтры лицензий локально');
+          },
+        );
       case EntityType.recoveryCodes:
         return const Text('Специфичные фильтры для этого типа пока недоступны');
     }
@@ -1183,6 +1216,15 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           }
           break;
         case EntityType.licenseKey:
+          if (_localLicenseKeysFilter != null) {
+            final syncedFilter = _localLicenseKeysFilter!.copyWith(
+              base: _localBaseFilter,
+            );
+            ref
+                .read(licenseKeysFilterProvider.notifier)
+                .updateFilter(syncedFilter);
+          }
+          break;
         case EntityType.recoveryCodes:
           break;
       }
@@ -1303,6 +1345,12 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           }
           break;
         case EntityType.licenseKey:
+          if (_initialValues!.licenseKeysFilter != null) {
+            ref
+                .read(licenseKeysFilterProvider.notifier)
+                .updateFilterDebounced(_initialValues!.licenseKeysFilter!);
+          }
+          break;
         case EntityType.recoveryCodes:
           break;
       }
@@ -1375,6 +1423,8 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           _localIdentitiesFilter = IdentitiesFilter(base: _localBaseFilter);
           break;
         case EntityType.licenseKey:
+          _localLicenseKeysFilter = LicenseKeysFilter(base: _localBaseFilter);
+          break;
         case EntityType.recoveryCodes:
           break;
       }
