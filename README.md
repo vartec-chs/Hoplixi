@@ -46,6 +46,18 @@
 - Главный экран приложения
   <img src="screenshots/main_screen.png" width="500" alt="Hoplixi Screenshot" />
 
+- Дашборд (ПК)
+  <img src="screenshots/dashboard_pc.png" width="800" alt="Hoplixi Dashboard PC" />
+
+- Дашборд (ПК, режим редактирования)
+  <img src="screenshots/dashboard_pc_edit_mode.png" width="800" alt="Hoplixi Dashboard PC Edit Mode" />
+
+- Дашборд (мобильный)
+  <img src="screenshots/dashboard_mobile.png" width="500" alt="Hoplixi Dashboard Mobile" />
+
+- Дашборд (мобильный, режим редактирования)
+  <img src="screenshots/dashboard_mobile_edit_mode.png" width="500" alt="Hoplixi Dashboard Mobile Edit Mode" />
+
 ## 🛠 Установка и запуск
 
 ### Предварительные требования
