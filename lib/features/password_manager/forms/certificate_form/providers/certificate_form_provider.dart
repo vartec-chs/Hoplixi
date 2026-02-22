@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -146,8 +148,15 @@ class CertificateFormNotifier extends AsyncNotifier<CertificateFormState> {
           _update((s) => s.copyWith(isSaving: false));
           return false;
         }
+
+        ref
+            .read(dataRefreshTriggerProvider.notifier)
+            .triggerEntityUpdate(
+              EntityType.certificate,
+              entityId: c.editingCertificateId,
+            );
       } else {
-        await dao.createCertificate(
+        final id = await dao.createCertificate(
           CreateCertificateDto(
             name: c.name.trim(),
             certificatePem: c.certificatePem.trim(),
@@ -165,6 +174,10 @@ class CertificateFormNotifier extends AsyncNotifier<CertificateFormState> {
             tagsIds: c.tagIds,
           ),
         );
+
+        ref
+            .read(dataRefreshTriggerProvider.notifier)
+            .triggerEntityAdd(EntityType.certificate, entityId: id);
       }
 
       _update((s) => s.copyWith(isSaving: false, isSaved: true));

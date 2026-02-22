@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -213,8 +215,15 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
           _update((s) => s.copyWith(isSaving: false));
           return false;
         }
+
+        ref
+            .read(dataRefreshTriggerProvider.notifier)
+            .triggerEntityUpdate(
+              EntityType.licenseKey,
+              entityId: c.editingLicenseKeyId,
+            );
       } else {
-        await dao.createLicenseKey(
+        final id = await dao.createLicenseKey(
           CreateLicenseKeyDto(
             name: c.name.trim(),
             product: c.product.trim(),
@@ -236,6 +245,10 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
             tagsIds: c.tagIds,
           ),
         );
+
+        ref
+            .read(dataRefreshTriggerProvider.notifier)
+            .triggerEntityAdd(EntityType.licenseKey, entityId: id);
       }
 
       _update((s) => s.copyWith(isSaving: false, isSaved: true));

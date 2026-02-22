@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -211,8 +213,15 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
           _update((s) => s.copyWith(isSaving: false));
           return false;
         }
+
+        ref
+            .read(dataRefreshTriggerProvider.notifier)
+            .triggerEntityUpdate(
+              EntityType.recoveryCodes,
+              entityId: c.editingRecoveryCodesId,
+            );
       } else {
-        await dao.createRecoveryCodes(
+        final id = await dao.createRecoveryCodes(
           CreateRecoveryCodesDto(
             name: c.name.trim(),
             codesBlob: c.codesBlob.trim(),
@@ -229,6 +238,10 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
             tagsIds: c.tagIds,
           ),
         );
+
+        ref
+            .read(dataRefreshTriggerProvider.notifier)
+            .triggerEntityAdd(EntityType.recoveryCodes, entityId: id);
       }
 
       _update((s) => s.copyWith(isSaving: false, isSaved: true));

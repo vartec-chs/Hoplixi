@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -176,8 +178,15 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
           _update((s) => s.copyWith(isSaving: false));
           return false;
         }
+
+        ref
+            .read(dataRefreshTriggerProvider.notifier)
+            .triggerEntityUpdate(
+              EntityType.apiKey,
+              entityId: current.editingApiKeyId,
+            );
       } else {
-        await dao.createApiKey(
+        final id = await dao.createApiKey(
           CreateApiKeyDto(
             name: name,
             service: service,
@@ -192,6 +201,10 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
             maskedKey: masked,
           ),
         );
+
+        ref
+            .read(dataRefreshTriggerProvider.notifier)
+            .triggerEntityAdd(EntityType.apiKey, entityId: id);
       }
 
       _update((s) => s.copyWith(isSaving: false, isSaved: true));

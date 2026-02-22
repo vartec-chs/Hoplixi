@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -153,8 +155,15 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
           _update((s) => s.copyWith(isSaving: false));
           return false;
         }
+
+        ref
+            .read(dataRefreshTriggerProvider.notifier)
+            .triggerEntityUpdate(
+              EntityType.cryptoWallet,
+              entityId: c.editingCryptoWalletId,
+            );
       } else {
-        await dao.createCryptoWallet(
+        final id = await dao.createCryptoWallet(
           CreateCryptoWalletDto(
             name: c.name.trim(),
             walletType: c.walletType.trim(),
@@ -175,6 +184,10 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
             tagsIds: c.tagIds,
           ),
         );
+
+        ref
+            .read(dataRefreshTriggerProvider.notifier)
+            .triggerEntityAdd(EntityType.cryptoWallet, entityId: id);
       }
 
       _update((s) => s.copyWith(isSaving: false, isSaved: true));

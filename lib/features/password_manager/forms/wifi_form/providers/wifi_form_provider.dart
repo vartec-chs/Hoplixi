@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -169,8 +171,15 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
           _update((s) => s.copyWith(isSaving: false));
           return false;
         }
+
+        ref
+            .read(dataRefreshTriggerProvider.notifier)
+            .triggerEntityUpdate(
+              EntityType.wifi,
+              entityId: current.editingWifiId,
+            );
       } else {
-        await dao.createWifi(
+        final id = await dao.createWifi(
           CreateWifiDto(
             name: current.name.trim(),
             ssid: current.ssid.trim(),
@@ -191,6 +200,10 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
             tagsIds: current.tagIds,
           ),
         );
+
+        ref
+            .read(dataRefreshTriggerProvider.notifier)
+            .triggerEntityAdd(EntityType.wifi, entityId: id);
       }
 
       _update((s) => s.copyWith(isSaving: false, isSaved: true));

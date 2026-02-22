@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -152,8 +154,15 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
           _update((s) => s.copyWith(isSaving: false));
           return false;
         }
+
+        ref
+            .read(dataRefreshTriggerProvider.notifier)
+            .triggerEntityUpdate(
+              EntityType.sshKey,
+              entityId: current.editingSshKeyId,
+            );
       } else {
-        await dao.createSshKey(
+        final id = await dao.createSshKey(
           CreateSshKeyDto(
             name: current.name.trim(),
             publicKey: current.publicKey.trim(),
@@ -168,6 +177,10 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
             tagsIds: current.tagIds,
           ),
         );
+
+        ref
+            .read(dataRefreshTriggerProvider.notifier)
+            .triggerEntityAdd(EntityType.sshKey, entityId: id);
       }
 
       _update((s) => s.copyWith(isSaving: false, isSaved: true));
