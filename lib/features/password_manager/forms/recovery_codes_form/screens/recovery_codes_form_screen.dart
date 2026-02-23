@@ -10,7 +10,6 @@ import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/generated/l10n.dart';
 
-
 import '../providers/recovery_codes_form_provider.dart';
 
 class RecoveryCodesFormScreen extends ConsumerStatefulWidget {
@@ -282,6 +281,3 @@ class _RecoveryCodesFormScreenState
     );
   }
 }
-
-
-

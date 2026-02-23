@@ -231,13 +231,19 @@ class _CryptoWalletFormScreenState
                 controller: _xprvController,
                 minLines: 2,
                 maxLines: 4,
-                decoration: primaryInputDecoration(context, labelText: S.of(context).xprvLabel),
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: S.of(context).xprvLabel,
+                ),
                 onChanged: notifier.setXprv,
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _xpubController,
-                decoration: primaryInputDecoration(context, labelText: S.of(context).xpubLabel),
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: S.of(context).xpubLabel,
+                ),
                 onChanged: notifier.setXpub,
               ),
               const SizedBox(height: 12),
@@ -334,6 +340,3 @@ class _CryptoWalletFormScreenState
     );
   }
 }
-
-
-

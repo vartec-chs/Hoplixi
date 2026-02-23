@@ -10,7 +10,6 @@ import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/generated/l10n.dart';
 
-
 import '../providers/identity_form_provider.dart';
 
 class IdentityFormScreen extends ConsumerStatefulWidget {
@@ -169,7 +168,9 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
           appBar: AppBar(
             leading: const FormCloseButton(),
             title: Text(
-              state.isEditMode ? S.of(context).editIdentity : S.of(context).newIdentity,
+              state.isEditMode
+                  ? S.of(context).editIdentity
+                  : S.of(context).newIdentity,
             ),
             actions: [
               if (state.isSaving)
@@ -220,7 +221,10 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
               const SizedBox(height: 12),
               TextField(
                 controller: _fullNameController,
-                decoration: primaryInputDecoration(context, labelText: S.of(context).fullNameLabel),
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: S.of(context).fullNameLabel,
+                ),
                 onChanged: notifier.setFullName,
               ),
               const SizedBox(height: 12),
@@ -285,7 +289,10 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                 controller: _mrzController,
                 minLines: 2,
                 maxLines: 4,
-                decoration: primaryInputDecoration(context, labelText: S.of(context).mrzLabel),
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: S.of(context).mrzLabel,
+                ),
                 onChanged: notifier.setMrz,
               ),
               const SizedBox(height: 12),
@@ -350,6 +357,3 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
     );
   }
 }
-
-
-

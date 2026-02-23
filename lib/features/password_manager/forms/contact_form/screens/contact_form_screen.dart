@@ -10,7 +10,6 @@ import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/generated/l10n.dart';
 
-
 import '../providers/contact_form_provider.dart';
 
 class ContactFormScreen extends ConsumerStatefulWidget {
@@ -146,7 +145,9 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
           appBar: AppBar(
             leading: const FormCloseButton(),
             title: Text(
-              state.isEditMode ? S.of(context).editContact : S.of(context).newContact,
+              state.isEditMode
+                  ? S.of(context).editContact
+                  : S.of(context).newContact,
             ),
             actions: [
               if (state.isSaving)
@@ -224,7 +225,10 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
               const SizedBox(height: 12),
               TextField(
                 controller: _addressController,
-                decoration: primaryInputDecoration(context, labelText: S.of(context).addressLabel),
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: S.of(context).addressLabel,
+                ),
                 onChanged: ref
                     .read(contactFormProvider(widget.contactId).notifier)
                     .setAddress,
@@ -232,7 +236,10 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
               const SizedBox(height: 12),
               TextField(
                 controller: _websiteController,
-                decoration: primaryInputDecoration(context, labelText: S.of(context).websiteLabel),
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: S.of(context).websiteLabel,
+                ),
                 onChanged: ref
                     .read(contactFormProvider(widget.contactId).notifier)
                     .setWebsite,
@@ -322,6 +329,3 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
     );
   }
 }
-
-
-

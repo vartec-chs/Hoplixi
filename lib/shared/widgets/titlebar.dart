@@ -168,14 +168,16 @@ class _TitleBarState extends ConsumerState<TitleBar> {
                     const CloseDatabaseButton(
                       type: CloseDatabaseButtonType.icon,
                     ),
-                  if (widget.showDatabaseButton && widget.showThemeSwitcher)
-                    const SizedBox(width: 4),
-                  if (widget.showLanguageSwitcher)
+
+                  if (widget.showLanguageSwitcher) ...[
                     const LanguageSwitcher(
                       size: 20,
                       style: LanguageSwitcherStyle.compact,
                       showCompactCode: true,
                     ),
+                    const SizedBox(width: 4),
+                  ],
+
                   if (widget.showThemeSwitcher)
                     const ThemeSwitcher(
                       size: 26,

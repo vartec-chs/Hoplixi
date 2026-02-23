@@ -10,7 +10,6 @@ import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/generated/l10n.dart';
 
-
 import '../providers/wifi_form_provider.dart';
 
 class WifiFormScreen extends ConsumerStatefulWidget {
@@ -94,7 +93,9 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
       final isSaved = next.value?.isSaved ?? false;
       if (!wasSaved && isSaved) {
         Toaster.success(
-          title: widget.wifiId != null ? S.of(context).wifiUpdated : S.of(context).wifiCreated,
+          title: widget.wifiId != null
+              ? S.of(context).wifiUpdated
+              : S.of(context).wifiCreated,
         );
         ref.read(wifiFormProvider(widget.wifiId).notifier).resetSaved();
         if (context.mounted) context.pop(true);
@@ -155,7 +156,9 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
           appBar: AppBar(
             leading: const FormCloseButton(),
             title: Text(
-              state.isEditMode ? S.of(context).editWifi : S.of(context).newWifiNetwork,
+              state.isEditMode
+                  ? S.of(context).editWifi
+                  : S.of(context).newWifiNetwork,
             ),
             actions: [
               if (state.isSaving)
@@ -320,6 +323,3 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
     );
   }
 }
-
-
-

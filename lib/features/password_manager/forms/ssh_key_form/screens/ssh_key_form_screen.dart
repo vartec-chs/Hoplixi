@@ -10,7 +10,6 @@ import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/generated/l10n.dart';
 
-
 import '../providers/ssh_key_form_provider.dart';
 
 class SshKeyFormScreen extends ConsumerStatefulWidget {
@@ -127,7 +126,9 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
           appBar: AppBar(
             leading: const FormCloseButton(),
             title: Text(
-              state.isEditMode ? S.of(context).editSshKey : S.of(context).newSshKey,
+              state.isEditMode
+                  ? S.of(context).editSshKey
+                  : S.of(context).newSshKey,
             ),
             actions: [
               if (state.isSaving)
@@ -250,6 +251,3 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
     );
   }
 }
-
-
-

@@ -10,7 +10,6 @@ import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/generated/l10n.dart';
 
-
 import '../providers/license_key_form_provider.dart';
 
 class LicenseKeyFormScreen extends ConsumerStatefulWidget {
@@ -174,7 +173,9 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
           appBar: AppBar(
             leading: const FormCloseButton(),
             title: Text(
-              state.isEditMode ? S.of(context).editLicense : S.of(context).newLicense,
+              state.isEditMode
+                  ? S.of(context).editLicense
+                  : S.of(context).newLicense,
             ),
             actions: [
               if (state.isSaving)
@@ -360,6 +361,3 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
     );
   }
 }
-
-
-
