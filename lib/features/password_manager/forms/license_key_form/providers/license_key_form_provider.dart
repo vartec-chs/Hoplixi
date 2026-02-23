@@ -1,6 +1,7 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -72,28 +73,28 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
   String? _intError(String value) {
     final v = value.trim();
     if (v.isEmpty) return null;
-    return int.tryParse(v) == null ? 'Нужно целое число' : null;
+    return int.tryParse(v) == null ? S.current.validationMustBeInteger : null;
   }
 
   String? _dateError(String value) {
     final v = value.trim();
     if (v.isEmpty) return null;
-    return DateTime.tryParse(v) == null ? 'Неверный ISO8601' : null;
+    return DateTime.tryParse(v) == null ? S.current.validationInvalidIso8601 : null;
   }
 
   void setName(String v) => _update(
-    (s) => s.copyWith(name: v, nameError: _required(v, 'Название обязательно')),
+    (s) => s.copyWith(name: v, nameError: _required(v, S.current.validationRequiredName)),
   );
   void setProduct(String v) => _update(
     (s) => s.copyWith(
       product: v,
-      productError: _required(v, 'Продукт обязателен'),
+      productError: _required(v, S.current.validationRequiredProduct),
     ),
   );
   void setLicenseKey(String v) => _update(
     (s) => s.copyWith(
       licenseKey: v,
-      licenseKeyError: _required(v, 'Ключ обязателен'),
+      licenseKeyError: _required(v, S.current.validationRequiredLicenseKey),
     ),
   );
   void setLicenseType(String v) => _update((s) => s.copyWith(licenseType: v));
@@ -126,9 +127,9 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
 
   bool validate() {
     final c = _current;
-    final nameError = _required(c.name, 'Название обязательно');
-    final productError = _required(c.product, 'Продукт обязателен');
-    final licenseKeyError = _required(c.licenseKey, 'Ключ обязателен');
+    final nameError = _required(c.name, S.current.validationRequiredName);
+    final productError = _required(c.product, S.current.validationRequiredProduct);
+    final licenseKeyError = _required(c.licenseKey, S.current.validationRequiredLicenseKey);
     final seatsError = _intError(c.seats);
     final maxActivationsError = _intError(c.maxActivations);
     final activatedOnError = _dateError(c.activatedOn);
@@ -257,3 +258,4 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
+

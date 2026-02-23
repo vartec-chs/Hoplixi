@@ -1,6 +1,7 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -60,21 +61,21 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
   void setName(String value) => _update(
     (s) => s.copyWith(
       name: value,
-      nameError: value.trim().isEmpty ? 'Название обязательно' : null,
+      nameError: value.trim().isEmpty ? S.current.validationRequiredName : null,
     ),
   );
 
   void setPublicKey(String value) => _update(
     (s) => s.copyWith(
       publicKey: value,
-      publicKeyError: value.trim().isEmpty ? 'Public key обязателен' : null,
+      publicKeyError: value.trim().isEmpty ? S.current.validationRequiredPublicKey : null,
     ),
   );
 
   void setPrivateKey(String value) => _update(
     (s) => s.copyWith(
       privateKey: value,
-      privateKeyError: value.trim().isEmpty ? 'Private key обязателен' : null,
+      privateKeyError: value.trim().isEmpty ? S.current.validationRequiredPrivateKey : null,
     ),
   );
 
@@ -97,13 +98,12 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
   bool validate() {
     final current = _current;
     final nameError = current.name.trim().isEmpty
-        ? 'Название обязательно'
-        : null;
+        ? S.current.validationRequiredName : null;
     final publicKeyError = current.publicKey.trim().isEmpty
-        ? 'Public key обязателен'
+        ? S.current.validationRequiredPublicKey
         : null;
     final privateKeyError = current.privateKey.trim().isEmpty
-        ? 'Private key обязателен'
+        ? S.current.validationRequiredPrivateKey
         : null;
 
     _update(
@@ -193,3 +193,4 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
+

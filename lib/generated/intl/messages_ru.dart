@@ -20,6 +20,14 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'ru';
 
+  static String m0(field) => "Ошибка получения ${field}";
+
+  static String m1(field) => "${field} скопирован";
+
+  static String m2(field) => "${field} пуст";
+
+  static String m3(field) => "${field} отсутствует";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "activatedAtIsoLabel": MessageLookupByLibrary.simpleMessage(
@@ -74,6 +82,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "certificateCreated": MessageLookupByLibrary.simpleMessage(
       "Сертификат создан",
     ),
+    "certificateNotFound": MessageLookupByLibrary.simpleMessage(
+      "Сертификат не найден",
+    ),
     "certificatePemLabel": MessageLookupByLibrary.simpleMessage(
       "Certificate PEM *",
     ),
@@ -90,13 +101,36 @@ class MessageLookup extends MessageLookupByLibrary {
     "codesBlobRequiredLabel": MessageLookupByLibrary.simpleMessage(
       "Codes blob *",
     ),
+    "commonAdded": MessageLookupByLibrary.simpleMessage("Добавлен"),
+    "commonDisabled": MessageLookupByLibrary.simpleMessage("Выключен"),
+    "commonEnabled": MessageLookupByLibrary.simpleMessage("Включен"),
+    "commonErrorGettingField": m0,
+    "commonFieldCopied": m1,
+    "commonFieldEmpty": m2,
+    "commonFieldMissing": m3,
+    "commonLoadError": MessageLookupByLibrary.simpleMessage("Ошибка загрузки"),
+    "commonNo": MessageLookupByLibrary.simpleMessage("Нет"),
+    "commonNotAdded": MessageLookupByLibrary.simpleMessage("Не добавлен"),
+    "commonPressVisibilityToLoad": MessageLookupByLibrary.simpleMessage(
+      "Нажмите кнопку видимости для загрузки",
+    ),
+    "commonRecordNotFound": MessageLookupByLibrary.simpleMessage(
+      "Запись не найдена",
+    ),
+    "commonYes": MessageLookupByLibrary.simpleMessage("Да"),
     "companyLabel": MessageLookupByLibrary.simpleMessage("Компания"),
     "contactCreated": MessageLookupByLibrary.simpleMessage("Контакт создан"),
     "contactNameLabel": MessageLookupByLibrary.simpleMessage("Имя контакта *"),
+    "contactNotFound": MessageLookupByLibrary.simpleMessage(
+      "Контакт не найден",
+    ),
     "contactUpdated": MessageLookupByLibrary.simpleMessage("Контакт обновлен"),
     "crlUrlLabel": MessageLookupByLibrary.simpleMessage("CRL URL"),
     "cryptoWalletCreated": MessageLookupByLibrary.simpleMessage(
       "Криптокошелек создан",
+    ),
+    "cryptoWalletNotFound": MessageLookupByLibrary.simpleMessage(
+      "Криптокошелек не найден",
     ),
     "cryptoWalletUpdated": MessageLookupByLibrary.simpleMessage(
       "Криптокошелек обновлен",
@@ -238,6 +272,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "perCodeStatusJsonLabel": MessageLookupByLibrary.simpleMessage(
       "Per-code status JSON",
     ),
+    "pfxPasswordLabel": MessageLookupByLibrary.simpleMessage("Пароль PFX"),
     "phoneLabel": MessageLookupByLibrary.simpleMessage("Телефон"),
     "photoIdLabel": MessageLookupByLibrary.simpleMessage("ID фото"),
     "pickDate": MessageLookupByLibrary.simpleMessage("Выбрать дату"),
@@ -260,6 +295,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "recoveryCodesUpdated": MessageLookupByLibrary.simpleMessage(
       "Коды восстановления обновлены",
     ),
+    "revealPrivateKeyFirst": MessageLookupByLibrary.simpleMessage(
+      "Сначала раскройте private key",
+    ),
     "saveError": MessageLookupByLibrary.simpleMessage("Ошибка сохранения"),
     "scanIdLabel": MessageLookupByLibrary.simpleMessage("ID скана"),
     "seatsCountLabel": MessageLookupByLibrary.simpleMessage("Количество мест"),
@@ -273,6 +311,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "selectTagsHint": MessageLookupByLibrary.simpleMessage("Выберите теги"),
     "serialNumberLabel": MessageLookupByLibrary.simpleMessage("Серийный номер"),
     "sshKeyCreated": MessageLookupByLibrary.simpleMessage("SSH-ключ создан"),
+    "sshKeyNotFound": MessageLookupByLibrary.simpleMessage(
+      "SSH-ключ не найден",
+    ),
     "sshKeyUpdated": MessageLookupByLibrary.simpleMessage("SSH-ключ обновлен"),
     "subjectLabel": MessageLookupByLibrary.simpleMessage("Субъект"),
     "supportContactLabel": MessageLookupByLibrary.simpleMessage(
@@ -285,8 +326,78 @@ class MessageLookup extends MessageLookupByLibrary {
     "urlLabel": MessageLookupByLibrary.simpleMessage("URL"),
     "usageLabel": MessageLookupByLibrary.simpleMessage("Использование"),
     "usedCodesLabel": MessageLookupByLibrary.simpleMessage("Использовано"),
+    "validationInvalidEmail": MessageLookupByLibrary.simpleMessage(
+      "Некорректный email",
+    ),
+    "validationInvalidIso8601": MessageLookupByLibrary.simpleMessage(
+      "Неверный ISO8601",
+    ),
+    "validationMin8Chars": MessageLookupByLibrary.simpleMessage(
+      "Минимум 8 символов",
+    ),
+    "validationMustBeInteger": MessageLookupByLibrary.simpleMessage(
+      "Нужно целое число",
+    ),
+    "validationRequiredCertificatePem": MessageLookupByLibrary.simpleMessage(
+      "Certificate PEM обязателен",
+    ),
+    "validationRequiredCodesBlob": MessageLookupByLibrary.simpleMessage(
+      "Codes blob обязателен",
+    ),
+    "validationRequiredContactName": MessageLookupByLibrary.simpleMessage(
+      "Имя контакта обязательно",
+    ),
+    "validationRequiredKey": MessageLookupByLibrary.simpleMessage(
+      "Ключ обязателен",
+    ),
+    "validationRequiredLicenseKey": MessageLookupByLibrary.simpleMessage(
+      "Ключ обязателен",
+    ),
+    "validationRequiredName": MessageLookupByLibrary.simpleMessage(
+      "Название обязательно",
+    ),
+    "validationRequiredNumber": MessageLookupByLibrary.simpleMessage(
+      "Номер обязателен",
+    ),
+    "validationRequiredPrivateKey": MessageLookupByLibrary.simpleMessage(
+      "Private key обязателен",
+    ),
+    "validationRequiredProduct": MessageLookupByLibrary.simpleMessage(
+      "Продукт обязателен",
+    ),
+    "validationRequiredPublicKey": MessageLookupByLibrary.simpleMessage(
+      "Public key обязателен",
+    ),
+    "validationRequiredService": MessageLookupByLibrary.simpleMessage(
+      "Сервис обязателен",
+    ),
+    "validationRequiredSsid": MessageLookupByLibrary.simpleMessage(
+      "SSID обязателен",
+    ),
+    "validationRequiredType": MessageLookupByLibrary.simpleMessage(
+      "Тип обязателен",
+    ),
+    "validationRequiredWalletType": MessageLookupByLibrary.simpleMessage(
+      "Тип кошелька обязателен",
+    ),
     "verifiedLabel": MessageLookupByLibrary.simpleMessage("Верифицировано"),
     "viewApiKey": MessageLookupByLibrary.simpleMessage("Просмотр API-ключа"),
+    "viewCertificate": MessageLookupByLibrary.simpleMessage(
+      "Просмотр сертификата",
+    ),
+    "viewContact": MessageLookupByLibrary.simpleMessage("Просмотр контакта"),
+    "viewCryptoWallet": MessageLookupByLibrary.simpleMessage(
+      "Просмотр криптокошелька",
+    ),
+    "viewIdentity": MessageLookupByLibrary.simpleMessage(
+      "Просмотр идентификации",
+    ),
+    "viewLicense": MessageLookupByLibrary.simpleMessage("Просмотр лицензии"),
+    "viewRecoveryCodes": MessageLookupByLibrary.simpleMessage(
+      "Просмотр кодов восстановления",
+    ),
+    "viewSshKey": MessageLookupByLibrary.simpleMessage("Просмотр SSH-ключа"),
+    "viewWifi": MessageLookupByLibrary.simpleMessage("Просмотр Wi-Fi сети"),
     "walletTypeLabel": MessageLookupByLibrary.simpleMessage("Тип кошелька *"),
     "watchOnlyLabel": MessageLookupByLibrary.simpleMessage("Только просмотр"),
     "websiteLabel": MessageLookupByLibrary.simpleMessage("Сайт"),
@@ -299,6 +410,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "wifiIdentityLabel": MessageLookupByLibrary.simpleMessage("Идентификатор"),
     "wifiLastConnectedBssidLabel": MessageLookupByLibrary.simpleMessage(
       "Последний подключенный BSSID",
+    ),
+    "wifiNotFound": MessageLookupByLibrary.simpleMessage(
+      "Wi-Fi сеть не найдена",
     ),
     "wifiPasswordLabel": MessageLookupByLibrary.simpleMessage("Пароль"),
     "wifiPriorityLabel": MessageLookupByLibrary.simpleMessage("Приоритет"),

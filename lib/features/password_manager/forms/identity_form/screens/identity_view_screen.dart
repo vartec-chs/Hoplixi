@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
@@ -46,7 +47,7 @@ class _IdentityViewScreenState extends ConsumerState<IdentityViewScreen> {
       final dao = await ref.read(identityDaoProvider.future);
       final row = await dao.getById(widget.identityId);
       if (row == null) {
-        Toaster.error(title: 'Запись не найдена');
+        Toaster.error(title: S.of(context).commonRecordNotFound);
         if (mounted) context.pop();
         return;
       }
@@ -71,7 +72,7 @@ class _IdentityViewScreenState extends ConsumerState<IdentityViewScreen> {
         _verified = identity.verified;
       });
     } catch (e) {
-      Toaster.error(title: 'Ошибка загрузки', description: '$e');
+      Toaster.error(title: S.of(context).commonLoadError, description: '$e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -84,12 +85,14 @@ class _IdentityViewScreenState extends ConsumerState<IdentityViewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = S.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Просмотр идентификации'),
+        title: Text(l10n.viewIdentity),
         actions: [
           IconButton(
-            tooltip: 'Редактировать',
+            tooltip: l10n.edit,
             onPressed: () => context.push(
               AppRoutesPaths.dashboardEntityEdit(
                 EntityType.identity,
@@ -108,69 +111,69 @@ class _IdentityViewScreenState extends ConsumerState<IdentityViewScreen> {
                 Text(_name, style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: 12),
                 ListTile(
-                  title: const Text('Тип документа'),
+                  title: Text(l10n.documentTypeRequiredLabel),
                   subtitle: Text(_idType),
                 ),
                 ListTile(
-                  title: const Text('Номер документа'),
+                  title: Text(l10n.documentNumberRequiredLabel),
                   subtitle: Text(_idNumber),
                 ),
                 if (_fullName?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('ФИО'),
+                    title: Text(l10n.fullNameLabel),
                     subtitle: Text(_fullName!),
                   ),
                 ListTile(
-                  title: const Text('Дата рождения'),
+                  title: Text(l10n.birthDateIsoLabel),
                   subtitle: Text(_fmt(_dateOfBirth)),
                 ),
                 if (_placeOfBirth?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('Место рождения'),
+                    title: Text(l10n.placeOfBirthLabel),
                     subtitle: Text(_placeOfBirth!),
                   ),
                 if (_nationality?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('Гражданство'),
+                    title: Text(l10n.nationalityLabel),
                     subtitle: Text(_nationality!),
                   ),
                 if (_issuingAuthority?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('Кем выдан'),
+                    title: Text(l10n.issuingAuthorityLabel),
                     subtitle: Text(_issuingAuthority!),
                   ),
                 ListTile(
-                  title: const Text('Дата выдачи'),
+                  title: Text(l10n.issueDateIsoLabel),
                   subtitle: Text(_fmt(_issueDate)),
                 ),
                 ListTile(
-                  title: const Text('Дата окончания'),
+                  title: Text(l10n.expiryDateIsoLabel),
                   subtitle: Text(_fmt(_expiryDate)),
                 ),
                 if (_mrz?.isNotEmpty == true)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('MRZ'),
+                    title: Text(l10n.mrzLabel),
                     subtitle: SelectableText(_mrz!),
                   ),
                 if (_scanAttachmentId?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('ID скана'),
+                    title: Text(l10n.scanIdLabel),
                     subtitle: Text(_scanAttachmentId!),
                   ),
                 if (_photoAttachmentId?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('ID фото'),
+                    title: Text(l10n.photoIdLabel),
                     subtitle: Text(_photoAttachmentId!),
                   ),
                 ListTile(
-                  title: const Text('Верифицировано'),
-                  subtitle: Text(_verified ? 'Да' : 'Нет'),
+                  title: Text(l10n.verifiedLabel),
+                  subtitle: Text(_verified ? l10n.commonYes : l10n.commonNo),
                 ),
                 if (_description?.isNotEmpty == true)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Описание'),
+                    title: Text(l10n.descriptionLabel),
                     subtitle: Text(_description!),
                   ),
               ],

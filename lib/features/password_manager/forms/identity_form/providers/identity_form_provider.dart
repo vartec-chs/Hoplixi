@@ -1,6 +1,7 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -68,17 +69,17 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
   String? _dateErr(String v) {
     final s = v.trim();
     if (s.isEmpty) return null;
-    return DateTime.tryParse(s) == null ? 'Неверный ISO8601' : null;
+    return DateTime.tryParse(s) == null ? S.current.validationInvalidIso8601 : null;
   }
 
   void setName(String v) => _update(
-    (s) => s.copyWith(name: v, nameError: _req(v, 'Название обязательно')),
+    (s) => s.copyWith(name: v, nameError: _req(v, S.current.validationRequiredName)),
   );
   void setIdType(String v) => _update(
-    (s) => s.copyWith(idType: v, idTypeError: _req(v, 'Тип обязателен')),
+    (s) => s.copyWith(idType: v, idTypeError: _req(v, S.current.validationRequiredType)),
   );
   void setIdNumber(String v) => _update(
-    (s) => s.copyWith(idNumber: v, idNumberError: _req(v, 'Номер обязателен')),
+    (s) => s.copyWith(idNumber: v, idNumberError: _req(v, S.current.validationRequiredNumber)),
   );
   void setFullName(String v) => _update((s) => s.copyWith(fullName: v));
   void setDateOfBirth(String v) =>
@@ -107,9 +108,9 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
 
   bool validate() {
     final c = _current;
-    final nameError = _req(c.name, 'Название обязательно');
-    final idTypeError = _req(c.idType, 'Тип обязателен');
-    final idNumberError = _req(c.idNumber, 'Номер обязателен');
+    final nameError = _req(c.name, S.current.validationRequiredName);
+    final idTypeError = _req(c.idType, S.current.validationRequiredType);
+    final idNumberError = _req(c.idNumber, S.current.validationRequiredNumber);
     final dateOfBirthError = _dateErr(c.dateOfBirth);
     final issueDateError = _dateErr(c.issueDate);
     final expiryDateError = _dateErr(c.expiryDate);
@@ -228,3 +229,4 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
+

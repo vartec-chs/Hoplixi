@@ -1,6 +1,7 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -105,19 +106,19 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
   }
 
   String? _validateName(String value) {
-    if (value.trim().isEmpty) return 'Название обязательно';
+    if (value.trim().isEmpty) return S.current.validationRequiredName;
     return null;
   }
 
   String? _validateService(String value) {
-    if (value.trim().isEmpty) return 'Сервис обязателен';
+    if (value.trim().isEmpty) return S.current.validationRequiredService;
     return null;
   }
 
   String? _validateKey(String value) {
     final v = value.trim();
-    if (v.isEmpty) return 'Ключ обязателен';
-    if (v.length < 8) return 'Минимум 8 символов';
+    if (v.isEmpty) return S.current.validationRequiredKey;
+    if (v.length < 8) return S.current.validationMin8Chars;
     return null;
   }
 
@@ -153,8 +154,8 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
     try {
       final dao = await ref.read(apiKeyDaoProvider.future);
       final masked = key.length > 6
-          ? '${key.substring(0, 3)}•••${key.substring(key.length - 3)}'
-          : '••••••';
+          ? '${key.substring(0, 3)}***${key.substring(key.length - 3)}'
+          : '******';
 
       if (current.isEditMode && current.editingApiKeyId != null) {
         final updated = await dao.updateApiKey(
@@ -219,3 +220,4 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
     _update((s) => s.copyWith(isSaved: false));
   }
 }
+

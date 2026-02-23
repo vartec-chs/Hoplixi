@@ -1,6 +1,7 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -66,15 +67,13 @@ class CertificateFormNotifier extends AsyncNotifier<CertificateFormState> {
   void setName(String v) => _update(
     (s) => s.copyWith(
       name: v,
-      nameError: v.trim().isEmpty ? 'Название обязательно' : null,
+      nameError: v.trim().isEmpty ? S.current.validationRequiredName : null,
     ),
   );
   void setCertificatePem(String v) => _update(
     (s) => s.copyWith(
       certificatePem: v,
-      certificatePemError: v.trim().isEmpty
-          ? 'Certificate PEM обязателен'
-          : null,
+      certificatePemError: v.trim().isEmpty ? S.current.validationRequiredCertificatePem : null,
     ),
   );
   void setPrivateKey(String v) => _update((s) => s.copyWith(privateKey: v));
@@ -95,10 +94,8 @@ class CertificateFormNotifier extends AsyncNotifier<CertificateFormState> {
 
   bool validate() {
     final c = _current;
-    final nameError = c.name.trim().isEmpty ? 'Название обязательно' : null;
-    final certificatePemError = c.certificatePem.trim().isEmpty
-        ? 'Certificate PEM обязателен'
-        : null;
+    final nameError = c.name.trim().isEmpty ? S.current.validationRequiredName : null;
+    final certificatePemError = c.certificatePem.trim().isEmpty ? S.current.validationRequiredCertificatePem : null;
 
     _update(
       (s) => s.copyWith(
@@ -190,3 +187,4 @@ class CertificateFormNotifier extends AsyncNotifier<CertificateFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
+

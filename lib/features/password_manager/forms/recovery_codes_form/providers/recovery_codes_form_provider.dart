@@ -1,6 +1,7 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -64,13 +65,13 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
   void setName(String value) => _update(
     (s) => s.copyWith(
       name: value,
-      nameError: value.trim().isEmpty ? 'Название обязательно' : null,
+      nameError: value.trim().isEmpty ? S.current.validationRequiredName : null,
     ),
   );
   void setCodesBlob(String value) => _update(
     (s) => s.copyWith(
       codesBlob: value,
-      codesBlobError: value.trim().isEmpty ? 'Codes blob обязателен' : null,
+      codesBlobError: value.trim().isEmpty ? S.current.validationRequiredCodesBlob : null,
     ),
   );
 
@@ -80,8 +81,7 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
       (s) => s.copyWith(
         codesCount: value,
         codesCountError: v.isEmpty || int.tryParse(v) != null
-            ? null
-            : 'Нужно целое число',
+            ? null : S.current.validationMustBeInteger,
       ),
     );
   }
@@ -92,8 +92,7 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
       (s) => s.copyWith(
         usedCount: value,
         usedCountError: v.isEmpty || int.tryParse(v) != null
-            ? null
-            : 'Нужно целое число',
+            ? null : S.current.validationMustBeInteger,
       ),
     );
   }
@@ -107,7 +106,7 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
         generatedAt: value,
         generatedAtError: v.isEmpty || DateTime.tryParse(v) != null
             ? null
-            : 'Неверный ISO8601',
+            : S.current.validationInvalidIso8601,
       ),
     );
   }
@@ -126,23 +125,19 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
 
   bool validate() {
     final c = _current;
-    final nameError = c.name.trim().isEmpty ? 'Название обязательно' : null;
-    final codesBlobError = c.codesBlob.trim().isEmpty
-        ? 'Codes blob обязателен'
-        : null;
+    final nameError = c.name.trim().isEmpty ? S.current.validationRequiredName : null;
+    final codesBlobError = c.codesBlob.trim().isEmpty ? S.current.validationRequiredCodesBlob : null;
     final codesCountError =
         c.codesCount.trim().isEmpty || int.tryParse(c.codesCount.trim()) != null
-        ? null
-        : 'Нужно целое число';
+        ? null : S.current.validationMustBeInteger;
     final usedCountError =
         c.usedCount.trim().isEmpty || int.tryParse(c.usedCount.trim()) != null
-        ? null
-        : 'Нужно целое число';
+        ? null : S.current.validationMustBeInteger;
     final generatedAtError =
         c.generatedAt.trim().isEmpty ||
             DateTime.tryParse(c.generatedAt.trim()) != null
         ? null
-        : 'Неверный ISO8601';
+        : S.current.validationInvalidIso8601;
 
     _update(
       (s) => s.copyWith(
@@ -250,3 +245,4 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
+

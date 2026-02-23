@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
@@ -42,7 +43,7 @@ class _RecoveryCodesViewScreenState
       final dao = await ref.read(recoveryCodesDaoProvider.future);
       final row = await dao.getById(widget.recoveryCodesId);
       if (row == null) {
-        Toaster.error(title: 'Запись не найдена');
+        Toaster.error(title: S.of(context).commonRecordNotFound);
         if (mounted) context.pop();
         return;
       }
@@ -61,7 +62,7 @@ class _RecoveryCodesViewScreenState
         _description = item.description;
       });
     } catch (e) {
-      Toaster.error(title: 'Ошибка загрузки', description: '$e');
+      Toaster.error(title: S.of(context).commonLoadError, description: '$e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -74,12 +75,14 @@ class _RecoveryCodesViewScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = S.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Просмотр кодов восстановления'),
+        title: Text(l10n.viewRecoveryCodes),
         actions: [
           IconButton(
-            tooltip: 'Редактировать',
+            tooltip: l10n.edit,
             onPressed: () => context.push(
               AppRoutesPaths.dashboardEntityEdit(
                 EntityType.recoveryCodes,
@@ -98,41 +101,41 @@ class _RecoveryCodesViewScreenState
                 Text(_name, style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: 12),
                 ListTile(
-                  title: const Text('Кодов всего'),
+                  title: Text(l10n.totalCodesLabel),
                   subtitle: Text('${_codesCount ?? '-'}'),
                 ),
                 ListTile(
-                  title: const Text('Кодов использовано'),
+                  title: Text(l10n.usedCodesLabel),
                   subtitle: Text('${_usedCount ?? '-'}'),
                 ),
                 ListTile(
-                  title: const Text('Generated at'),
+                  title: Text(l10n.generatedAtIsoLabel),
                   subtitle: Text(_fmt(_generatedAt)),
                 ),
                 ListTile(
-                  title: const Text('Одноразовые'),
-                  subtitle: Text(_oneTime ? 'Да' : 'Нет'),
+                  title: Text(l10n.oneTimeCodesLabel),
+                  subtitle: Text(_oneTime ? l10n.commonYes : l10n.commonNo),
                 ),
                 if (_displayHint?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('Display hint'),
+                    title: Text(l10n.displayHintLabel),
                     subtitle: Text(_displayHint!),
                   ),
                 if (_perCodeStatus?.isNotEmpty == true)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Per-code status'),
+                    title: Text(l10n.perCodeStatusJsonLabel),
                     subtitle: SelectableText(_perCodeStatus!),
                   ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Codes blob'),
+                  title: Text(l10n.codesBlobRequiredLabel),
                   subtitle: SelectableText(_codesBlob),
                 ),
                 if (_description?.isNotEmpty == true)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Описание'),
+                    title: Text(l10n.descriptionLabel),
                     subtitle: Text(_description!),
                   ),
               ],

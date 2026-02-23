@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -118,7 +119,7 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
   }
 
   String? _validateName(String value) {
-    if (value.trim().isEmpty) return 'Имя контакта обязательно';
+    if (value.trim().isEmpty) return S.current.validationRequiredContactName;
     return null;
   }
 
@@ -126,7 +127,7 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
     final v = value.trim();
     if (v.isEmpty) return null;
     final isValid = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v);
-    if (!isValid) return 'Некорректный email';
+    if (!isValid) return S.current.validationInvalidEmail;
     return null;
   }
 

@@ -1493,6 +1493,431 @@ class S {
       args: [],
     );
   }
+
+  /// `Load error`
+  String get commonLoadError {
+    return Intl.message(
+      'Load error',
+      name: 'commonLoadError',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Record not found`
+  String get commonRecordNotFound {
+    return Intl.message(
+      'Record not found',
+      name: 'commonRecordNotFound',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Press visibility button to load`
+  String get commonPressVisibilityToLoad {
+    return Intl.message(
+      'Press visibility button to load',
+      name: 'commonPressVisibilityToLoad',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Yes`
+  String get commonYes {
+    return Intl.message('Yes', name: 'commonYes', desc: '', args: []);
+  }
+
+  /// `No`
+  String get commonNo {
+    return Intl.message('No', name: 'commonNo', desc: '', args: []);
+  }
+
+  /// `Enabled`
+  String get commonEnabled {
+    return Intl.message('Enabled', name: 'commonEnabled', desc: '', args: []);
+  }
+
+  /// `Disabled`
+  String get commonDisabled {
+    return Intl.message('Disabled', name: 'commonDisabled', desc: '', args: []);
+  }
+
+  /// `Added`
+  String get commonAdded {
+    return Intl.message('Added', name: 'commonAdded', desc: '', args: []);
+  }
+
+  /// `Not added`
+  String get commonNotAdded {
+    return Intl.message(
+      'Not added',
+      name: 'commonNotAdded',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{field} is missing`
+  String commonFieldMissing(Object field) {
+    return Intl.message(
+      '$field is missing',
+      name: 'commonFieldMissing',
+      desc: '',
+      args: [field],
+    );
+  }
+
+  /// `{field} is empty`
+  String commonFieldEmpty(Object field) {
+    return Intl.message(
+      '$field is empty',
+      name: 'commonFieldEmpty',
+      desc: '',
+      args: [field],
+    );
+  }
+
+  /// `{field} copied`
+  String commonFieldCopied(Object field) {
+    return Intl.message(
+      '$field copied',
+      name: 'commonFieldCopied',
+      desc: '',
+      args: [field],
+    );
+  }
+
+  /// `Error getting {field}`
+  String commonErrorGettingField(Object field) {
+    return Intl.message(
+      'Error getting $field',
+      name: 'commonErrorGettingField',
+      desc: '',
+      args: [field],
+    );
+  }
+
+  /// `View contact`
+  String get viewContact {
+    return Intl.message(
+      'View contact',
+      name: 'viewContact',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `View Wi-Fi`
+  String get viewWifi {
+    return Intl.message('View Wi-Fi', name: 'viewWifi', desc: '', args: []);
+  }
+
+  /// `View certificate`
+  String get viewCertificate {
+    return Intl.message(
+      'View certificate',
+      name: 'viewCertificate',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `View crypto wallet`
+  String get viewCryptoWallet {
+    return Intl.message(
+      'View crypto wallet',
+      name: 'viewCryptoWallet',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `View identity`
+  String get viewIdentity {
+    return Intl.message(
+      'View identity',
+      name: 'viewIdentity',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `View license`
+  String get viewLicense {
+    return Intl.message(
+      'View license',
+      name: 'viewLicense',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `View recovery codes`
+  String get viewRecoveryCodes {
+    return Intl.message(
+      'View recovery codes',
+      name: 'viewRecoveryCodes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `View SSH key`
+  String get viewSshKey {
+    return Intl.message('View SSH key', name: 'viewSshKey', desc: '', args: []);
+  }
+
+  /// `Contact not found`
+  String get contactNotFound {
+    return Intl.message(
+      'Contact not found',
+      name: 'contactNotFound',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Wi-Fi network not found`
+  String get wifiNotFound {
+    return Intl.message(
+      'Wi-Fi network not found',
+      name: 'wifiNotFound',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Certificate not found`
+  String get certificateNotFound {
+    return Intl.message(
+      'Certificate not found',
+      name: 'certificateNotFound',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Crypto wallet not found`
+  String get cryptoWalletNotFound {
+    return Intl.message(
+      'Crypto wallet not found',
+      name: 'cryptoWalletNotFound',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `SSH key not found`
+  String get sshKeyNotFound {
+    return Intl.message(
+      'SSH key not found',
+      name: 'sshKeyNotFound',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `PFX password`
+  String get pfxPasswordLabel {
+    return Intl.message(
+      'PFX password',
+      name: 'pfxPasswordLabel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Name is required`
+  String get validationRequiredName {
+    return Intl.message(
+      'Name is required',
+      name: 'validationRequiredName',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Service is required`
+  String get validationRequiredService {
+    return Intl.message(
+      'Service is required',
+      name: 'validationRequiredService',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Key is required`
+  String get validationRequiredKey {
+    return Intl.message(
+      'Key is required',
+      name: 'validationRequiredKey',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Minimum 8 characters`
+  String get validationMin8Chars {
+    return Intl.message(
+      'Minimum 8 characters',
+      name: 'validationMin8Chars',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Contact name is required`
+  String get validationRequiredContactName {
+    return Intl.message(
+      'Contact name is required',
+      name: 'validationRequiredContactName',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invalid email`
+  String get validationInvalidEmail {
+    return Intl.message(
+      'Invalid email',
+      name: 'validationInvalidEmail',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Certificate PEM is required`
+  String get validationRequiredCertificatePem {
+    return Intl.message(
+      'Certificate PEM is required',
+      name: 'validationRequiredCertificatePem',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Wallet type is required`
+  String get validationRequiredWalletType {
+    return Intl.message(
+      'Wallet type is required',
+      name: 'validationRequiredWalletType',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invalid ISO8601`
+  String get validationInvalidIso8601 {
+    return Intl.message(
+      'Invalid ISO8601',
+      name: 'validationInvalidIso8601',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Type is required`
+  String get validationRequiredType {
+    return Intl.message(
+      'Type is required',
+      name: 'validationRequiredType',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Number is required`
+  String get validationRequiredNumber {
+    return Intl.message(
+      'Number is required',
+      name: 'validationRequiredNumber',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Must be an integer`
+  String get validationMustBeInteger {
+    return Intl.message(
+      'Must be an integer',
+      name: 'validationMustBeInteger',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Product is required`
+  String get validationRequiredProduct {
+    return Intl.message(
+      'Product is required',
+      name: 'validationRequiredProduct',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `License key is required`
+  String get validationRequiredLicenseKey {
+    return Intl.message(
+      'License key is required',
+      name: 'validationRequiredLicenseKey',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Codes blob is required`
+  String get validationRequiredCodesBlob {
+    return Intl.message(
+      'Codes blob is required',
+      name: 'validationRequiredCodesBlob',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Public key is required`
+  String get validationRequiredPublicKey {
+    return Intl.message(
+      'Public key is required',
+      name: 'validationRequiredPublicKey',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Private key is required`
+  String get validationRequiredPrivateKey {
+    return Intl.message(
+      'Private key is required',
+      name: 'validationRequiredPrivateKey',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `SSID is required`
+  String get validationRequiredSsid {
+    return Intl.message(
+      'SSID is required',
+      name: 'validationRequiredSsid',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reveal private key first`
+  String get revealPrivateKeyFirst {
+    return Intl.message(
+      'Reveal private key first',
+      name: 'revealPrivateKeyFirst',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

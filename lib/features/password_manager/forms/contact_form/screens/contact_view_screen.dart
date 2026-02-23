@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
@@ -42,7 +43,7 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
       final dao = await ref.read(contactDaoProvider.future);
       final row = await dao.getById(widget.contactId);
       if (row == null) {
-        Toaster.error(title: 'Контакт не найден');
+        Toaster.error(title: S.of(context).contactNotFound);
         if (mounted) context.pop();
         return;
       }
@@ -61,7 +62,7 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
         _isEmergencyContact = details.isEmergencyContact;
       });
     } catch (e) {
-      Toaster.error(title: 'Ошибка загрузки', description: '$e');
+      Toaster.error(title: S.of(context).commonLoadError, description: '$e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -69,11 +70,11 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
 
   Future<void> _copyValue(String? value, String label) async {
     if (value == null || value.isEmpty) {
-      Toaster.warning(title: '$label не указан');
+      Toaster.warning(title: S.of(context).commonFieldMissing(label));
       return;
     }
     await Clipboard.setData(ClipboardData(text: value));
-    Toaster.success(title: '$label скопирован');
+    Toaster.success(title: S.of(context).commonFieldCopied(label));
   }
 
   String _formatDate(DateTime value) {
@@ -82,12 +83,14 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = S.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Просмотр контакта'),
+        title: Text(l10n.viewContact),
         actions: [
           IconButton(
-            tooltip: 'Редактировать',
+            tooltip: l10n.edit,
             onPressed: () => context.push(
               AppRoutesPaths.dashboardEntityEdit(
                 EntityType.contact,
@@ -112,59 +115,59 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
                   ),
                 const SizedBox(height: 8),
                 if (_isEmergencyContact)
-                  const ListTile(
+                  ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: Icon(Icons.warning_amber_rounded),
-                    title: Text('Экстренный контакт'),
+                    leading: const Icon(Icons.warning_amber_rounded),
+                    title: Text(l10n.emergencyContactLabel),
                   ),
                 if (_phone?.isNotEmpty == true)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Телефон'),
+                    title: Text(l10n.phoneLabel),
                     subtitle: Text(_phone!),
                     trailing: IconButton(
-                      onPressed: () => _copyValue(_phone, 'Телефон'),
+                      onPressed: () => _copyValue(_phone, l10n.phoneLabel),
                       icon: const Icon(Icons.copy),
                     ),
                   ),
                 if (_email?.isNotEmpty == true)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Email'),
+                    title: Text(l10n.emailLabel),
                     subtitle: Text(_email!),
                     trailing: IconButton(
-                      onPressed: () => _copyValue(_email, 'Email'),
+                      onPressed: () => _copyValue(_email, l10n.emailLabel),
                       icon: const Icon(Icons.copy),
                     ),
                   ),
                 if (_jobTitle?.isNotEmpty == true)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Должность'),
+                    title: Text(l10n.jobTitleLabel),
                     subtitle: Text(_jobTitle!),
                   ),
                 if (_address?.isNotEmpty == true)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Адрес'),
+                    title: Text(l10n.addressLabel),
                     subtitle: Text(_address!),
                   ),
                 if (_website?.isNotEmpty == true)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Сайт'),
+                    title: Text(l10n.websiteLabel),
                     subtitle: Text(_website!),
                   ),
                 if (_birthday != null)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Дата рождения'),
+                    title: Text(l10n.birthdayLabel),
                     subtitle: Text(_formatDate(_birthday!)),
                   ),
                 if (_description?.isNotEmpty == true)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Описание'),
+                    title: Text(l10n.descriptionLabel),
                     subtitle: Text(_description!),
                   ),
               ],

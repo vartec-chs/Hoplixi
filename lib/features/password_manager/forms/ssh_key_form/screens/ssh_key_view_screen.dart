@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
@@ -41,7 +42,7 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
       final dao = await ref.read(sshKeyDaoProvider.future);
       final row = await dao.getById(widget.sshKeyId);
       if (row == null) {
-        Toaster.error(title: 'SSH-ключ не найден');
+        Toaster.error(title: S.of(context).sshKeyNotFound);
         if (mounted) context.pop();
         return;
       }
@@ -57,7 +58,7 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
         _addedToAgent = ssh.addedToAgent;
       });
     } catch (e) {
-      Toaster.error(title: 'Ошибка загрузки', description: '$e');
+      Toaster.error(title: S.of(context).commonLoadError, description: '$e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -73,7 +74,9 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
       final dao = await ref.read(sshKeyDaoProvider.future);
       final value = await dao.getPrivateKeyFieldById(widget.sshKeyId);
       if (value == null) {
-        Toaster.error(title: 'Не удалось получить private key');
+        Toaster.error(
+          title: S.of(context).commonErrorGettingField(S.of(context).privateKeyLabel),
+        );
         return;
       }
       setState(() {
@@ -81,33 +84,37 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
         _showPrivateKey = true;
       });
     } catch (e) {
-      Toaster.error(title: 'Ошибка получения private key', description: '$e');
+      Toaster.error(
+        title: S.of(context).commonErrorGettingField(S.of(context).privateKeyLabel),
+        description: '$e',
+      );
     }
   }
 
   Future<void> _copyPrivateKey() async {
     final value = _privateKey;
     if (value == null || value.isEmpty) {
-      Toaster.warning(title: 'Сначала раскройте private key');
+      Toaster.warning(title: S.of(context).revealPrivateKeyFirst);
       return;
     }
     await Clipboard.setData(ClipboardData(text: value));
-    Toaster.success(title: 'Private key скопирован');
+    Toaster.success(
+      title: S.of(context).commonFieldCopied(S.of(context).privateKeyLabel),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = S.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Просмотр SSH-ключа'),
+        title: Text(l10n.viewSshKey),
         actions: [
           IconButton(
-            tooltip: 'Редактировать',
+            tooltip: l10n.edit,
             onPressed: () => context.push(
-              AppRoutesPaths.dashboardEntityEdit(
-                EntityType.sshKey,
-                widget.sshKeyId,
-              ),
+              AppRoutesPaths.dashboardEntityEdit(EntityType.sshKey, widget.sshKeyId),
             ),
             icon: const Icon(Icons.edit),
           ),
@@ -124,11 +131,11 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
                 const SizedBox(height: 16),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Private key'),
+                  title: Text(l10n.privateKeyLabel),
                   subtitle: SelectableText(
                     _showPrivateKey
                         ? (_privateKey ?? '')
-                        : 'Нажмите кнопку видимости для загрузки',
+                        : l10n.commonPressVisibilityToLoad,
                   ),
                   trailing: Wrap(
                     spacing: 4,
@@ -136,9 +143,7 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
                       IconButton(
                         onPressed: _revealPrivateKey,
                         icon: Icon(
-                          _showPrivateKey
-                              ? Icons.visibility_off
-                              : Icons.visibility,
+                          _showPrivateKey ? Icons.visibility_off : Icons.visibility,
                         ),
                       ),
                       IconButton(
@@ -149,24 +154,23 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
                   ),
                 ),
                 if (_keyType?.isNotEmpty == true)
-                  ListTile(title: const Text('Тип'), subtitle: Text(_keyType!)),
+                  ListTile(title: Text(l10n.keyTypeLabel), subtitle: Text(_keyType!)),
                 if (_fingerprint?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('Fingerprint'),
+                    title: Text(l10n.fingerprintLabel),
                     subtitle: Text(_fingerprint!),
                   ),
                 if (_usage?.isNotEmpty == true)
-                  ListTile(
-                    title: const Text('Использование'),
-                    subtitle: Text(_usage!),
-                  ),
+                  ListTile(title: Text(l10n.usageLabel), subtitle: Text(_usage!)),
                 ListTile(
-                  title: const Text('SSH-agent'),
-                  subtitle: Text(_addedToAgent ? 'Добавлен' : 'Не добавлен'),
+                  title: Text(l10n.addedToSshAgentLabel),
+                  subtitle: Text(
+                    _addedToAgent ? l10n.commonAdded : l10n.commonNotAdded,
+                  ),
                 ),
                 if (_description?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('Описание'),
+                    title: Text(l10n.descriptionLabel),
                     subtitle: Text(_description!),
                     contentPadding: EdgeInsets.zero,
                   ),

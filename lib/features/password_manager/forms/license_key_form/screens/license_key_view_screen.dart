@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
@@ -46,7 +47,7 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
       final dao = await ref.read(licenseKeyDaoProvider.future);
       final row = await dao.getById(widget.licenseKeyId);
       if (row == null) {
-        Toaster.error(title: 'Запись не найдена');
+        Toaster.error(title: S.of(context).commonRecordNotFound);
         if (mounted) context.pop();
         return;
       }
@@ -70,7 +71,7 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
         _description = item.description;
       });
     } catch (e) {
-      Toaster.error(title: 'Ошибка загрузки', description: '$e');
+      Toaster.error(title: S.of(context).commonLoadError, description: '$e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -83,12 +84,14 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = S.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Просмотр лицензии'),
+        title: Text(l10n.viewLicense),
         actions: [
           IconButton(
-            tooltip: 'Редактировать',
+            tooltip: l10n.edit,
             onPressed: () => context.push(
               AppRoutesPaths.dashboardEntityEdit(
                 EntityType.licenseKey,
@@ -106,65 +109,59 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
               children: [
                 Text(_name, style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: 12),
+                ListTile(title: Text(l10n.productLabel), subtitle: Text(_product)),
                 ListTile(
-                  title: const Text('Продукт'),
-                  subtitle: Text(_product),
-                ),
-                ListTile(
-                  title: const Text('Ключ лицензии'),
+                  title: Text(l10n.licenseKeyLabel),
                   subtitle: SelectableText(_licenseKey),
                 ),
                 if (_licenseType?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('Тип лицензии'),
+                    title: Text(l10n.licenseTypeLabel),
                     subtitle: Text(_licenseType!),
                   ),
                 if (_seats != null)
                   ListTile(
-                    title: const Text('Количество мест'),
+                    title: Text(l10n.seatsCountLabel),
                     subtitle: Text('$_seats'),
                   ),
                 if (_maxActivations != null)
                   ListTile(
-                    title: const Text('Макс. активаций'),
+                    title: Text(l10n.maxActivationsLabel),
                     subtitle: Text('$_maxActivations'),
                   ),
                 ListTile(
-                  title: const Text('Активировано'),
+                  title: Text(l10n.activatedAtIsoLabel),
                   subtitle: Text(_fmt(_activatedOn)),
                 ),
                 ListTile(
-                  title: const Text('Дата покупки'),
+                  title: Text(l10n.purchaseDateIsoLabel),
                   subtitle: Text(_fmt(_purchaseDate)),
                 ),
                 if (_purchaseFrom?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('Где куплено'),
+                    title: Text(l10n.purchasedFromLabel),
                     subtitle: Text(_purchaseFrom!),
                   ),
                 if (_orderId?.isNotEmpty == true)
-                  ListTile(
-                    title: const Text('Order ID'),
-                    subtitle: Text(_orderId!),
-                  ),
+                  ListTile(title: Text(l10n.orderIdLabel), subtitle: Text(_orderId!)),
                 if (_licenseFileId?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('ID файла лицензии'),
+                    title: Text(l10n.licenseFileIdLabel),
                     subtitle: Text(_licenseFileId!),
                   ),
                 ListTile(
-                  title: const Text('Истекает'),
+                  title: Text(l10n.expiresAtIsoLabel),
                   subtitle: Text(_fmt(_expiresAt)),
                 ),
                 if (_supportContact?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('Контакт поддержки'),
+                    title: Text(l10n.supportContactLabel),
                     subtitle: Text(_supportContact!),
                   ),
                 if (_description?.isNotEmpty == true)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Описание'),
+                    title: Text(l10n.descriptionLabel),
                     subtitle: Text(_description!),
                   ),
               ],

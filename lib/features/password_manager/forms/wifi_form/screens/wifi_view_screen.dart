@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
@@ -46,7 +47,7 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
       final dao = await ref.read(wifiDaoProvider.future);
       final row = await dao.getById(widget.wifiId);
       if (row == null) {
-        Toaster.error(title: 'Wi-Fi сеть не найдена');
+        Toaster.error(title: S.of(context).wifiNotFound);
         if (mounted) context.pop();
         return;
       }
@@ -68,7 +69,7 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
         _description = item.description;
       });
     } catch (e) {
-      Toaster.error(title: 'Ошибка загрузки', description: '$e');
+      Toaster.error(title: S.of(context).commonLoadError, description: '$e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -84,7 +85,9 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
       final dao = await ref.read(wifiDaoProvider.future);
       final value = await dao.getPasswordFieldById(widget.wifiId);
       if (value == null || value.isEmpty) {
-        Toaster.warning(title: 'Пароль отсутствует');
+        Toaster.warning(
+          title: S.of(context).commonFieldMissing(S.of(context).wifiPasswordLabel),
+        );
         return;
       }
       setState(() {
@@ -92,32 +95,36 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
         _showPassword = true;
       });
     } catch (e) {
-      Toaster.error(title: 'Ошибка получения пароля', description: '$e');
+      Toaster.error(
+        title: S.of(context).commonErrorGettingField(
+          S.of(context).wifiPasswordLabel,
+        ),
+        description: '$e',
+      );
     }
   }
 
   Future<void> _copyText(String title, String? value) async {
     if (value == null || value.isEmpty) {
-      Toaster.warning(title: '$title пуст');
+      Toaster.warning(title: S.of(context).commonFieldEmpty(title));
       return;
     }
     await Clipboard.setData(ClipboardData(text: value));
-    Toaster.success(title: '$title скопирован');
+    Toaster.success(title: S.of(context).commonFieldCopied(title));
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = S.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Просмотр Wi-Fi сети'),
+        title: Text(l10n.viewWifi),
         actions: [
           IconButton(
-            tooltip: 'Редактировать',
+            tooltip: l10n.edit,
             onPressed: () => context.push(
-              AppRoutesPaths.dashboardEntityEdit(
-                EntityType.wifi,
-                widget.wifiId,
-              ),
+              AppRoutesPaths.dashboardEntityEdit(EntityType.wifi, widget.wifiId),
             ),
             icon: const Icon(Icons.edit),
           ),
@@ -133,11 +140,11 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
                 ListTile(title: const Text('SSID'), subtitle: Text(_ssid)),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Password'),
+                  title: Text(l10n.wifiPasswordLabel),
                   subtitle: SelectableText(
                     _showPassword
                         ? (_password ?? '')
-                        : 'Нажмите кнопку видимости для загрузки',
+                        : l10n.commonPressVisibilityToLoad,
                   ),
                   trailing: Wrap(
                     spacing: 4,
@@ -145,71 +152,56 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
                       IconButton(
                         onPressed: _revealPassword,
                         icon: Icon(
-                          _showPassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
+                          _showPassword ? Icons.visibility_off : Icons.visibility,
                         ),
                       ),
                       IconButton(
-                        onPressed: () => _copyText('Password', _password),
+                        onPressed: () =>
+                            _copyText(l10n.wifiPasswordLabel, _password),
                         icon: const Icon(Icons.copy),
                       ),
                     ],
                   ),
                 ),
                 if (_security?.isNotEmpty == true)
-                  ListTile(
-                    title: const Text('Security'),
-                    subtitle: Text(_security!),
-                  ),
+                  ListTile(title: Text(l10n.wifiSecurityLabel), subtitle: Text(_security!)),
                 ListTile(
-                  title: const Text('Hidden'),
-                  subtitle: Text(_hidden ? 'Да' : 'Нет'),
+                  title: Text(l10n.wifiHiddenNetworkLabel),
+                  subtitle: Text(_hidden ? l10n.commonYes : l10n.commonNo),
                 ),
                 if (_eapMethod?.isNotEmpty == true)
-                  ListTile(
-                    title: const Text('EAP method'),
-                    subtitle: Text(_eapMethod!),
-                  ),
+                  ListTile(title: Text(l10n.wifiEapMethodLabel), subtitle: Text(_eapMethod!)),
                 if (_username?.isNotEmpty == true)
-                  ListTile(
-                    title: const Text('Username'),
-                    subtitle: Text(_username!),
-                  ),
+                  ListTile(title: Text(l10n.wifiUsernameLabel), subtitle: Text(_username!)),
                 if (_identity?.isNotEmpty == true)
-                  ListTile(
-                    title: const Text('Identity'),
-                    subtitle: Text(_identity!),
-                  ),
+                  ListTile(title: Text(l10n.wifiIdentityLabel), subtitle: Text(_identity!)),
                 if (_domain?.isNotEmpty == true)
-                  ListTile(
-                    title: const Text('Domain'),
-                    subtitle: Text(_domain!),
-                  ),
+                  ListTile(title: Text(l10n.wifiDomainLabel), subtitle: Text(_domain!)),
                 if (_lastConnectedBssid?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('Last connected BSSID'),
+                    title: Text(l10n.wifiLastConnectedBssidLabel),
                     subtitle: Text(_lastConnectedBssid!),
                   ),
                 if (_priority != null)
                   ListTile(
-                    title: const Text('Priority'),
+                    title: Text(l10n.wifiPriorityLabel),
                     subtitle: Text('$_priority'),
                   ),
                 if (_qrPayload?.isNotEmpty == true)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('QR payload'),
+                    title: Text(l10n.wifiQrPayloadLabel),
                     subtitle: SelectableText(_qrPayload!),
                     trailing: IconButton(
-                      onPressed: () => _copyText('QR payload', _qrPayload),
+                      onPressed: () =>
+                          _copyText(l10n.wifiQrPayloadLabel, _qrPayload),
                       icon: const Icon(Icons.copy),
                     ),
                   ),
                 if (_description?.isNotEmpty == true)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Описание'),
+                    title: Text(l10n.descriptionLabel),
                     subtitle: Text(_description!),
                   ),
               ],

@@ -20,6 +20,14 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'en';
 
+  static String m0(field) => "Error getting ${field}";
+
+  static String m1(field) => "${field} copied";
+
+  static String m2(field) => "${field} is empty";
+
+  static String m3(field) => "${field} is missing";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "activatedAtIsoLabel": MessageLookupByLibrary.simpleMessage(
@@ -76,6 +84,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "certificateCreated": MessageLookupByLibrary.simpleMessage(
       "Certificate created",
     ),
+    "certificateNotFound": MessageLookupByLibrary.simpleMessage(
+      "Certificate not found",
+    ),
     "certificatePemLabel": MessageLookupByLibrary.simpleMessage(
       "Certificate PEM *",
     ),
@@ -92,13 +103,36 @@ class MessageLookup extends MessageLookupByLibrary {
     "codesBlobRequiredLabel": MessageLookupByLibrary.simpleMessage(
       "Codes blob *",
     ),
+    "commonAdded": MessageLookupByLibrary.simpleMessage("Added"),
+    "commonDisabled": MessageLookupByLibrary.simpleMessage("Disabled"),
+    "commonEnabled": MessageLookupByLibrary.simpleMessage("Enabled"),
+    "commonErrorGettingField": m0,
+    "commonFieldCopied": m1,
+    "commonFieldEmpty": m2,
+    "commonFieldMissing": m3,
+    "commonLoadError": MessageLookupByLibrary.simpleMessage("Load error"),
+    "commonNo": MessageLookupByLibrary.simpleMessage("No"),
+    "commonNotAdded": MessageLookupByLibrary.simpleMessage("Not added"),
+    "commonPressVisibilityToLoad": MessageLookupByLibrary.simpleMessage(
+      "Press visibility button to load",
+    ),
+    "commonRecordNotFound": MessageLookupByLibrary.simpleMessage(
+      "Record not found",
+    ),
+    "commonYes": MessageLookupByLibrary.simpleMessage("Yes"),
     "companyLabel": MessageLookupByLibrary.simpleMessage("Company"),
     "contactCreated": MessageLookupByLibrary.simpleMessage("Contact created"),
     "contactNameLabel": MessageLookupByLibrary.simpleMessage("Contact name *"),
+    "contactNotFound": MessageLookupByLibrary.simpleMessage(
+      "Contact not found",
+    ),
     "contactUpdated": MessageLookupByLibrary.simpleMessage("Contact updated"),
     "crlUrlLabel": MessageLookupByLibrary.simpleMessage("CRL URL"),
     "cryptoWalletCreated": MessageLookupByLibrary.simpleMessage(
       "Crypto wallet created",
+    ),
+    "cryptoWalletNotFound": MessageLookupByLibrary.simpleMessage(
+      "Crypto wallet not found",
     ),
     "cryptoWalletUpdated": MessageLookupByLibrary.simpleMessage(
       "Crypto wallet updated",
@@ -220,6 +254,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "perCodeStatusJsonLabel": MessageLookupByLibrary.simpleMessage(
       "Per-code status JSON",
     ),
+    "pfxPasswordLabel": MessageLookupByLibrary.simpleMessage("PFX password"),
     "phoneLabel": MessageLookupByLibrary.simpleMessage("Phone"),
     "photoIdLabel": MessageLookupByLibrary.simpleMessage("Photo ID"),
     "pickDate": MessageLookupByLibrary.simpleMessage("Pick date"),
@@ -244,6 +279,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "recoveryCodesUpdated": MessageLookupByLibrary.simpleMessage(
       "Recovery codes updated",
     ),
+    "revealPrivateKeyFirst": MessageLookupByLibrary.simpleMessage(
+      "Reveal private key first",
+    ),
     "saveError": MessageLookupByLibrary.simpleMessage("Save error"),
     "scanIdLabel": MessageLookupByLibrary.simpleMessage("Scan ID"),
     "seatsCountLabel": MessageLookupByLibrary.simpleMessage("Seats count"),
@@ -257,6 +295,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "selectTagsHint": MessageLookupByLibrary.simpleMessage("Select tags"),
     "serialNumberLabel": MessageLookupByLibrary.simpleMessage("Serial number"),
     "sshKeyCreated": MessageLookupByLibrary.simpleMessage("SSH key created"),
+    "sshKeyNotFound": MessageLookupByLibrary.simpleMessage("SSH key not found"),
     "sshKeyUpdated": MessageLookupByLibrary.simpleMessage("SSH key updated"),
     "subjectLabel": MessageLookupByLibrary.simpleMessage("Subject"),
     "supportContactLabel": MessageLookupByLibrary.simpleMessage(
@@ -269,8 +308,74 @@ class MessageLookup extends MessageLookupByLibrary {
     "urlLabel": MessageLookupByLibrary.simpleMessage("URL"),
     "usageLabel": MessageLookupByLibrary.simpleMessage("Usage"),
     "usedCodesLabel": MessageLookupByLibrary.simpleMessage("Used"),
+    "validationInvalidEmail": MessageLookupByLibrary.simpleMessage(
+      "Invalid email",
+    ),
+    "validationInvalidIso8601": MessageLookupByLibrary.simpleMessage(
+      "Invalid ISO8601",
+    ),
+    "validationMin8Chars": MessageLookupByLibrary.simpleMessage(
+      "Minimum 8 characters",
+    ),
+    "validationMustBeInteger": MessageLookupByLibrary.simpleMessage(
+      "Must be an integer",
+    ),
+    "validationRequiredCertificatePem": MessageLookupByLibrary.simpleMessage(
+      "Certificate PEM is required",
+    ),
+    "validationRequiredCodesBlob": MessageLookupByLibrary.simpleMessage(
+      "Codes blob is required",
+    ),
+    "validationRequiredContactName": MessageLookupByLibrary.simpleMessage(
+      "Contact name is required",
+    ),
+    "validationRequiredKey": MessageLookupByLibrary.simpleMessage(
+      "Key is required",
+    ),
+    "validationRequiredLicenseKey": MessageLookupByLibrary.simpleMessage(
+      "License key is required",
+    ),
+    "validationRequiredName": MessageLookupByLibrary.simpleMessage(
+      "Name is required",
+    ),
+    "validationRequiredNumber": MessageLookupByLibrary.simpleMessage(
+      "Number is required",
+    ),
+    "validationRequiredPrivateKey": MessageLookupByLibrary.simpleMessage(
+      "Private key is required",
+    ),
+    "validationRequiredProduct": MessageLookupByLibrary.simpleMessage(
+      "Product is required",
+    ),
+    "validationRequiredPublicKey": MessageLookupByLibrary.simpleMessage(
+      "Public key is required",
+    ),
+    "validationRequiredService": MessageLookupByLibrary.simpleMessage(
+      "Service is required",
+    ),
+    "validationRequiredSsid": MessageLookupByLibrary.simpleMessage(
+      "SSID is required",
+    ),
+    "validationRequiredType": MessageLookupByLibrary.simpleMessage(
+      "Type is required",
+    ),
+    "validationRequiredWalletType": MessageLookupByLibrary.simpleMessage(
+      "Wallet type is required",
+    ),
     "verifiedLabel": MessageLookupByLibrary.simpleMessage("Verified"),
     "viewApiKey": MessageLookupByLibrary.simpleMessage("View API key"),
+    "viewCertificate": MessageLookupByLibrary.simpleMessage("View certificate"),
+    "viewContact": MessageLookupByLibrary.simpleMessage("View contact"),
+    "viewCryptoWallet": MessageLookupByLibrary.simpleMessage(
+      "View crypto wallet",
+    ),
+    "viewIdentity": MessageLookupByLibrary.simpleMessage("View identity"),
+    "viewLicense": MessageLookupByLibrary.simpleMessage("View license"),
+    "viewRecoveryCodes": MessageLookupByLibrary.simpleMessage(
+      "View recovery codes",
+    ),
+    "viewSshKey": MessageLookupByLibrary.simpleMessage("View SSH key"),
+    "viewWifi": MessageLookupByLibrary.simpleMessage("View Wi-Fi"),
     "walletTypeLabel": MessageLookupByLibrary.simpleMessage("Wallet type *"),
     "watchOnlyLabel": MessageLookupByLibrary.simpleMessage("Watch-only"),
     "websiteLabel": MessageLookupByLibrary.simpleMessage("Website"),
@@ -283,6 +388,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "wifiIdentityLabel": MessageLookupByLibrary.simpleMessage("Identity"),
     "wifiLastConnectedBssidLabel": MessageLookupByLibrary.simpleMessage(
       "Last connected BSSID",
+    ),
+    "wifiNotFound": MessageLookupByLibrary.simpleMessage(
+      "Wi-Fi network not found",
     ),
     "wifiPasswordLabel": MessageLookupByLibrary.simpleMessage("Password"),
     "wifiPriorityLabel": MessageLookupByLibrary.simpleMessage("Priority"),

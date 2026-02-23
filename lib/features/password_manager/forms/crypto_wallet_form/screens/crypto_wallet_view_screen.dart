@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
@@ -51,7 +52,7 @@ class _CryptoWalletViewScreenState
       final dao = await ref.read(cryptoWalletDaoProvider.future);
       final row = await dao.getById(widget.cryptoWalletId);
       if (row == null) {
-        Toaster.error(title: 'Криптокошелек не найден');
+        Toaster.error(title: S.of(context).cryptoWalletNotFound);
         if (mounted) context.pop();
         return;
       }
@@ -71,7 +72,7 @@ class _CryptoWalletViewScreenState
         _watchOnly = wallet.watchOnly;
       });
     } catch (e) {
-      Toaster.error(title: 'Ошибка загрузки', description: '$e');
+      Toaster.error(title: S.of(context).commonLoadError, description: '$e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -87,7 +88,9 @@ class _CryptoWalletViewScreenState
       final dao = await ref.read(cryptoWalletDaoProvider.future);
       final value = await dao.getMnemonicFieldById(widget.cryptoWalletId);
       if (value == null || value.isEmpty) {
-        Toaster.warning(title: 'Mnemonic отсутствует');
+        Toaster.warning(
+          title: S.of(context).commonFieldMissing(S.of(context).mnemonicLabel),
+        );
         return;
       }
       setState(() {
@@ -95,7 +98,10 @@ class _CryptoWalletViewScreenState
         _showMnemonic = true;
       });
     } catch (e) {
-      Toaster.error(title: 'Ошибка получения mnemonic', description: '$e');
+      Toaster.error(
+        title: S.of(context).commonErrorGettingField(S.of(context).mnemonicLabel),
+        description: '$e',
+      );
     }
   }
 
@@ -109,7 +115,9 @@ class _CryptoWalletViewScreenState
       final dao = await ref.read(cryptoWalletDaoProvider.future);
       final value = await dao.getPrivateKeyFieldById(widget.cryptoWalletId);
       if (value == null || value.isEmpty) {
-        Toaster.warning(title: 'Private key отсутствует');
+        Toaster.warning(
+          title: S.of(context).commonFieldMissing(S.of(context).privateKeyLabel),
+        );
         return;
       }
       setState(() {
@@ -117,7 +125,10 @@ class _CryptoWalletViewScreenState
         _showPrivateKey = true;
       });
     } catch (e) {
-      Toaster.error(title: 'Ошибка получения private key', description: '$e');
+      Toaster.error(
+        title: S.of(context).commonErrorGettingField(S.of(context).privateKeyLabel),
+        description: '$e',
+      );
     }
   }
 
@@ -131,7 +142,9 @@ class _CryptoWalletViewScreenState
       final dao = await ref.read(cryptoWalletDaoProvider.future);
       final value = await dao.getXprvFieldById(widget.cryptoWalletId);
       if (value == null || value.isEmpty) {
-        Toaster.warning(title: 'XPRV отсутствует');
+        Toaster.warning(
+          title: S.of(context).commonFieldMissing(S.of(context).xprvLabel),
+        );
         return;
       }
       setState(() {
@@ -139,17 +152,20 @@ class _CryptoWalletViewScreenState
         _showXprv = true;
       });
     } catch (e) {
-      Toaster.error(title: 'Ошибка получения XPRV', description: '$e');
+      Toaster.error(
+        title: S.of(context).commonErrorGettingField(S.of(context).xprvLabel),
+        description: '$e',
+      );
     }
   }
 
   Future<void> _copyText(String title, String? value) async {
     if (value == null || value.isEmpty) {
-      Toaster.warning(title: '$title пуст');
+      Toaster.warning(title: S.of(context).commonFieldEmpty(title));
       return;
     }
     await Clipboard.setData(ClipboardData(text: value));
-    Toaster.success(title: '$title скопирован');
+    Toaster.success(title: S.of(context).commonFieldCopied(title));
   }
 
   Widget _buildSensitiveTile({
@@ -162,7 +178,7 @@ class _CryptoWalletViewScreenState
       contentPadding: EdgeInsets.zero,
       title: Text(title),
       subtitle: SelectableText(
-        isVisible ? (value ?? '') : 'Нажмите кнопку видимости для загрузки',
+        isVisible ? (value ?? '') : S.of(context).commonPressVisibilityToLoad,
       ),
       trailing: Wrap(
         spacing: 4,
@@ -182,12 +198,14 @@ class _CryptoWalletViewScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = S.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Просмотр криптокошелька'),
+        title: Text(l10n.viewCryptoWallet),
         actions: [
           IconButton(
-            tooltip: 'Редактировать',
+            tooltip: l10n.edit,
             onPressed: () => context.push(
               AppRoutesPaths.dashboardEntityEdit(
                 EntityType.cryptoWallet,
@@ -207,23 +225,23 @@ class _CryptoWalletViewScreenState
                 const SizedBox(height: 12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Тип кошелька'),
+                  title: Text(l10n.walletTypeLabel),
                   subtitle: Text(_walletType),
                 ),
                 _buildSensitiveTile(
-                  title: 'Mnemonic',
+                  title: l10n.mnemonicLabel,
                   value: _mnemonic,
                   isVisible: _showMnemonic,
                   onToggle: _revealMnemonic,
                 ),
                 _buildSensitiveTile(
-                  title: 'Private key',
+                  title: l10n.privateKeyLabel,
                   value: _privateKey,
                   isVisible: _showPrivateKey,
                   onToggle: _revealPrivateKey,
                 ),
                 _buildSensitiveTile(
-                  title: 'XPRV',
+                  title: l10n.xprvLabel,
                   value: _xprv,
                   isVisible: _showXprv,
                   onToggle: _revealXprv,
@@ -231,46 +249,44 @@ class _CryptoWalletViewScreenState
                 if (_xpub?.isNotEmpty == true)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('XPUB'),
+                    title: Text(l10n.xpubLabel),
                     subtitle: SelectableText(_xpub!),
                     trailing: IconButton(
-                      onPressed: () => _copyText('XPUB', _xpub),
+                      onPressed: () => _copyText(l10n.xpubLabel, _xpub),
                       icon: const Icon(Icons.copy),
                     ),
                   ),
                 if (_network?.isNotEmpty == true)
-                  ListTile(
-                    title: const Text('Network'),
-                    subtitle: Text(_network!),
-                  ),
+                  ListTile(title: Text(l10n.networkLabel), subtitle: Text(_network!)),
                 if (_derivationPath?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('Derivation path'),
+                    title: Text(l10n.derivationPathLabel),
                     subtitle: Text(_derivationPath!),
                   ),
                 if (_derivationScheme?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('Derivation scheme'),
+                    title: Text(l10n.derivationSchemeLabel),
                     subtitle: Text(_derivationScheme!),
                   ),
                 if (_hardwareDevice?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('Hardware device'),
+                    title: Text(l10n.hardwareDeviceLabel),
                     subtitle: Text(_hardwareDevice!),
                   ),
                 if (_addresses?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('Addresses'),
+                    title: Text(l10n.addressesJsonLabel),
                     subtitle: SelectableText(_addresses!),
                   ),
                 ListTile(
-                  title: const Text('Watch-only'),
-                  subtitle: Text(_watchOnly ? 'Включен' : 'Выключен'),
+                  title: Text(l10n.watchOnlyLabel),
+                  subtitle:
+                      Text(_watchOnly ? l10n.commonEnabled : l10n.commonDisabled),
                 ),
                 if (_description?.isNotEmpty == true)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Описание'),
+                    title: Text(l10n.descriptionLabel),
                     subtitle: Text(_description!),
                   ),
               ],
