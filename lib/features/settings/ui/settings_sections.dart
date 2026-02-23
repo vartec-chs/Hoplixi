@@ -9,6 +9,7 @@ import 'package:hoplixi/features/settings/providers/settings_provider.dart';
 import 'package:hoplixi/features/settings/ui/widgets/settings_section_card.dart';
 import 'package:hoplixi/features/settings/ui/widgets/settings_tile.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
+import 'package:hoplixi/shared/widgets/language_switcher.dart';
 import 'package:universal_platform/universal_platform.dart';
 
 /// Секция настроек внешнего вида
@@ -34,20 +35,13 @@ class GeneralSettingsSection extends ConsumerWidget {
     final notifier = ref.read(settingsProvider.notifier);
     final launchAtStartupService = getIt<LaunchAtStartupService>();
 
-    final language = settings[AppKeys.language.key] as String? ?? 'ru';
     final launchAtStartupEnabled =
         settings[AppKeys.launchAtStartupEnabled.key] as bool? ?? false;
 
     return SettingsSectionCard(
       title: 'Общие',
       children: [
-        SettingsTile(
-          title: 'Язык',
-          subtitle: _getLanguageName(language),
-          leading: const Icon(Icons.language),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-          onTap: () => _showLanguageDialog(context, ref, notifier),
-        ),
+        const LanguageSwitcher(style: LanguageSwitcherStyle.settings),
         if (UniversalPlatform.isDesktop) ...[
           const Divider(height: 1),
           SettingsSwitchTile(
@@ -77,45 +71,6 @@ class GeneralSettingsSection extends ConsumerWidget {
         ],
       ],
     );
-  }
-
-  String _getLanguageName(String code) {
-    switch (code) {
-      case 'ru':
-        return 'Русский';
-      case 'en':
-        return 'English';
-      default:
-        return code;
-    }
-  }
-
-  Future<void> _showLanguageDialog(
-    BuildContext context,
-    WidgetRef ref,
-    SettingsNotifier notifier,
-  ) async {
-    final languages = {'ru': 'Русский', 'en': 'English'};
-
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Выберите язык'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: languages.entries.map((entry) {
-            return ListTile(
-              title: Text(entry.value),
-              onTap: () => Navigator.pop(context, entry.key),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-
-    if (result != null) {
-      await notifier.setString(AppKeys.language.key, result);
-    }
   }
 }
 

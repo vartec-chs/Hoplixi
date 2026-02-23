@@ -7,12 +7,14 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/settings/providers/settings_provider.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 import 'package:hoplixi/shared/widgets/close_database_button.dart';
+import 'package:hoplixi/shared/widgets/language_switcher.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:window_manager/window_manager.dart';
 
 class TitleBar extends ConsumerStatefulWidget {
   final String? labelOverride;
   final bool showDatabaseButton;
+  final bool showLanguageSwitcher;
   final bool showThemeSwitcher;
   final bool lockStoreOnClose;
   final Future<void> Function()? onClose;
@@ -21,6 +23,7 @@ class TitleBar extends ConsumerStatefulWidget {
     super.key,
     this.labelOverride,
     this.showDatabaseButton = true,
+    this.showLanguageSwitcher = true,
     this.showThemeSwitcher = true,
     this.lockStoreOnClose = true,
     this.onClose,
@@ -167,6 +170,12 @@ class _TitleBarState extends ConsumerState<TitleBar> {
                     ),
                   if (widget.showDatabaseButton && widget.showThemeSwitcher)
                     const SizedBox(width: 4),
+                  if (widget.showLanguageSwitcher)
+                    const LanguageSwitcher(
+                      size: 20,
+                      style: LanguageSwitcherStyle.compact,
+                      showCompactCode: true,
+                    ),
                   if (widget.showThemeSwitcher)
                     const ThemeSwitcher(
                       size: 26,

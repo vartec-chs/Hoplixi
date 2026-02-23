@@ -3,6 +3,7 @@ import 'package:hoplixi/core/app_preferences/app_key.dart';
 import 'package:hoplixi/core/app_preferences/app_preference_keys.dart';
 import 'package:hoplixi/core/app_preferences/app_storage_service.dart';
 import 'package:hoplixi/core/app_preferences/storage_errors.dart';
+import 'package:hoplixi/core/localization/locale_provider.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/di_init.dart';
@@ -67,6 +68,12 @@ class SettingsNotifier extends Notifier<Map<String, dynamic>> {
     final result = await _storage.setString(appKey as AppKey<String>, value);
     if (result) {
       state = {...state, key: value};
+
+      if (key == AppKeys.language.key) {
+        await ref
+            .read(localeProvider.notifier)
+            .setLocaleCode(value, persist: false);
+      }
     }
   }
 

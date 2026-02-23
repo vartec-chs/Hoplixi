@@ -8,6 +8,7 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_preferences/app_preferences.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
+import 'package:hoplixi/core/localization/locale_provider.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
 import 'package:hoplixi/core/theme/index.dart';
@@ -34,6 +35,7 @@ class App extends ConsumerStatefulWidget {
 class _AppState extends ConsumerState<App> {
   ProviderSubscription<AsyncValue<ThemeMode>>? _themeSyncSubscription;
   late final Future<ThemeMode> _initialThemeModeFuture;
+  late final Future<List<dynamic>> _initialThemeAndLocaleFuture;
 
   ThemeMode _parseThemeMode(String? value) {
     switch (value) {
@@ -56,6 +58,11 @@ class _AppState extends ConsumerState<App> {
       final savedMode = await storage.get(AppKeys.themeMode);
       return _parseThemeMode(savedMode);
     }();
+
+    _initialThemeAndLocaleFuture = Future.wait<dynamic>([
+      _initialThemeModeFuture,
+      ref.read(localeProvider.future),
+    ]);
 
     Future<void>(() {
       ref.read(launchDbPathProvider.notifier).setPath(widget.filePath);
@@ -93,18 +100,22 @@ class _AppState extends ConsumerState<App> {
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
+    final localeAsync = ref.watch(localeProvider);
 
     return ShortcutWatcher(
       child: TrayWatcher(
         child: AppLifecycleObserver(
-          child: FutureBuilder<ThemeMode>(
-            future: _initialThemeModeFuture,
-            builder: (context, asyncSnapshot) {
-              if (!asyncSnapshot.hasData) {
+          child: FutureBuilder<List<dynamic>>(
+            future: _initialThemeAndLocaleFuture,
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
                 return const AppLoadingScreen();
               }
 
-              final themeMode = asyncSnapshot.requireData;
+              final themeMode = snapshot.data![0] as ThemeMode;
+              final initialLocale = snapshot.data![1] as Locale;
+              final activeLocale = localeAsync.value ?? initialLocale;
+
               logTrace('App build with theme mode: $themeMode');
               return animated_theme.ThemeProvider(
                 initTheme: themeMode == ThemeMode.light
@@ -121,6 +132,11 @@ class _AppState extends ConsumerState<App> {
                     GlobalCupertinoLocalizations.delegate,
                     GlobalWidgetsLocalizations.delegate,
                     FlutterQuillLocalizations.delegate,
+                  ],
+                  locale: activeLocale,
+                  supportedLocales: const [
+                    Locale('en'), // English
+                    Locale('ru'), // Russian
                   ],
                   debugShowCheckedModeBanner: false,
                   builder: (context, child) {

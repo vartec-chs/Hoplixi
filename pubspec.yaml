@@ -35,7 +35,7 @@ dependencies:
   package_info_plus: ^9.0.0
   device_info_plus: ^12.3.0
   archive: ^4.0.9
-  uuid: ^4.5.2
+  uuid: ^4.5.3
   crypto: ^3.0.7
   pointycastle: ^4.0.0
   flutter_secure_storage: ^10.0.0
@@ -70,7 +70,7 @@ dependencies:
   result_dart: ^2.1.1
   universal_platform: ^1.1.0
   logger: ^2.6.2
-  intl: ^0.20.2
+  intl: any
   window_manager: ^0.5.1
   animated_text_kit: ^4.3.0
 
@@ -123,6 +123,8 @@ dependencies:
   rust_lib_hoplixi:
     path: rust_builder
   flutter_rust_bridge: 2.11.1
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
@@ -139,9 +141,13 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  generate: true # Add this line
+
   assets:
     - assets/images/
     - assets/icons/
     - assets/illustration/
     - assets/logo/
     - .env
+flutter_intl:
+  enabled: true

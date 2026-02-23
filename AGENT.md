@@ -26,6 +26,8 @@ securely store and manage their passwords.
   [docs-ai/add-new-vault-entity-guide.md](docs-ai/add-new-vault-entity-guide.md)
   for step-by-step instructions on adding a new vault entity (tables, DAO,
   filters, DTO, UI forms, cards, and integration points).
+- See [docs-ai/localization.md](docs-ai/localization.md) for localization rules
+  and workflow (currently supported locales: `en` and `ru`).
 
 ## Technologies Used
 
