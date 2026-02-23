@@ -124,36 +124,51 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
         body: Center(child: Text('$error')),
       ),
       data: (state) {
-        if (_nameController.text != state.name)
+        if (_nameController.text != state.name) {
           _nameController.text = state.name;
-        if (_productController.text != state.product)
+        }
+        if (_productController.text != state.product) {
           _productController.text = state.product;
-        if (_licenseKeyController.text != state.licenseKey)
+        }
+        if (_licenseKeyController.text != state.licenseKey) {
           _licenseKeyController.text = state.licenseKey;
-        if (_licenseTypeController.text != state.licenseType)
+        }
+        if (_licenseTypeController.text != state.licenseType) {
           _licenseTypeController.text = state.licenseType;
-        if (_seatsController.text != state.seats)
+        }
+        if (_seatsController.text != state.seats) {
           _seatsController.text = state.seats;
-        if (_maxActivationsController.text != state.maxActivations)
+        }
+        if (_maxActivationsController.text != state.maxActivations) {
           _maxActivationsController.text = state.maxActivations;
-        if (_activatedOnController.text != state.activatedOn)
+        }
+        if (_activatedOnController.text != state.activatedOn) {
           _activatedOnController.text = state.activatedOn;
-        if (_purchaseDateController.text != state.purchaseDate)
+        }
+        if (_purchaseDateController.text != state.purchaseDate) {
           _purchaseDateController.text = state.purchaseDate;
-        if (_purchaseFromController.text != state.purchaseFrom)
+        }
+        if (_purchaseFromController.text != state.purchaseFrom) {
           _purchaseFromController.text = state.purchaseFrom;
-        if (_orderIdController.text != state.orderId)
+        }
+        if (_orderIdController.text != state.orderId) {
           _orderIdController.text = state.orderId;
-        if (_licenseFileIdController.text != state.licenseFileId)
+        }
+        if (_licenseFileIdController.text != state.licenseFileId) {
           _licenseFileIdController.text = state.licenseFileId;
-        if (_expiresAtController.text != state.expiresAt)
+        }
+        if (_expiresAtController.text != state.expiresAt) {
           _expiresAtController.text = state.expiresAt;
-        if (_licenseNotesController.text != state.licenseNotes)
+        }
+        if (_licenseNotesController.text != state.licenseNotes) {
           _licenseNotesController.text = state.licenseNotes;
-        if (_supportContactController.text != state.supportContact)
+        }
+        if (_supportContactController.text != state.supportContact) {
           _supportContactController.text = state.supportContact;
-        if (_descriptionController.text != state.description)
+        }
+        if (_descriptionController.text != state.description) {
           _descriptionController.text = state.description;
+        }
 
         final notifier = ref.read(
           licenseKeyFormProvider(widget.licenseKeyId).notifier,

@@ -97,20 +97,27 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
         body: Center(child: Text('$error')),
       ),
       data: (state) {
-        if (_nameController.text != state.name)
+        if (_nameController.text != state.name) {
           _nameController.text = state.name;
-        if (_publicKeyController.text != state.publicKey)
+        }
+        if (_publicKeyController.text != state.publicKey) {
           _publicKeyController.text = state.publicKey;
-        if (_privateKeyController.text != state.privateKey)
+        }
+        if (_privateKeyController.text != state.privateKey) {
           _privateKeyController.text = state.privateKey;
-        if (_keyTypeController.text != state.keyType)
+        }
+        if (_keyTypeController.text != state.keyType) {
           _keyTypeController.text = state.keyType;
-        if (_fingerprintController.text != state.fingerprint)
+        }
+        if (_fingerprintController.text != state.fingerprint) {
           _fingerprintController.text = state.fingerprint;
-        if (_usageController.text != state.usage)
+        }
+        if (_usageController.text != state.usage) {
           _usageController.text = state.usage;
-        if (_descriptionController.text != state.description)
+        }
+        if (_descriptionController.text != state.description) {
           _descriptionController.text = state.description;
+        }
 
         final notifier = ref.read(sshKeyFormProvider(widget.sshKeyId).notifier);
 

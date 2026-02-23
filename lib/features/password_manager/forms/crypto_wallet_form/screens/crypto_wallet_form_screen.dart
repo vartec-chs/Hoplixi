@@ -121,32 +121,45 @@ class _CryptoWalletFormScreenState
         body: Center(child: Text('$error')),
       ),
       data: (state) {
-        if (_nameController.text != state.name)
+        if (_nameController.text != state.name) {
           _nameController.text = state.name;
-        if (_walletTypeController.text != state.walletType)
+        }
+        if (_walletTypeController.text != state.walletType) {
           _walletTypeController.text = state.walletType;
-        if (_mnemonicController.text != state.mnemonic)
+        }
+        if (_mnemonicController.text != state.mnemonic) {
           _mnemonicController.text = state.mnemonic;
-        if (_privateKeyController.text != state.privateKey)
+        }
+        if (_privateKeyController.text != state.privateKey) {
           _privateKeyController.text = state.privateKey;
-        if (_derivationPathController.text != state.derivationPath)
+        }
+        if (_derivationPathController.text != state.derivationPath) {
           _derivationPathController.text = state.derivationPath;
-        if (_networkController.text != state.network)
+        }
+        if (_networkController.text != state.network) {
           _networkController.text = state.network;
-        if (_addressesController.text != state.addresses)
+        }
+        if (_addressesController.text != state.addresses) {
           _addressesController.text = state.addresses;
-        if (_xpubController.text != state.xpub)
+        }
+        if (_xpubController.text != state.xpub) {
           _xpubController.text = state.xpub;
-        if (_xprvController.text != state.xprv)
+        }
+        if (_xprvController.text != state.xprv) {
           _xprvController.text = state.xprv;
-        if (_hardwareController.text != state.hardwareDevice)
+        }
+        if (_hardwareController.text != state.hardwareDevice) {
           _hardwareController.text = state.hardwareDevice;
-        if (_derivationSchemeController.text != state.derivationScheme)
+        }
+        if (_derivationSchemeController.text != state.derivationScheme) {
           _derivationSchemeController.text = state.derivationScheme;
-        if (_notesController.text != state.notesOnUsage)
+        }
+        if (_notesController.text != state.notesOnUsage) {
           _notesController.text = state.notesOnUsage;
-        if (_descriptionController.text != state.description)
+        }
+        if (_descriptionController.text != state.description) {
           _descriptionController.text = state.description;
+        }
 
         final notifier = ref.read(
           cryptoWalletFormProvider(widget.cryptoWalletId).notifier,

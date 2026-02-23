@@ -121,35 +121,49 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
         body: Center(child: Text('$error')),
       ),
       data: (state) {
-        if (_nameController.text != state.name)
+        if (_nameController.text != state.name) {
           _nameController.text = state.name;
-        if (_idTypeController.text != state.idType)
+        }
+        if (_idTypeController.text != state.idType) {
           _idTypeController.text = state.idType;
-        if (_idNumberController.text != state.idNumber)
+        }
+        if (_idNumberController.text != state.idNumber) {
           _idNumberController.text = state.idNumber;
-        if (_fullNameController.text != state.fullName)
+        }
+        if (_fullNameController.text != state.fullName) {
           _fullNameController.text = state.fullName;
-        if (_dateOfBirthController.text != state.dateOfBirth)
+        }
+        if (_dateOfBirthController.text != state.dateOfBirth) {
           _dateOfBirthController.text = state.dateOfBirth;
-        if (_placeOfBirthController.text != state.placeOfBirth)
+        }
+        if (_placeOfBirthController.text != state.placeOfBirth) {
           _placeOfBirthController.text = state.placeOfBirth;
-        if (_nationalityController.text != state.nationality)
+        }
+        if (_nationalityController.text != state.nationality) {
           _nationalityController.text = state.nationality;
-        if (_issuingAuthorityController.text != state.issuingAuthority)
+        }
+        if (_issuingAuthorityController.text != state.issuingAuthority) {
           _issuingAuthorityController.text = state.issuingAuthority;
-        if (_issueDateController.text != state.issueDate)
+        }
+        if (_issueDateController.text != state.issueDate) {
           _issueDateController.text = state.issueDate;
-        if (_expiryDateController.text != state.expiryDate)
+        }
+        if (_expiryDateController.text != state.expiryDate) {
           _expiryDateController.text = state.expiryDate;
+        }
         if (_mrzController.text != state.mrz) _mrzController.text = state.mrz;
-        if (_scanAttachmentIdController.text != state.scanAttachmentId)
+        if (_scanAttachmentIdController.text != state.scanAttachmentId) {
           _scanAttachmentIdController.text = state.scanAttachmentId;
-        if (_photoAttachmentIdController.text != state.photoAttachmentId)
+        }
+        if (_photoAttachmentIdController.text != state.photoAttachmentId) {
           _photoAttachmentIdController.text = state.photoAttachmentId;
-        if (_notesController.text != state.notes)
+        }
+        if (_notesController.text != state.notes) {
           _notesController.text = state.notes;
-        if (_descriptionController.text != state.description)
+        }
+        if (_descriptionController.text != state.description) {
           _descriptionController.text = state.description;
+        }
 
         final notifier = ref.read(
           identityFormProvider(widget.identityId).notifier,

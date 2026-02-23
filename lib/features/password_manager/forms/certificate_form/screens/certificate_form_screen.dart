@@ -109,26 +109,36 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
         body: Center(child: Text('$error')),
       ),
       data: (state) {
-        if (_nameController.text != state.name)
+        if (_nameController.text != state.name) {
           _nameController.text = state.name;
-        if (_certificatePemController.text != state.certificatePem)
+        }
+        if (_certificatePemController.text != state.certificatePem) {
           _certificatePemController.text = state.certificatePem;
-        if (_privateKeyController.text != state.privateKey)
+        }
+        if (_privateKeyController.text != state.privateKey) {
           _privateKeyController.text = state.privateKey;
-        if (_serialController.text != state.serialNumber)
+        }
+        if (_serialController.text != state.serialNumber) {
           _serialController.text = state.serialNumber;
-        if (_issuerController.text != state.issuer)
+        }
+        if (_issuerController.text != state.issuer) {
           _issuerController.text = state.issuer;
-        if (_subjectController.text != state.subject)
+        }
+        if (_subjectController.text != state.subject) {
           _subjectController.text = state.subject;
-        if (_fingerprintController.text != state.fingerprint)
+        }
+        if (_fingerprintController.text != state.fingerprint) {
           _fingerprintController.text = state.fingerprint;
-        if (_ocspController.text != state.ocspUrl)
+        }
+        if (_ocspController.text != state.ocspUrl) {
           _ocspController.text = state.ocspUrl;
-        if (_crlController.text != state.crlUrl)
+        }
+        if (_crlController.text != state.crlUrl) {
           _crlController.text = state.crlUrl;
-        if (_descriptionController.text != state.description)
+        }
+        if (_descriptionController.text != state.description) {
           _descriptionController.text = state.description;
+        }
 
         final notifier = ref.read(
           certificateFormProvider(widget.certificateId).notifier,

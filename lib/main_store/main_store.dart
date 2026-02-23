@@ -187,7 +187,7 @@ class MainStore extends _$MainStore {
 
         for (final row in tableRows) {
           final name = row.read<String>('name');
-          if (name == null || name.isEmpty) continue;
+          if (name.isEmpty) continue;
           final escapedName = name.replaceAll('"', '""');
           await customStatement('DROP TABLE IF EXISTS "$escapedName"');
         }

@@ -113,32 +113,45 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
         body: Center(child: Text('$error')),
       ),
       data: (state) {
-        if (_nameController.text != state.name)
+        if (_nameController.text != state.name) {
           _nameController.text = state.name;
-        if (_ssidController.text != state.ssid)
+        }
+        if (_ssidController.text != state.ssid) {
           _ssidController.text = state.ssid;
-        if (_passwordController.text != state.password)
+        }
+        if (_passwordController.text != state.password) {
           _passwordController.text = state.password;
-        if (_securityController.text != state.security)
+        }
+        if (_securityController.text != state.security) {
           _securityController.text = state.security;
-        if (_eapMethodController.text != state.eapMethod)
+        }
+        if (_eapMethodController.text != state.eapMethod) {
           _eapMethodController.text = state.eapMethod;
-        if (_usernameController.text != state.username)
+        }
+        if (_usernameController.text != state.username) {
           _usernameController.text = state.username;
-        if (_identityController.text != state.identity)
+        }
+        if (_identityController.text != state.identity) {
           _identityController.text = state.identity;
-        if (_domainController.text != state.domain)
+        }
+        if (_domainController.text != state.domain) {
           _domainController.text = state.domain;
-        if (_bssidController.text != state.lastConnectedBssid)
+        }
+        if (_bssidController.text != state.lastConnectedBssid) {
           _bssidController.text = state.lastConnectedBssid;
-        if (_priorityController.text != state.priority)
+        }
+        if (_priorityController.text != state.priority) {
           _priorityController.text = state.priority;
-        if (_notesController.text != state.notes)
+        }
+        if (_notesController.text != state.notes) {
           _notesController.text = state.notes;
-        if (_qrPayloadController.text != state.qrCodePayload)
+        }
+        if (_qrPayloadController.text != state.qrCodePayload) {
           _qrPayloadController.text = state.qrCodePayload;
-        if (_descriptionController.text != state.description)
+        }
+        if (_descriptionController.text != state.description) {
           _descriptionController.text = state.description;
+        }
 
         final notifier = ref.read(wifiFormProvider(widget.wifiId).notifier);
 

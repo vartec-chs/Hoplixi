@@ -109,24 +109,33 @@ class _RecoveryCodesFormScreenState
         body: Center(child: Text('$error')),
       ),
       data: (state) {
-        if (_nameController.text != state.name)
+        if (_nameController.text != state.name) {
           _nameController.text = state.name;
-        if (_codesBlobController.text != state.codesBlob)
+        }
+        if (_codesBlobController.text != state.codesBlob) {
           _codesBlobController.text = state.codesBlob;
-        if (_codesCountController.text != state.codesCount)
+        }
+        if (_codesCountController.text != state.codesCount) {
           _codesCountController.text = state.codesCount;
-        if (_usedCountController.text != state.usedCount)
+        }
+        if (_usedCountController.text != state.usedCount) {
           _usedCountController.text = state.usedCount;
-        if (_perCodeStatusController.text != state.perCodeStatus)
+        }
+        if (_perCodeStatusController.text != state.perCodeStatus) {
           _perCodeStatusController.text = state.perCodeStatus;
-        if (_generatedAtController.text != state.generatedAt)
+        }
+        if (_generatedAtController.text != state.generatedAt) {
           _generatedAtController.text = state.generatedAt;
-        if (_notesController.text != state.notes)
+        }
+        if (_notesController.text != state.notes) {
           _notesController.text = state.notes;
-        if (_displayHintController.text != state.displayHint)
+        }
+        if (_displayHintController.text != state.displayHint) {
           _displayHintController.text = state.displayHint;
-        if (_descriptionController.text != state.description)
+        }
+        if (_descriptionController.text != state.description) {
           _descriptionController.text = state.description;
+        }
 
         final notifier = ref.read(
           recoveryCodesFormProvider(widget.recoveryCodesId).notifier,
