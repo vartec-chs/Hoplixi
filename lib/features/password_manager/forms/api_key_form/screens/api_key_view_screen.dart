@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
@@ -41,7 +42,7 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
       final dao = await ref.read(apiKeyDaoProvider.future);
       final row = await dao.getById(widget.apiKeyId);
       if (row == null) {
-        Toaster.error(title: 'API-ключ не найден');
+        Toaster.error(title: S.of(context).apiKeyNotFound);
         if (mounted) context.pop();
         return;
       }
@@ -57,7 +58,7 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
         _revoked = details.revoked;
       });
     } catch (e) {
-      Toaster.error(title: 'Ошибка загрузки', description: '$e');
+      Toaster.error(title: S.of(context).apiKeyLoadError, description: '$e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -73,7 +74,7 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
       final dao = await ref.read(apiKeyDaoProvider.future);
       final key = await dao.getKeyFieldById(widget.apiKeyId);
       if (key == null) {
-        Toaster.error(title: 'Не удалось получить ключ');
+        Toaster.error(title: S.of(context).apiKeyRevealError);
         return;
       }
       setState(() {
@@ -81,28 +82,28 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
         _revealingKey = true;
       });
     } catch (e) {
-      Toaster.error(title: 'Ошибка получения ключа', description: '$e');
+      Toaster.error(title: S.of(context).apiKeyGetKeyError, description: '$e');
     }
   }
 
   Future<void> _copyKey() async {
     final value = _realKey ?? _maskedKey;
     if (value == null || value.isEmpty) {
-      Toaster.warning(title: 'Ключ пуст');
+      Toaster.warning(title: S.of(context).apiKeyEmpty);
       return;
     }
     await Clipboard.setData(ClipboardData(text: value));
-    Toaster.success(title: 'Ключ скопирован');
+    Toaster.success(title: S.of(context).apiKeyCopied);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Просмотр API-ключа'),
+        title: Text(S.of(context).viewApiKey),
         actions: [
           IconButton(
-            tooltip: 'Редактировать',
+            tooltip: S.of(context).edit,
             onPressed: () => context.push(
               AppRoutesPaths.dashboardEntityEdit(
                 EntityType.apiKey,
@@ -124,7 +125,7 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
                 const SizedBox(height: 16),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Ключ'),
+                  title: Text(S.of(context).apiKeyLabel),
                   subtitle: Text(
                     _revealingKey
                         ? (_realKey ?? '')
@@ -150,21 +151,25 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
                 ),
                 if (_tokenType?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('Тип токена'),
+                    title: Text(S.of(context).tokenTypeLabel),
                     subtitle: Text(_tokenType!),
                   ),
                 if (_environment?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('Окружение'),
+                    title: Text(S.of(context).environmentLabel),
                     subtitle: Text(_environment!),
                   ),
                 ListTile(
-                  title: const Text('Статус'),
-                  subtitle: Text(_revoked ? 'Отозван' : 'Активен'),
+                  title: Text(S.of(context).apiKeyStatusLabel),
+                  subtitle: Text(
+                    _revoked
+                        ? S.of(context).apiKeyRevokedStatus
+                        : S.of(context).apiKeyActiveStatus,
+                  ),
                 ),
                 if (_description?.isNotEmpty == true)
                   ListTile(
-                    title: const Text('Описание'),
+                    title: Text(S.of(context).descriptionLabel),
                     subtitle: Text(_description!),
                     contentPadding: EdgeInsets.zero,
                   ),

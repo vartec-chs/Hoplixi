@@ -14,6 +14,7 @@ import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
 import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/core/theme/theme_window_sync_service.dart';
 import 'package:hoplixi/di_init.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/provider/decrypted_files_guard_provider.dart';
 import 'package:hoplixi/routing/router.dart';
 import 'package:hoplixi/shared/widgets/app_loading_screen.dart';
@@ -128,6 +129,7 @@ class _AppState extends ConsumerState<App> {
                   darkTheme: AppTheme.dark(context),
                   themeMode: themeMode,
                   localizationsDelegates: const [
+                    S.delegate,
                     GlobalMaterialLocalizations.delegate,
                     GlobalCupertinoLocalizations.delegate,
                     GlobalWidgetsLocalizations.delegate,
@@ -135,8 +137,8 @@ class _AppState extends ConsumerState<App> {
                   ],
                   locale: activeLocale,
                   supportedLocales: const [
-                    Locale('en'), // English
-                    Locale('ru'), // Russian
+                    Locale('en', 'US'), // English
+                    Locale('ru', 'RU'), // Russian
                   ],
                   debugShowCheckedModeBanner: false,
                   builder: (context, child) {

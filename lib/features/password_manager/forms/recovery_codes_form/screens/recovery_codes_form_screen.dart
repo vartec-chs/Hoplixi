@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
@@ -8,6 +8,8 @@ import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picke
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/generated/l10n.dart';
+
 
 import '../providers/recovery_codes_form_provider.dart';
 
@@ -67,8 +69,8 @@ class _RecoveryCodesFormScreenState
 
     if (!success) {
       Toaster.error(
-        title: 'Ошибка сохранения',
-        description: 'Проверьте поля формы и попробуйте снова',
+        title: S.of(context).saveError,
+        description: S.of(context).checkFormFieldsAndTryAgain,
       );
     }
   }
@@ -85,8 +87,8 @@ class _RecoveryCodesFormScreenState
       if (!wasSaved && isSaved) {
         Toaster.success(
           title: widget.recoveryCodesId != null
-              ? 'Коды восстановления обновлены'
-              : 'Коды восстановления созданы',
+              ? S.of(context).recoveryCodesUpdated
+              : S.of(context).recoveryCodesCreated,
         );
         ref
             .read(recoveryCodesFormProvider(widget.recoveryCodesId).notifier)
@@ -101,7 +103,7 @@ class _RecoveryCodesFormScreenState
       error: (error, _) => Scaffold(
         appBar: AppBar(
           leading: const FormCloseButton(),
-          title: const Text('Ошибка формы'),
+          title: Text(S.of(context).formError),
         ),
         body: Center(child: Text('$error')),
       ),
@@ -140,8 +142,8 @@ class _RecoveryCodesFormScreenState
             leading: const FormCloseButton(),
             title: Text(
               state.isEditMode
-                  ? 'Редактировать коды восстановления'
-                  : 'Новые коды восстановления',
+                  ? S.of(context).editRecoveryCodes
+                  : S.of(context).newRecoveryCodes,
             ),
             actions: [
               if (state.isSaving)
@@ -164,7 +166,7 @@ class _RecoveryCodesFormScreenState
                 controller: _nameController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Название *',
+                  labelText: S.of(context).nameLabel,
                   errorText: state.nameError,
                 ),
                 onChanged: notifier.setName,
@@ -176,7 +178,7 @@ class _RecoveryCodesFormScreenState
                 maxLines: 8,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Codes blob *',
+                  labelText: S.of(context).codesBlobRequiredLabel,
                   errorText: state.codesBlobError,
                 ),
                 onChanged: notifier.setCodesBlob,
@@ -187,7 +189,7 @@ class _RecoveryCodesFormScreenState
                 keyboardType: TextInputType.number,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Всего кодов',
+                  labelText: S.of(context).totalCodesLabel,
                   errorText: state.codesCountError,
                 ),
                 onChanged: notifier.setCodesCount,
@@ -198,7 +200,7 @@ class _RecoveryCodesFormScreenState
                 keyboardType: TextInputType.number,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Использовано',
+                  labelText: S.of(context).usedCodesLabel,
                   errorText: state.usedCountError,
                 ),
                 onChanged: notifier.setUsedCount,
@@ -210,7 +212,7 @@ class _RecoveryCodesFormScreenState
                 maxLines: 4,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Per-code status JSON',
+                  labelText: S.of(context).perCodeStatusJsonLabel,
                 ),
                 onChanged: notifier.setPerCodeStatus,
               ),
@@ -219,7 +221,7 @@ class _RecoveryCodesFormScreenState
                 controller: _generatedAtController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Generated at (ISO8601)',
+                  labelText: S.of(context).generatedAtIsoLabel,
                   errorText: state.generatedAtError,
                 ),
                 onChanged: notifier.setGeneratedAt,
@@ -229,7 +231,7 @@ class _RecoveryCodesFormScreenState
                 controller: _displayHintController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Display hint',
+                  labelText: S.of(context).displayHintLabel,
                 ),
                 onChanged: notifier.setDisplayHint,
               ),
@@ -263,7 +265,7 @@ class _RecoveryCodesFormScreenState
                 maxLines: 4,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Описание',
+                  labelText: S.of(context).descriptionLabel,
                 ),
                 onChanged: notifier.setDescription,
               ),
@@ -271,7 +273,7 @@ class _RecoveryCodesFormScreenState
               SwitchListTile(
                 value: state.oneTime,
                 onChanged: notifier.setOneTime,
-                title: const Text('Одноразовые коды'),
+                title: Text(S.of(context).oneTimeCodesLabel),
               ),
             ],
           ),
@@ -280,3 +282,6 @@ class _RecoveryCodesFormScreenState
     );
   }
 }
+
+
+

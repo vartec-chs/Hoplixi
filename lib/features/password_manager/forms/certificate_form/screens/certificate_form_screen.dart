@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
@@ -8,6 +8,8 @@ import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picke
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/generated/l10n.dart';
+
 
 import '../providers/certificate_form_provider.dart';
 
@@ -72,8 +74,8 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
 
     if (!success) {
       Toaster.error(
-        title: 'Ошибка сохранения',
-        description: 'Проверьте поля формы и попробуйте снова',
+        title: S.of(context).saveError,
+        description: S.of(context).checkFormFieldsAndTryAgain,
       );
     }
   }
@@ -88,8 +90,8 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
       if (!wasSaved && isSaved) {
         Toaster.success(
           title: widget.certificateId != null
-              ? 'Сертификат обновлен'
-              : 'Сертификат создан',
+              ? S.of(context).certificateUpdated
+              : S.of(context).certificateCreated,
         );
         ref
             .read(certificateFormProvider(widget.certificateId).notifier)
@@ -104,7 +106,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
       error: (error, _) => Scaffold(
         appBar: AppBar(
           leading: const FormCloseButton(),
-          title: const Text('Ошибка формы'),
+          title: Text(S.of(context).formError),
         ),
         body: Center(child: Text('$error')),
       ),
@@ -149,8 +151,8 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
             leading: const FormCloseButton(),
             title: Text(
               state.isEditMode
-                  ? 'Редактировать сертификат'
-                  : 'Новый сертификат',
+                  ? S.of(context).editCertificate
+                  : S.of(context).newCertificate,
             ),
             actions: [
               if (state.isSaving)
@@ -173,7 +175,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 controller: _nameController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Название *',
+                  labelText: S.of(context).nameLabel,
                   errorText: state.nameError,
                 ),
                 onChanged: notifier.setName,
@@ -185,7 +187,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 maxLines: 8,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Certificate PEM *',
+                  labelText: S.of(context).certificatePemLabel,
                   errorText: state.certificatePemError,
                 ),
                 onChanged: notifier.setCertificatePem,
@@ -197,7 +199,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 maxLines: 6,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Private key',
+                  labelText: S.of(context).privateKeyLabel,
                 ),
                 onChanged: notifier.setPrivateKey,
               ),
@@ -206,7 +208,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 controller: _serialController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Serial number',
+                  labelText: S.of(context).serialNumberLabel,
                 ),
                 onChanged: notifier.setSerialNumber,
               ),
@@ -215,7 +217,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 controller: _issuerController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Issuer',
+                  labelText: S.of(context).issuerLabel,
                 ),
                 onChanged: notifier.setIssuer,
               ),
@@ -224,7 +226,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 controller: _subjectController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Subject',
+                  labelText: S.of(context).subjectLabel,
                 ),
                 onChanged: notifier.setSubject,
               ),
@@ -233,7 +235,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 controller: _fingerprintController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Fingerprint',
+                  labelText: S.of(context).fingerprintLabel,
                 ),
                 onChanged: notifier.setFingerprint,
               ),
@@ -242,7 +244,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 controller: _ocspController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'OCSP URL',
+                  labelText: S.of(context).ocspUrlLabel,
                 ),
                 onChanged: notifier.setOcspUrl,
               ),
@@ -251,7 +253,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 controller: _crlController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'CRL URL',
+                  labelText: S.of(context).crlUrlLabel,
                 ),
                 onChanged: notifier.setCrlUrl,
               ),
@@ -285,7 +287,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 maxLines: 4,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Описание',
+                  labelText: S.of(context).descriptionLabel,
                 ),
                 onChanged: notifier.setDescription,
               ),
@@ -293,7 +295,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
               SwitchListTile(
                 value: state.autoRenew,
                 onChanged: notifier.setAutoRenew,
-                title: const Text('Auto-renew'),
+                title: Text(S.of(context).autoRenewLabel),
               ),
             ],
           ),
@@ -302,3 +304,6 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
     );
   }
 }
+
+
+

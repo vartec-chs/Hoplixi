@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
@@ -8,6 +8,8 @@ import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picke
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/generated/l10n.dart';
+
 
 import '../providers/wifi_form_provider.dart';
 
@@ -77,8 +79,8 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
 
     if (!success) {
       Toaster.error(
-        title: 'Ошибка сохранения',
-        description: 'Проверьте поля формы и попробуйте снова',
+        title: S.of(context).saveError,
+        description: S.of(context).checkFormFieldsAndTryAgain,
       );
     }
   }
@@ -92,7 +94,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
       final isSaved = next.value?.isSaved ?? false;
       if (!wasSaved && isSaved) {
         Toaster.success(
-          title: widget.wifiId != null ? 'Wi-Fi обновлен' : 'Wi-Fi создан',
+          title: widget.wifiId != null ? S.of(context).wifiUpdated : S.of(context).wifiCreated,
         );
         ref.read(wifiFormProvider(widget.wifiId).notifier).resetSaved();
         if (context.mounted) context.pop(true);
@@ -105,7 +107,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
       error: (error, _) => Scaffold(
         appBar: AppBar(
           leading: const FormCloseButton(),
-          title: const Text('Ошибка формы'),
+          title: Text(S.of(context).formError),
         ),
         body: Center(child: Text('$error')),
       ),
@@ -153,7 +155,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
           appBar: AppBar(
             leading: const FormCloseButton(),
             title: Text(
-              state.isEditMode ? 'Редактировать Wi-Fi' : 'Новая Wi-Fi сеть',
+              state.isEditMode ? S.of(context).editWifi : S.of(context).newWifiNetwork,
             ),
             actions: [
               if (state.isSaving)
@@ -176,7 +178,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                 controller: _nameController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Название *',
+                  labelText: S.of(context).nameLabel,
                   errorText: state.nameError,
                 ),
                 onChanged: notifier.setName,
@@ -186,7 +188,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                 controller: _ssidController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'SSID *',
+                  labelText: S.of(context).wifiSsidLabel,
                   errorText: state.ssidError,
                 ),
                 onChanged: notifier.setSsid,
@@ -196,7 +198,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                 controller: _passwordController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Password',
+                  labelText: S.of(context).wifiPasswordLabel,
                 ),
                 onChanged: notifier.setPassword,
               ),
@@ -205,7 +207,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                 controller: _securityController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Security',
+                  labelText: S.of(context).wifiSecurityLabel,
                 ),
                 onChanged: notifier.setSecurity,
               ),
@@ -214,7 +216,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                 controller: _eapMethodController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'EAP method',
+                  labelText: S.of(context).wifiEapMethodLabel,
                 ),
                 onChanged: notifier.setEapMethod,
               ),
@@ -223,7 +225,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                 controller: _usernameController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Username',
+                  labelText: S.of(context).wifiUsernameLabel,
                 ),
                 onChanged: notifier.setUsername,
               ),
@@ -232,7 +234,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                 controller: _identityController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Identity',
+                  labelText: S.of(context).wifiIdentityLabel,
                 ),
                 onChanged: notifier.setIdentity,
               ),
@@ -241,7 +243,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                 controller: _domainController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Domain',
+                  labelText: S.of(context).wifiDomainLabel,
                 ),
                 onChanged: notifier.setDomain,
               ),
@@ -250,7 +252,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                 controller: _bssidController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Last connected BSSID',
+                  labelText: S.of(context).wifiLastConnectedBssidLabel,
                 ),
                 onChanged: notifier.setLastConnectedBssid,
               ),
@@ -260,7 +262,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                 keyboardType: TextInputType.number,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Priority',
+                  labelText: S.of(context).wifiPriorityLabel,
                   errorText: state.priorityError,
                 ),
                 onChanged: notifier.setPriority,
@@ -271,7 +273,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                 maxLines: 2,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'QR payload',
+                  labelText: S.of(context).wifiQrPayloadLabel,
                 ),
                 onChanged: notifier.setQrCodePayload,
               ),
@@ -301,7 +303,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                 maxLines: 4,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Описание',
+                  labelText: S.of(context).descriptionLabel,
                 ),
                 onChanged: notifier.setDescription,
               ),
@@ -309,7 +311,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
               SwitchListTile(
                 value: state.hidden,
                 onChanged: notifier.setHidden,
-                title: const Text('Скрытая сеть'),
+                title: Text(S.of(context).wifiHiddenNetworkLabel),
               ),
             ],
           ),
@@ -318,3 +320,6 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
     );
   }
 }
+
+
+

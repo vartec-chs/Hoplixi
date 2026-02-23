@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
@@ -8,6 +8,8 @@ import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picke
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/generated/l10n.dart';
+
 
 import '../providers/identity_form_provider.dart';
 
@@ -83,8 +85,8 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
 
     if (!success) {
       Toaster.error(
-        title: 'Ошибка сохранения',
-        description: 'Проверьте поля формы и попробуйте снова',
+        title: S.of(context).saveError,
+        description: S.of(context).checkFormFieldsAndTryAgain,
       );
     }
   }
@@ -99,8 +101,8 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
       if (!wasSaved && isSaved) {
         Toaster.success(
           title: widget.identityId != null
-              ? 'Идентификация обновлена'
-              : 'Идентификация создана',
+              ? S.of(context).identityUpdated
+              : S.of(context).identityCreated,
         );
         ref.read(identityFormProvider(widget.identityId).notifier).resetSaved();
         if (context.mounted) context.pop(true);
@@ -113,7 +115,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
       error: (error, _) => Scaffold(
         appBar: AppBar(
           leading: const FormCloseButton(),
-          title: const Text('Ошибка формы'),
+          title: Text(S.of(context).formError),
         ),
         body: Center(child: Text('$error')),
       ),
@@ -167,7 +169,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
           appBar: AppBar(
             leading: const FormCloseButton(),
             title: Text(
-              state.isEditMode ? 'Редактировать ID' : 'Новая идентификация',
+              state.isEditMode ? S.of(context).editIdentity : S.of(context).newIdentity,
             ),
             actions: [
               if (state.isSaving)
@@ -190,7 +192,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                 controller: _nameController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Название *',
+                  labelText: S.of(context).nameLabel,
                   errorText: state.nameError,
                 ),
                 onChanged: notifier.setName,
@@ -200,7 +202,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                 controller: _idTypeController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Тип документа *',
+                  labelText: S.of(context).documentTypeRequiredLabel,
                   errorText: state.idTypeError,
                 ),
                 onChanged: notifier.setIdType,
@@ -210,7 +212,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                 controller: _idNumberController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Номер документа *',
+                  labelText: S.of(context).documentNumberRequiredLabel,
                   errorText: state.idNumberError,
                 ),
                 onChanged: notifier.setIdNumber,
@@ -218,7 +220,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
               const SizedBox(height: 12),
               TextField(
                 controller: _fullNameController,
-                decoration: primaryInputDecoration(context, labelText: 'ФИО'),
+                decoration: primaryInputDecoration(context, labelText: S.of(context).fullNameLabel),
                 onChanged: notifier.setFullName,
               ),
               const SizedBox(height: 12),
@@ -226,7 +228,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                 controller: _dateOfBirthController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Дата рождения (ISO8601)',
+                  labelText: S.of(context).birthDateIsoLabel,
                   errorText: state.dateOfBirthError,
                 ),
                 onChanged: notifier.setDateOfBirth,
@@ -236,7 +238,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                 controller: _placeOfBirthController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Место рождения',
+                  labelText: S.of(context).placeOfBirthLabel,
                 ),
                 onChanged: notifier.setPlaceOfBirth,
               ),
@@ -245,7 +247,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                 controller: _nationalityController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Гражданство',
+                  labelText: S.of(context).nationalityLabel,
                 ),
                 onChanged: notifier.setNationality,
               ),
@@ -254,7 +256,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                 controller: _issuingAuthorityController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Кем выдан',
+                  labelText: S.of(context).issuingAuthorityLabel,
                 ),
                 onChanged: notifier.setIssuingAuthority,
               ),
@@ -263,7 +265,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                 controller: _issueDateController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Дата выдачи (ISO8601)',
+                  labelText: S.of(context).issueDateIsoLabel,
                   errorText: state.issueDateError,
                 ),
                 onChanged: notifier.setIssueDate,
@@ -273,7 +275,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                 controller: _expiryDateController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Дата окончания (ISO8601)',
+                  labelText: S.of(context).expiryDateIsoLabel,
                   errorText: state.expiryDateError,
                 ),
                 onChanged: notifier.setExpiryDate,
@@ -283,7 +285,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                 controller: _mrzController,
                 minLines: 2,
                 maxLines: 4,
-                decoration: primaryInputDecoration(context, labelText: 'MRZ'),
+                decoration: primaryInputDecoration(context, labelText: S.of(context).mrzLabel),
                 onChanged: notifier.setMrz,
               ),
               const SizedBox(height: 12),
@@ -291,7 +293,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                 controller: _scanAttachmentIdController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'ID скана',
+                  labelText: S.of(context).scanIdLabel,
                 ),
                 onChanged: notifier.setScanAttachmentId,
               ),
@@ -300,7 +302,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                 controller: _photoAttachmentIdController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'ID фото',
+                  labelText: S.of(context).photoIdLabel,
                 ),
                 onChanged: notifier.setPhotoAttachmentId,
               ),
@@ -331,7 +333,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                 maxLines: 4,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Описание',
+                  labelText: S.of(context).descriptionLabel,
                 ),
                 onChanged: notifier.setDescription,
               ),
@@ -339,7 +341,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
               SwitchListTile(
                 value: state.verified,
                 onChanged: notifier.setVerified,
-                title: const Text('Верифицировано'),
+                title: Text(S.of(context).verifiedLabel),
               ),
             ],
           ),
@@ -348,3 +350,6 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
     );
   }
 }
+
+
+

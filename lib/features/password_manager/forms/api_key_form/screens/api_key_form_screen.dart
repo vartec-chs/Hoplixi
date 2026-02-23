@@ -6,6 +6,7 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_b
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
@@ -59,8 +60,8 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
 
     if (!success) {
       Toaster.error(
-        title: 'Ошибка сохранения',
-        description: 'Проверьте поля формы и попробуйте снова',
+        title: S.of(context).apiKeySaveError,
+        description: S.of(context).apiKeyCheckFieldsMessage,
       );
     }
   }
@@ -75,8 +76,8 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
       if (!wasSaved && isSaved) {
         Toaster.success(
           title: widget.apiKeyId != null
-              ? 'API-ключ обновлен'
-              : 'API-ключ создан',
+              ? S.of(context).apiKeyUpdated
+              : S.of(context).apiKeyCreated,
         );
         ref.read(apiKeyFormProvider(widget.apiKeyId).notifier).resetSaved();
         if (context.mounted) context.pop(true);
@@ -89,7 +90,7 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
       error: (error, _) => Scaffold(
         appBar: AppBar(
           leading: const FormCloseButton(),
-          title: const Text('Ошибка формы'),
+          title: Text(S.of(context).apiKeyFormError),
         ),
         body: Center(child: Text('$error')),
       ),
@@ -117,7 +118,9 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
           appBar: AppBar(
             leading: const FormCloseButton(),
             title: Text(
-              state.isEditMode ? 'Редактировать API-ключ' : 'Новый API-ключ',
+              state.isEditMode
+                  ? S.of(context).editApiKey
+                  : S.of(context).newApiKey,
             ),
             actions: [
               if (state.isSaving)
@@ -140,7 +143,7 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                 controller: _nameController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Название *',
+                  labelText: S.of(context).apiKeyNameLabel,
                   errorText: state.nameError,
                 ),
                 onChanged: ref
@@ -152,7 +155,7 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                 controller: _serviceController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Сервис *',
+                  labelText: S.of(context).apiKeyServiceLabel,
                   errorText: state.serviceError,
                 ),
                 onChanged: ref
@@ -164,7 +167,7 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                 controller: _keyController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Ключ *',
+                  labelText: S.of(context).apiKeyKeyLabel,
                   errorText: state.keyError,
                 ),
                 onChanged: ref
@@ -176,7 +179,7 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                 controller: _tokenTypeController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Тип токена',
+                  labelText: S.of(context).apiKeyTokenTypeLabel,
                 ),
                 onChanged: ref
                     .read(apiKeyFormProvider(widget.apiKeyId).notifier)
@@ -187,7 +190,7 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                 controller: _environmentController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Окружение',
+                  labelText: S.of(context).apiKeyEnvironmentLabel,
                 ),
                 onChanged: ref
                     .read(apiKeyFormProvider(widget.apiKeyId).notifier)
@@ -226,7 +229,7 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                 maxLines: 4,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Описание',
+                  labelText: S.of(context).apiKeyDescriptionLabel,
                 ),
                 onChanged: ref
                     .read(apiKeyFormProvider(widget.apiKeyId).notifier)
@@ -238,7 +241,7 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                 onChanged: ref
                     .read(apiKeyFormProvider(widget.apiKeyId).notifier)
                     .setRevoked,
-                title: const Text('Ключ отозван'),
+                title: Text(S.of(context).apiKeyRevokedLabel),
               ),
             ],
           ),

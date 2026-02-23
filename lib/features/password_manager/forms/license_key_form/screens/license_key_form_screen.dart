@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
@@ -8,6 +8,8 @@ import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picke
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/generated/l10n.dart';
+
 
 import '../providers/license_key_form_provider.dart';
 
@@ -84,8 +86,8 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
 
     if (!success) {
       Toaster.error(
-        title: 'Ошибка сохранения',
-        description: 'Проверьте поля формы и попробуйте снова',
+        title: S.of(context).saveError,
+        description: S.of(context).checkFormFieldsAndTryAgain,
       );
     }
   }
@@ -100,8 +102,8 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
       if (!wasSaved && isSaved) {
         Toaster.success(
           title: widget.licenseKeyId != null
-              ? 'Лицензия обновлена'
-              : 'Лицензия создана',
+              ? S.of(context).licenseUpdated
+              : S.of(context).licenseCreated,
         );
         ref
             .read(licenseKeyFormProvider(widget.licenseKeyId).notifier)
@@ -116,7 +118,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
       error: (error, _) => Scaffold(
         appBar: AppBar(
           leading: const FormCloseButton(),
-          title: const Text('Ошибка формы'),
+          title: Text(S.of(context).formError),
         ),
         body: Center(child: Text('$error')),
       ),
@@ -172,7 +174,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
           appBar: AppBar(
             leading: const FormCloseButton(),
             title: Text(
-              state.isEditMode ? 'Редактировать лицензию' : 'Новая лицензия',
+              state.isEditMode ? S.of(context).editLicense : S.of(context).newLicense,
             ),
             actions: [
               if (state.isSaving)
@@ -195,7 +197,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                 controller: _nameController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Название *',
+                  labelText: S.of(context).nameLabel,
                   errorText: state.nameError,
                 ),
                 onChanged: notifier.setName,
@@ -205,7 +207,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                 controller: _productController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Продукт *',
+                  labelText: S.of(context).productLabel,
                   errorText: state.productError,
                 ),
                 onChanged: notifier.setProduct,
@@ -215,7 +217,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                 controller: _licenseKeyController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Ключ лицензии *',
+                  labelText: S.of(context).licenseKeyLabel,
                   errorText: state.licenseKeyError,
                 ),
                 onChanged: notifier.setLicenseKey,
@@ -225,7 +227,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                 controller: _licenseTypeController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Тип лицензии',
+                  labelText: S.of(context).licenseTypeLabel,
                 ),
                 onChanged: notifier.setLicenseType,
               ),
@@ -235,7 +237,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                 keyboardType: TextInputType.number,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Количество мест',
+                  labelText: S.of(context).seatsCountLabel,
                   errorText: state.seatsError,
                 ),
                 onChanged: notifier.setSeats,
@@ -246,7 +248,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                 keyboardType: TextInputType.number,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Макс. активаций',
+                  labelText: S.of(context).maxActivationsLabel,
                   errorText: state.maxActivationsError,
                 ),
                 onChanged: notifier.setMaxActivations,
@@ -256,7 +258,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                 controller: _activatedOnController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Активировано (ISO8601)',
+                  labelText: S.of(context).activatedAtIsoLabel,
                   errorText: state.activatedOnError,
                 ),
                 onChanged: notifier.setActivatedOn,
@@ -266,7 +268,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                 controller: _purchaseDateController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Дата покупки (ISO8601)',
+                  labelText: S.of(context).purchaseDateIsoLabel,
                   errorText: state.purchaseDateError,
                 ),
                 onChanged: notifier.setPurchaseDate,
@@ -276,7 +278,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                 controller: _purchaseFromController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Где куплено',
+                  labelText: S.of(context).purchasedFromLabel,
                 ),
                 onChanged: notifier.setPurchaseFrom,
               ),
@@ -285,7 +287,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                 controller: _orderIdController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Order ID',
+                  labelText: S.of(context).orderIdLabel,
                 ),
                 onChanged: notifier.setOrderId,
               ),
@@ -294,7 +296,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                 controller: _licenseFileIdController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'ID файла лицензии',
+                  labelText: S.of(context).licenseFileIdLabel,
                 ),
                 onChanged: notifier.setLicenseFileId,
               ),
@@ -303,7 +305,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                 controller: _expiresAtController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Истекает (ISO8601)',
+                  labelText: S.of(context).expiresAtIsoLabel,
                   errorText: state.expiresAtError,
                 ),
                 onChanged: notifier.setExpiresAt,
@@ -313,7 +315,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                 controller: _supportContactController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Контакт поддержки',
+                  labelText: S.of(context).supportContactLabel,
                 ),
                 onChanged: notifier.setSupportContact,
               ),
@@ -347,7 +349,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                 maxLines: 4,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Описание',
+                  labelText: S.of(context).descriptionLabel,
                 ),
                 onChanged: notifier.setDescription,
               ),
@@ -358,3 +360,6 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
     );
   }
 }
+
+
+

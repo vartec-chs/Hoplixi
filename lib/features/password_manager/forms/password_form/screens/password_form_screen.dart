@@ -7,6 +7,7 @@ import 'package:hoplixi/features/password_manager/pickers/category_picker/catego
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/otp_picker/otp_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -100,14 +101,14 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
 
     if (success) {
       Toaster.success(
-        title: widget.passwordId != null ? 'Пароль обновлен' : 'Пароль создан',
-        description: 'Изменения успешно сохранены',
+        title: S.of(context).passwordUpdated,
+        description: S.of(context).changesSavedSuccessfully,
       );
       context.pop(true);
     } else {
       Toaster.error(
-        title: 'Ошибка сохранения',
-        description: 'Не удалось сохранить пароль',
+        title: S.of(context).saveError,
+        description: S.of(context).failedToSavePassword,
       );
     }
   }
@@ -156,13 +157,15 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.passwordId != null ? 'Редактировать пароль' : 'Новый пароль',
+          widget.passwordId != null
+              ? S.of(context).editPassword
+              : S.of(context).newPassword,
         ),
         actions: [
           // Кнопка миграции паролей
           IconButton(
             icon: const Icon(LucideIcons.import),
-            tooltip: 'Миграция паролей',
+            tooltip: S.of(context).passwordMigration,
             onPressed: () => context.go(AppRoutesPaths.passwordMigrate),
           ),
           if (state.isSaving)
@@ -196,8 +199,8 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                             controller: _nameController,
                             decoration: primaryInputDecoration(
                               context,
-                              labelText: 'Название *',
-                              hintText: 'Введите название',
+                              labelText: S.of(context).nameLabel,
+                              hintText: S.of(context).enterNameHint,
                               errorText: state.nameError,
                               prefixIcon: const Icon(LucideIcons.tag),
                             ),
@@ -215,8 +218,8 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                             obscureText: _obscurePassword,
                             decoration: primaryInputDecoration(
                               context,
-                              labelText: 'Пароль *',
-                              hintText: 'Введите пароль',
+                              labelText: S.of(context).passwordLabel,
+                              hintText: S.of(context).enterPasswordHint,
                               errorText: state.passwordError,
                               prefixIcon: const Icon(LucideIcons.lock),
                               suffixIcon: IconButton(
@@ -245,8 +248,8 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                             controller: _loginController,
                             decoration: primaryInputDecoration(
                               context,
-                              labelText: 'Логин',
-                              hintText: 'Введите логин',
+                              labelText: S.of(context).loginLabel,
+                              hintText: S.of(context).enterLoginHint,
                               errorText: state.loginError,
                               prefixIcon: const Icon(LucideIcons.user),
                             ),
@@ -263,8 +266,8 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                             controller: _emailController,
                             decoration: primaryInputDecoration(
                               context,
-                              labelText: 'Email',
-                              hintText: 'Введите email',
+                              labelText: S.of(context).emailLabel,
+                              hintText: S.of(context).enterEmailHint,
                               errorText: state.emailError,
                               prefixIcon: const Icon(LucideIcons.mail),
                             ),
@@ -279,7 +282,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
 
                           // Подсказка
                           Text(
-                            '* Заполните хотя бы одно поле: Логин или Email',
+                            S.of(context).fillAtLeastOneField,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                               fontStyle: FontStyle.italic,
@@ -292,8 +295,8 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                             controller: _urlController,
                             decoration: primaryInputDecoration(
                               context,
-                              labelText: 'URL',
-                              hintText: 'https://example.com',
+                              labelText: S.of(context).urlLabel,
+                              hintText: S.of(context).urlHint,
                               errorText: state.urlError,
                               prefixIcon: const Icon(LucideIcons.globe),
                             ),
@@ -318,8 +321,8 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                             readOnly: true,
                             decoration: primaryInputDecoration(
                               context,
-                              labelText: 'Срок действия',
-                              hintText: 'Выберите дату и время',
+                              labelText: S.of(context).expirationDateLabel,
+                              hintText: S.of(context).selectDateTimeHint,
                               prefixIcon: const Icon(LucideIcons.calendar),
                               suffixIcon: state.expireAt != null
                                   ? IconButton(
@@ -369,8 +372,8 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                           CategoryPickerField(
                             selectedCategoryId: state.categoryId,
                             selectedCategoryName: state.categoryName,
-                            label: 'Категория',
-                            hintText: 'Выберите категорию',
+                            label: S.of(context).categoryLabel,
+                            hintText: S.of(context).selectCategoryHint,
                             filterByType: [
                               CategoryType.password,
                               CategoryType.mixed,
@@ -387,8 +390,8 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                           TagPickerField(
                             selectedTagIds: state.tagIds,
                             selectedTagNames: state.tagNames,
-                            label: 'Теги',
-                            hintText: 'Выберите теги',
+                            label: S.of(context).tagsLabel,
+                            hintText: S.of(context).selectTagsHint,
                             filterByType: [TagType.password, TagType.mixed],
                             onTagsSelected: (tagIds, tagNames) {
                               ref
@@ -403,8 +406,8 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                             controller: _descriptionController,
                             decoration: primaryInputDecoration(
                               context,
-                              labelText: 'Описание',
-                              hintText: 'Краткое описание',
+                              labelText: S.of(context).descriptionLabel,
+                              hintText: S.of(context).briefDescriptionHint,
                               prefixIcon: const Icon(LucideIcons.fileText),
                             ),
                             maxLines: 2,
@@ -432,7 +435,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                           NotePickerField(
                             selectedNoteId: state.noteId,
                             selectedNoteName: _noteName,
-                            hintText: 'Выберите заметку',
+                            hintText: S.of(context).selectNoteHint,
                             onNoteSelected: (noteId, noteName) {
                               ref
                                   .read(passwordFormProvider.notifier)
