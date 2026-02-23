@@ -32,13 +32,13 @@ const List<String> cryptoWalletsHistoryCreateTriggers = [
       INSERT INTO crypto_wallet_history (
         history_id, wallet_type, mnemonic, private_key, derivation_path,
         network, addresses, xpub, xprv, hardware_device,
-        last_balance_checked_at, notes_on_usage, watch_only, derivation_scheme
+        last_balance_checked_at, watch_only, derivation_scheme
       )
       SELECT
         (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
         c.wallet_type, c.mnemonic, c.private_key, c.derivation_path,
         c.network, c.addresses, c.xpub, c.xprv, c.hardware_device,
-        c.last_balance_checked_at, c.notes_on_usage, c.watch_only,
+        c.last_balance_checked_at, c.watch_only,
         c.derivation_scheme
       FROM crypto_wallet_items c
       WHERE c.item_id = OLD.id;
@@ -59,7 +59,6 @@ const List<String> cryptoWalletsHistoryCreateTriggers = [
       OLD.xprv IS NOT NEW.xprv OR
       OLD.hardware_device IS NOT NEW.hardware_device OR
       OLD.last_balance_checked_at IS NOT NEW.last_balance_checked_at OR
-      OLD.notes_on_usage IS NOT NEW.notes_on_usage OR
       OLD.watch_only != NEW.watch_only OR
       OLD.derivation_scheme IS NOT NEW.derivation_scheme
     ) AND COALESCE((SELECT value FROM store_settings WHERE key = 'history_enabled'), 'true') = 'true'
@@ -82,12 +81,12 @@ const List<String> cryptoWalletsHistoryCreateTriggers = [
       INSERT INTO crypto_wallet_history (
         history_id, wallet_type, mnemonic, private_key, derivation_path,
         network, addresses, xpub, xprv, hardware_device,
-        last_balance_checked_at, notes_on_usage, watch_only, derivation_scheme
+        last_balance_checked_at, watch_only, derivation_scheme
       ) VALUES (
         (SELECT id FROM vault_item_history WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
         OLD.wallet_type, OLD.mnemonic, OLD.private_key, OLD.derivation_path,
         OLD.network, OLD.addresses, OLD.xpub, OLD.xprv, OLD.hardware_device,
-        OLD.last_balance_checked_at, OLD.notes_on_usage, OLD.watch_only,
+        OLD.last_balance_checked_at, OLD.watch_only,
         OLD.derivation_scheme
       );
     END;
@@ -114,13 +113,13 @@ const List<String> cryptoWalletsHistoryCreateTriggers = [
       INSERT INTO crypto_wallet_history (
         history_id, wallet_type, mnemonic, private_key, derivation_path,
         network, addresses, xpub, xprv, hardware_device,
-        last_balance_checked_at, notes_on_usage, watch_only, derivation_scheme
+        last_balance_checked_at, watch_only, derivation_scheme
       )
       SELECT
         (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
         c.wallet_type, c.mnemonic, c.private_key, c.derivation_path,
         c.network, c.addresses, c.xpub, c.xprv, c.hardware_device,
-        c.last_balance_checked_at, c.notes_on_usage, c.watch_only,
+        c.last_balance_checked_at, c.watch_only,
         c.derivation_scheme
       FROM crypto_wallet_items c
       WHERE c.item_id = OLD.id;

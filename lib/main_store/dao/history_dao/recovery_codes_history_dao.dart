@@ -35,8 +35,7 @@ class RecoveryCodesHistoryDao extends DatabaseAccessor<MainStore>
       where =
           where &
           (vaultItemHistory.name.like(q) |
-              recoveryCodesHistory.displayHint.like(q) |
-              recoveryCodesHistory.notes.like(q));
+            recoveryCodesHistory.displayHint.like(q));
     }
 
     query
@@ -71,8 +70,7 @@ class RecoveryCodesHistoryDao extends DatabaseAccessor<MainStore>
       final q = '%$searchQuery%';
       query.where(
         vaultItemHistory.name.like(q) |
-            recoveryCodesHistory.displayHint.like(q) |
-            recoveryCodesHistory.notes.like(q),
+        recoveryCodesHistory.displayHint.like(q),
       );
     }
 

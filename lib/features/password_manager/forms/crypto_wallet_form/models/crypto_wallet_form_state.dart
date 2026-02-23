@@ -18,7 +18,6 @@ sealed class CryptoWalletFormState with _$CryptoWalletFormState {
     @Default('') String xprv,
     @Default('') String hardwareDevice,
     @Default('') String derivationScheme,
-    @Default('') String notesOnUsage,
     @Default('') String description,
     @Default(false) bool watchOnly,
     String? noteId,

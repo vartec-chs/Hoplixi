@@ -31,7 +31,6 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
   String? _orderId;
   String? _licenseFileId;
   DateTime? _expiresAt;
-  String? _licenseNotes;
   String? _supportContact;
   String? _description;
 
@@ -67,7 +66,6 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
         _orderId = license.orderId;
         _licenseFileId = license.licenseFileId;
         _expiresAt = license.expiresAt;
-        _licenseNotes = license.licenseNotes;
         _supportContact = license.supportContact;
         _description = item.description;
       });
@@ -162,12 +160,6 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
                   ListTile(
                     title: const Text('Контакт поддержки'),
                     subtitle: Text(_supportContact!),
-                  ),
-                if (_licenseNotes?.isNotEmpty == true)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Заметки по лицензии'),
-                    subtitle: Text(_licenseNotes!),
                   ),
                 if (_description?.isNotEmpty == true)
                   ListTile(

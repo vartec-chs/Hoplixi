@@ -27,8 +27,6 @@ class CryptoWalletHistory extends Table {
 
   DateTimeColumn get lastBalanceCheckedAt => dateTime().nullable()();
 
-  TextColumn get notesOnUsage => text().nullable()();
-
   BoolColumn get watchOnly => boolean().withDefault(const Constant(false))();
 
   TextColumn get derivationScheme => text().nullable()();

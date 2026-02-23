@@ -29,8 +29,6 @@ class LicenseKeyHistory extends Table {
 
   DateTimeColumn get expiresAt => dateTime().nullable()();
 
-  TextColumn get licenseNotes => text().nullable()();
-
   TextColumn get supportContact => text().nullable()();
 
   @override

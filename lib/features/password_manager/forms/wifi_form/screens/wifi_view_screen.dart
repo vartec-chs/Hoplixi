@@ -31,7 +31,6 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
   String? _domain;
   String? _lastConnectedBssid;
   int? _priority;
-  String? _notes;
   String? _qrPayload;
   String? _description;
 
@@ -65,7 +64,6 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
         _domain = wifi.domain;
         _lastConnectedBssid = wifi.lastConnectedBssid;
         _priority = wifi.priority;
-        _notes = wifi.notes;
         _qrPayload = wifi.qrCodePayload;
         _description = item.description;
       });
@@ -207,12 +205,6 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
                       onPressed: () => _copyText('QR payload', _qrPayload),
                       icon: const Icon(Icons.copy),
                     ),
-                  ),
-                if (_notes?.isNotEmpty == true)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Notes'),
-                    subtitle: Text(_notes!),
                   ),
                 if (_description?.isNotEmpty == true)
                   ListTile(

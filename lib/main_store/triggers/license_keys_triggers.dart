@@ -32,13 +32,13 @@ const List<String> licenseKeysHistoryCreateTriggers = [
       INSERT INTO license_key_history (
         history_id, product, license_key, license_type, seats, max_activations,
         activated_on, purchase_date, purchase_from, order_id, license_file_id,
-        expires_at, license_notes, support_contact
+        expires_at, support_contact
       )
       SELECT
         (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
         l.product, l.license_key, l.license_type, l.seats, l.max_activations,
         l.activated_on, l.purchase_date, l.purchase_from, l.order_id,
-        l.license_file_id, l.expires_at, l.license_notes, l.support_contact
+        l.license_file_id, l.expires_at, l.support_contact
       FROM license_key_items l
       WHERE l.item_id = OLD.id;
     END;
@@ -59,7 +59,6 @@ const List<String> licenseKeysHistoryCreateTriggers = [
       OLD.order_id IS NOT NEW.order_id OR
       OLD.license_file_id IS NOT NEW.license_file_id OR
       OLD.expires_at IS NOT NEW.expires_at OR
-      OLD.license_notes IS NOT NEW.license_notes OR
       OLD.support_contact IS NOT NEW.support_contact
     ) AND COALESCE((SELECT value FROM store_settings WHERE key = 'history_enabled'), 'true') = 'true'
     BEGIN
@@ -81,13 +80,13 @@ const List<String> licenseKeysHistoryCreateTriggers = [
       INSERT INTO license_key_history (
         history_id, product, license_key, license_type, seats, max_activations,
         activated_on, purchase_date, purchase_from, order_id, license_file_id,
-        expires_at, license_notes, support_contact
+        expires_at, support_contact
       ) VALUES (
         (SELECT id FROM vault_item_history WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
         OLD.product, OLD.license_key, OLD.license_type, OLD.seats,
         OLD.max_activations, OLD.activated_on, OLD.purchase_date,
         OLD.purchase_from, OLD.order_id, OLD.license_file_id, OLD.expires_at,
-        OLD.license_notes, OLD.support_contact
+        OLD.support_contact
       );
     END;
   ''',
@@ -113,13 +112,13 @@ const List<String> licenseKeysHistoryCreateTriggers = [
       INSERT INTO license_key_history (
         history_id, product, license_key, license_type, seats, max_activations,
         activated_on, purchase_date, purchase_from, order_id, license_file_id,
-        expires_at, license_notes, support_contact
+        expires_at, support_contact
       )
       SELECT
         (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
         l.product, l.license_key, l.license_type, l.seats, l.max_activations,
         l.activated_on, l.purchase_date, l.purchase_from, l.order_id,
-        l.license_file_id, l.expires_at, l.license_notes, l.support_contact
+        l.license_file_id, l.expires_at, l.support_contact
       FROM license_key_items l
       WHERE l.item_id = OLD.id;
     END;

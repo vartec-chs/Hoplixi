@@ -31,12 +31,12 @@ const List<String> recoveryCodesHistoryCreateTriggers = [
 
       INSERT INTO recovery_codes_history (
         history_id, codes_blob, codes_count, used_count, per_code_status,
-        generated_at, notes, one_time, display_hint
+        generated_at, one_time, display_hint
       )
       SELECT
         (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
         r.codes_blob, r.codes_count, r.used_count, r.per_code_status,
-        r.generated_at, r.notes, r.one_time, r.display_hint
+        r.generated_at, r.one_time, r.display_hint
       FROM recovery_codes_items r
       WHERE r.item_id = OLD.id;
     END;
@@ -51,7 +51,6 @@ const List<String> recoveryCodesHistoryCreateTriggers = [
       OLD.used_count IS NOT NEW.used_count OR
       OLD.per_code_status IS NOT NEW.per_code_status OR
       OLD.generated_at IS NOT NEW.generated_at OR
-      OLD.notes IS NOT NEW.notes OR
       OLD.one_time != NEW.one_time OR
       OLD.display_hint IS NOT NEW.display_hint
     ) AND COALESCE((SELECT value FROM store_settings WHERE key = 'history_enabled'), 'true') = 'true'
@@ -73,11 +72,11 @@ const List<String> recoveryCodesHistoryCreateTriggers = [
 
       INSERT INTO recovery_codes_history (
         history_id, codes_blob, codes_count, used_count, per_code_status,
-        generated_at, notes, one_time, display_hint
+        generated_at, one_time, display_hint
       ) VALUES (
         (SELECT id FROM vault_item_history WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
         OLD.codes_blob, OLD.codes_count, OLD.used_count, OLD.per_code_status,
-        OLD.generated_at, OLD.notes, OLD.one_time, OLD.display_hint
+        OLD.generated_at, OLD.one_time, OLD.display_hint
       );
     END;
   ''',
@@ -102,12 +101,12 @@ const List<String> recoveryCodesHistoryCreateTriggers = [
 
       INSERT INTO recovery_codes_history (
         history_id, codes_blob, codes_count, used_count, per_code_status,
-        generated_at, notes, one_time, display_hint
+        generated_at, one_time, display_hint
       )
       SELECT
         (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
         r.codes_blob, r.codes_count, r.used_count, r.per_code_status,
-        r.generated_at, r.notes, r.one_time, r.display_hint
+        r.generated_at, r.one_time, r.display_hint
       FROM recovery_codes_items r
       WHERE r.item_id = OLD.id;
     END;

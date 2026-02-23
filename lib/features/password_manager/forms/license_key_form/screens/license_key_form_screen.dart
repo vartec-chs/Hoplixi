@@ -34,7 +34,6 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
   late final TextEditingController _orderIdController;
   late final TextEditingController _licenseFileIdController;
   late final TextEditingController _expiresAtController;
-  late final TextEditingController _licenseNotesController;
   late final TextEditingController _supportContactController;
   late final TextEditingController _descriptionController;
 
@@ -53,7 +52,6 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
     _orderIdController = TextEditingController();
     _licenseFileIdController = TextEditingController();
     _expiresAtController = TextEditingController();
-    _licenseNotesController = TextEditingController();
     _supportContactController = TextEditingController();
     _descriptionController = TextEditingController();
   }
@@ -72,7 +70,6 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
     _orderIdController.dispose();
     _licenseFileIdController.dispose();
     _expiresAtController.dispose();
-    _licenseNotesController.dispose();
     _supportContactController.dispose();
     _descriptionController.dispose();
     super.dispose();
@@ -159,9 +156,6 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
         }
         if (_expiresAtController.text != state.expiresAt) {
           _expiresAtController.text = state.expiresAt;
-        }
-        if (_licenseNotesController.text != state.licenseNotes) {
-          _licenseNotesController.text = state.licenseNotes;
         }
         if (_supportContactController.text != state.supportContact) {
           _supportContactController.text = state.supportContact;
@@ -313,17 +307,6 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   errorText: state.expiresAtError,
                 ),
                 onChanged: notifier.setExpiresAt,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _licenseNotesController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: 'Заметки по лицензии',
-                ),
-                onChanged: notifier.setLicenseNotes,
               ),
               const SizedBox(height: 12),
               TextField(

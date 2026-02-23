@@ -49,7 +49,6 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
       mrz: identity.mrz ?? '',
       scanAttachmentId: identity.scanAttachmentId ?? '',
       photoAttachmentId: identity.photoAttachmentId ?? '',
-      notes: identity.notes ?? '',
       description: item.description ?? '',
       verified: identity.verified,
       noteId: item.noteId,
@@ -97,7 +96,6 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
       _update((s) => s.copyWith(scanAttachmentId: v));
   void setPhotoAttachmentId(String v) =>
       _update((s) => s.copyWith(photoAttachmentId: v));
-  void setNotes(String v) => _update((s) => s.copyWith(notes: v));
   void setDescription(String v) => _update((s) => s.copyWith(description: v));
   void setVerified(bool v) => _update((s) => s.copyWith(verified: v));
   void setNote(String? id, String? name) =>
@@ -172,7 +170,6 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
             mrz: clean(c.mrz),
             scanAttachmentId: clean(c.scanAttachmentId),
             photoAttachmentId: clean(c.photoAttachmentId),
-            notes: clean(c.notes),
             verified: c.verified,
             description: clean(c.description),
             noteId: c.noteId,
@@ -208,7 +205,6 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
             mrz: clean(c.mrz),
             scanAttachmentId: clean(c.scanAttachmentId),
             photoAttachmentId: clean(c.photoAttachmentId),
-            notes: clean(c.notes),
             verified: c.verified,
             description: clean(c.description),
             noteId: c.noteId,

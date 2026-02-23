@@ -31,8 +31,6 @@ class IdentityItems extends Table {
 
   TextColumn get photoAttachmentId => text().nullable()();
 
-  TextColumn get notes => text().nullable()();
-
   BoolColumn get verified => boolean().withDefault(const Constant(false))();
 
   @override

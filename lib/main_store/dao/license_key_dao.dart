@@ -91,7 +91,6 @@ class LicenseKeyDao extends DatabaseAccessor<MainStore>
           orderId: Value(dto.orderId),
           licenseFileId: Value(dto.licenseFileId),
           expiresAt: Value(dto.expiresAt),
-          licenseNotes: Value(dto.licenseNotes),
           supportContact: Value(dto.supportContact),
         ),
       );
@@ -140,7 +139,6 @@ class LicenseKeyDao extends DatabaseAccessor<MainStore>
         orderId: Value(dto.orderId),
         licenseFileId: Value(dto.licenseFileId),
         expiresAt: Value(dto.expiresAt),
-        licenseNotes: Value(dto.licenseNotes),
         supportContact: Value(dto.supportContact),
       );
 

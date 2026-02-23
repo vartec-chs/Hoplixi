@@ -20,7 +20,6 @@ sealed class IdentityFormState with _$IdentityFormState {
     @Default('') String mrz,
     @Default('') String scanAttachmentId,
     @Default('') String photoAttachmentId,
-    @Default('') String notes,
     @Default('') String description,
     @Default(false) bool verified,
     String? noteId,

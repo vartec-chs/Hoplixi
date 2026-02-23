@@ -32,13 +32,13 @@ const List<String> wifisHistoryCreateTriggers = [
       INSERT INTO wifi_history (
         history_id, ssid, password, security, hidden,
         eap_method, username, identity, domain,
-        last_connected_bssid, priority, notes, qr_code_payload
+        last_connected_bssid, priority, qr_code_payload
       )
       SELECT
         (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
         w.ssid, w.password, w.security, w.hidden,
         w.eap_method, w.username, w.identity, w.domain,
-        w.last_connected_bssid, w.priority, w.notes, w.qr_code_payload
+        w.last_connected_bssid, w.priority, w.qr_code_payload
       FROM wifi_items w
       WHERE w.item_id = OLD.id;
     END;
@@ -58,7 +58,6 @@ const List<String> wifisHistoryCreateTriggers = [
       OLD.domain IS NOT NEW.domain OR
       OLD.last_connected_bssid IS NOT NEW.last_connected_bssid OR
       OLD.priority IS NOT NEW.priority OR
-      OLD.notes IS NOT NEW.notes OR
       OLD.qr_code_payload IS NOT NEW.qr_code_payload
     ) AND COALESCE((SELECT value FROM store_settings WHERE key = 'history_enabled'), 'true') = 'true'
     BEGIN
@@ -80,12 +79,12 @@ const List<String> wifisHistoryCreateTriggers = [
       INSERT INTO wifi_history (
         history_id, ssid, password, security, hidden,
         eap_method, username, identity, domain,
-        last_connected_bssid, priority, notes, qr_code_payload
+        last_connected_bssid, priority, qr_code_payload
       ) VALUES (
         (SELECT id FROM vault_item_history WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
         OLD.ssid, OLD.password, OLD.security, OLD.hidden,
         OLD.eap_method, OLD.username, OLD.identity, OLD.domain,
-        OLD.last_connected_bssid, OLD.priority, OLD.notes, OLD.qr_code_payload
+        OLD.last_connected_bssid, OLD.priority, OLD.qr_code_payload
       );
     END;
   ''',
@@ -111,13 +110,13 @@ const List<String> wifisHistoryCreateTriggers = [
       INSERT INTO wifi_history (
         history_id, ssid, password, security, hidden,
         eap_method, username, identity, domain,
-        last_connected_bssid, priority, notes, qr_code_payload
+        last_connected_bssid, priority, qr_code_payload
       )
       SELECT
         (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
         w.ssid, w.password, w.security, w.hidden,
         w.eap_method, w.username, w.identity, w.domain,
-        w.last_connected_bssid, w.priority, w.notes, w.qr_code_payload
+        w.last_connected_bssid, w.priority, w.qr_code_payload
       FROM wifi_items w
       WHERE w.item_id = OLD.id;
     END;

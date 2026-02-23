@@ -45,7 +45,6 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
       domain: wifi.domain ?? '',
       lastConnectedBssid: wifi.lastConnectedBssid ?? '',
       priority: wifi.priority?.toString() ?? '',
-      notes: wifi.notes ?? '',
       qrCodePayload: wifi.qrCodePayload ?? '',
       description: item.description ?? '',
       noteId: item.noteId,
@@ -93,7 +92,6 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
     _update((s) => s.copyWith(priority: value, priorityError: err));
   }
 
-  void setNotes(String value) => _update((s) => s.copyWith(notes: value));
   void setQrCodePayload(String value) =>
       _update((s) => s.copyWith(qrCodePayload: value));
   void setDescription(String value) =>
@@ -158,7 +156,6 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
             domain: clean(current.domain),
             lastConnectedBssid: clean(current.lastConnectedBssid),
             priority: priority,
-            notes: clean(current.notes),
             qrCodePayload: clean(current.qrCodePayload),
             description: clean(current.description),
             noteId: current.noteId,
@@ -192,7 +189,6 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
             domain: clean(current.domain),
             lastConnectedBssid: clean(current.lastConnectedBssid),
             priority: priority,
-            notes: clean(current.notes),
             qrCodePayload: clean(current.qrCodePayload),
             description: clean(current.description),
             noteId: current.noteId,

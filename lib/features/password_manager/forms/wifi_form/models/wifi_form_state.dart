@@ -18,7 +18,6 @@ sealed class WifiFormState with _$WifiFormState {
     @Default('') String domain,
     @Default('') String lastConnectedBssid,
     @Default('') String priority,
-    @Default('') String notes,
     @Default('') String qrCodePayload,
     @Default('') String description,
     String? noteId,

@@ -49,7 +49,6 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
       xprv: wallet.xprv ?? '',
       hardwareDevice: wallet.hardwareDevice ?? '',
       derivationScheme: wallet.derivationScheme ?? '',
-      notesOnUsage: wallet.notesOnUsage ?? '',
       description: item.description ?? '',
       watchOnly: wallet.watchOnly,
       noteId: item.noteId,
@@ -90,7 +89,6 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
       _update((s) => s.copyWith(hardwareDevice: v));
   void setDerivationScheme(String v) =>
       _update((s) => s.copyWith(derivationScheme: v));
-  void setNotesOnUsage(String v) => _update((s) => s.copyWith(notesOnUsage: v));
   void setDescription(String v) => _update((s) => s.copyWith(description: v));
   void setWatchOnly(bool v) => _update((s) => s.copyWith(watchOnly: v));
   void setNote(String? id, String? name) =>
@@ -142,7 +140,6 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
             xprv: clean(c.xprv),
             hardwareDevice: clean(c.hardwareDevice),
             derivationScheme: clean(c.derivationScheme),
-            notesOnUsage: clean(c.notesOnUsage),
             description: clean(c.description),
             watchOnly: c.watchOnly,
             noteId: c.noteId,
@@ -176,7 +173,6 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
             xprv: clean(c.xprv),
             hardwareDevice: clean(c.hardwareDevice),
             derivationScheme: clean(c.derivationScheme),
-            notesOnUsage: clean(c.notesOnUsage),
             description: clean(c.description),
             watchOnly: c.watchOnly,
             noteId: c.noteId,

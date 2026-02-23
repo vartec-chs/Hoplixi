@@ -44,7 +44,6 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
       usedCount: data.usedCount?.toString() ?? '',
       perCodeStatus: data.perCodeStatus ?? '',
       generatedAt: data.generatedAt?.toIso8601String() ?? '',
-      notes: data.notes ?? '',
       displayHint: data.displayHint ?? '',
       description: item.description ?? '',
       oneTime: data.oneTime,
@@ -113,7 +112,6 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
     );
   }
 
-  void setNotes(String value) => _update((s) => s.copyWith(notes: value));
   void setDisplayHint(String value) =>
       _update((s) => s.copyWith(displayHint: value));
   void setDescription(String value) =>
@@ -199,7 +197,6 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
             usedCount: parseInt(c.usedCount),
             perCodeStatus: clean(c.perCodeStatus),
             generatedAt: parseDate(c.generatedAt),
-            notes: clean(c.notes),
             oneTime: c.oneTime,
             displayHint: clean(c.displayHint),
             description: clean(c.description),
@@ -229,7 +226,6 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
             usedCount: parseInt(c.usedCount),
             perCodeStatus: clean(c.perCodeStatus),
             generatedAt: parseDate(c.generatedAt),
-            notes: clean(c.notes),
             oneTime: c.oneTime,
             displayHint: clean(c.displayHint),
             description: clean(c.description),

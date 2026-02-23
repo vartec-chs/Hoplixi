@@ -90,7 +90,6 @@ class RecoveryCodesDao extends DatabaseAccessor<MainStore>
           usedCount: Value(dto.usedCount),
           perCodeStatus: Value(dto.perCodeStatus),
           generatedAt: Value(dto.generatedAt),
-          notes: Value(dto.notes),
           oneTime: Value(dto.oneTime ?? false),
           displayHint: Value(dto.displayHint),
         ),
@@ -132,7 +131,6 @@ class RecoveryCodesDao extends DatabaseAccessor<MainStore>
         usedCount: Value(dto.usedCount),
         perCodeStatus: Value(dto.perCodeStatus),
         generatedAt: Value(dto.generatedAt),
-        notes: Value(dto.notes),
         oneTime: dto.oneTime != null
             ? Value(dto.oneTime!)
             : const Value.absent(),

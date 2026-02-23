@@ -34,7 +34,6 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
   late final TextEditingController _mrzController;
   late final TextEditingController _scanAttachmentIdController;
   late final TextEditingController _photoAttachmentIdController;
-  late final TextEditingController _notesController;
   late final TextEditingController _descriptionController;
 
   @override
@@ -53,7 +52,6 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
     _mrzController = TextEditingController();
     _scanAttachmentIdController = TextEditingController();
     _photoAttachmentIdController = TextEditingController();
-    _notesController = TextEditingController();
     _descriptionController = TextEditingController();
   }
 
@@ -72,7 +70,6 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
     _mrzController.dispose();
     _scanAttachmentIdController.dispose();
     _photoAttachmentIdController.dispose();
-    _notesController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
@@ -157,9 +154,6 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
         }
         if (_photoAttachmentIdController.text != state.photoAttachmentId) {
           _photoAttachmentIdController.text = state.photoAttachmentId;
-        }
-        if (_notesController.text != state.notes) {
-          _notesController.text = state.notes;
         }
         if (_descriptionController.text != state.description) {
           _descriptionController.text = state.description;
@@ -309,17 +303,6 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   labelText: 'ID фото',
                 ),
                 onChanged: notifier.setPhotoAttachmentId,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _notesController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: 'Заметки',
-                ),
-                onChanged: notifier.setNotes,
               ),
               const SizedBox(height: 12),
               CategoryPickerField(

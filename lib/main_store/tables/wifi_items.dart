@@ -27,8 +27,6 @@ class WifiItems extends Table {
 
   IntColumn get priority => integer().nullable()();
 
-  TextColumn get notes => text().nullable()();
-
   TextColumn get qrCodePayload => text().nullable()();
 
   @override

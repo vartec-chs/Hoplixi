@@ -34,7 +34,6 @@ class _CryptoWalletFormScreenState
   late final TextEditingController _xprvController;
   late final TextEditingController _hardwareController;
   late final TextEditingController _derivationSchemeController;
-  late final TextEditingController _notesController;
   late final TextEditingController _descriptionController;
 
   @override
@@ -51,7 +50,6 @@ class _CryptoWalletFormScreenState
     _xprvController = TextEditingController();
     _hardwareController = TextEditingController();
     _derivationSchemeController = TextEditingController();
-    _notesController = TextEditingController();
     _descriptionController = TextEditingController();
   }
 
@@ -68,7 +66,6 @@ class _CryptoWalletFormScreenState
     _xprvController.dispose();
     _hardwareController.dispose();
     _derivationSchemeController.dispose();
-    _notesController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
@@ -153,9 +150,6 @@ class _CryptoWalletFormScreenState
         }
         if (_derivationSchemeController.text != state.derivationScheme) {
           _derivationSchemeController.text = state.derivationScheme;
-        }
-        if (_notesController.text != state.notesOnUsage) {
-          _notesController.text = state.notesOnUsage;
         }
         if (_descriptionController.text != state.description) {
           _descriptionController.text = state.description;
@@ -291,17 +285,6 @@ class _CryptoWalletFormScreenState
                   labelText: 'Hardware device',
                 ),
                 onChanged: notifier.setHardwareDevice,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _notesController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: 'Notes on usage',
-                ),
-                onChanged: notifier.setNotesOnUsage,
               ),
               const SizedBox(height: 12),
               CategoryPickerField(

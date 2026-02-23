@@ -13,7 +13,6 @@ sealed class RecoveryCodesFormState with _$RecoveryCodesFormState {
     @Default('') String usedCount,
     @Default('') String perCodeStatus,
     @Default('') String generatedAt,
-    @Default('') String notes,
     @Default('') String displayHint,
     @Default('') String description,
     @Default(false) bool oneTime,

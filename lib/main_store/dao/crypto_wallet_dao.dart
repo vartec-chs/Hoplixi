@@ -92,7 +92,6 @@ class CryptoWalletDao extends DatabaseAccessor<MainStore>
           xprv: Value(dto.xprv),
           hardwareDevice: Value(dto.hardwareDevice),
           lastBalanceCheckedAt: Value(dto.lastBalanceCheckedAt),
-          notesOnUsage: Value(dto.notesOnUsage),
           watchOnly: Value(dto.watchOnly ?? false),
           derivationScheme: Value(dto.derivationScheme),
         ),
@@ -139,7 +138,6 @@ class CryptoWalletDao extends DatabaseAccessor<MainStore>
         xprv: Value(dto.xprv),
         hardwareDevice: Value(dto.hardwareDevice),
         lastBalanceCheckedAt: Value(dto.lastBalanceCheckedAt),
-        notesOnUsage: Value(dto.notesOnUsage),
         watchOnly: dto.watchOnly != null
             ? Value(dto.watchOnly!)
             : const Value.absent(),

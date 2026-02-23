@@ -19,7 +19,6 @@ sealed class LicenseKeyFormState with _$LicenseKeyFormState {
     @Default('') String orderId,
     @Default('') String licenseFileId,
     @Default('') String expiresAt,
-    @Default('') String licenseNotes,
     @Default('') String supportContact,
     @Default('') String description,
     String? noteId,

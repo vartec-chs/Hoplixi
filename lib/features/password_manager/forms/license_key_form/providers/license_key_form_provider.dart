@@ -50,7 +50,6 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
       orderId: license.orderId ?? '',
       licenseFileId: license.licenseFileId ?? '',
       expiresAt: license.expiresAt?.toIso8601String() ?? '',
-      licenseNotes: license.licenseNotes ?? '',
       supportContact: license.supportContact ?? '',
       description: item.description ?? '',
       noteId: item.noteId,
@@ -115,7 +114,6 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
       _update((s) => s.copyWith(licenseFileId: v));
   void setExpiresAt(String v) =>
       _update((s) => s.copyWith(expiresAt: v, expiresAtError: _dateError(v)));
-  void setLicenseNotes(String v) => _update((s) => s.copyWith(licenseNotes: v));
   void setSupportContact(String v) =>
       _update((s) => s.copyWith(supportContact: v));
   void setDescription(String v) => _update((s) => s.copyWith(description: v));
@@ -202,7 +200,6 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
             orderId: clean(c.orderId),
             licenseFileId: clean(c.licenseFileId),
             expiresAt: parseDate(c.expiresAt),
-            licenseNotes: clean(c.licenseNotes),
             supportContact: clean(c.supportContact),
             description: clean(c.description),
             noteId: c.noteId,
@@ -237,7 +234,6 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
             orderId: clean(c.orderId),
             licenseFileId: clean(c.licenseFileId),
             expiresAt: parseDate(c.expiresAt),
-            licenseNotes: clean(c.licenseNotes),
             supportContact: clean(c.supportContact),
             description: clean(c.description),
             noteId: c.noteId,

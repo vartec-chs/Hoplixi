@@ -36,7 +36,6 @@ class _CryptoWalletViewScreenState
   String? _xpub;
   String? _hardwareDevice;
   String? _derivationScheme;
-  String? _notesOnUsage;
   String? _description;
   bool _watchOnly = false;
 
@@ -68,7 +67,6 @@ class _CryptoWalletViewScreenState
         _xpub = wallet.xpub;
         _hardwareDevice = wallet.hardwareDevice;
         _derivationScheme = wallet.derivationScheme;
-        _notesOnUsage = wallet.notesOnUsage;
         _description = item.description;
         _watchOnly = wallet.watchOnly;
       });
@@ -269,12 +267,6 @@ class _CryptoWalletViewScreenState
                   title: const Text('Watch-only'),
                   subtitle: Text(_watchOnly ? 'Включен' : 'Выключен'),
                 ),
-                if (_notesOnUsage?.isNotEmpty == true)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Notes on usage'),
-                    subtitle: Text(_notesOnUsage!),
-                  ),
                 if (_description?.isNotEmpty == true)
                   ListTile(
                     contentPadding: EdgeInsets.zero,

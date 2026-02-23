@@ -31,7 +31,6 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
   late final TextEditingController _domainController;
   late final TextEditingController _bssidController;
   late final TextEditingController _priorityController;
-  late final TextEditingController _notesController;
   late final TextEditingController _qrPayloadController;
   late final TextEditingController _descriptionController;
 
@@ -48,7 +47,6 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
     _domainController = TextEditingController();
     _bssidController = TextEditingController();
     _priorityController = TextEditingController();
-    _notesController = TextEditingController();
     _qrPayloadController = TextEditingController();
     _descriptionController = TextEditingController();
   }
@@ -65,7 +63,6 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
     _domainController.dispose();
     _bssidController.dispose();
     _priorityController.dispose();
-    _notesController.dispose();
     _qrPayloadController.dispose();
     _descriptionController.dispose();
     super.dispose();
@@ -142,9 +139,6 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
         }
         if (_priorityController.text != state.priority) {
           _priorityController.text = state.priority;
-        }
-        if (_notesController.text != state.notes) {
-          _notesController.text = state.notes;
         }
         if (_qrPayloadController.text != state.qrCodePayload) {
           _qrPayloadController.text = state.qrCodePayload;
@@ -270,13 +264,6 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                   errorText: state.priorityError,
                 ),
                 onChanged: notifier.setPriority,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _notesController,
-                maxLines: 4,
-                decoration: primaryInputDecoration(context, labelText: 'Notes'),
-                onChanged: notifier.setNotes,
               ),
               const SizedBox(height: 12),
               TextField(

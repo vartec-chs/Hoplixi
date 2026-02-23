@@ -422,7 +422,6 @@ Type-specific table for crypto wallets.
 | xprv                 | Text     | nullable                                    | Private extended key    |
 | hardwareDevice       | Text     | nullable                                    | Hardware device id/name |
 | lastBalanceCheckedAt | DateTime | nullable                                    | Last balance check      |
-| notesOnUsage         | Text     | nullable                                    | Usage notes             |
 | watchOnly            | Bool     | default: false                              | Watch-only flag         |
 | derivationScheme     | Text     | nullable                                    | Derivation scheme       |
 
@@ -445,7 +444,6 @@ History table for crypto wallet-specific fields.
 | xprv                 | Text     | nullable                                           | XPRV snapshot            |
 | hardwareDevice       | Text     | nullable                                           | Hardware device snapshot |
 | lastBalanceCheckedAt | DateTime | nullable                                           | Balance check snapshot   |
-| notesOnUsage         | Text     | nullable                                           | Usage notes snapshot     |
 | watchOnly            | Bool     | default: false                                     | Watch-only flag snapshot |
 | derivationScheme     | Text     | nullable                                           | Scheme snapshot          |
 
@@ -468,7 +466,6 @@ Type-specific table for Wi‑Fi credentials.
 | domain             | Text | nullable                                    | Enterprise domain     |
 | lastConnectedBssid | Text | nullable                                    | Last connected BSSID  |
 | priority           | Int  | nullable                                    | Network priority      |
-| notes              | Text | nullable                                    | Notes                 |
 | qrCodePayload      | Text | nullable                                    | QR payload            |
 
 ---
@@ -490,7 +487,6 @@ History table for Wi‑Fi-specific fields.
 | domain             | Text | nullable                                           | Domain snapshot      |
 | lastConnectedBssid | Text | nullable                                           | BSSID snapshot       |
 | priority           | Int  | nullable                                           | Priority snapshot    |
-| notes              | Text | nullable                                           | Notes snapshot       |
 | qrCodePayload      | Text | nullable                                           | QR payload snapshot  |
 
 ---
@@ -514,7 +510,6 @@ Type-specific table for identity documents.
 | mrz               | Text     | nullable                                    | MRZ                 |
 | scanAttachmentId  | Text     | nullable                                    | Scan attachment id  |
 | photoAttachmentId | Text     | nullable                                    | Photo attachment id |
-| notes             | Text     | nullable                                    | Notes               |
 | verified          | Bool     | default: false                              | Verification flag   |
 
 ---
@@ -538,7 +533,6 @@ History table for identity-specific fields.
 | mrz               | Text     | nullable                                           | MRZ snapshot              |
 | scanAttachmentId  | Text     | nullable                                           | Scan attachment snapshot  |
 | photoAttachmentId | Text     | nullable                                           | Photo attachment snapshot |
-| notes             | Text     | nullable                                           | Notes snapshot            |
 | verified          | Bool     | default: false                                     | Verification snapshot     |
 
 ---
@@ -561,7 +555,6 @@ Type-specific table for license keys.
 | orderId        | Text     | nullable                                    | Order id              |
 | licenseFileId  | Text     | nullable                                    | License file id       |
 | expiresAt      | DateTime | nullable                                    | Expiration date       |
-| licenseNotes   | Text     | nullable                                    | License notes         |
 | supportContact | Text     | nullable                                    | Support contact       |
 
 ---
@@ -584,7 +577,6 @@ History table for license key-specific fields.
 | orderId        | Text     | nullable                                           | Order snapshot           |
 | licenseFileId  | Text     | nullable                                           | File id snapshot         |
 | expiresAt      | DateTime | nullable                                           | Expiry snapshot          |
-| licenseNotes   | Text     | nullable                                           | Notes snapshot           |
 | supportContact | Text     | nullable                                           | Contact snapshot         |
 
 ---
@@ -601,7 +593,6 @@ Type-specific table for recovery codes.
 | usedCount     | Int      | nullable                                    | Used codes count          |
 | perCodeStatus | Text     | nullable                                    | Per-code status JSON/text |
 | generatedAt   | DateTime | nullable                                    | Generated timestamp       |
-| notes         | Text     | nullable                                    | Notes                     |
 | oneTime       | Bool     | default: false                              | One-time codes flag       |
 | displayHint   | Text     | nullable                                    | Display masking policy    |
 
@@ -619,7 +610,6 @@ History table for recovery code-specific fields.
 | usedCount     | Int      | nullable                                           | Used count snapshot    |
 | perCodeStatus | Text     | nullable                                           | Status snapshot        |
 | generatedAt   | DateTime | nullable                                           | Generated-at snapshot  |
-| notes         | Text     | nullable                                           | Notes snapshot         |
 | oneTime       | Bool     | default: false                                     | One-time flag snapshot |
 | displayHint   | Text     | nullable                                           | Display hint snapshot  |
 

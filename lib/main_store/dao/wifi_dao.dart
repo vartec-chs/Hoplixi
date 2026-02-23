@@ -75,7 +75,6 @@ class WifiDao extends DatabaseAccessor<MainStore>
           domain: Value(dto.domain),
           lastConnectedBssid: Value(dto.lastConnectedBssid),
           priority: Value(dto.priority),
-          notes: Value(dto.notes),
           qrCodePayload: Value(dto.qrCodePayload),
         ),
       );
@@ -119,7 +118,6 @@ class WifiDao extends DatabaseAccessor<MainStore>
         domain: Value(dto.domain),
         lastConnectedBssid: Value(dto.lastConnectedBssid),
         priority: Value(dto.priority),
-        notes: Value(dto.notes),
         qrCodePayload: Value(dto.qrCodePayload),
       );
 

@@ -26,7 +26,6 @@ class _RecoveryCodesViewScreenState
   int? _usedCount;
   String? _perCodeStatus;
   DateTime? _generatedAt;
-  String? _notes;
   bool _oneTime = false;
   String? _displayHint;
   String? _description;
@@ -57,7 +56,6 @@ class _RecoveryCodesViewScreenState
         _usedCount = data.usedCount;
         _perCodeStatus = data.perCodeStatus;
         _generatedAt = data.generatedAt;
-        _notes = data.notes;
         _oneTime = data.oneTime;
         _displayHint = data.displayHint;
         _description = item.description;
@@ -119,12 +117,6 @@ class _RecoveryCodesViewScreenState
                   ListTile(
                     title: const Text('Display hint'),
                     subtitle: Text(_displayHint!),
-                  ),
-                if (_notes?.isNotEmpty == true)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Заметки'),
-                    subtitle: Text(_notes!),
                   ),
                 if (_perCodeStatus?.isNotEmpty == true)
                   ListTile(

@@ -31,7 +31,6 @@ class _IdentityViewScreenState extends ConsumerState<IdentityViewScreen> {
   String? _mrz;
   String? _scanAttachmentId;
   String? _photoAttachmentId;
-  String? _notes;
   String? _description;
   bool _verified = false;
 
@@ -68,7 +67,6 @@ class _IdentityViewScreenState extends ConsumerState<IdentityViewScreen> {
         _mrz = identity.mrz;
         _scanAttachmentId = identity.scanAttachmentId;
         _photoAttachmentId = identity.photoAttachmentId;
-        _notes = identity.notes;
         _description = item.description;
         _verified = identity.verified;
       });
@@ -169,12 +167,6 @@ class _IdentityViewScreenState extends ConsumerState<IdentityViewScreen> {
                   title: const Text('Верифицировано'),
                   subtitle: Text(_verified ? 'Да' : 'Нет'),
                 ),
-                if (_notes?.isNotEmpty == true)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Заметки'),
-                    subtitle: Text(_notes!),
-                  ),
                 if (_description?.isNotEmpty == true)
                   ListTile(
                     contentPadding: EdgeInsets.zero,

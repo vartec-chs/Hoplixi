@@ -79,7 +79,6 @@ class IdentityDao extends DatabaseAccessor<MainStore>
           mrz: Value(dto.mrz),
           scanAttachmentId: Value(dto.scanAttachmentId),
           photoAttachmentId: Value(dto.photoAttachmentId),
-          notes: Value(dto.notes),
           verified: Value(dto.verified ?? false),
         ),
       );
@@ -127,7 +126,6 @@ class IdentityDao extends DatabaseAccessor<MainStore>
         mrz: Value(dto.mrz),
         scanAttachmentId: Value(dto.scanAttachmentId),
         photoAttachmentId: Value(dto.photoAttachmentId),
-        notes: Value(dto.notes),
         verified: dto.verified != null
             ? Value(dto.verified!)
             : const Value.absent(),

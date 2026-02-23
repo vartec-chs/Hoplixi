@@ -29,7 +29,6 @@ class _RecoveryCodesFormScreenState
   late final TextEditingController _usedCountController;
   late final TextEditingController _perCodeStatusController;
   late final TextEditingController _generatedAtController;
-  late final TextEditingController _notesController;
   late final TextEditingController _displayHintController;
   late final TextEditingController _descriptionController;
 
@@ -42,7 +41,6 @@ class _RecoveryCodesFormScreenState
     _usedCountController = TextEditingController();
     _perCodeStatusController = TextEditingController();
     _generatedAtController = TextEditingController();
-    _notesController = TextEditingController();
     _displayHintController = TextEditingController();
     _descriptionController = TextEditingController();
   }
@@ -55,7 +53,6 @@ class _RecoveryCodesFormScreenState
     _usedCountController.dispose();
     _perCodeStatusController.dispose();
     _generatedAtController.dispose();
-    _notesController.dispose();
     _displayHintController.dispose();
     _descriptionController.dispose();
     super.dispose();
@@ -126,9 +123,6 @@ class _RecoveryCodesFormScreenState
         }
         if (_generatedAtController.text != state.generatedAt) {
           _generatedAtController.text = state.generatedAt;
-        }
-        if (_notesController.text != state.notes) {
-          _notesController.text = state.notes;
         }
         if (_displayHintController.text != state.displayHint) {
           _displayHintController.text = state.displayHint;
@@ -229,17 +223,6 @@ class _RecoveryCodesFormScreenState
                   errorText: state.generatedAtError,
                 ),
                 onChanged: notifier.setGeneratedAt,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _notesController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: 'Заметки',
-                ),
-                onChanged: notifier.setNotes,
               ),
               const SizedBox(height: 12),
               TextField(

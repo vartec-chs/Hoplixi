@@ -17,8 +17,6 @@ class RecoveryCodesItems extends Table {
 
   DateTimeColumn get generatedAt => dateTime().nullable()();
 
-  TextColumn get notes => text().nullable()();
-
   BoolColumn get oneTime => boolean().withDefault(const Constant(false))();
 
   TextColumn get displayHint => text().nullable()();

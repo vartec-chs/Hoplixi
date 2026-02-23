@@ -124,7 +124,6 @@ class RecoveryCodesFilterDao extends DatabaseAccessor<MainStore>
           expr &
           (vaultItems.name.lower().like('%$q%') |
               recoveryCodesItems.displayHint.lower().like('%$q%') |
-              recoveryCodesItems.notes.lower().like('%$q%') |
               vaultItems.description.lower().like('%$q%') |
               noteItems.content.lower().like('%$q%'));
     }
