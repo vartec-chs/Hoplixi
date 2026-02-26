@@ -93,6 +93,8 @@ pub enum FrbEncryptEvent {
     Progress(FrbProgressEvent),
     /// Emitted exactly once at the end – carries the final result.
     Done(FrbEncryptResult),
+    /// Operation failed. Always the last event in the stream.
+    Error(String),
 }
 
 /// Event emitted by `decrypt_file`.
@@ -102,6 +104,8 @@ pub enum FrbDecryptEvent {
     Progress(FrbProgressEvent),
     /// Emitted exactly once at the end – carries the final result.
     Done(FrbDecryptResult),
+    /// Operation failed. Always the last event in the stream.
+    Error(String),
 }
 
 // ─── Batch event ──────────────────────────────────────────────────────────────
@@ -423,7 +427,7 @@ fn build_decrypt_opts(
 pub async fn encrypt_file(
     opts: FrbEncryptOptions,
     sink: StreamSink<FrbEncryptEvent>,
-) -> anyhow::Result<()> {
+) {
     let chunk_size = opts.chunk_size.bytes();
     let sink = Arc::new(sink);
     let sink_clone = Arc::clone(&sink);
@@ -437,21 +441,21 @@ pub async fn encrypt_file(
     let engine = FileCrypt::with_chunk_size(chunk_size);
     let internal_opts = build_encrypt_opts(opts, Some(progress_cb));
 
-    let result = engine
-        .encrypt(internal_opts)
-        .await
-        .context("encrypt_file failed")?;
-
-    let frb_result = FrbEncryptResult {
-        output_path: result.output_path.to_string_lossy().into_owned(),
-        uuid: result.uuid,
-        original_size: result.original_size,
-    };
-
-    sink.add(FrbEncryptEvent::Done(frb_result))
-        .map_err(|e| anyhow::anyhow!("sink closed: {e}"))?;
-
-    Ok(())
+    match engine.encrypt(internal_opts).await {
+        Ok(result) => {
+            let frb_result = FrbEncryptResult {
+                output_path: result.output_path.to_string_lossy().into_owned(),
+                uuid: result.uuid,
+                original_size: result.original_size,
+            };
+            let _ = sink.add(FrbEncryptEvent::Done(frb_result));
+        }
+        Err(e) => {
+            let _ = sink.add(FrbEncryptEvent::Error(
+                format!("{e:#}"),
+            ));
+        }
+    }
 }
 
 /// Decrypt a single `.enc` file.
@@ -473,7 +477,7 @@ pub async fn encrypt_file(
 pub async fn decrypt_file(
     opts: FrbDecryptOptions,
     sink: StreamSink<FrbDecryptEvent>,
-) -> anyhow::Result<()> {
+) {
     let chunk_size = opts.chunk_size.bytes();
     let sink = Arc::new(sink);
     let sink_clone = Arc::clone(&sink);
@@ -487,29 +491,28 @@ pub async fn decrypt_file(
     let engine = FileCrypt::with_chunk_size(chunk_size);
     let internal_opts = build_decrypt_opts(opts, Some(progress_cb));
 
-    let result = engine
-        .decrypt(internal_opts)
-        .await
-        .context("decrypt_file failed")?;
-
-    let frb_metadata = FrbDecryptedMetadata {
-        original_filename: result.metadata.original_filename,
-        original_extension: result.metadata.original_extension,
-        gzip_compressed: result.metadata.gzip_compressed,
-        original_size: result.metadata.original_size,
-        uuid: result.metadata.uuid,
-        metadata: map_to_kv(result.metadata.metadata),
-    };
-
-    let frb_result = FrbDecryptResult {
-        output_path: result.output_path.to_string_lossy().into_owned(),
-        metadata: frb_metadata,
-    };
-
-    sink.add(FrbDecryptEvent::Done(frb_result))
-        .map_err(|e| anyhow::anyhow!("sink closed: {e}"))?;
-
-    Ok(())
+    match engine.decrypt(internal_opts).await {
+        Ok(result) => {
+            let frb_metadata = FrbDecryptedMetadata {
+                original_filename: result.metadata.original_filename,
+                original_extension: result.metadata.original_extension,
+                gzip_compressed: result.metadata.gzip_compressed,
+                original_size: result.metadata.original_size,
+                uuid: result.metadata.uuid,
+                metadata: map_to_kv(result.metadata.metadata),
+            };
+            let frb_result = FrbDecryptResult {
+                output_path: result.output_path.to_string_lossy().into_owned(),
+                metadata: frb_metadata,
+            };
+            let _ = sink.add(FrbDecryptEvent::Done(frb_result));
+        }
+        Err(e) => {
+            let _ = sink.add(FrbDecryptEvent::Error(
+                format!("{e:#}"),
+            ));
+        }
+    }
 }
 
 /// Encrypt multiple files sequentially.

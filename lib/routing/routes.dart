@@ -5,6 +5,7 @@ import 'package:hoplixi/features/cloud_sync/auth/ui/auth_login_screen.dart';
 import 'package:hoplixi/features/cloud_sync/auth/ui/tokens_screen.dart';
 import 'package:hoplixi/features/cloud_sync/oauth_apps/ui/oauth_apps_screen.dart';
 import 'package:hoplixi/features/component_showcase/component_showcase_screen.dart';
+import 'package:hoplixi/features/home/crypt_test_screen.dart';
 import 'package:hoplixi/features/home/home_screen_v2.dart';
 import 'package:hoplixi/features/logs_viewer/screens/logs_tabs_screen.dart';
 import 'package:hoplixi/features/password_manager/create_store/create_store_screen.dart';
@@ -59,6 +60,10 @@ final List<RouteBase> appRoutes = [
   GoRoute(
     path: AppRoutesPaths.localSendSend,
     builder: (context, state) => const LocalSendScreen(),
+  ),
+  GoRoute(
+    path: AppRoutesPaths.cryptTest,
+    builder: (context, state) => const CryptTestScreen(),
   ),
   GoRoute(
     path: AppRoutesPaths.createStore,

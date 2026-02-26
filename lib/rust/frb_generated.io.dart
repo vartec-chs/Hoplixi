@@ -12,338 +12,654 @@ import 'dart:ffi' as ffi;
 import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 
+abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
+  RustLibApiImplPlatform({
+    required super.handler,
+    required super.wire,
+    required super.generalizedFrbRustBinding,
+    required super.portManager,
+  });
 
+  @protected
+  AnyhowException dco_decode_AnyhowException(dynamic raw);
 
+  @protected
+  RustStreamSink<FrbBatchDecryptEvent>
+  dco_decode_StreamSink_frb_batch_decrypt_event_Sse(dynamic raw);
 
-                abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
-                  RustLibApiImplPlatform({
-                    required super.handler,
-                    required super.wire,
-                    required super.generalizedFrbRustBinding,
-                    required super.portManager,
-                  });
+  @protected
+  RustStreamSink<FrbBatchEncryptEvent>
+  dco_decode_StreamSink_frb_batch_encrypt_event_Sse(dynamic raw);
 
-                  
+  @protected
+  RustStreamSink<FrbDecryptEvent> dco_decode_StreamSink_frb_decrypt_event_Sse(
+    dynamic raw,
+  );
 
-                  @protected AnyhowException dco_decode_AnyhowException(dynamic raw);
+  @protected
+  RustStreamSink<FrbEncryptEvent> dco_decode_StreamSink_frb_encrypt_event_Sse(
+    dynamic raw,
+  );
 
-@protected RustStreamSink<FrbBatchDecryptEvent> dco_decode_StreamSink_frb_batch_decrypt_event_Sse(dynamic raw);
+  @protected
+  RustStreamSink<LogEntry> dco_decode_StreamSink_log_entry_Sse(dynamic raw);
 
-@protected RustStreamSink<FrbBatchEncryptEvent> dco_decode_StreamSink_frb_batch_encrypt_event_Sse(dynamic raw);
+  @protected
+  String dco_decode_String(dynamic raw);
 
-@protected RustStreamSink<FrbDecryptEvent> dco_decode_StreamSink_frb_decrypt_event_Sse(dynamic raw);
+  @protected
+  bool dco_decode_bool(dynamic raw);
 
-@protected RustStreamSink<FrbEncryptEvent> dco_decode_StreamSink_frb_encrypt_event_Sse(dynamic raw);
+  @protected
+  FrbBatchDecryptOptions dco_decode_box_autoadd_frb_batch_decrypt_options(
+    dynamic raw,
+  );
 
-@protected RustStreamSink<LogEntry> dco_decode_StreamSink_log_entry_Sse(dynamic raw);
+  @protected
+  FrbBatchDecryptResult dco_decode_box_autoadd_frb_batch_decrypt_result(
+    dynamic raw,
+  );
 
-@protected String dco_decode_String(dynamic raw);
+  @protected
+  FrbBatchEncryptOptions dco_decode_box_autoadd_frb_batch_encrypt_options(
+    dynamic raw,
+  );
 
-@protected bool dco_decode_bool(dynamic raw);
+  @protected
+  FrbBatchEncryptResult dco_decode_box_autoadd_frb_batch_encrypt_result(
+    dynamic raw,
+  );
 
-@protected FrbBatchDecryptOptions dco_decode_box_autoadd_frb_batch_decrypt_options(dynamic raw);
+  @protected
+  FrbDecryptOptions dco_decode_box_autoadd_frb_decrypt_options(dynamic raw);
 
-@protected FrbBatchDecryptResult dco_decode_box_autoadd_frb_batch_decrypt_result(dynamic raw);
+  @protected
+  FrbDecryptResult dco_decode_box_autoadd_frb_decrypt_result(dynamic raw);
 
-@protected FrbBatchEncryptOptions dco_decode_box_autoadd_frb_batch_encrypt_options(dynamic raw);
+  @protected
+  FrbEncryptOptions dco_decode_box_autoadd_frb_encrypt_options(dynamic raw);
 
-@protected FrbBatchEncryptResult dco_decode_box_autoadd_frb_batch_encrypt_result(dynamic raw);
+  @protected
+  FrbEncryptResult dco_decode_box_autoadd_frb_encrypt_result(dynamic raw);
 
-@protected FrbDecryptOptions dco_decode_box_autoadd_frb_decrypt_options(dynamic raw);
+  @protected
+  FrbProgressEvent dco_decode_box_autoadd_frb_progress_event(dynamic raw);
 
-@protected FrbDecryptResult dco_decode_box_autoadd_frb_decrypt_result(dynamic raw);
+  @protected
+  double dco_decode_f_64(dynamic raw);
 
-@protected FrbEncryptOptions dco_decode_box_autoadd_frb_encrypt_options(dynamic raw);
+  @protected
+  FrbBatchDecryptEvent dco_decode_frb_batch_decrypt_event(dynamic raw);
 
-@protected FrbEncryptResult dco_decode_box_autoadd_frb_encrypt_result(dynamic raw);
+  @protected
+  FrbBatchDecryptOptions dco_decode_frb_batch_decrypt_options(dynamic raw);
 
-@protected FrbProgressEvent dco_decode_box_autoadd_frb_progress_event(dynamic raw);
+  @protected
+  FrbBatchDecryptResult dco_decode_frb_batch_decrypt_result(dynamic raw);
 
-@protected double dco_decode_f_64(dynamic raw);
+  @protected
+  FrbBatchEncryptEvent dco_decode_frb_batch_encrypt_event(dynamic raw);
 
-@protected FrbBatchDecryptEvent dco_decode_frb_batch_decrypt_event(dynamic raw);
+  @protected
+  FrbBatchEncryptOptions dco_decode_frb_batch_encrypt_options(dynamic raw);
 
-@protected FrbBatchDecryptOptions dco_decode_frb_batch_decrypt_options(dynamic raw);
+  @protected
+  FrbBatchEncryptResult dco_decode_frb_batch_encrypt_result(dynamic raw);
 
-@protected FrbBatchDecryptResult dco_decode_frb_batch_decrypt_result(dynamic raw);
+  @protected
+  FrbBatchError dco_decode_frb_batch_error(dynamic raw);
 
-@protected FrbBatchEncryptEvent dco_decode_frb_batch_encrypt_event(dynamic raw);
+  @protected
+  FrbChunkSizePreset dco_decode_frb_chunk_size_preset(dynamic raw);
 
-@protected FrbBatchEncryptOptions dco_decode_frb_batch_encrypt_options(dynamic raw);
+  @protected
+  FrbDecryptEvent dco_decode_frb_decrypt_event(dynamic raw);
 
-@protected FrbBatchEncryptResult dco_decode_frb_batch_encrypt_result(dynamic raw);
+  @protected
+  FrbDecryptOptions dco_decode_frb_decrypt_options(dynamic raw);
 
-@protected FrbBatchError dco_decode_frb_batch_error(dynamic raw);
+  @protected
+  FrbDecryptResult dco_decode_frb_decrypt_result(dynamic raw);
 
-@protected FrbChunkSizePreset dco_decode_frb_chunk_size_preset(dynamic raw);
+  @protected
+  FrbDecryptedMetadata dco_decode_frb_decrypted_metadata(dynamic raw);
 
-@protected FrbDecryptEvent dco_decode_frb_decrypt_event(dynamic raw);
+  @protected
+  FrbEncryptEvent dco_decode_frb_encrypt_event(dynamic raw);
 
-@protected FrbDecryptOptions dco_decode_frb_decrypt_options(dynamic raw);
+  @protected
+  FrbEncryptOptions dco_decode_frb_encrypt_options(dynamic raw);
 
-@protected FrbDecryptResult dco_decode_frb_decrypt_result(dynamic raw);
+  @protected
+  FrbEncryptResult dco_decode_frb_encrypt_result(dynamic raw);
 
-@protected FrbDecryptedMetadata dco_decode_frb_decrypted_metadata(dynamic raw);
+  @protected
+  FrbKeyValue dco_decode_frb_key_value(dynamic raw);
 
-@protected FrbEncryptEvent dco_decode_frb_encrypt_event(dynamic raw);
+  @protected
+  FrbProgressEvent dco_decode_frb_progress_event(dynamic raw);
 
-@protected FrbEncryptOptions dco_decode_frb_encrypt_options(dynamic raw);
+  @protected
+  FrbProgressStage dco_decode_frb_progress_stage(dynamic raw);
 
-@protected FrbEncryptResult dco_decode_frb_encrypt_result(dynamic raw);
+  @protected
+  int dco_decode_i_32(dynamic raw);
 
-@protected FrbKeyValue dco_decode_frb_key_value(dynamic raw);
+  @protected
+  PlatformInt64 dco_decode_i_64(dynamic raw);
 
-@protected FrbProgressEvent dco_decode_frb_progress_event(dynamic raw);
+  @protected
+  List<String> dco_decode_list_String(dynamic raw);
 
-@protected FrbProgressStage dco_decode_frb_progress_stage(dynamic raw);
+  @protected
+  List<FrbBatchError> dco_decode_list_frb_batch_error(dynamic raw);
 
-@protected int dco_decode_i_32(dynamic raw);
+  @protected
+  List<FrbDecryptResult> dco_decode_list_frb_decrypt_result(dynamic raw);
 
-@protected PlatformInt64 dco_decode_i_64(dynamic raw);
+  @protected
+  List<FrbEncryptResult> dco_decode_list_frb_encrypt_result(dynamic raw);
 
-@protected List<String> dco_decode_list_String(dynamic raw);
+  @protected
+  List<FrbKeyValue> dco_decode_list_frb_key_value(dynamic raw);
 
-@protected List<FrbBatchError> dco_decode_list_frb_batch_error(dynamic raw);
+  @protected
+  Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
-@protected List<FrbDecryptResult> dco_decode_list_frb_decrypt_result(dynamic raw);
+  @protected
+  LogEntry dco_decode_log_entry(dynamic raw);
 
-@protected List<FrbEncryptResult> dco_decode_list_frb_encrypt_result(dynamic raw);
+  @protected
+  String? dco_decode_opt_String(dynamic raw);
 
-@protected List<FrbKeyValue> dco_decode_list_frb_key_value(dynamic raw);
+  @protected
+  int dco_decode_u_32(dynamic raw);
 
-@protected Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+  @protected
+  BigInt dco_decode_u_64(dynamic raw);
 
-@protected LogEntry dco_decode_log_entry(dynamic raw);
+  @protected
+  int dco_decode_u_8(dynamic raw);
 
-@protected String? dco_decode_opt_String(dynamic raw);
+  @protected
+  void dco_decode_unit(dynamic raw);
 
-@protected int dco_decode_u_32(dynamic raw);
+  @protected
+  AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
 
-@protected BigInt dco_decode_u_64(dynamic raw);
+  @protected
+  RustStreamSink<FrbBatchDecryptEvent>
+  sse_decode_StreamSink_frb_batch_decrypt_event_Sse(
+    SseDeserializer deserializer,
+  );
 
-@protected int dco_decode_u_8(dynamic raw);
+  @protected
+  RustStreamSink<FrbBatchEncryptEvent>
+  sse_decode_StreamSink_frb_batch_encrypt_event_Sse(
+    SseDeserializer deserializer,
+  );
 
-@protected void dco_decode_unit(dynamic raw);
+  @protected
+  RustStreamSink<FrbDecryptEvent> sse_decode_StreamSink_frb_decrypt_event_Sse(
+    SseDeserializer deserializer,
+  );
 
-@protected AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
+  @protected
+  RustStreamSink<FrbEncryptEvent> sse_decode_StreamSink_frb_encrypt_event_Sse(
+    SseDeserializer deserializer,
+  );
 
-@protected RustStreamSink<FrbBatchDecryptEvent> sse_decode_StreamSink_frb_batch_decrypt_event_Sse(SseDeserializer deserializer);
+  @protected
+  RustStreamSink<LogEntry> sse_decode_StreamSink_log_entry_Sse(
+    SseDeserializer deserializer,
+  );
 
-@protected RustStreamSink<FrbBatchEncryptEvent> sse_decode_StreamSink_frb_batch_encrypt_event_Sse(SseDeserializer deserializer);
+  @protected
+  String sse_decode_String(SseDeserializer deserializer);
 
-@protected RustStreamSink<FrbDecryptEvent> sse_decode_StreamSink_frb_decrypt_event_Sse(SseDeserializer deserializer);
+  @protected
+  bool sse_decode_bool(SseDeserializer deserializer);
 
-@protected RustStreamSink<FrbEncryptEvent> sse_decode_StreamSink_frb_encrypt_event_Sse(SseDeserializer deserializer);
+  @protected
+  FrbBatchDecryptOptions sse_decode_box_autoadd_frb_batch_decrypt_options(
+    SseDeserializer deserializer,
+  );
 
-@protected RustStreamSink<LogEntry> sse_decode_StreamSink_log_entry_Sse(SseDeserializer deserializer);
+  @protected
+  FrbBatchDecryptResult sse_decode_box_autoadd_frb_batch_decrypt_result(
+    SseDeserializer deserializer,
+  );
 
-@protected String sse_decode_String(SseDeserializer deserializer);
+  @protected
+  FrbBatchEncryptOptions sse_decode_box_autoadd_frb_batch_encrypt_options(
+    SseDeserializer deserializer,
+  );
 
-@protected bool sse_decode_bool(SseDeserializer deserializer);
+  @protected
+  FrbBatchEncryptResult sse_decode_box_autoadd_frb_batch_encrypt_result(
+    SseDeserializer deserializer,
+  );
 
-@protected FrbBatchDecryptOptions sse_decode_box_autoadd_frb_batch_decrypt_options(SseDeserializer deserializer);
+  @protected
+  FrbDecryptOptions sse_decode_box_autoadd_frb_decrypt_options(
+    SseDeserializer deserializer,
+  );
 
-@protected FrbBatchDecryptResult sse_decode_box_autoadd_frb_batch_decrypt_result(SseDeserializer deserializer);
+  @protected
+  FrbDecryptResult sse_decode_box_autoadd_frb_decrypt_result(
+    SseDeserializer deserializer,
+  );
 
-@protected FrbBatchEncryptOptions sse_decode_box_autoadd_frb_batch_encrypt_options(SseDeserializer deserializer);
+  @protected
+  FrbEncryptOptions sse_decode_box_autoadd_frb_encrypt_options(
+    SseDeserializer deserializer,
+  );
 
-@protected FrbBatchEncryptResult sse_decode_box_autoadd_frb_batch_encrypt_result(SseDeserializer deserializer);
+  @protected
+  FrbEncryptResult sse_decode_box_autoadd_frb_encrypt_result(
+    SseDeserializer deserializer,
+  );
 
-@protected FrbDecryptOptions sse_decode_box_autoadd_frb_decrypt_options(SseDeserializer deserializer);
+  @protected
+  FrbProgressEvent sse_decode_box_autoadd_frb_progress_event(
+    SseDeserializer deserializer,
+  );
 
-@protected FrbDecryptResult sse_decode_box_autoadd_frb_decrypt_result(SseDeserializer deserializer);
+  @protected
+  double sse_decode_f_64(SseDeserializer deserializer);
 
-@protected FrbEncryptOptions sse_decode_box_autoadd_frb_encrypt_options(SseDeserializer deserializer);
+  @protected
+  FrbBatchDecryptEvent sse_decode_frb_batch_decrypt_event(
+    SseDeserializer deserializer,
+  );
 
-@protected FrbEncryptResult sse_decode_box_autoadd_frb_encrypt_result(SseDeserializer deserializer);
+  @protected
+  FrbBatchDecryptOptions sse_decode_frb_batch_decrypt_options(
+    SseDeserializer deserializer,
+  );
 
-@protected FrbProgressEvent sse_decode_box_autoadd_frb_progress_event(SseDeserializer deserializer);
+  @protected
+  FrbBatchDecryptResult sse_decode_frb_batch_decrypt_result(
+    SseDeserializer deserializer,
+  );
 
-@protected double sse_decode_f_64(SseDeserializer deserializer);
+  @protected
+  FrbBatchEncryptEvent sse_decode_frb_batch_encrypt_event(
+    SseDeserializer deserializer,
+  );
 
-@protected FrbBatchDecryptEvent sse_decode_frb_batch_decrypt_event(SseDeserializer deserializer);
+  @protected
+  FrbBatchEncryptOptions sse_decode_frb_batch_encrypt_options(
+    SseDeserializer deserializer,
+  );
 
-@protected FrbBatchDecryptOptions sse_decode_frb_batch_decrypt_options(SseDeserializer deserializer);
+  @protected
+  FrbBatchEncryptResult sse_decode_frb_batch_encrypt_result(
+    SseDeserializer deserializer,
+  );
 
-@protected FrbBatchDecryptResult sse_decode_frb_batch_decrypt_result(SseDeserializer deserializer);
+  @protected
+  FrbBatchError sse_decode_frb_batch_error(SseDeserializer deserializer);
 
-@protected FrbBatchEncryptEvent sse_decode_frb_batch_encrypt_event(SseDeserializer deserializer);
+  @protected
+  FrbChunkSizePreset sse_decode_frb_chunk_size_preset(
+    SseDeserializer deserializer,
+  );
 
-@protected FrbBatchEncryptOptions sse_decode_frb_batch_encrypt_options(SseDeserializer deserializer);
+  @protected
+  FrbDecryptEvent sse_decode_frb_decrypt_event(SseDeserializer deserializer);
 
-@protected FrbBatchEncryptResult sse_decode_frb_batch_encrypt_result(SseDeserializer deserializer);
+  @protected
+  FrbDecryptOptions sse_decode_frb_decrypt_options(
+    SseDeserializer deserializer,
+  );
 
-@protected FrbBatchError sse_decode_frb_batch_error(SseDeserializer deserializer);
+  @protected
+  FrbDecryptResult sse_decode_frb_decrypt_result(SseDeserializer deserializer);
 
-@protected FrbChunkSizePreset sse_decode_frb_chunk_size_preset(SseDeserializer deserializer);
+  @protected
+  FrbDecryptedMetadata sse_decode_frb_decrypted_metadata(
+    SseDeserializer deserializer,
+  );
 
-@protected FrbDecryptEvent sse_decode_frb_decrypt_event(SseDeserializer deserializer);
+  @protected
+  FrbEncryptEvent sse_decode_frb_encrypt_event(SseDeserializer deserializer);
 
-@protected FrbDecryptOptions sse_decode_frb_decrypt_options(SseDeserializer deserializer);
+  @protected
+  FrbEncryptOptions sse_decode_frb_encrypt_options(
+    SseDeserializer deserializer,
+  );
 
-@protected FrbDecryptResult sse_decode_frb_decrypt_result(SseDeserializer deserializer);
+  @protected
+  FrbEncryptResult sse_decode_frb_encrypt_result(SseDeserializer deserializer);
 
-@protected FrbDecryptedMetadata sse_decode_frb_decrypted_metadata(SseDeserializer deserializer);
+  @protected
+  FrbKeyValue sse_decode_frb_key_value(SseDeserializer deserializer);
 
-@protected FrbEncryptEvent sse_decode_frb_encrypt_event(SseDeserializer deserializer);
+  @protected
+  FrbProgressEvent sse_decode_frb_progress_event(SseDeserializer deserializer);
 
-@protected FrbEncryptOptions sse_decode_frb_encrypt_options(SseDeserializer deserializer);
+  @protected
+  FrbProgressStage sse_decode_frb_progress_stage(SseDeserializer deserializer);
 
-@protected FrbEncryptResult sse_decode_frb_encrypt_result(SseDeserializer deserializer);
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer);
 
-@protected FrbKeyValue sse_decode_frb_key_value(SseDeserializer deserializer);
+  @protected
+  PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
 
-@protected FrbProgressEvent sse_decode_frb_progress_event(SseDeserializer deserializer);
+  @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer);
 
-@protected FrbProgressStage sse_decode_frb_progress_stage(SseDeserializer deserializer);
-
-@protected int sse_decode_i_32(SseDeserializer deserializer);
-
-@protected PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
-
-@protected List<String> sse_decode_list_String(SseDeserializer deserializer);
-
-@protected List<FrbBatchError> sse_decode_list_frb_batch_error(SseDeserializer deserializer);
-
-@protected List<FrbDecryptResult> sse_decode_list_frb_decrypt_result(SseDeserializer deserializer);
-
-@protected List<FrbEncryptResult> sse_decode_list_frb_encrypt_result(SseDeserializer deserializer);
-
-@protected List<FrbKeyValue> sse_decode_list_frb_key_value(SseDeserializer deserializer);
-
-@protected Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
-
-@protected LogEntry sse_decode_log_entry(SseDeserializer deserializer);
-
-@protected String? sse_decode_opt_String(SseDeserializer deserializer);
-
-@protected int sse_decode_u_32(SseDeserializer deserializer);
-
-@protected BigInt sse_decode_u_64(SseDeserializer deserializer);
-
-@protected int sse_decode_u_8(SseDeserializer deserializer);
-
-@protected void sse_decode_unit(SseDeserializer deserializer);
-
-@protected void sse_encode_AnyhowException(AnyhowException self, SseSerializer serializer);
-
-@protected void sse_encode_StreamSink_frb_batch_decrypt_event_Sse(RustStreamSink<FrbBatchDecryptEvent> self, SseSerializer serializer);
-
-@protected void sse_encode_StreamSink_frb_batch_encrypt_event_Sse(RustStreamSink<FrbBatchEncryptEvent> self, SseSerializer serializer);
-
-@protected void sse_encode_StreamSink_frb_decrypt_event_Sse(RustStreamSink<FrbDecryptEvent> self, SseSerializer serializer);
-
-@protected void sse_encode_StreamSink_frb_encrypt_event_Sse(RustStreamSink<FrbEncryptEvent> self, SseSerializer serializer);
-
-@protected void sse_encode_StreamSink_log_entry_Sse(RustStreamSink<LogEntry> self, SseSerializer serializer);
-
-@protected void sse_encode_String(String self, SseSerializer serializer);
-
-@protected void sse_encode_bool(bool self, SseSerializer serializer);
-
-@protected void sse_encode_box_autoadd_frb_batch_decrypt_options(FrbBatchDecryptOptions self, SseSerializer serializer);
-
-@protected void sse_encode_box_autoadd_frb_batch_decrypt_result(FrbBatchDecryptResult self, SseSerializer serializer);
-
-@protected void sse_encode_box_autoadd_frb_batch_encrypt_options(FrbBatchEncryptOptions self, SseSerializer serializer);
-
-@protected void sse_encode_box_autoadd_frb_batch_encrypt_result(FrbBatchEncryptResult self, SseSerializer serializer);
-
-@protected void sse_encode_box_autoadd_frb_decrypt_options(FrbDecryptOptions self, SseSerializer serializer);
-
-@protected void sse_encode_box_autoadd_frb_decrypt_result(FrbDecryptResult self, SseSerializer serializer);
-
-@protected void sse_encode_box_autoadd_frb_encrypt_options(FrbEncryptOptions self, SseSerializer serializer);
-
-@protected void sse_encode_box_autoadd_frb_encrypt_result(FrbEncryptResult self, SseSerializer serializer);
-
-@protected void sse_encode_box_autoadd_frb_progress_event(FrbProgressEvent self, SseSerializer serializer);
-
-@protected void sse_encode_f_64(double self, SseSerializer serializer);
-
-@protected void sse_encode_frb_batch_decrypt_event(FrbBatchDecryptEvent self, SseSerializer serializer);
-
-@protected void sse_encode_frb_batch_decrypt_options(FrbBatchDecryptOptions self, SseSerializer serializer);
-
-@protected void sse_encode_frb_batch_decrypt_result(FrbBatchDecryptResult self, SseSerializer serializer);
-
-@protected void sse_encode_frb_batch_encrypt_event(FrbBatchEncryptEvent self, SseSerializer serializer);
-
-@protected void sse_encode_frb_batch_encrypt_options(FrbBatchEncryptOptions self, SseSerializer serializer);
-
-@protected void sse_encode_frb_batch_encrypt_result(FrbBatchEncryptResult self, SseSerializer serializer);
-
-@protected void sse_encode_frb_batch_error(FrbBatchError self, SseSerializer serializer);
-
-@protected void sse_encode_frb_chunk_size_preset(FrbChunkSizePreset self, SseSerializer serializer);
-
-@protected void sse_encode_frb_decrypt_event(FrbDecryptEvent self, SseSerializer serializer);
-
-@protected void sse_encode_frb_decrypt_options(FrbDecryptOptions self, SseSerializer serializer);
-
-@protected void sse_encode_frb_decrypt_result(FrbDecryptResult self, SseSerializer serializer);
-
-@protected void sse_encode_frb_decrypted_metadata(FrbDecryptedMetadata self, SseSerializer serializer);
-
-@protected void sse_encode_frb_encrypt_event(FrbEncryptEvent self, SseSerializer serializer);
-
-@protected void sse_encode_frb_encrypt_options(FrbEncryptOptions self, SseSerializer serializer);
-
-@protected void sse_encode_frb_encrypt_result(FrbEncryptResult self, SseSerializer serializer);
-
-@protected void sse_encode_frb_key_value(FrbKeyValue self, SseSerializer serializer);
-
-@protected void sse_encode_frb_progress_event(FrbProgressEvent self, SseSerializer serializer);
-
-@protected void sse_encode_frb_progress_stage(FrbProgressStage self, SseSerializer serializer);
-
-@protected void sse_encode_i_32(int self, SseSerializer serializer);
-
-@protected void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
-
-@protected void sse_encode_list_String(List<String> self, SseSerializer serializer);
-
-@protected void sse_encode_list_frb_batch_error(List<FrbBatchError> self, SseSerializer serializer);
-
-@protected void sse_encode_list_frb_decrypt_result(List<FrbDecryptResult> self, SseSerializer serializer);
-
-@protected void sse_encode_list_frb_encrypt_result(List<FrbEncryptResult> self, SseSerializer serializer);
-
-@protected void sse_encode_list_frb_key_value(List<FrbKeyValue> self, SseSerializer serializer);
-
-@protected void sse_encode_list_prim_u_8_strict(Uint8List self, SseSerializer serializer);
-
-@protected void sse_encode_log_entry(LogEntry self, SseSerializer serializer);
-
-@protected void sse_encode_opt_String(String? self, SseSerializer serializer);
-
-@protected void sse_encode_u_32(int self, SseSerializer serializer);
-
-@protected void sse_encode_u_64(BigInt self, SseSerializer serializer);
-
-@protected void sse_encode_u_8(int self, SseSerializer serializer);
-
-@protected void sse_encode_unit(void self, SseSerializer serializer);
-                }
-                
-
+  @protected
+  List<FrbBatchError> sse_decode_list_frb_batch_error(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbDecryptResult> sse_decode_list_frb_decrypt_result(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbEncryptResult> sse_decode_list_frb_encrypt_result(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbKeyValue> sse_decode_list_frb_key_value(SseDeserializer deserializer);
+
+  @protected
+  Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  LogEntry sse_decode_log_entry(SseDeserializer deserializer);
+
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_u_32(SseDeserializer deserializer);
+
+  @protected
+  BigInt sse_decode_u_64(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_u_8(SseDeserializer deserializer);
+
+  @protected
+  void sse_decode_unit(SseDeserializer deserializer);
+
+  @protected
+  void sse_encode_AnyhowException(
+    AnyhowException self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_frb_batch_decrypt_event_Sse(
+    RustStreamSink<FrbBatchDecryptEvent> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_frb_batch_encrypt_event_Sse(
+    RustStreamSink<FrbBatchEncryptEvent> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_frb_decrypt_event_Sse(
+    RustStreamSink<FrbDecryptEvent> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_frb_encrypt_event_Sse(
+    RustStreamSink<FrbEncryptEvent> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_log_entry_Sse(
+    RustStreamSink<LogEntry> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_String(String self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_frb_batch_decrypt_options(
+    FrbBatchDecryptOptions self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_frb_batch_decrypt_result(
+    FrbBatchDecryptResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_frb_batch_encrypt_options(
+    FrbBatchEncryptOptions self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_frb_batch_encrypt_result(
+    FrbBatchEncryptResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_frb_decrypt_options(
+    FrbDecryptOptions self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_frb_decrypt_result(
+    FrbDecryptResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_frb_encrypt_options(
+    FrbEncryptOptions self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_frb_encrypt_result(
+    FrbEncryptResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_frb_progress_event(
+    FrbProgressEvent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_f_64(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_frb_batch_decrypt_event(
+    FrbBatchDecryptEvent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_batch_decrypt_options(
+    FrbBatchDecryptOptions self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_batch_decrypt_result(
+    FrbBatchDecryptResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_batch_encrypt_event(
+    FrbBatchEncryptEvent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_batch_encrypt_options(
+    FrbBatchEncryptOptions self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_batch_encrypt_result(
+    FrbBatchEncryptResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_batch_error(FrbBatchError self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_frb_chunk_size_preset(
+    FrbChunkSizePreset self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_decrypt_event(
+    FrbDecryptEvent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_decrypt_options(
+    FrbDecryptOptions self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_decrypt_result(
+    FrbDecryptResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_decrypted_metadata(
+    FrbDecryptedMetadata self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_encrypt_event(
+    FrbEncryptEvent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_encrypt_options(
+    FrbEncryptOptions self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_encrypt_result(
+    FrbEncryptResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_key_value(FrbKeyValue self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_frb_progress_event(
+    FrbProgressEvent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_progress_stage(
+    FrbProgressStage self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_frb_batch_error(
+    List<FrbBatchError> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_decrypt_result(
+    List<FrbDecryptResult> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_encrypt_result(
+    List<FrbEncryptResult> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_key_value(
+    List<FrbKeyValue> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_prim_u_8_strict(
+    Uint8List self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_log_entry(LogEntry self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_u_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_u_64(BigInt self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_u_8(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_unit(void self, SseSerializer serializer);
+}
 
 // Section: wire_class
 
+class RustLibWire implements BaseWire {
+  factory RustLibWire.fromExternalLibrary(ExternalLibrary lib) =>
+      RustLibWire(lib.ffiDynamicLibrary);
 
-        class RustLibWire implements BaseWire {
+  /// Holds the symbol lookup function.
+  final ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
+  _lookup;
 
-            factory RustLibWire.fromExternalLibrary(ExternalLibrary lib) =>
-              RustLibWire(lib.ffiDynamicLibrary);
-        
-            /// Holds the symbol lookup function.
-            final ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
-                _lookup;
-  
-            /// The symbols are looked up in [dynamicLibrary].
-            RustLibWire(ffi.DynamicLibrary dynamicLibrary)
-                : _lookup = dynamicLibrary.lookup;
-
-            
-        }
-        
+  /// The symbols are looked up in [dynamicLibrary].
+  RustLibWire(ffi.DynamicLibrary dynamicLibrary)
+    : _lookup = dynamicLibrary.lookup;
+}

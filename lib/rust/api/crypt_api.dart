@@ -8,11 +8,10 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'crypt_api.freezed.dart';
 
-            // These functions are ignored because they are not marked as `pub`: `build_decrypt_opts`, `build_encrypt_opts`, `bytes`, `kv_to_map`, `map_to_kv`
+// These functions are ignored because they are not marked as `pub`: `build_decrypt_opts`, `build_encrypt_opts`, `bytes`, `kv_to_map`, `map_to_kv`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`, `from`
 
-
-            /// Encrypt a single file or directory.
+/// Encrypt a single file or directory.
 ///
 /// Events (progress + final result) are emitted through `sink`.
 /// The stream is always closed after the final `FrbEncryptEvent::Done`
@@ -30,7 +29,8 @@ part 'crypt_api.freezed.dart';
 ///   }
 /// }
 /// ```
-Stream<FrbEncryptEvent>  encryptFile({required FrbEncryptOptions opts }) => RustLib.instance.api.crateApiCryptApiEncryptFile(opts: opts);
+Stream<FrbEncryptEvent> encryptFile({required FrbEncryptOptions opts}) =>
+    RustLib.instance.api.crateApiCryptApiEncryptFile(opts: opts);
 
 /// Decrypt a single `.enc` file.
 ///
@@ -48,7 +48,8 @@ Stream<FrbEncryptEvent>  encryptFile({required FrbEncryptOptions opts }) => Rust
 ///   }
 /// }
 /// ```
-Stream<FrbDecryptEvent>  decryptFile({required FrbDecryptOptions opts }) => RustLib.instance.api.crateApiCryptApiDecryptFile(opts: opts);
+Stream<FrbDecryptEvent> decryptFile({required FrbDecryptOptions opts}) =>
+    RustLib.instance.api.crateApiCryptApiDecryptFile(opts: opts);
 
 /// Encrypt multiple files sequentially.
 ///
@@ -67,13 +68,17 @@ Stream<FrbDecryptEvent>  decryptFile({required FrbDecryptOptions opts }) => Rust
 ///   }
 /// }
 /// ```
-Stream<FrbBatchEncryptEvent>  encryptBatch({required FrbBatchEncryptOptions opts }) => RustLib.instance.api.crateApiCryptApiEncryptBatch(opts: opts);
+Stream<FrbBatchEncryptEvent> encryptBatch({
+  required FrbBatchEncryptOptions opts,
+}) => RustLib.instance.api.crateApiCryptApiEncryptBatch(opts: opts);
 
 /// Decrypt multiple `.enc` files sequentially.
 ///
 /// Events (per-file progress, per-file results, final summary) are emitted
 /// through `sink`. Processing continues even if individual files fail.
-Stream<FrbBatchDecryptEvent>  decryptBatch({required FrbBatchDecryptOptions opts }) => RustLib.instance.api.crateApiCryptApiDecryptBatch(opts: opts);
+Stream<FrbBatchDecryptEvent> decryptBatch({
+  required FrbBatchDecryptOptions opts,
+}) => RustLib.instance.api.crateApiCryptApiDecryptBatch(opts: opts);
 
 /// Read only the header of an encrypted file without decrypting the data.
 ///
@@ -82,466 +87,576 @@ Stream<FrbBatchDecryptEvent>  decryptBatch({required FrbBatchDecryptOptions opts
 ///
 /// Much faster than a full `decrypt_file` — suitable for showing file
 /// information in the UI before the user decides to decrypt.
-Future<FrbDecryptedMetadata>  readEncryptedHeader({required String inputPath , required String password }) => RustLib.instance.api.crateApiCryptApiReadEncryptedHeader(inputPath: inputPath, password: password);
+Future<FrbDecryptedMetadata> readEncryptedHeader({
+  required String inputPath,
+  required String password,
+}) => RustLib.instance.api.crateApiCryptApiReadEncryptedHeader(
+  inputPath: inputPath,
+  password: password,
+);
 
-            @freezed
-                sealed class FrbBatchDecryptEvent with _$FrbBatchDecryptEvent  {
-                    const FrbBatchDecryptEvent._();
+@freezed
+sealed class FrbBatchDecryptEvent with _$FrbBatchDecryptEvent {
+  const FrbBatchDecryptEvent._();
 
-                     /// Progress for the currently processed file.
-const factory FrbBatchDecryptEvent.fileProgress({   required int fileIndex ,  required int totalFiles ,  required String currentFile ,  required FrbProgressEvent progress , }) = FrbBatchDecryptEvent_FileProgress;
- /// One file finished successfully.
-const factory FrbBatchDecryptEvent.fileDone({   required int fileIndex ,  required FrbDecryptResult result , }) = FrbBatchDecryptEvent_FileDone;
- /// One file failed; processing continues for the rest.
-const factory FrbBatchDecryptEvent.fileError({   required int fileIndex ,  required String inputPath ,  required String error , }) = FrbBatchDecryptEvent_FileError;
- /// Emitted once when all files are processed.
-const factory FrbBatchDecryptEvent.allDone(  FrbBatchDecryptResult field0,) = FrbBatchDecryptEvent_AllDone;
+  /// Progress for the currently processed file.
+  const factory FrbBatchDecryptEvent.fileProgress({
+    required int fileIndex,
+    required int totalFiles,
+    required String currentFile,
+    required FrbProgressEvent progress,
+  }) = FrbBatchDecryptEvent_FileProgress;
 
-                    
+  /// One file finished successfully.
+  const factory FrbBatchDecryptEvent.fileDone({
+    required int fileIndex,
+    required FrbDecryptResult result,
+  }) = FrbBatchDecryptEvent_FileDone;
 
-                    
-                }
+  /// One file failed; processing continues for the rest.
+  const factory FrbBatchDecryptEvent.fileError({
+    required int fileIndex,
+    required String inputPath,
+    required String error,
+  }) = FrbBatchDecryptEvent_FileError;
+
+  /// Emitted once when all files are processed.
+  const factory FrbBatchDecryptEvent.allDone(FrbBatchDecryptResult field0) =
+      FrbBatchDecryptEvent_AllDone;
+}
 
 /// Options for decrypting multiple `.enc` files in a batch.
-class FrbBatchDecryptOptions  {
-                /// Paths to encrypted `.enc` files.
-final List<String> inputPaths;
-/// Common output directory for all decrypted files.
-final String outputDir;
-/// User password.
-final String password;
-/// Temporary directory for intermediate files.
-final String? tempDir;
-/// Chunk-size preset.
-final FrbChunkSizePreset chunkSize;
+class FrbBatchDecryptOptions {
+  /// Paths to encrypted `.enc` files.
+  final List<String> inputPaths;
 
-                const FrbBatchDecryptOptions({required this.inputPaths ,required this.outputDir ,required this.password ,this.tempDir ,required this.chunkSize ,});
+  /// Common output directory for all decrypted files.
+  final String outputDir;
 
-                
-                
+  /// User password.
+  final String password;
 
-                
-        @override
-        int get hashCode => inputPaths.hashCode^outputDir.hashCode^password.hashCode^tempDir.hashCode^chunkSize.hashCode;
-        
+  /// Temporary directory for intermediate files.
+  final String? tempDir;
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is FrbBatchDecryptOptions &&
-                runtimeType == other.runtimeType
-                && inputPaths == other.inputPaths&& outputDir == other.outputDir&& password == other.password&& tempDir == other.tempDir&& chunkSize == other.chunkSize;
-        
-            }
+  /// Chunk-size preset.
+  final FrbChunkSizePreset chunkSize;
+
+  const FrbBatchDecryptOptions({
+    required this.inputPaths,
+    required this.outputDir,
+    required this.password,
+    this.tempDir,
+    required this.chunkSize,
+  });
+
+  @override
+  int get hashCode =>
+      inputPaths.hashCode ^
+      outputDir.hashCode ^
+      password.hashCode ^
+      tempDir.hashCode ^
+      chunkSize.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbBatchDecryptOptions &&
+          runtimeType == other.runtimeType &&
+          inputPaths == other.inputPaths &&
+          outputDir == other.outputDir &&
+          password == other.password &&
+          tempDir == other.tempDir &&
+          chunkSize == other.chunkSize;
+}
 
 /// Summary returned as the final `AllDone` event of `decrypt_batch`.
-class FrbBatchDecryptResult  {
-                final List<FrbDecryptResult> succeeded;
-final List<FrbBatchError> failed;
+class FrbBatchDecryptResult {
+  final List<FrbDecryptResult> succeeded;
+  final List<FrbBatchError> failed;
 
-                const FrbBatchDecryptResult({required this.succeeded ,required this.failed ,});
+  const FrbBatchDecryptResult({required this.succeeded, required this.failed});
 
-                
-                
+  @override
+  int get hashCode => succeeded.hashCode ^ failed.hashCode;
 
-                
-        @override
-        int get hashCode => succeeded.hashCode^failed.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is FrbBatchDecryptResult &&
-                runtimeType == other.runtimeType
-                && succeeded == other.succeeded&& failed == other.failed;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbBatchDecryptResult &&
+          runtimeType == other.runtimeType &&
+          succeeded == other.succeeded &&
+          failed == other.failed;
+}
 
 @freezed
-                sealed class FrbBatchEncryptEvent with _$FrbBatchEncryptEvent  {
-                    const FrbBatchEncryptEvent._();
+sealed class FrbBatchEncryptEvent with _$FrbBatchEncryptEvent {
+  const FrbBatchEncryptEvent._();
 
-                     /// Progress for the currently processed file.
-const factory FrbBatchEncryptEvent.fileProgress({   required int fileIndex ,  required int totalFiles ,  required String currentFile ,  required FrbProgressEvent progress , }) = FrbBatchEncryptEvent_FileProgress;
- /// One file finished successfully.
-const factory FrbBatchEncryptEvent.fileDone({   required int fileIndex ,  required FrbEncryptResult result , }) = FrbBatchEncryptEvent_FileDone;
- /// One file failed; processing continues for the rest.
-const factory FrbBatchEncryptEvent.fileError({   required int fileIndex ,  required String inputPath ,  required String error , }) = FrbBatchEncryptEvent_FileError;
- /// Emitted once when all files are processed.
-const factory FrbBatchEncryptEvent.allDone(  FrbBatchEncryptResult field0,) = FrbBatchEncryptEvent_AllDone;
+  /// Progress for the currently processed file.
+  const factory FrbBatchEncryptEvent.fileProgress({
+    required int fileIndex,
+    required int totalFiles,
+    required String currentFile,
+    required FrbProgressEvent progress,
+  }) = FrbBatchEncryptEvent_FileProgress;
 
-                    
+  /// One file finished successfully.
+  const factory FrbBatchEncryptEvent.fileDone({
+    required int fileIndex,
+    required FrbEncryptResult result,
+  }) = FrbBatchEncryptEvent_FileDone;
 
-                    
-                }
+  /// One file failed; processing continues for the rest.
+  const factory FrbBatchEncryptEvent.fileError({
+    required int fileIndex,
+    required String inputPath,
+    required String error,
+  }) = FrbBatchEncryptEvent_FileError;
+
+  /// Emitted once when all files are processed.
+  const factory FrbBatchEncryptEvent.allDone(FrbBatchEncryptResult field0) =
+      FrbBatchEncryptEvent_AllDone;
+}
 
 /// Options for encrypting multiple files in a batch.
-class FrbBatchEncryptOptions  {
-                /// Paths to input files or directories.
-final List<String> inputPaths;
-/// Common output directory for all encrypted files.
-final String outputDir;
-/// User password (same for every file in the batch).
-final String password;
-/// Whether to apply Gzip compression before encryption.
-final bool gzipCompressed;
-/// Temporary directory for intermediate files.
-final String? tempDir;
-/// Additional metadata to embed in every encrypted header.
-final List<FrbKeyValue> metadata;
-/// Chunk-size preset.
-final FrbChunkSizePreset chunkSize;
+class FrbBatchEncryptOptions {
+  /// Paths to input files or directories.
+  final List<String> inputPaths;
 
-                const FrbBatchEncryptOptions({required this.inputPaths ,required this.outputDir ,required this.password ,required this.gzipCompressed ,this.tempDir ,required this.metadata ,required this.chunkSize ,});
+  /// Common output directory for all encrypted files.
+  final String outputDir;
 
-                
-                
+  /// User password (same for every file in the batch).
+  final String password;
 
-                
-        @override
-        int get hashCode => inputPaths.hashCode^outputDir.hashCode^password.hashCode^gzipCompressed.hashCode^tempDir.hashCode^metadata.hashCode^chunkSize.hashCode;
-        
+  /// Whether to apply Gzip compression before encryption.
+  final bool gzipCompressed;
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is FrbBatchEncryptOptions &&
-                runtimeType == other.runtimeType
-                && inputPaths == other.inputPaths&& outputDir == other.outputDir&& password == other.password&& gzipCompressed == other.gzipCompressed&& tempDir == other.tempDir&& metadata == other.metadata&& chunkSize == other.chunkSize;
-        
-            }
+  /// Temporary directory for intermediate files.
+  final String? tempDir;
+
+  /// Additional metadata to embed in every encrypted header.
+  final List<FrbKeyValue> metadata;
+
+  /// Chunk-size preset.
+  final FrbChunkSizePreset chunkSize;
+
+  const FrbBatchEncryptOptions({
+    required this.inputPaths,
+    required this.outputDir,
+    required this.password,
+    required this.gzipCompressed,
+    this.tempDir,
+    required this.metadata,
+    required this.chunkSize,
+  });
+
+  @override
+  int get hashCode =>
+      inputPaths.hashCode ^
+      outputDir.hashCode ^
+      password.hashCode ^
+      gzipCompressed.hashCode ^
+      tempDir.hashCode ^
+      metadata.hashCode ^
+      chunkSize.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbBatchEncryptOptions &&
+          runtimeType == other.runtimeType &&
+          inputPaths == other.inputPaths &&
+          outputDir == other.outputDir &&
+          password == other.password &&
+          gzipCompressed == other.gzipCompressed &&
+          tempDir == other.tempDir &&
+          metadata == other.metadata &&
+          chunkSize == other.chunkSize;
+}
 
 /// Summary returned as the final `AllDone` event of `encrypt_batch`.
-class FrbBatchEncryptResult  {
-                final List<FrbEncryptResult> succeeded;
-final List<FrbBatchError> failed;
+class FrbBatchEncryptResult {
+  final List<FrbEncryptResult> succeeded;
+  final List<FrbBatchError> failed;
 
-                const FrbBatchEncryptResult({required this.succeeded ,required this.failed ,});
+  const FrbBatchEncryptResult({required this.succeeded, required this.failed});
 
-                
-                
+  @override
+  int get hashCode => succeeded.hashCode ^ failed.hashCode;
 
-                
-        @override
-        int get hashCode => succeeded.hashCode^failed.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is FrbBatchEncryptResult &&
-                runtimeType == other.runtimeType
-                && succeeded == other.succeeded&& failed == other.failed;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbBatchEncryptResult &&
+          runtimeType == other.runtimeType &&
+          succeeded == other.succeeded &&
+          failed == other.failed;
+}
 
 /// Error record for a single failed item in a batch operation.
-class FrbBatchError  {
-                final String inputPath;
-final String error;
+class FrbBatchError {
+  final String inputPath;
+  final String error;
 
-                const FrbBatchError({required this.inputPath ,required this.error ,});
+  const FrbBatchError({required this.inputPath, required this.error});
 
-                
-                
+  @override
+  int get hashCode => inputPath.hashCode ^ error.hashCode;
 
-                
-        @override
-        int get hashCode => inputPath.hashCode^error.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is FrbBatchError &&
-                runtimeType == other.runtimeType
-                && inputPath == other.inputPath&& error == other.error;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbBatchError &&
+          runtimeType == other.runtimeType &&
+          inputPath == other.inputPath &&
+          error == other.error;
+}
 
 @freezed
-                sealed class FrbChunkSizePreset with _$FrbChunkSizePreset  {
-                    const FrbChunkSizePreset._();
+sealed class FrbChunkSizePreset with _$FrbChunkSizePreset {
+  const FrbChunkSizePreset._();
 
-                     /// 1 MB – optimised for desktop (default).
-const factory FrbChunkSizePreset.desktop() = FrbChunkSizePreset_Desktop;
- /// 256 KB – optimised for mobile.
-const factory FrbChunkSizePreset.mobile() = FrbChunkSizePreset_Mobile;
- /// Custom size in bytes.
-const factory FrbChunkSizePreset.custom(  int field0,) = FrbChunkSizePreset_Custom;
+  /// 1 MB – optimised for desktop (default).
+  const factory FrbChunkSizePreset.desktop() = FrbChunkSizePreset_Desktop;
 
-                    
+  /// 256 KB – optimised for mobile.
+  const factory FrbChunkSizePreset.mobile() = FrbChunkSizePreset_Mobile;
 
-                    
-                }
+  /// Custom size in bytes.
+  const factory FrbChunkSizePreset.custom(int field0) =
+      FrbChunkSizePreset_Custom;
+}
 
 @freezed
-                sealed class FrbDecryptEvent with _$FrbDecryptEvent  {
-                    const FrbDecryptEvent._();
+sealed class FrbDecryptEvent with _$FrbDecryptEvent {
+  const FrbDecryptEvent._();
 
-                     /// Intermediate progress update.
-const factory FrbDecryptEvent.progress(  FrbProgressEvent field0,) = FrbDecryptEvent_Progress;
- /// Emitted exactly once at the end – carries the final result.
-const factory FrbDecryptEvent.done(  FrbDecryptResult field0,) = FrbDecryptEvent_Done;
+  /// Intermediate progress update.
+  const factory FrbDecryptEvent.progress(FrbProgressEvent field0) =
+      FrbDecryptEvent_Progress;
 
-                    
+  /// Emitted exactly once at the end – carries the final result.
+  const factory FrbDecryptEvent.done(FrbDecryptResult field0) =
+      FrbDecryptEvent_Done;
 
-                    
-                }
+  /// Operation failed. Always the last event in the stream.
+  const factory FrbDecryptEvent.error(String field0) = FrbDecryptEvent_Error;
+}
 
 /// Options for decrypting a single `.enc` file.
-class FrbDecryptOptions  {
-                /// Path to the encrypted `.enc` file.
-final String inputPath;
-/// Directory where the decrypted output will be saved.
-final String outputDir;
-/// User password.
-final String password;
-/// Temporary directory for intermediate files.
-final String? tempDir;
-/// Chunk-size preset.
-final FrbChunkSizePreset chunkSize;
+class FrbDecryptOptions {
+  /// Path to the encrypted `.enc` file.
+  final String inputPath;
 
-                const FrbDecryptOptions({required this.inputPath ,required this.outputDir ,required this.password ,this.tempDir ,required this.chunkSize ,});
+  /// Directory where the decrypted output will be saved.
+  final String outputDir;
 
-                /// Minimal constructor.
-static Future<FrbDecryptOptions>  simple({required String inputPath , required String outputDir , required String password })=>RustLib.instance.api.crateApiCryptApiFrbDecryptOptionsSimple(inputPath: inputPath, outputDir: outputDir, password: password);
+  /// User password.
+  final String password;
 
+  /// Temporary directory for intermediate files.
+  final String? tempDir;
 
-                
+  /// Chunk-size preset.
+  final FrbChunkSizePreset chunkSize;
 
-                
-        @override
-        int get hashCode => inputPath.hashCode^outputDir.hashCode^password.hashCode^tempDir.hashCode^chunkSize.hashCode;
-        
+  const FrbDecryptOptions({
+    required this.inputPath,
+    required this.outputDir,
+    required this.password,
+    this.tempDir,
+    required this.chunkSize,
+  });
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is FrbDecryptOptions &&
-                runtimeType == other.runtimeType
-                && inputPath == other.inputPath&& outputDir == other.outputDir&& password == other.password&& tempDir == other.tempDir&& chunkSize == other.chunkSize;
-        
-            }
+  /// Minimal constructor.
+  static Future<FrbDecryptOptions> simple({
+    required String inputPath,
+    required String outputDir,
+    required String password,
+  }) => RustLib.instance.api.crateApiCryptApiFrbDecryptOptionsSimple(
+    inputPath: inputPath,
+    outputDir: outputDir,
+    password: password,
+  );
+
+  @override
+  int get hashCode =>
+      inputPath.hashCode ^
+      outputDir.hashCode ^
+      password.hashCode ^
+      tempDir.hashCode ^
+      chunkSize.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbDecryptOptions &&
+          runtimeType == other.runtimeType &&
+          inputPath == other.inputPath &&
+          outputDir == other.outputDir &&
+          password == other.password &&
+          tempDir == other.tempDir &&
+          chunkSize == other.chunkSize;
+}
 
 /// Returned after a successful decryption.
-class FrbDecryptResult  {
-                /// Absolute path to the decrypted output file / directory.
-final String outputPath;
-/// Decoded metadata from the encrypted header.
-final FrbDecryptedMetadata metadata;
+class FrbDecryptResult {
+  /// Absolute path to the decrypted output file / directory.
+  final String outputPath;
 
-                const FrbDecryptResult({required this.outputPath ,required this.metadata ,});
+  /// Decoded metadata from the encrypted header.
+  final FrbDecryptedMetadata metadata;
 
-                
-                
+  const FrbDecryptResult({required this.outputPath, required this.metadata});
 
-                
-        @override
-        int get hashCode => outputPath.hashCode^metadata.hashCode;
-        
+  @override
+  int get hashCode => outputPath.hashCode ^ metadata.hashCode;
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is FrbDecryptResult &&
-                runtimeType == other.runtimeType
-                && outputPath == other.outputPath&& metadata == other.metadata;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbDecryptResult &&
+          runtimeType == other.runtimeType &&
+          outputPath == other.outputPath &&
+          metadata == other.metadata;
+}
 
 /// Metadata decoded from an encrypted header.
-class FrbDecryptedMetadata  {
-                final String originalFilename;
-final String originalExtension;
-final bool gzipCompressed;
-final BigInt originalSize;
-final String uuid;
-final List<FrbKeyValue> metadata;
+class FrbDecryptedMetadata {
+  final String originalFilename;
+  final String originalExtension;
+  final bool gzipCompressed;
+  final BigInt originalSize;
+  final String uuid;
+  final List<FrbKeyValue> metadata;
 
-                const FrbDecryptedMetadata({required this.originalFilename ,required this.originalExtension ,required this.gzipCompressed ,required this.originalSize ,required this.uuid ,required this.metadata ,});
+  const FrbDecryptedMetadata({
+    required this.originalFilename,
+    required this.originalExtension,
+    required this.gzipCompressed,
+    required this.originalSize,
+    required this.uuid,
+    required this.metadata,
+  });
 
-                
-                
+  @override
+  int get hashCode =>
+      originalFilename.hashCode ^
+      originalExtension.hashCode ^
+      gzipCompressed.hashCode ^
+      originalSize.hashCode ^
+      uuid.hashCode ^
+      metadata.hashCode;
 
-                
-        @override
-        int get hashCode => originalFilename.hashCode^originalExtension.hashCode^gzipCompressed.hashCode^originalSize.hashCode^uuid.hashCode^metadata.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is FrbDecryptedMetadata &&
-                runtimeType == other.runtimeType
-                && originalFilename == other.originalFilename&& originalExtension == other.originalExtension&& gzipCompressed == other.gzipCompressed&& originalSize == other.originalSize&& uuid == other.uuid&& metadata == other.metadata;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbDecryptedMetadata &&
+          runtimeType == other.runtimeType &&
+          originalFilename == other.originalFilename &&
+          originalExtension == other.originalExtension &&
+          gzipCompressed == other.gzipCompressed &&
+          originalSize == other.originalSize &&
+          uuid == other.uuid &&
+          metadata == other.metadata;
+}
 
 @freezed
-                sealed class FrbEncryptEvent with _$FrbEncryptEvent  {
-                    const FrbEncryptEvent._();
+sealed class FrbEncryptEvent with _$FrbEncryptEvent {
+  const FrbEncryptEvent._();
 
-                     /// Intermediate progress update.
-const factory FrbEncryptEvent.progress(  FrbProgressEvent field0,) = FrbEncryptEvent_Progress;
- /// Emitted exactly once at the end – carries the final result.
-const factory FrbEncryptEvent.done(  FrbEncryptResult field0,) = FrbEncryptEvent_Done;
+  /// Intermediate progress update.
+  const factory FrbEncryptEvent.progress(FrbProgressEvent field0) =
+      FrbEncryptEvent_Progress;
 
-                    
+  /// Emitted exactly once at the end – carries the final result.
+  const factory FrbEncryptEvent.done(FrbEncryptResult field0) =
+      FrbEncryptEvent_Done;
 
-                    
-                }
+  /// Operation failed. Always the last event in the stream.
+  const factory FrbEncryptEvent.error(String field0) = FrbEncryptEvent_Error;
+}
 
 /// Options for encrypting a single file or directory.
-class FrbEncryptOptions  {
-                /// Path to the input file or directory.
-final String inputPath;
-/// Directory where the encrypted output will be saved.
-final String outputDir;
-/// User password used for key derivation.
-final String password;
-/// Whether to apply Gzip compression before encryption.
-final bool gzipCompressed;
-/// Optional UUID to embed in the output filename and header.
-/// Auto-generated if `None`.
-final String? uuid;
-/// Output file extension. Defaults to `.enc`.
-final String? outputExtension;
-/// Temporary directory for intermediate files.
-/// Defaults to `output_dir`.
-final String? tempDir;
-/// Additional metadata to embed in the encrypted header.
-final List<FrbKeyValue> metadata;
-/// Chunk-size preset (desktop is the default).
-final FrbChunkSizePreset chunkSize;
+class FrbEncryptOptions {
+  /// Path to the input file or directory.
+  final String inputPath;
 
-                const FrbEncryptOptions({required this.inputPath ,required this.outputDir ,required this.password ,required this.gzipCompressed ,this.uuid ,this.outputExtension ,this.tempDir ,required this.metadata ,required this.chunkSize ,});
+  /// Directory where the encrypted output will be saved.
+  final String outputDir;
 
-                /// Minimal constructor: only the required fields.
-static Future<FrbEncryptOptions>  simple({required String inputPath , required String outputDir , required String password })=>RustLib.instance.api.crateApiCryptApiFrbEncryptOptionsSimple(inputPath: inputPath, outputDir: outputDir, password: password);
+  /// User password used for key derivation.
+  final String password;
 
+  /// Whether to apply Gzip compression before encryption.
+  final bool gzipCompressed;
 
-                
+  /// Optional UUID to embed in the output filename and header.
+  /// Auto-generated if `None`.
+  final String? uuid;
 
-                
-        @override
-        int get hashCode => inputPath.hashCode^outputDir.hashCode^password.hashCode^gzipCompressed.hashCode^uuid.hashCode^outputExtension.hashCode^tempDir.hashCode^metadata.hashCode^chunkSize.hashCode;
-        
+  /// Output file extension. Defaults to `.enc`.
+  final String? outputExtension;
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is FrbEncryptOptions &&
-                runtimeType == other.runtimeType
-                && inputPath == other.inputPath&& outputDir == other.outputDir&& password == other.password&& gzipCompressed == other.gzipCompressed&& uuid == other.uuid&& outputExtension == other.outputExtension&& tempDir == other.tempDir&& metadata == other.metadata&& chunkSize == other.chunkSize;
-        
-            }
+  /// Temporary directory for intermediate files.
+  /// Defaults to `output_dir`.
+  final String? tempDir;
+
+  /// Additional metadata to embed in the encrypted header.
+  final List<FrbKeyValue> metadata;
+
+  /// Chunk-size preset (desktop is the default).
+  final FrbChunkSizePreset chunkSize;
+
+  const FrbEncryptOptions({
+    required this.inputPath,
+    required this.outputDir,
+    required this.password,
+    required this.gzipCompressed,
+    this.uuid,
+    this.outputExtension,
+    this.tempDir,
+    required this.metadata,
+    required this.chunkSize,
+  });
+
+  /// Minimal constructor: only the required fields.
+  static Future<FrbEncryptOptions> simple({
+    required String inputPath,
+    required String outputDir,
+    required String password,
+  }) => RustLib.instance.api.crateApiCryptApiFrbEncryptOptionsSimple(
+    inputPath: inputPath,
+    outputDir: outputDir,
+    password: password,
+  );
+
+  @override
+  int get hashCode =>
+      inputPath.hashCode ^
+      outputDir.hashCode ^
+      password.hashCode ^
+      gzipCompressed.hashCode ^
+      uuid.hashCode ^
+      outputExtension.hashCode ^
+      tempDir.hashCode ^
+      metadata.hashCode ^
+      chunkSize.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbEncryptOptions &&
+          runtimeType == other.runtimeType &&
+          inputPath == other.inputPath &&
+          outputDir == other.outputDir &&
+          password == other.password &&
+          gzipCompressed == other.gzipCompressed &&
+          uuid == other.uuid &&
+          outputExtension == other.outputExtension &&
+          tempDir == other.tempDir &&
+          metadata == other.metadata &&
+          chunkSize == other.chunkSize;
+}
 
 /// Returned after a successful encryption.
-class FrbEncryptResult  {
-                /// Absolute path to the encrypted output file.
-final String outputPath;
-/// UUID embedded in the encrypted header.
-final String uuid;
-/// Original file size (bytes) before any compression.
-final BigInt originalSize;
+class FrbEncryptResult {
+  /// Absolute path to the encrypted output file.
+  final String outputPath;
 
-                const FrbEncryptResult({required this.outputPath ,required this.uuid ,required this.originalSize ,});
+  /// UUID embedded in the encrypted header.
+  final String uuid;
 
-                
-                
+  /// Original file size (bytes) before any compression.
+  final BigInt originalSize;
 
-                
-        @override
-        int get hashCode => outputPath.hashCode^uuid.hashCode^originalSize.hashCode;
-        
+  const FrbEncryptResult({
+    required this.outputPath,
+    required this.uuid,
+    required this.originalSize,
+  });
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is FrbEncryptResult &&
-                runtimeType == other.runtimeType
-                && outputPath == other.outputPath&& uuid == other.uuid&& originalSize == other.originalSize;
-        
-            }
+  @override
+  int get hashCode =>
+      outputPath.hashCode ^ uuid.hashCode ^ originalSize.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbEncryptResult &&
+          runtimeType == other.runtimeType &&
+          outputPath == other.outputPath &&
+          uuid == other.uuid &&
+          originalSize == other.originalSize;
+}
 
 /// Key-value metadata entry stored in the encrypted header.
-class FrbKeyValue  {
-                final String key;
-final String value;
+class FrbKeyValue {
+  final String key;
+  final String value;
 
-                const FrbKeyValue({required this.key ,required this.value ,});
+  const FrbKeyValue({required this.key, required this.value});
 
-                
-                
+  @override
+  int get hashCode => key.hashCode ^ value.hashCode;
 
-                
-        @override
-        int get hashCode => key.hashCode^value.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is FrbKeyValue &&
-                runtimeType == other.runtimeType
-                && key == other.key&& value == other.value;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbKeyValue &&
+          runtimeType == other.runtimeType &&
+          key == other.key &&
+          value == other.value;
+}
 
 /// Progress event emitted during encryption/decryption.
-class FrbProgressEvent  {
-                /// Current pipeline stage.
-final FrbProgressStage stage;
-/// Bytes processed so far.
-final BigInt bytesProcessed;
-/// Total bytes expected (0 if unknown).
-final BigInt totalBytes;
-/// Completion percentage 0.0–100.0. 0 when total is unknown.
-final double percentage;
+class FrbProgressEvent {
+  /// Current pipeline stage.
+  final FrbProgressStage stage;
 
-                const FrbProgressEvent({required this.stage ,required this.bytesProcessed ,required this.totalBytes ,required this.percentage ,});
+  /// Bytes processed so far.
+  final BigInt bytesProcessed;
 
-                
-                
+  /// Total bytes expected (0 if unknown).
+  final BigInt totalBytes;
 
-                
-        @override
-        int get hashCode => stage.hashCode^bytesProcessed.hashCode^totalBytes.hashCode^percentage.hashCode;
-        
+  /// Completion percentage 0.0–100.0. 0 when total is unknown.
+  final double percentage;
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is FrbProgressEvent &&
-                runtimeType == other.runtimeType
-                && stage == other.stage&& bytesProcessed == other.bytesProcessed&& totalBytes == other.totalBytes&& percentage == other.percentage;
-        
-            }
+  const FrbProgressEvent({
+    required this.stage,
+    required this.bytesProcessed,
+    required this.totalBytes,
+    required this.percentage,
+  });
+
+  @override
+  int get hashCode =>
+      stage.hashCode ^
+      bytesProcessed.hashCode ^
+      totalBytes.hashCode ^
+      percentage.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbProgressEvent &&
+          runtimeType == other.runtimeType &&
+          stage == other.stage &&
+          bytesProcessed == other.bytesProcessed &&
+          totalBytes == other.totalBytes &&
+          percentage == other.percentage;
+}
 
 /// Stage of the encryption/decryption pipeline.
 enum FrbProgressStage {
-                    compressingDirectory,
-compressingGzip,
-encrypting,
-decrypting,
-decompressingGzip,
-decompressingDirectory,
-done,
-                    ;
-                    
-                }
-            
+  compressingDirectory,
+  compressingGzip,
+  encrypting,
+  decrypting,
+  decompressingGzip,
+  decompressingDirectory,
+  done,
+}

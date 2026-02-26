@@ -9,1358 +9,2470 @@ import 'api/simple.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
-import 'frb_generated.io.dart' if (dart.library.js_interop) 'frb_generated.web.dart';
+import 'frb_generated.io.dart'
+    if (dart.library.js_interop) 'frb_generated.web.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+/// Main entrypoint of the Rust API
+class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
+  @internal
+  static final instance = RustLib._();
 
-                /// Main entrypoint of the Rust API
-                class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
-                  @internal
-                  static final instance = RustLib._();
+  RustLib._();
 
-                  RustLib._();
+  /// Initialize flutter_rust_bridge
+  static Future<void> init({
+    RustLibApi? api,
+    BaseHandler? handler,
+    ExternalLibrary? externalLibrary,
+    bool forceSameCodegenVersion = true,
+  }) async {
+    await instance.initImpl(
+      api: api,
+      handler: handler,
+      externalLibrary: externalLibrary,
+      forceSameCodegenVersion: forceSameCodegenVersion,
+    );
+  }
 
-                  /// Initialize flutter_rust_bridge
-                  static Future<void> init({
-                    RustLibApi? api,
-                    BaseHandler? handler,
-                    ExternalLibrary? externalLibrary,
-                    bool forceSameCodegenVersion = true,
-                  }) async {
-                    await instance.initImpl(
-                      api: api,
-                      handler: handler,
-                      externalLibrary: externalLibrary,
-                      forceSameCodegenVersion: forceSameCodegenVersion,
-                    );
-                  }
+  /// Initialize flutter_rust_bridge in mock mode.
+  /// No libraries for FFI are loaded.
+  static void initMock({required RustLibApi api}) {
+    instance.initMockImpl(api: api);
+  }
 
-                  /// Initialize flutter_rust_bridge in mock mode.
-                  /// No libraries for FFI are loaded.
-                  static void initMock({
-                    required RustLibApi api,
-                  }) {
-                    instance.initMockImpl(
-                      api: api,
-                    );
-                  }
+  /// Dispose flutter_rust_bridge
+  ///
+  /// The call to this function is optional, since flutter_rust_bridge (and everything else)
+  /// is automatically disposed when the app stops.
+  static void dispose() => instance.disposeImpl();
 
-                  /// Dispose flutter_rust_bridge
-                  ///
-                  /// The call to this function is optional, since flutter_rust_bridge (and everything else)
-                  /// is automatically disposed when the app stops.
-                  static void dispose() => instance.disposeImpl();
+  @override
+  ApiImplConstructor<RustLibApiImpl, RustLibWire> get apiImplConstructor =>
+      RustLibApiImpl.new;
 
-                  @override
-                  ApiImplConstructor<RustLibApiImpl, RustLibWire> get apiImplConstructor => RustLibApiImpl.new;
+  @override
+  WireConstructor<RustLibWire> get wireConstructor =>
+      RustLibWire.fromExternalLibrary;
 
-                  @override
-                  WireConstructor<RustLibWire> get wireConstructor => RustLibWire.fromExternalLibrary;
+  @override
+  Future<void> executeRustInitializers() async {
+    await api.crateApiSimpleInitApp();
+  }
 
-                  @override
-                  Future<void> executeRustInitializers() async {
-                    await api.crateApiSimpleInitApp();
+  @override
+  ExternalLibraryLoaderConfig get defaultExternalLibraryLoaderConfig =>
+      kDefaultExternalLibraryLoaderConfig;
 
-                  }
+  @override
+  String get codegenVersion => '2.11.1';
 
-                  @override
-                  ExternalLibraryLoaderConfig get defaultExternalLibraryLoaderConfig => kDefaultExternalLibraryLoaderConfig;
+  @override
+  int get rustContentHash => 117895093;
 
-                  @override
-                  String get codegenVersion => '2.11.1';
+  static const kDefaultExternalLibraryLoaderConfig =
+      ExternalLibraryLoaderConfig(
+        stem: 'rust_lib_hoplixi',
+        ioDirectory: 'rust/target/release/',
+        webPrefix: 'pkg/',
+      );
+}
 
-                  @override
-                  int get rustContentHash => 117895093;
+abstract class RustLibApi extends BaseApi {
+  Stream<LogEntry> crateApiLoggingCreateLogStream();
 
-                  static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
-                    stem: 'rust_lib_hoplixi',
-                    ioDirectory: 'rust/target/release/',
-                    webPrefix: 'pkg/',
-                  );
-                }
-                
+  Stream<FrbBatchDecryptEvent> crateApiCryptApiDecryptBatch({
+    required FrbBatchDecryptOptions opts,
+  });
 
-                abstract class RustLibApi extends BaseApi {
-                  Stream<LogEntry> crateApiLoggingCreateLogStream();
+  Stream<FrbDecryptEvent> crateApiCryptApiDecryptFile({
+    required FrbDecryptOptions opts,
+  });
 
-Stream<FrbBatchDecryptEvent> crateApiCryptApiDecryptBatch({required FrbBatchDecryptOptions opts });
+  Stream<FrbBatchEncryptEvent> crateApiCryptApiEncryptBatch({
+    required FrbBatchEncryptOptions opts,
+  });
 
-Stream<FrbDecryptEvent> crateApiCryptApiDecryptFile({required FrbDecryptOptions opts });
+  Stream<FrbEncryptEvent> crateApiCryptApiEncryptFile({
+    required FrbEncryptOptions opts,
+  });
 
-Stream<FrbBatchEncryptEvent> crateApiCryptApiEncryptBatch({required FrbBatchEncryptOptions opts });
+  Future<FrbDecryptOptions> crateApiCryptApiFrbDecryptOptionsSimple({
+    required String inputPath,
+    required String outputDir,
+    required String password,
+  });
 
-Stream<FrbEncryptEvent> crateApiCryptApiEncryptFile({required FrbEncryptOptions opts });
+  Future<FrbEncryptOptions> crateApiCryptApiFrbEncryptOptionsSimple({
+    required String inputPath,
+    required String outputDir,
+    required String password,
+  });
 
-Future<FrbDecryptOptions> crateApiCryptApiFrbDecryptOptionsSimple({required String inputPath , required String outputDir , required String password });
+  String crateApiSimpleGreet({required String name});
 
-Future<FrbEncryptOptions> crateApiCryptApiFrbEncryptOptionsSimple({required String inputPath , required String outputDir , required String password });
+  Future<void> crateApiSimpleInitApp();
 
-String crateApiSimpleGreet({required String name });
+  Future<void> crateApiLoggingInstallRustLogBridge({required int level});
 
-Future<void> crateApiSimpleInitApp();
+  Future<FrbDecryptedMetadata> crateApiCryptApiReadEncryptedHeader({
+    required String inputPath,
+    required String password,
+  });
 
-Future<void> crateApiLoggingInstallRustLogBridge({required int level });
+  Future<void> crateApiLoggingRustLog({
+    required int level,
+    required String tag,
+    required String msg,
+  });
 
-Future<FrbDecryptedMetadata> crateApiCryptApiReadEncryptedHeader({required String inputPath , required String password });
+  Future<void> crateApiLoggingRustLogDebug({
+    required String tag,
+    required String msg,
+  });
 
-Future<void> crateApiLoggingRustLog({required int level , required String tag , required String msg });
+  Future<void> crateApiLoggingRustLogError({
+    required String tag,
+    required String msg,
+  });
 
-Future<void> crateApiLoggingRustLogDebug({required String tag , required String msg });
+  Future<void> crateApiLoggingRustLogFatal({
+    required String tag,
+    required String msg,
+  });
 
-Future<void> crateApiLoggingRustLogError({required String tag , required String msg });
+  Future<void> crateApiLoggingRustLogInfo({
+    required String tag,
+    required String msg,
+  });
 
-Future<void> crateApiLoggingRustLogFatal({required String tag , required String msg });
+  Future<void> crateApiLoggingRustLogWarning({
+    required String tag,
+    required String msg,
+  });
+}
 
-Future<void> crateApiLoggingRustLogInfo({required String tag , required String msg });
+class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
+  RustLibApiImpl({
+    required super.handler,
+    required super.wire,
+    required super.generalizedFrbRustBinding,
+    required super.portManager,
+  });
 
-Future<void> crateApiLoggingRustLogWarning({required String tag , required String msg });
+  @override
+  Stream<LogEntry> crateApiLoggingCreateLogStream() {
+    final sink = RustStreamSink<LogEntry>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_StreamSink_log_entry_Sse(sink, serializer);
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 1,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: null,
+          ),
+          constMeta: kCrateApiLoggingCreateLogStreamConstMeta,
+          argValues: [sink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return sink.stream;
+  }
 
+  TaskConstMeta get kCrateApiLoggingCreateLogStreamConstMeta =>
+      const TaskConstMeta(debugName: "create_log_stream", argNames: ["sink"]);
 
-                }
-                
+  @override
+  Stream<FrbBatchDecryptEvent> crateApiCryptApiDecryptBatch({
+    required FrbBatchDecryptOptions opts,
+  }) {
+    final sink = RustStreamSink<FrbBatchDecryptEvent>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_box_autoadd_frb_batch_decrypt_options(opts, serializer);
+            sse_encode_StreamSink_frb_batch_decrypt_event_Sse(sink, serializer);
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 2,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: sse_decode_AnyhowException,
+          ),
+          constMeta: kCrateApiCryptApiDecryptBatchConstMeta,
+          argValues: [opts, sink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return sink.stream;
+  }
 
-                class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
-                  RustLibApiImpl({
-                    required super.handler,
-                    required super.wire,
-                    required super.generalizedFrbRustBinding,
-                    required super.portManager,
-                  });
+  TaskConstMeta get kCrateApiCryptApiDecryptBatchConstMeta =>
+      const TaskConstMeta(
+        debugName: "decrypt_batch",
+        argNames: ["opts", "sink"],
+      );
 
-                  @override Stream<LogEntry> crateApiLoggingCreateLogStream()  { 
-            final sink = RustStreamSink<LogEntry>();
-            unawaited(handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);sse_encode_StreamSink_log_entry_Sse(sink, serializer);
-            pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 1, port: port_);
-            
-            },
-            codec: 
-        SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        )
-        ,
-            constMeta: kCrateApiLoggingCreateLogStreamConstMeta,
-            argValues: [sink],
-            apiImpl: this,
-        )));
-            return sink.stream;
-             }
+  @override
+  Stream<FrbDecryptEvent> crateApiCryptApiDecryptFile({
+    required FrbDecryptOptions opts,
+  }) {
+    final sink = RustStreamSink<FrbDecryptEvent>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_box_autoadd_frb_decrypt_options(opts, serializer);
+            sse_encode_StreamSink_frb_decrypt_event_Sse(sink, serializer);
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 3,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: null,
+          ),
+          constMeta: kCrateApiCryptApiDecryptFileConstMeta,
+          argValues: [opts, sink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return sink.stream;
+  }
 
+  TaskConstMeta get kCrateApiCryptApiDecryptFileConstMeta =>
+      const TaskConstMeta(
+        debugName: "decrypt_file",
+        argNames: ["opts", "sink"],
+      );
 
-        TaskConstMeta get kCrateApiLoggingCreateLogStreamConstMeta => const TaskConstMeta(
-            debugName: "create_log_stream",
-            argNames: ["sink"],
-        );
-        
+  @override
+  Stream<FrbBatchEncryptEvent> crateApiCryptApiEncryptBatch({
+    required FrbBatchEncryptOptions opts,
+  }) {
+    final sink = RustStreamSink<FrbBatchEncryptEvent>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_box_autoadd_frb_batch_encrypt_options(opts, serializer);
+            sse_encode_StreamSink_frb_batch_encrypt_event_Sse(sink, serializer);
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 4,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: sse_decode_AnyhowException,
+          ),
+          constMeta: kCrateApiCryptApiEncryptBatchConstMeta,
+          argValues: [opts, sink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return sink.stream;
+  }
 
-@override Stream<FrbBatchDecryptEvent> crateApiCryptApiDecryptBatch({required FrbBatchDecryptOptions opts })  { 
-            final sink = RustStreamSink<FrbBatchDecryptEvent>();
-            unawaited(handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);sse_encode_box_autoadd_frb_batch_decrypt_options(opts, serializer);
-sse_encode_StreamSink_frb_batch_decrypt_event_Sse(sink, serializer);
-            pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2, port: port_);
-            
-            },
-            codec: 
-        SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: sse_decode_AnyhowException,
-        )
-        ,
-            constMeta: kCrateApiCryptApiDecryptBatchConstMeta,
-            argValues: [opts, sink],
-            apiImpl: this,
-        )));
-            return sink.stream;
-             }
+  TaskConstMeta get kCrateApiCryptApiEncryptBatchConstMeta =>
+      const TaskConstMeta(
+        debugName: "encrypt_batch",
+        argNames: ["opts", "sink"],
+      );
 
+  @override
+  Stream<FrbEncryptEvent> crateApiCryptApiEncryptFile({
+    required FrbEncryptOptions opts,
+  }) {
+    final sink = RustStreamSink<FrbEncryptEvent>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_box_autoadd_frb_encrypt_options(opts, serializer);
+            sse_encode_StreamSink_frb_encrypt_event_Sse(sink, serializer);
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 5,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: null,
+          ),
+          constMeta: kCrateApiCryptApiEncryptFileConstMeta,
+          argValues: [opts, sink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return sink.stream;
+  }
 
-        TaskConstMeta get kCrateApiCryptApiDecryptBatchConstMeta => const TaskConstMeta(
-            debugName: "decrypt_batch",
-            argNames: ["opts", "sink"],
-        );
-        
+  TaskConstMeta get kCrateApiCryptApiEncryptFileConstMeta =>
+      const TaskConstMeta(
+        debugName: "encrypt_file",
+        argNames: ["opts", "sink"],
+      );
 
-@override Stream<FrbDecryptEvent> crateApiCryptApiDecryptFile({required FrbDecryptOptions opts })  { 
-            final sink = RustStreamSink<FrbDecryptEvent>();
-            unawaited(handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);sse_encode_box_autoadd_frb_decrypt_options(opts, serializer);
-sse_encode_StreamSink_frb_decrypt_event_Sse(sink, serializer);
-            pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3, port: port_);
-            
-            },
-            codec: 
-        SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: sse_decode_AnyhowException,
-        )
-        ,
-            constMeta: kCrateApiCryptApiDecryptFileConstMeta,
-            argValues: [opts, sink],
-            apiImpl: this,
-        )));
-            return sink.stream;
-             }
-
-
-        TaskConstMeta get kCrateApiCryptApiDecryptFileConstMeta => const TaskConstMeta(
-            debugName: "decrypt_file",
-            argNames: ["opts", "sink"],
-        );
-        
-
-@override Stream<FrbBatchEncryptEvent> crateApiCryptApiEncryptBatch({required FrbBatchEncryptOptions opts })  { 
-            final sink = RustStreamSink<FrbBatchEncryptEvent>();
-            unawaited(handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);sse_encode_box_autoadd_frb_batch_encrypt_options(opts, serializer);
-sse_encode_StreamSink_frb_batch_encrypt_event_Sse(sink, serializer);
-            pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4, port: port_);
-            
-            },
-            codec: 
-        SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: sse_decode_AnyhowException,
-        )
-        ,
-            constMeta: kCrateApiCryptApiEncryptBatchConstMeta,
-            argValues: [opts, sink],
-            apiImpl: this,
-        )));
-            return sink.stream;
-             }
-
-
-        TaskConstMeta get kCrateApiCryptApiEncryptBatchConstMeta => const TaskConstMeta(
-            debugName: "encrypt_batch",
-            argNames: ["opts", "sink"],
-        );
-        
-
-@override Stream<FrbEncryptEvent> crateApiCryptApiEncryptFile({required FrbEncryptOptions opts })  { 
-            final sink = RustStreamSink<FrbEncryptEvent>();
-            unawaited(handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);sse_encode_box_autoadd_frb_encrypt_options(opts, serializer);
-sse_encode_StreamSink_frb_encrypt_event_Sse(sink, serializer);
-            pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5, port: port_);
-            
-            },
-            codec: 
-        SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: sse_decode_AnyhowException,
-        )
-        ,
-            constMeta: kCrateApiCryptApiEncryptFileConstMeta,
-            argValues: [opts, sink],
-            apiImpl: this,
-        )));
-            return sink.stream;
-             }
-
-
-        TaskConstMeta get kCrateApiCryptApiEncryptFileConstMeta => const TaskConstMeta(
-            debugName: "encrypt_file",
-            argNames: ["opts", "sink"],
-        );
-        
-
-@override Future<FrbDecryptOptions> crateApiCryptApiFrbDecryptOptionsSimple({required String inputPath , required String outputDir , required String password })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);sse_encode_String(inputPath, serializer);
-sse_encode_String(outputDir, serializer);
-sse_encode_String(password, serializer);
-            pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6, port: port_);
-            
-            },
-            codec: 
-        SseCodec(
+  @override
+  Future<FrbDecryptOptions> crateApiCryptApiFrbDecryptOptionsSimple({
+    required String inputPath,
+    required String outputDir,
+    required String password,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(inputPath, serializer);
+          sse_encode_String(outputDir, serializer);
+          sse_encode_String(password, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 6,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
           decodeSuccessData: sse_decode_frb_decrypt_options,
           decodeErrorData: null,
-        )
-        ,
-            constMeta: kCrateApiCryptApiFrbDecryptOptionsSimpleConstMeta,
-            argValues: [inputPath, outputDir, password],
-            apiImpl: this,
-        )); }
+        ),
+        constMeta: kCrateApiCryptApiFrbDecryptOptionsSimpleConstMeta,
+        argValues: [inputPath, outputDir, password],
+        apiImpl: this,
+      ),
+    );
+  }
 
+  TaskConstMeta get kCrateApiCryptApiFrbDecryptOptionsSimpleConstMeta =>
+      const TaskConstMeta(
+        debugName: "frb_decrypt_options_simple",
+        argNames: ["inputPath", "outputDir", "password"],
+      );
 
-        TaskConstMeta get kCrateApiCryptApiFrbDecryptOptionsSimpleConstMeta => const TaskConstMeta(
-            debugName: "frb_decrypt_options_simple",
-            argNames: ["inputPath", "outputDir", "password"],
-        );
-        
-
-@override Future<FrbEncryptOptions> crateApiCryptApiFrbEncryptOptionsSimple({required String inputPath , required String outputDir , required String password })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);sse_encode_String(inputPath, serializer);
-sse_encode_String(outputDir, serializer);
-sse_encode_String(password, serializer);
-            pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 7, port: port_);
-            
-            },
-            codec: 
-        SseCodec(
+  @override
+  Future<FrbEncryptOptions> crateApiCryptApiFrbEncryptOptionsSimple({
+    required String inputPath,
+    required String outputDir,
+    required String password,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(inputPath, serializer);
+          sse_encode_String(outputDir, serializer);
+          sse_encode_String(password, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 7,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
           decodeSuccessData: sse_decode_frb_encrypt_options,
           decodeErrorData: null,
-        )
-        ,
-            constMeta: kCrateApiCryptApiFrbEncryptOptionsSimpleConstMeta,
-            argValues: [inputPath, outputDir, password],
-            apiImpl: this,
-        )); }
+        ),
+        constMeta: kCrateApiCryptApiFrbEncryptOptionsSimpleConstMeta,
+        argValues: [inputPath, outputDir, password],
+        apiImpl: this,
+      ),
+    );
+  }
 
+  TaskConstMeta get kCrateApiCryptApiFrbEncryptOptionsSimpleConstMeta =>
+      const TaskConstMeta(
+        debugName: "frb_encrypt_options_simple",
+        argNames: ["inputPath", "outputDir", "password"],
+      );
 
-        TaskConstMeta get kCrateApiCryptApiFrbEncryptOptionsSimpleConstMeta => const TaskConstMeta(
-            debugName: "frb_encrypt_options_simple",
-            argNames: ["inputPath", "outputDir", "password"],
-        );
-        
-
-@override String crateApiSimpleGreet({required String name })  { return handler.executeSync(SyncTask(
-            callFfi: () {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);sse_encode_String(name, serializer);
-            return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 8)!;
-            
-            },
-            codec: 
-        SseCodec(
+  @override
+  String crateApiSimpleGreet({required String name}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(name, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 8)!;
+        },
+        codec: SseCodec(
           decodeSuccessData: sse_decode_String,
           decodeErrorData: null,
-        )
-        ,
-            constMeta: kCrateApiSimpleGreetConstMeta,
-            argValues: [name],
-            apiImpl: this,
-        )); }
+        ),
+        constMeta: kCrateApiSimpleGreetConstMeta,
+        argValues: [name],
+        apiImpl: this,
+      ),
+    );
+  }
 
+  TaskConstMeta get kCrateApiSimpleGreetConstMeta =>
+      const TaskConstMeta(debugName: "greet", argNames: ["name"]);
 
-        TaskConstMeta get kCrateApiSimpleGreetConstMeta => const TaskConstMeta(
-            debugName: "greet",
-            argNames: ["name"],
-        );
-        
-
-@override Future<void> crateApiSimpleInitApp()  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);
-            pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9, port: port_);
-            
-            },
-            codec: 
-        SseCodec(
+  @override
+  Future<void> crateApiSimpleInitApp() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 9,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
-        )
-        ,
-            constMeta: kCrateApiSimpleInitAppConstMeta,
-            argValues: [],
-            apiImpl: this,
-        )); }
+        ),
+        constMeta: kCrateApiSimpleInitAppConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
 
+  TaskConstMeta get kCrateApiSimpleInitAppConstMeta =>
+      const TaskConstMeta(debugName: "init_app", argNames: []);
 
-        TaskConstMeta get kCrateApiSimpleInitAppConstMeta => const TaskConstMeta(
-            debugName: "init_app",
-            argNames: [],
-        );
-        
-
-@override Future<void> crateApiLoggingInstallRustLogBridge({required int level })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);sse_encode_i_32(level, serializer);
-            pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 10, port: port_);
-            
-            },
-            codec: 
-        SseCodec(
+  @override
+  Future<void> crateApiLoggingInstallRustLogBridge({required int level}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_i_32(level, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 10,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: sse_decode_String,
-        )
-        ,
-            constMeta: kCrateApiLoggingInstallRustLogBridgeConstMeta,
-            argValues: [level],
-            apiImpl: this,
-        )); }
+        ),
+        constMeta: kCrateApiLoggingInstallRustLogBridgeConstMeta,
+        argValues: [level],
+        apiImpl: this,
+      ),
+    );
+  }
 
+  TaskConstMeta get kCrateApiLoggingInstallRustLogBridgeConstMeta =>
+      const TaskConstMeta(
+        debugName: "install_rust_log_bridge",
+        argNames: ["level"],
+      );
 
-        TaskConstMeta get kCrateApiLoggingInstallRustLogBridgeConstMeta => const TaskConstMeta(
-            debugName: "install_rust_log_bridge",
-            argNames: ["level"],
-        );
-        
-
-@override Future<FrbDecryptedMetadata> crateApiCryptApiReadEncryptedHeader({required String inputPath , required String password })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);sse_encode_String(inputPath, serializer);
-sse_encode_String(password, serializer);
-            pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 11, port: port_);
-            
-            },
-            codec: 
-        SseCodec(
+  @override
+  Future<FrbDecryptedMetadata> crateApiCryptApiReadEncryptedHeader({
+    required String inputPath,
+    required String password,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(inputPath, serializer);
+          sse_encode_String(password, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 11,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
           decodeSuccessData: sse_decode_frb_decrypted_metadata,
           decodeErrorData: sse_decode_AnyhowException,
-        )
-        ,
-            constMeta: kCrateApiCryptApiReadEncryptedHeaderConstMeta,
-            argValues: [inputPath, password],
-            apiImpl: this,
-        )); }
+        ),
+        constMeta: kCrateApiCryptApiReadEncryptedHeaderConstMeta,
+        argValues: [inputPath, password],
+        apiImpl: this,
+      ),
+    );
+  }
 
+  TaskConstMeta get kCrateApiCryptApiReadEncryptedHeaderConstMeta =>
+      const TaskConstMeta(
+        debugName: "read_encrypted_header",
+        argNames: ["inputPath", "password"],
+      );
 
-        TaskConstMeta get kCrateApiCryptApiReadEncryptedHeaderConstMeta => const TaskConstMeta(
-            debugName: "read_encrypted_header",
-            argNames: ["inputPath", "password"],
-        );
-        
-
-@override Future<void> crateApiLoggingRustLog({required int level , required String tag , required String msg })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);sse_encode_i_32(level, serializer);
-sse_encode_String(tag, serializer);
-sse_encode_String(msg, serializer);
-            pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 12, port: port_);
-            
-            },
-            codec: 
-        SseCodec(
+  @override
+  Future<void> crateApiLoggingRustLog({
+    required int level,
+    required String tag,
+    required String msg,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_i_32(level, serializer);
+          sse_encode_String(tag, serializer);
+          sse_encode_String(msg, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 12,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
-        )
-        ,
-            constMeta: kCrateApiLoggingRustLogConstMeta,
-            argValues: [level, tag, msg],
-            apiImpl: this,
-        )); }
+        ),
+        constMeta: kCrateApiLoggingRustLogConstMeta,
+        argValues: [level, tag, msg],
+        apiImpl: this,
+      ),
+    );
+  }
 
+  TaskConstMeta get kCrateApiLoggingRustLogConstMeta => const TaskConstMeta(
+    debugName: "rust_log",
+    argNames: ["level", "tag", "msg"],
+  );
 
-        TaskConstMeta get kCrateApiLoggingRustLogConstMeta => const TaskConstMeta(
-            debugName: "rust_log",
-            argNames: ["level", "tag", "msg"],
-        );
-        
-
-@override Future<void> crateApiLoggingRustLogDebug({required String tag , required String msg })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);sse_encode_String(tag, serializer);
-sse_encode_String(msg, serializer);
-            pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 13, port: port_);
-            
-            },
-            codec: 
-        SseCodec(
+  @override
+  Future<void> crateApiLoggingRustLogDebug({
+    required String tag,
+    required String msg,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(tag, serializer);
+          sse_encode_String(msg, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 13,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
-        )
-        ,
-            constMeta: kCrateApiLoggingRustLogDebugConstMeta,
-            argValues: [tag, msg],
-            apiImpl: this,
-        )); }
+        ),
+        constMeta: kCrateApiLoggingRustLogDebugConstMeta,
+        argValues: [tag, msg],
+        apiImpl: this,
+      ),
+    );
+  }
 
+  TaskConstMeta get kCrateApiLoggingRustLogDebugConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_log_debug",
+        argNames: ["tag", "msg"],
+      );
 
-        TaskConstMeta get kCrateApiLoggingRustLogDebugConstMeta => const TaskConstMeta(
-            debugName: "rust_log_debug",
-            argNames: ["tag", "msg"],
-        );
-        
-
-@override Future<void> crateApiLoggingRustLogError({required String tag , required String msg })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);sse_encode_String(tag, serializer);
-sse_encode_String(msg, serializer);
-            pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 14, port: port_);
-            
-            },
-            codec: 
-        SseCodec(
+  @override
+  Future<void> crateApiLoggingRustLogError({
+    required String tag,
+    required String msg,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(tag, serializer);
+          sse_encode_String(msg, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 14,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
-        )
-        ,
-            constMeta: kCrateApiLoggingRustLogErrorConstMeta,
-            argValues: [tag, msg],
-            apiImpl: this,
-        )); }
+        ),
+        constMeta: kCrateApiLoggingRustLogErrorConstMeta,
+        argValues: [tag, msg],
+        apiImpl: this,
+      ),
+    );
+  }
 
+  TaskConstMeta get kCrateApiLoggingRustLogErrorConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_log_error",
+        argNames: ["tag", "msg"],
+      );
 
-        TaskConstMeta get kCrateApiLoggingRustLogErrorConstMeta => const TaskConstMeta(
-            debugName: "rust_log_error",
-            argNames: ["tag", "msg"],
-        );
-        
-
-@override Future<void> crateApiLoggingRustLogFatal({required String tag , required String msg })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);sse_encode_String(tag, serializer);
-sse_encode_String(msg, serializer);
-            pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 15, port: port_);
-            
-            },
-            codec: 
-        SseCodec(
+  @override
+  Future<void> crateApiLoggingRustLogFatal({
+    required String tag,
+    required String msg,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(tag, serializer);
+          sse_encode_String(msg, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 15,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
-        )
-        ,
-            constMeta: kCrateApiLoggingRustLogFatalConstMeta,
-            argValues: [tag, msg],
-            apiImpl: this,
-        )); }
+        ),
+        constMeta: kCrateApiLoggingRustLogFatalConstMeta,
+        argValues: [tag, msg],
+        apiImpl: this,
+      ),
+    );
+  }
 
+  TaskConstMeta get kCrateApiLoggingRustLogFatalConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_log_fatal",
+        argNames: ["tag", "msg"],
+      );
 
-        TaskConstMeta get kCrateApiLoggingRustLogFatalConstMeta => const TaskConstMeta(
-            debugName: "rust_log_fatal",
-            argNames: ["tag", "msg"],
-        );
-        
-
-@override Future<void> crateApiLoggingRustLogInfo({required String tag , required String msg })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);sse_encode_String(tag, serializer);
-sse_encode_String(msg, serializer);
-            pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 16, port: port_);
-            
-            },
-            codec: 
-        SseCodec(
+  @override
+  Future<void> crateApiLoggingRustLogInfo({
+    required String tag,
+    required String msg,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(tag, serializer);
+          sse_encode_String(msg, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 16,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
-        )
-        ,
-            constMeta: kCrateApiLoggingRustLogInfoConstMeta,
-            argValues: [tag, msg],
-            apiImpl: this,
-        )); }
+        ),
+        constMeta: kCrateApiLoggingRustLogInfoConstMeta,
+        argValues: [tag, msg],
+        apiImpl: this,
+      ),
+    );
+  }
 
+  TaskConstMeta get kCrateApiLoggingRustLogInfoConstMeta =>
+      const TaskConstMeta(debugName: "rust_log_info", argNames: ["tag", "msg"]);
 
-        TaskConstMeta get kCrateApiLoggingRustLogInfoConstMeta => const TaskConstMeta(
-            debugName: "rust_log_info",
-            argNames: ["tag", "msg"],
-        );
-        
-
-@override Future<void> crateApiLoggingRustLogWarning({required String tag , required String msg })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              
-            final serializer = SseSerializer(generalizedFrbRustBinding);sse_encode_String(tag, serializer);
-sse_encode_String(msg, serializer);
-            pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 17, port: port_);
-            
-            },
-            codec: 
-        SseCodec(
+  @override
+  Future<void> crateApiLoggingRustLogWarning({
+    required String tag,
+    required String msg,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(tag, serializer);
+          sse_encode_String(msg, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 17,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
-        )
-        ,
-            constMeta: kCrateApiLoggingRustLogWarningConstMeta,
-            argValues: [tag, msg],
-            apiImpl: this,
-        )); }
+        ),
+        constMeta: kCrateApiLoggingRustLogWarningConstMeta,
+        argValues: [tag, msg],
+        apiImpl: this,
+      ),
+    );
+  }
 
+  TaskConstMeta get kCrateApiLoggingRustLogWarningConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_log_warning",
+        argNames: ["tag", "msg"],
+      );
 
-        TaskConstMeta get kCrateApiLoggingRustLogWarningConstMeta => const TaskConstMeta(
-            debugName: "rust_log_warning",
-            argNames: ["tag", "msg"],
+  @protected
+  AnyhowException dco_decode_AnyhowException(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return AnyhowException(raw as String);
+  }
+
+  @protected
+  RustStreamSink<FrbBatchDecryptEvent>
+  dco_decode_StreamSink_frb_batch_decrypt_event_Sse(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
+  RustStreamSink<FrbBatchEncryptEvent>
+  dco_decode_StreamSink_frb_batch_encrypt_event_Sse(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
+  RustStreamSink<FrbDecryptEvent> dco_decode_StreamSink_frb_decrypt_event_Sse(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
+  RustStreamSink<FrbEncryptEvent> dco_decode_StreamSink_frb_encrypt_event_Sse(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
+  RustStreamSink<LogEntry> dco_decode_StreamSink_log_entry_Sse(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
+  String dco_decode_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as String;
+  }
+
+  @protected
+  bool dco_decode_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as bool;
+  }
+
+  @protected
+  FrbBatchDecryptOptions dco_decode_box_autoadd_frb_batch_decrypt_options(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_frb_batch_decrypt_options(raw);
+  }
+
+  @protected
+  FrbBatchDecryptResult dco_decode_box_autoadd_frb_batch_decrypt_result(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_frb_batch_decrypt_result(raw);
+  }
+
+  @protected
+  FrbBatchEncryptOptions dco_decode_box_autoadd_frb_batch_encrypt_options(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_frb_batch_encrypt_options(raw);
+  }
+
+  @protected
+  FrbBatchEncryptResult dco_decode_box_autoadd_frb_batch_encrypt_result(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_frb_batch_encrypt_result(raw);
+  }
+
+  @protected
+  FrbDecryptOptions dco_decode_box_autoadd_frb_decrypt_options(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_frb_decrypt_options(raw);
+  }
+
+  @protected
+  FrbDecryptResult dco_decode_box_autoadd_frb_decrypt_result(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_frb_decrypt_result(raw);
+  }
+
+  @protected
+  FrbEncryptOptions dco_decode_box_autoadd_frb_encrypt_options(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_frb_encrypt_options(raw);
+  }
+
+  @protected
+  FrbEncryptResult dco_decode_box_autoadd_frb_encrypt_result(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_frb_encrypt_result(raw);
+  }
+
+  @protected
+  FrbProgressEvent dco_decode_box_autoadd_frb_progress_event(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_frb_progress_event(raw);
+  }
+
+  @protected
+  double dco_decode_f_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as double;
+  }
+
+  @protected
+  FrbBatchDecryptEvent dco_decode_frb_batch_decrypt_event(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return FrbBatchDecryptEvent_FileProgress(
+          fileIndex: dco_decode_u_32(raw[1]),
+          totalFiles: dco_decode_u_32(raw[2]),
+          currentFile: dco_decode_String(raw[3]),
+          progress: dco_decode_box_autoadd_frb_progress_event(raw[4]),
         );
-        
-
-
-
-                  @protected AnyhowException dco_decode_AnyhowException(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return AnyhowException(raw as String); }
-
-@protected RustStreamSink<FrbBatchDecryptEvent> dco_decode_StreamSink_frb_batch_decrypt_event_Sse(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-throw UnimplementedError(); }
-
-@protected RustStreamSink<FrbBatchEncryptEvent> dco_decode_StreamSink_frb_batch_encrypt_event_Sse(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-throw UnimplementedError(); }
-
-@protected RustStreamSink<FrbDecryptEvent> dco_decode_StreamSink_frb_decrypt_event_Sse(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-throw UnimplementedError(); }
-
-@protected RustStreamSink<FrbEncryptEvent> dco_decode_StreamSink_frb_encrypt_event_Sse(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-throw UnimplementedError(); }
-
-@protected RustStreamSink<LogEntry> dco_decode_StreamSink_log_entry_Sse(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-throw UnimplementedError(); }
-
-@protected String dco_decode_String(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as String; }
-
-@protected bool dco_decode_bool(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as bool; }
-
-@protected FrbBatchDecryptOptions dco_decode_box_autoadd_frb_batch_decrypt_options(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_frb_batch_decrypt_options(raw); }
-
-@protected FrbBatchDecryptResult dco_decode_box_autoadd_frb_batch_decrypt_result(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_frb_batch_decrypt_result(raw); }
-
-@protected FrbBatchEncryptOptions dco_decode_box_autoadd_frb_batch_encrypt_options(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_frb_batch_encrypt_options(raw); }
-
-@protected FrbBatchEncryptResult dco_decode_box_autoadd_frb_batch_encrypt_result(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_frb_batch_encrypt_result(raw); }
-
-@protected FrbDecryptOptions dco_decode_box_autoadd_frb_decrypt_options(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_frb_decrypt_options(raw); }
-
-@protected FrbDecryptResult dco_decode_box_autoadd_frb_decrypt_result(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_frb_decrypt_result(raw); }
-
-@protected FrbEncryptOptions dco_decode_box_autoadd_frb_encrypt_options(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_frb_encrypt_options(raw); }
-
-@protected FrbEncryptResult dco_decode_box_autoadd_frb_encrypt_result(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_frb_encrypt_result(raw); }
-
-@protected FrbProgressEvent dco_decode_box_autoadd_frb_progress_event(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_frb_progress_event(raw); }
-
-@protected double dco_decode_f_64(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as double; }
-
-@protected FrbBatchDecryptEvent dco_decode_frb_batch_decrypt_event(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-switch (raw[0]) {
-                case 0: return FrbBatchDecryptEvent_FileProgress(fileIndex: dco_decode_u_32(raw[1]),totalFiles: dco_decode_u_32(raw[2]),currentFile: dco_decode_String(raw[3]),progress: dco_decode_box_autoadd_frb_progress_event(raw[4]),);
-case 1: return FrbBatchDecryptEvent_FileDone(fileIndex: dco_decode_u_32(raw[1]),result: dco_decode_box_autoadd_frb_decrypt_result(raw[2]),);
-case 2: return FrbBatchDecryptEvent_FileError(fileIndex: dco_decode_u_32(raw[1]),inputPath: dco_decode_String(raw[2]),error: dco_decode_String(raw[3]),);
-case 3: return FrbBatchDecryptEvent_AllDone(dco_decode_box_autoadd_frb_batch_decrypt_result(raw[1]),);
-                default: throw Exception("unreachable");
-            } }
-
-@protected FrbBatchDecryptOptions dco_decode_frb_batch_decrypt_options(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
-                return FrbBatchDecryptOptions(inputPaths: dco_decode_list_String(arr[0]),
-outputDir: dco_decode_String(arr[1]),
-password: dco_decode_String(arr[2]),
-tempDir: dco_decode_opt_String(arr[3]),
-chunkSize: dco_decode_frb_chunk_size_preset(arr[4]),); }
-
-@protected FrbBatchDecryptResult dco_decode_frb_batch_decrypt_result(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return FrbBatchDecryptResult(succeeded: dco_decode_list_frb_decrypt_result(arr[0]),
-failed: dco_decode_list_frb_batch_error(arr[1]),); }
-
-@protected FrbBatchEncryptEvent dco_decode_frb_batch_encrypt_event(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-switch (raw[0]) {
-                case 0: return FrbBatchEncryptEvent_FileProgress(fileIndex: dco_decode_u_32(raw[1]),totalFiles: dco_decode_u_32(raw[2]),currentFile: dco_decode_String(raw[3]),progress: dco_decode_box_autoadd_frb_progress_event(raw[4]),);
-case 1: return FrbBatchEncryptEvent_FileDone(fileIndex: dco_decode_u_32(raw[1]),result: dco_decode_box_autoadd_frb_encrypt_result(raw[2]),);
-case 2: return FrbBatchEncryptEvent_FileError(fileIndex: dco_decode_u_32(raw[1]),inputPath: dco_decode_String(raw[2]),error: dco_decode_String(raw[3]),);
-case 3: return FrbBatchEncryptEvent_AllDone(dco_decode_box_autoadd_frb_batch_encrypt_result(raw[1]),);
-                default: throw Exception("unreachable");
-            } }
-
-@protected FrbBatchEncryptOptions dco_decode_frb_batch_encrypt_options(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
-                return FrbBatchEncryptOptions(inputPaths: dco_decode_list_String(arr[0]),
-outputDir: dco_decode_String(arr[1]),
-password: dco_decode_String(arr[2]),
-gzipCompressed: dco_decode_bool(arr[3]),
-tempDir: dco_decode_opt_String(arr[4]),
-metadata: dco_decode_list_frb_key_value(arr[5]),
-chunkSize: dco_decode_frb_chunk_size_preset(arr[6]),); }
-
-@protected FrbBatchEncryptResult dco_decode_frb_batch_encrypt_result(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return FrbBatchEncryptResult(succeeded: dco_decode_list_frb_encrypt_result(arr[0]),
-failed: dco_decode_list_frb_batch_error(arr[1]),); }
-
-@protected FrbBatchError dco_decode_frb_batch_error(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return FrbBatchError(inputPath: dco_decode_String(arr[0]),
-error: dco_decode_String(arr[1]),); }
-
-@protected FrbChunkSizePreset dco_decode_frb_chunk_size_preset(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-switch (raw[0]) {
-                case 0: return FrbChunkSizePreset_Desktop();
-case 1: return FrbChunkSizePreset_Mobile();
-case 2: return FrbChunkSizePreset_Custom(dco_decode_u_32(raw[1]),);
-                default: throw Exception("unreachable");
-            } }
-
-@protected FrbDecryptEvent dco_decode_frb_decrypt_event(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-switch (raw[0]) {
-                case 0: return FrbDecryptEvent_Progress(dco_decode_box_autoadd_frb_progress_event(raw[1]),);
-case 1: return FrbDecryptEvent_Done(dco_decode_box_autoadd_frb_decrypt_result(raw[1]),);
-                default: throw Exception("unreachable");
-            } }
-
-@protected FrbDecryptOptions dco_decode_frb_decrypt_options(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
-                return FrbDecryptOptions(inputPath: dco_decode_String(arr[0]),
-outputDir: dco_decode_String(arr[1]),
-password: dco_decode_String(arr[2]),
-tempDir: dco_decode_opt_String(arr[3]),
-chunkSize: dco_decode_frb_chunk_size_preset(arr[4]),); }
-
-@protected FrbDecryptResult dco_decode_frb_decrypt_result(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return FrbDecryptResult(outputPath: dco_decode_String(arr[0]),
-metadata: dco_decode_frb_decrypted_metadata(arr[1]),); }
-
-@protected FrbDecryptedMetadata dco_decode_frb_decrypted_metadata(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
-                return FrbDecryptedMetadata(originalFilename: dco_decode_String(arr[0]),
-originalExtension: dco_decode_String(arr[1]),
-gzipCompressed: dco_decode_bool(arr[2]),
-originalSize: dco_decode_u_64(arr[3]),
-uuid: dco_decode_String(arr[4]),
-metadata: dco_decode_list_frb_key_value(arr[5]),); }
-
-@protected FrbEncryptEvent dco_decode_frb_encrypt_event(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-switch (raw[0]) {
-                case 0: return FrbEncryptEvent_Progress(dco_decode_box_autoadd_frb_progress_event(raw[1]),);
-case 1: return FrbEncryptEvent_Done(dco_decode_box_autoadd_frb_encrypt_result(raw[1]),);
-                default: throw Exception("unreachable");
-            } }
-
-@protected FrbEncryptOptions dco_decode_frb_encrypt_options(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 9) throw Exception('unexpected arr length: expect 9 but see ${arr.length}');
-                return FrbEncryptOptions(inputPath: dco_decode_String(arr[0]),
-outputDir: dco_decode_String(arr[1]),
-password: dco_decode_String(arr[2]),
-gzipCompressed: dco_decode_bool(arr[3]),
-uuid: dco_decode_opt_String(arr[4]),
-outputExtension: dco_decode_opt_String(arr[5]),
-tempDir: dco_decode_opt_String(arr[6]),
-metadata: dco_decode_list_frb_key_value(arr[7]),
-chunkSize: dco_decode_frb_chunk_size_preset(arr[8]),); }
-
-@protected FrbEncryptResult dco_decode_frb_encrypt_result(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-                return FrbEncryptResult(outputPath: dco_decode_String(arr[0]),
-uuid: dco_decode_String(arr[1]),
-originalSize: dco_decode_u_64(arr[2]),); }
-
-@protected FrbKeyValue dco_decode_frb_key_value(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return FrbKeyValue(key: dco_decode_String(arr[0]),
-value: dco_decode_String(arr[1]),); }
-
-@protected FrbProgressEvent dco_decode_frb_progress_event(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
-                return FrbProgressEvent(stage: dco_decode_frb_progress_stage(arr[0]),
-bytesProcessed: dco_decode_u_64(arr[1]),
-totalBytes: dco_decode_u_64(arr[2]),
-percentage: dco_decode_f_64(arr[3]),); }
-
-@protected FrbProgressStage dco_decode_frb_progress_stage(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return FrbProgressStage.values[raw as int]; }
-
-@protected int dco_decode_i_32(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as int; }
-
-@protected PlatformInt64 dco_decode_i_64(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dcoDecodeI64(raw); }
-
-@protected List<String> dco_decode_list_String(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return (raw as List<dynamic>).map(dco_decode_String).toList(); }
-
-@protected List<FrbBatchError> dco_decode_list_frb_batch_error(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return (raw as List<dynamic>).map(dco_decode_frb_batch_error).toList(); }
-
-@protected List<FrbDecryptResult> dco_decode_list_frb_decrypt_result(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return (raw as List<dynamic>).map(dco_decode_frb_decrypt_result).toList(); }
-
-@protected List<FrbEncryptResult> dco_decode_list_frb_encrypt_result(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return (raw as List<dynamic>).map(dco_decode_frb_encrypt_result).toList(); }
-
-@protected List<FrbKeyValue> dco_decode_list_frb_key_value(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return (raw as List<dynamic>).map(dco_decode_frb_key_value).toList(); }
-
-@protected Uint8List dco_decode_list_prim_u_8_strict(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as Uint8List; }
-
-@protected LogEntry dco_decode_log_entry(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
-                return LogEntry(timeMillis: dco_decode_i_64(arr[0]),
-level: dco_decode_i_32(arr[1]),
-tag: dco_decode_String(arr[2]),
-msg: dco_decode_String(arr[3]),); }
-
-@protected String? dco_decode_opt_String(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw == null ? null : dco_decode_String(raw); }
-
-@protected int dco_decode_u_32(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as int; }
-
-@protected BigInt dco_decode_u_64(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dcoDecodeU64(raw); }
-
-@protected int dco_decode_u_8(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as int; }
-
-@protected void dco_decode_unit(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return; }
-
-@protected AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var inner = sse_decode_String(deserializer);
-        return AnyhowException(inner); }
-
-@protected RustStreamSink<FrbBatchDecryptEvent> sse_decode_StreamSink_frb_batch_decrypt_event_Sse(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-throw UnimplementedError('Unreachable ()'); }
-
-@protected RustStreamSink<FrbBatchEncryptEvent> sse_decode_StreamSink_frb_batch_encrypt_event_Sse(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-throw UnimplementedError('Unreachable ()'); }
-
-@protected RustStreamSink<FrbDecryptEvent> sse_decode_StreamSink_frb_decrypt_event_Sse(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-throw UnimplementedError('Unreachable ()'); }
-
-@protected RustStreamSink<FrbEncryptEvent> sse_decode_StreamSink_frb_encrypt_event_Sse(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-throw UnimplementedError('Unreachable ()'); }
-
-@protected RustStreamSink<LogEntry> sse_decode_StreamSink_log_entry_Sse(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-throw UnimplementedError('Unreachable ()'); }
-
-@protected String sse_decode_String(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var inner = sse_decode_list_prim_u_8_strict(deserializer);
-        return utf8.decoder.convert(inner); }
-
-@protected bool sse_decode_bool(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getUint8() != 0; }
-
-@protected FrbBatchDecryptOptions sse_decode_box_autoadd_frb_batch_decrypt_options(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_frb_batch_decrypt_options(deserializer)); }
-
-@protected FrbBatchDecryptResult sse_decode_box_autoadd_frb_batch_decrypt_result(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_frb_batch_decrypt_result(deserializer)); }
-
-@protected FrbBatchEncryptOptions sse_decode_box_autoadd_frb_batch_encrypt_options(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_frb_batch_encrypt_options(deserializer)); }
-
-@protected FrbBatchEncryptResult sse_decode_box_autoadd_frb_batch_encrypt_result(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_frb_batch_encrypt_result(deserializer)); }
-
-@protected FrbDecryptOptions sse_decode_box_autoadd_frb_decrypt_options(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_frb_decrypt_options(deserializer)); }
-
-@protected FrbDecryptResult sse_decode_box_autoadd_frb_decrypt_result(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_frb_decrypt_result(deserializer)); }
-
-@protected FrbEncryptOptions sse_decode_box_autoadd_frb_encrypt_options(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_frb_encrypt_options(deserializer)); }
-
-@protected FrbEncryptResult sse_decode_box_autoadd_frb_encrypt_result(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_frb_encrypt_result(deserializer)); }
-
-@protected FrbProgressEvent sse_decode_box_autoadd_frb_progress_event(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_frb_progress_event(deserializer)); }
-
-@protected double sse_decode_f_64(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getFloat64(); }
-
-@protected FrbBatchDecryptEvent sse_decode_frb_batch_decrypt_event(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            var tag_ = sse_decode_i_32(deserializer);
-            switch (tag_) { case 0: var var_fileIndex = sse_decode_u_32(deserializer);
-var var_totalFiles = sse_decode_u_32(deserializer);
-var var_currentFile = sse_decode_String(deserializer);
-var var_progress = sse_decode_box_autoadd_frb_progress_event(deserializer);
-return FrbBatchDecryptEvent_FileProgress(fileIndex: var_fileIndex, totalFiles: var_totalFiles, currentFile: var_currentFile, progress: var_progress);case 1: var var_fileIndex = sse_decode_u_32(deserializer);
-var var_result = sse_decode_box_autoadd_frb_decrypt_result(deserializer);
-return FrbBatchDecryptEvent_FileDone(fileIndex: var_fileIndex, result: var_result);case 2: var var_fileIndex = sse_decode_u_32(deserializer);
-var var_inputPath = sse_decode_String(deserializer);
-var var_error = sse_decode_String(deserializer);
-return FrbBatchDecryptEvent_FileError(fileIndex: var_fileIndex, inputPath: var_inputPath, error: var_error);case 3: var var_field0 = sse_decode_box_autoadd_frb_batch_decrypt_result(deserializer);
-return FrbBatchDecryptEvent_AllDone(var_field0); default: throw UnimplementedError(''); }
-             }
-
-@protected FrbBatchDecryptOptions sse_decode_frb_batch_decrypt_options(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_inputPaths = sse_decode_list_String(deserializer);
-var var_outputDir = sse_decode_String(deserializer);
-var var_password = sse_decode_String(deserializer);
-var var_tempDir = sse_decode_opt_String(deserializer);
-var var_chunkSize = sse_decode_frb_chunk_size_preset(deserializer);
-return FrbBatchDecryptOptions(inputPaths: var_inputPaths, outputDir: var_outputDir, password: var_password, tempDir: var_tempDir, chunkSize: var_chunkSize); }
-
-@protected FrbBatchDecryptResult sse_decode_frb_batch_decrypt_result(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_succeeded = sse_decode_list_frb_decrypt_result(deserializer);
-var var_failed = sse_decode_list_frb_batch_error(deserializer);
-return FrbBatchDecryptResult(succeeded: var_succeeded, failed: var_failed); }
-
-@protected FrbBatchEncryptEvent sse_decode_frb_batch_encrypt_event(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            var tag_ = sse_decode_i_32(deserializer);
-            switch (tag_) { case 0: var var_fileIndex = sse_decode_u_32(deserializer);
-var var_totalFiles = sse_decode_u_32(deserializer);
-var var_currentFile = sse_decode_String(deserializer);
-var var_progress = sse_decode_box_autoadd_frb_progress_event(deserializer);
-return FrbBatchEncryptEvent_FileProgress(fileIndex: var_fileIndex, totalFiles: var_totalFiles, currentFile: var_currentFile, progress: var_progress);case 1: var var_fileIndex = sse_decode_u_32(deserializer);
-var var_result = sse_decode_box_autoadd_frb_encrypt_result(deserializer);
-return FrbBatchEncryptEvent_FileDone(fileIndex: var_fileIndex, result: var_result);case 2: var var_fileIndex = sse_decode_u_32(deserializer);
-var var_inputPath = sse_decode_String(deserializer);
-var var_error = sse_decode_String(deserializer);
-return FrbBatchEncryptEvent_FileError(fileIndex: var_fileIndex, inputPath: var_inputPath, error: var_error);case 3: var var_field0 = sse_decode_box_autoadd_frb_batch_encrypt_result(deserializer);
-return FrbBatchEncryptEvent_AllDone(var_field0); default: throw UnimplementedError(''); }
-             }
-
-@protected FrbBatchEncryptOptions sse_decode_frb_batch_encrypt_options(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_inputPaths = sse_decode_list_String(deserializer);
-var var_outputDir = sse_decode_String(deserializer);
-var var_password = sse_decode_String(deserializer);
-var var_gzipCompressed = sse_decode_bool(deserializer);
-var var_tempDir = sse_decode_opt_String(deserializer);
-var var_metadata = sse_decode_list_frb_key_value(deserializer);
-var var_chunkSize = sse_decode_frb_chunk_size_preset(deserializer);
-return FrbBatchEncryptOptions(inputPaths: var_inputPaths, outputDir: var_outputDir, password: var_password, gzipCompressed: var_gzipCompressed, tempDir: var_tempDir, metadata: var_metadata, chunkSize: var_chunkSize); }
-
-@protected FrbBatchEncryptResult sse_decode_frb_batch_encrypt_result(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_succeeded = sse_decode_list_frb_encrypt_result(deserializer);
-var var_failed = sse_decode_list_frb_batch_error(deserializer);
-return FrbBatchEncryptResult(succeeded: var_succeeded, failed: var_failed); }
-
-@protected FrbBatchError sse_decode_frb_batch_error(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_inputPath = sse_decode_String(deserializer);
-var var_error = sse_decode_String(deserializer);
-return FrbBatchError(inputPath: var_inputPath, error: var_error); }
-
-@protected FrbChunkSizePreset sse_decode_frb_chunk_size_preset(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            var tag_ = sse_decode_i_32(deserializer);
-            switch (tag_) { case 0: return FrbChunkSizePreset_Desktop();case 1: return FrbChunkSizePreset_Mobile();case 2: var var_field0 = sse_decode_u_32(deserializer);
-return FrbChunkSizePreset_Custom(var_field0); default: throw UnimplementedError(''); }
-             }
-
-@protected FrbDecryptEvent sse_decode_frb_decrypt_event(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            var tag_ = sse_decode_i_32(deserializer);
-            switch (tag_) { case 0: var var_field0 = sse_decode_box_autoadd_frb_progress_event(deserializer);
-return FrbDecryptEvent_Progress(var_field0);case 1: var var_field0 = sse_decode_box_autoadd_frb_decrypt_result(deserializer);
-return FrbDecryptEvent_Done(var_field0); default: throw UnimplementedError(''); }
-             }
-
-@protected FrbDecryptOptions sse_decode_frb_decrypt_options(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_inputPath = sse_decode_String(deserializer);
-var var_outputDir = sse_decode_String(deserializer);
-var var_password = sse_decode_String(deserializer);
-var var_tempDir = sse_decode_opt_String(deserializer);
-var var_chunkSize = sse_decode_frb_chunk_size_preset(deserializer);
-return FrbDecryptOptions(inputPath: var_inputPath, outputDir: var_outputDir, password: var_password, tempDir: var_tempDir, chunkSize: var_chunkSize); }
-
-@protected FrbDecryptResult sse_decode_frb_decrypt_result(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_outputPath = sse_decode_String(deserializer);
-var var_metadata = sse_decode_frb_decrypted_metadata(deserializer);
-return FrbDecryptResult(outputPath: var_outputPath, metadata: var_metadata); }
-
-@protected FrbDecryptedMetadata sse_decode_frb_decrypted_metadata(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_originalFilename = sse_decode_String(deserializer);
-var var_originalExtension = sse_decode_String(deserializer);
-var var_gzipCompressed = sse_decode_bool(deserializer);
-var var_originalSize = sse_decode_u_64(deserializer);
-var var_uuid = sse_decode_String(deserializer);
-var var_metadata = sse_decode_list_frb_key_value(deserializer);
-return FrbDecryptedMetadata(originalFilename: var_originalFilename, originalExtension: var_originalExtension, gzipCompressed: var_gzipCompressed, originalSize: var_originalSize, uuid: var_uuid, metadata: var_metadata); }
-
-@protected FrbEncryptEvent sse_decode_frb_encrypt_event(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            var tag_ = sse_decode_i_32(deserializer);
-            switch (tag_) { case 0: var var_field0 = sse_decode_box_autoadd_frb_progress_event(deserializer);
-return FrbEncryptEvent_Progress(var_field0);case 1: var var_field0 = sse_decode_box_autoadd_frb_encrypt_result(deserializer);
-return FrbEncryptEvent_Done(var_field0); default: throw UnimplementedError(''); }
-             }
-
-@protected FrbEncryptOptions sse_decode_frb_encrypt_options(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_inputPath = sse_decode_String(deserializer);
-var var_outputDir = sse_decode_String(deserializer);
-var var_password = sse_decode_String(deserializer);
-var var_gzipCompressed = sse_decode_bool(deserializer);
-var var_uuid = sse_decode_opt_String(deserializer);
-var var_outputExtension = sse_decode_opt_String(deserializer);
-var var_tempDir = sse_decode_opt_String(deserializer);
-var var_metadata = sse_decode_list_frb_key_value(deserializer);
-var var_chunkSize = sse_decode_frb_chunk_size_preset(deserializer);
-return FrbEncryptOptions(inputPath: var_inputPath, outputDir: var_outputDir, password: var_password, gzipCompressed: var_gzipCompressed, uuid: var_uuid, outputExtension: var_outputExtension, tempDir: var_tempDir, metadata: var_metadata, chunkSize: var_chunkSize); }
-
-@protected FrbEncryptResult sse_decode_frb_encrypt_result(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_outputPath = sse_decode_String(deserializer);
-var var_uuid = sse_decode_String(deserializer);
-var var_originalSize = sse_decode_u_64(deserializer);
-return FrbEncryptResult(outputPath: var_outputPath, uuid: var_uuid, originalSize: var_originalSize); }
-
-@protected FrbKeyValue sse_decode_frb_key_value(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_key = sse_decode_String(deserializer);
-var var_value = sse_decode_String(deserializer);
-return FrbKeyValue(key: var_key, value: var_value); }
-
-@protected FrbProgressEvent sse_decode_frb_progress_event(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_stage = sse_decode_frb_progress_stage(deserializer);
-var var_bytesProcessed = sse_decode_u_64(deserializer);
-var var_totalBytes = sse_decode_u_64(deserializer);
-var var_percentage = sse_decode_f_64(deserializer);
-return FrbProgressEvent(stage: var_stage, bytesProcessed: var_bytesProcessed, totalBytes: var_totalBytes, percentage: var_percentage); }
-
-@protected FrbProgressStage sse_decode_frb_progress_stage(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var inner = sse_decode_i_32(deserializer);
-        return FrbProgressStage.values[inner]; }
-
-@protected int sse_decode_i_32(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getInt32(); }
-
-@protected PlatformInt64 sse_decode_i_64(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getPlatformInt64(); }
-
-@protected List<String> sse_decode_list_String(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-        var len_ = sse_decode_i_32(deserializer);
-        var ans_ = <String>[];
-        for (var idx_ = 0; idx_ < len_; ++idx_) { ans_.add(sse_decode_String(deserializer)); }
-        return ans_;
-         }
-
-@protected List<FrbBatchError> sse_decode_list_frb_batch_error(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-        var len_ = sse_decode_i_32(deserializer);
-        var ans_ = <FrbBatchError>[];
-        for (var idx_ = 0; idx_ < len_; ++idx_) { ans_.add(sse_decode_frb_batch_error(deserializer)); }
-        return ans_;
-         }
-
-@protected List<FrbDecryptResult> sse_decode_list_frb_decrypt_result(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-        var len_ = sse_decode_i_32(deserializer);
-        var ans_ = <FrbDecryptResult>[];
-        for (var idx_ = 0; idx_ < len_; ++idx_) { ans_.add(sse_decode_frb_decrypt_result(deserializer)); }
-        return ans_;
-         }
-
-@protected List<FrbEncryptResult> sse_decode_list_frb_encrypt_result(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-        var len_ = sse_decode_i_32(deserializer);
-        var ans_ = <FrbEncryptResult>[];
-        for (var idx_ = 0; idx_ < len_; ++idx_) { ans_.add(sse_decode_frb_encrypt_result(deserializer)); }
-        return ans_;
-         }
-
-@protected List<FrbKeyValue> sse_decode_list_frb_key_value(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-        var len_ = sse_decode_i_32(deserializer);
-        var ans_ = <FrbKeyValue>[];
-        for (var idx_ = 0; idx_ < len_; ++idx_) { ans_.add(sse_decode_frb_key_value(deserializer)); }
-        return ans_;
-         }
-
-@protected Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var len_ = sse_decode_i_32(deserializer);
-                return deserializer.buffer.getUint8List(len_); }
-
-@protected LogEntry sse_decode_log_entry(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_timeMillis = sse_decode_i_64(deserializer);
-var var_level = sse_decode_i_32(deserializer);
-var var_tag = sse_decode_String(deserializer);
-var var_msg = sse_decode_String(deserializer);
-return LogEntry(timeMillis: var_timeMillis, level: var_level, tag: var_tag, msg: var_msg); }
-
-@protected String? sse_decode_opt_String(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            if (sse_decode_bool(deserializer)) {
-                return (sse_decode_String(deserializer));
-            } else {
-                return null;
-            }
-             }
-
-@protected int sse_decode_u_32(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getUint32(); }
-
-@protected BigInt sse_decode_u_64(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getBigUint64(); }
-
-@protected int sse_decode_u_8(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getUint8(); }
-
-@protected void sse_decode_unit(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
- }
-
-@protected void sse_encode_AnyhowException(AnyhowException self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.message, serializer); }
-
-@protected void sse_encode_StreamSink_frb_batch_decrypt_event_Sse(RustStreamSink<FrbBatchDecryptEvent> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.setupAndSerialize(codec: SseCodec(
-            decodeSuccessData: sse_decode_frb_batch_decrypt_event,
-            decodeErrorData: sse_decode_AnyhowException,
-        )), serializer); }
-
-@protected void sse_encode_StreamSink_frb_batch_encrypt_event_Sse(RustStreamSink<FrbBatchEncryptEvent> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.setupAndSerialize(codec: SseCodec(
-            decodeSuccessData: sse_decode_frb_batch_encrypt_event,
-            decodeErrorData: sse_decode_AnyhowException,
-        )), serializer); }
-
-@protected void sse_encode_StreamSink_frb_decrypt_event_Sse(RustStreamSink<FrbDecryptEvent> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.setupAndSerialize(codec: SseCodec(
-            decodeSuccessData: sse_decode_frb_decrypt_event,
-            decodeErrorData: sse_decode_AnyhowException,
-        )), serializer); }
-
-@protected void sse_encode_StreamSink_frb_encrypt_event_Sse(RustStreamSink<FrbEncryptEvent> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.setupAndSerialize(codec: SseCodec(
-            decodeSuccessData: sse_decode_frb_encrypt_event,
-            decodeErrorData: sse_decode_AnyhowException,
-        )), serializer); }
-
-@protected void sse_encode_StreamSink_log_entry_Sse(RustStreamSink<LogEntry> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.setupAndSerialize(codec: SseCodec(
-            decodeSuccessData: sse_decode_log_entry,
-            decodeErrorData: sse_decode_AnyhowException,
-        )), serializer); }
-
-@protected void sse_encode_String(String self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer); }
-
-@protected void sse_encode_bool(bool self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putUint8(self ? 1 : 0); }
-
-@protected void sse_encode_box_autoadd_frb_batch_decrypt_options(FrbBatchDecryptOptions self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_frb_batch_decrypt_options(self, serializer); }
-
-@protected void sse_encode_box_autoadd_frb_batch_decrypt_result(FrbBatchDecryptResult self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_frb_batch_decrypt_result(self, serializer); }
-
-@protected void sse_encode_box_autoadd_frb_batch_encrypt_options(FrbBatchEncryptOptions self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_frb_batch_encrypt_options(self, serializer); }
-
-@protected void sse_encode_box_autoadd_frb_batch_encrypt_result(FrbBatchEncryptResult self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_frb_batch_encrypt_result(self, serializer); }
-
-@protected void sse_encode_box_autoadd_frb_decrypt_options(FrbDecryptOptions self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_frb_decrypt_options(self, serializer); }
-
-@protected void sse_encode_box_autoadd_frb_decrypt_result(FrbDecryptResult self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_frb_decrypt_result(self, serializer); }
-
-@protected void sse_encode_box_autoadd_frb_encrypt_options(FrbEncryptOptions self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_frb_encrypt_options(self, serializer); }
-
-@protected void sse_encode_box_autoadd_frb_encrypt_result(FrbEncryptResult self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_frb_encrypt_result(self, serializer); }
-
-@protected void sse_encode_box_autoadd_frb_progress_event(FrbProgressEvent self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_frb_progress_event(self, serializer); }
-
-@protected void sse_encode_f_64(double self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putFloat64(self); }
-
-@protected void sse_encode_frb_batch_decrypt_event(FrbBatchDecryptEvent self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-switch (self) { case FrbBatchDecryptEvent_FileProgress(fileIndex: final fileIndex,totalFiles: final totalFiles,currentFile: final currentFile,progress: final progress): sse_encode_i_32(0, serializer); sse_encode_u_32(fileIndex, serializer);
-sse_encode_u_32(totalFiles, serializer);
-sse_encode_String(currentFile, serializer);
-sse_encode_box_autoadd_frb_progress_event(progress, serializer);
-case FrbBatchDecryptEvent_FileDone(fileIndex: final fileIndex,result: final result): sse_encode_i_32(1, serializer); sse_encode_u_32(fileIndex, serializer);
-sse_encode_box_autoadd_frb_decrypt_result(result, serializer);
-case FrbBatchDecryptEvent_FileError(fileIndex: final fileIndex,inputPath: final inputPath,error: final error): sse_encode_i_32(2, serializer); sse_encode_u_32(fileIndex, serializer);
-sse_encode_String(inputPath, serializer);
-sse_encode_String(error, serializer);
-case FrbBatchDecryptEvent_AllDone(field0: final field0): sse_encode_i_32(3, serializer); sse_encode_box_autoadd_frb_batch_decrypt_result(field0, serializer);
-  } }
-
-@protected void sse_encode_frb_batch_decrypt_options(FrbBatchDecryptOptions self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_list_String(self.inputPaths, serializer);
-sse_encode_String(self.outputDir, serializer);
-sse_encode_String(self.password, serializer);
-sse_encode_opt_String(self.tempDir, serializer);
-sse_encode_frb_chunk_size_preset(self.chunkSize, serializer);
- }
-
-@protected void sse_encode_frb_batch_decrypt_result(FrbBatchDecryptResult self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_list_frb_decrypt_result(self.succeeded, serializer);
-sse_encode_list_frb_batch_error(self.failed, serializer);
- }
-
-@protected void sse_encode_frb_batch_encrypt_event(FrbBatchEncryptEvent self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-switch (self) { case FrbBatchEncryptEvent_FileProgress(fileIndex: final fileIndex,totalFiles: final totalFiles,currentFile: final currentFile,progress: final progress): sse_encode_i_32(0, serializer); sse_encode_u_32(fileIndex, serializer);
-sse_encode_u_32(totalFiles, serializer);
-sse_encode_String(currentFile, serializer);
-sse_encode_box_autoadd_frb_progress_event(progress, serializer);
-case FrbBatchEncryptEvent_FileDone(fileIndex: final fileIndex,result: final result): sse_encode_i_32(1, serializer); sse_encode_u_32(fileIndex, serializer);
-sse_encode_box_autoadd_frb_encrypt_result(result, serializer);
-case FrbBatchEncryptEvent_FileError(fileIndex: final fileIndex,inputPath: final inputPath,error: final error): sse_encode_i_32(2, serializer); sse_encode_u_32(fileIndex, serializer);
-sse_encode_String(inputPath, serializer);
-sse_encode_String(error, serializer);
-case FrbBatchEncryptEvent_AllDone(field0: final field0): sse_encode_i_32(3, serializer); sse_encode_box_autoadd_frb_batch_encrypt_result(field0, serializer);
-  } }
-
-@protected void sse_encode_frb_batch_encrypt_options(FrbBatchEncryptOptions self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_list_String(self.inputPaths, serializer);
-sse_encode_String(self.outputDir, serializer);
-sse_encode_String(self.password, serializer);
-sse_encode_bool(self.gzipCompressed, serializer);
-sse_encode_opt_String(self.tempDir, serializer);
-sse_encode_list_frb_key_value(self.metadata, serializer);
-sse_encode_frb_chunk_size_preset(self.chunkSize, serializer);
- }
-
-@protected void sse_encode_frb_batch_encrypt_result(FrbBatchEncryptResult self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_list_frb_encrypt_result(self.succeeded, serializer);
-sse_encode_list_frb_batch_error(self.failed, serializer);
- }
-
-@protected void sse_encode_frb_batch_error(FrbBatchError self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.inputPath, serializer);
-sse_encode_String(self.error, serializer);
- }
-
-@protected void sse_encode_frb_chunk_size_preset(FrbChunkSizePreset self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-switch (self) { case FrbChunkSizePreset_Desktop(): sse_encode_i_32(0, serializer); case FrbChunkSizePreset_Mobile(): sse_encode_i_32(1, serializer); case FrbChunkSizePreset_Custom(field0: final field0): sse_encode_i_32(2, serializer); sse_encode_u_32(field0, serializer);
-  } }
-
-@protected void sse_encode_frb_decrypt_event(FrbDecryptEvent self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-switch (self) { case FrbDecryptEvent_Progress(field0: final field0): sse_encode_i_32(0, serializer); sse_encode_box_autoadd_frb_progress_event(field0, serializer);
-case FrbDecryptEvent_Done(field0: final field0): sse_encode_i_32(1, serializer); sse_encode_box_autoadd_frb_decrypt_result(field0, serializer);
-  } }
-
-@protected void sse_encode_frb_decrypt_options(FrbDecryptOptions self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.inputPath, serializer);
-sse_encode_String(self.outputDir, serializer);
-sse_encode_String(self.password, serializer);
-sse_encode_opt_String(self.tempDir, serializer);
-sse_encode_frb_chunk_size_preset(self.chunkSize, serializer);
- }
-
-@protected void sse_encode_frb_decrypt_result(FrbDecryptResult self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.outputPath, serializer);
-sse_encode_frb_decrypted_metadata(self.metadata, serializer);
- }
-
-@protected void sse_encode_frb_decrypted_metadata(FrbDecryptedMetadata self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.originalFilename, serializer);
-sse_encode_String(self.originalExtension, serializer);
-sse_encode_bool(self.gzipCompressed, serializer);
-sse_encode_u_64(self.originalSize, serializer);
-sse_encode_String(self.uuid, serializer);
-sse_encode_list_frb_key_value(self.metadata, serializer);
- }
-
-@protected void sse_encode_frb_encrypt_event(FrbEncryptEvent self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-switch (self) { case FrbEncryptEvent_Progress(field0: final field0): sse_encode_i_32(0, serializer); sse_encode_box_autoadd_frb_progress_event(field0, serializer);
-case FrbEncryptEvent_Done(field0: final field0): sse_encode_i_32(1, serializer); sse_encode_box_autoadd_frb_encrypt_result(field0, serializer);
-  } }
-
-@protected void sse_encode_frb_encrypt_options(FrbEncryptOptions self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.inputPath, serializer);
-sse_encode_String(self.outputDir, serializer);
-sse_encode_String(self.password, serializer);
-sse_encode_bool(self.gzipCompressed, serializer);
-sse_encode_opt_String(self.uuid, serializer);
-sse_encode_opt_String(self.outputExtension, serializer);
-sse_encode_opt_String(self.tempDir, serializer);
-sse_encode_list_frb_key_value(self.metadata, serializer);
-sse_encode_frb_chunk_size_preset(self.chunkSize, serializer);
- }
-
-@protected void sse_encode_frb_encrypt_result(FrbEncryptResult self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.outputPath, serializer);
-sse_encode_String(self.uuid, serializer);
-sse_encode_u_64(self.originalSize, serializer);
- }
-
-@protected void sse_encode_frb_key_value(FrbKeyValue self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.key, serializer);
-sse_encode_String(self.value, serializer);
- }
-
-@protected void sse_encode_frb_progress_event(FrbProgressEvent self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_frb_progress_stage(self.stage, serializer);
-sse_encode_u_64(self.bytesProcessed, serializer);
-sse_encode_u_64(self.totalBytes, serializer);
-sse_encode_f_64(self.percentage, serializer);
- }
-
-@protected void sse_encode_frb_progress_stage(FrbProgressStage self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.index, serializer); }
-
-@protected void sse_encode_i_32(int self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putInt32(self); }
-
-@protected void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putPlatformInt64(self); }
-
-@protected void sse_encode_list_String(List<String> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.length, serializer);
-        for (final item in self) { sse_encode_String(item, serializer); } }
-
-@protected void sse_encode_list_frb_batch_error(List<FrbBatchError> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.length, serializer);
-        for (final item in self) { sse_encode_frb_batch_error(item, serializer); } }
-
-@protected void sse_encode_list_frb_decrypt_result(List<FrbDecryptResult> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.length, serializer);
-        for (final item in self) { sse_encode_frb_decrypt_result(item, serializer); } }
-
-@protected void sse_encode_list_frb_encrypt_result(List<FrbEncryptResult> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.length, serializer);
-        for (final item in self) { sse_encode_frb_encrypt_result(item, serializer); } }
-
-@protected void sse_encode_list_frb_key_value(List<FrbKeyValue> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.length, serializer);
-        for (final item in self) { sse_encode_frb_key_value(item, serializer); } }
-
-@protected void sse_encode_list_prim_u_8_strict(Uint8List self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.length, serializer);
-                    serializer.buffer.putUint8List(self); }
-
-@protected void sse_encode_log_entry(LogEntry self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_64(self.timeMillis, serializer);
-sse_encode_i_32(self.level, serializer);
-sse_encode_String(self.tag, serializer);
-sse_encode_String(self.msg, serializer);
- }
-
-@protected void sse_encode_opt_String(String? self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-                sse_encode_bool(self != null, serializer);
-                if (self != null) {
-                    sse_encode_String(self, serializer);
-                }
-                 }
-
-@protected void sse_encode_u_32(int self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putUint32(self); }
-
-@protected void sse_encode_u_64(BigInt self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putBigUint64(self); }
-
-@protected void sse_encode_u_8(int self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putUint8(self); }
-
-@protected void sse_encode_unit(void self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
- }
-                }
-                
+      case 1:
+        return FrbBatchDecryptEvent_FileDone(
+          fileIndex: dco_decode_u_32(raw[1]),
+          result: dco_decode_box_autoadd_frb_decrypt_result(raw[2]),
+        );
+      case 2:
+        return FrbBatchDecryptEvent_FileError(
+          fileIndex: dco_decode_u_32(raw[1]),
+          inputPath: dco_decode_String(raw[2]),
+          error: dco_decode_String(raw[3]),
+        );
+      case 3:
+        return FrbBatchDecryptEvent_AllDone(
+          dco_decode_box_autoadd_frb_batch_decrypt_result(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  FrbBatchDecryptOptions dco_decode_frb_batch_decrypt_options(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return FrbBatchDecryptOptions(
+      inputPaths: dco_decode_list_String(arr[0]),
+      outputDir: dco_decode_String(arr[1]),
+      password: dco_decode_String(arr[2]),
+      tempDir: dco_decode_opt_String(arr[3]),
+      chunkSize: dco_decode_frb_chunk_size_preset(arr[4]),
+    );
+  }
+
+  @protected
+  FrbBatchDecryptResult dco_decode_frb_batch_decrypt_result(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return FrbBatchDecryptResult(
+      succeeded: dco_decode_list_frb_decrypt_result(arr[0]),
+      failed: dco_decode_list_frb_batch_error(arr[1]),
+    );
+  }
+
+  @protected
+  FrbBatchEncryptEvent dco_decode_frb_batch_encrypt_event(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return FrbBatchEncryptEvent_FileProgress(
+          fileIndex: dco_decode_u_32(raw[1]),
+          totalFiles: dco_decode_u_32(raw[2]),
+          currentFile: dco_decode_String(raw[3]),
+          progress: dco_decode_box_autoadd_frb_progress_event(raw[4]),
+        );
+      case 1:
+        return FrbBatchEncryptEvent_FileDone(
+          fileIndex: dco_decode_u_32(raw[1]),
+          result: dco_decode_box_autoadd_frb_encrypt_result(raw[2]),
+        );
+      case 2:
+        return FrbBatchEncryptEvent_FileError(
+          fileIndex: dco_decode_u_32(raw[1]),
+          inputPath: dco_decode_String(raw[2]),
+          error: dco_decode_String(raw[3]),
+        );
+      case 3:
+        return FrbBatchEncryptEvent_AllDone(
+          dco_decode_box_autoadd_frb_batch_encrypt_result(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  FrbBatchEncryptOptions dco_decode_frb_batch_encrypt_options(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7)
+      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return FrbBatchEncryptOptions(
+      inputPaths: dco_decode_list_String(arr[0]),
+      outputDir: dco_decode_String(arr[1]),
+      password: dco_decode_String(arr[2]),
+      gzipCompressed: dco_decode_bool(arr[3]),
+      tempDir: dco_decode_opt_String(arr[4]),
+      metadata: dco_decode_list_frb_key_value(arr[5]),
+      chunkSize: dco_decode_frb_chunk_size_preset(arr[6]),
+    );
+  }
+
+  @protected
+  FrbBatchEncryptResult dco_decode_frb_batch_encrypt_result(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return FrbBatchEncryptResult(
+      succeeded: dco_decode_list_frb_encrypt_result(arr[0]),
+      failed: dco_decode_list_frb_batch_error(arr[1]),
+    );
+  }
+
+  @protected
+  FrbBatchError dco_decode_frb_batch_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return FrbBatchError(
+      inputPath: dco_decode_String(arr[0]),
+      error: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
+  FrbChunkSizePreset dco_decode_frb_chunk_size_preset(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return const FrbChunkSizePreset_Desktop();
+      case 1:
+        return const FrbChunkSizePreset_Mobile();
+      case 2:
+        return FrbChunkSizePreset_Custom(dco_decode_u_32(raw[1]));
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  FrbDecryptEvent dco_decode_frb_decrypt_event(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return FrbDecryptEvent_Progress(
+          dco_decode_box_autoadd_frb_progress_event(raw[1]),
+        );
+      case 1:
+        return FrbDecryptEvent_Done(
+          dco_decode_box_autoadd_frb_decrypt_result(raw[1]),
+        );
+      case 2:
+        return FrbDecryptEvent_Error(dco_decode_String(raw[1]));
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  FrbDecryptOptions dco_decode_frb_decrypt_options(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return FrbDecryptOptions(
+      inputPath: dco_decode_String(arr[0]),
+      outputDir: dco_decode_String(arr[1]),
+      password: dco_decode_String(arr[2]),
+      tempDir: dco_decode_opt_String(arr[3]),
+      chunkSize: dco_decode_frb_chunk_size_preset(arr[4]),
+    );
+  }
+
+  @protected
+  FrbDecryptResult dco_decode_frb_decrypt_result(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return FrbDecryptResult(
+      outputPath: dco_decode_String(arr[0]),
+      metadata: dco_decode_frb_decrypted_metadata(arr[1]),
+    );
+  }
+
+  @protected
+  FrbDecryptedMetadata dco_decode_frb_decrypted_metadata(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return FrbDecryptedMetadata(
+      originalFilename: dco_decode_String(arr[0]),
+      originalExtension: dco_decode_String(arr[1]),
+      gzipCompressed: dco_decode_bool(arr[2]),
+      originalSize: dco_decode_u_64(arr[3]),
+      uuid: dco_decode_String(arr[4]),
+      metadata: dco_decode_list_frb_key_value(arr[5]),
+    );
+  }
+
+  @protected
+  FrbEncryptEvent dco_decode_frb_encrypt_event(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return FrbEncryptEvent_Progress(
+          dco_decode_box_autoadd_frb_progress_event(raw[1]),
+        );
+      case 1:
+        return FrbEncryptEvent_Done(
+          dco_decode_box_autoadd_frb_encrypt_result(raw[1]),
+        );
+      case 2:
+        return FrbEncryptEvent_Error(dco_decode_String(raw[1]));
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  FrbEncryptOptions dco_decode_frb_encrypt_options(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 9)
+      throw Exception('unexpected arr length: expect 9 but see ${arr.length}');
+    return FrbEncryptOptions(
+      inputPath: dco_decode_String(arr[0]),
+      outputDir: dco_decode_String(arr[1]),
+      password: dco_decode_String(arr[2]),
+      gzipCompressed: dco_decode_bool(arr[3]),
+      uuid: dco_decode_opt_String(arr[4]),
+      outputExtension: dco_decode_opt_String(arr[5]),
+      tempDir: dco_decode_opt_String(arr[6]),
+      metadata: dco_decode_list_frb_key_value(arr[7]),
+      chunkSize: dco_decode_frb_chunk_size_preset(arr[8]),
+    );
+  }
+
+  @protected
+  FrbEncryptResult dco_decode_frb_encrypt_result(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return FrbEncryptResult(
+      outputPath: dco_decode_String(arr[0]),
+      uuid: dco_decode_String(arr[1]),
+      originalSize: dco_decode_u_64(arr[2]),
+    );
+  }
+
+  @protected
+  FrbKeyValue dco_decode_frb_key_value(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return FrbKeyValue(
+      key: dco_decode_String(arr[0]),
+      value: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
+  FrbProgressEvent dco_decode_frb_progress_event(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return FrbProgressEvent(
+      stage: dco_decode_frb_progress_stage(arr[0]),
+      bytesProcessed: dco_decode_u_64(arr[1]),
+      totalBytes: dco_decode_u_64(arr[2]),
+      percentage: dco_decode_f_64(arr[3]),
+    );
+  }
+
+  @protected
+  FrbProgressStage dco_decode_frb_progress_stage(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return FrbProgressStage.values[raw as int];
+  }
+
+  @protected
+  int dco_decode_i_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
+  PlatformInt64 dco_decode_i_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeI64(raw);
+  }
+
+  @protected
+  List<String> dco_decode_list_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_String).toList();
+  }
+
+  @protected
+  List<FrbBatchError> dco_decode_list_frb_batch_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_frb_batch_error).toList();
+  }
+
+  @protected
+  List<FrbDecryptResult> dco_decode_list_frb_decrypt_result(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_frb_decrypt_result).toList();
+  }
+
+  @protected
+  List<FrbEncryptResult> dco_decode_list_frb_encrypt_result(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_frb_encrypt_result).toList();
+  }
+
+  @protected
+  List<FrbKeyValue> dco_decode_list_frb_key_value(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_frb_key_value).toList();
+  }
+
+  @protected
+  Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as Uint8List;
+  }
+
+  @protected
+  LogEntry dco_decode_log_entry(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return LogEntry(
+      timeMillis: dco_decode_i_64(arr[0]),
+      level: dco_decode_i_32(arr[1]),
+      tag: dco_decode_String(arr[2]),
+      msg: dco_decode_String(arr[3]),
+    );
+  }
+
+  @protected
+  String? dco_decode_opt_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_String(raw);
+  }
+
+  @protected
+  int dco_decode_u_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
+  BigInt dco_decode_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeU64(raw);
+  }
+
+  @protected
+  int dco_decode_u_8(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
+  void dco_decode_unit(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return;
+  }
+
+  @protected
+  AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_String(deserializer);
+    return AnyhowException(inner);
+  }
+
+  @protected
+  RustStreamSink<FrbBatchDecryptEvent>
+  sse_decode_StreamSink_frb_batch_decrypt_event_Sse(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    throw UnimplementedError('Unreachable ()');
+  }
+
+  @protected
+  RustStreamSink<FrbBatchEncryptEvent>
+  sse_decode_StreamSink_frb_batch_encrypt_event_Sse(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    throw UnimplementedError('Unreachable ()');
+  }
+
+  @protected
+  RustStreamSink<FrbDecryptEvent> sse_decode_StreamSink_frb_decrypt_event_Sse(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    throw UnimplementedError('Unreachable ()');
+  }
+
+  @protected
+  RustStreamSink<FrbEncryptEvent> sse_decode_StreamSink_frb_encrypt_event_Sse(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    throw UnimplementedError('Unreachable ()');
+  }
+
+  @protected
+  RustStreamSink<LogEntry> sse_decode_StreamSink_log_entry_Sse(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    throw UnimplementedError('Unreachable ()');
+  }
+
+  @protected
+  String sse_decode_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_list_prim_u_8_strict(deserializer);
+    return utf8.decoder.convert(inner);
+  }
+
+  @protected
+  bool sse_decode_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint8() != 0;
+  }
+
+  @protected
+  FrbBatchDecryptOptions sse_decode_box_autoadd_frb_batch_decrypt_options(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_frb_batch_decrypt_options(deserializer));
+  }
+
+  @protected
+  FrbBatchDecryptResult sse_decode_box_autoadd_frb_batch_decrypt_result(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_frb_batch_decrypt_result(deserializer));
+  }
+
+  @protected
+  FrbBatchEncryptOptions sse_decode_box_autoadd_frb_batch_encrypt_options(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_frb_batch_encrypt_options(deserializer));
+  }
+
+  @protected
+  FrbBatchEncryptResult sse_decode_box_autoadd_frb_batch_encrypt_result(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_frb_batch_encrypt_result(deserializer));
+  }
+
+  @protected
+  FrbDecryptOptions sse_decode_box_autoadd_frb_decrypt_options(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_frb_decrypt_options(deserializer));
+  }
+
+  @protected
+  FrbDecryptResult sse_decode_box_autoadd_frb_decrypt_result(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_frb_decrypt_result(deserializer));
+  }
+
+  @protected
+  FrbEncryptOptions sse_decode_box_autoadd_frb_encrypt_options(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_frb_encrypt_options(deserializer));
+  }
+
+  @protected
+  FrbEncryptResult sse_decode_box_autoadd_frb_encrypt_result(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_frb_encrypt_result(deserializer));
+  }
+
+  @protected
+  FrbProgressEvent sse_decode_box_autoadd_frb_progress_event(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_frb_progress_event(deserializer));
+  }
+
+  @protected
+  double sse_decode_f_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getFloat64();
+  }
+
+  @protected
+  FrbBatchDecryptEvent sse_decode_frb_batch_decrypt_event(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_fileIndex = sse_decode_u_32(deserializer);
+        var var_totalFiles = sse_decode_u_32(deserializer);
+        var var_currentFile = sse_decode_String(deserializer);
+        var var_progress = sse_decode_box_autoadd_frb_progress_event(
+          deserializer,
+        );
+        return FrbBatchDecryptEvent_FileProgress(
+          fileIndex: var_fileIndex,
+          totalFiles: var_totalFiles,
+          currentFile: var_currentFile,
+          progress: var_progress,
+        );
+      case 1:
+        var var_fileIndex = sse_decode_u_32(deserializer);
+        var var_result = sse_decode_box_autoadd_frb_decrypt_result(
+          deserializer,
+        );
+        return FrbBatchDecryptEvent_FileDone(
+          fileIndex: var_fileIndex,
+          result: var_result,
+        );
+      case 2:
+        var var_fileIndex = sse_decode_u_32(deserializer);
+        var var_inputPath = sse_decode_String(deserializer);
+        var var_error = sse_decode_String(deserializer);
+        return FrbBatchDecryptEvent_FileError(
+          fileIndex: var_fileIndex,
+          inputPath: var_inputPath,
+          error: var_error,
+        );
+      case 3:
+        var var_field0 = sse_decode_box_autoadd_frb_batch_decrypt_result(
+          deserializer,
+        );
+        return FrbBatchDecryptEvent_AllDone(var_field0);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  FrbBatchDecryptOptions sse_decode_frb_batch_decrypt_options(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_inputPaths = sse_decode_list_String(deserializer);
+    var var_outputDir = sse_decode_String(deserializer);
+    var var_password = sse_decode_String(deserializer);
+    var var_tempDir = sse_decode_opt_String(deserializer);
+    var var_chunkSize = sse_decode_frb_chunk_size_preset(deserializer);
+    return FrbBatchDecryptOptions(
+      inputPaths: var_inputPaths,
+      outputDir: var_outputDir,
+      password: var_password,
+      tempDir: var_tempDir,
+      chunkSize: var_chunkSize,
+    );
+  }
+
+  @protected
+  FrbBatchDecryptResult sse_decode_frb_batch_decrypt_result(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_succeeded = sse_decode_list_frb_decrypt_result(deserializer);
+    var var_failed = sse_decode_list_frb_batch_error(deserializer);
+    return FrbBatchDecryptResult(succeeded: var_succeeded, failed: var_failed);
+  }
+
+  @protected
+  FrbBatchEncryptEvent sse_decode_frb_batch_encrypt_event(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_fileIndex = sse_decode_u_32(deserializer);
+        var var_totalFiles = sse_decode_u_32(deserializer);
+        var var_currentFile = sse_decode_String(deserializer);
+        var var_progress = sse_decode_box_autoadd_frb_progress_event(
+          deserializer,
+        );
+        return FrbBatchEncryptEvent_FileProgress(
+          fileIndex: var_fileIndex,
+          totalFiles: var_totalFiles,
+          currentFile: var_currentFile,
+          progress: var_progress,
+        );
+      case 1:
+        var var_fileIndex = sse_decode_u_32(deserializer);
+        var var_result = sse_decode_box_autoadd_frb_encrypt_result(
+          deserializer,
+        );
+        return FrbBatchEncryptEvent_FileDone(
+          fileIndex: var_fileIndex,
+          result: var_result,
+        );
+      case 2:
+        var var_fileIndex = sse_decode_u_32(deserializer);
+        var var_inputPath = sse_decode_String(deserializer);
+        var var_error = sse_decode_String(deserializer);
+        return FrbBatchEncryptEvent_FileError(
+          fileIndex: var_fileIndex,
+          inputPath: var_inputPath,
+          error: var_error,
+        );
+      case 3:
+        var var_field0 = sse_decode_box_autoadd_frb_batch_encrypt_result(
+          deserializer,
+        );
+        return FrbBatchEncryptEvent_AllDone(var_field0);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  FrbBatchEncryptOptions sse_decode_frb_batch_encrypt_options(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_inputPaths = sse_decode_list_String(deserializer);
+    var var_outputDir = sse_decode_String(deserializer);
+    var var_password = sse_decode_String(deserializer);
+    var var_gzipCompressed = sse_decode_bool(deserializer);
+    var var_tempDir = sse_decode_opt_String(deserializer);
+    var var_metadata = sse_decode_list_frb_key_value(deserializer);
+    var var_chunkSize = sse_decode_frb_chunk_size_preset(deserializer);
+    return FrbBatchEncryptOptions(
+      inputPaths: var_inputPaths,
+      outputDir: var_outputDir,
+      password: var_password,
+      gzipCompressed: var_gzipCompressed,
+      tempDir: var_tempDir,
+      metadata: var_metadata,
+      chunkSize: var_chunkSize,
+    );
+  }
+
+  @protected
+  FrbBatchEncryptResult sse_decode_frb_batch_encrypt_result(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_succeeded = sse_decode_list_frb_encrypt_result(deserializer);
+    var var_failed = sse_decode_list_frb_batch_error(deserializer);
+    return FrbBatchEncryptResult(succeeded: var_succeeded, failed: var_failed);
+  }
+
+  @protected
+  FrbBatchError sse_decode_frb_batch_error(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_inputPath = sse_decode_String(deserializer);
+    var var_error = sse_decode_String(deserializer);
+    return FrbBatchError(inputPath: var_inputPath, error: var_error);
+  }
+
+  @protected
+  FrbChunkSizePreset sse_decode_frb_chunk_size_preset(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        return const FrbChunkSizePreset_Desktop();
+      case 1:
+        return const FrbChunkSizePreset_Mobile();
+      case 2:
+        var var_field0 = sse_decode_u_32(deserializer);
+        return FrbChunkSizePreset_Custom(var_field0);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  FrbDecryptEvent sse_decode_frb_decrypt_event(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_field0 = sse_decode_box_autoadd_frb_progress_event(
+          deserializer,
+        );
+        return FrbDecryptEvent_Progress(var_field0);
+      case 1:
+        var var_field0 = sse_decode_box_autoadd_frb_decrypt_result(
+          deserializer,
+        );
+        return FrbDecryptEvent_Done(var_field0);
+      case 2:
+        var var_field0 = sse_decode_String(deserializer);
+        return FrbDecryptEvent_Error(var_field0);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  FrbDecryptOptions sse_decode_frb_decrypt_options(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_inputPath = sse_decode_String(deserializer);
+    var var_outputDir = sse_decode_String(deserializer);
+    var var_password = sse_decode_String(deserializer);
+    var var_tempDir = sse_decode_opt_String(deserializer);
+    var var_chunkSize = sse_decode_frb_chunk_size_preset(deserializer);
+    return FrbDecryptOptions(
+      inputPath: var_inputPath,
+      outputDir: var_outputDir,
+      password: var_password,
+      tempDir: var_tempDir,
+      chunkSize: var_chunkSize,
+    );
+  }
+
+  @protected
+  FrbDecryptResult sse_decode_frb_decrypt_result(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_outputPath = sse_decode_String(deserializer);
+    var var_metadata = sse_decode_frb_decrypted_metadata(deserializer);
+    return FrbDecryptResult(outputPath: var_outputPath, metadata: var_metadata);
+  }
+
+  @protected
+  FrbDecryptedMetadata sse_decode_frb_decrypted_metadata(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_originalFilename = sse_decode_String(deserializer);
+    var var_originalExtension = sse_decode_String(deserializer);
+    var var_gzipCompressed = sse_decode_bool(deserializer);
+    var var_originalSize = sse_decode_u_64(deserializer);
+    var var_uuid = sse_decode_String(deserializer);
+    var var_metadata = sse_decode_list_frb_key_value(deserializer);
+    return FrbDecryptedMetadata(
+      originalFilename: var_originalFilename,
+      originalExtension: var_originalExtension,
+      gzipCompressed: var_gzipCompressed,
+      originalSize: var_originalSize,
+      uuid: var_uuid,
+      metadata: var_metadata,
+    );
+  }
+
+  @protected
+  FrbEncryptEvent sse_decode_frb_encrypt_event(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_field0 = sse_decode_box_autoadd_frb_progress_event(
+          deserializer,
+        );
+        return FrbEncryptEvent_Progress(var_field0);
+      case 1:
+        var var_field0 = sse_decode_box_autoadd_frb_encrypt_result(
+          deserializer,
+        );
+        return FrbEncryptEvent_Done(var_field0);
+      case 2:
+        var var_field0 = sse_decode_String(deserializer);
+        return FrbEncryptEvent_Error(var_field0);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  FrbEncryptOptions sse_decode_frb_encrypt_options(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_inputPath = sse_decode_String(deserializer);
+    var var_outputDir = sse_decode_String(deserializer);
+    var var_password = sse_decode_String(deserializer);
+    var var_gzipCompressed = sse_decode_bool(deserializer);
+    var var_uuid = sse_decode_opt_String(deserializer);
+    var var_outputExtension = sse_decode_opt_String(deserializer);
+    var var_tempDir = sse_decode_opt_String(deserializer);
+    var var_metadata = sse_decode_list_frb_key_value(deserializer);
+    var var_chunkSize = sse_decode_frb_chunk_size_preset(deserializer);
+    return FrbEncryptOptions(
+      inputPath: var_inputPath,
+      outputDir: var_outputDir,
+      password: var_password,
+      gzipCompressed: var_gzipCompressed,
+      uuid: var_uuid,
+      outputExtension: var_outputExtension,
+      tempDir: var_tempDir,
+      metadata: var_metadata,
+      chunkSize: var_chunkSize,
+    );
+  }
+
+  @protected
+  FrbEncryptResult sse_decode_frb_encrypt_result(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_outputPath = sse_decode_String(deserializer);
+    var var_uuid = sse_decode_String(deserializer);
+    var var_originalSize = sse_decode_u_64(deserializer);
+    return FrbEncryptResult(
+      outputPath: var_outputPath,
+      uuid: var_uuid,
+      originalSize: var_originalSize,
+    );
+  }
+
+  @protected
+  FrbKeyValue sse_decode_frb_key_value(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_key = sse_decode_String(deserializer);
+    var var_value = sse_decode_String(deserializer);
+    return FrbKeyValue(key: var_key, value: var_value);
+  }
+
+  @protected
+  FrbProgressEvent sse_decode_frb_progress_event(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_stage = sse_decode_frb_progress_stage(deserializer);
+    var var_bytesProcessed = sse_decode_u_64(deserializer);
+    var var_totalBytes = sse_decode_u_64(deserializer);
+    var var_percentage = sse_decode_f_64(deserializer);
+    return FrbProgressEvent(
+      stage: var_stage,
+      bytesProcessed: var_bytesProcessed,
+      totalBytes: var_totalBytes,
+      percentage: var_percentage,
+    );
+  }
+
+  @protected
+  FrbProgressStage sse_decode_frb_progress_stage(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return FrbProgressStage.values[inner];
+  }
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getInt32();
+  }
+
+  @protected
+  PlatformInt64 sse_decode_i_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getPlatformInt64();
+  }
+
+  @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <String>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_String(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FrbBatchError> sse_decode_list_frb_batch_error(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FrbBatchError>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_frb_batch_error(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FrbDecryptResult> sse_decode_list_frb_decrypt_result(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FrbDecryptResult>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_frb_decrypt_result(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FrbEncryptResult> sse_decode_list_frb_encrypt_result(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FrbEncryptResult>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_frb_encrypt_result(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FrbKeyValue> sse_decode_list_frb_key_value(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FrbKeyValue>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_frb_key_value(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
+  LogEntry sse_decode_log_entry(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_timeMillis = sse_decode_i_64(deserializer);
+    var var_level = sse_decode_i_32(deserializer);
+    var var_tag = sse_decode_String(deserializer);
+    var var_msg = sse_decode_String(deserializer);
+    return LogEntry(
+      timeMillis: var_timeMillis,
+      level: var_level,
+      tag: var_tag,
+      msg: var_msg,
+    );
+  }
+
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_String(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  int sse_decode_u_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint32();
+  }
+
+  @protected
+  BigInt sse_decode_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getBigUint64();
+  }
+
+  @protected
+  int sse_decode_u_8(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint8();
+  }
+
+  @protected
+  void sse_decode_unit(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
+  void sse_encode_AnyhowException(
+    AnyhowException self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.message, serializer);
+  }
+
+  @protected
+  void sse_encode_StreamSink_frb_batch_decrypt_event_Sse(
+    RustStreamSink<FrbBatchDecryptEvent> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(
+      self.setupAndSerialize(
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_frb_batch_decrypt_event,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void sse_encode_StreamSink_frb_batch_encrypt_event_Sse(
+    RustStreamSink<FrbBatchEncryptEvent> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(
+      self.setupAndSerialize(
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_frb_batch_encrypt_event,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void sse_encode_StreamSink_frb_decrypt_event_Sse(
+    RustStreamSink<FrbDecryptEvent> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(
+      self.setupAndSerialize(
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_frb_decrypt_event,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void sse_encode_StreamSink_frb_encrypt_event_Sse(
+    RustStreamSink<FrbEncryptEvent> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(
+      self.setupAndSerialize(
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_frb_encrypt_event,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void sse_encode_StreamSink_log_entry_Sse(
+    RustStreamSink<LogEntry> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(
+      self.setupAndSerialize(
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_log_entry,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void sse_encode_String(String self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer);
+  }
+
+  @protected
+  void sse_encode_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint8(self ? 1 : 0);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_frb_batch_decrypt_options(
+    FrbBatchDecryptOptions self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_frb_batch_decrypt_options(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_frb_batch_decrypt_result(
+    FrbBatchDecryptResult self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_frb_batch_decrypt_result(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_frb_batch_encrypt_options(
+    FrbBatchEncryptOptions self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_frb_batch_encrypt_options(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_frb_batch_encrypt_result(
+    FrbBatchEncryptResult self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_frb_batch_encrypt_result(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_frb_decrypt_options(
+    FrbDecryptOptions self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_frb_decrypt_options(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_frb_decrypt_result(
+    FrbDecryptResult self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_frb_decrypt_result(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_frb_encrypt_options(
+    FrbEncryptOptions self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_frb_encrypt_options(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_frb_encrypt_result(
+    FrbEncryptResult self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_frb_encrypt_result(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_frb_progress_event(
+    FrbProgressEvent self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_frb_progress_event(self, serializer);
+  }
+
+  @protected
+  void sse_encode_f_64(double self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putFloat64(self);
+  }
+
+  @protected
+  void sse_encode_frb_batch_decrypt_event(
+    FrbBatchDecryptEvent self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case FrbBatchDecryptEvent_FileProgress(
+        fileIndex: final fileIndex,
+        totalFiles: final totalFiles,
+        currentFile: final currentFile,
+        progress: final progress,
+      ):
+        sse_encode_i_32(0, serializer);
+        sse_encode_u_32(fileIndex, serializer);
+        sse_encode_u_32(totalFiles, serializer);
+        sse_encode_String(currentFile, serializer);
+        sse_encode_box_autoadd_frb_progress_event(progress, serializer);
+      case FrbBatchDecryptEvent_FileDone(
+        fileIndex: final fileIndex,
+        result: final result,
+      ):
+        sse_encode_i_32(1, serializer);
+        sse_encode_u_32(fileIndex, serializer);
+        sse_encode_box_autoadd_frb_decrypt_result(result, serializer);
+      case FrbBatchDecryptEvent_FileError(
+        fileIndex: final fileIndex,
+        inputPath: final inputPath,
+        error: final error,
+      ):
+        sse_encode_i_32(2, serializer);
+        sse_encode_u_32(fileIndex, serializer);
+        sse_encode_String(inputPath, serializer);
+        sse_encode_String(error, serializer);
+      case FrbBatchDecryptEvent_AllDone(field0: final field0):
+        sse_encode_i_32(3, serializer);
+        sse_encode_box_autoadd_frb_batch_decrypt_result(field0, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_frb_batch_decrypt_options(
+    FrbBatchDecryptOptions self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_String(self.inputPaths, serializer);
+    sse_encode_String(self.outputDir, serializer);
+    sse_encode_String(self.password, serializer);
+    sse_encode_opt_String(self.tempDir, serializer);
+    sse_encode_frb_chunk_size_preset(self.chunkSize, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_batch_decrypt_result(
+    FrbBatchDecryptResult self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_frb_decrypt_result(self.succeeded, serializer);
+    sse_encode_list_frb_batch_error(self.failed, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_batch_encrypt_event(
+    FrbBatchEncryptEvent self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case FrbBatchEncryptEvent_FileProgress(
+        fileIndex: final fileIndex,
+        totalFiles: final totalFiles,
+        currentFile: final currentFile,
+        progress: final progress,
+      ):
+        sse_encode_i_32(0, serializer);
+        sse_encode_u_32(fileIndex, serializer);
+        sse_encode_u_32(totalFiles, serializer);
+        sse_encode_String(currentFile, serializer);
+        sse_encode_box_autoadd_frb_progress_event(progress, serializer);
+      case FrbBatchEncryptEvent_FileDone(
+        fileIndex: final fileIndex,
+        result: final result,
+      ):
+        sse_encode_i_32(1, serializer);
+        sse_encode_u_32(fileIndex, serializer);
+        sse_encode_box_autoadd_frb_encrypt_result(result, serializer);
+      case FrbBatchEncryptEvent_FileError(
+        fileIndex: final fileIndex,
+        inputPath: final inputPath,
+        error: final error,
+      ):
+        sse_encode_i_32(2, serializer);
+        sse_encode_u_32(fileIndex, serializer);
+        sse_encode_String(inputPath, serializer);
+        sse_encode_String(error, serializer);
+      case FrbBatchEncryptEvent_AllDone(field0: final field0):
+        sse_encode_i_32(3, serializer);
+        sse_encode_box_autoadd_frb_batch_encrypt_result(field0, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_frb_batch_encrypt_options(
+    FrbBatchEncryptOptions self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_String(self.inputPaths, serializer);
+    sse_encode_String(self.outputDir, serializer);
+    sse_encode_String(self.password, serializer);
+    sse_encode_bool(self.gzipCompressed, serializer);
+    sse_encode_opt_String(self.tempDir, serializer);
+    sse_encode_list_frb_key_value(self.metadata, serializer);
+    sse_encode_frb_chunk_size_preset(self.chunkSize, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_batch_encrypt_result(
+    FrbBatchEncryptResult self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_frb_encrypt_result(self.succeeded, serializer);
+    sse_encode_list_frb_batch_error(self.failed, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_batch_error(
+    FrbBatchError self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.inputPath, serializer);
+    sse_encode_String(self.error, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_chunk_size_preset(
+    FrbChunkSizePreset self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case FrbChunkSizePreset_Desktop():
+        sse_encode_i_32(0, serializer);
+      case FrbChunkSizePreset_Mobile():
+        sse_encode_i_32(1, serializer);
+      case FrbChunkSizePreset_Custom(field0: final field0):
+        sse_encode_i_32(2, serializer);
+        sse_encode_u_32(field0, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_frb_decrypt_event(
+    FrbDecryptEvent self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case FrbDecryptEvent_Progress(field0: final field0):
+        sse_encode_i_32(0, serializer);
+        sse_encode_box_autoadd_frb_progress_event(field0, serializer);
+      case FrbDecryptEvent_Done(field0: final field0):
+        sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_frb_decrypt_result(field0, serializer);
+      case FrbDecryptEvent_Error(field0: final field0):
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(field0, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_frb_decrypt_options(
+    FrbDecryptOptions self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.inputPath, serializer);
+    sse_encode_String(self.outputDir, serializer);
+    sse_encode_String(self.password, serializer);
+    sse_encode_opt_String(self.tempDir, serializer);
+    sse_encode_frb_chunk_size_preset(self.chunkSize, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_decrypt_result(
+    FrbDecryptResult self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.outputPath, serializer);
+    sse_encode_frb_decrypted_metadata(self.metadata, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_decrypted_metadata(
+    FrbDecryptedMetadata self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.originalFilename, serializer);
+    sse_encode_String(self.originalExtension, serializer);
+    sse_encode_bool(self.gzipCompressed, serializer);
+    sse_encode_u_64(self.originalSize, serializer);
+    sse_encode_String(self.uuid, serializer);
+    sse_encode_list_frb_key_value(self.metadata, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_encrypt_event(
+    FrbEncryptEvent self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case FrbEncryptEvent_Progress(field0: final field0):
+        sse_encode_i_32(0, serializer);
+        sse_encode_box_autoadd_frb_progress_event(field0, serializer);
+      case FrbEncryptEvent_Done(field0: final field0):
+        sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_frb_encrypt_result(field0, serializer);
+      case FrbEncryptEvent_Error(field0: final field0):
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(field0, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_frb_encrypt_options(
+    FrbEncryptOptions self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.inputPath, serializer);
+    sse_encode_String(self.outputDir, serializer);
+    sse_encode_String(self.password, serializer);
+    sse_encode_bool(self.gzipCompressed, serializer);
+    sse_encode_opt_String(self.uuid, serializer);
+    sse_encode_opt_String(self.outputExtension, serializer);
+    sse_encode_opt_String(self.tempDir, serializer);
+    sse_encode_list_frb_key_value(self.metadata, serializer);
+    sse_encode_frb_chunk_size_preset(self.chunkSize, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_encrypt_result(
+    FrbEncryptResult self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.outputPath, serializer);
+    sse_encode_String(self.uuid, serializer);
+    sse_encode_u_64(self.originalSize, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_key_value(FrbKeyValue self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.key, serializer);
+    sse_encode_String(self.value, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_progress_event(
+    FrbProgressEvent self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_frb_progress_stage(self.stage, serializer);
+    sse_encode_u_64(self.bytesProcessed, serializer);
+    sse_encode_u_64(self.totalBytes, serializer);
+    sse_encode_f_64(self.percentage, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_progress_stage(
+    FrbProgressStage self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putInt32(self);
+  }
+
+  @protected
+  void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putPlatformInt64(self);
+  }
+
+  @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_String(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_frb_batch_error(
+    List<FrbBatchError> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_frb_batch_error(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_frb_decrypt_result(
+    List<FrbDecryptResult> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_frb_decrypt_result(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_frb_encrypt_result(
+    List<FrbEncryptResult> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_frb_encrypt_result(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_frb_key_value(
+    List<FrbKeyValue> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_frb_key_value(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_prim_u_8_strict(
+    Uint8List self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putUint8List(self);
+  }
+
+  @protected
+  void sse_encode_log_entry(LogEntry self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self.timeMillis, serializer);
+    sse_encode_i_32(self.level, serializer);
+    sse_encode_String(self.tag, serializer);
+    sse_encode_String(self.msg, serializer);
+  }
+
+  @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_String(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_u_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint32(self);
+  }
+
+  @protected
+  void sse_encode_u_64(BigInt self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putBigUint64(self);
+  }
+
+  @protected
+  void sse_encode_u_8(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint8(self);
+  }
+
+  @protected
+  void sse_encode_unit(void self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+}

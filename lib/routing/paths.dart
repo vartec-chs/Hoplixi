@@ -101,4 +101,7 @@ class AppRoutesPaths {
   static String iconEditForEntity(EntityType entity, String id) =>
       '/dashboard/${entity.id}/icons/edit/$id';
   static String iconEditWithId(String id) => '/dashboard/icons/edit/$id';
+
+  /// Crypt API Test
+  static const String cryptTest = '/crypt-test';
 }

@@ -590,6 +590,12 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2>
       ),
       // --- TEST ITEMS ---
       ActionItem(
+        icon: LucideIcons.shield,
+        label: 'Crypt API',
+        description: 'Тест шифрования',
+        onTap: () => context.push(AppRoutesPaths.cryptTest),
+      ),
+      ActionItem(
         icon: LucideIcons.key,
         label: 'Генератор',
         description: 'Генерация паролей',
