@@ -1,0 +1,36 @@
+[package]
+name = "hoplixi_file_crypt"
+version = "0.1.0"
+edition = "2024"
+description = "Secure file and folder encryption library using XChaCha20-Poly1305 + Argon2id"
+
+[lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = ["cfg(frb_expand)"]
+
+[lib]
+name = "hoplixi_file_crypt"
+path = "src/lib.rs"
+crate-type = ["cdylib", "lib", "staticlib"]
+
+[[bin]]
+name = "hoplixi-crypt"
+path = "src/main.rs"
+
+[dependencies]
+chacha20poly1305 = "0.10.1"
+argon2 = "0.5.3"
+hkdf = "0.12.4"
+sha2 = "0.10.9"
+rand = "0.10.0"
+tokio = { version = "1.49.0", features = ["full"] }
+uuid = { version = "1.21.0", features = ["v4"] }
+serde = { version = "1.0.228", features = ["derive"] }
+bincode = { version = "2.0.1", features = ["serde"] }
+walkdir = "2.5.0"
+tempfile = "3.26.0"
+sevenz-rust2 = { version = "0.20.2", features = ["compress", "util"] }
+flate2 = "1.1.9"
+thiserror = "2.0.18"
+zeroize = { version = "1.8.2", features = ["derive"] }
+anyhow = "1.0.102"

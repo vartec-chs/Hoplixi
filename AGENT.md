@@ -28,6 +28,8 @@ securely store and manage their passwords.
   filters, DTO, UI forms, cards, and integration points).
 - See [docs-ai/localization.md](docs-ai/localization.md) for localization rules
   and workflow (currently supported locales: `en` and `ru`).
+- See [docs-ai/crypt-api-usage.md](docs-ai/crypt-api-usage.md) for usage
+  instructions of the Hoplixi File Crypt API from Dart.
 
 ## Technologies Used
 
@@ -90,6 +92,9 @@ and ready for use. You can immediately start implementing Rust functions in
 See [docs-ai/rust-integration.md](docs-ai/rust-integration.md) for details on
 integrating Rust code using `flutter_rust_bridge` version 2.x and cross-platform
 requirements.
+
+See [docs-ai/crypt-api-usage.md](docs-ai/crypt-api-usage.md) for usage
+instructions of the Hoplixi File Crypt API from Dart.
 
 ### Extension Methods
 
