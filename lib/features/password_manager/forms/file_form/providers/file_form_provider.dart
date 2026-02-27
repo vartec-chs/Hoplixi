@@ -246,9 +246,8 @@ class FileFormNotifier extends Notifier<FileFormState> {
             await fileStorageService.updateFileContent(
               fileId: state.editingFileId!,
               newFile: state.selectedFile!,
-              onProgress: (processed, total) {
-                final progress = total > 0 ? processed / total : 0.0;
-                state = state.copyWith(uploadProgress: progress);
+              onProgress: (percentage) {
+                state = state.copyWith(uploadProgress: percentage / 100.0);
               },
             );
             logInfo(
@@ -294,9 +293,8 @@ class FileFormNotifier extends Notifier<FileFormState> {
           categoryId: state.categoryId,
           noteId: state.noteId,
           tagsIds: state.tagIds,
-          onProgress: (processed, total) {
-            final progress = total > 0 ? processed / total : 0.0;
-            state = state.copyWith(uploadProgress: progress);
+          onProgress: (percentage) {
+            state = state.copyWith(uploadProgress: percentage / 100.0);
           },
         );
 

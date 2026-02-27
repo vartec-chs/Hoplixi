@@ -52,9 +52,7 @@ class DocumentStorageService {
         // Импортируем файл страницы
         final metadataId = await _fileStorageService.importPageFile(
           sourceFile: pageFile,
-          onProgress: (processed, total) {
-            onProgress?.call(i + 1, pageFiles.length);
-          },
+          onProgress: (_) => onProgress?.call(i + 1, pageFiles.length),
         );
 
         // Создаем запись страницы документа
@@ -117,9 +115,7 @@ class DocumentStorageService {
         // Импортируем файл страницы
         final metadataId = await _fileStorageService.importPageFile(
           sourceFile: pageFile,
-          onProgress: (processed, total) {
-            onProgress?.call(i + 1, pageFiles.length);
-          },
+          onProgress: (_) => onProgress?.call(i + 1, pageFiles.length),
         );
 
         // Создаем запись страницы
@@ -290,7 +286,7 @@ class DocumentStorageService {
   /// Расшифровать страницу документа
   Future<String> decryptDocumentPage({
     required String pageId,
-    void Function(int, int)? onProgress,
+    void Function(double percentage)? onProgress,
   }) async {
     final page = await (_db.select(
       _db.documentPages,
@@ -310,7 +306,7 @@ class DocumentStorageService {
   Future<void> updateDocumentPage({
     required String pageId,
     required File newPageFile,
-    void Function(int, int)? onProgress,
+    void Function(double percentage)? onProgress,
   }) async {
     await _db.transaction(() async {
       final page = await (_db.select(

@@ -2,19 +2,18 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
-import 'package:file_crypto/file_crypto.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/dto/file_dto.dart';
 import 'package:hoplixi/main_store/models/store_settings_keys.dart';
+import 'package:hoplixi/rust/api/crypt_api.dart' as crypt;
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
 class FileStorageService {
   final MainStore _db;
-  final ArchiveEncryptor _encryptor;
   final String _attachmentsPath;
   final String _decryptedAttachmentsPath;
 
@@ -22,15 +21,15 @@ class FileStorageService {
     this._db,
     this._attachmentsPath,
     this._decryptedAttachmentsPath,
-  ) : _encryptor = ArchiveEncryptor();
+  );
 
-  /// Получить ключ шифрования из метаданных хранилища
+  /// Получить ключ шифрования из метаданных хранилища.
   Future<String> _getAttachmentKey() async {
     final meta = await _db.select(_db.storeMetaTable).getSingle();
     return meta.attachmentKey;
   }
 
-  /// Получить путь к директории вложений
+  /// Получить путь к директории вложений, создав её при необходимости.
   Future<String> _getAttachmentsPath() async {
     final directory = Directory(_attachmentsPath);
     if (!await directory.exists()) {
@@ -39,7 +38,85 @@ class FileStorageService {
     return _attachmentsPath;
   }
 
-  /// Импортировать файл: шифрует и сохраняет в БД
+  /// Зашифровать файл через crypt_api и вернуть базовое имя выходного файла.
+  ///
+  /// [uuid] — используется как имя выходного файла. Если не передан, генерируется.
+  /// [onProgress] — коллбэк прогресса (0.0–100.0).
+  Future<String> _encryptFile({
+    required String inputPath,
+    required String outputDir,
+    required String password,
+    required String uuid,
+    void Function(double percentage)? onProgress,
+  }) async {
+    final opts = crypt.FrbEncryptOptions(
+      inputPath: inputPath,
+      outputDir: outputDir,
+      password: password,
+      gzipCompressed: false,
+      uuid: uuid,
+      outputExtension: MainConstants.encryptedFileExtension,
+      tempDir: null,
+      metadata: const [],
+      chunkSize: crypt.FrbChunkSizePreset.desktop(),
+    );
+
+    String? resultPath;
+
+    await for (final event in crypt.encryptFile(opts: opts)) {
+      switch (event) {
+        case crypt.FrbEncryptEvent_Progress(:final field0):
+          onProgress?.call(field0.percentage);
+        case crypt.FrbEncryptEvent_Done(:final field0):
+          resultPath = field0.outputPath;
+        case crypt.FrbEncryptEvent_Error(:final field0):
+          throw Exception('Ошибка шифрования: $field0');
+      }
+    }
+
+    if (resultPath == null) {
+      throw Exception('Шифрование завершилось без результата');
+    }
+
+    return p.basename(resultPath);
+  }
+
+  /// Расшифровать файл через crypt_api в директорию [outputDir].
+  ///
+  /// Возвращает путь к расшифрованному файлу.
+  Future<String> _decryptFile({
+    required String encryptedFilePath,
+    required String outputDir,
+    required String password,
+    void Function(double percentage)? onProgress,
+  }) async {
+    final opts = await crypt.FrbDecryptOptions.simple(
+      inputPath: encryptedFilePath,
+      outputDir: outputDir,
+      password: password,
+    );
+
+    String? resultPath;
+
+    await for (final event in crypt.decryptFile(opts: opts)) {
+      switch (event) {
+        case crypt.FrbDecryptEvent_Progress(:final field0):
+          onProgress?.call(field0.percentage);
+        case crypt.FrbDecryptEvent_Done(:final field0):
+          resultPath = field0.outputPath;
+        case crypt.FrbDecryptEvent_Error(:final field0):
+          throw Exception('Ошибка расшифровки: $field0');
+      }
+    }
+
+    if (resultPath == null) {
+      throw Exception('Расшифровка завершилась без результата');
+    }
+
+    return resultPath;
+  }
+
+  /// Импортировать файл: шифрует и сохраняет в БД.
   Future<String> importFile({
     required File sourceFile,
     required String name,
@@ -47,7 +124,7 @@ class FileStorageService {
     String? categoryId,
     String? noteId,
     required List<String> tagsIds,
-    void Function(int, int)? onProgress,
+    void Function(double percentage)? onProgress,
   }) async {
     if (!await sourceFile.exists()) {
       throw Exception('Source file not found');
@@ -57,25 +134,19 @@ class FileStorageService {
     final attachmentsPath = await _getAttachmentsPath();
     final filePathUuid = const Uuid().v4();
     final extension = p.extension(sourceFile.path);
-    final encryptedFileName =
-        '$filePathUuid${MainConstants.encryptedFileExtension}';
-    final encryptedFilePath = p.join(attachmentsPath, encryptedFileName);
 
-    // Шифруем файл
-    await _encryptor.encrypt(
+    final encryptedFileName = await _encryptFile(
       inputPath: sourceFile.path,
-      outputPath: encryptedFilePath,
+      outputDir: attachmentsPath,
       password: key,
+      uuid: filePathUuid,
       onProgress: onProgress,
     );
 
-    // Вычисляем хеш оригинального файла
     final digest = await sha256.bind(sourceFile.openRead()).first;
     final fileHash = digest.toString();
-
     final fileSize = await sourceFile.length();
     final fileName = p.basename(sourceFile.path);
-
     final mimeType =
         lookupMimeType(sourceFile.path) ?? 'application/octet-stream';
 
@@ -96,10 +167,10 @@ class FileStorageService {
     return _db.fileDao.createFile(dto);
   }
 
-  /// Расшифровать файл в указанный путь
+  /// Расшифровать файл в директорию для расшифрованных вложений.
   Future<String> decryptFile({
     required String fileId,
-    void Function(int, int)? onProgress,
+    void Function(double percentage)? onProgress,
   }) async {
     final record = await _db.fileDao.getById(fileId);
     if (record == null) {
@@ -129,36 +200,34 @@ class FileStorageService {
       throw Exception('Encrypted file not found on disk');
     }
 
-    // Создаем временную директорию для расшифровки, так как ArchiveEncryptor
-    // восстанавливает оригинальное имя файла, а нам нужно сохранить в destinationPath
+    // Расшифровываем во временную директорию, потому что crypt_api
+    // восстанавливает оригинальное имя файла из заголовка.
     final tempDir = await Directory.systemTemp.createTemp('hoplixi_decrypt_');
     try {
-      final result = await _encryptor.decrypt(
-        inputPath: encryptedFilePath,
-        outputPath: tempDir.path,
+      final decryptedPath = await _decryptFile(
+        encryptedFilePath: encryptedFilePath,
+        outputDir: tempDir.path,
         password: key,
         onProgress: onProgress,
       );
 
-      final decryptedFile = File(result.outputPath);
-      if (await decryptedFile.exists()) {
-        // Копируем файл в целевой путь
-        // Убедимся, что директория назначения существует
-        final destDir = Directory(_decryptedAttachmentsPath);
-        if (!await destDir.exists()) {
-          await destDir.create(recursive: true);
-        }
-        final destinationPath = p.join(
-          _decryptedAttachmentsPath,
-          p.basename(decryptedFile.path),
-        );
-        await decryptedFile.copy(destinationPath);
-        return destinationPath;
-      } else {
+      final decryptedFile = File(decryptedPath);
+      if (!await decryptedFile.exists()) {
         throw Exception(
-          'Decryption finished but file not found at ${result.outputPath}',
+          'Decryption finished but file not found at $decryptedPath',
         );
       }
+
+      final destDir = Directory(_decryptedAttachmentsPath);
+      if (!await destDir.exists()) {
+        await destDir.create(recursive: true);
+      }
+      final destinationPath = p.join(
+        _decryptedAttachmentsPath,
+        p.basename(decryptedFile.path),
+      );
+      await decryptedFile.copy(destinationPath);
+      return destinationPath;
     } finally {
       if (await tempDir.exists()) {
         await tempDir.delete(recursive: true);
@@ -166,15 +235,15 @@ class FileStorageService {
     }
   }
 
-  /// Обновить содержимое файла: старый файл в историю, новый шифруется и сохраняется
+  /// Обновить содержимое файла: старый файл — в историю, новый шифруется.
   Future<void> updateFileContent({
     required String fileId,
     required File newFile,
-    void Function(int, int)? onProgress,
+    void Function(double percentage)? onProgress,
   }) async {
     final record = await _db.fileDao.getById(fileId);
     if (record == null) throw Exception('File not found');
-    final (currentVault, currentFileItem) = record;
+    final (_, currentFileItem) = record;
 
     if (currentFileItem.metadataId == null) {
       throw Exception('File has no metadata');
@@ -198,22 +267,18 @@ class FileStorageService {
     final isHistoryEnabled =
         historyEnabledStr == null || historyEnabledStr.value == 'true';
 
-    // 2. Шифруем новый файл
     final key = await _getAttachmentKey();
     final attachmentsPath = await _getAttachmentsPath();
     final newFilePathUuid = const Uuid().v4();
-    final newEncryptedFileName =
-        '$newFilePathUuid${MainConstants.encryptedFileExtension}';
-    final newEncryptedFilePath = p.join(attachmentsPath, newEncryptedFileName);
 
-    await _encryptor.encrypt(
+    final newEncryptedFileName = await _encryptFile(
       inputPath: newFile.path,
-      outputPath: newEncryptedFilePath,
+      outputDir: attachmentsPath,
       password: key,
+      uuid: newFilePathUuid,
       onProgress: onProgress,
     );
 
-    // 3. Вычисляем новые метаданные
     final digest = await sha256.bind(newFile.openRead()).first;
     final newFileHash = digest.toString();
     final newFileSize = await newFile.length();
@@ -222,7 +287,6 @@ class FileStorageService {
     final newMimeType =
         lookupMimeType(newFile.path) ?? 'application/octet-stream';
 
-    // 4. Создаём новую запись FileMetadata
     final newMetadataId = const Uuid().v4();
     await _db
         .into(_db.fileMetadata)
@@ -238,13 +302,11 @@ class FileStorageService {
           ),
         );
 
-    // 5. Обновляем запись в таблице FileItems
-    // (триггер file_content_update_history сработает и запишет историю)
+    // Триггер file_content_update_history сработает и запишет историю.
     await (_db.update(_db.fileItems)..where((f) => f.itemId.equals(fileId)))
         .write(FileItemsCompanion(metadataId: Value(newMetadataId)));
 
     if (!isHistoryEnabled) {
-      // 6. История выключена — удаляем старый физический файл и метаданные
       final oldEncryptedFilePath = p.join(
         attachmentsPath,
         currentMetadata.filePath,
@@ -260,10 +322,10 @@ class FileStorageService {
     }
   }
 
-  /// Импортировать файл страницы (только метаданные)
+  /// Импортировать файл страницы (только метаданные).
   Future<String> importPageFile({
     required File sourceFile,
-    void Function(int, int)? onProgress,
+    void Function(double percentage)? onProgress,
   }) async {
     if (!await sourceFile.exists()) {
       throw Exception('Source file not found');
@@ -273,14 +335,12 @@ class FileStorageService {
     final attachmentsPath = await _getAttachmentsPath();
     final filePathUuid = const Uuid().v4();
     final extension = p.extension(sourceFile.path);
-    final encryptedFileName =
-        '$filePathUuid${MainConstants.encryptedFileExtension}';
-    final encryptedFilePath = p.join(attachmentsPath, encryptedFileName);
 
-    await _encryptor.encrypt(
+    final encryptedFileName = await _encryptFile(
       inputPath: sourceFile.path,
-      outputPath: encryptedFilePath,
+      outputDir: attachmentsPath,
       password: key,
+      uuid: filePathUuid,
       onProgress: onProgress,
     );
 
@@ -309,10 +369,10 @@ class FileStorageService {
     return metadataId;
   }
 
-  /// Расшифровать файл страницы по metadataId
+  /// Расшифровать файл страницы по metadataId.
   Future<String> decryptPageFile({
     required String metadataId,
-    void Function(int, int)? onProgress,
+    void Function(double percentage)? onProgress,
   }) async {
     final metadata = await (_db.select(
       _db.fileMetadata,
@@ -334,30 +394,30 @@ class FileStorageService {
 
     final tempDir = await Directory.systemTemp.createTemp('hoplixi_decrypt_');
     try {
-      final result = await _encryptor.decrypt(
-        inputPath: encryptedFilePath,
-        outputPath: tempDir.path,
+      final decryptedPath = await _decryptFile(
+        encryptedFilePath: encryptedFilePath,
+        outputDir: tempDir.path,
         password: key,
         onProgress: onProgress,
       );
 
-      final decryptedFile = File(result.outputPath);
-      if (await decryptedFile.exists()) {
-        final destDir = Directory(_decryptedAttachmentsPath);
-        if (!await destDir.exists()) {
-          await destDir.create(recursive: true);
-        }
-        final destinationPath = p.join(
-          _decryptedAttachmentsPath,
-          p.basename(decryptedFile.path),
-        );
-        await decryptedFile.copy(destinationPath);
-        return destinationPath;
-      } else {
+      final decryptedFile = File(decryptedPath);
+      if (!await decryptedFile.exists()) {
         throw Exception(
-          'Decryption finished but file not found at ${result.outputPath}',
+          'Decryption finished but file not found at $decryptedPath',
         );
       }
+
+      final destDir = Directory(_decryptedAttachmentsPath);
+      if (!await destDir.exists()) {
+        await destDir.create(recursive: true);
+      }
+      final destinationPath = p.join(
+        _decryptedAttachmentsPath,
+        p.basename(decryptedFile.path),
+      );
+      await decryptedFile.copy(destinationPath);
+      return destinationPath;
     } finally {
       if (await tempDir.exists()) {
         await tempDir.delete(recursive: true);
@@ -365,11 +425,11 @@ class FileStorageService {
     }
   }
 
-  /// Обновить содержимое файла страницы (обновляет метаданные)
+  /// Обновить содержимое файла страницы (обновляет метаданные).
   Future<void> updatePageFile({
     required String metadataId,
     required File newFile,
-    void Function(int, int)? onProgress,
+    void Function(double percentage)? onProgress,
   }) async {
     final metadata = await (_db.select(
       _db.fileMetadata,
@@ -377,7 +437,6 @@ class FileStorageService {
 
     if (metadata == null) throw Exception('File metadata not found');
 
-    // Удаляем старый файл с диска
     final attachmentsPath = await _getAttachmentsPath();
     final oldEncryptedFilePath = p.join(attachmentsPath, metadata.filePath);
     final oldFile = File(oldEncryptedFilePath);
@@ -385,21 +444,17 @@ class FileStorageService {
       await oldFile.delete();
     }
 
-    // Шифруем новый файл
     final key = await _getAttachmentKey();
     final newFilePathUuid = const Uuid().v4();
-    final newEncryptedFileName =
-        '$newFilePathUuid${MainConstants.encryptedFileExtension}';
-    final newEncryptedFilePath = p.join(attachmentsPath, newEncryptedFileName);
 
-    await _encryptor.encrypt(
+    final newEncryptedFileName = await _encryptFile(
       inputPath: newFile.path,
-      outputPath: newEncryptedFilePath,
+      outputDir: attachmentsPath,
       password: key,
+      uuid: newFilePathUuid,
       onProgress: onProgress,
     );
 
-    // Вычисляем новые метаданные
     final digest = await sha256.bind(newFile.openRead()).first;
     final newFileHash = digest.toString();
     final newFileSize = await newFile.length();
@@ -422,7 +477,7 @@ class FileStorageService {
     );
   }
 
-  /// Удалить файл страницы с диска по metadataId + удаление записи
+  /// Удалить файл страницы с диска по metadataId и удалить запись из БД.
   Future<bool> deletePageFile(String metadataId) async {
     final metadata = await (_db.select(
       _db.fileMetadata,
@@ -445,7 +500,7 @@ class FileStorageService {
     return true;
   }
 
-  /// Удалить файл с диска (используется при удалении из БД)
+  /// Удалить файл с диска (используется при удалении записи из БД).
   Future<bool> deleteFileFromDisk(String fileId) async {
     final record = await _db.fileDao.getById(fileId);
     if (record == null) return false;
@@ -470,7 +525,7 @@ class FileStorageService {
     return false;
   }
 
-  /// Удалить файл истории с диска по пути
+  /// Удалить файл истории с диска по пути.
   Future<bool> deleteHistoryFileFromDisk(String filePath) async {
     final attachmentsPath = await _getAttachmentsPath();
     final encryptedFilePath = p.join(attachmentsPath, filePath);
@@ -485,12 +540,11 @@ class FileStorageService {
     return false;
   }
 
-  /// Очистить физические файлы и метаданные, на которые больше нет ссылок
+  /// Очистить физические файлы и метаданные, на которые больше нет ссылок.
   Future<int> cleanupOrphanedFiles() async {
     int deletedCount = 0;
     try {
-      // 1. Выбираем file_metadata, которые не используются
-      final String sql = '''
+      const String sql = '''
         SELECT id, file_path 
         FROM file_metadata 
         WHERE id NOT IN (SELECT metadata_id FROM file_items WHERE metadata_id IS NOT NULL)
@@ -499,14 +553,12 @@ class FileStorageService {
       ''';
 
       final rows = await _db.customSelect(sql).get();
-
       final attachmentsPath = await _getAttachmentsPath();
 
       for (final row in rows) {
         final String id = row.read<String>('id');
         final String filePath = row.read<String>('file_path');
 
-        // Удаляем физический файл
         final encryptedFilePath = p.join(attachmentsPath, filePath);
         final file = File(encryptedFilePath);
 
@@ -514,14 +566,13 @@ class FileStorageService {
           await file.delete();
         }
 
-        // Удаляем метаданные из БД
         await (_db.delete(
           _db.fileMetadata,
         )..where((m) => m.id.equals(id))).go();
         deletedCount++;
       }
 
-      // 2. Ищем файлы на диске, которых нет в таблице file_metadata вообще (рассинхронизация)
+      // Ищем файлы на диске, которых нет в таблице file_metadata (рассинхронизация).
       final dir = Directory(attachmentsPath);
       if (await dir.exists()) {
         final entities = dir.listSync();
