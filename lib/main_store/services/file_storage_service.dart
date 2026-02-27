@@ -9,6 +9,7 @@ import 'package:hoplixi/main_store/models/dto/file_dto.dart';
 import 'package:hoplixi/main_store/models/store_settings_keys.dart';
 import 'package:hoplixi/rust/api/crypt_api.dart' as crypt;
 import 'package:mime/mime.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
@@ -40,7 +41,7 @@ class FileStorageService {
 
   /// Зашифровать файл через crypt_api и вернуть базовое имя выходного файла.
   ///
-  /// [uuid] — используется как имя выходного файла. Если не передан, генерируется.
+  /// [uuid] — используется как имя выходного файла.
   /// [onProgress] — коллбэк прогресса (0.0–100.0).
   Future<String> _encryptFile({
     required String inputPath,
@@ -49,6 +50,7 @@ class FileStorageService {
     required String uuid,
     void Function(double percentage)? onProgress,
   }) async {
+    final tempDir = await getTemporaryDirectory();
     final opts = crypt.FrbEncryptOptions(
       inputPath: inputPath,
       outputDir: outputDir,
@@ -56,9 +58,9 @@ class FileStorageService {
       gzipCompressed: false,
       uuid: uuid,
       outputExtension: MainConstants.encryptedFileExtension,
-      tempDir: null,
+      tempDir: tempDir.path,
       metadata: const [],
-      chunkSize: crypt.FrbChunkSizePreset.desktop(),
+      chunkSize: const crypt.FrbChunkSizePreset.desktop(),
     );
 
     String? resultPath;
@@ -90,10 +92,13 @@ class FileStorageService {
     required String password,
     void Function(double percentage)? onProgress,
   }) async {
-    final opts = await crypt.FrbDecryptOptions.simple(
+    final tempDir = await getTemporaryDirectory();
+    final opts = crypt.FrbDecryptOptions(
       inputPath: encryptedFilePath,
       outputDir: outputDir,
       password: password,
+      tempDir: tempDir.path,
+      chunkSize: const crypt.FrbChunkSizePreset.desktop(),
     );
 
     String? resultPath;
