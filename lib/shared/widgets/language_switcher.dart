@@ -29,27 +29,45 @@ class LanguageSwitcher extends ConsumerWidget {
     switch (style) {
       case LanguageSwitcherStyle.compact:
         final compactCode = activeLanguageCode.toUpperCase();
-        return PopupMenuButton<String>(
-          tooltip: 'Язык',
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.language, size: size),
-              if (showCompactCode) ...[
-                const SizedBox(width: 4),
-                Text(
-                  compactCode,
-                  style: Theme.of(context).textTheme.labelSmall,
+        return MenuAnchor(
+          alignmentOffset: const Offset(0, 4),
+          builder: (context, controller, child) {
+            return Tooltip(
+              message: 'Язык',
+              child: InkWell(
+                onTap: () {
+                  if (controller.isOpen) {
+                    controller.close();
+                  } else {
+                    controller.open();
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4.0,
+                    vertical: 4.0,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.language, size: size),
+                      if (showCompactCode) ...[
+                        const SizedBox(width: 4),
+                        Text(
+                          compactCode,
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
-              ],
-            ],
-          ),
-          onSelected: (languageCode) =>
-              _setLanguageCode(ref, languageCode: languageCode),
-          itemBuilder: (context) => _languages.entries.map((entry) {
+              ),
+            );
+          },
+          menuChildren: _languages.entries.map((entry) {
             final isSelected = activeLanguageCode == entry.key;
-            return PopupMenuItem<String>(
-              value: entry.key,
+            return MenuItemButton(
+              onPressed: () => _setLanguageCode(ref, languageCode: entry.key),
               child: Row(
                 children: [
                   SizedBox(
