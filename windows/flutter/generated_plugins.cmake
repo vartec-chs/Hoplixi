@@ -6,7 +6,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   app_links
   desktop_multi_window
   file_selector_windows
-  flutter_doc_scanner
   flutter_secure_storage_windows
   flutter_webrtc
   local_auth_windows
@@ -14,7 +13,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   pasteboard
   permission_handler_windows
   screen_retriever_windows
-  sqlcipher_flutter_libs
   tray_manager
   url_launcher_windows
   window_manager

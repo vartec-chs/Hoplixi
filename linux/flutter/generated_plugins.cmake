@@ -5,7 +5,6 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   desktop_multi_window
   file_selector_linux
-  flutter_doc_scanner
   flutter_secure_storage_linux
   flutter_webrtc
   gtk
@@ -13,7 +12,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   open_file_linux
   pasteboard
   screen_retriever_linux
-  sqlcipher_flutter_libs
   tray_manager
   url_launcher_linux
   window_manager

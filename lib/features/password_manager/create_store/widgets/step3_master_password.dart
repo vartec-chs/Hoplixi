@@ -21,6 +21,8 @@ class Step3MasterPassword extends ConsumerStatefulWidget {
 class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
   late final TextEditingController _passwordController;
   late final TextEditingController _confirmationController;
+  late final FocusNode _passwordFocusNode;
+  late final FocusNode _confirmationFocusNode;
   bool _obscurePassword = true;
   bool _obscureConfirmation = true;
 
@@ -82,12 +84,20 @@ class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
     _confirmationController = TextEditingController(
       text: state.passwordConfirmation,
     );
+    _passwordFocusNode = FocusNode();
+    _confirmationFocusNode = FocusNode();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _passwordFocusNode.requestFocus();
+    });
   }
 
   @override
   void dispose() {
     _passwordController.dispose();
     _confirmationController.dispose();
+    _passwordFocusNode.dispose();
+    _confirmationFocusNode.dispose();
     super.dispose();
   }
 
@@ -120,11 +130,17 @@ class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
           // Поле пароля
           TextField(
             controller: _passwordController,
+            focusNode: _passwordFocusNode,
+            autofocus: true,
+            onSubmitted: (_) {
+              _confirmationFocusNode.requestFocus();
+            },
             decoration: primaryInputDecoration(
               context,
               labelText: 'Мастер пароль *',
               hintText: 'Минимум 4 символов',
               errorText: state.passwordError,
+
               prefixIcon: const Icon(Icons.lock),
               suffixIcon: IconButton(
                 icon: Icon(
@@ -158,6 +174,7 @@ class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
           // Поле подтверждения
           TextField(
             controller: _confirmationController,
+            focusNode: _confirmationFocusNode,
             decoration: primaryInputDecoration(
               context,
               labelText: 'Подтвердите пароль *',

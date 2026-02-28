@@ -230,30 +230,31 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
       final scannedDocs = await FlutterDocScanner()
           .getScannedDocumentAsImages();
 
+      if (scannedDocs == null) {
+        logInfo('No documents scanned', tag: _logTag);
+        return;
+      }
+
       logTrace('Scanned docs: $scannedDocs', tag: _logTag);
 
       final List<String> paths = [];
 
       if (scannedDocs is Map) {
-        final images = scannedDocs['images'] ?? scannedDocs['Uri'];
-        if (images is List) {
-          for (final item in images) {
-            if (item is String) {
-              if (item.startsWith('file://')) {
-                try {
-                  paths.add(Uri.parse(item).toFilePath());
-                } catch (e) {
-                  paths.add(item);
-                }
-              } else {
-                paths.add(item);
-              }
+        final images = scannedDocs.images;
+        for (final item in images) {
+          if (item.startsWith('file://')) {
+            try {
+              paths.add(Uri.parse(item).toFilePath());
+            } catch (e) {
+              paths.add(item);
             }
+          } else {
+            paths.add(item);
           }
         }
       } else if (scannedDocs is List) {
-        for (final item in scannedDocs) {
-          if (item is String) paths.add(item);
+        for (final item in scannedDocs.images) {
+          if (item.isNotEmpty) paths.add(item);
         }
       }
 

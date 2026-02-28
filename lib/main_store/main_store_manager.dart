@@ -18,15 +18,8 @@ import 'package:hoplixi/main_store/services/db_history_services.dart';
 import 'package:hoplixi/main_store/services/db_key_derivation_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:result_dart/result_dart.dart';
-import 'package:sqlcipher_flutter_libs/sqlcipher_flutter_libs.dart';
-import 'package:sqlite3/open.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:uuid/uuid.dart';
-
-Future<void> setupSqlCipher() async {
-  await applyWorkaroundToOpenSqlCipherOnOldAndroidVersions();
-  open.overrideFor(OperatingSystem.android, openCipherOnAndroid);
-}
 
 /// Менеджер для управления хранилищами MainStore
 ///
@@ -89,13 +82,34 @@ class MainStoreManager {
 
       // Проверка существования папки
       if (await storageDir.exists()) {
-        return Failure(
-          DatabaseError.validationError(
-            message: 'Хранилище с таким именем уже существует',
-            data: {'path': storageDir.path},
-            timestamp: DateTime.now(),
-          ),
-        );
+        final existingDbFile = await _findDatabaseFile(storageDir.path);
+        if (existingDbFile != null) {
+          return Failure(
+            DatabaseError.validationError(
+              message: 'Хранилище с таким именем уже существует',
+              data: {'path': storageDir.path},
+              timestamp: DateTime.now(),
+            ),
+          );
+        } else {
+          final noSpacesName = dto.name.replaceAll(RegExp(r'\s+'), '');
+          final backupName = 'do_not_contain_db_file_$noSpacesName';
+          var backupPath = p.join(storagePath, backupName);
+
+          var backupDir = Directory(backupPath);
+          var counter = 1;
+          while (await backupDir.exists()) {
+            backupPath = p.join(storagePath, '${backupName}_$counter');
+            backupDir = Directory(backupPath);
+            counter++;
+          }
+
+          await storageDir.rename(backupPath);
+          logInfo(
+            'Renamed directory without db file to: $backupPath',
+            tag: _logTag,
+          );
+        }
       }
 
       // Создание папки хранилища
@@ -849,6 +863,14 @@ class MainStoreManager {
     }
   }
 
+  static bool _debugCheckHasCipher(Database database) {
+    return database.select('PRAGMA cipher;').isNotEmpty;
+  }
+
+  static Future<void> _driftIsolateSetup(RootIsolateToken token) async {
+    BackgroundIsolateBinaryMessenger.ensureInitialized(token);
+  }
+
   /// Создать соединение с БД с шифрованием
   ///
   /// [pragmaKey] — либо строка `x'<hex>'` (Argon2-деривация), либо
@@ -863,20 +885,17 @@ class MainStoreManager {
 
       final executor = NativeDatabase.createInBackground(
         File(dbFilePath),
-        isolateSetup: () async {
-          BackgroundIsolateBinaryMessenger.ensureInitialized(token);
-          if (Platform.isAndroid) {
-            await setupSqlCipher(); //code from docs
-          }
-        },
+        isolateSetup: () => _driftIsolateSetup(token),
         setup: (rawDb) {
-          final result = rawDb.select('pragma cipher_version');
-          if (result.isEmpty) {
+          // rawDb.execute('PRAGMA legacy = 4');
+          if (!_debugCheckHasCipher(rawDb)) {
             throw UnsupportedError(
               'This database needs to run with SQLCipher, but that library is '
               'not available!',
             );
           }
+
+          // Отключаем двойные кавычки для строковых литералов, чтобы избежать проблем с паролями, содержащими кавычки
           rawDb.config.doubleQuotedStringLiterals = false;
 
           // Регистрация функции exp для SQLite для сортировки по времени
@@ -918,6 +937,8 @@ class MainStoreManager {
             final escaped = pragmaKey.replaceAll("'", "''");
             rawDb.execute("PRAGMA key = '$escaped';");
           }
+
+          rawDb.execute("PRAGMA cipher_compatibility = 4;");
         },
       );
 
@@ -925,14 +946,14 @@ class MainStoreManager {
 
       // Проверка соединения (попытка выполнить простой запрос)
       try {
-        await database.customSelect('SELECT 1').getSingle();
+        await database.customSelect('SELECT 1;').getSingle();
         logInfo('Database connection established', tag: _logTag);
       } catch (e) {
         await database.close();
         logError('Failed to verify database connection: $e', tag: _logTag);
         return Failure(
           DatabaseError.invalidPassword(
-            message: 'Неверный пароль или поврежденная база данных',
+            message: 'Неверный пароль или поврежденная база данных (error: $e)',
             timestamp: DateTime.now(),
           ),
         );

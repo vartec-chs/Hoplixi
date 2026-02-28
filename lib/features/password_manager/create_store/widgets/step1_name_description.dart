@@ -16,6 +16,7 @@ class Step1NameAndDescription extends ConsumerStatefulWidget {
 class _Step1NameAndDescriptionState
     extends ConsumerState<Step1NameAndDescription> {
   late final TextEditingController _nameController;
+  late final FocusNode _nameFocusNode;
   late final TextEditingController _descriptionController;
 
   @override
@@ -24,12 +25,18 @@ class _Step1NameAndDescriptionState
     final state = ref.read(createStoreFormProvider);
     _nameController = TextEditingController(text: state.name);
     _descriptionController = TextEditingController(text: state.description);
+    _nameFocusNode = FocusNode();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _nameFocusNode.requestFocus();
+    });
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
+    _nameFocusNode.dispose();
     super.dispose();
   }
 
@@ -62,6 +69,8 @@ class _Step1NameAndDescriptionState
           // Поле имени
           TextField(
             controller: _nameController,
+            focusNode: _nameFocusNode,
+
             decoration: primaryInputDecoration(
               context,
               labelText: 'Имя хранилища *',
