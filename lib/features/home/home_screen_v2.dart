@@ -14,10 +14,13 @@ import 'package:hoplixi/main_store/provider/db_history_provider.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/shared/ui/password_generator_widget.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/widgets/titlebar.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:path/path.dart' as p;
+import 'package:universal_platform/universal_platform.dart';
+import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 import 'providers/recent_database_provider.dart';
 import 'widgets/action_button.dart';
@@ -496,7 +499,7 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2>
                     padding: EdgeInsets.symmetric(horizontal: 12.0),
                     child: RecentDatabaseCard(),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Expanded(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
@@ -600,11 +603,15 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2>
         label: 'Генератор',
         description: 'Генерация паролей',
         onTap: () async {
-          unawaited(
-            MultiWindowService.instance.openWindow(
-              type: SubWindowType.passwordGenerator,
-            ),
-          );
+          if (UniversalPlatform.isDesktop) {
+            unawaited(
+              MultiWindowService.instance.openWindow(
+                type: SubWindowType.passwordGenerator,
+              ),
+            );
+          } else {
+            await _openPasswordGeneratorModal();
+          }
         },
       ),
     ];
@@ -677,6 +684,46 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2>
             ),
           )
           .toList(),
+    );
+  }
+
+  Future<void> _openPasswordGeneratorModal() async {
+    await WoltModalSheet.show<String>(
+      context: context,
+      useSafeArea: true,
+      useRootNavigator: true,
+      pageListBuilder: (modalContext) => [
+        WoltModalSheetPage(
+          surfaceTintColor: Colors.transparent,
+          hasTopBarLayer: true,
+          isTopBarLayerAlwaysVisible: true,
+          topBarTitle: Text(
+            'Генератор пароля',
+            style: Theme.of(
+              modalContext,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          leadingNavBarWidget: Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: IconButton(
+              icon: const Icon(Icons.close),
+              tooltip: 'Закрыть',
+              onPressed: () => Navigator.of(modalContext).pop(),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: PasswordGeneratorWidget(
+              showRefreshButton: true,
+              showSubmitButton: true,
+              submitLabel: 'Использовать пароль',
+              onPasswordSubmitted: (password) {
+                Navigator.of(modalContext).pop(password);
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

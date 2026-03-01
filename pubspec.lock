@@ -584,7 +584,7 @@ packages:
     source: hosted
     version: "2.5.2"
   flutter_flavorizr:
-    dependency: "direct main"
+    dependency: "direct dev"
     description:
       name: flutter_flavorizr
       sha256: "4dc1a78f8df828977eece8128e81acbec26195e76ff3a5c0ac18682cd17e3d7b"

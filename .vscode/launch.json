@@ -1,6 +1,7 @@
 {
 	"version": "0.2.0",
 	"configurations": [
+		
 		{
 			"name": "dev Debug",
 			"request": "launch",
@@ -48,22 +49,6 @@
 			"flutterMode": "release",
 			"args": ["--flavor", "prod"],
 			"program": "lib/main.dart"
-		},
-		{
-			"name": "Hoplixi Dev",
-			"request": "launch",
-			"type": "dart",
-			"flutterMode": "debug",
-			"program": "lib/main_dev.dart",
-			"args": ["--flavor", "dev"]
-		},
-		{
-			"name": "Hoplixi Prod",
-			"request": "launch",
-			"type": "dart",
-			"flutterMode": "debug",
-			"program": "lib/main_prod.dart",
-			"args": ["--flavor", "prod"]
 		}
 	]
 }

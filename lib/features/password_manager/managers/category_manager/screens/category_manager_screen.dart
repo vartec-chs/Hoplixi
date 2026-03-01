@@ -78,19 +78,6 @@ class CategoryManagerScreen extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'categoryManagerFab',
-        onPressed: () {
-          context.push<bool>(AppRoutesPaths.categoryAdd(entity)).then((
-            created,
-          ) {
-            if (created == true) {
-              ref.read(categoryTreeProvider.notifier).refresh();
-            }
-          });
-        },
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }

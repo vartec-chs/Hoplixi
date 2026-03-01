@@ -8,40 +8,42 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Настройки'),
-        elevation: 0,
-        scrolledUnderElevation: 2,
-      ),
-      body: const SingleChildScrollView(
-        child: Column(
-          children: [
-            // Секция внешнего вида
-            AppearanceSettingsSection(),
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Настройки'),
+          elevation: 0,
+          scrolledUnderElevation: 2,
+        ),
+        body: const SingleChildScrollView(
+          child: Column(
+            children: [
+              // Секция внешнего вида
+              AppearanceSettingsSection(),
 
-            SizedBox(height: 8),
+              SizedBox(height: 8),
 
-            // Секция общих настроек
-            GeneralSettingsSection(),
+              // Секция общих настроек
+              GeneralSettingsSection(),
 
-            SizedBox(height: 8),
+              SizedBox(height: 8),
 
-            // Секция безопасности
-            SecuritySettingsSection(),
+              // Секция безопасности
+              SecuritySettingsSection(),
 
-            SizedBox(height: 8),
+              SizedBox(height: 8),
 
-            // Секция синхронизации
-            // SyncSettingsSection(),
+              // Секция синхронизации
+              // SyncSettingsSection(),
 
-            // SizedBox(height: 8),
+              // SizedBox(height: 8),
 
-            // Секция резервного копирования
-            BackupSettingsSection(),
+              // Секция резервного копирования
+              BackupSettingsSection(),
 
-            SizedBox(height: 16),
-          ],
+              SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );

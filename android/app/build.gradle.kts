@@ -69,6 +69,8 @@ android {
 
     flavorDimensions += "flavor-type"
 
+
+
     productFlavors {
         create("dev") {
             dimension = "flavor-type"
