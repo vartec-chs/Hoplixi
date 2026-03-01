@@ -6,7 +6,7 @@ import 'package:window_manager/window_manager.dart';
 
 class WindowManager {
   static Future<void> initialize({bool showOnInit = true}) async {
-    if (UniversalPlatform.isWindows) {
+    if (UniversalPlatform.isDesktop) {
       await windowManager.ensureInitialized();
       WindowOptions windowOptions = WindowOptions(
         title: MainConstants.appName,

@@ -1,6 +1,7 @@
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:hoplixi/core/theme/theme_provider.dart';
+import 'package:universal_platform/universal_platform.dart';
 
 class ThemeWindowSyncService {
   ThemeWindowSyncService._();
@@ -20,6 +21,7 @@ class ThemeWindowSyncService {
   Future<void> bindMainNotifier(ThemeProvider notifier) async {
     _mainNotifier = notifier;
 
+    if (!UniversalPlatform.isDesktop) return;
     if (_mainHandlerInitialized) return;
 
     final controller = await WindowController.fromCurrentEngine();
@@ -87,6 +89,7 @@ class ThemeWindowSyncService {
   }
 
   Future<void> broadcastFromMain(ThemeMode mode) async {
+    if (!UniversalPlatform.isDesktop) return;
     final controllers = await WindowController.getAll();
 
     for (final controller in controllers) {
@@ -101,6 +104,7 @@ class ThemeWindowSyncService {
   }
 
   Future<void> broadcastFromSub(ThemeMode mode) async {
+    if (!UniversalPlatform.isDesktop) return;
     try {
       final mainController = WindowController.fromWindowId('0');
       await mainController.invokeMethod(_methodSetTheme, mode.name);
@@ -119,6 +123,7 @@ class ThemeWindowSyncService {
   }
 
   Future<ThemeMode?> _requestMainTheme() async {
+    if (!UniversalPlatform.isDesktop) return null;
     try {
       final mainController = WindowController.fromWindowId('0');
       final raw = await mainController.invokeMethod<String>(_methodGetTheme);

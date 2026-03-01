@@ -7,6 +7,7 @@ import 'package:hoplixi/core/utils/window_manager.dart';
 import 'package:hoplixi/setup_tray.dart';
 import 'package:open_dir/open_dir.dart';
 import 'package:tray_manager/tray_manager.dart';
+import 'package:universal_platform/universal_platform.dart';
 
 /// Виджет-обёртка, управляющая подпиской на события tray_manager.
 class TrayWatcher extends StatefulWidget {
@@ -22,12 +23,16 @@ class _TrayWatcherState extends State<TrayWatcher> with TrayListener {
   @override
   void initState() {
     super.initState();
-    trayManager.addListener(this);
+    if (UniversalPlatform.isDesktop) {
+      trayManager.addListener(this);
+    }
   }
 
   @override
   void dispose() {
-    trayManager.removeListener(this);
+    if (UniversalPlatform.isDesktop) {
+      trayManager.removeListener(this);
+    }
     super.dispose();
   }
 

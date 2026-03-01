@@ -119,82 +119,122 @@ Future<void> _runGuardedApp(List<String> args) async {
 }
 
 Future<void> _runGuiMode(_LaunchContext launchContext) async {
-  _configureSingleInstanceFocusHandler();
+  if (UniversalPlatform.isDesktop) {
+    _configureSingleInstanceFocusHandler();
 
-  final singleInstance = FlutterSingleInstance();
-  final bool firstInstance = await singleInstance.isFirstInstance();
-  if (!firstInstance) {
-    try {
-      final focusError = await singleInstance.focus(
-        _buildFocusMetadata(launchContext.filePath),
-      );
-      if (focusError != null) {
-        logWarning(
-          'Не удалось сфокусировать запущенный экземпляр: $focusError',
+    final singleInstance = FlutterSingleInstance();
+    final bool firstInstance = await singleInstance.isFirstInstance();
+    if (!firstInstance) {
+      try {
+        final focusError = await singleInstance.focus(
+          _buildFocusMetadata(launchContext.filePath),
+        );
+        if (focusError != null) {
+          logWarning(
+            'Не удалось сфокусировать запущенный экземпляр: $focusError',
+          );
+        }
+      } catch (error, stackTrace) {
+        logError(
+          'Ошибка при фокусировке запущенного экземпляра',
+          error: error,
+          stackTrace: stackTrace,
         );
       }
-    } catch (error, stackTrace) {
-      logError(
-        'Ошибка при фокусировке запущенного экземпляра',
-        error: error,
-        stackTrace: stackTrace,
-      );
+      exit(0);
     }
-    exit(0);
   }
 
   await WindowManager.initialize(showOnInit: !launchContext.startInTray);
 
-  await RustLib.init();
-  await dotenv.load(fileName: '.env');
+  try {
+    debugPrint('Initializing Rust library...');
+    await RustLib.init();
+    debugPrint('Rust library initialized successfully');
+    await dotenv.load(fileName: '.env');
 
-  await AppLogger.instance.initialize(
-    config: const LoggerConfig(
-      maxFileSize: 10 * 1024 * 1024,
-      maxFileCount: 10,
-      bufferSize: 50,
-      bufferFlushInterval: Duration(seconds: 15),
-      enableDebug: true,
-      enableInfo: true,
-      enableWarning: true,
-      enableError: true,
-      enableTrace: MainConstants.isProduction ? false : true,
-      enableFatal: true,
-      enableConsoleOutput: true,
-      enableFileOutput: true,
-      enableCrashReports: true,
-      maxCrashReportCount: 10,
-      maxCrashReportFileSize: 10 * 1024 * 1024,
-      crashReportRetentionPeriod: Duration(days: 30),
-    ),
-  );
+    await AppLogger.instance.initialize(
+      config: const LoggerConfig(
+        maxFileSize: 10 * 1024 * 1024,
+        maxFileCount: 10,
+        bufferSize: 50,
+        bufferFlushInterval: Duration(seconds: 15),
+        enableDebug: true,
+        enableInfo: true,
+        enableWarning: true,
+        enableError: true,
+        enableTrace: MainConstants.isProduction ? false : true,
+        enableFatal: true,
+        enableConsoleOutput: true,
+        enableFileOutput: true,
+        enableCrashReports: true,
+        maxCrashReportCount: 10,
+        maxCrashReportFileSize: 10 * 1024 * 1024,
+        crashReportRetentionPeriod: Duration(days: 30),
+      ),
+    );
 
-  await RustLogBridge.instance.initialize();
+    debugPrint('Initializing Rust log bridge...');
+    await RustLogBridge.instance.initialize();
+    debugPrint('Rust log bridge initialized successfully');
 
-  setupErrorHandling();
+    setupErrorHandling();
 
-  if (UniversalPlatform.isAndroid) {
-    await _handleLostData();
+    if (UniversalPlatform.isAndroid) {
+      await _handleLostData();
+    }
+
+    await setupDI();
+    await _applyInstallConfig();
+    await _syncLaunchAtStartupPreference();
+    if (UniversalPlatform.isDesktop) {
+      await setupTray();
+    }
+
+    if (launchContext.startInTray) {
+      logInfo('Приложение запущено в режиме автозапуска: старт в трей');
+    }
+    logInfo('Starting app with file path: ${launchContext.filePath}');
+
+    final app = ProviderScope(
+      observers: [LoggingProviderObserver()],
+      child: setupToastificationWrapper(App(filePath: launchContext.filePath)),
+    );
+
+    runApp(app);
+  } catch (error, stackTrace) {
+    // Гарантируем отображение ошибки вместо чёрного экрана
+    debugPrint('Fatal initialization error: $error\n$stackTrace');
+    runApp(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: Material(
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Initialization Error',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    error.toString(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
-
-  await setupDI();
-  await _applyInstallConfig();
-  await _syncLaunchAtStartupPreference();
-  if (UniversalPlatform.isDesktop) {
-    await setupTray();
-  }
-
-  if (launchContext.startInTray) {
-    logInfo('Приложение запущено в режиме автозапуска: старт в трей');
-  }
-  logInfo('Starting app with file path: ${launchContext.filePath}');
-
-  final app = ProviderScope(
-    observers: [LoggingProviderObserver()],
-    child: setupToastificationWrapper(App(filePath: launchContext.filePath)),
-  );
-
-  runApp(app);
 }
 
 Map<String, dynamic> _buildFocusMetadata(String? filePath) {
