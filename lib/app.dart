@@ -111,6 +111,7 @@ class _AppState extends ConsumerState<App> {
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return const AppLoadingScreen();
+
               }
 
               final themeMode = snapshot.data![0] as ThemeMode;

@@ -1,8 +1,8 @@
 name: hoplixi
-description: 'Password manager application'
+description: "Password manager application"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0
 
 environment:
-  sdk: '3.11.0'
+  sdk: "3.11.0"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -43,7 +43,6 @@ dependencies:
   synchronized: ^3.4.0
   cupertino_icons: ^1.0.8
   flutter_riverpod: ^3.2.1
-
   freezed_annotation: ^3.1.0
   json_annotation: ^4.11.0
   drift: ^2.32.0
@@ -72,7 +71,6 @@ dependencies:
   intl: 0.20.2
   window_manager: ^0.5.1
   animated_text_kit: ^4.3.0
-
   animated_theme_switcher: ^2.0.10
   wolt_modal_sheet: ^0.11.0
   dotted_border: ^3.1.0
@@ -135,8 +133,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  integration_test:
-    sdk: flutter
+  # integration_test:
+  #   sdk: flutter
 
   flutter_lints: ^6.0.0
   build_runner: ^2.11.1
