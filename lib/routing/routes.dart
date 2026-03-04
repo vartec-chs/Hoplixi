@@ -117,11 +117,14 @@ final List<RouteBase> appRoutes = [
       GoRoute(
         path: '/dashboard/:entity',
         name: 'entity',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final entity = EntityType.fromId(state.pathParameters['entity']!)!;
-          return DashboardHomeScreen(
-            // key: ValueKey('dashboard_home_${entity.id}'),
-            entityType: entity,
+          return NoTransitionPage<void>(
+            key: state.pageKey,
+            child: DashboardHomeScreen(
+              // key: ValueKey('dashboard_home_${entity.id}'),
+              entityType: entity,
+            ),
           );
         },
         routes: [
@@ -129,11 +132,14 @@ final List<RouteBase> appRoutes = [
           GoRoute(
             path: 'categories',
             name: 'entity_categories',
-            builder: (context, state) {
+            pageBuilder: (context, state) {
               final entity = EntityType.fromId(
                 state.pathParameters['entity']!,
               )!;
-              return CategoryManagerScreen(entity: entity);
+              return NoTransitionPage<void>(
+                key: state.pageKey,
+                child: CategoryManagerScreen(entity: entity),
+              );
             },
             routes: [
               GoRoute(
@@ -164,11 +170,14 @@ final List<RouteBase> appRoutes = [
           GoRoute(
             path: 'tags',
             name: 'entity_tags',
-            builder: (context, state) {
+            pageBuilder: (context, state) {
               final entity = EntityType.fromId(
                 state.pathParameters['entity']!,
               )!;
-              return TagsManagerScreen(entity: entity);
+              return NoTransitionPage<void>(
+                key: state.pageKey,
+                child: TagsManagerScreen(entity: entity),
+              );
             },
             routes: [
               GoRoute(
@@ -199,11 +208,14 @@ final List<RouteBase> appRoutes = [
           GoRoute(
             path: 'icons',
             name: 'entity_icons',
-            builder: (context, state) {
+            pageBuilder: (context, state) {
               final entity = EntityType.fromId(
                 state.pathParameters['entity']!,
               )!;
-              return IconManagerScreen(entity: entity);
+              return NoTransitionPage<void>(
+                key: state.pageKey,
+                child: IconManagerScreen(entity: entity),
+              );
             },
             routes: [
               GoRoute(
@@ -267,9 +279,12 @@ final List<RouteBase> appRoutes = [
               if (ent != 'notes') return '/dashboard/$ent';
               return null;
             },
-            builder: (context, state) {
+            pageBuilder: (context, state) {
               // final ent = state.pathParameters['entity']!;
-              return const NotesGraphScreen();
+              return NoTransitionPage<void>(
+                key: state.pageKey,
+                child: const NotesGraphScreen(),
+              );
             },
           ),
 

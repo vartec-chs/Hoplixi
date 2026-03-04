@@ -30,9 +30,9 @@ WoltModalType buildModalType(BuildContext context) {
 abstract final class AppTheme {
   static const pageTransitionsTheme = PageTransitionsTheme(
     builders: {
-      TargetPlatform.android: GoTransitions.material,
+      // TargetPlatform.android: GoTransitions.material,
       TargetPlatform.iOS: GoTransitions.cupertino,
-      TargetPlatform.linux: GoTransitions.material,
+      // TargetPlatform.linux: GoTransitions.material,
       TargetPlatform.macOS: GoTransitions.cupertino,
       TargetPlatform.windows: GoTransitions.openUpwards,
     },

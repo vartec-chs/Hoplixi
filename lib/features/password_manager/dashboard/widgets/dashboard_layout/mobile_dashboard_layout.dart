@@ -12,7 +12,11 @@ import 'widgets/floating_nav_bar.dart';
 /// Отображает контент из роутинга ([child]) с floating bottom navigation
 /// и FAB. DashboardHomeScreen приходит из роутера как [child] на базовом
 /// маршруте, панели (categories, tags, etc.) — на sub-маршрутах.
-class MobileDashboardLayout extends StatelessWidget {
+///
+/// При смене маршрута контент плавно появляется через fade-in анимацию.
+/// Используется fade-in-only (без crossfade), чтобы избежать конфликтов
+/// GlobalKey — в дереве всегда только один экземпляр child.
+class MobileDashboardLayout extends StatefulWidget {
   /// Текущий entity (passwords, notes, etc.)
   final String entity;
 
@@ -54,19 +58,60 @@ class MobileDashboardLayout extends StatelessWidget {
   });
 
   @override
+  State<MobileDashboardLayout> createState() => _MobileDashboardLayoutState();
+}
+
+class _MobileDashboardLayoutState extends State<MobileDashboardLayout>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _fadeController;
+
+  @override
+  void initState() {
+    super.initState();
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: kFadeAnimationDuration,
+      value: 1.0, // начинаем с полной видимости
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant MobileDashboardLayout oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.uri != widget.uri) {
+      // Сброс и запуск fade-in при смене маршрута
+      _fadeController
+        ..value = 0.0
+        ..forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final systemPadding = MediaQuery.of(context).viewPadding;
 
     return Scaffold(
       extendBody: true,
       drawer: DashboardDrawer(
-        entityType: EntityType.fromId(entity) ?? EntityType.password,
+        entityType: EntityType.fromId(widget.entity) ?? EntityType.password,
       ),
       body: Stack(
         children: [
-          // Контент из роутера
+          // Контент из роутера с fade-in анимацией при смене маршрута
           Positioned.fill(
-            child: KeyedSubtree(key: ValueKey(uri), child: child),
+            child: FadeTransition(
+              opacity: _fadeController,
+              child: KeyedSubtree(
+                key: ValueKey(widget.uri),
+                child: widget.child,
+              ),
+            ),
           ),
 
           // Floating bottom navigation bar
@@ -77,23 +122,29 @@ class MobileDashboardLayout extends StatelessWidget {
             left: kFloatingNavMarginHorizontal,
             right: kFloatingNavMarginHorizontal,
             child: IgnorePointer(
-              ignoring: !showBottomNav,
+              ignoring: !widget.showBottomNav,
               child: AnimatedSlide(
-                offset: showBottomNav ? Offset.zero : const Offset(0, 1.5),
+                offset: widget.showBottomNav
+                    ? Offset.zero
+                    : const Offset(0, 1.5),
                 duration: kScaleAnimationDuration,
-                curve: showBottomNav ? Curves.easeOutCubic : Curves.easeInCubic,
+                curve: widget.showBottomNav
+                    ? Curves.easeOutCubic
+                    : Curves.easeInCubic,
                 child: AnimatedOpacity(
-                  opacity: showBottomNav ? 1.0 : 0.0,
+                  opacity: widget.showBottomNav ? 1.0 : 0.0,
                   duration: kFadeAnimationDuration,
                   curve: Curves.easeInOut,
                   child: AnimatedScale(
-                    scale: showBottomNav ? 1.0 : 0.95,
+                    scale: widget.showBottomNav ? 1.0 : 0.95,
                     duration: kScaleAnimationDuration,
-                    curve: showBottomNav ? Curves.easeOutBack : Curves.easeIn,
+                    curve: widget.showBottomNav
+                        ? Curves.easeOutBack
+                        : Curves.easeIn,
                     child: FloatingNavBar(
-                      destinations: destinations,
-                      selectedIndex: selectedIndex,
-                      onItemSelected: onNavItemSelected,
+                      destinations: widget.destinations,
+                      selectedIndex: widget.selectedIndex,
+                      onItemSelected: widget.onNavItemSelected,
                     ),
                   ),
                 ),
@@ -103,7 +154,7 @@ class MobileDashboardLayout extends StatelessWidget {
 
           // FAB выше floating nav
           Positioned(
-            bottom: showBottomNav && UniversalPlatform.isDesktop
+            bottom: widget.showBottomNav && UniversalPlatform.isDesktop
                 ? kFloatingNavFabBottomOffset + kFloatingNavBarHeight + 5
                 : systemPadding.bottom +
                       kFloatingNavFabBottomOffset +
@@ -115,19 +166,21 @@ class MobileDashboardLayout extends StatelessWidget {
                 right: kFloatingNavMarginHorizontal,
               ),
               child: AnimatedOpacity(
-                opacity: showFAB ? 1.0 : 0.0,
+                opacity: widget.showFAB ? 1.0 : 0.0,
                 duration: kOpacityAnimationDuration,
-                curve: showFAB ? Curves.easeOutBack : Curves.easeIn,
+                curve: widget.showFAB ? Curves.easeOutBack : Curves.easeIn,
                 child: AnimatedSlide(
-                  offset: showBottomNav ? Offset.zero : const Offset(0, 1.5),
+                  offset: widget.showBottomNav
+                      ? Offset.zero
+                      : const Offset(0, 1.5),
                   duration: kFadeAnimationDuration,
                   curve: Curves.easeInOut,
                   child: IgnorePointer(
-                    ignoring: !showFAB,
+                    ignoring: !widget.showFAB,
                     child: DashboardFabBuilder(
                       context: context,
-                      entity: entity,
-                      currentAction: currentAction,
+                      entity: widget.entity,
+                      currentAction: widget.currentAction,
                       isMobile: true,
                     ).buildExpandableFAB(),
                   ),
