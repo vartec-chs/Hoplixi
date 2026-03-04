@@ -102,70 +102,72 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
           ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Text(_name, style: Theme.of(context).textTheme.headlineSmall),
-                const SizedBox(height: 12),
-                ListTile(title: Text(l10n.productLabel), subtitle: Text(_product)),
-                ListTile(
-                  title: Text(l10n.licenseKeyLabel),
-                  subtitle: SelectableText(_licenseKey),
-                ),
-                if (_licenseType?.isNotEmpty == true)
+      body: SafeArea(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Text(_name, style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 12),
+                  ListTile(title: Text(l10n.productLabel), subtitle: Text(_product)),
                   ListTile(
-                    title: Text(l10n.licenseTypeLabel),
-                    subtitle: Text(_licenseType!),
+                    title: Text(l10n.licenseKeyLabel),
+                    subtitle: SelectableText(_licenseKey),
                   ),
-                if (_seats != null)
+                  if (_licenseType?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.licenseTypeLabel),
+                      subtitle: Text(_licenseType!),
+                    ),
+                  if (_seats != null)
+                    ListTile(
+                      title: Text(l10n.seatsCountLabel),
+                      subtitle: Text('$_seats'),
+                    ),
+                  if (_maxActivations != null)
+                    ListTile(
+                      title: Text(l10n.maxActivationsLabel),
+                      subtitle: Text('$_maxActivations'),
+                    ),
                   ListTile(
-                    title: Text(l10n.seatsCountLabel),
-                    subtitle: Text('$_seats'),
+                    title: Text(l10n.activatedAtIsoLabel),
+                    subtitle: Text(_fmt(_activatedOn)),
                   ),
-                if (_maxActivations != null)
                   ListTile(
-                    title: Text(l10n.maxActivationsLabel),
-                    subtitle: Text('$_maxActivations'),
+                    title: Text(l10n.purchaseDateIsoLabel),
+                    subtitle: Text(_fmt(_purchaseDate)),
                   ),
-                ListTile(
-                  title: Text(l10n.activatedAtIsoLabel),
-                  subtitle: Text(_fmt(_activatedOn)),
-                ),
-                ListTile(
-                  title: Text(l10n.purchaseDateIsoLabel),
-                  subtitle: Text(_fmt(_purchaseDate)),
-                ),
-                if (_purchaseFrom?.isNotEmpty == true)
+                  if (_purchaseFrom?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.purchasedFromLabel),
+                      subtitle: Text(_purchaseFrom!),
+                    ),
+                  if (_orderId?.isNotEmpty == true)
+                    ListTile(title: Text(l10n.orderIdLabel), subtitle: Text(_orderId!)),
+                  if (_licenseFileId?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.licenseFileIdLabel),
+                      subtitle: Text(_licenseFileId!),
+                    ),
                   ListTile(
-                    title: Text(l10n.purchasedFromLabel),
-                    subtitle: Text(_purchaseFrom!),
+                    title: Text(l10n.expiresAtIsoLabel),
+                    subtitle: Text(_fmt(_expiresAt)),
                   ),
-                if (_orderId?.isNotEmpty == true)
-                  ListTile(title: Text(l10n.orderIdLabel), subtitle: Text(_orderId!)),
-                if (_licenseFileId?.isNotEmpty == true)
-                  ListTile(
-                    title: Text(l10n.licenseFileIdLabel),
-                    subtitle: Text(_licenseFileId!),
-                  ),
-                ListTile(
-                  title: Text(l10n.expiresAtIsoLabel),
-                  subtitle: Text(_fmt(_expiresAt)),
-                ),
-                if (_supportContact?.isNotEmpty == true)
-                  ListTile(
-                    title: Text(l10n.supportContactLabel),
-                    subtitle: Text(_supportContact!),
-                  ),
-                if (_description?.isNotEmpty == true)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.descriptionLabel),
-                    subtitle: Text(_description!),
-                  ),
-              ],
-            ),
+                  if (_supportContact?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.supportContactLabel),
+                      subtitle: Text(_supportContact!),
+                    ),
+                  if (_description?.isNotEmpty == true)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.descriptionLabel),
+                      subtitle: Text(_description!),
+                    ),
+                ],
+              ),
+      ),
     );
   }
 }

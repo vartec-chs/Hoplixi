@@ -103,81 +103,83 @@ class _IdentityViewScreenState extends ConsumerState<IdentityViewScreen> {
           ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Text(_name, style: Theme.of(context).textTheme.headlineSmall),
-                const SizedBox(height: 12),
-                ListTile(
-                  title: Text(l10n.documentTypeRequiredLabel),
-                  subtitle: Text(_idType),
-                ),
-                ListTile(
-                  title: Text(l10n.documentNumberRequiredLabel),
-                  subtitle: Text(_idNumber),
-                ),
-                if (_fullName?.isNotEmpty == true)
+      body: SafeArea(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Text(_name, style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 12),
                   ListTile(
-                    title: Text(l10n.fullNameLabel),
-                    subtitle: Text(_fullName!),
+                    title: Text(l10n.documentTypeRequiredLabel),
+                    subtitle: Text(_idType),
                   ),
-                ListTile(
-                  title: Text(l10n.birthDateIsoLabel),
-                  subtitle: Text(_fmt(_dateOfBirth)),
-                ),
-                if (_placeOfBirth?.isNotEmpty == true)
                   ListTile(
-                    title: Text(l10n.placeOfBirthLabel),
-                    subtitle: Text(_placeOfBirth!),
+                    title: Text(l10n.documentNumberRequiredLabel),
+                    subtitle: Text(_idNumber),
                   ),
-                if (_nationality?.isNotEmpty == true)
+                  if (_fullName?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.fullNameLabel),
+                      subtitle: Text(_fullName!),
+                    ),
                   ListTile(
-                    title: Text(l10n.nationalityLabel),
-                    subtitle: Text(_nationality!),
+                    title: Text(l10n.birthDateIsoLabel),
+                    subtitle: Text(_fmt(_dateOfBirth)),
                   ),
-                if (_issuingAuthority?.isNotEmpty == true)
+                  if (_placeOfBirth?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.placeOfBirthLabel),
+                      subtitle: Text(_placeOfBirth!),
+                    ),
+                  if (_nationality?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.nationalityLabel),
+                      subtitle: Text(_nationality!),
+                    ),
+                  if (_issuingAuthority?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.issuingAuthorityLabel),
+                      subtitle: Text(_issuingAuthority!),
+                    ),
                   ListTile(
-                    title: Text(l10n.issuingAuthorityLabel),
-                    subtitle: Text(_issuingAuthority!),
+                    title: Text(l10n.issueDateIsoLabel),
+                    subtitle: Text(_fmt(_issueDate)),
                   ),
-                ListTile(
-                  title: Text(l10n.issueDateIsoLabel),
-                  subtitle: Text(_fmt(_issueDate)),
-                ),
-                ListTile(
-                  title: Text(l10n.expiryDateIsoLabel),
-                  subtitle: Text(_fmt(_expiryDate)),
-                ),
-                if (_mrz?.isNotEmpty == true)
                   ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.mrzLabel),
-                    subtitle: SelectableText(_mrz!),
+                    title: Text(l10n.expiryDateIsoLabel),
+                    subtitle: Text(_fmt(_expiryDate)),
                   ),
-                if (_scanAttachmentId?.isNotEmpty == true)
+                  if (_mrz?.isNotEmpty == true)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.mrzLabel),
+                      subtitle: SelectableText(_mrz!),
+                    ),
+                  if (_scanAttachmentId?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.scanIdLabel),
+                      subtitle: Text(_scanAttachmentId!),
+                    ),
+                  if (_photoAttachmentId?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.photoIdLabel),
+                      subtitle: Text(_photoAttachmentId!),
+                    ),
                   ListTile(
-                    title: Text(l10n.scanIdLabel),
-                    subtitle: Text(_scanAttachmentId!),
+                    title: Text(l10n.verifiedLabel),
+                    subtitle: Text(_verified ? l10n.commonYes : l10n.commonNo),
                   ),
-                if (_photoAttachmentId?.isNotEmpty == true)
-                  ListTile(
-                    title: Text(l10n.photoIdLabel),
-                    subtitle: Text(_photoAttachmentId!),
-                  ),
-                ListTile(
-                  title: Text(l10n.verifiedLabel),
-                  subtitle: Text(_verified ? l10n.commonYes : l10n.commonNo),
-                ),
-                if (_description?.isNotEmpty == true)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.descriptionLabel),
-                    subtitle: Text(_description!),
-                  ),
-              ],
-            ),
+                  if (_description?.isNotEmpty == true)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.descriptionLabel),
+                      subtitle: Text(_description!),
+                    ),
+                ],
+              ),
+      ),
     );
   }
 }

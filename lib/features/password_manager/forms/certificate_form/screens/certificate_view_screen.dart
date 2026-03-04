@@ -156,104 +156,106 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
           ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Text(_name, style: Theme.of(context).textTheme.headlineSmall),
-                const SizedBox(height: 12),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l10n.certificatePemLabel),
-                  subtitle: SelectableText(_certificatePem),
-                  trailing: IconButton(
-                    onPressed: () =>
-                        _copyText(l10n.certificatePemLabel, _certificatePem),
-                    icon: const Icon(Icons.copy),
-                  ),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l10n.privateKeyLabel),
-                  subtitle: SelectableText(
-                    _showPrivateKey
-                        ? (_privateKey ?? '')
-                        : l10n.commonPressVisibilityToLoad,
-                  ),
-                  trailing: Wrap(
-                    spacing: 4,
-                    children: [
-                      IconButton(
-                        onPressed: _revealPrivateKey,
-                        icon: Icon(
-                          _showPrivateKey ? Icons.visibility_off : Icons.visibility,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () =>
-                            _copyText(l10n.privateKeyLabel, _privateKey),
-                        icon: const Icon(Icons.copy),
-                      ),
-                    ],
-                  ),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l10n.pfxPasswordLabel),
-                  subtitle: Text(
-                    _showPfxPassword
-                        ? (_pfxPassword ?? '')
-                        : l10n.commonPressVisibilityToLoad,
-                  ),
-                  trailing: Wrap(
-                    spacing: 4,
-                    children: [
-                      IconButton(
-                        onPressed: _revealPfxPassword,
-                        icon: Icon(
-                          _showPfxPassword ? Icons.visibility_off : Icons.visibility,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () =>
-                            _copyText(l10n.pfxPasswordLabel, _pfxPassword),
-                        icon: const Icon(Icons.copy),
-                      ),
-                    ],
-                  ),
-                ),
-                if (_issuer?.isNotEmpty == true)
-                  ListTile(title: Text(l10n.issuerLabel), subtitle: Text(_issuer!)),
-                if (_subject?.isNotEmpty == true)
-                  ListTile(title: Text(l10n.subjectLabel), subtitle: Text(_subject!)),
-                if (_serialNumber?.isNotEmpty == true)
-                  ListTile(
-                    title: Text(l10n.serialNumberLabel),
-                    subtitle: Text(_serialNumber!),
-                  ),
-                if (_fingerprint?.isNotEmpty == true)
-                  ListTile(
-                    title: Text(l10n.fingerprintLabel),
-                    subtitle: Text(_fingerprint!),
-                  ),
-                if (_ocspUrl?.isNotEmpty == true)
-                  ListTile(title: Text(l10n.ocspUrlLabel), subtitle: Text(_ocspUrl!)),
-                if (_crlUrl?.isNotEmpty == true)
-                  ListTile(title: Text(l10n.crlUrlLabel), subtitle: Text(_crlUrl!)),
-                ListTile(
-                  title: Text(l10n.autoRenewLabel),
-                  subtitle:
-                      Text(_autoRenew ? l10n.commonEnabled : l10n.commonDisabled),
-                ),
-                if (_description?.isNotEmpty == true)
+      body: SafeArea(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Text(_name, style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 12),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.descriptionLabel),
-                    subtitle: Text(_description!),
+                    title: Text(l10n.certificatePemLabel),
+                    subtitle: SelectableText(_certificatePem),
+                    trailing: IconButton(
+                      onPressed: () =>
+                          _copyText(l10n.certificatePemLabel, _certificatePem),
+                      icon: const Icon(Icons.copy),
+                    ),
                   ),
-              ],
-            ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.privateKeyLabel),
+                    subtitle: SelectableText(
+                      _showPrivateKey
+                          ? (_privateKey ?? '')
+                          : l10n.commonPressVisibilityToLoad,
+                    ),
+                    trailing: Wrap(
+                      spacing: 4,
+                      children: [
+                        IconButton(
+                          onPressed: _revealPrivateKey,
+                          icon: Icon(
+                            _showPrivateKey ? Icons.visibility_off : Icons.visibility,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () =>
+                              _copyText(l10n.privateKeyLabel, _privateKey),
+                          icon: const Icon(Icons.copy),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.pfxPasswordLabel),
+                    subtitle: Text(
+                      _showPfxPassword
+                          ? (_pfxPassword ?? '')
+                          : l10n.commonPressVisibilityToLoad,
+                    ),
+                    trailing: Wrap(
+                      spacing: 4,
+                      children: [
+                        IconButton(
+                          onPressed: _revealPfxPassword,
+                          icon: Icon(
+                            _showPfxPassword ? Icons.visibility_off : Icons.visibility,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () =>
+                              _copyText(l10n.pfxPasswordLabel, _pfxPassword),
+                          icon: const Icon(Icons.copy),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (_issuer?.isNotEmpty == true)
+                    ListTile(title: Text(l10n.issuerLabel), subtitle: Text(_issuer!)),
+                  if (_subject?.isNotEmpty == true)
+                    ListTile(title: Text(l10n.subjectLabel), subtitle: Text(_subject!)),
+                  if (_serialNumber?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.serialNumberLabel),
+                      subtitle: Text(_serialNumber!),
+                    ),
+                  if (_fingerprint?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.fingerprintLabel),
+                      subtitle: Text(_fingerprint!),
+                    ),
+                  if (_ocspUrl?.isNotEmpty == true)
+                    ListTile(title: Text(l10n.ocspUrlLabel), subtitle: Text(_ocspUrl!)),
+                  if (_crlUrl?.isNotEmpty == true)
+                    ListTile(title: Text(l10n.crlUrlLabel), subtitle: Text(_crlUrl!)),
+                  ListTile(
+                    title: Text(l10n.autoRenewLabel),
+                    subtitle:
+                        Text(_autoRenew ? l10n.commonEnabled : l10n.commonDisabled),
+                  ),
+                  if (_description?.isNotEmpty == true)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.descriptionLabel),
+                      subtitle: Text(_description!),
+                    ),
+                ],
+              ),
+      ),
     );
   }
 }

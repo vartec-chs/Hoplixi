@@ -114,67 +114,69 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
           ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Text(_name, style: Theme.of(context).textTheme.headlineSmall),
-                const SizedBox(height: 8),
-                Text(_service, style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 16),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(S.of(context).apiKeyLabel),
-                  subtitle: Text(
-                    _revealingKey
-                        ? (_realKey ?? '')
-                        : (_maskedKey ?? '••••••••'),
-                  ),
-                  trailing: Wrap(
-                    spacing: 4,
-                    children: [
-                      IconButton(
-                        onPressed: _revealKey,
-                        icon: Icon(
-                          _revealingKey
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: _copyKey,
-                        icon: const Icon(Icons.copy),
-                      ),
-                    ],
-                  ),
-                ),
-                if (_tokenType?.isNotEmpty == true)
+      body: SafeArea(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Text(_name, style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 8),
+                  Text(_service, style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 16),
                   ListTile(
-                    title: Text(S.of(context).tokenTypeLabel),
-                    subtitle: Text(_tokenType!),
-                  ),
-                if (_environment?.isNotEmpty == true)
-                  ListTile(
-                    title: Text(S.of(context).environmentLabel),
-                    subtitle: Text(_environment!),
-                  ),
-                ListTile(
-                  title: Text(S.of(context).apiKeyStatusLabel),
-                  subtitle: Text(
-                    _revoked
-                        ? S.of(context).apiKeyRevokedStatus
-                        : S.of(context).apiKeyActiveStatus,
-                  ),
-                ),
-                if (_description?.isNotEmpty == true)
-                  ListTile(
-                    title: Text(S.of(context).descriptionLabel),
-                    subtitle: Text(_description!),
                     contentPadding: EdgeInsets.zero,
+                    title: Text(S.of(context).apiKeyLabel),
+                    subtitle: Text(
+                      _revealingKey
+                          ? (_realKey ?? '')
+                          : (_maskedKey ?? '••••••••'),
+                    ),
+                    trailing: Wrap(
+                      spacing: 4,
+                      children: [
+                        IconButton(
+                          onPressed: _revealKey,
+                          icon: Icon(
+                            _revealingKey
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: _copyKey,
+                          icon: const Icon(Icons.copy),
+                        ),
+                      ],
+                    ),
                   ),
-              ],
-            ),
+                  if (_tokenType?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(S.of(context).tokenTypeLabel),
+                      subtitle: Text(_tokenType!),
+                    ),
+                  if (_environment?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(S.of(context).environmentLabel),
+                      subtitle: Text(_environment!),
+                    ),
+                  ListTile(
+                    title: Text(S.of(context).apiKeyStatusLabel),
+                    subtitle: Text(
+                      _revoked
+                          ? S.of(context).apiKeyRevokedStatus
+                          : S.of(context).apiKeyActiveStatus,
+                    ),
+                  ),
+                  if (_description?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(S.of(context).descriptionLabel),
+                      subtitle: Text(_description!),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                ],
+              ),
+      ),
     );
   }
 }

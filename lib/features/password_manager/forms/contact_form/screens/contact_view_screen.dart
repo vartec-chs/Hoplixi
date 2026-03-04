@@ -101,77 +101,79 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
           ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Text(_name, style: Theme.of(context).textTheme.headlineSmall),
-                const SizedBox(height: 8),
-                if (_company?.isNotEmpty == true)
-                  Text(
-                    _company!,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                const SizedBox(height: 8),
-                if (_isEmergencyContact)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.warning_amber_rounded),
-                    title: Text(l10n.emergencyContactLabel),
-                  ),
-                if (_phone?.isNotEmpty == true)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.phoneLabel),
-                    subtitle: Text(_phone!),
-                    trailing: IconButton(
-                      onPressed: () => _copyValue(_phone, l10n.phoneLabel),
-                      icon: const Icon(Icons.copy),
+      body: SafeArea(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Text(_name, style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 8),
+                  if (_company?.isNotEmpty == true)
+                    Text(
+                      _company!,
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
-                  ),
-                if (_email?.isNotEmpty == true)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.emailLabel),
-                    subtitle: Text(_email!),
-                    trailing: IconButton(
-                      onPressed: () => _copyValue(_email, l10n.emailLabel),
-                      icon: const Icon(Icons.copy),
+                  const SizedBox(height: 8),
+                  if (_isEmergencyContact)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.warning_amber_rounded),
+                      title: Text(l10n.emergencyContactLabel),
                     ),
-                  ),
-                if (_jobTitle?.isNotEmpty == true)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.jobTitleLabel),
-                    subtitle: Text(_jobTitle!),
-                  ),
-                if (_address?.isNotEmpty == true)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.addressLabel),
-                    subtitle: Text(_address!),
-                  ),
-                if (_website?.isNotEmpty == true)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.websiteLabel),
-                    subtitle: Text(_website!),
-                  ),
-                if (_birthday != null)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.birthdayLabel),
-                    subtitle: Text(_formatDate(_birthday!)),
-                  ),
-                if (_description?.isNotEmpty == true)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.descriptionLabel),
-                    subtitle: Text(_description!),
-                  ),
-              ],
-            ),
+                  if (_phone?.isNotEmpty == true)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.phoneLabel),
+                      subtitle: Text(_phone!),
+                      trailing: IconButton(
+                        onPressed: () => _copyValue(_phone, l10n.phoneLabel),
+                        icon: const Icon(Icons.copy),
+                      ),
+                    ),
+                  if (_email?.isNotEmpty == true)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.emailLabel),
+                      subtitle: Text(_email!),
+                      trailing: IconButton(
+                        onPressed: () => _copyValue(_email, l10n.emailLabel),
+                        icon: const Icon(Icons.copy),
+                      ),
+                    ),
+                  if (_jobTitle?.isNotEmpty == true)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.jobTitleLabel),
+                      subtitle: Text(_jobTitle!),
+                    ),
+                  if (_address?.isNotEmpty == true)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.addressLabel),
+                      subtitle: Text(_address!),
+                    ),
+                  if (_website?.isNotEmpty == true)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.websiteLabel),
+                      subtitle: Text(_website!),
+                    ),
+                  if (_birthday != null)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.birthdayLabel),
+                      subtitle: Text(_formatDate(_birthday!)),
+                    ),
+                  if (_description?.isNotEmpty == true)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.descriptionLabel),
+                      subtitle: Text(_description!),
+                    ),
+                ],
+              ),
+      ),
     );
   }
 }

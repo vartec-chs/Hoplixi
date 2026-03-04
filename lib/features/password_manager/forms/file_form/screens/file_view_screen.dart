@@ -165,75 +165,77 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
           IconButton(icon: const Icon(LucideIcons.pencil), onPressed: _edit),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _file == null
-          ? const Center(child: Text('Не найден'))
-          : ListView(
-              padding: const EdgeInsets.all(12),
-              children: [
-                Container(
-                  height: 160,
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(_getFileIcon(ext), size: 64, color: cs.primary),
-                      const SizedBox(height: 12),
-                      Text(
-                        ext != null ? '.$ext' : 'file',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _file == null
+            ? const Center(child: Text('Не найден'))
+            : ListView(
+                padding: const EdgeInsets.all(12),
+                children: [
+                  Container(
+                    height: 160,
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(_getFileIcon(ext), size: 64, color: cs.primary),
+                        const SizedBox(height: 12),
+                        Text(
+                          ext != null ? '.$ext' : 'file',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                _info(
-                  theme,
-                  LucideIcons.tag,
-                  'Название',
-                  _file!.$1.name,
-                  () => _copy(_file!.$1.name, 'Название'),
-                ),
-                if (_metadata?.fileName != null)
+                  const SizedBox(height: 24),
                   _info(
                     theme,
-                    LucideIcons.file,
-                    'Имя файла',
-                    _metadata!.fileName,
+                    LucideIcons.tag,
+                    'Название',
+                    _file!.$1.name,
+                    () => _copy(_file!.$1.name, 'Название'),
                   ),
-                if (_metadata != null)
-                  _info(
-                    theme,
-                    LucideIcons.hardDrive,
-                    'Размер',
-                    _formatSize(_metadata!.fileSize),
+                  if (_metadata?.fileName != null)
+                    _info(
+                      theme,
+                      LucideIcons.file,
+                      'Имя файла',
+                      _metadata!.fileName,
+                    ),
+                  if (_metadata != null)
+                    _info(
+                      theme,
+                      LucideIcons.hardDrive,
+                      'Размер',
+                      _formatSize(_metadata!.fileSize),
+                    ),
+                  if (ext != null)
+                    _info(theme, LucideIcons.fileType, 'Расширение', '.$ext'),
+                  if (_categoryName != null)
+                    _info(theme, LucideIcons.folder, 'Категория', _categoryName!),
+                  if (_tagNames.isNotEmpty) _tags(theme),
+                  if (_file!.$1.description?.isNotEmpty ?? false)
+                    _info(
+                      theme,
+                      LucideIcons.fileText,
+                      'Описание',
+                      _file!.$1.description!,
+                    ),
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: _edit,
+                    icon: const Icon(LucideIcons.pencil),
+                    label: const Text('Редактировать'),
                   ),
-                if (ext != null)
-                  _info(theme, LucideIcons.fileType, 'Расширение', '.$ext'),
-                if (_categoryName != null)
-                  _info(theme, LucideIcons.folder, 'Категория', _categoryName!),
-                if (_tagNames.isNotEmpty) _tags(theme),
-                if (_file!.$1.description?.isNotEmpty ?? false)
-                  _info(
-                    theme,
-                    LucideIcons.fileText,
-                    'Описание',
-                    _file!.$1.description!,
-                  ),
-                const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: _edit,
-                  icon: const Icon(LucideIcons.pencil),
-                  label: const Text('Редактировать'),
-                ),
-              ],
-            ),
+                ],
+              ),
+      ),
     );
   }
 

@@ -144,107 +144,109 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                 IconButton(icon: const Icon(Icons.save), onPressed: _save),
             ],
           ),
-          body: ListView(
-            padding: formPadding,
-            children: [
-              TextField(
-                controller: _nameController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).nameLabel,
-                  errorText: state.nameError,
+          body: SafeArea(
+            child: ListView(
+              padding: formPadding,
+              children: [
+                TextField(
+                  controller: _nameController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).nameLabel,
+                    errorText: state.nameError,
+                  ),
+                  onChanged: notifier.setName,
                 ),
-                onChanged: notifier.setName,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _publicKeyController,
-                minLines: 2,
-                maxLines: 5,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).publicKeyRequiredLabel,
-                  errorText: state.publicKeyError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _publicKeyController,
+                  minLines: 2,
+                  maxLines: 5,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).publicKeyRequiredLabel,
+                    errorText: state.publicKeyError,
+                  ),
+                  onChanged: notifier.setPublicKey,
                 ),
-                onChanged: notifier.setPublicKey,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _privateKeyController,
-                minLines: 2,
-                maxLines: 6,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).privateKeyRequiredLabel,
-                  errorText: state.privateKeyError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _privateKeyController,
+                  minLines: 2,
+                  maxLines: 6,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).privateKeyRequiredLabel,
+                    errorText: state.privateKeyError,
+                  ),
+                  onChanged: notifier.setPrivateKey,
                 ),
-                onChanged: notifier.setPrivateKey,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _keyTypeController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).keyTypeLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _keyTypeController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).keyTypeLabel,
+                  ),
+                  onChanged: notifier.setKeyType,
                 ),
-                onChanged: notifier.setKeyType,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _fingerprintController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).fingerprintLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _fingerprintController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).fingerprintLabel,
+                  ),
+                  onChanged: notifier.setFingerprint,
                 ),
-                onChanged: notifier.setFingerprint,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _usageController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).usageLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _usageController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).usageLabel,
+                  ),
+                  onChanged: notifier.setUsage,
                 ),
-                onChanged: notifier.setUsage,
-              ),
-              const SizedBox(height: 12),
-              CategoryPickerField(
-                selectedCategoryId: state.categoryId,
-                selectedCategoryName: state.categoryName,
-                filterByType: const [CategoryType.sshKey, CategoryType.mixed],
-                onCategorySelected: notifier.setCategory,
-              ),
-              const SizedBox(height: 12),
-              TagPickerField(
-                selectedTagIds: state.tagIds,
-                selectedTagNames: state.tagNames,
-                filterByType: const [TagType.sshKey, TagType.mixed],
-                onTagsSelected: notifier.setTags,
-              ),
-              const SizedBox(height: 12),
-              NotePickerField(
-                selectedNoteId: state.noteId,
-                selectedNoteName: state.noteName,
-                onNoteSelected: notifier.setNote,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _descriptionController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).descriptionLabel,
+                const SizedBox(height: 12),
+                CategoryPickerField(
+                  selectedCategoryId: state.categoryId,
+                  selectedCategoryName: state.categoryName,
+                  filterByType: const [CategoryType.sshKey, CategoryType.mixed],
+                  onCategorySelected: notifier.setCategory,
                 ),
-                onChanged: notifier.setDescription,
-              ),
-              const SizedBox(height: 8),
-              SwitchListTile(
-                value: state.addedToAgent,
-                onChanged: notifier.setAddedToAgent,
-                title: Text(S.of(context).addedToSshAgentLabel),
-              ),
-            ],
+                const SizedBox(height: 12),
+                TagPickerField(
+                  selectedTagIds: state.tagIds,
+                  selectedTagNames: state.tagNames,
+                  filterByType: const [TagType.sshKey, TagType.mixed],
+                  onTagsSelected: notifier.setTags,
+                ),
+                const SizedBox(height: 12),
+                NotePickerField(
+                  selectedNoteId: state.noteId,
+                  selectedNoteName: state.noteName,
+                  onNoteSelected: notifier.setNote,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _descriptionController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).descriptionLabel,
+                  ),
+                  onChanged: notifier.setDescription,
+                ),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  value: state.addedToAgent,
+                  onChanged: notifier.setAddedToAgent,
+                  title: Text(S.of(context).addedToSshAgentLabel),
+                ),
+              ],
+            ),
           ),
         );
       },

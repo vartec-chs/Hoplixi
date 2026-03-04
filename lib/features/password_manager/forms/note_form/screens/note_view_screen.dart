@@ -132,74 +132,76 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _note == null
-          ? const Center(child: Text('Не найдена'))
-          : Column(
-              children: [
-                if (_categoryName != null || _tagNames.isNotEmpty)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      border: Border(
-                        bottom: BorderSide(color: theme.dividerColor),
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _note == null
+            ? const Center(child: Text('Не найдена'))
+            : Column(
+                children: [
+                  if (_categoryName != null || _tagNames.isNotEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        border: Border(
+                          bottom: BorderSide(color: theme.dividerColor),
+                        ),
+                      ),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          if (_categoryName != null)
+                            Chip(
+                              avatar: Icon(
+                                LucideIcons.folder,
+                                size: 16,
+                                color: theme.colorScheme.primary,
+                              ),
+                              label: Text(_categoryName!),
+                            ),
+                          ..._tagNames.map((tag) => Chip(label: Text(tag))),
+                        ],
                       ),
                     ),
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        if (_categoryName != null)
-                          Chip(
-                            avatar: Icon(
-                              LucideIcons.folder,
-                              size: 16,
-                              color: theme.colorScheme.primary,
-                            ),
-                            label: Text(_categoryName!),
-                          ),
-                        ..._tagNames.map((tag) => Chip(label: Text(tag))),
-                      ],
-                    ),
-                  ),
-                Expanded(
-                  child: _quillController != null
-                      ? QuillEditor(
-                          controller: _quillController!,
-                          scrollController: ScrollController(),
-                          focusNode: FocusNode(),
-                          config: QuillEditorConfig(
-                            padding: const EdgeInsets.all(12),
-                            expands: true,
-                            customStyles: DefaultStyles(
-                              link: TextStyle(
-                                color: theme.colorScheme.primary,
-                                decoration: TextDecoration.underline,
+                  Expanded(
+                    child: _quillController != null
+                        ? QuillEditor(
+                            controller: _quillController!,
+                            scrollController: ScrollController(),
+                            focusNode: FocusNode(),
+                            config: QuillEditorConfig(
+                              padding: const EdgeInsets.all(12),
+                              expands: true,
+                              customStyles: DefaultStyles(
+                                link: TextStyle(
+                                  color: theme.colorScheme.primary,
+                                  decoration: TextDecoration.underline,
+                                ),
                               ),
                             ),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: FilledButton.icon(
-                    onPressed: _edit,
-                    icon: const Icon(LucideIcons.pencil),
-                    label: const Text('Редактировать'),
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(48),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: FilledButton.icon(
+                      onPressed: _edit,
+                      icon: const Icon(LucideIcons.pencil),
+                      label: const Text('Редактировать'),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+      ),
     );
   }
 }

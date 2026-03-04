@@ -104,65 +104,67 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _password == null
-          ? const Center(child: Text('Не найден'))
-          : ListView(
-              padding: const EdgeInsets.all(12),
-              children: [
-                _info(
-                  theme,
-                  LucideIcons.tag,
-                  'Название',
-                  _password!.$1.name,
-                  () => _copy(_password!.$1.name, 'Название'),
-                ),
-                _passwordField(theme),
-                if (_password!.$2.login?.isNotEmpty ?? false)
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _password == null
+            ? const Center(child: Text('Не найден'))
+            : ListView(
+                padding: const EdgeInsets.all(12),
+                children: [
                   _info(
                     theme,
-                    LucideIcons.user,
-                    'Логин',
-                    _password!.$2.login!,
-                    () => _copy(_password!.$2.login!, 'Логин'),
+                    LucideIcons.tag,
+                    'Название',
+                    _password!.$1.name,
+                    () => _copy(_password!.$1.name, 'Название'),
                   ),
-                if (_password!.$2.email?.isNotEmpty ?? false)
-                  _info(
-                    theme,
-                    LucideIcons.mail,
-                    'Email',
-                    _password!.$2.email!,
-                    () => _copy(_password!.$2.email!, 'Email'),
+                  _passwordField(theme),
+                  if (_password!.$2.login?.isNotEmpty ?? false)
+                    _info(
+                      theme,
+                      LucideIcons.user,
+                      'Логин',
+                      _password!.$2.login!,
+                      () => _copy(_password!.$2.login!, 'Логин'),
+                    ),
+                  if (_password!.$2.email?.isNotEmpty ?? false)
+                    _info(
+                      theme,
+                      LucideIcons.mail,
+                      'Email',
+                      _password!.$2.email!,
+                      () => _copy(_password!.$2.email!, 'Email'),
+                    ),
+                  if (_password!.$2.url?.isNotEmpty ?? false)
+                    _info(
+                      theme,
+                      LucideIcons.globe,
+                      'URL',
+                      _password!.$2.url!,
+                      () => _copy(_password!.$2.url!, 'URL'),
+                    ),
+                  if (_categoryName != null)
+                    _info(theme, LucideIcons.folder, 'Категория', _categoryName!),
+                  if (_tagNames.isNotEmpty) _tags(theme),
+                  if (_password!.$1.description?.isNotEmpty ?? false)
+                    _info(
+                      theme,
+                      LucideIcons.fileText,
+                      'Описание',
+                      _password!.$1.description!,
+                    ),
+                  if (_noteName != null)
+                    _info(theme, LucideIcons.stickyNote, 'Заметка', _noteName!),
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: _edit,
+                    icon: const Icon(LucideIcons.pencil),
+                    label: const Text('Редактировать'),
                   ),
-                if (_password!.$2.url?.isNotEmpty ?? false)
-                  _info(
-                    theme,
-                    LucideIcons.globe,
-                    'URL',
-                    _password!.$2.url!,
-                    () => _copy(_password!.$2.url!, 'URL'),
-                  ),
-                if (_categoryName != null)
-                  _info(theme, LucideIcons.folder, 'Категория', _categoryName!),
-                if (_tagNames.isNotEmpty) _tags(theme),
-                if (_password!.$1.description?.isNotEmpty ?? false)
-                  _info(
-                    theme,
-                    LucideIcons.fileText,
-                    'Описание',
-                    _password!.$1.description!,
-                  ),
-                if (_noteName != null)
-                  _info(theme, LucideIcons.stickyNote, 'Заметка', _noteName!),
-                const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: _edit,
-                  icon: const Icon(LucideIcons.pencil),
-                  label: const Text('Редактировать'),
-                ),
-              ],
-            ),
+                ],
+              ),
+      ),
     );
   }
 

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
@@ -6,9 +6,9 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_b
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
-import 'package:hoplixi/generated/l10n.dart';
 
 import '../providers/contact_form_provider.dart';
 
@@ -163,166 +163,171 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                 IconButton(icon: const Icon(Icons.save), onPressed: _save),
             ],
           ),
-          body: ListView(
-            padding: formPadding,
-            children: [
-              TextField(
-                controller: _nameController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).contactNameLabel,
-                  errorText: state.nameError,
+          body: SafeArea(
+            child: ListView(
+              padding: formPadding,
+              children: [
+                TextField(
+                  controller: _nameController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).contactNameLabel,
+                    errorText: state.nameError,
+                  ),
+                  onChanged: ref
+                      .read(contactFormProvider(widget.contactId).notifier)
+                      .setName,
                 ),
-                onChanged: ref
-                    .read(contactFormProvider(widget.contactId).notifier)
-                    .setName,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _phoneController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).phoneLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _phoneController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).phoneLabel,
+                  ),
+                  onChanged: ref
+                      .read(contactFormProvider(widget.contactId).notifier)
+                      .setPhone,
                 ),
-                onChanged: ref
-                    .read(contactFormProvider(widget.contactId).notifier)
-                    .setPhone,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _emailController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).emailFieldLabel,
-                  errorText: state.emailError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _emailController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).emailFieldLabel,
+                    errorText: state.emailError,
+                  ),
+                  onChanged: ref
+                      .read(contactFormProvider(widget.contactId).notifier)
+                      .setEmail,
                 ),
-                onChanged: ref
-                    .read(contactFormProvider(widget.contactId).notifier)
-                    .setEmail,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _companyController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).companyLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _companyController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).companyLabel,
+                  ),
+                  onChanged: ref
+                      .read(contactFormProvider(widget.contactId).notifier)
+                      .setCompany,
                 ),
-                onChanged: ref
-                    .read(contactFormProvider(widget.contactId).notifier)
-                    .setCompany,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _jobTitleController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).jobTitleLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _jobTitleController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).jobTitleLabel,
+                  ),
+                  onChanged: ref
+                      .read(contactFormProvider(widget.contactId).notifier)
+                      .setJobTitle,
                 ),
-                onChanged: ref
-                    .read(contactFormProvider(widget.contactId).notifier)
-                    .setJobTitle,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _addressController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).addressLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _addressController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).addressLabel,
+                  ),
+                  onChanged: ref
+                      .read(contactFormProvider(widget.contactId).notifier)
+                      .setAddress,
                 ),
-                onChanged: ref
-                    .read(contactFormProvider(widget.contactId).notifier)
-                    .setAddress,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _websiteController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).websiteLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _websiteController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).websiteLabel,
+                  ),
+                  onChanged: ref
+                      .read(contactFormProvider(widget.contactId).notifier)
+                      .setWebsite,
                 ),
-                onChanged: ref
-                    .read(contactFormProvider(widget.contactId).notifier)
-                    .setWebsite,
-              ),
-              const SizedBox(height: 12),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(S.of(context).birthdayLabel),
-                subtitle: Text(
-                  state.birthday == null
-                      ? S.of(context).notSpecified
-                      : '${state.birthday!.day.toString().padLeft(2, '0')}.${state.birthday!.month.toString().padLeft(2, '0')}.${state.birthday!.year}',
-                ),
-                trailing: Wrap(
-                  spacing: 8,
-                  children: [
-                    if (state.birthday != null)
+                const SizedBox(height: 12),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(S.of(context).birthdayLabel),
+                  subtitle: Text(
+                    state.birthday == null
+                        ? S.of(context).notSpecified
+                        : '${state.birthday!.day.toString().padLeft(2, '0')}.${state.birthday!.month.toString().padLeft(2, '0')}.${state.birthday!.year}',
+                  ),
+                  trailing: Wrap(
+                    spacing: 8,
+                    children: [
+                      if (state.birthday != null)
+                        IconButton(
+                          tooltip: S.of(context).clear,
+                          icon: const Icon(Icons.clear),
+                          onPressed: () => ref
+                              .read(
+                                contactFormProvider(widget.contactId).notifier,
+                              )
+                              .setBirthday(null),
+                        ),
                       IconButton(
-                        tooltip: S.of(context).clear,
-                        icon: const Icon(Icons.clear),
-                        onPressed: () => ref
-                            .read(
-                              contactFormProvider(widget.contactId).notifier,
-                            )
-                            .setBirthday(null),
+                        tooltip: S.of(context).pickDate,
+                        icon: const Icon(Icons.calendar_today),
+                        onPressed: () => _pickBirthday(state.birthday),
                       ),
-                    IconButton(
-                      tooltip: S.of(context).pickDate,
-                      icon: const Icon(Icons.calendar_today),
-                      onPressed: () => _pickBirthday(state.birthday),
-                    ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SwitchListTile(
+                  value: state.isEmergencyContact,
+                  onChanged: ref
+                      .read(contactFormProvider(widget.contactId).notifier)
+                      .setEmergencyContact,
+                  title: Text(S.of(context).emergencyContactLabel),
+                  contentPadding: EdgeInsets.zero,
+                ),
+                const SizedBox(height: 12),
+                CategoryPickerField(
+                  selectedCategoryId: state.categoryId,
+                  selectedCategoryName: state.categoryName,
+                  filterByType: const [
+                    CategoryType.contact,
+                    CategoryType.mixed,
                   ],
+                  onCategorySelected: ref
+                      .read(contactFormProvider(widget.contactId).notifier)
+                      .setCategory,
                 ),
-              ),
-              const SizedBox(height: 12),
-              SwitchListTile(
-                value: state.isEmergencyContact,
-                onChanged: ref
-                    .read(contactFormProvider(widget.contactId).notifier)
-                    .setEmergencyContact,
-                title: Text(S.of(context).emergencyContactLabel),
-                contentPadding: EdgeInsets.zero,
-              ),
-              const SizedBox(height: 12),
-              CategoryPickerField(
-                selectedCategoryId: state.categoryId,
-                selectedCategoryName: state.categoryName,
-                filterByType: const [CategoryType.contact, CategoryType.mixed],
-                onCategorySelected: ref
-                    .read(contactFormProvider(widget.contactId).notifier)
-                    .setCategory,
-              ),
-              const SizedBox(height: 12),
-              TagPickerField(
-                selectedTagIds: state.tagIds,
-                selectedTagNames: state.tagNames,
-                filterByType: const [TagType.contact, TagType.mixed],
-                onTagsSelected: ref
-                    .read(contactFormProvider(widget.contactId).notifier)
-                    .setTags,
-              ),
-              const SizedBox(height: 12),
-              NotePickerField(
-                selectedNoteId: state.noteId,
-                selectedNoteName: state.noteName,
-                onNoteSelected: ref
-                    .read(contactFormProvider(widget.contactId).notifier)
-                    .setNote,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _descriptionController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).descriptionLabel,
+                const SizedBox(height: 12),
+                TagPickerField(
+                  selectedTagIds: state.tagIds,
+                  selectedTagNames: state.tagNames,
+                  filterByType: const [TagType.contact, TagType.mixed],
+                  onTagsSelected: ref
+                      .read(contactFormProvider(widget.contactId).notifier)
+                      .setTags,
                 ),
-                onChanged: ref
-                    .read(contactFormProvider(widget.contactId).notifier)
-                    .setDescription,
-              ),
-            ],
+                const SizedBox(height: 12),
+                NotePickerField(
+                  selectedNoteId: state.noteId,
+                  selectedNoteName: state.noteName,
+                  onNoteSelected: ref
+                      .read(contactFormProvider(widget.contactId).notifier)
+                      .setNote,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _descriptionController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).descriptionLabel,
+                  ),
+                  onChanged: ref
+                      .read(contactFormProvider(widget.contactId).notifier)
+                      .setDescription,
+                ),
+              ],
+            ),
           ),
         );
       },

@@ -186,171 +186,173 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                 IconButton(icon: const Icon(Icons.save), onPressed: _save),
             ],
           ),
-          body: ListView(
-            padding: formPadding,
-            children: [
-              TextField(
-                controller: _nameController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).nameLabel,
-                  errorText: state.nameError,
+          body: SafeArea(
+            child: ListView(
+              padding: formPadding,
+              children: [
+                TextField(
+                  controller: _nameController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).nameLabel,
+                    errorText: state.nameError,
+                  ),
+                  onChanged: notifier.setName,
                 ),
-                onChanged: notifier.setName,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _idTypeController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).documentTypeRequiredLabel,
-                  errorText: state.idTypeError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _idTypeController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).documentTypeRequiredLabel,
+                    errorText: state.idTypeError,
+                  ),
+                  onChanged: notifier.setIdType,
                 ),
-                onChanged: notifier.setIdType,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _idNumberController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).documentNumberRequiredLabel,
-                  errorText: state.idNumberError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _idNumberController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).documentNumberRequiredLabel,
+                    errorText: state.idNumberError,
+                  ),
+                  onChanged: notifier.setIdNumber,
                 ),
-                onChanged: notifier.setIdNumber,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _fullNameController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).fullNameLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _fullNameController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).fullNameLabel,
+                  ),
+                  onChanged: notifier.setFullName,
                 ),
-                onChanged: notifier.setFullName,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _dateOfBirthController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).birthDateIsoLabel,
-                  errorText: state.dateOfBirthError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _dateOfBirthController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).birthDateIsoLabel,
+                    errorText: state.dateOfBirthError,
+                  ),
+                  onChanged: notifier.setDateOfBirth,
                 ),
-                onChanged: notifier.setDateOfBirth,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _placeOfBirthController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).placeOfBirthLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _placeOfBirthController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).placeOfBirthLabel,
+                  ),
+                  onChanged: notifier.setPlaceOfBirth,
                 ),
-                onChanged: notifier.setPlaceOfBirth,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _nationalityController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).nationalityLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _nationalityController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).nationalityLabel,
+                  ),
+                  onChanged: notifier.setNationality,
                 ),
-                onChanged: notifier.setNationality,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _issuingAuthorityController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).issuingAuthorityLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _issuingAuthorityController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).issuingAuthorityLabel,
+                  ),
+                  onChanged: notifier.setIssuingAuthority,
                 ),
-                onChanged: notifier.setIssuingAuthority,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _issueDateController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).issueDateIsoLabel,
-                  errorText: state.issueDateError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _issueDateController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).issueDateIsoLabel,
+                    errorText: state.issueDateError,
+                  ),
+                  onChanged: notifier.setIssueDate,
                 ),
-                onChanged: notifier.setIssueDate,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _expiryDateController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).expiryDateIsoLabel,
-                  errorText: state.expiryDateError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _expiryDateController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).expiryDateIsoLabel,
+                    errorText: state.expiryDateError,
+                  ),
+                  onChanged: notifier.setExpiryDate,
                 ),
-                onChanged: notifier.setExpiryDate,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _mrzController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).mrzLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _mrzController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).mrzLabel,
+                  ),
+                  onChanged: notifier.setMrz,
                 ),
-                onChanged: notifier.setMrz,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _scanAttachmentIdController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).scanIdLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _scanAttachmentIdController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).scanIdLabel,
+                  ),
+                  onChanged: notifier.setScanAttachmentId,
                 ),
-                onChanged: notifier.setScanAttachmentId,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _photoAttachmentIdController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).photoIdLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _photoAttachmentIdController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).photoIdLabel,
+                  ),
+                  onChanged: notifier.setPhotoAttachmentId,
                 ),
-                onChanged: notifier.setPhotoAttachmentId,
-              ),
-              const SizedBox(height: 12),
-              CategoryPickerField(
-                selectedCategoryId: state.categoryId,
-                selectedCategoryName: state.categoryName,
-                filterByType: const [CategoryType.identity, CategoryType.mixed],
-                onCategorySelected: notifier.setCategory,
-              ),
-              const SizedBox(height: 12),
-              TagPickerField(
-                selectedTagIds: state.tagIds,
-                selectedTagNames: state.tagNames,
-                filterByType: const [TagType.identity, TagType.mixed],
-                onTagsSelected: notifier.setTags,
-              ),
-              const SizedBox(height: 12),
-              NotePickerField(
-                selectedNoteId: state.noteId,
-                selectedNoteName: state.noteName,
-                onNoteSelected: notifier.setNote,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _descriptionController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).descriptionLabel,
+                const SizedBox(height: 12),
+                CategoryPickerField(
+                  selectedCategoryId: state.categoryId,
+                  selectedCategoryName: state.categoryName,
+                  filterByType: const [CategoryType.identity, CategoryType.mixed],
+                  onCategorySelected: notifier.setCategory,
                 ),
-                onChanged: notifier.setDescription,
-              ),
-              const SizedBox(height: 8),
-              SwitchListTile(
-                value: state.verified,
-                onChanged: notifier.setVerified,
-                title: Text(S.of(context).verifiedLabel),
-              ),
-            ],
+                const SizedBox(height: 12),
+                TagPickerField(
+                  selectedTagIds: state.tagIds,
+                  selectedTagNames: state.tagNames,
+                  filterByType: const [TagType.identity, TagType.mixed],
+                  onTagsSelected: notifier.setTags,
+                ),
+                const SizedBox(height: 12),
+                NotePickerField(
+                  selectedNoteId: state.noteId,
+                  selectedNoteName: state.noteName,
+                  onNoteSelected: notifier.setNote,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _descriptionController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).descriptionLabel,
+                  ),
+                  onChanged: notifier.setDescription,
+                ),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  value: state.verified,
+                  onChanged: notifier.setVerified,
+                  title: Text(S.of(context).verifiedLabel),
+                ),
+              ],
+            ),
           ),
         );
       },

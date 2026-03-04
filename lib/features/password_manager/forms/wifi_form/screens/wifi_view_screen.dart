@@ -130,82 +130,84 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
           ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Text(_name, style: Theme.of(context).textTheme.headlineSmall),
-                const SizedBox(height: 12),
-                ListTile(title: const Text('SSID'), subtitle: Text(_ssid)),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l10n.wifiPasswordLabel),
-                  subtitle: SelectableText(
-                    _showPassword
-                        ? (_password ?? '')
-                        : l10n.commonPressVisibilityToLoad,
-                  ),
-                  trailing: Wrap(
-                    spacing: 4,
-                    children: [
-                      IconButton(
-                        onPressed: _revealPassword,
-                        icon: Icon(
-                          _showPassword ? Icons.visibility_off : Icons.visibility,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () =>
-                            _copyText(l10n.wifiPasswordLabel, _password),
-                        icon: const Icon(Icons.copy),
-                      ),
-                    ],
-                  ),
-                ),
-                if (_security?.isNotEmpty == true)
-                  ListTile(title: Text(l10n.wifiSecurityLabel), subtitle: Text(_security!)),
-                ListTile(
-                  title: Text(l10n.wifiHiddenNetworkLabel),
-                  subtitle: Text(_hidden ? l10n.commonYes : l10n.commonNo),
-                ),
-                if (_eapMethod?.isNotEmpty == true)
-                  ListTile(title: Text(l10n.wifiEapMethodLabel), subtitle: Text(_eapMethod!)),
-                if (_username?.isNotEmpty == true)
-                  ListTile(title: Text(l10n.wifiUsernameLabel), subtitle: Text(_username!)),
-                if (_identity?.isNotEmpty == true)
-                  ListTile(title: Text(l10n.wifiIdentityLabel), subtitle: Text(_identity!)),
-                if (_domain?.isNotEmpty == true)
-                  ListTile(title: Text(l10n.wifiDomainLabel), subtitle: Text(_domain!)),
-                if (_lastConnectedBssid?.isNotEmpty == true)
-                  ListTile(
-                    title: Text(l10n.wifiLastConnectedBssidLabel),
-                    subtitle: Text(_lastConnectedBssid!),
-                  ),
-                if (_priority != null)
-                  ListTile(
-                    title: Text(l10n.wifiPriorityLabel),
-                    subtitle: Text('$_priority'),
-                  ),
-                if (_qrPayload?.isNotEmpty == true)
+      body: SafeArea(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Text(_name, style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 12),
+                  ListTile(title: const Text('SSID'), subtitle: Text(_ssid)),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.wifiQrPayloadLabel),
-                    subtitle: SelectableText(_qrPayload!),
-                    trailing: IconButton(
-                      onPressed: () =>
-                          _copyText(l10n.wifiQrPayloadLabel, _qrPayload),
-                      icon: const Icon(Icons.copy),
+                    title: Text(l10n.wifiPasswordLabel),
+                    subtitle: SelectableText(
+                      _showPassword
+                          ? (_password ?? '')
+                          : l10n.commonPressVisibilityToLoad,
+                    ),
+                    trailing: Wrap(
+                      spacing: 4,
+                      children: [
+                        IconButton(
+                          onPressed: _revealPassword,
+                          icon: Icon(
+                            _showPassword ? Icons.visibility_off : Icons.visibility,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () =>
+                              _copyText(l10n.wifiPasswordLabel, _password),
+                          icon: const Icon(Icons.copy),
+                        ),
+                      ],
                     ),
                   ),
-                if (_description?.isNotEmpty == true)
+                  if (_security?.isNotEmpty == true)
+                    ListTile(title: Text(l10n.wifiSecurityLabel), subtitle: Text(_security!)),
                   ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.descriptionLabel),
-                    subtitle: Text(_description!),
+                    title: Text(l10n.wifiHiddenNetworkLabel),
+                    subtitle: Text(_hidden ? l10n.commonYes : l10n.commonNo),
                   ),
-              ],
-            ),
+                  if (_eapMethod?.isNotEmpty == true)
+                    ListTile(title: Text(l10n.wifiEapMethodLabel), subtitle: Text(_eapMethod!)),
+                  if (_username?.isNotEmpty == true)
+                    ListTile(title: Text(l10n.wifiUsernameLabel), subtitle: Text(_username!)),
+                  if (_identity?.isNotEmpty == true)
+                    ListTile(title: Text(l10n.wifiIdentityLabel), subtitle: Text(_identity!)),
+                  if (_domain?.isNotEmpty == true)
+                    ListTile(title: Text(l10n.wifiDomainLabel), subtitle: Text(_domain!)),
+                  if (_lastConnectedBssid?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.wifiLastConnectedBssidLabel),
+                      subtitle: Text(_lastConnectedBssid!),
+                    ),
+                  if (_priority != null)
+                    ListTile(
+                      title: Text(l10n.wifiPriorityLabel),
+                      subtitle: Text('$_priority'),
+                    ),
+                  if (_qrPayload?.isNotEmpty == true)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.wifiQrPayloadLabel),
+                      subtitle: SelectableText(_qrPayload!),
+                      trailing: IconButton(
+                        onPressed: () =>
+                            _copyText(l10n.wifiQrPayloadLabel, _qrPayload),
+                        icon: const Icon(Icons.copy),
+                      ),
+                    ),
+                  if (_description?.isNotEmpty == true)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.descriptionLabel),
+                      subtitle: Text(_description!),
+                    ),
+                ],
+              ),
+      ),
     );
   }
 }

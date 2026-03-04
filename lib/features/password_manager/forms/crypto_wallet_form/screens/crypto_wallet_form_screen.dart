@@ -182,158 +182,160 @@ class _CryptoWalletFormScreenState
                 IconButton(icon: const Icon(Icons.save), onPressed: _save),
             ],
           ),
-          body: ListView(
-            padding: formPadding,
-            children: [
-              TextField(
-                controller: _nameController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).nameLabel,
-                  errorText: state.nameError,
+          body: SafeArea(
+            child: ListView(
+              padding: formPadding,
+              children: [
+                TextField(
+                  controller: _nameController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).nameLabel,
+                    errorText: state.nameError,
+                  ),
+                  onChanged: notifier.setName,
                 ),
-                onChanged: notifier.setName,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _walletTypeController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).walletTypeLabel,
-                  errorText: state.walletTypeError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _walletTypeController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).walletTypeLabel,
+                    errorText: state.walletTypeError,
+                  ),
+                  onChanged: notifier.setWalletType,
                 ),
-                onChanged: notifier.setWalletType,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _mnemonicController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).mnemonicLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _mnemonicController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).mnemonicLabel,
+                  ),
+                  onChanged: notifier.setMnemonic,
                 ),
-                onChanged: notifier.setMnemonic,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _privateKeyController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).privateKeyLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _privateKeyController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).privateKeyLabel,
+                  ),
+                  onChanged: notifier.setPrivateKey,
                 ),
-                onChanged: notifier.setPrivateKey,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _xprvController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).xprvLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _xprvController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).xprvLabel,
+                  ),
+                  onChanged: notifier.setXprv,
                 ),
-                onChanged: notifier.setXprv,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _xpubController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).xpubLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _xpubController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).xpubLabel,
+                  ),
+                  onChanged: notifier.setXpub,
                 ),
-                onChanged: notifier.setXpub,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _networkController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).networkLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _networkController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).networkLabel,
+                  ),
+                  onChanged: notifier.setNetwork,
                 ),
-                onChanged: notifier.setNetwork,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _derivationPathController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).derivationPathLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _derivationPathController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).derivationPathLabel,
+                  ),
+                  onChanged: notifier.setDerivationPath,
                 ),
-                onChanged: notifier.setDerivationPath,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _derivationSchemeController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).derivationSchemeLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _derivationSchemeController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).derivationSchemeLabel,
+                  ),
+                  onChanged: notifier.setDerivationScheme,
                 ),
-                onChanged: notifier.setDerivationScheme,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _addressesController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).addressesJsonLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _addressesController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).addressesJsonLabel,
+                  ),
+                  onChanged: notifier.setAddresses,
                 ),
-                onChanged: notifier.setAddresses,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _hardwareController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).hardwareDeviceLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _hardwareController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).hardwareDeviceLabel,
+                  ),
+                  onChanged: notifier.setHardwareDevice,
                 ),
-                onChanged: notifier.setHardwareDevice,
-              ),
-              const SizedBox(height: 12),
-              CategoryPickerField(
-                selectedCategoryId: state.categoryId,
-                selectedCategoryName: state.categoryName,
-                filterByType: const [
-                  CategoryType.cryptoWallet,
-                  CategoryType.mixed,
-                ],
-                onCategorySelected: notifier.setCategory,
-              ),
-              const SizedBox(height: 12),
-              TagPickerField(
-                selectedTagIds: state.tagIds,
-                selectedTagNames: state.tagNames,
-                filterByType: const [TagType.cryptoWallet, TagType.mixed],
-                onTagsSelected: notifier.setTags,
-              ),
-              const SizedBox(height: 12),
-              NotePickerField(
-                selectedNoteId: state.noteId,
-                selectedNoteName: state.noteName,
-                onNoteSelected: notifier.setNote,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _descriptionController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).descriptionLabel,
+                const SizedBox(height: 12),
+                CategoryPickerField(
+                  selectedCategoryId: state.categoryId,
+                  selectedCategoryName: state.categoryName,
+                  filterByType: const [
+                    CategoryType.cryptoWallet,
+                    CategoryType.mixed,
+                  ],
+                  onCategorySelected: notifier.setCategory,
                 ),
-                onChanged: notifier.setDescription,
-              ),
-              const SizedBox(height: 8),
-              SwitchListTile(
-                value: state.watchOnly,
-                onChanged: notifier.setWatchOnly,
-                title: Text(S.of(context).watchOnlyLabel),
-              ),
-            ],
+                const SizedBox(height: 12),
+                TagPickerField(
+                  selectedTagIds: state.tagIds,
+                  selectedTagNames: state.tagNames,
+                  filterByType: const [TagType.cryptoWallet, TagType.mixed],
+                  onTagsSelected: notifier.setTags,
+                ),
+                const SizedBox(height: 12),
+                NotePickerField(
+                  selectedNoteId: state.noteId,
+                  selectedNoteName: state.noteName,
+                  onNoteSelected: notifier.setNote,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _descriptionController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).descriptionLabel,
+                  ),
+                  onChanged: notifier.setDescription,
+                ),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  value: state.watchOnly,
+                  onChanged: notifier.setWatchOnly,
+                  title: Text(S.of(context).watchOnlyLabel),
+                ),
+              ],
+            ),
           ),
         );
       },

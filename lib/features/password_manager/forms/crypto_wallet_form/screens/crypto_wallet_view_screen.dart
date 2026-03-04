@@ -216,81 +216,83 @@ class _CryptoWalletViewScreenState
           ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Text(_name, style: Theme.of(context).textTheme.headlineSmall),
-                const SizedBox(height: 12),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l10n.walletTypeLabel),
-                  subtitle: Text(_walletType),
-                ),
-                _buildSensitiveTile(
-                  title: l10n.mnemonicLabel,
-                  value: _mnemonic,
-                  isVisible: _showMnemonic,
-                  onToggle: _revealMnemonic,
-                ),
-                _buildSensitiveTile(
-                  title: l10n.privateKeyLabel,
-                  value: _privateKey,
-                  isVisible: _showPrivateKey,
-                  onToggle: _revealPrivateKey,
-                ),
-                _buildSensitiveTile(
-                  title: l10n.xprvLabel,
-                  value: _xprv,
-                  isVisible: _showXprv,
-                  onToggle: _revealXprv,
-                ),
-                if (_xpub?.isNotEmpty == true)
+      body: SafeArea(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Text(_name, style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 12),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.xpubLabel),
-                    subtitle: SelectableText(_xpub!),
-                    trailing: IconButton(
-                      onPressed: () => _copyText(l10n.xpubLabel, _xpub),
-                      icon: const Icon(Icons.copy),
+                    title: Text(l10n.walletTypeLabel),
+                    subtitle: Text(_walletType),
+                  ),
+                  _buildSensitiveTile(
+                    title: l10n.mnemonicLabel,
+                    value: _mnemonic,
+                    isVisible: _showMnemonic,
+                    onToggle: _revealMnemonic,
+                  ),
+                  _buildSensitiveTile(
+                    title: l10n.privateKeyLabel,
+                    value: _privateKey,
+                    isVisible: _showPrivateKey,
+                    onToggle: _revealPrivateKey,
+                  ),
+                  _buildSensitiveTile(
+                    title: l10n.xprvLabel,
+                    value: _xprv,
+                    isVisible: _showXprv,
+                    onToggle: _revealXprv,
+                  ),
+                  if (_xpub?.isNotEmpty == true)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.xpubLabel),
+                      subtitle: SelectableText(_xpub!),
+                      trailing: IconButton(
+                        onPressed: () => _copyText(l10n.xpubLabel, _xpub),
+                        icon: const Icon(Icons.copy),
+                      ),
                     ),
-                  ),
-                if (_network?.isNotEmpty == true)
-                  ListTile(title: Text(l10n.networkLabel), subtitle: Text(_network!)),
-                if (_derivationPath?.isNotEmpty == true)
+                  if (_network?.isNotEmpty == true)
+                    ListTile(title: Text(l10n.networkLabel), subtitle: Text(_network!)),
+                  if (_derivationPath?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.derivationPathLabel),
+                      subtitle: Text(_derivationPath!),
+                    ),
+                  if (_derivationScheme?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.derivationSchemeLabel),
+                      subtitle: Text(_derivationScheme!),
+                    ),
+                  if (_hardwareDevice?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.hardwareDeviceLabel),
+                      subtitle: Text(_hardwareDevice!),
+                    ),
+                  if (_addresses?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.addressesJsonLabel),
+                      subtitle: SelectableText(_addresses!),
+                    ),
                   ListTile(
-                    title: Text(l10n.derivationPathLabel),
-                    subtitle: Text(_derivationPath!),
+                    title: Text(l10n.watchOnlyLabel),
+                    subtitle:
+                        Text(_watchOnly ? l10n.commonEnabled : l10n.commonDisabled),
                   ),
-                if (_derivationScheme?.isNotEmpty == true)
-                  ListTile(
-                    title: Text(l10n.derivationSchemeLabel),
-                    subtitle: Text(_derivationScheme!),
-                  ),
-                if (_hardwareDevice?.isNotEmpty == true)
-                  ListTile(
-                    title: Text(l10n.hardwareDeviceLabel),
-                    subtitle: Text(_hardwareDevice!),
-                  ),
-                if (_addresses?.isNotEmpty == true)
-                  ListTile(
-                    title: Text(l10n.addressesJsonLabel),
-                    subtitle: SelectableText(_addresses!),
-                  ),
-                ListTile(
-                  title: Text(l10n.watchOnlyLabel),
-                  subtitle:
-                      Text(_watchOnly ? l10n.commonEnabled : l10n.commonDisabled),
-                ),
-                if (_description?.isNotEmpty == true)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.descriptionLabel),
-                    subtitle: Text(_description!),
-                  ),
-              ],
-            ),
+                  if (_description?.isNotEmpty == true)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.descriptionLabel),
+                      subtitle: Text(_description!),
+                    ),
+                ],
+              ),
+      ),
     );
   }
 }

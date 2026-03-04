@@ -165,98 +165,100 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
           IconButton(icon: const Icon(LucideIcons.pencil), onPressed: _edit),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _otp == null
-          ? const Center(child: Text('Не найден'))
-          : ListView(
-              padding: const EdgeInsets.all(12),
-              children: [
-                Card(
-                  child: InkWell(
-                    onTap: _copyCode,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        children: [
-                          Text(
-                            _currentCode,
-                            style: theme.textTheme.displayMedium?.copyWith(
-                              fontFamily: 'monospace',
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 8,
-                              color: cs.primary,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  value: _remainingSeconds / _otp!.$2.period,
-                                  strokeWidth: 3,
-                                  color: _remainingSeconds <= 5
-                                      ? cs.error
-                                      : cs.primary,
-                                ),
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _otp == null
+            ? const Center(child: Text('Не найден'))
+            : ListView(
+                padding: const EdgeInsets.all(12),
+                children: [
+                  Card(
+                    child: InkWell(
+                      onTap: _copyCode,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          children: [
+                            Text(
+                              _currentCode,
+                              style: theme.textTheme.displayMedium?.copyWith(
+                                fontFamily: 'monospace',
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 8,
+                                color: cs.primary,
                               ),
-                              const SizedBox(width: 8),
-                              Text('$_remainingSeconds сек'),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Нажмите для копирования',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 16),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    value: _remainingSeconds / _otp!.$2.period,
+                                    strokeWidth: 3,
+                                    color: _remainingSeconds <= 5
+                                        ? cs.error
+                                        : cs.primary,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text('$_remainingSeconds сек'),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Нажмите для копирования',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                _info(
-                  theme,
-                  LucideIcons.building,
-                  'Издатель',
-                  _otp!.$2.issuer ?? '-',
-                ),
-                _info(
-                  theme,
-                  LucideIcons.user,
-                  'Аккаунт',
-                  _otp!.$2.accountName ?? '-',
-                ),
-                _info(
-                  theme,
-                  LucideIcons.timer,
-                  'Период',
-                  '${_otp!.$2.period} сек',
-                ),
-                _info(theme, LucideIcons.hash, 'Цифр', '${_otp!.$2.digits}'),
-                _info(
-                  theme,
-                  LucideIcons.cpu,
-                  'Алгоритм',
-                  _otp!.$2.algorithm.name,
-                ),
-                if (_categoryName != null)
-                  _info(theme, LucideIcons.folder, 'Категория', _categoryName!),
-                if (_tagNames.isNotEmpty) _tags(theme),
-                const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: _edit,
-                  icon: const Icon(LucideIcons.pencil),
-                  label: const Text('Редактировать'),
-                ),
-              ],
-            ),
+                  const SizedBox(height: 24),
+                  _info(
+                    theme,
+                    LucideIcons.building,
+                    'Издатель',
+                    _otp!.$2.issuer ?? '-',
+                  ),
+                  _info(
+                    theme,
+                    LucideIcons.user,
+                    'Аккаунт',
+                    _otp!.$2.accountName ?? '-',
+                  ),
+                  _info(
+                    theme,
+                    LucideIcons.timer,
+                    'Период',
+                    '${_otp!.$2.period} сек',
+                  ),
+                  _info(theme, LucideIcons.hash, 'Цифр', '${_otp!.$2.digits}'),
+                  _info(
+                    theme,
+                    LucideIcons.cpu,
+                    'Алгоритм',
+                    _otp!.$2.algorithm.name,
+                  ),
+                  if (_categoryName != null)
+                    _info(theme, LucideIcons.folder, 'Категория', _categoryName!),
+                  if (_tagNames.isNotEmpty) _tags(theme),
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: _edit,
+                    icon: const Icon(LucideIcons.pencil),
+                    label: const Text('Редактировать'),
+                  ),
+                ],
+              ),
+      ),
     );
   }
 

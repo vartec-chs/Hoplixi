@@ -120,62 +120,64 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
           ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Text(_name, style: Theme.of(context).textTheme.headlineSmall),
-                const SizedBox(height: 12),
-                SelectableText(_publicKey),
-                const SizedBox(height: 16),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l10n.privateKeyLabel),
-                  subtitle: SelectableText(
-                    _showPrivateKey
-                        ? (_privateKey ?? '')
-                        : l10n.commonPressVisibilityToLoad,
-                  ),
-                  trailing: Wrap(
-                    spacing: 4,
-                    children: [
-                      IconButton(
-                        onPressed: _revealPrivateKey,
-                        icon: Icon(
-                          _showPrivateKey ? Icons.visibility_off : Icons.visibility,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: _copyPrivateKey,
-                        icon: const Icon(Icons.copy),
-                      ),
-                    ],
-                  ),
-                ),
-                if (_keyType?.isNotEmpty == true)
-                  ListTile(title: Text(l10n.keyTypeLabel), subtitle: Text(_keyType!)),
-                if (_fingerprint?.isNotEmpty == true)
+      body: SafeArea(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Text(_name, style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 12),
+                  SelectableText(_publicKey),
+                  const SizedBox(height: 16),
                   ListTile(
-                    title: Text(l10n.fingerprintLabel),
-                    subtitle: Text(_fingerprint!),
-                  ),
-                if (_usage?.isNotEmpty == true)
-                  ListTile(title: Text(l10n.usageLabel), subtitle: Text(_usage!)),
-                ListTile(
-                  title: Text(l10n.addedToSshAgentLabel),
-                  subtitle: Text(
-                    _addedToAgent ? l10n.commonAdded : l10n.commonNotAdded,
-                  ),
-                ),
-                if (_description?.isNotEmpty == true)
-                  ListTile(
-                    title: Text(l10n.descriptionLabel),
-                    subtitle: Text(_description!),
                     contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.privateKeyLabel),
+                    subtitle: SelectableText(
+                      _showPrivateKey
+                          ? (_privateKey ?? '')
+                          : l10n.commonPressVisibilityToLoad,
+                    ),
+                    trailing: Wrap(
+                      spacing: 4,
+                      children: [
+                        IconButton(
+                          onPressed: _revealPrivateKey,
+                          icon: Icon(
+                            _showPrivateKey ? Icons.visibility_off : Icons.visibility,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: _copyPrivateKey,
+                          icon: const Icon(Icons.copy),
+                        ),
+                      ],
+                    ),
                   ),
-              ],
-            ),
+                  if (_keyType?.isNotEmpty == true)
+                    ListTile(title: Text(l10n.keyTypeLabel), subtitle: Text(_keyType!)),
+                  if (_fingerprint?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.fingerprintLabel),
+                      subtitle: Text(_fingerprint!),
+                    ),
+                  if (_usage?.isNotEmpty == true)
+                    ListTile(title: Text(l10n.usageLabel), subtitle: Text(_usage!)),
+                  ListTile(
+                    title: Text(l10n.addedToSshAgentLabel),
+                    subtitle: Text(
+                      _addedToAgent ? l10n.commonAdded : l10n.commonNotAdded,
+                    ),
+                  ),
+                  if (_description?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.descriptionLabel),
+                      subtitle: Text(_description!),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                ],
+              ),
+      ),
     );
   }
 }

@@ -136,114 +136,116 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                 IconButton(icon: const Icon(Icons.save), onPressed: _save),
             ],
           ),
-          body: ListView(
-            padding: formPadding,
-            children: [
-              TextField(
-                controller: _nameController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).apiKeyNameLabel,
-                  errorText: state.nameError,
+          body: SafeArea(
+            child: ListView(
+              padding: formPadding,
+              children: [
+                TextField(
+                  controller: _nameController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).apiKeyNameLabel,
+                    errorText: state.nameError,
+                  ),
+                  onChanged: ref
+                      .read(apiKeyFormProvider(widget.apiKeyId).notifier)
+                      .setName,
                 ),
-                onChanged: ref
-                    .read(apiKeyFormProvider(widget.apiKeyId).notifier)
-                    .setName,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _serviceController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).apiKeyServiceLabel,
-                  errorText: state.serviceError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _serviceController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).apiKeyServiceLabel,
+                    errorText: state.serviceError,
+                  ),
+                  onChanged: ref
+                      .read(apiKeyFormProvider(widget.apiKeyId).notifier)
+                      .setService,
                 ),
-                onChanged: ref
-                    .read(apiKeyFormProvider(widget.apiKeyId).notifier)
-                    .setService,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _keyController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).apiKeyKeyLabel,
-                  errorText: state.keyError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _keyController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).apiKeyKeyLabel,
+                    errorText: state.keyError,
+                  ),
+                  onChanged: ref
+                      .read(apiKeyFormProvider(widget.apiKeyId).notifier)
+                      .setKey,
                 ),
-                onChanged: ref
-                    .read(apiKeyFormProvider(widget.apiKeyId).notifier)
-                    .setKey,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _tokenTypeController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).apiKeyTokenTypeLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _tokenTypeController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).apiKeyTokenTypeLabel,
+                  ),
+                  onChanged: ref
+                      .read(apiKeyFormProvider(widget.apiKeyId).notifier)
+                      .setTokenType,
                 ),
-                onChanged: ref
-                    .read(apiKeyFormProvider(widget.apiKeyId).notifier)
-                    .setTokenType,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _environmentController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).apiKeyEnvironmentLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _environmentController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).apiKeyEnvironmentLabel,
+                  ),
+                  onChanged: ref
+                      .read(apiKeyFormProvider(widget.apiKeyId).notifier)
+                      .setEnvironment,
                 ),
-                onChanged: ref
-                    .read(apiKeyFormProvider(widget.apiKeyId).notifier)
-                    .setEnvironment,
-              ),
-              const SizedBox(height: 12),
-              CategoryPickerField(
-                selectedCategoryId: state.categoryId,
-                selectedCategoryName: state.categoryName,
-                filterByType: const [CategoryType.apiKey, CategoryType.mixed],
-                onCategorySelected: ref
-                    .read(apiKeyFormProvider(widget.apiKeyId).notifier)
-                    .setCategory,
-              ),
-              const SizedBox(height: 12),
-              TagPickerField(
-                selectedTagIds: state.tagIds,
-                selectedTagNames: state.tagNames,
-                filterByType: const [TagType.apiKey, TagType.mixed],
-                onTagsSelected: ref
-                    .read(apiKeyFormProvider(widget.apiKeyId).notifier)
-                    .setTags,
-              ),
-              const SizedBox(height: 12),
-              NotePickerField(
-                selectedNoteId: state.noteId,
-                selectedNoteName: state.noteName,
-                onNoteSelected: ref
-                    .read(apiKeyFormProvider(widget.apiKeyId).notifier)
-                    .setNote,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _descriptionController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).apiKeyDescriptionLabel,
+                const SizedBox(height: 12),
+                CategoryPickerField(
+                  selectedCategoryId: state.categoryId,
+                  selectedCategoryName: state.categoryName,
+                  filterByType: const [CategoryType.apiKey, CategoryType.mixed],
+                  onCategorySelected: ref
+                      .read(apiKeyFormProvider(widget.apiKeyId).notifier)
+                      .setCategory,
                 ),
-                onChanged: ref
-                    .read(apiKeyFormProvider(widget.apiKeyId).notifier)
-                    .setDescription,
-              ),
-              const SizedBox(height: 8),
-              SwitchListTile(
-                value: state.revoked,
-                onChanged: ref
-                    .read(apiKeyFormProvider(widget.apiKeyId).notifier)
-                    .setRevoked,
-                title: Text(S.of(context).apiKeyRevokedLabel),
-              ),
-            ],
+                const SizedBox(height: 12),
+                TagPickerField(
+                  selectedTagIds: state.tagIds,
+                  selectedTagNames: state.tagNames,
+                  filterByType: const [TagType.apiKey, TagType.mixed],
+                  onTagsSelected: ref
+                      .read(apiKeyFormProvider(widget.apiKeyId).notifier)
+                      .setTags,
+                ),
+                const SizedBox(height: 12),
+                NotePickerField(
+                  selectedNoteId: state.noteId,
+                  selectedNoteName: state.noteName,
+                  onNoteSelected: ref
+                      .read(apiKeyFormProvider(widget.apiKeyId).notifier)
+                      .setNote,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _descriptionController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).apiKeyDescriptionLabel,
+                  ),
+                  onChanged: ref
+                      .read(apiKeyFormProvider(widget.apiKeyId).notifier)
+                      .setDescription,
+                ),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  value: state.revoked,
+                  onChanged: ref
+                      .read(apiKeyFormProvider(widget.apiKeyId).notifier)
+                      .setRevoked,
+                  title: Text(S.of(context).apiKeyRevokedLabel),
+                ),
+              ],
+            ),
           ),
         );
       },

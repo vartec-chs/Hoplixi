@@ -158,123 +158,125 @@ class _RecoveryCodesFormScreenState
                 IconButton(icon: const Icon(Icons.save), onPressed: _save),
             ],
           ),
-          body: ListView(
-            padding: formPadding,
-            children: [
-              TextField(
-                controller: _nameController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).nameLabel,
-                  errorText: state.nameError,
+          body: SafeArea(
+            child: ListView(
+              padding: formPadding,
+              children: [
+                TextField(
+                  controller: _nameController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).nameLabel,
+                    errorText: state.nameError,
+                  ),
+                  onChanged: notifier.setName,
                 ),
-                onChanged: notifier.setName,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _codesBlobController,
-                minLines: 4,
-                maxLines: 8,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).codesBlobRequiredLabel,
-                  errorText: state.codesBlobError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _codesBlobController,
+                  minLines: 4,
+                  maxLines: 8,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).codesBlobRequiredLabel,
+                    errorText: state.codesBlobError,
+                  ),
+                  onChanged: notifier.setCodesBlob,
                 ),
-                onChanged: notifier.setCodesBlob,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _codesCountController,
-                keyboardType: TextInputType.number,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).totalCodesLabel,
-                  errorText: state.codesCountError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _codesCountController,
+                  keyboardType: TextInputType.number,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).totalCodesLabel,
+                    errorText: state.codesCountError,
+                  ),
+                  onChanged: notifier.setCodesCount,
                 ),
-                onChanged: notifier.setCodesCount,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _usedCountController,
-                keyboardType: TextInputType.number,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).usedCodesLabel,
-                  errorText: state.usedCountError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _usedCountController,
+                  keyboardType: TextInputType.number,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).usedCodesLabel,
+                    errorText: state.usedCountError,
+                  ),
+                  onChanged: notifier.setUsedCount,
                 ),
-                onChanged: notifier.setUsedCount,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _perCodeStatusController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).perCodeStatusJsonLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _perCodeStatusController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).perCodeStatusJsonLabel,
+                  ),
+                  onChanged: notifier.setPerCodeStatus,
                 ),
-                onChanged: notifier.setPerCodeStatus,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _generatedAtController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).generatedAtIsoLabel,
-                  errorText: state.generatedAtError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _generatedAtController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).generatedAtIsoLabel,
+                    errorText: state.generatedAtError,
+                  ),
+                  onChanged: notifier.setGeneratedAt,
                 ),
-                onChanged: notifier.setGeneratedAt,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _displayHintController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).displayHintLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _displayHintController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).displayHintLabel,
+                  ),
+                  onChanged: notifier.setDisplayHint,
                 ),
-                onChanged: notifier.setDisplayHint,
-              ),
-              const SizedBox(height: 12),
-              CategoryPickerField(
-                selectedCategoryId: state.categoryId,
-                selectedCategoryName: state.categoryName,
-                filterByType: const [
-                  CategoryType.recoveryCodes,
-                  CategoryType.mixed,
-                ],
-                onCategorySelected: notifier.setCategory,
-              ),
-              const SizedBox(height: 12),
-              TagPickerField(
-                selectedTagIds: state.tagIds,
-                selectedTagNames: state.tagNames,
-                filterByType: const [TagType.recoveryCodes, TagType.mixed],
-                onTagsSelected: notifier.setTags,
-              ),
-              const SizedBox(height: 12),
-              NotePickerField(
-                selectedNoteId: state.noteId,
-                selectedNoteName: state.noteName,
-                onNoteSelected: notifier.setNote,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _descriptionController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).descriptionLabel,
+                const SizedBox(height: 12),
+                CategoryPickerField(
+                  selectedCategoryId: state.categoryId,
+                  selectedCategoryName: state.categoryName,
+                  filterByType: const [
+                    CategoryType.recoveryCodes,
+                    CategoryType.mixed,
+                  ],
+                  onCategorySelected: notifier.setCategory,
                 ),
-                onChanged: notifier.setDescription,
-              ),
-              const SizedBox(height: 8),
-              SwitchListTile(
-                value: state.oneTime,
-                onChanged: notifier.setOneTime,
-                title: Text(S.of(context).oneTimeCodesLabel),
-              ),
-            ],
+                const SizedBox(height: 12),
+                TagPickerField(
+                  selectedTagIds: state.tagIds,
+                  selectedTagNames: state.tagNames,
+                  filterByType: const [TagType.recoveryCodes, TagType.mixed],
+                  onTagsSelected: notifier.setTags,
+                ),
+                const SizedBox(height: 12),
+                NotePickerField(
+                  selectedNoteId: state.noteId,
+                  selectedNoteName: state.noteName,
+                  onNoteSelected: notifier.setNote,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _descriptionController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).descriptionLabel,
+                  ),
+                  onChanged: notifier.setDescription,
+                ),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  value: state.oneTime,
+                  onChanged: notifier.setOneTime,
+                  title: Text(S.of(context).oneTimeCodesLabel),
+                ),
+              ],
+            ),
           ),
         );
       },

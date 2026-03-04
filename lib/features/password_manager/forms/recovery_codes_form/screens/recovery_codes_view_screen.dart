@@ -93,53 +93,55 @@ class _RecoveryCodesViewScreenState
           ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Text(_name, style: Theme.of(context).textTheme.headlineSmall),
-                const SizedBox(height: 12),
-                ListTile(
-                  title: Text(l10n.totalCodesLabel),
-                  subtitle: Text('${_codesCount ?? '-'}'),
-                ),
-                ListTile(
-                  title: Text(l10n.usedCodesLabel),
-                  subtitle: Text('${_usedCount ?? '-'}'),
-                ),
-                ListTile(
-                  title: Text(l10n.generatedAtIsoLabel),
-                  subtitle: Text(_fmt(_generatedAt)),
-                ),
-                ListTile(
-                  title: Text(l10n.oneTimeCodesLabel),
-                  subtitle: Text(_oneTime ? l10n.commonYes : l10n.commonNo),
-                ),
-                if (_displayHint?.isNotEmpty == true)
+      body: SafeArea(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Text(_name, style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 12),
                   ListTile(
-                    title: Text(l10n.displayHintLabel),
-                    subtitle: Text(_displayHint!),
+                    title: Text(l10n.totalCodesLabel),
+                    subtitle: Text('${_codesCount ?? '-'}'),
                   ),
-                if (_perCodeStatus?.isNotEmpty == true)
                   ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.perCodeStatusJsonLabel),
-                    subtitle: SelectableText(_perCodeStatus!),
+                    title: Text(l10n.usedCodesLabel),
+                    subtitle: Text('${_usedCount ?? '-'}'),
                   ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l10n.codesBlobRequiredLabel),
-                  subtitle: SelectableText(_codesBlob),
-                ),
-                if (_description?.isNotEmpty == true)
+                  ListTile(
+                    title: Text(l10n.generatedAtIsoLabel),
+                    subtitle: Text(_fmt(_generatedAt)),
+                  ),
+                  ListTile(
+                    title: Text(l10n.oneTimeCodesLabel),
+                    subtitle: Text(_oneTime ? l10n.commonYes : l10n.commonNo),
+                  ),
+                  if (_displayHint?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.displayHintLabel),
+                      subtitle: Text(_displayHint!),
+                    ),
+                  if (_perCodeStatus?.isNotEmpty == true)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.perCodeStatusJsonLabel),
+                      subtitle: SelectableText(_perCodeStatus!),
+                    ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.descriptionLabel),
-                    subtitle: Text(_description!),
+                    title: Text(l10n.codesBlobRequiredLabel),
+                    subtitle: SelectableText(_codesBlob),
                   ),
-              ],
-            ),
+                  if (_description?.isNotEmpty == true)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.descriptionLabel),
+                      subtitle: Text(_description!),
+                    ),
+                ],
+              ),
+      ),
     );
   }
 }

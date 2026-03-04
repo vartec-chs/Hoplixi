@@ -191,170 +191,172 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                 IconButton(icon: const Icon(Icons.save), onPressed: _save),
             ],
           ),
-          body: ListView(
-            padding: formPadding,
-            children: [
-              TextField(
-                controller: _nameController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).nameLabel,
-                  errorText: state.nameError,
+          body: SafeArea(
+            child: ListView(
+              padding: formPadding,
+              children: [
+                TextField(
+                  controller: _nameController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).nameLabel,
+                    errorText: state.nameError,
+                  ),
+                  onChanged: notifier.setName,
                 ),
-                onChanged: notifier.setName,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _productController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).productLabel,
-                  errorText: state.productError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _productController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).productLabel,
+                    errorText: state.productError,
+                  ),
+                  onChanged: notifier.setProduct,
                 ),
-                onChanged: notifier.setProduct,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _licenseKeyController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).licenseKeyLabel,
-                  errorText: state.licenseKeyError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _licenseKeyController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).licenseKeyLabel,
+                    errorText: state.licenseKeyError,
+                  ),
+                  onChanged: notifier.setLicenseKey,
                 ),
-                onChanged: notifier.setLicenseKey,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _licenseTypeController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).licenseTypeLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _licenseTypeController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).licenseTypeLabel,
+                  ),
+                  onChanged: notifier.setLicenseType,
                 ),
-                onChanged: notifier.setLicenseType,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _seatsController,
-                keyboardType: TextInputType.number,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).seatsCountLabel,
-                  errorText: state.seatsError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _seatsController,
+                  keyboardType: TextInputType.number,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).seatsCountLabel,
+                    errorText: state.seatsError,
+                  ),
+                  onChanged: notifier.setSeats,
                 ),
-                onChanged: notifier.setSeats,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _maxActivationsController,
-                keyboardType: TextInputType.number,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).maxActivationsLabel,
-                  errorText: state.maxActivationsError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _maxActivationsController,
+                  keyboardType: TextInputType.number,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).maxActivationsLabel,
+                    errorText: state.maxActivationsError,
+                  ),
+                  onChanged: notifier.setMaxActivations,
                 ),
-                onChanged: notifier.setMaxActivations,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _activatedOnController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).activatedAtIsoLabel,
-                  errorText: state.activatedOnError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _activatedOnController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).activatedAtIsoLabel,
+                    errorText: state.activatedOnError,
+                  ),
+                  onChanged: notifier.setActivatedOn,
                 ),
-                onChanged: notifier.setActivatedOn,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _purchaseDateController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).purchaseDateIsoLabel,
-                  errorText: state.purchaseDateError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _purchaseDateController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).purchaseDateIsoLabel,
+                    errorText: state.purchaseDateError,
+                  ),
+                  onChanged: notifier.setPurchaseDate,
                 ),
-                onChanged: notifier.setPurchaseDate,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _purchaseFromController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).purchasedFromLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _purchaseFromController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).purchasedFromLabel,
+                  ),
+                  onChanged: notifier.setPurchaseFrom,
                 ),
-                onChanged: notifier.setPurchaseFrom,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _orderIdController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).orderIdLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _orderIdController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).orderIdLabel,
+                  ),
+                  onChanged: notifier.setOrderId,
                 ),
-                onChanged: notifier.setOrderId,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _licenseFileIdController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).licenseFileIdLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _licenseFileIdController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).licenseFileIdLabel,
+                  ),
+                  onChanged: notifier.setLicenseFileId,
                 ),
-                onChanged: notifier.setLicenseFileId,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _expiresAtController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).expiresAtIsoLabel,
-                  errorText: state.expiresAtError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _expiresAtController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).expiresAtIsoLabel,
+                    errorText: state.expiresAtError,
+                  ),
+                  onChanged: notifier.setExpiresAt,
                 ),
-                onChanged: notifier.setExpiresAt,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _supportContactController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).supportContactLabel,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _supportContactController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).supportContactLabel,
+                  ),
+                  onChanged: notifier.setSupportContact,
                 ),
-                onChanged: notifier.setSupportContact,
-              ),
-              const SizedBox(height: 12),
-              CategoryPickerField(
-                selectedCategoryId: state.categoryId,
-                selectedCategoryName: state.categoryName,
-                filterByType: const [
-                  CategoryType.licenseKey,
-                  CategoryType.mixed,
-                ],
-                onCategorySelected: notifier.setCategory,
-              ),
-              const SizedBox(height: 12),
-              TagPickerField(
-                selectedTagIds: state.tagIds,
-                selectedTagNames: state.tagNames,
-                filterByType: const [TagType.licenseKey, TagType.mixed],
-                onTagsSelected: notifier.setTags,
-              ),
-              const SizedBox(height: 12),
-              NotePickerField(
-                selectedNoteId: state.noteId,
-                selectedNoteName: state.noteName,
-                onNoteSelected: notifier.setNote,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _descriptionController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: S.of(context).descriptionLabel,
+                const SizedBox(height: 12),
+                CategoryPickerField(
+                  selectedCategoryId: state.categoryId,
+                  selectedCategoryName: state.categoryName,
+                  filterByType: const [
+                    CategoryType.licenseKey,
+                    CategoryType.mixed,
+                  ],
+                  onCategorySelected: notifier.setCategory,
                 ),
-                onChanged: notifier.setDescription,
-              ),
-            ],
+                const SizedBox(height: 12),
+                TagPickerField(
+                  selectedTagIds: state.tagIds,
+                  selectedTagNames: state.tagNames,
+                  filterByType: const [TagType.licenseKey, TagType.mixed],
+                  onTagsSelected: notifier.setTags,
+                ),
+                const SizedBox(height: 12),
+                NotePickerField(
+                  selectedNoteId: state.noteId,
+                  selectedNoteName: state.noteName,
+                  onNoteSelected: notifier.setNote,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _descriptionController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).descriptionLabel,
+                  ),
+                  onChanged: notifier.setDescription,
+                ),
+              ],
+            ),
           ),
         );
       },

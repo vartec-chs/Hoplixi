@@ -167,9 +167,10 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 IconButton(icon: const Icon(Icons.save), onPressed: _save),
             ],
           ),
-          body: ListView(
-            padding: formPadding,
-            children: [
+          body: SafeArea(
+            child: ListView(
+              padding: formPadding,
+              children: [
               TextField(
                 controller: _nameController,
                 decoration: primaryInputDecoration(
@@ -298,6 +299,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
               ),
             ],
           ),
+          )
         );
       },
     );

@@ -120,73 +120,75 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
           IconButton(icon: const Icon(LucideIcons.pencil), onPressed: _edit),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _document == null
-          ? const Center(child: Text('Не найден'))
-          : ListView(
-              padding: const EdgeInsets.all(12),
-              children: [
-                Container(
-                  height: 160,
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(LucideIcons.fileText, size: 64, color: cs.primary),
-                      const SizedBox(height: 12),
-                      Text(
-                        '${_document!.$2.pageCount} стр.',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _document == null
+            ? const Center(child: Text('Не найден'))
+            : ListView(
+                padding: const EdgeInsets.all(12),
+                children: [
+                  Container(
+                    height: 160,
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(LucideIcons.fileText, size: 64, color: cs.primary),
+                        const SizedBox(height: 12),
+                        Text(
+                          '${_document!.$2.pageCount} стр.',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                if (_document!.$1.name.isNotEmpty)
+                  const SizedBox(height: 24),
+                  if (_document!.$1.name.isNotEmpty)
+                    _info(
+                      theme,
+                      LucideIcons.tag,
+                      'Название',
+                      _document!.$1.name,
+                      () => _copy(_document!.$1.name, 'Название'),
+                    ),
+                  if (_document!.$2.documentType != null)
+                    _info(
+                      theme,
+                      LucideIcons.file,
+                      'Тип',
+                      _document!.$2.documentType!,
+                    ),
                   _info(
                     theme,
-                    LucideIcons.tag,
-                    'Название',
-                    _document!.$1.name,
-                    () => _copy(_document!.$1.name, 'Название'),
+                    LucideIcons.layers,
+                    'Страниц',
+                    '${_document!.$2.pageCount}',
                   ),
-                if (_document!.$2.documentType != null)
-                  _info(
-                    theme,
-                    LucideIcons.file,
-                    'Тип',
-                    _document!.$2.documentType!,
+                  if (_categoryName != null)
+                    _info(theme, LucideIcons.folder, 'Категория', _categoryName!),
+                  if (_tagNames.isNotEmpty) _tags(theme),
+                  if (_document!.$1.description?.isNotEmpty ?? false)
+                    _info(
+                      theme,
+                      LucideIcons.fileText,
+                      'Описание',
+                      _document!.$1.description!,
+                    ),
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: _edit,
+                    icon: const Icon(LucideIcons.pencil),
+                    label: const Text('Редактировать'),
                   ),
-                _info(
-                  theme,
-                  LucideIcons.layers,
-                  'Страниц',
-                  '${_document!.$2.pageCount}',
-                ),
-                if (_categoryName != null)
-                  _info(theme, LucideIcons.folder, 'Категория', _categoryName!),
-                if (_tagNames.isNotEmpty) _tags(theme),
-                if (_document!.$1.description?.isNotEmpty ?? false)
-                  _info(
-                    theme,
-                    LucideIcons.fileText,
-                    'Описание',
-                    _document!.$1.description!,
-                  ),
-                const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: _edit,
-                  icon: const Icon(LucideIcons.pencil),
-                  label: const Text('Редактировать'),
-                ),
-              ],
-            ),
+                ],
+              ),
+      ),
     );
   }
 

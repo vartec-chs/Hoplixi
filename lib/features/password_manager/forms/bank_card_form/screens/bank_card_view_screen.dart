@@ -112,107 +112,109 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
           IconButton(icon: const Icon(LucideIcons.pencil), onPressed: _edit),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _bankCard == null
-          ? const Center(child: Text('Не найдена'))
-          : ListView(
-              padding: const EdgeInsets.all(12),
-              children: [
-                GestureDetector(
-                  onTap: () => setState(() => _showBackView = !_showBackView),
-                  child: CreditCardWidget(
-                    cardNumber: _formatCardNumber(_bankCard!.$2.cardNumber),
-                    expiryDate: _getExpiryDate(),
-                    cardHolderName: _bankCard!.$2.cardholderName.toUpperCase(),
-                    cvvCode: _bankCard?.$2.cvv ?? '',
-                    showBackView: _showBackView,
-                    onCreditCardWidgetChange: (_) {},
-                    bankName: _bankCard!.$2.bankName,
-                    cardBgColor: cs.primary,
-                    obscureCardNumber: false,
-                    obscureCardCvv: true,
-                    isHolderNameVisible: true,
-                    height: 200,
-                    width: MediaQuery.of(context).size.width,
-                    isChipVisible: true,
-                    isSwipeGestureEnabled: true,
-                    animationDuration: const Duration(milliseconds: 500),
-                    padding: 8,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Center(
-                  child: Text(
-                    'Нажмите для переворота',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _bankCard == null
+            ? const Center(child: Text('Не найдена'))
+            : ListView(
+                padding: const EdgeInsets.all(12),
+                children: [
+                  GestureDetector(
+                    onTap: () => setState(() => _showBackView = !_showBackView),
+                    child: CreditCardWidget(
+                      cardNumber: _formatCardNumber(_bankCard!.$2.cardNumber),
+                      expiryDate: _getExpiryDate(),
+                      cardHolderName: _bankCard!.$2.cardholderName.toUpperCase(),
+                      cvvCode: _bankCard?.$2.cvv ?? '',
+                      showBackView: _showBackView,
+                      onCreditCardWidgetChange: (_) {},
+                      bankName: _bankCard!.$2.bankName,
+                      cardBgColor: cs.primary,
+                      obscureCardNumber: false,
+                      obscureCardCvv: true,
+                      isHolderNameVisible: true,
+                      height: 200,
+                      width: MediaQuery.of(context).size.width,
+                      isChipVisible: true,
+                      isSwipeGestureEnabled: true,
+                      animationDuration: const Duration(milliseconds: 500),
+                      padding: 8,
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                _info(
-                  theme,
-                  LucideIcons.tag,
-                  'Название',
-                  _bankCard!.$1.name,
-                  () => _copy(_bankCard!.$1.name, 'Название'),
-                ),
-                _info(
-                  theme,
-                  LucideIcons.creditCard,
-                  'Номер карты',
-                  _formatCardNumber(_bankCard!.$2.cardNumber),
-                  () => _copy(_bankCard!.$2.cardNumber, 'Номер'),
-                ),
-                _info(
-                  theme,
-                  LucideIcons.user,
-                  'Владелец',
-                  _bankCard!.$2.cardholderName,
-                  () => _copy(_bankCard!.$2.cardholderName, 'Владелец'),
-                ),
-                if (_getExpiryDate().isNotEmpty)
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Text(
+                      'Нажмите для переворота',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   _info(
                     theme,
-                    LucideIcons.calendar,
-                    'Срок',
-                    _getExpiryDate(),
-                    () => _copy(_getExpiryDate(), 'Срок'),
+                    LucideIcons.tag,
+                    'Название',
+                    _bankCard!.$1.name,
+                    () => _copy(_bankCard!.$1.name, 'Название'),
                   ),
-                if (_bankCard!.$2.cvv?.isNotEmpty ?? false)
                   _info(
                     theme,
-                    LucideIcons.shield,
-                    'CVV',
-                    '•••',
-                    () => _copy(_bankCard!.$2.cvv!, 'CVV'),
+                    LucideIcons.creditCard,
+                    'Номер карты',
+                    _formatCardNumber(_bankCard!.$2.cardNumber),
+                    () => _copy(_bankCard!.$2.cardNumber, 'Номер'),
                   ),
-                if (_bankCard!.$2.bankName?.isNotEmpty ?? false)
                   _info(
                     theme,
-                    LucideIcons.building,
-                    'Банк',
-                    _bankCard!.$2.bankName!,
+                    LucideIcons.user,
+                    'Владелец',
+                    _bankCard!.$2.cardholderName,
+                    () => _copy(_bankCard!.$2.cardholderName, 'Владелец'),
                   ),
-                if (_categoryName != null)
-                  _info(theme, LucideIcons.folder, 'Категория', _categoryName!),
-                if (_tagNames.isNotEmpty) _tags(theme),
-                if (_bankCard!.$1.description?.isNotEmpty ?? false)
-                  _info(
-                    theme,
-                    LucideIcons.fileText,
-                    'Описание',
-                    _bankCard!.$1.description!,
+                  if (_getExpiryDate().isNotEmpty)
+                    _info(
+                      theme,
+                      LucideIcons.calendar,
+                      'Срок',
+                      _getExpiryDate(),
+                      () => _copy(_getExpiryDate(), 'Срок'),
+                    ),
+                  if (_bankCard!.$2.cvv?.isNotEmpty ?? false)
+                    _info(
+                      theme,
+                      LucideIcons.shield,
+                      'CVV',
+                      '•••',
+                      () => _copy(_bankCard!.$2.cvv!, 'CVV'),
+                    ),
+                  if (_bankCard!.$2.bankName?.isNotEmpty ?? false)
+                    _info(
+                      theme,
+                      LucideIcons.building,
+                      'Банк',
+                      _bankCard!.$2.bankName!,
+                    ),
+                  if (_categoryName != null)
+                    _info(theme, LucideIcons.folder, 'Категория', _categoryName!),
+                  if (_tagNames.isNotEmpty) _tags(theme),
+                  if (_bankCard!.$1.description?.isNotEmpty ?? false)
+                    _info(
+                      theme,
+                      LucideIcons.fileText,
+                      'Описание',
+                      _bankCard!.$1.description!,
+                    ),
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: _edit,
+                    icon: const Icon(LucideIcons.pencil),
+                    label: const Text('Редактировать'),
                   ),
-                const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: _edit,
-                  icon: const Icon(LucideIcons.pencil),
-                  label: const Text('Редактировать'),
-                ),
-              ],
-            ),
+                ],
+              ),
+      ),
     );
   }
 
