@@ -48,6 +48,7 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
       environment: details.environment ?? '',
       description: item.description ?? '',
       revoked: details.revoked,
+      expiresAt: details.expiresAt,
       noteId: item.noteId,
       categoryId: item.categoryId,
       tagIds: tagIds,
@@ -89,6 +90,10 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
 
   void setRevoked(bool value) {
     _update((s) => s.copyWith(revoked: value));
+  }
+
+  void setExpiresAt(DateTime? value) {
+    _update((s) => s.copyWith(expiresAt: value));
   }
 
   void setNote(String? noteId, String? noteName) {
@@ -167,6 +172,7 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
             description: description.isEmpty ? null : description,
             tokenType: tokenType.isEmpty ? null : tokenType,
             environment: environment.isEmpty ? null : environment,
+            expiresAt: current.expiresAt,
             noteId: current.noteId,
             categoryId: current.categoryId,
             revoked: current.revoked,
@@ -195,6 +201,7 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
             description: description.isEmpty ? null : description,
             tokenType: tokenType.isEmpty ? null : tokenType,
             environment: environment.isEmpty ? null : environment,
+            expiresAt: current.expiresAt,
             noteId: current.noteId,
             categoryId: current.categoryId,
             revoked: current.revoked,
@@ -220,4 +227,3 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
     _update((s) => s.copyWith(isSaved: false));
   }
 }
-

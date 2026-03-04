@@ -20,6 +20,7 @@ sealed class ApiKeyFormState with _$ApiKeyFormState {
     String? categoryName,
     @Default([]) List<String> tagIds,
     @Default([]) List<String> tagNames,
+    DateTime? expiresAt,
     String? nameError,
     String? serviceError,
     String? keyError,

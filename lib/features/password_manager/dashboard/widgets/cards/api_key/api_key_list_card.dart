@@ -5,6 +5,7 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:intl/intl.dart';
 
 class ApiKeyListCard extends ConsumerStatefulWidget {
   final ApiKeyCardDto apiKey;
@@ -65,6 +66,38 @@ class _ApiKeyListCardState extends ConsumerState<ApiKeyListCard> {
     ];
   }
 
+  Widget? _buildExpirySection(
+    ThemeData theme,
+    DateTime? expiresAt,
+    bool isExpired,
+    bool isExpiringSoon,
+  ) {
+    if (expiresAt == null) return null;
+    final dateStr = DateFormat('dd.MM.yyyy HH:mm').format(expiresAt);
+    final Color color;
+    final String label;
+    if (isExpired) {
+      color = theme.colorScheme.error;
+      label = 'Истёк: $dateStr';
+    } else if (isExpiringSoon) {
+      color = Colors.orange;
+      label = 'Истекает: $dateStr';
+    } else {
+      color = theme.colorScheme.onSurfaceVariant;
+      label = 'Срок действия: $dateStr';
+    }
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Icon(Icons.schedule, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(label, style: theme.textTheme.bodySmall?.copyWith(color: color)),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final apiKey = widget.apiKey;
@@ -104,6 +137,12 @@ class _ApiKeyListCardState extends ConsumerState<ApiKeyListCard> {
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
       onOpenHistory: widget.onOpenHistory,
+      customExpandedContent: _buildExpirySection(
+        Theme.of(context),
+        apiKey.expiresAt,
+        isExpired,
+        isExpiringSoon,
+      ),
       copyActions: _buildCopyActions(),
     );
   }

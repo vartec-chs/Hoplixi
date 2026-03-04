@@ -9,6 +9,7 @@ import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picke
 import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:intl/intl.dart';
 
 import '../providers/api_key_form_provider.dart';
 
@@ -235,6 +236,59 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                   onChanged: ref
                       .read(apiKeyFormProvider(widget.apiKeyId).notifier)
                       .setDescription,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: TextEditingController(
+                    text: state.expiresAt != null
+                        ? DateFormat(
+                            'dd.MM.yyyy HH:mm',
+                          ).format(state.expiresAt!)
+                        : '',
+                  ),
+                  readOnly: true,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: S.of(context).expirationDateLabel,
+                    hintText: S.of(context).selectDateTimeHint,
+                    suffixIcon: state.expiresAt != null
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: () => ref
+                                .read(
+                                  apiKeyFormProvider(widget.apiKeyId).notifier,
+                                )
+                                .setExpiresAt(null),
+                          )
+                        : null,
+                  ),
+                  onTap: () async {
+                    final initialDate = state.expiresAt ?? DateTime.now();
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: initialDate,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(DateTime.now().year + 150),
+                    );
+                    if (date != null && context.mounted) {
+                      final time = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay.fromDateTime(initialDate),
+                      );
+                      if (time != null) {
+                        final finalDateTime = DateTime(
+                          date.year,
+                          date.month,
+                          date.day,
+                          time.hour,
+                          time.minute,
+                        );
+                        ref
+                            .read(apiKeyFormProvider(widget.apiKeyId).notifier)
+                            .setExpiresAt(finalDateTime);
+                      }
+                    }
+                  },
                 ),
                 const SizedBox(height: 8),
                 SwitchListTile(
