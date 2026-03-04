@@ -34,7 +34,7 @@ abstract final class AppTheme {
       TargetPlatform.iOS: GoTransitions.cupertino,
       // TargetPlatform.linux: GoTransitions.material,
       TargetPlatform.macOS: GoTransitions.cupertino,
-      TargetPlatform.windows: GoTransitions.openUpwards,
+      TargetPlatform.windows: GoTransitions.scale,
     },
   );
 
@@ -76,7 +76,7 @@ abstract final class AppTheme {
       textButtonTheme: ButtonThemes.adaptiveTextButtonTheme(context, bs),
       listTileTheme: ComponentThemes.adaptiveListTileTheme(),
       textTheme: GoogleFonts.nunitoTextTheme(bs.textTheme),
-      pageTransitionsTheme: pageTransitionsTheme,
+      // pageTransitionsTheme: pageTransitionsTheme,
       extensions: <ThemeExtension>[
         const WoltModalSheetThemeData(
           backgroundColor: Color(0xFFF5F5F5),
@@ -130,8 +130,8 @@ abstract final class AppTheme {
       textButtonTheme: ButtonThemes.adaptiveTextButtonTheme(context, bs),
       listTileTheme: ComponentThemes.adaptiveListTileTheme(),
       textTheme: GoogleFonts.nunitoTextTheme(bs.textTheme),
-      pageTransitionsTheme: pageTransitionsTheme,
 
+      // pageTransitionsTheme: pageTransitionsTheme,
       extensions: <ThemeExtension>[
         const WoltModalSheetThemeData(
           backgroundColor: AppColors.darkSurface,

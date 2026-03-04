@@ -63,6 +63,9 @@ class _IconManagerScreenState extends ConsumerState<IconManagerScreen> {
       floatingActionButton: _isMobileLayout(context)
           ? FloatingActionButton(
               heroTag: 'iconManagerFab',
+               shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               onPressed: () {
                 final result = context.push<bool>(
                   AppRoutesPaths.iconAddForEntity(widget.entity),

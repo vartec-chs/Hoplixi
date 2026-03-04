@@ -59,7 +59,7 @@ class DesktopDashboardLayout extends StatefulWidget {
 }
 
 class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _panelAnimation;
 
   /// Покривлённая анимация для плавного перехода панелей.
@@ -68,6 +68,9 @@ class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
   /// изменении ширины трёх секций (левая, центр, правая).
   /// `easeInOutCubic` сглаживает начало и конец.
   late final CurvedAnimation _curvedAnimation;
+
+  /// Анимация fade для смены контента правой панели.
+  late final AnimationController _fadeController;
 
   /// Флаг: строить ли контент правой панели в дереве виджетов.
   bool _showChild = false;
@@ -130,6 +133,11 @@ class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
       parent: _panelAnimation,
       curve: Curves.easeInOutCubic,
     );
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: kFadeAnimationDuration,
+      value: 1.0,
+    );
     _panelAnimation.addStatusListener(_onAnimationStatus);
 
     if (widget.isFullCenter) {
@@ -141,6 +149,8 @@ class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
   @override
   void didUpdateWidget(covariant DesktopDashboardLayout oldWidget) {
     super.didUpdateWidget(oldWidget);
+
+    final oldLastPanelChild = _lastPanelChild;
 
     final enteredFullCenter = !oldWidget.isFullCenter && widget.isFullCenter;
     final changedFullCenterRoute =
@@ -207,6 +217,11 @@ class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
       // Контент панели обновился (например categories → tags)
       _lastPanelChild = currentPanelChild;
     }
+
+    if (_lastPanelChild != oldLastPanelChild && _lastPanelChild != null) {
+      _fadeController.value = 0.0;
+      _fadeController.forward();
+    }
   }
 
   void _onAnimationStatus(AnimationStatus status) {
@@ -223,6 +238,7 @@ class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
     _panelAnimation.removeStatusListener(_onAnimationStatus);
     _curvedAnimation.dispose();
     _panelAnimation.dispose();
+    _fadeController.dispose();
     super.dispose();
   }
 
@@ -484,7 +500,13 @@ class _DesktopDashboardLayoutState extends State<DesktopDashboardLayout>
       // во время reverse-анимации показывать предыдущий контент
       // панели, а не DashboardHomeScreen из роутера
       child: _showChild && _lastPanelChild != null
-          ? KeyedSubtree(key: ValueKey(widget.uri), child: _lastPanelChild!)
+          ? FadeTransition(
+              opacity: _fadeController,
+              child: KeyedSubtree(
+                key: ValueKey(widget.uri),
+                child: _lastPanelChild!,
+              ),
+            )
           : null,
     );
   }

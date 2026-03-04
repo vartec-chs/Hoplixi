@@ -214,6 +214,9 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
       floatingActionButton: _isMobileLayout(context)
           ? FloatingActionButton(
               heroTag: 'tagsManagerFab',
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               onPressed: () {
                 final result = context.push<bool>(
                   AppRoutesPaths.tagsAdd(widget.entity),

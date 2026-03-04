@@ -78,7 +78,30 @@ class CategoryManagerScreen extends ConsumerWidget {
           ),
         ],
       ),
+      floatingActionButton: _isMobileLayout(context)
+          ? FloatingActionButton(
+              heroTag: 'category_add_btn',
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              onPressed: () {
+                final result = context.push<bool>(
+                  AppRoutesPaths.categoryAdd(entity),
+                );
+                result.then((added) {
+                  if (added == true) {
+                    ref.read(categoryTreeProvider.notifier).refresh();
+                  }
+                });
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
+  }
+
+  bool _isMobileLayout(BuildContext context) {
+    return MediaQuery.sizeOf(context).width > 700.0;
   }
 }
 
