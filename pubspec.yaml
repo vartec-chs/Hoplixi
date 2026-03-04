@@ -123,6 +123,7 @@ dependencies:
     sdk: flutter
   flutter_lucide: ^1.8.2
   sqlite3: ^3.1.6
+  go_transitions: ^0.8.3
 
 hooks:
   user_defines:

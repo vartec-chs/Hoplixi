@@ -1,6 +1,7 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:go_transitions/go_transitions.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:universal_platform/universal_platform.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
@@ -27,6 +28,16 @@ WoltModalType buildModalType(BuildContext context) {
 }
 
 abstract final class AppTheme {
+  static const pageTransitionsTheme = PageTransitionsTheme(
+    builders: {
+      TargetPlatform.android: GoTransitions.material,
+      TargetPlatform.iOS: GoTransitions.cupertino,
+      TargetPlatform.linux: GoTransitions.material,
+      TargetPlatform.macOS: GoTransitions.cupertino,
+      TargetPlatform.windows: GoTransitions.openUpwards,
+    },
+  );
+
   // LIGHT THEME
   static ThemeData light(BuildContext context) {
     final bs = FlexThemeData.light(
@@ -45,6 +56,9 @@ abstract final class AppTheme {
       errorContainer: AppColors.lightColors.errorContainer,
     );
 
+    GoTransition.defaultCurve = Curves.easeInOut;
+    GoTransition.defaultDuration = const Duration(milliseconds: 600);
+
     final base = bs.copyWith(
       dialogTheme: bs.dialogTheme.copyWith(
         insetPadding: const EdgeInsets.symmetric(horizontal: 12),
@@ -62,6 +76,7 @@ abstract final class AppTheme {
       textButtonTheme: ButtonThemes.adaptiveTextButtonTheme(context, bs),
       listTileTheme: ComponentThemes.adaptiveListTileTheme(),
       textTheme: GoogleFonts.nunitoTextTheme(bs.textTheme),
+      pageTransitionsTheme: pageTransitionsTheme,
       extensions: <ThemeExtension>[
         const WoltModalSheetThemeData(
           backgroundColor: Color(0xFFF5F5F5),
@@ -69,7 +84,6 @@ abstract final class AppTheme {
           useSafeArea: true,
           enableDrag: true,
           modalTypeBuilder: buildModalType,
-
           mainContentScrollPhysics: ClampingScrollPhysics(),
         ),
       ],
@@ -96,6 +110,9 @@ abstract final class AppTheme {
       errorContainer: AppColors.darkColors.errorContainer,
     );
 
+    GoTransition.defaultCurve = Curves.easeInOut;
+    GoTransition.defaultDuration = const Duration(milliseconds: 600);
+
     final base = bs.copyWith(
       dialogTheme: bs.dialogTheme.copyWith(
         insetPadding: const EdgeInsets.symmetric(horizontal: 12),
@@ -113,6 +130,8 @@ abstract final class AppTheme {
       textButtonTheme: ButtonThemes.adaptiveTextButtonTheme(context, bs),
       listTileTheme: ComponentThemes.adaptiveListTileTheme(),
       textTheme: GoogleFonts.nunitoTextTheme(bs.textTheme),
+      pageTransitionsTheme: pageTransitionsTheme,
+
       extensions: <ThemeExtension>[
         const WoltModalSheetThemeData(
           backgroundColor: AppColors.darkSurface,

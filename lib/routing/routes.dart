@@ -7,6 +7,7 @@ import 'package:hoplixi/features/cloud_sync/oauth_apps/ui/oauth_apps_screen.dart
 import 'package:hoplixi/features/component_showcase/component_showcase_screen.dart';
 import 'package:hoplixi/features/home/crypt_test_screen.dart';
 import 'package:hoplixi/features/home/home_screen_v2.dart';
+import 'package:hoplixi/features/local_send/screens/local_send_screen.dart';
 import 'package:hoplixi/features/logs_viewer/screens/logs_tabs_screen.dart';
 import 'package:hoplixi/features/password_manager/create_store/create_store_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
@@ -28,7 +29,6 @@ import 'package:hoplixi/features/password_manager/migration/passwords/screens/pa
 import 'package:hoplixi/features/password_manager/open_store/open_store_screen.dart';
 import 'package:hoplixi/features/settings/screens/settings_screen.dart';
 import 'package:hoplixi/features/setup/screens/setup_screen.dart';
-import 'package:hoplixi/features/local_send/screens/local_send_screen.dart';
 import 'package:hoplixi/global_key.dart';
 import 'package:hoplixi/routing/paths.dart';
 
@@ -112,6 +112,7 @@ final List<RouteBase> appRoutes = [
     builder: (context, state, child) {
       return DashboardLayout(state: state, child: child);
     },
+
     routes: [
       GoRoute(
         path: '/dashboard/:entity',
