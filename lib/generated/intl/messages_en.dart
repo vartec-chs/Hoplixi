@@ -33,6 +33,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "activatedAtIsoLabel": MessageLookupByLibrary.simpleMessage(
       "Activated at (ISO8601)",
     ),
+    "addCodesLabel": MessageLookupByLibrary.simpleMessage("Add codes"),
     "addedToSshAgentLabel": MessageLookupByLibrary.simpleMessage(
       "Added to ssh-agent",
     ),
@@ -100,9 +101,19 @@ class MessageLookup extends MessageLookupByLibrary {
       "Check the form fields and try again",
     ),
     "clear": MessageLookupByLibrary.simpleMessage("Clear"),
+    "codeCopied": MessageLookupByLibrary.simpleMessage("Code copied"),
+    "codeMarkedUnused": MessageLookupByLibrary.simpleMessage(
+      "Code marked as unused",
+    ),
+    "codeMarkedUsed": MessageLookupByLibrary.simpleMessage(
+      "Code marked as used",
+    ),
+    "codeUnusedLabel": MessageLookupByLibrary.simpleMessage("Available"),
+    "codeUsedLabel": MessageLookupByLibrary.simpleMessage("Used"),
     "codesBlobRequiredLabel": MessageLookupByLibrary.simpleMessage(
       "Codes blob *",
     ),
+    "codesLabel": MessageLookupByLibrary.simpleMessage("Codes"),
     "commonAdded": MessageLookupByLibrary.simpleMessage("Added"),
     "commonDisabled": MessageLookupByLibrary.simpleMessage("Disabled"),
     "commonEnabled": MessageLookupByLibrary.simpleMessage("Enabled"),
@@ -127,6 +138,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Contact not found",
     ),
     "contactUpdated": MessageLookupByLibrary.simpleMessage("Contact updated"),
+    "copyCodeAction": MessageLookupByLibrary.simpleMessage("Copy"),
     "crlUrlLabel": MessageLookupByLibrary.simpleMessage("CRL URL"),
     "cryptoWalletCreated": MessageLookupByLibrary.simpleMessage(
       "Crypto wallet created",
@@ -137,6 +149,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "cryptoWalletUpdated": MessageLookupByLibrary.simpleMessage(
       "Crypto wallet updated",
     ),
+    "deleteCodeLabel": MessageLookupByLibrary.simpleMessage("Delete code"),
     "derivationPathLabel": MessageLookupByLibrary.simpleMessage(
       "Derivation path",
     ),
@@ -219,6 +232,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "licenseTypeLabel": MessageLookupByLibrary.simpleMessage("License type"),
     "licenseUpdated": MessageLookupByLibrary.simpleMessage("License updated"),
     "loginLabel": MessageLookupByLibrary.simpleMessage("Login"),
+    "markCodeUnusedAction": MessageLookupByLibrary.simpleMessage("Mark unused"),
+    "markCodeUsedAction": MessageLookupByLibrary.simpleMessage("Mark used"),
     "maxActivationsLabel": MessageLookupByLibrary.simpleMessage(
       "Max activations",
     ),
@@ -241,6 +256,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "newSshKey": MessageLookupByLibrary.simpleMessage("New SSH key"),
     "newWifiNetwork": MessageLookupByLibrary.simpleMessage("New Wi-Fi network"),
+    "noCodesYet": MessageLookupByLibrary.simpleMessage("No codes yet"),
     "notSpecified": MessageLookupByLibrary.simpleMessage("Not specified"),
     "ocspUrlLabel": MessageLookupByLibrary.simpleMessage("OCSP URL"),
     "oneTimeCodesLabel": MessageLookupByLibrary.simpleMessage("One-time codes"),
@@ -251,6 +267,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Password migration",
     ),
     "passwordUpdated": MessageLookupByLibrary.simpleMessage("Password updated"),
+    "pasteCodesHint": MessageLookupByLibrary.simpleMessage("One code per line"),
     "perCodeStatusJsonLabel": MessageLookupByLibrary.simpleMessage(
       "Per-code status JSON",
     ),
@@ -308,6 +325,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "urlLabel": MessageLookupByLibrary.simpleMessage("URL"),
     "usageLabel": MessageLookupByLibrary.simpleMessage("Usage"),
     "usedCodesLabel": MessageLookupByLibrary.simpleMessage("Used"),
+    "validationAtLeastOneCode": MessageLookupByLibrary.simpleMessage(
+      "At least one code is required",
+    ),
     "validationInvalidEmail": MessageLookupByLibrary.simpleMessage(
       "Invalid email",
     ),

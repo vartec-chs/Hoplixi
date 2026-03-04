@@ -1889,6 +1889,16 @@ class S {
     );
   }
 
+  /// `At least one code is required`
+  String get validationAtLeastOneCode {
+    return Intl.message(
+      'At least one code is required',
+      name: 'validationAtLeastOneCode',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Private key is required`
   String get validationRequiredPrivateKey {
     return Intl.message(
@@ -1917,6 +1927,106 @@ class S {
       desc: '',
       args: [],
     );
+  }
+
+  /// `Add codes`
+  String get addCodesLabel {
+    return Intl.message('Add codes', name: 'addCodesLabel', desc: '', args: []);
+  }
+
+  /// `One code per line`
+  String get pasteCodesHint {
+    return Intl.message(
+      'One code per line',
+      name: 'pasteCodesHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Mark used`
+  String get markCodeUsedAction {
+    return Intl.message(
+      'Mark used',
+      name: 'markCodeUsedAction',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Mark unused`
+  String get markCodeUnusedAction {
+    return Intl.message(
+      'Mark unused',
+      name: 'markCodeUnusedAction',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Used`
+  String get codeUsedLabel {
+    return Intl.message('Used', name: 'codeUsedLabel', desc: '', args: []);
+  }
+
+  /// `Available`
+  String get codeUnusedLabel {
+    return Intl.message(
+      'Available',
+      name: 'codeUnusedLabel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Copy`
+  String get copyCodeAction {
+    return Intl.message('Copy', name: 'copyCodeAction', desc: '', args: []);
+  }
+
+  /// `Code copied`
+  String get codeCopied {
+    return Intl.message('Code copied', name: 'codeCopied', desc: '', args: []);
+  }
+
+  /// `Code marked as used`
+  String get codeMarkedUsed {
+    return Intl.message(
+      'Code marked as used',
+      name: 'codeMarkedUsed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Code marked as unused`
+  String get codeMarkedUnused {
+    return Intl.message(
+      'Code marked as unused',
+      name: 'codeMarkedUnused',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No codes yet`
+  String get noCodesYet {
+    return Intl.message('No codes yet', name: 'noCodesYet', desc: '', args: []);
+  }
+
+  /// `Delete code`
+  String get deleteCodeLabel {
+    return Intl.message(
+      'Delete code',
+      name: 'deleteCodeLabel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Codes`
+  String get codesLabel {
+    return Intl.message('Codes', name: 'codesLabel', desc: '', args: []);
   }
 }
 

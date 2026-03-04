@@ -3,17 +3,22 @@ import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/base_main_entity_dao.dart';
 import 'package:hoplixi/main_store/models/dto/recovery_codes_dto.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
+import 'package:hoplixi/main_store/tables/recovery_codes.dart';
 import 'package:hoplixi/main_store/tables/recovery_codes_items.dart';
 import 'package:hoplixi/main_store/tables/vault_items.dart';
 import 'package:uuid/uuid.dart';
 
 part 'recovery_codes_dao.g.dart';
 
-@DriftAccessor(tables: [VaultItems, RecoveryCodesItems])
+@DriftAccessor(tables: [VaultItems, RecoveryCodesItems, RecoveryCodes])
 class RecoveryCodesDao extends DatabaseAccessor<MainStore>
     with _$RecoveryCodesDaoMixin
     implements BaseMainEntityDao {
   RecoveryCodesDao(super.db);
+
+  // ---------------------------------------------------------------------------
+  // Чтение
+  // ---------------------------------------------------------------------------
 
   Future<List<(VaultItemsData, RecoveryCodesItemsData)>>
   getAllRecoveryCodes() async {
@@ -26,10 +31,8 @@ class RecoveryCodesDao extends DatabaseAccessor<MainStore>
     final rows = await query.get();
     return rows
         .map(
-          (row) => (
-            row.readTable(vaultItems),
-            row.readTable(recoveryCodesItems),
-          ),
+          (row) =>
+              (row.readTable(vaultItems), row.readTable(recoveryCodesItems)),
         )
         .toList();
   }
@@ -47,7 +50,8 @@ class RecoveryCodesDao extends DatabaseAccessor<MainStore>
     return (row.readTable(vaultItems), row.readTable(recoveryCodesItems));
   }
 
-  Stream<List<(VaultItemsData, RecoveryCodesItemsData)>> watchAllRecoveryCodes() {
+  Stream<List<(VaultItemsData, RecoveryCodesItemsData)>>
+  watchAllRecoveryCodes() {
     final query = select(vaultItems).join([
       innerJoin(
         recoveryCodesItems,
@@ -58,14 +62,98 @@ class RecoveryCodesDao extends DatabaseAccessor<MainStore>
     return query.watch().map(
       (rows) => rows
           .map(
-            (row) => (
-              row.readTable(vaultItems),
-              row.readTable(recoveryCodesItems),
-            ),
+            (row) =>
+                (row.readTable(vaultItems), row.readTable(recoveryCodesItems)),
           )
           .toList(),
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Работа с отдельными кодами
+  // ---------------------------------------------------------------------------
+
+  /// Возвращает список кодов для элемента, отсортированных по позиции / id.
+  Future<List<RecoveryCodeData>> getCodesForItem(String itemId) {
+    return (select(recoveryCodes)
+          ..where((c) => c.itemId.equals(itemId))
+          ..orderBy([
+            (c) => OrderingTerm.asc(c.position),
+            (c) => OrderingTerm.asc(c.id),
+          ]))
+        .get();
+  }
+
+  /// Стрим кодов для элемента.
+  Stream<List<RecoveryCodeData>> watchCodesForItem(String itemId) {
+    return (select(recoveryCodes)
+          ..where((c) => c.itemId.equals(itemId))
+          ..orderBy([
+            (c) => OrderingTerm.asc(c.position),
+            (c) => OrderingTerm.asc(c.id),
+          ]))
+        .watch();
+  }
+
+  /// Пометить код как использованный.
+  Future<bool> markCodeUsed(int codeId) async {
+    final count =
+        await (update(recoveryCodes)..where((c) => c.id.equals(codeId))).write(
+          RecoveryCodesCompanion(
+            used: const Value(true),
+            usedAt: Value(DateTime.now()),
+          ),
+        );
+    return count > 0;
+  }
+
+  /// Снять отметку об использовании кода.
+  Future<bool> markCodeUnused(int codeId) async {
+    final count =
+        await (update(recoveryCodes)..where((c) => c.id.equals(codeId))).write(
+          const RecoveryCodesCompanion(used: Value(false), usedAt: Value(null)),
+        );
+    return count > 0;
+  }
+
+  /// Удалить отдельный код.
+  Future<bool> deleteCode(int codeId) async {
+    final count = await (delete(
+      recoveryCodes,
+    )..where((c) => c.id.equals(codeId))).go();
+    return count > 0;
+  }
+
+  /// Добавить отдельные коды к существующему элементу.
+  Future<void> addCodes(String itemId, List<String> codes) {
+    return db.transaction(() async {
+      int position = await _nextPosition(itemId);
+      for (final code in codes) {
+        final trimmed = code.trim();
+        if (trimmed.isEmpty) continue;
+        await into(recoveryCodes).insert(
+          RecoveryCodesCompanion.insert(
+            itemId: itemId,
+            code: trimmed,
+            position: Value(position++),
+          ),
+        );
+      }
+    });
+  }
+
+  Future<int> _nextPosition(String itemId) async {
+    final maxPos = recoveryCodes.position.max();
+    final query = selectOnly(recoveryCodes)
+      ..addColumns([maxPos])
+      ..where(recoveryCodes.itemId.equals(itemId));
+    final result = await query.map((row) => row.read(maxPos)).getSingle();
+    return (result ?? -1) + 1;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Создание / обновление
+  // ---------------------------------------------------------------------------
 
   Future<String> createRecoveryCodes(CreateRecoveryCodesDto dto) {
     final id = const Uuid().v4();
@@ -85,15 +173,27 @@ class RecoveryCodesDao extends DatabaseAccessor<MainStore>
       await into(recoveryCodesItems).insert(
         RecoveryCodesItemsCompanion.insert(
           itemId: id,
-          codesBlob: dto.codesBlob,
-          codesCount: Value(dto.codesCount),
-          usedCount: Value(dto.usedCount),
-          perCodeStatus: Value(dto.perCodeStatus),
           generatedAt: Value(dto.generatedAt),
           oneTime: Value(dto.oneTime ?? false),
           displayHint: Value(dto.displayHint),
         ),
       );
+
+      // Вставляем отдельные коды
+      if (dto.codes != null) {
+        int pos = 0;
+        for (final code in dto.codes!) {
+          final trimmed = code.trim();
+          if (trimmed.isEmpty) continue;
+          await into(recoveryCodes).insert(
+            RecoveryCodesCompanion.insert(
+              itemId: id,
+              code: trimmed,
+              position: Value(pos++),
+            ),
+          );
+        }
+      }
 
       await db.vaultItemDao.insertTags(id, dto.tagsIds);
       return id;
@@ -124,12 +224,6 @@ class RecoveryCodesDao extends DatabaseAccessor<MainStore>
       )..where((v) => v.id.equals(id))).write(vaultCompanion);
 
       final itemCompanion = RecoveryCodesItemsCompanion(
-        codesBlob: dto.codesBlob != null
-            ? Value(dto.codesBlob!)
-            : const Value.absent(),
-        codesCount: Value(dto.codesCount),
-        usedCount: Value(dto.usedCount),
-        perCodeStatus: Value(dto.perCodeStatus),
         generatedAt: Value(dto.generatedAt),
         oneTime: dto.oneTime != null
             ? Value(dto.oneTime!)
@@ -141,6 +235,11 @@ class RecoveryCodesDao extends DatabaseAccessor<MainStore>
         recoveryCodesItems,
       )..where((i) => i.itemId.equals(id))).write(itemCompanion);
 
+      // Добавляем новые коды (если переданы)
+      if (dto.newCodes != null && dto.newCodes!.isNotEmpty) {
+        await addCodes(id, dto.newCodes!);
+      }
+
       if (dto.tagsIds != null) {
         await db.vaultItemDao.syncTags(id, dto.tagsIds!);
       }
@@ -148,6 +247,10 @@ class RecoveryCodesDao extends DatabaseAccessor<MainStore>
       return true;
     });
   }
+
+  // ---------------------------------------------------------------------------
+  // Базовые методы интерфейса
+  // ---------------------------------------------------------------------------
 
   @override
   Future<bool> incrementUsage(String id) => db.vaultItemDao.incrementUsage(id);

@@ -7,15 +7,11 @@ class RecoveryCodesHistory extends Table {
   TextColumn get historyId =>
       text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
 
-  TextColumn get codesBlob => text()();
-
+  /// Снимок общего кол-ва кодов на момент события.
   IntColumn get codesCount => integer().nullable()();
 
+  /// Снимок кол-ва использованных кодов.
   IntColumn get usedCount => integer().nullable()();
-
-  TextColumn get perCodeStatus => text().nullable()();
-
-  DateTimeColumn get generatedAt => dateTime().nullable()();
 
   BoolColumn get oneTime => boolean().withDefault(const Constant(false))();
 

@@ -33,6 +33,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "activatedAtIsoLabel": MessageLookupByLibrary.simpleMessage(
       "Активировано (ISO8601)",
     ),
+    "addCodesLabel": MessageLookupByLibrary.simpleMessage("Добавить коды"),
     "addedToSshAgentLabel": MessageLookupByLibrary.simpleMessage(
       "Добавлен в ssh-agent",
     ),
@@ -98,9 +99,17 @@ class MessageLookup extends MessageLookupByLibrary {
       "Проверьте поля формы и попробуйте снова",
     ),
     "clear": MessageLookupByLibrary.simpleMessage("Очистить"),
+    "codeCopied": MessageLookupByLibrary.simpleMessage("Код скопирован"),
+    "codeMarkedUnused": MessageLookupByLibrary.simpleMessage("Отметка снята"),
+    "codeMarkedUsed": MessageLookupByLibrary.simpleMessage(
+      "Код отмечен как использованный",
+    ),
+    "codeUnusedLabel": MessageLookupByLibrary.simpleMessage("Доступен"),
+    "codeUsedLabel": MessageLookupByLibrary.simpleMessage("Использован"),
     "codesBlobRequiredLabel": MessageLookupByLibrary.simpleMessage(
       "Codes blob *",
     ),
+    "codesLabel": MessageLookupByLibrary.simpleMessage("Коды"),
     "commonAdded": MessageLookupByLibrary.simpleMessage("Добавлен"),
     "commonDisabled": MessageLookupByLibrary.simpleMessage("Выключен"),
     "commonEnabled": MessageLookupByLibrary.simpleMessage("Включен"),
@@ -125,6 +134,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Контакт не найден",
     ),
     "contactUpdated": MessageLookupByLibrary.simpleMessage("Контакт обновлен"),
+    "copyCodeAction": MessageLookupByLibrary.simpleMessage("Копировать"),
     "crlUrlLabel": MessageLookupByLibrary.simpleMessage("CRL URL"),
     "cryptoWalletCreated": MessageLookupByLibrary.simpleMessage(
       "Криптокошелек создан",
@@ -135,6 +145,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "cryptoWalletUpdated": MessageLookupByLibrary.simpleMessage(
       "Криптокошелек обновлен",
     ),
+    "deleteCodeLabel": MessageLookupByLibrary.simpleMessage("Удалить код"),
     "derivationPathLabel": MessageLookupByLibrary.simpleMessage(
       "Путь деривации",
     ),
@@ -235,6 +246,12 @@ class MessageLookup extends MessageLookupByLibrary {
       "Лицензия обновлена",
     ),
     "loginLabel": MessageLookupByLibrary.simpleMessage("Логин"),
+    "markCodeUnusedAction": MessageLookupByLibrary.simpleMessage(
+      "Снять отметку",
+    ),
+    "markCodeUsedAction": MessageLookupByLibrary.simpleMessage(
+      "Отметить использованным",
+    ),
     "maxActivationsLabel": MessageLookupByLibrary.simpleMessage(
       "Макс. активаций",
     ),
@@ -257,6 +274,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "newSshKey": MessageLookupByLibrary.simpleMessage("Новый SSH-ключ"),
     "newWifiNetwork": MessageLookupByLibrary.simpleMessage("Новая Wi-Fi сеть"),
+    "noCodesYet": MessageLookupByLibrary.simpleMessage("Нет кодов"),
     "notSpecified": MessageLookupByLibrary.simpleMessage("Не указана"),
     "ocspUrlLabel": MessageLookupByLibrary.simpleMessage("OCSP URL"),
     "oneTimeCodesLabel": MessageLookupByLibrary.simpleMessage(
@@ -269,6 +287,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Миграция паролей",
     ),
     "passwordUpdated": MessageLookupByLibrary.simpleMessage("Пароль обновлен"),
+    "pasteCodesHint": MessageLookupByLibrary.simpleMessage(
+      "По одному коду на строку",
+    ),
     "perCodeStatusJsonLabel": MessageLookupByLibrary.simpleMessage(
       "Per-code status JSON",
     ),
@@ -326,6 +347,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "urlLabel": MessageLookupByLibrary.simpleMessage("URL"),
     "usageLabel": MessageLookupByLibrary.simpleMessage("Использование"),
     "usedCodesLabel": MessageLookupByLibrary.simpleMessage("Использовано"),
+    "validationAtLeastOneCode": MessageLookupByLibrary.simpleMessage(
+      "Необходим хотя бы один код",
+    ),
     "validationInvalidEmail": MessageLookupByLibrary.simpleMessage(
       "Некорректный email",
     ),

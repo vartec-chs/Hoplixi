@@ -10,10 +10,9 @@ part 'recovery_codes_dto.g.dart';
 sealed class CreateRecoveryCodesDto with _$CreateRecoveryCodesDto {
   const factory CreateRecoveryCodesDto({
     required String name,
-    required String codesBlob,
-    int? codesCount,
-    int? usedCount,
-    String? perCodeStatus,
+
+    /// Список кодов (по одному на строку после разбиения).
+    List<String>? codes,
     DateTime? generatedAt,
     bool? oneTime,
     String? displayHint,
@@ -31,10 +30,9 @@ sealed class CreateRecoveryCodesDto with _$CreateRecoveryCodesDto {
 sealed class UpdateRecoveryCodesDto with _$UpdateRecoveryCodesDto {
   const factory UpdateRecoveryCodesDto({
     String? name,
-    String? codesBlob,
-    int? codesCount,
-    int? usedCount,
-    String? perCodeStatus,
+
+    /// Новые коды для добавления к существующим (append-only через форму).
+    List<String>? newCodes,
     DateTime? generatedAt,
     bool? oneTime,
     String? displayHint,

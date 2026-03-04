@@ -36,18 +36,30 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
     final tagDao = await ref.read(tagDaoProvider.future);
     final tags = await tagDao.getTagsByIds(tagIds);
 
+    // Загружаем существующие коды
+    final codesRaw = await dao.getCodesForItem(id);
+    final existingCodes = codesRaw
+        .map(
+          (c) => RecoveryCodeItemDto(
+            id: c.id,
+            itemId: c.itemId,
+            code: c.code,
+            used: c.used,
+            usedAt: c.usedAt,
+            position: c.position,
+          ),
+        )
+        .toList();
+
     return RecoveryCodesFormState(
       isEditMode: true,
       editingRecoveryCodesId: id,
       name: item.name,
-      codesBlob: data.codesBlob,
-      codesCount: data.codesCount?.toString() ?? '',
-      usedCount: data.usedCount?.toString() ?? '',
-      perCodeStatus: data.perCodeStatus ?? '',
       generatedAt: data.generatedAt?.toIso8601String() ?? '',
       displayHint: data.displayHint ?? '',
       description: item.description ?? '',
       oneTime: data.oneTime,
+      existingCodes: existingCodes,
       noteId: item.noteId,
       categoryId: item.categoryId,
       tagIds: tagIds,
@@ -68,37 +80,10 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
       nameError: value.trim().isEmpty ? S.current.validationRequiredName : null,
     ),
   );
-  void setCodesBlob(String value) => _update(
-    (s) => s.copyWith(
-      codesBlob: value,
-      codesBlobError: value.trim().isEmpty ? S.current.validationRequiredCodesBlob : null,
-    ),
-  );
 
-  void setCodesCount(String value) {
-    final v = value.trim();
-    _update(
-      (s) => s.copyWith(
-        codesCount: value,
-        codesCountError: v.isEmpty || int.tryParse(v) != null
-            ? null : S.current.validationMustBeInteger,
-      ),
-    );
-  }
+  void setCodesInput(String value) =>
+      _update((s) => s.copyWith(codesInput: value, codesInputError: null));
 
-  void setUsedCount(String value) {
-    final v = value.trim();
-    _update(
-      (s) => s.copyWith(
-        usedCount: value,
-        usedCountError: v.isEmpty || int.tryParse(v) != null
-            ? null : S.current.validationMustBeInteger,
-      ),
-    );
-  }
-
-  void setPerCodeStatus(String value) =>
-      _update((s) => s.copyWith(perCodeStatus: value));
   void setGeneratedAt(String value) {
     final v = value.trim();
     _update(
@@ -125,14 +110,15 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
 
   bool validate() {
     final c = _current;
-    final nameError = c.name.trim().isEmpty ? S.current.validationRequiredName : null;
-    final codesBlobError = c.codesBlob.trim().isEmpty ? S.current.validationRequiredCodesBlob : null;
-    final codesCountError =
-        c.codesCount.trim().isEmpty || int.tryParse(c.codesCount.trim()) != null
-        ? null : S.current.validationMustBeInteger;
-    final usedCountError =
-        c.usedCount.trim().isEmpty || int.tryParse(c.usedCount.trim()) != null
-        ? null : S.current.validationMustBeInteger;
+    final nameError = c.name.trim().isEmpty
+        ? S.current.validationRequiredName
+        : null;
+
+    // В режиме создания хотя бы один код обязателен
+    final codesInputError = (!c.isEditMode && _parseCodes(c.codesInput).isEmpty)
+        ? S.current.validationAtLeastOneCode
+        : null;
+
     final generatedAtError =
         c.generatedAt.trim().isEmpty ||
             DateTime.tryParse(c.generatedAt.trim()) != null
@@ -142,18 +128,22 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
     _update(
       (s) => s.copyWith(
         nameError: nameError,
-        codesBlobError: codesBlobError,
-        codesCountError: codesCountError,
-        usedCountError: usedCountError,
+        codesInputError: codesInputError,
         generatedAtError: generatedAtError,
       ),
     );
 
     return nameError == null &&
-        codesBlobError == null &&
-        codesCountError == null &&
-        usedCountError == null &&
+        codesInputError == null &&
         generatedAtError == null;
+  }
+
+  List<String> _parseCodes(String input) {
+    return input
+        .split('\n')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
   }
 
   Future<bool> save() async {
@@ -173,24 +163,16 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
       return DateTime.tryParse(v);
     }
 
-    int? parseInt(String value) {
-      final v = value.trim();
-      if (v.isEmpty) return null;
-      return int.tryParse(v);
-    }
-
     try {
       final dao = await ref.read(recoveryCodesDaoProvider.future);
+      final parsedCodes = _parseCodes(c.codesInput);
 
       if (c.isEditMode && c.editingRecoveryCodesId != null) {
         final updated = await dao.updateRecoveryCodes(
           c.editingRecoveryCodesId!,
           UpdateRecoveryCodesDto(
             name: c.name.trim(),
-            codesBlob: c.codesBlob.trim(),
-            codesCount: parseInt(c.codesCount),
-            usedCount: parseInt(c.usedCount),
-            perCodeStatus: clean(c.perCodeStatus),
+            newCodes: parsedCodes.isEmpty ? null : parsedCodes,
             generatedAt: parseDate(c.generatedAt),
             oneTime: c.oneTime,
             displayHint: clean(c.displayHint),
@@ -216,10 +198,7 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
         final id = await dao.createRecoveryCodes(
           CreateRecoveryCodesDto(
             name: c.name.trim(),
-            codesBlob: c.codesBlob.trim(),
-            codesCount: parseInt(c.codesCount),
-            usedCount: parseInt(c.usedCount),
-            perCodeStatus: clean(c.perCodeStatus),
+            codes: parsedCodes,
             generatedAt: parseDate(c.generatedAt),
             oneTime: c.oneTime,
             displayHint: clean(c.displayHint),
@@ -245,4 +224,3 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
-

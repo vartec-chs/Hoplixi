@@ -6,9 +6,9 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_b
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
-import 'package:hoplixi/generated/l10n.dart';
 
 import '../providers/recovery_codes_form_provider.dart';
 
@@ -25,10 +25,7 @@ class RecoveryCodesFormScreen extends ConsumerStatefulWidget {
 class _RecoveryCodesFormScreenState
     extends ConsumerState<RecoveryCodesFormScreen> {
   late final TextEditingController _nameController;
-  late final TextEditingController _codesBlobController;
-  late final TextEditingController _codesCountController;
-  late final TextEditingController _usedCountController;
-  late final TextEditingController _perCodeStatusController;
+  late final TextEditingController _codesInputController;
   late final TextEditingController _generatedAtController;
   late final TextEditingController _displayHintController;
   late final TextEditingController _descriptionController;
@@ -37,10 +34,7 @@ class _RecoveryCodesFormScreenState
   void initState() {
     super.initState();
     _nameController = TextEditingController();
-    _codesBlobController = TextEditingController();
-    _codesCountController = TextEditingController();
-    _usedCountController = TextEditingController();
-    _perCodeStatusController = TextEditingController();
+    _codesInputController = TextEditingController();
     _generatedAtController = TextEditingController();
     _displayHintController = TextEditingController();
     _descriptionController = TextEditingController();
@@ -49,10 +43,7 @@ class _RecoveryCodesFormScreenState
   @override
   void dispose() {
     _nameController.dispose();
-    _codesBlobController.dispose();
-    _codesCountController.dispose();
-    _usedCountController.dispose();
-    _perCodeStatusController.dispose();
+    _codesInputController.dispose();
     _generatedAtController.dispose();
     _displayHintController.dispose();
     _descriptionController.dispose();
@@ -110,17 +101,8 @@ class _RecoveryCodesFormScreenState
         if (_nameController.text != state.name) {
           _nameController.text = state.name;
         }
-        if (_codesBlobController.text != state.codesBlob) {
-          _codesBlobController.text = state.codesBlob;
-        }
-        if (_codesCountController.text != state.codesCount) {
-          _codesCountController.text = state.codesCount;
-        }
-        if (_usedCountController.text != state.usedCount) {
-          _usedCountController.text = state.usedCount;
-        }
-        if (_perCodeStatusController.text != state.perCodeStatus) {
-          _perCodeStatusController.text = state.perCodeStatus;
+        if (_codesInputController.text != state.codesInput) {
+          _codesInputController.text = state.codesInput;
         }
         if (_generatedAtController.text != state.generatedAt) {
           _generatedAtController.text = state.generatedAt;
@@ -162,6 +144,7 @@ class _RecoveryCodesFormScreenState
             child: ListView(
               padding: formPadding,
               children: [
+                // Название
                 TextField(
                   controller: _nameController,
                   decoration: primaryInputDecoration(
@@ -172,51 +155,46 @@ class _RecoveryCodesFormScreenState
                   onChanged: notifier.setName,
                 ),
                 const SizedBox(height: 12),
+
+                // Существующие коды (только в режиме редактирования)
+                if (state.isEditMode && state.existingCodes.isNotEmpty) ...[
+                  Text(
+                    S.of(context).codesLabel,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  ...state.existingCodes.map(
+                    (c) => _ExistingCodeTile(
+                      code: c.code,
+                      used: c.used,
+                      position: c.position,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+
+                // Поле для добавления новых кодов
+                Text(
+                  state.isEditMode
+                      ? S.of(context).addCodesLabel
+                      : S.of(context).codesBlobRequiredLabel,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 4),
                 TextField(
-                  controller: _codesBlobController,
+                  controller: _codesInputController,
                   minLines: 4,
-                  maxLines: 8,
+                  maxLines: 10,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).codesBlobRequiredLabel,
-                    errorText: state.codesBlobError,
+                    hintText: S.of(context).pasteCodesHint,
+                    errorText: state.codesInputError,
                   ),
-                  onChanged: notifier.setCodesBlob,
+                  onChanged: notifier.setCodesInput,
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  controller: _codesCountController,
-                  keyboardType: TextInputType.number,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: S.of(context).totalCodesLabel,
-                    errorText: state.codesCountError,
-                  ),
-                  onChanged: notifier.setCodesCount,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _usedCountController,
-                  keyboardType: TextInputType.number,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: S.of(context).usedCodesLabel,
-                    errorText: state.usedCountError,
-                  ),
-                  onChanged: notifier.setUsedCount,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _perCodeStatusController,
-                  minLines: 2,
-                  maxLines: 4,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: S.of(context).perCodeStatusJsonLabel,
-                  ),
-                  onChanged: notifier.setPerCodeStatus,
-                ),
-                const SizedBox(height: 12),
+
+                // Дата генерации
                 TextField(
                   controller: _generatedAtController,
                   decoration: primaryInputDecoration(
@@ -227,6 +205,8 @@ class _RecoveryCodesFormScreenState
                   onChanged: notifier.setGeneratedAt,
                 ),
                 const SizedBox(height: 12),
+
+                // Подсказка
                 TextField(
                   controller: _displayHintController,
                   decoration: primaryInputDecoration(
@@ -236,6 +216,8 @@ class _RecoveryCodesFormScreenState
                   onChanged: notifier.setDisplayHint,
                 ),
                 const SizedBox(height: 12),
+
+                // Категория
                 CategoryPickerField(
                   selectedCategoryId: state.categoryId,
                   selectedCategoryName: state.categoryName,
@@ -246,6 +228,8 @@ class _RecoveryCodesFormScreenState
                   onCategorySelected: notifier.setCategory,
                 ),
                 const SizedBox(height: 12),
+
+                // Теги
                 TagPickerField(
                   selectedTagIds: state.tagIds,
                   selectedTagNames: state.tagNames,
@@ -253,12 +237,16 @@ class _RecoveryCodesFormScreenState
                   onTagsSelected: notifier.setTags,
                 ),
                 const SizedBox(height: 12),
+
+                // Заметка
                 NotePickerField(
                   selectedNoteId: state.noteId,
                   selectedNoteName: state.noteName,
                   onNoteSelected: notifier.setNote,
                 ),
                 const SizedBox(height: 12),
+
+                // Описание
                 TextField(
                   controller: _descriptionController,
                   minLines: 2,
@@ -270,6 +258,8 @@ class _RecoveryCodesFormScreenState
                   onChanged: notifier.setDescription,
                 ),
                 const SizedBox(height: 8),
+
+                // Одноразовые коды
                 SwitchListTile(
                   value: state.oneTime,
                   onChanged: notifier.setOneTime,
@@ -280,6 +270,52 @@ class _RecoveryCodesFormScreenState
           ),
         );
       },
+    );
+  }
+}
+
+class _ExistingCodeTile extends StatelessWidget {
+  const _ExistingCodeTile({
+    required this.code,
+    required this.used,
+    this.position,
+  });
+
+  final String code;
+  final bool used;
+  final int? position;
+
+  @override
+  Widget build(BuildContext context) {
+    final textStyle = used
+        ? Theme.of(context).textTheme.bodyMedium?.copyWith(
+            decoration: TextDecoration.lineThrough,
+            color: Theme.of(context).colorScheme.outline,
+          )
+        : Theme.of(context).textTheme.bodyMedium;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 28,
+            child: Text(
+              '${(position ?? 0) + 1}.',
+              style: Theme.of(context).textTheme.labelSmall,
+              textAlign: TextAlign.right,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(child: Text(code, style: textStyle)),
+          if (used)
+            Icon(
+              Icons.check_circle_outline,
+              size: 16,
+              color: Theme.of(context).colorScheme.outline,
+            ),
+        ],
+      ),
     );
   }
 }

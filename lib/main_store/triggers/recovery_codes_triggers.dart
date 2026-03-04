@@ -1,3 +1,45 @@
+// Триггеры кэша: обновляют codesCount / usedCount в recovery_codes_items
+// при INSERT / DELETE / UPDATE (used) в таблице recovery_codes.
+const List<String> recoveryCodesCacheCreateTriggers = [
+  '''
+    CREATE TRIGGER IF NOT EXISTS rc_cache_after_insert
+    AFTER INSERT ON recovery_codes
+    BEGIN
+      UPDATE recovery_codes_items
+      SET codes_count = (SELECT COUNT(*) FROM recovery_codes WHERE item_id = NEW.item_id)
+      WHERE item_id = NEW.item_id;
+    END;
+  ''',
+  '''
+    CREATE TRIGGER IF NOT EXISTS rc_cache_after_delete
+    AFTER DELETE ON recovery_codes
+    BEGIN
+      UPDATE recovery_codes_items
+      SET
+        codes_count = (SELECT COUNT(*) FROM recovery_codes WHERE item_id = OLD.item_id),
+        used_count  = (SELECT COUNT(*) FROM recovery_codes WHERE item_id = OLD.item_id AND used = 1)
+      WHERE item_id = OLD.item_id;
+    END;
+  ''',
+  '''
+    CREATE TRIGGER IF NOT EXISTS rc_cache_used_update
+    AFTER UPDATE OF used ON recovery_codes
+    WHEN NEW.used != OLD.used
+    BEGIN
+      UPDATE recovery_codes_items
+      SET used_count = (SELECT COUNT(*) FROM recovery_codes WHERE item_id = NEW.item_id AND used = 1)
+      WHERE item_id = NEW.item_id;
+    END;
+  ''',
+];
+
+const List<String> recoveryCodesCacheDropTriggers = [
+  'DROP TRIGGER IF EXISTS rc_cache_after_insert;',
+  'DROP TRIGGER IF EXISTS rc_cache_after_delete;',
+  'DROP TRIGGER IF EXISTS rc_cache_used_update;',
+];
+
+// Триггеры истории изменений
 const List<String> recoveryCodesHistoryCreateTriggers = [
   '''
     CREATE TRIGGER IF NOT EXISTS recovery_codes_update_history
@@ -30,13 +72,11 @@ const List<String> recoveryCodesHistoryCreateTriggers = [
       );
 
       INSERT INTO recovery_codes_history (
-        history_id, codes_blob, codes_count, used_count, per_code_status,
-        generated_at, one_time, display_hint
+        history_id, codes_count, used_count, one_time, display_hint
       )
       SELECT
         (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
-        r.codes_blob, r.codes_count, r.used_count, r.per_code_status,
-        r.generated_at, r.one_time, r.display_hint
+        r.codes_count, r.used_count, r.one_time, r.display_hint
       FROM recovery_codes_items r
       WHERE r.item_id = OLD.id;
     END;
@@ -46,10 +86,8 @@ const List<String> recoveryCodesHistoryCreateTriggers = [
     AFTER UPDATE ON recovery_codes_items
     FOR EACH ROW
     WHEN (
-      OLD.codes_blob != NEW.codes_blob OR
-      OLD.codes_count IS NOT NEW.codes_count OR
-      OLD.used_count IS NOT NEW.used_count OR
-      OLD.per_code_status IS NOT NEW.per_code_status OR
+      OLD.codes_count != NEW.codes_count OR
+      OLD.used_count != NEW.used_count OR
       OLD.generated_at IS NOT NEW.generated_at OR
       OLD.one_time != NEW.one_time OR
       OLD.display_hint IS NOT NEW.display_hint
@@ -71,12 +109,10 @@ const List<String> recoveryCodesHistoryCreateTriggers = [
       WHERE v.id = OLD.item_id;
 
       INSERT INTO recovery_codes_history (
-        history_id, codes_blob, codes_count, used_count, per_code_status,
-        generated_at, one_time, display_hint
+        history_id, codes_count, used_count, one_time, display_hint
       ) VALUES (
         (SELECT id FROM vault_item_history WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
-        OLD.codes_blob, OLD.codes_count, OLD.used_count, OLD.per_code_status,
-        OLD.generated_at, OLD.one_time, OLD.display_hint
+        OLD.codes_count, OLD.used_count, OLD.one_time, OLD.display_hint
       );
     END;
   ''',
@@ -100,13 +136,11 @@ const List<String> recoveryCodesHistoryCreateTriggers = [
       );
 
       INSERT INTO recovery_codes_history (
-        history_id, codes_blob, codes_count, used_count, per_code_status,
-        generated_at, one_time, display_hint
+        history_id, codes_count, used_count, one_time, display_hint
       )
       SELECT
         (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
-        r.codes_blob, r.codes_count, r.used_count, r.per_code_status,
-        r.generated_at, r.one_time, r.display_hint
+        r.codes_count, r.used_count, r.one_time, r.display_hint
       FROM recovery_codes_items r
       WHERE r.item_id = OLD.id;
     END;
