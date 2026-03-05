@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/providers/category_info_provider.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_modal.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -14,8 +15,8 @@ class CategoryPickerField extends ConsumerStatefulWidget {
     this.onCategorySelected,
     this.selectedCategoryId,
     this.selectedCategoryName,
-    this.label = 'Категория',
-    this.hintText = 'Выберите категорию',
+    this.label,
+    this.hintText,
     this.enabled = true,
     this.focusNode,
     this.autofocus = false,
@@ -46,10 +47,10 @@ class CategoryPickerField extends ConsumerStatefulWidget {
   final List<String> selectedCategoryNames;
 
   /// Метка поля
-  final String label;
+  final String? label;
 
   /// Подсказка
-  final String hintText;
+  final String? hintText;
 
   /// Доступность поля
   final bool enabled;
@@ -177,8 +178,12 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    final effectiveLabel = widget.label ?? s.pickersCategoryLabel;
+    final effectiveHintText = widget.hintText ?? s.selectCategoryHint;
 
     // Получаем эффективное имя категории
     String? effectiveCategoryName = widget.selectedCategoryName;
@@ -215,7 +220,7 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
           // Показываем временный текст пока загружается
           effectiveCategoryName = categoryInfoAsync.when(
             data: (info) => info?.name,
-            loading: () => 'Загрузка...',
+            loading: () => s.pickersLoading,
             error: (_, _) => null,
           );
         }
@@ -251,7 +256,7 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
           // Показываем временный текст пока загружается
           effectiveCategoryNames = categoriesInfoAsync.when(
             data: (infos) => infos.map((i) => i.name).toList(),
-            loading: () => ['Загрузка...'],
+            loading: () => [s.pickersLoading],
             error: (_, _) => [],
           );
         }
@@ -264,13 +269,13 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
         : (effectiveCategoryName != null && effectiveCategoryName.isNotEmpty);
 
     return Semantics(
-      label: widget.label,
+      label: effectiveLabel,
       value: hasValue
           ? (widget.isFilter
                 ? effectiveCategoryNames.join(', ')
                 : effectiveCategoryName)
           : null,
-      hint: hasValue ? null : widget.hintText,
+      hint: hasValue ? null : effectiveHintText,
       button: true,
       enabled: widget.enabled,
       focusable: widget.enabled,
@@ -335,8 +340,8 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
                   child: InputDecorator(
                     decoration: primaryInputDecoration(
                       context,
-                      labelText: widget.label,
-                      hintText: hasValue ? null : widget.hintText,
+                      labelText: effectiveLabel,
+                      hintText: hasValue ? null : effectiveHintText,
                       enabled: widget.enabled,
                       isFocused: isFocused,
                       prefixIcon: const Icon(LucideIcons.folder),
@@ -388,7 +393,7 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
                                 child: Text(
                                   hasValue
                                       ? effectiveCategoryName!
-                                      : widget.hintText,
+                                      : effectiveHintText,
                                   style: theme.textTheme.bodyLarge?.copyWith(
                                     color: hasValue
                                         ? colorScheme.onSurface

@@ -2038,6 +2038,81 @@ class S {
       args: [],
     );
   }
+
+  /// `Category`
+  String get pickersCategoryLabel {
+    return Intl.message(
+      'Category',
+      name: 'pickersCategoryLabel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Note`
+  String get pickersNoteLabel {
+    return Intl.message('Note', name: 'pickersNoteLabel', desc: '', args: []);
+  }
+
+  /// `OTP`
+  String get pickersOtpLabel {
+    return Intl.message('OTP', name: 'pickersOtpLabel', desc: '', args: []);
+  }
+
+  /// `Tags`
+  String get pickersTagsLabel {
+    return Intl.message('Tags', name: 'pickersTagsLabel', desc: '', args: []);
+  }
+
+  /// `Select icon`
+  String get pickersSelectIconHint {
+    return Intl.message(
+      'Select icon',
+      name: 'pickersSelectIconHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Delete icon`
+  String get pickersDeleteIcon {
+    return Intl.message(
+      'Delete icon',
+      name: 'pickersDeleteIcon',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Loading...`
+  String get pickersLoading {
+    return Intl.message(
+      'Loading...',
+      name: 'pickersLoading',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Select tags`
+  String get pickersSelectTagsHint {
+    return Intl.message(
+      'Select tags',
+      name: 'pickersSelectTagsHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Select OTP`
+  String get pickersSelectOtpHint {
+    return Intl.message(
+      'Select OTP',
+      name: 'pickersSelectOtpHint',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

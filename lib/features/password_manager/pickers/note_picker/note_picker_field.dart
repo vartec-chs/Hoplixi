@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_modal.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
@@ -12,8 +13,8 @@ class NotePickerField extends ConsumerStatefulWidget {
     this.onNoteSelected,
     this.selectedNoteId,
     this.selectedNoteName,
-    this.label = 'Заметка',
-    this.hintText = 'Выберите заметку',
+    this.label,
+    this.hintText,
     this.enabled = true,
     this.focusNode,
     this.autofocus = false,
@@ -29,10 +30,10 @@ class NotePickerField extends ConsumerStatefulWidget {
   final String? selectedNoteName;
 
   /// Метка поля
-  final String label;
+  final String? label;
 
   /// Подсказка
-  final String hintText;
+  final String? hintText;
 
   /// Доступность поля
   final bool enabled;
@@ -102,8 +103,12 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    final effectiveLabel = widget.label ?? s.pickersNoteLabel;
+    final effectiveHintText = widget.hintText ?? s.selectNoteHint;
 
     // Получаем эффективное название заметки
     String? effectiveNoteName = widget.selectedNoteName;
@@ -138,8 +143,8 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
 
         // Показываем временный текст пока загружается
         effectiveNoteName = noteDao.when(
-          data: (_) => _resolvedNoteName ?? 'Загрузка...',
-          loading: () => 'Загрузка...',
+          data: (_) => _resolvedNoteName ?? s.pickersLoading,
+          loading: () => s.pickersLoading,
           error: (_, _) => null,
         );
       }
@@ -149,9 +154,9 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
     final hasValue = effectiveNoteName != null && effectiveNoteName.isNotEmpty;
 
     return Semantics(
-      label: widget.label,
+      label: effectiveLabel,
       value: hasValue ? effectiveNoteName : null,
-      hint: hasValue ? null : widget.hintText,
+      hint: hasValue ? null : effectiveHintText,
       button: true,
       enabled: widget.enabled,
       focusable: widget.enabled,

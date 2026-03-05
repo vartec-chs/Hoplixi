@@ -228,5 +228,14 @@
 	"noCodesYet": "Нет кодов",
 	"deleteCodeLabel": "Удалить код",
 	"codesLabel": "Коды",
-	"advancedSettings": "Расширенные настройки"
+	"advancedSettings": "Расширенные настройки",
+	"pickersCategoryLabel": "Категория",
+	"pickersNoteLabel": "Заметка",
+	"pickersOtpLabel": "OTP",
+	"pickersTagsLabel": "Теги",
+	"pickersSelectIconHint": "Выбрать иконку",
+	"pickersDeleteIcon": "Удалить иконку",
+	"pickersLoading": "Загрузка...",
+	"pickersSelectTagsHint": "Выберите теги",
+	"pickersSelectOtpHint": "Выберите OTP"
 }

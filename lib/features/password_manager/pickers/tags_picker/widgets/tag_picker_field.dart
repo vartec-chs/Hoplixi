@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/widgets/tag_picker_modal.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -12,8 +13,8 @@ class TagPickerField extends StatefulWidget {
     this.onTagsSelected,
     this.selectedTagIds = const [],
     this.selectedTagNames = const [],
-    this.label = 'Теги',
-    this.hintText = 'Выберите теги',
+    this.label,
+    this.hintText,
     this.enabled = true,
     this.focusNode,
     this.autofocus = false,
@@ -32,10 +33,10 @@ class TagPickerField extends StatefulWidget {
   final List<String> selectedTagNames;
 
   /// Метка поля
-  final String label;
+  final String? label;
 
   /// Подсказка
-  final String hintText;
+  final String? hintText;
 
   /// Доступность поля
   final bool enabled;
@@ -116,15 +117,19 @@ class _TagPickerFieldState extends State<TagPickerField> {
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    final effectiveLabel = widget.label ?? s.pickersTagsLabel;
+    final effectiveHintText = widget.hintText ?? s.pickersSelectTagsHint;
 
     final hasValue = widget.selectedTagNames.isNotEmpty;
 
     return Semantics(
-      label: widget.label,
+      label: effectiveLabel,
       value: hasValue ? widget.selectedTagNames.join(', ') : null,
-      hint: hasValue ? null : widget.hintText,
+      hint: hasValue ? null : effectiveHintText,
       button: true,
       enabled: widget.enabled,
       focusable: widget.enabled,
@@ -189,8 +194,8 @@ class _TagPickerFieldState extends State<TagPickerField> {
                   child: InputDecorator(
                     decoration: primaryInputDecoration(
                       context,
-                      labelText: widget.label,
-                      hintText: hasValue ? null : widget.hintText,
+                      labelText: effectiveLabel,
+                      hintText: hasValue ? null : effectiveHintText,
                       enabled: widget.enabled,
                       isFocused: isFocused,
                       prefixIcon: const Icon(LucideIcons.tag),
@@ -238,7 +243,7 @@ class _TagPickerFieldState extends State<TagPickerField> {
                             : Align(
                                 alignment: Alignment.centerLeft,
                                 child: Text(
-                                  widget.hintText,
+                                  effectiveHintText,
                                   style: theme.textTheme.bodyLarge?.copyWith(
                                     color: colorScheme.onSurface.withOpacity(
                                       0.6,

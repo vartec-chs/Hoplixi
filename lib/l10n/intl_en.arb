@@ -1,4 +1,4 @@
-﻿{
+{
 	"certificatePemLabel": "Certificate PEM *",
 	"jobTitleLabel": "Job title",
 	"generatedAtIsoLabel": "Generated at (ISO8601)",
@@ -228,5 +228,14 @@
 	"noCodesYet": "No codes yet",
 	"deleteCodeLabel": "Delete code",
 	"codesLabel": "Codes",
-	"advancedSettings": "Advanced Settings"
+	"advancedSettings": "Advanced Settings",
+	"pickersCategoryLabel": "Category",
+	"pickersNoteLabel": "Note",
+	"pickersOtpLabel": "OTP",
+	"pickersTagsLabel": "Tags",
+	"pickersSelectIconHint": "Select icon",
+	"pickersDeleteIcon": "Delete icon",
+	"pickersLoading": "Loading...",
+	"pickersSelectTagsHint": "Select tags",
+	"pickersSelectOtpHint": "Select OTP"
 }

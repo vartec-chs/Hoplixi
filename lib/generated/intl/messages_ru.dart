@@ -300,6 +300,21 @@ class MessageLookup extends MessageLookupByLibrary {
     "phoneLabel": MessageLookupByLibrary.simpleMessage("Телефон"),
     "photoIdLabel": MessageLookupByLibrary.simpleMessage("ID фото"),
     "pickDate": MessageLookupByLibrary.simpleMessage("Выбрать дату"),
+    "pickersCategoryLabel": MessageLookupByLibrary.simpleMessage("Категория"),
+    "pickersDeleteIcon": MessageLookupByLibrary.simpleMessage("Удалить иконку"),
+    "pickersLoading": MessageLookupByLibrary.simpleMessage("Загрузка..."),
+    "pickersNoteLabel": MessageLookupByLibrary.simpleMessage("Заметка"),
+    "pickersOtpLabel": MessageLookupByLibrary.simpleMessage("OTP"),
+    "pickersSelectIconHint": MessageLookupByLibrary.simpleMessage(
+      "Выбрать иконку",
+    ),
+    "pickersSelectOtpHint": MessageLookupByLibrary.simpleMessage(
+      "Выберите OTP",
+    ),
+    "pickersSelectTagsHint": MessageLookupByLibrary.simpleMessage(
+      "Выберите теги",
+    ),
+    "pickersTagsLabel": MessageLookupByLibrary.simpleMessage("Теги"),
     "placeOfBirthLabel": MessageLookupByLibrary.simpleMessage("Место рождения"),
     "privateKeyLabel": MessageLookupByLibrary.simpleMessage("Приватный ключ"),
     "privateKeyRequiredLabel": MessageLookupByLibrary.simpleMessage(

@@ -278,6 +278,19 @@ class MessageLookup extends MessageLookupByLibrary {
     "phoneLabel": MessageLookupByLibrary.simpleMessage("Phone"),
     "photoIdLabel": MessageLookupByLibrary.simpleMessage("Photo ID"),
     "pickDate": MessageLookupByLibrary.simpleMessage("Pick date"),
+    "pickersCategoryLabel": MessageLookupByLibrary.simpleMessage("Category"),
+    "pickersDeleteIcon": MessageLookupByLibrary.simpleMessage("Delete icon"),
+    "pickersLoading": MessageLookupByLibrary.simpleMessage("Loading..."),
+    "pickersNoteLabel": MessageLookupByLibrary.simpleMessage("Note"),
+    "pickersOtpLabel": MessageLookupByLibrary.simpleMessage("OTP"),
+    "pickersSelectIconHint": MessageLookupByLibrary.simpleMessage(
+      "Select icon",
+    ),
+    "pickersSelectOtpHint": MessageLookupByLibrary.simpleMessage("Select OTP"),
+    "pickersSelectTagsHint": MessageLookupByLibrary.simpleMessage(
+      "Select tags",
+    ),
+    "pickersTagsLabel": MessageLookupByLibrary.simpleMessage("Tags"),
     "placeOfBirthLabel": MessageLookupByLibrary.simpleMessage("Place of birth"),
     "privateKeyLabel": MessageLookupByLibrary.simpleMessage("Private key"),
     "privateKeyRequiredLabel": MessageLookupByLibrary.simpleMessage(

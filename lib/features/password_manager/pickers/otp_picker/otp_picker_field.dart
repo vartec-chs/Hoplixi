@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/pickers/otp_picker/otp_picker_modal.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -13,8 +14,8 @@ class OtpPickerField extends ConsumerStatefulWidget {
     this.onOtpSelected,
     this.selectedOtpId,
     this.selectedOtpName,
-    this.label = 'OTP',
-    this.hintText = 'Выберите OTP',
+    this.label,
+    this.hintText,
     this.enabled = true,
     this.focusNode,
     this.autofocus = false,
@@ -30,10 +31,10 @@ class OtpPickerField extends ConsumerStatefulWidget {
   final String? selectedOtpName;
 
   /// Метка поля
-  final String label;
+  final String? label;
 
   /// Подсказка
-  final String hintText;
+  final String? hintText;
 
   /// Доступность поля
   final bool enabled;
@@ -103,8 +104,12 @@ class _OtpPickerFieldState extends ConsumerState<OtpPickerField> {
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    final effectiveLabel = widget.label ?? s.pickersOtpLabel;
+    final effectiveHintText = widget.hintText ?? s.pickersSelectOtpHint;
 
     // Получаем эффективное название OTP
     String? effectiveOtpName = widget.selectedOtpName;
@@ -143,8 +148,8 @@ class _OtpPickerFieldState extends ConsumerState<OtpPickerField> {
 
         // Показываем временный текст пока загружается
         effectiveOtpName = otpDao.when(
-          data: (_) => _resolvedOtpName ?? 'Загрузка...',
-          loading: () => 'Загрузка...',
+          data: (_) => _resolvedOtpName ?? s.pickersLoading,
+          loading: () => s.pickersLoading,
           error: (_, _) => null,
         );
       }
@@ -154,9 +159,9 @@ class _OtpPickerFieldState extends ConsumerState<OtpPickerField> {
     final hasValue = effectiveOtpName != null && effectiveOtpName.isNotEmpty;
 
     return Semantics(
-      label: widget.label,
+      label: effectiveLabel,
       value: hasValue ? effectiveOtpName : null,
-      hint: hasValue ? null : widget.hintText,
+      hint: hasValue ? null : effectiveHintText,
       button: true,
       enabled: widget.enabled,
       focusable: widget.enabled,
