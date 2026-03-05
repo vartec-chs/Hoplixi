@@ -54,13 +54,10 @@ pub fn compress_directory(
                     CryptError::Compression(format!("7z add dir: {e}"))
                 })?;
         } else {
-            let file_data = std::fs::read(abs_path)?;
+            let file = File::open(abs_path)?;
             let sz_entry = ArchiveEntry::new_file(&entry_name);
             writer
-                .push_archive_entry(
-                    sz_entry,
-                    Some(file_data.as_slice()),
-                )
+                .push_archive_entry(sz_entry, Some(file))
                 .map_err(|e| {
                     CryptError::Compression(format!("7z add file: {e}"))
                 })?;
