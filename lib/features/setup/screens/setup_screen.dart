@@ -127,6 +127,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
     return Scaffold(
       body: SafeArea(
+        top: false,
         child: AnimatedBuilder(
           animation: _backgroundController,
           builder: (context, child) {

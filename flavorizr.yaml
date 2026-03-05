@@ -28,7 +28,7 @@ flavors:
     macos:
       bundleId: 'com.hiplixi.app'
       generateDummyAssets: false
-
+ 
 instructions:
   - assets:download
   - assets:extract
@@ -38,10 +38,11 @@ instructions:
   - android:dummyAssets
   - android:icons
   - flutter:flavors
+  - ide:config
   # Отключены, чтобы не перезаписать существующие файлы проекта
-  # - flutter:app
-  # - flutter:pages
-  # - flutter:main
+  - flutter:app
+  - flutter:pages
+  - flutter:main
   # - ios:buildTargets
   # - ios:schema
   # - ios:dummyAssets

@@ -8,14 +8,14 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Настройки'),
-          elevation: 0,
-          scrolledUnderElevation: 2,
-        ),
-        body: const SingleChildScrollView(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Настройки'),
+        elevation: 0,
+        scrolledUnderElevation: 2,
+      ),
+      body: const SafeArea(
+        child: SingleChildScrollView(
           child: Column(
             children: [
               // Секция внешнего вида
