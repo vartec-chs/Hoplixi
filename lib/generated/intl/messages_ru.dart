@@ -39,6 +39,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "addressLabel": MessageLookupByLibrary.simpleMessage("Адрес"),
     "addressesJsonLabel": MessageLookupByLibrary.simpleMessage("Адреса (JSON)"),
+    "advancedSettings": MessageLookupByLibrary.simpleMessage(
+      "Расширенные настройки",
+    ),
     "apiKeyActiveStatus": MessageLookupByLibrary.simpleMessage("Активен"),
     "apiKeyCheckFieldsMessage": MessageLookupByLibrary.simpleMessage(
       "Проверьте поля формы и попробуйте снова",

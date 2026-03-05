@@ -227,5 +227,6 @@
 	"codeMarkedUnused": "Отметка снята",
 	"noCodesYet": "Нет кодов",
 	"deleteCodeLabel": "Удалить код",
-	"codesLabel": "Коды"
+	"codesLabel": "Коды",
+	"advancedSettings": "Расширенные настройки"
 }

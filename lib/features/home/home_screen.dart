@@ -504,7 +504,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         padding: EdgeInsets.symmetric(horizontal: 12.0),
                         child: RecentDatabaseCard(),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       Expanded(
                         child: LayoutBuilder(
                           builder: (context, constraints) {
@@ -583,25 +583,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         onTap: () => context.push(AppRoutesPaths.settings),
       ),
       ActionItem(
-        icon: LucideIcons.fileText,
-        label: 'Логи',
-        description: 'Просмотр логов',
-        onTap: () => context.push(AppRoutesPaths.logs),
-      ),
-      ActionItem(
-        icon: LucideIcons.send,
-        label: 'LocalSend (alpha)',
-        description: 'Отправка файлов другим устройствам',
-        onTap: () => context.push(AppRoutesPaths.localSendSend),
-      ),
-      // --- TEST ITEMS ---
-      // ActionItem(
-      //   icon: LucideIcons.shield,
-      //   label: 'Crypt API',
-      //   description: 'Тест шифрования',
-      //   onTap: () => context.push(AppRoutesPaths.cryptTest),
-      // ),
-      ActionItem(
         icon: LucideIcons.key,
         label: 'Генератор',
         description: 'Генерация паролей',
@@ -616,6 +597,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             await _openPasswordGeneratorModal();
           }
         },
+      ),
+
+      ActionItem(
+        icon: LucideIcons.send,
+        label: 'LocalSend (alpha)',
+        description: 'Отправка файлов другим устройствам',
+        onTap: () => context.push(AppRoutesPaths.localSendSend),
+      ),
+
+      // --- TEST ITEMS ---
+      // ActionItem(
+      //   icon: LucideIcons.shield,
+      //   label: 'Crypt API',
+      //   description: 'Тест шифрования',
+      //   onTap: () => context.push(AppRoutesPaths.cryptTest),
+      // ),
+      ActionItem(
+        icon: LucideIcons.fileText,
+        label: 'Логи',
+        description: 'Просмотр логов',
+        onTap: () => context.push(AppRoutesPaths.logs),
       ),
     ];
   }

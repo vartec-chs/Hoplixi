@@ -41,6 +41,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "addressesJsonLabel": MessageLookupByLibrary.simpleMessage(
       "Addresses (JSON)",
     ),
+    "advancedSettings": MessageLookupByLibrary.simpleMessage(
+      "Advanced Settings",
+    ),
     "apiKeyActiveStatus": MessageLookupByLibrary.simpleMessage("Active"),
     "apiKeyCheckFieldsMessage": MessageLookupByLibrary.simpleMessage(
       "Check the form fields and try again",

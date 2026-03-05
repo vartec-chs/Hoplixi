@@ -6,9 +6,9 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_b
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
-import 'package:hoplixi/generated/l10n.dart';
 
 import '../providers/wifi_form_provider.dart';
 
@@ -207,81 +207,6 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                   onChanged: notifier.setPassword,
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  controller: _securityController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: S.of(context).wifiSecurityLabel,
-                  ),
-                  onChanged: notifier.setSecurity,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _eapMethodController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: S.of(context).wifiEapMethodLabel,
-                  ),
-                  onChanged: notifier.setEapMethod,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _usernameController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: S.of(context).wifiUsernameLabel,
-                  ),
-                  onChanged: notifier.setUsername,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _identityController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: S.of(context).wifiIdentityLabel,
-                  ),
-                  onChanged: notifier.setIdentity,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _domainController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: S.of(context).wifiDomainLabel,
-                  ),
-                  onChanged: notifier.setDomain,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _bssidController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: S.of(context).wifiLastConnectedBssidLabel,
-                  ),
-                  onChanged: notifier.setLastConnectedBssid,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _priorityController,
-                  keyboardType: TextInputType.number,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: S.of(context).wifiPriorityLabel,
-                    errorText: state.priorityError,
-                  ),
-                  onChanged: notifier.setPriority,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _qrPayloadController,
-                  maxLines: 2,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: S.of(context).wifiQrPayloadLabel,
-                  ),
-                  onChanged: notifier.setQrCodePayload,
-                ),
-                const SizedBox(height: 12),
                 CategoryPickerField(
                   selectedCategoryId: state.categoryId,
                   selectedCategoryName: state.categoryName,
@@ -296,12 +221,6 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                   onTagsSelected: notifier.setTags,
                 ),
                 const SizedBox(height: 12),
-                NotePickerField(
-                  selectedNoteId: state.noteId,
-                  selectedNoteName: state.noteName,
-                  onNoteSelected: notifier.setNote,
-                ),
-                const SizedBox(height: 12),
                 TextField(
                   controller: _descriptionController,
                   maxLines: 4,
@@ -311,11 +230,88 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                   ),
                   onChanged: notifier.setDescription,
                 ),
-                const SizedBox(height: 8),
-                SwitchListTile(
-                  value: state.hidden,
-                  onChanged: notifier.setHidden,
-                  title: Text(S.of(context).wifiHiddenNetworkLabel),
+                const SizedBox(height: 12),
+                ExpansionTile(
+                  title: Text(S.of(context).advancedSettings),
+                  children: [
+                    TextField(
+                      controller: _eapMethodController,
+                      decoration: primaryInputDecoration(
+                        context,
+                        labelText: S.of(context).wifiEapMethodLabel,
+                      ),
+                      onChanged: notifier.setEapMethod,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _usernameController,
+                      decoration: primaryInputDecoration(
+                        context,
+                        labelText: S.of(context).wifiUsernameLabel,
+                      ),
+                      onChanged: notifier.setUsername,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _identityController,
+                      decoration: primaryInputDecoration(
+                        context,
+                        labelText: S.of(context).wifiIdentityLabel,
+                      ),
+                      onChanged: notifier.setIdentity,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _domainController,
+                      decoration: primaryInputDecoration(
+                        context,
+                        labelText: S.of(context).wifiDomainLabel,
+                      ),
+                      onChanged: notifier.setDomain,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _bssidController,
+                      decoration: primaryInputDecoration(
+                        context,
+                        labelText: S.of(context).wifiLastConnectedBssidLabel,
+                      ),
+                      onChanged: notifier.setLastConnectedBssid,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _priorityController,
+                      keyboardType: TextInputType.number,
+                      decoration: primaryInputDecoration(
+                        context,
+                        labelText: S.of(context).wifiPriorityLabel,
+                        errorText: state.priorityError,
+                      ),
+                      onChanged: notifier.setPriority,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _qrPayloadController,
+                      maxLines: 2,
+                      decoration: primaryInputDecoration(
+                        context,
+                        labelText: S.of(context).wifiQrPayloadLabel,
+                      ),
+                      onChanged: notifier.setQrCodePayload,
+                    ),
+                    const SizedBox(height: 12),
+                    NotePickerField(
+                      selectedNoteId: state.noteId,
+                      selectedNoteName: state.noteName,
+                      onNoteSelected: notifier.setNote,
+                    ),
+                    const SizedBox(height: 12),
+                    SwitchListTile(
+                      value: state.hidden,
+                      onChanged: notifier.setHidden,
+                      title: Text(S.of(context).wifiHiddenNetworkLabel),
+                    ),
+                  ],
                 ),
               ],
             ),

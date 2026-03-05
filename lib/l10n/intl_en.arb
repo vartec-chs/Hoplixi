@@ -227,5 +227,6 @@
 	"codeMarkedUnused": "Code marked as unused",
 	"noCodesYet": "No codes yet",
 	"deleteCodeLabel": "Delete code",
-	"codesLabel": "Codes"
+	"codesLabel": "Codes",
+	"advancedSettings": "Advanced Settings"
 }

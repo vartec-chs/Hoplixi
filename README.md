@@ -251,6 +251,41 @@ Android.
 build_prod.bat
 ```
 
+#### Генерация Keystore для Android
+
+Для подписи Android APK необходим keystore. Проект включает скрипты для
+генерации debug и production keystore.
+
+**Генерация debug keystore:**
+
+```bash
+android\create_debug_keystore.bat
+```
+
+Этот скрипт создаст `android/app/debug.keystore` с предустановленными
+параметрами для отладки.
+
+**Генерация production keystore:**
+
+```bash
+android\create_keystore.bat
+```
+
+Этот скрипт создаст `upload-keystore.jks` в папке `android`. Вам будет
+предложено ввести информацию для сертификата (имя, организация и т.д.).
+**Обязательно сделайте резервную копию этого файла и храните его в безопасном
+месте!**
+
+После генерации keystore, убедитесь, что файл `android/key.properties` содержит
+правильные пути и пароли:
+
+```
+storePassword=ваш_пароль
+keyPassword=ваш_пароль
+keyAlias=upload
+storeFile=../upload-keystore.jks
+```
+
 #### Ручная сборка Android APK (Prod)
 
 ```bash

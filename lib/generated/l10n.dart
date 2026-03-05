@@ -2028,6 +2028,16 @@ class S {
   String get codesLabel {
     return Intl.message('Codes', name: 'codesLabel', desc: '', args: []);
   }
+
+  /// `Advanced Settings`
+  String get advancedSettings {
+    return Intl.message(
+      'Advanced Settings',
+      name: 'advancedSettings',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {
