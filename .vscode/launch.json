@@ -48,33 +48,6 @@
 			"flutterMode": "release",
 			"args": ["--flavor", "prod"],
 			"program": "lib/main.dart"
-		},
-
-		// run without flavor
-		{
-			"name": "Flutter Run",
-			"request": "launch",
-			"type": "dart",
-			"program": "lib/main.dart"
-		},
-		{
-			"name": "Flutter Attach",
-			"request": "attach",
-			"type": "dart"
-		},
-		{
-			"name": "Flutter Test",
-			"request": "launch",
-			"type": "dart",
-			"program": "test"
-		},
-		// dev
-		{
-			"name": "Flutter Test Dev",
-			"request": "launch",
-			"type": "dart",
-			"args": ["dev"],
-			"program": "test"
 		}
 	]
 }
