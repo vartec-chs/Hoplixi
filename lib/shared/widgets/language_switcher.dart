@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/localization/locale_provider.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 enum LanguageSwitcherStyle { compact, settings }
 
@@ -8,7 +9,7 @@ class LanguageSwitcher extends ConsumerWidget {
   const LanguageSwitcher({
     super.key,
     this.style = LanguageSwitcherStyle.compact,
-    this.size = 26,
+    this.size = 22,
     this.showCompactCode = false,
   });
 
@@ -50,7 +51,7 @@ class LanguageSwitcher extends ConsumerWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.language, size: size),
+                      Icon(LucideIcons.globe, size: size),
                       if (showCompactCode) ...[
                         const SizedBox(width: 4),
                         Text(
@@ -73,7 +74,7 @@ class LanguageSwitcher extends ConsumerWidget {
                   SizedBox(
                     width: 20,
                     child: isSelected
-                        ? const Icon(Icons.check, size: 16)
+                        ? const Icon(LucideIcons.check, size: 16)
                         : const SizedBox.shrink(),
                   ),
                   const SizedBox(width: 8),

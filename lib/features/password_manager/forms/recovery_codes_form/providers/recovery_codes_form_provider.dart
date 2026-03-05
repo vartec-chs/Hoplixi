@@ -17,6 +17,9 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
 
   final String? recoveryCodesId;
 
+  /// Идентификаторы кодов, помеченных для удаления при следующем сохранении.
+  final Set<int> _pendingDeleteIds = {};
+
   @override
   Future<RecoveryCodesFormState> build() async {
     if (recoveryCodesId == null) {
@@ -108,6 +111,17 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
   void setTags(List<String> ids, List<String> names) =>
       _update((s) => s.copyWith(tagIds: ids, tagNames: names));
 
+  /// Пометить существующий код для удаления при сохранении.
+  /// Код исчезает из списка немедленно; фактическое удаление — в [save].
+  void markCodeForDeletion(int codeId) {
+    _pendingDeleteIds.add(codeId);
+    _update(
+      (s) => s.copyWith(
+        existingCodes: s.existingCodes.where((c) => c.id != codeId).toList(),
+      ),
+    );
+  }
+
   bool validate() {
     final c = _current;
     final nameError = c.name.trim().isEmpty
@@ -168,6 +182,12 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
       final parsedCodes = _parseCodes(c.codesInput);
 
       if (c.isEditMode && c.editingRecoveryCodesId != null) {
+        // Удаляем коды, помеченные для удаления
+        for (final codeId in _pendingDeleteIds) {
+          await dao.deleteCode(codeId);
+        }
+        _pendingDeleteIds.clear();
+
         final updated = await dao.updateRecoveryCodes(
           c.editingRecoveryCodesId!,
           UpdateRecoveryCodesDto(

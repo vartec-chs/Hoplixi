@@ -75,7 +75,7 @@ const List<String> recoveryCodesHistoryCreateTriggers = [
         history_id, codes_count, used_count, one_time, display_hint
       )
       SELECT
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY rowid DESC LIMIT 1),
         r.codes_count, r.used_count, r.one_time, r.display_hint
       FROM recovery_codes_items r
       WHERE r.item_id = OLD.id;
@@ -111,7 +111,7 @@ const List<String> recoveryCodesHistoryCreateTriggers = [
       INSERT INTO recovery_codes_history (
         history_id, codes_count, used_count, one_time, display_hint
       ) VALUES (
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE item_id = OLD.item_id ORDER BY rowid DESC LIMIT 1),
         OLD.codes_count, OLD.used_count, OLD.one_time, OLD.display_hint
       );
     END;
@@ -139,7 +139,7 @@ const List<String> recoveryCodesHistoryCreateTriggers = [
         history_id, codes_count, used_count, one_time, display_hint
       )
       SELECT
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY rowid DESC LIMIT 1),
         r.codes_count, r.used_count, r.one_time, r.display_hint
       FROM recovery_codes_items r
       WHERE r.item_id = OLD.id;

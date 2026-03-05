@@ -168,25 +168,20 @@ class _RecoveryCodesFormScreenState
                       code: c.code,
                       used: c.used,
                       position: c.position,
+                      onDelete: () => notifier.markCodeForDeletion(c.id),
                     ),
                   ),
                   const SizedBox(height: 12),
                 ],
 
                 // Поле для добавления новых кодов
-                Text(
-                  state.isEditMode
-                      ? S.of(context).addCodesLabel
-                      : S.of(context).codesBlobRequiredLabel,
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                const SizedBox(height: 4),
                 TextField(
                   controller: _codesInputController,
                   minLines: 4,
                   maxLines: 10,
                   decoration: primaryInputDecoration(
                     context,
+                    labelText: S.of(context).codesLabel,
                     hintText: S.of(context).pasteCodesHint,
                     errorText: state.codesInputError,
                   ),
@@ -279,11 +274,13 @@ class _ExistingCodeTile extends StatelessWidget {
     required this.code,
     required this.used,
     this.position,
+    this.onDelete,
   });
 
   final String code;
   final bool used;
   final int? position;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -314,6 +311,18 @@ class _ExistingCodeTile extends StatelessWidget {
               size: 16,
               color: Theme.of(context).colorScheme.outline,
             ),
+          IconButton(
+            icon: Icon(
+              Icons.delete_outline,
+              size: 18,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            tooltip: S.of(context).deleteCodeLabel,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            onPressed: onDelete,
+          ),
         ],
       ),
     );
