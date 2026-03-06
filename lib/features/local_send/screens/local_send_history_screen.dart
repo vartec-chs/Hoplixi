@@ -106,7 +106,7 @@ class LocalSendHistoryScreen extends ConsumerWidget {
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       itemCount: reversed.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      separatorBuilder: (_, _) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final item = reversed[index];
         final originalIndex = items.length - 1 - index;
