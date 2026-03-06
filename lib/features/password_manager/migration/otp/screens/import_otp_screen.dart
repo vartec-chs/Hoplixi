@@ -74,7 +74,7 @@ class ImportOtpScreen extends ConsumerWidget {
                           subtitle: 'Выберите способ сканирования QR-кода',
                           onResult: (data) async {
                             await notifier.importOtp(
-                              Uint8List.fromList(data.codeUnits),
+                              Uint8List.fromList(data.text.codeUnits),
                             );
                           },
                         ),
@@ -152,7 +152,7 @@ class ImportOtpScreen extends ConsumerWidget {
                             );
                             if (result != null) {
                               await notifier.importOtp(
-                                Uint8List.fromList(result.codeUnits),
+                                Uint8List.fromList(result.text.codeUnits),
                               );
                             }
                           },

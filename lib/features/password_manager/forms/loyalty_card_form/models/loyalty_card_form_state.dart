@@ -11,6 +11,7 @@ sealed class LoyaltyCardFormState with _$LoyaltyCardFormState {
     @Default('') String programName,
     @Default('') String cardNumber,
     @Default('') String holderName,
+    @Default('') String password,
     @Default('') String barcodeValue,
     @Default('') String barcodeType,
     @Default('') String pointsBalance,
@@ -26,7 +27,7 @@ sealed class LoyaltyCardFormState with _$LoyaltyCardFormState {
     @Default([]) List<String> tagNames,
     String? nameError,
     String? programNameError,
-    String? cardNumberError,
+    String? cardOrBarcodeError,
     String? expiryDateError,
     String? websiteError,
     @Default(false) bool isLoading,
@@ -39,7 +40,7 @@ sealed class LoyaltyCardFormState with _$LoyaltyCardFormState {
   bool get hasErrors {
     return nameError != null ||
         programNameError != null ||
-        cardNumberError != null ||
+        cardOrBarcodeError != null ||
         expiryDateError != null ||
         websiteError != null;
   }

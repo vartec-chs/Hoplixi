@@ -50,13 +50,14 @@ class LoyaltyCardFormNotifier extends Notifier<LoyaltyCardFormState> {
         editingLoyaltyCardId: loyaltyCardId,
         name: vault.name,
         programName: loyalty.programName,
-        cardNumber: loyalty.cardNumber,
+        cardNumber: loyalty.cardNumber ?? '',
         holderName: loyalty.holderName ?? '',
+        password: loyalty.password ?? '',
         barcodeValue: loyalty.barcodeValue ?? '',
         barcodeType: loyalty.barcodeType ?? '',
         pointsBalance: loyalty.pointsBalance ?? '',
         tier: loyalty.tier ?? '',
-        expiryDate: loyalty.expiryDate?.toIso8601String().split('T').first ?? '',
+        expiryDate: loyalty.expiryDate?.toIso8601String() ?? '',
         website: loyalty.website ?? '',
         phoneNumber: loyalty.phoneNumber ?? '',
         description: vault.description ?? '',
@@ -90,19 +91,21 @@ class LoyaltyCardFormNotifier extends Notifier<LoyaltyCardFormState> {
   }
 
   void setCardNumber(String value) {
-    state = state.copyWith(
-      cardNumber: value,
-      cardNumberError: _validateCardNumber(value),
-    );
+    state = state.copyWith(cardNumber: value, cardOrBarcodeError: null);
   }
 
   void setHolderName(String value) => state = state.copyWith(holderName: value);
 
-  void setBarcodeValue(String value) => state = state.copyWith(barcodeValue: value);
+  void setPassword(String value) => state = state.copyWith(password: value);
 
-  void setBarcodeType(String value) => state = state.copyWith(barcodeType: value);
+  void setBarcodeValue(String value) =>
+      state = state.copyWith(barcodeValue: value, cardOrBarcodeError: null);
 
-  void setPointsBalance(String value) => state = state.copyWith(pointsBalance: value);
+  void setBarcodeType(String value) =>
+      state = state.copyWith(barcodeType: value);
+
+  void setPointsBalance(String value) =>
+      state = state.copyWith(pointsBalance: value);
 
   void setTier(String value) => state = state.copyWith(tier: value);
 
@@ -114,12 +117,17 @@ class LoyaltyCardFormNotifier extends Notifier<LoyaltyCardFormState> {
   }
 
   void setWebsite(String value) {
-    state = state.copyWith(website: value, websiteError: _validateWebsite(value));
+    state = state.copyWith(
+      website: value,
+      websiteError: _validateWebsite(value),
+    );
   }
 
-  void setPhoneNumber(String value) => state = state.copyWith(phoneNumber: value);
+  void setPhoneNumber(String value) =>
+      state = state.copyWith(phoneNumber: value);
 
-  void setDescription(String value) => state = state.copyWith(description: value);
+  void setDescription(String value) =>
+      state = state.copyWith(description: value);
 
   void setNoteId(String? value) => state = state.copyWith(noteId: value);
 
@@ -143,11 +151,9 @@ class LoyaltyCardFormNotifier extends Notifier<LoyaltyCardFormState> {
     return null;
   }
 
-  String? _validateCardNumber(String value) {
-    final normalized = value.trim();
-    if (normalized.isEmpty) return 'Номер карты обязателен';
-    if (normalized.length < 3 || normalized.length > 255) {
-      return 'Номер карты должен содержать от 3 до 255 символов';
+  String? _validateCardOrBarcode(String cardNumber, String barcodeValue) {
+    if (cardNumber.trim().isEmpty && barcodeValue.trim().isEmpty) {
+      return 'Укажите номер карты или штрихкод';
     }
     return null;
   }
@@ -173,14 +179,17 @@ class LoyaltyCardFormNotifier extends Notifier<LoyaltyCardFormState> {
   bool validateAll() {
     final nameError = _validateName(state.name);
     final programNameError = _validateProgramName(state.programName);
-    final cardNumberError = _validateCardNumber(state.cardNumber);
+    final cardOrBarcodeError = _validateCardOrBarcode(
+      state.cardNumber,
+      state.barcodeValue,
+    );
     final expiryDateError = _validateExpiryDate(state.expiryDate);
     final websiteError = _validateWebsite(state.website);
 
     state = state.copyWith(
       nameError: nameError,
       programNameError: programNameError,
-      cardNumberError: cardNumberError,
+      cardOrBarcodeError: cardOrBarcodeError,
       expiryDateError: expiryDateError,
       websiteError: websiteError,
     );
@@ -206,22 +215,42 @@ class LoyaltyCardFormNotifier extends Notifier<LoyaltyCardFormState> {
         final dto = UpdateLoyaltyCardDto(
           name: state.name.trim(),
           programName: state.programName.trim(),
-          cardNumber: state.cardNumber.trim(),
-          holderName: state.holderName.trim().isEmpty ? null : state.holderName.trim(),
-          barcodeValue: state.barcodeValue.trim().isEmpty ? null : state.barcodeValue.trim(),
-          barcodeType: state.barcodeType.trim().isEmpty ? null : state.barcodeType.trim(),
-          pointsBalance: state.pointsBalance.trim().isEmpty ? null : state.pointsBalance.trim(),
+          cardNumber: state.cardNumber.trim().isEmpty
+              ? null
+              : state.cardNumber.trim(),
+          holderName: state.holderName.trim().isEmpty
+              ? null
+              : state.holderName.trim(),
+          barcodeValue: state.barcodeValue.trim().isEmpty
+              ? null
+              : state.barcodeValue.trim(),
+          barcodeType: state.barcodeType.trim().isEmpty
+              ? null
+              : state.barcodeType.trim(),
+          password: state.password.trim().isEmpty
+              ? null
+              : state.password.trim(),
+          pointsBalance: state.pointsBalance.trim().isEmpty
+              ? null
+              : state.pointsBalance.trim(),
           tier: state.tier.trim().isEmpty ? null : state.tier.trim(),
           expiryDate: expiryDate,
           website: state.website.trim().isEmpty ? null : state.website.trim(),
-          phoneNumber: state.phoneNumber.trim().isEmpty ? null : state.phoneNumber.trim(),
-          description: state.description.trim().isEmpty ? null : state.description.trim(),
+          phoneNumber: state.phoneNumber.trim().isEmpty
+              ? null
+              : state.phoneNumber.trim(),
+          description: state.description.trim().isEmpty
+              ? null
+              : state.description.trim(),
           noteId: state.noteId,
           categoryId: state.categoryId,
           tagsIds: state.tagIds,
         );
 
-        final success = await dao.updateLoyaltyCard(state.editingLoyaltyCardId!, dto);
+        final success = await dao.updateLoyaltyCard(
+          state.editingLoyaltyCardId!,
+          dto,
+        );
         if (!success) {
           state = state.copyWith(isSaving: false);
           return false;
@@ -229,21 +258,41 @@ class LoyaltyCardFormNotifier extends Notifier<LoyaltyCardFormState> {
 
         ref
             .read(dataRefreshTriggerProvider.notifier)
-            .triggerEntityUpdate(EntityType.loyaltyCard, entityId: state.editingLoyaltyCardId);
+            .triggerEntityUpdate(
+              EntityType.loyaltyCard,
+              entityId: state.editingLoyaltyCardId,
+            );
       } else {
         final dto = CreateLoyaltyCardDto(
           name: state.name.trim(),
           programName: state.programName.trim(),
-          cardNumber: state.cardNumber.trim(),
-          holderName: state.holderName.trim().isEmpty ? null : state.holderName.trim(),
-          barcodeValue: state.barcodeValue.trim().isEmpty ? null : state.barcodeValue.trim(),
-          barcodeType: state.barcodeType.trim().isEmpty ? null : state.barcodeType.trim(),
-          pointsBalance: state.pointsBalance.trim().isEmpty ? null : state.pointsBalance.trim(),
+          cardNumber: state.cardNumber.trim().isEmpty
+              ? null
+              : state.cardNumber.trim(),
+          holderName: state.holderName.trim().isEmpty
+              ? null
+              : state.holderName.trim(),
+          barcodeValue: state.barcodeValue.trim().isEmpty
+              ? null
+              : state.barcodeValue.trim(),
+          barcodeType: state.barcodeType.trim().isEmpty
+              ? null
+              : state.barcodeType.trim(),
+          password: state.password.trim().isEmpty
+              ? null
+              : state.password.trim(),
+          pointsBalance: state.pointsBalance.trim().isEmpty
+              ? null
+              : state.pointsBalance.trim(),
           tier: state.tier.trim().isEmpty ? null : state.tier.trim(),
           expiryDate: expiryDate,
           website: state.website.trim().isEmpty ? null : state.website.trim(),
-          phoneNumber: state.phoneNumber.trim().isEmpty ? null : state.phoneNumber.trim(),
-          description: state.description.trim().isEmpty ? null : state.description.trim(),
+          phoneNumber: state.phoneNumber.trim().isEmpty
+              ? null
+              : state.phoneNumber.trim(),
+          description: state.description.trim().isEmpty
+              ? null
+              : state.description.trim(),
           noteId: state.noteId,
           categoryId: state.categoryId,
           tagsIds: state.tagIds,

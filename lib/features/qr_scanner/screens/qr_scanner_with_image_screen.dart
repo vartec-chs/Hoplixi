@@ -1,10 +1,10 @@
-/// QR Scanner Screen that uses image input for scanning QR codes.
+/// Scanner screen that uses image input for scanning QR-codes and barcodes.
 ///
 /// This screen allows users to:
 /// 1. Pick an image from gallery or camera
-/// 2. Crop the image to focus on QR code (using crop_image on desktop,
+/// 2. Crop the image to focus on the code (using crop_image on desktop,
 ///    image_cropper on mobile)
-/// 3. Decode QR code using zxing2
+/// 3. Decode using flutter_zxing (all formats) + zxing2 fallback (QR only)
 /// 4. Show result in WoltModalSheet for confirmation
 library;
 
@@ -12,22 +12,20 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:crop_image/crop_image.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/index.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/qr_scanner/utils/barcode_decoder.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/notification_card.dart';
-import 'package:image/image.dart' as img;
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pasteboard/pasteboard.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:universal_platform/universal_platform.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
-import 'package:zxing2/qrcode.dart';
 
 /// Custom aspect ratio preset for QR codes (square) - used on mobile
 class _QrAspectRatioPreset implements CropAspectRatioPresetData {
@@ -40,7 +38,18 @@ class _QrAspectRatioPreset implements CropAspectRatioPresetData {
 
 /// QR Scanner Screen that uses image input for scanning QR codes.
 class QrScannerWithImageScreen extends StatefulWidget {
-  const QrScannerWithImageScreen({super.key});
+  /// Включить QR-декодирование. По умолчанию true.
+  final bool enableQrCode;
+
+  /// Включить распознавание 1D-штрихкодов (Code128, EAN-13, UPC, Code39 и др.).
+  /// Поддерживается через flutter_zxing (ZXing C++ via FFI).
+  final bool enableBarcode;
+
+  const QrScannerWithImageScreen({
+    super.key,
+    this.enableQrCode = true,
+    this.enableBarcode = false,
+  });
 
   @override
   State<QrScannerWithImageScreen> createState() =>
@@ -56,6 +65,7 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
   bool _isProcessFileSelect = false;
   String? _errorMessage;
   File? _selectedImage;
+  BarcodeDecodeResult? _decodeResult;
 
   @override
   void initState() {
@@ -221,7 +231,13 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
       onKeyEvent: _handleKeyEvent,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Сканер QR-кода'),
+          title: Text(
+            widget.enableBarcode && !widget.enableQrCode
+                ? 'Сканер штрихкодов'
+                : widget.enableBarcode
+                ? 'Сканер кодов'
+                : 'Сканер QR-кода',
+          ),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => context.pop(),
@@ -249,7 +265,11 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
               children: [
                 // Header
                 Text(
-                  'Выберите изображение с QR-кодом',
+                  widget.enableBarcode && !widget.enableQrCode
+                      ? 'Выберите изображение со штрихкодом'
+                      : widget.enableBarcode
+                      ? 'Выберите изображение с кодом'
+                      : 'Выберите изображение с QR-кодом',
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -262,6 +282,7 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
                             'После выбора вы сможете обрезать изображение для лучшего распознавания.'
                       : 'Выберите изображение из галереи или сделайте фото. '
                             'После выбора вы сможете обрезать изображение для лучшего распознавания.',
+                  // Note: barcode-only hint shown in error section
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -322,7 +343,7 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
             Text(
               _isProcessFileSelect
                   ? 'Выбор и обработка файла...'
-                  : 'Сканирование QR-кода...',
+                  : 'Сканирование...',
             ),
           ],
         ),
@@ -412,7 +433,7 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
 
         // Scan button
         SmoothButton(
-          label: 'Сканировать QR-код',
+          label: 'Сканировать изображение',
           icon: const Icon(Icons.qr_code),
           type: SmoothButtonType.filled,
           isFullWidth: true,
@@ -430,6 +451,7 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
     setState(() {
       _selectedImage = null;
       _errorMessage = null;
+      _decodeResult = null;
     });
   }
 
@@ -586,26 +608,23 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
     });
 
     try {
-      final result = await _decodeQrCode(_selectedImage!);
+      final result = await _decodeBarcodeFromFile(_selectedImage!);
 
       if (result != null) {
+        _decodeResult = result;
         if (mounted) {
-          await _showResultModal(result);
+          await _showResultModal(result.text);
         }
       } else {
         setState(() {
           _errorMessage =
-              'QR-код не найден на изображении. '
+              'Код не найден на изображении. '
               'Попробуйте выбрать другое изображение или обрезать его так, '
-              'чтобы QR-код занимал большую часть кадра.';
+              'чтобы код занимал большую часть кадра.';
         });
       }
     } catch (e, stackTrace) {
-      logError(
-        'Error scanning QR code: $e',
-        tag: _logTag,
-        stackTrace: stackTrace,
-      );
+      logError('Error scanning code: $e', tag: _logTag, stackTrace: stackTrace);
       setState(() {
         _errorMessage = 'Ошибка сканирования: $e';
       });
@@ -616,29 +635,32 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
     }
   }
 
-  Future<String?> _decodeQrCode(File imageFile) async {
+  Future<BarcodeDecodeResult?> _decodeBarcodeFromFile(File imageFile) async {
     try {
-      final bytes = await imageFile.readAsBytes();
-      final result = await compute(_decodeQrCodeInIsolate, bytes);
+      final result = await decodeBarcodeFromFile(
+        imageFile,
+        enableQrCode: widget.enableQrCode,
+        enableBarcode: widget.enableBarcode,
+      );
 
       if (result != null) {
-        logInfo('QR code decoded successfully: $result', tag: _logTag);
+        logInfo(
+          'Code decoded [${result.formatName}]: ${result.text}',
+          tag: _logTag,
+        );
       } else {
-        logInfo('QR code not found in image', tag: _logTag);
+        logInfo('Code not found in image', tag: _logTag);
       }
 
       return result;
     } catch (e, stackTrace) {
-      logError(
-        'Error decoding QR code: $e',
-        tag: _logTag,
-        stackTrace: stackTrace,
-      );
+      logError('Error decoding code: $e', tag: _logTag, stackTrace: stackTrace);
       return null;
     }
   }
 
   Future<void> _showResultModal(String qrData) async {
+    final formatName = _decodeResult?.formatName ?? 'QR-код';
     final result = await WoltModalSheet.show<String?>(
       context: context,
       useRootNavigator: true,
@@ -650,7 +672,7 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
 
     // If user confirmed, return the data
     if (result != null && mounted) {
-      context.pop(result);
+      context.pop((text: result, formatName: formatName));
     }
   }
 
@@ -660,11 +682,15 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
   ) {
     final theme = Theme.of(modalContext);
     final colorScheme = theme.colorScheme;
+    final formatName = _decodeResult?.formatName ?? 'QR-код';
 
     return WoltModalSheetPage(
       surfaceTintColor: Colors.transparent,
       hasTopBarLayer: true,
-      topBarTitle: Text('QR-код распознан', style: theme.textTheme.titleMedium),
+      topBarTitle: Text(
+        '$formatName распознан',
+        style: theme.textTheme.titleMedium,
+      ),
       isTopBarLayerAlwaysVisible: true,
       leadingNavBarWidget: IconButton(
         icon: const Icon(Icons.close),
@@ -716,9 +742,29 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
             ),
             const SizedBox(height: 24),
 
+            // Format badge
+            Row(
+              children: [
+                Icon(
+                  Icons.label_outline,
+                  size: 14,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  formatName,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
             // Label
             Text(
-              'Содержимое QR-кода:',
+              'Содержимое:',
               style: theme.textTheme.labelLarge?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -1047,44 +1093,5 @@ class _AspectRatioButton extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-/// Function to decode QR code in isolate to avoid blocking UI
-String? _decodeQrCodeInIsolate(Uint8List bytes) {
-  try {
-    final image = img.decodeImage(bytes);
-
-    if (image == null) {
-      return null;
-    }
-
-    // Convert image to ABGR format for zxing2
-    final convertedImage = image.convert(numChannels: 4);
-    final int32List = convertedImage
-        .getBytes(order: img.ChannelOrder.abgr)
-        .buffer
-        .asInt32List();
-
-    final source = RGBLuminanceSource(image.width, image.height, int32List);
-
-    final bitmap = BinaryBitmap(GlobalHistogramBinarizer(source));
-    final reader = QRCodeReader();
-
-    try {
-      final result = reader.decode(bitmap);
-      return result.text;
-    } on NotFoundException {
-      // Try with HybridBinarizer as fallback
-      final hybridBitmap = BinaryBitmap(HybridBinarizer(source));
-      try {
-        final result = reader.decode(hybridBitmap);
-        return result.text;
-      } on NotFoundException {
-        return null;
-      }
-    }
-  } catch (e) {
-    return null;
   }
 }

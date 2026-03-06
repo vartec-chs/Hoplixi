@@ -24,9 +24,14 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
   LoyaltyCardFilterDao(super.db);
 
   @override
-  Future<List<LoyaltyCardCardDto>> getFiltered(LoyaltyCardsFilter filter) async {
+  Future<List<LoyaltyCardCardDto>> getFiltered(
+    LoyaltyCardsFilter filter,
+  ) async {
     final query = select(vaultItems).join([
-      innerJoin(loyaltyCardItems, loyaltyCardItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(
+        loyaltyCardItems,
+        loyaltyCardItems.itemId.equalsExp(vaultItems.id),
+      ),
       leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
@@ -55,6 +60,7 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
         holderName: loyalty.holderName,
         barcodeValue: loyalty.barcodeValue,
         barcodeType: loyalty.barcodeType,
+        password: loyalty.password,
         pointsBalance: loyalty.pointsBalance,
         tier: loyalty.tier,
         expiryDate: loyalty.expiryDate,
@@ -82,7 +88,10 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
   @override
   Future<int> countFiltered(LoyaltyCardsFilter filter) async {
     final query = select(vaultItems).join([
-      innerJoin(loyaltyCardItems, loyaltyCardItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(
+        loyaltyCardItems,
+        loyaltyCardItems.itemId.equalsExp(vaultItems.id),
+      ),
       leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
@@ -143,7 +152,11 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
     }
 
     if (base.hasNotes != null) {
-      expr = expr & (base.hasNotes! ? vaultItems.noteId.isNotNull() : vaultItems.noteId.isNull());
+      expr =
+          expr &
+          (base.hasNotes!
+              ? vaultItems.noteId.isNotNull()
+              : vaultItems.noteId.isNull());
     }
 
     if (base.noteIds.isNotEmpty) {
@@ -151,28 +164,41 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
     }
 
     if (base.createdAfter != null) {
-      expr = expr & vaultItems.createdAt.isBiggerOrEqualValue(base.createdAfter!);
+      expr =
+          expr & vaultItems.createdAt.isBiggerOrEqualValue(base.createdAfter!);
     }
     if (base.createdBefore != null) {
-      expr = expr & vaultItems.createdAt.isSmallerOrEqualValue(base.createdBefore!);
+      expr =
+          expr &
+          vaultItems.createdAt.isSmallerOrEqualValue(base.createdBefore!);
     }
     if (base.modifiedAfter != null) {
-      expr = expr & vaultItems.modifiedAt.isBiggerOrEqualValue(base.modifiedAfter!);
+      expr =
+          expr &
+          vaultItems.modifiedAt.isBiggerOrEqualValue(base.modifiedAfter!);
     }
     if (base.modifiedBefore != null) {
-      expr = expr & vaultItems.modifiedAt.isSmallerOrEqualValue(base.modifiedBefore!);
+      expr =
+          expr &
+          vaultItems.modifiedAt.isSmallerOrEqualValue(base.modifiedBefore!);
     }
     if (base.lastUsedAfter != null) {
-      expr = expr & vaultItems.lastUsedAt.isBiggerOrEqualValue(base.lastUsedAfter!);
+      expr =
+          expr &
+          vaultItems.lastUsedAt.isBiggerOrEqualValue(base.lastUsedAfter!);
     }
     if (base.lastUsedBefore != null) {
-      expr = expr & vaultItems.lastUsedAt.isSmallerOrEqualValue(base.lastUsedBefore!);
+      expr =
+          expr &
+          vaultItems.lastUsedAt.isSmallerOrEqualValue(base.lastUsedBefore!);
     }
     if (base.minUsedCount != null) {
-      expr = expr & vaultItems.usedCount.isBiggerOrEqualValue(base.minUsedCount!);
+      expr =
+          expr & vaultItems.usedCount.isBiggerOrEqualValue(base.minUsedCount!);
     }
     if (base.maxUsedCount != null) {
-      expr = expr & vaultItems.usedCount.isSmallerOrEqualValue(base.maxUsedCount!);
+      expr =
+          expr & vaultItems.usedCount.isSmallerOrEqualValue(base.maxUsedCount!);
     }
 
     return expr;
@@ -182,34 +208,51 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
     Expression<bool> expr = const Constant(true);
 
     if (filter.programName != null && filter.programName!.isNotEmpty) {
-      expr = expr & loyaltyCardItems.programName.lower().contains(filter.programName!.toLowerCase());
+      expr =
+          expr &
+          loyaltyCardItems.programName.lower().contains(
+            filter.programName!.toLowerCase(),
+          );
     }
 
     if (filter.holderName != null && filter.holderName!.isNotEmpty) {
-      expr = expr & loyaltyCardItems.holderName.lower().contains(filter.holderName!.toLowerCase());
+      expr =
+          expr &
+          loyaltyCardItems.holderName.lower().contains(
+            filter.holderName!.toLowerCase(),
+          );
     }
 
     if (filter.tier != null && filter.tier!.isNotEmpty) {
-      expr = expr & loyaltyCardItems.tier.lower().contains(filter.tier!.toLowerCase());
+      expr =
+          expr &
+          loyaltyCardItems.tier.lower().contains(filter.tier!.toLowerCase());
     }
 
     if (filter.hasBarcode != null) {
-      expr = expr & (filter.hasBarcode!
-          ? loyaltyCardItems.barcodeValue.isNotNull()
-          : loyaltyCardItems.barcodeValue.isNull());
+      expr =
+          expr &
+          (filter.hasBarcode!
+              ? loyaltyCardItems.barcodeValue.isNotNull()
+              : loyaltyCardItems.barcodeValue.isNull());
     }
 
     if (filter.hasExpiryDatePassed != null) {
-      expr = expr & (filter.hasExpiryDatePassed!
-          ? loyaltyCardItems.expiryDate.isSmallerThanValue(DateTime.now())
-          : (loyaltyCardItems.expiryDate.isNull() |
-              loyaltyCardItems.expiryDate.isBiggerOrEqualValue(DateTime.now())));
+      expr =
+          expr &
+          (filter.hasExpiryDatePassed!
+              ? loyaltyCardItems.expiryDate.isSmallerThanValue(DateTime.now())
+              : (loyaltyCardItems.expiryDate.isNull() |
+                    loyaltyCardItems.expiryDate.isBiggerOrEqualValue(
+                      DateTime.now(),
+                    )));
     }
 
     if (filter.isExpiringSoon == true) {
       final now = DateTime.now();
       final soon = now.add(const Duration(days: 90));
-      expr = expr &
+      expr =
+          expr &
           loyaltyCardItems.expiryDate.isBiggerOrEqualValue(now) &
           loyaltyCardItems.expiryDate.isSmallerOrEqualValue(soon);
     }
@@ -242,7 +285,9 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
 
     if (filter.base.isFrequentlyUsed == true) {
       final wd = filter.base.frequencyWindowDays ?? 7;
-      terms.add(OrderingTerm(expression: _calculateDynamicScore(wd), mode: mode));
+      terms.add(
+        OrderingTerm(expression: _calculateDynamicScore(wd), mode: mode),
+      );
       return terms;
     }
 
@@ -251,38 +296,58 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
         case LoyaltyCardsSortField.name:
           terms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
         case LoyaltyCardsSortField.programName:
-          terms.add(OrderingTerm(expression: loyaltyCardItems.programName, mode: mode));
+          terms.add(
+            OrderingTerm(expression: loyaltyCardItems.programName, mode: mode),
+          );
         case LoyaltyCardsSortField.holderName:
-          terms.add(OrderingTerm(expression: loyaltyCardItems.holderName, mode: mode));
+          terms.add(
+            OrderingTerm(expression: loyaltyCardItems.holderName, mode: mode),
+          );
         case LoyaltyCardsSortField.tier:
-          terms.add(OrderingTerm(expression: loyaltyCardItems.tier, mode: mode));
+          terms.add(
+            OrderingTerm(expression: loyaltyCardItems.tier, mode: mode),
+          );
         case LoyaltyCardsSortField.expiryDate:
-          terms.add(OrderingTerm(expression: loyaltyCardItems.expiryDate, mode: mode));
+          terms.add(
+            OrderingTerm(expression: loyaltyCardItems.expiryDate, mode: mode),
+          );
         case LoyaltyCardsSortField.createdAt:
           terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
         case LoyaltyCardsSortField.modifiedAt:
-          terms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
+          terms.add(
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
+          );
         case LoyaltyCardsSortField.lastAccessed:
-          terms.add(OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
+          terms.add(
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
+          );
       }
     } else {
       switch (filter.base.sortBy) {
         case SortBy.createdAt:
           terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
         case SortBy.modifiedAt:
-          terms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
+          terms.add(
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
+          );
         case SortBy.lastUsedAt:
-          terms.add(OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
+          terms.add(
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
+          );
         case SortBy.recentScore:
           final wd = filter.base.frequencyWindowDays ?? 7;
-          terms.add(OrderingTerm(expression: _calculateDynamicScore(wd), mode: mode));
+          terms.add(
+            OrderingTerm(expression: _calculateDynamicScore(wd), mode: mode),
+          );
       }
     }
 
     return terms;
   }
 
-  Future<Map<String, List<TagInCardDto>>> _loadTagsForItems(List<String> itemIds) async {
+  Future<Map<String, List<TagInCardDto>>> _loadTagsForItems(
+    List<String> itemIds,
+  ) async {
     if (itemIds.isEmpty) return {};
 
     final query = select(itemTags).join([
@@ -307,4 +372,3 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
     return tagsMap;
   }
 }
-

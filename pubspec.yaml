@@ -128,6 +128,7 @@ dependencies:
   network_info_plus: ^7.0.0
   web_socket_channel: ^3.0.3
   desktop_drop: ^0.7.0
+  flutter_zxing: ^2.2.1
 
 hooks:
   user_defines:

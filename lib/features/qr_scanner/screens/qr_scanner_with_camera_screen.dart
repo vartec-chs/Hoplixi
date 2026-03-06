@@ -19,7 +19,17 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 /// QR Scanner Screen that uses live camera for scanning QR codes.
 class QrScannerWithCameraScreen extends StatefulWidget {
-  const QrScannerWithCameraScreen({super.key});
+  /// Включить сканирование QR-кодов. По умолчанию true.
+  final bool enableQrCode;
+
+  /// Включить сканирование штрихкодов (Code128, EAN, UPC, ITF, и др.). По умолчанию false.
+  final bool enableBarcode;
+
+  const QrScannerWithCameraScreen({
+    super.key,
+    this.enableQrCode = true,
+    this.enableBarcode = false,
+  });
 
   @override
   State<QrScannerWithCameraScreen> createState() =>
@@ -37,15 +47,35 @@ class _QrScannerWithCameraScreenState extends State<QrScannerWithCameraScreen>
   bool _hasPermission = true;
   String? _errorMessage;
   bool _torchEnabled = false;
+  BarcodeFormat? _detectedFormat;
 
   @override
   void initState() {
     super.initState();
 
+    // Compute formats based on enabled flags
+    final formats = <BarcodeFormat>[
+      if (widget.enableQrCode) BarcodeFormat.qrCode,
+      if (widget.enableBarcode) ...<BarcodeFormat>[
+        BarcodeFormat.code128,
+        BarcodeFormat.code39,
+        BarcodeFormat.code93,
+        BarcodeFormat.codabar,
+        BarcodeFormat.ean13,
+        BarcodeFormat.ean8,
+        BarcodeFormat.upcA,
+        BarcodeFormat.upcE,
+        BarcodeFormat.itf14,
+        BarcodeFormat.dataMatrix,
+        BarcodeFormat.pdf417,
+        BarcodeFormat.aztec,
+      ],
+    ];
+
     // Initialize controller with autoStart: false for manual lifecycle management
     _controller = MobileScannerController(
       autoStart: false,
-      formats: const [BarcodeFormat.qrCode],
+      formats: formats.isEmpty ? const [BarcodeFormat.all] : formats,
       detectionSpeed: DetectionSpeed.normal,
       detectionTimeoutMs: 500,
       returnImage: false,
@@ -163,10 +193,13 @@ class _QrScannerWithCameraScreenState extends State<QrScannerWithCameraScreen>
 
     if (rawValue == null || rawValue.isEmpty) return;
 
-    logInfo('QR code detected: $rawValue', tag: _logTag);
+    logInfo('Code detected [${barcode.format.name}]: $rawValue', tag: _logTag);
 
     // Set processing flag to prevent duplicate scans
-    setState(() => _isProcessing = true);
+    setState(() {
+      _isProcessing = true;
+      _detectedFormat = barcode.format;
+    });
 
     // Stop the scanner temporarily
     unawaited(_controller.stop());
@@ -194,11 +227,63 @@ class _QrScannerWithCameraScreenState extends State<QrScannerWithCameraScreen>
     }
   }
 
+  String get _appBarTitle {
+    final qr = widget.enableQrCode;
+    final bc = widget.enableBarcode;
+    if (qr && bc) return 'Сканер кодов';
+    if (bc) return 'Сканер штрихкодов';
+    return 'Сканер QR-кода';
+  }
+
+  String get _scanHintText {
+    final qr = widget.enableQrCode;
+    final bc = widget.enableBarcode;
+    if (qr && bc) return 'Наведите камеру на QR-код или штрихкод';
+    if (bc) return 'Наведите камеру на штрихкод';
+    return 'Наведите камеру на QR-код';
+  }
+
+  String get _resultModalTitle {
+    final format = _detectedFormat;
+    if (format == BarcodeFormat.qrCode) return 'QR-код распознан';
+    if (format != null &&
+        format != BarcodeFormat.unknown &&
+        format != BarcodeFormat.all) {
+      return 'Штрихкод распознан';
+    }
+    return 'Код распознан';
+  }
+
+  String _getFormatLabel(BarcodeFormat? format) {
+    if (format == null) return 'Неизвестный';
+    return switch (format) {
+      BarcodeFormat.qrCode => 'QR-код',
+      BarcodeFormat.code128 => 'Code 128',
+      BarcodeFormat.code39 => 'Code 39',
+      BarcodeFormat.code93 => 'Code 93',
+      BarcodeFormat.codabar => 'Codabar',
+      BarcodeFormat.ean13 => 'EAN-13',
+      BarcodeFormat.ean8 => 'EAN-8',
+      BarcodeFormat.upcA => 'UPC-A',
+      BarcodeFormat.upcE => 'UPC-E',
+      BarcodeFormat.itf14 => 'ITF-14',
+      BarcodeFormat.dataMatrix => 'Data Matrix',
+      BarcodeFormat.pdf417 => 'PDF-417',
+      BarcodeFormat.aztec => 'Aztec',
+      _ => format.name,
+    };
+  }
+
+  IconData _getFormatIcon(BarcodeFormat? format) {
+    if (format == BarcodeFormat.qrCode) return Icons.qr_code_2;
+    return Icons.view_week;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Сканер QR-кода'),
+        title: Text(_appBarTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -352,7 +437,7 @@ class _QrScannerWithCameraScreenState extends State<QrScannerWithCameraScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Наведите камеру на QR-код',
+              _scanHintText,
               style: theme.textTheme.titleMedium?.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w500,
@@ -374,6 +459,7 @@ class _QrScannerWithCameraScreenState extends State<QrScannerWithCameraScreen>
   }
 
   Future<void> _showResultModal(String qrData) async {
+    final formatName = _getFormatLabel(_detectedFormat);
     final result = await WoltModalSheet.show<String?>(
       context: context,
       useRootNavigator: true,
@@ -385,7 +471,7 @@ class _QrScannerWithCameraScreenState extends State<QrScannerWithCameraScreen>
 
     if (result != null && mounted) {
       // User confirmed, return the data
-      context.pop(result);
+      context.pop((text: result, formatName: formatName));
     } else if (mounted) {
       // User cancelled, resume scanning
       setState(() => _isProcessing = false);
@@ -403,7 +489,7 @@ class _QrScannerWithCameraScreenState extends State<QrScannerWithCameraScreen>
     return WoltModalSheetPage(
       surfaceTintColor: Colors.transparent,
       hasTopBarLayer: true,
-      topBarTitle: Text('QR-код распознан', style: theme.textTheme.titleMedium),
+      topBarTitle: Text(_resultModalTitle, style: theme.textTheme.titleMedium),
       isTopBarLayerAlwaysVisible: true,
       leadingNavBarWidget: IconButton(
         icon: const Icon(Icons.close),
@@ -447,7 +533,7 @@ class _QrScannerWithCameraScreenState extends State<QrScannerWithCameraScreen>
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.qr_code_2,
+                  _getFormatIcon(_detectedFormat),
                   size: 48,
                   color: Colors.green.shade600,
                 ),
@@ -455,9 +541,29 @@ class _QrScannerWithCameraScreenState extends State<QrScannerWithCameraScreen>
             ),
             const SizedBox(height: 24),
 
+            // Format badge
+            Row(
+              children: [
+                Icon(
+                  Icons.label_outline,
+                  size: 14,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  _getFormatLabel(_detectedFormat),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
             // Label
             Text(
-              'Содержимое QR-кода:',
+              'Содержимое:',
               style: theme.textTheme.labelLarge?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -522,7 +628,7 @@ class _QrScannerWithCameraScreenState extends State<QrScannerWithCameraScreen>
             const NotificationCard(
               type: NotificationType.info,
               text:
-                  'Нажмите "Использовать данные", чтобы передать содержимое QR-кода, '
+                  'Нажмите "Использовать данные", чтобы передать данные кода, '
                   'или "Сканировать другой" чтобы продолжить сканирование.',
             ),
 

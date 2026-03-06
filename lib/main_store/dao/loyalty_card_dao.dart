@@ -15,19 +15,28 @@ class LoyaltyCardDao extends DatabaseAccessor<MainStore>
     implements BaseMainEntityDao {
   LoyaltyCardDao(super.db);
 
-  Future<List<(VaultItemsData, LoyaltyCardItemsData)>> getAllLoyaltyCards() async {
+  Future<List<(VaultItemsData, LoyaltyCardItemsData)>>
+  getAllLoyaltyCards() async {
     final query = select(vaultItems).join([
-      innerJoin(loyaltyCardItems, loyaltyCardItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(
+        loyaltyCardItems,
+        loyaltyCardItems.itemId.equalsExp(vaultItems.id),
+      ),
     ]);
     final rows = await query.get();
     return rows
-        .map((row) => (row.readTable(vaultItems), row.readTable(loyaltyCardItems)))
+        .map(
+          (row) => (row.readTable(vaultItems), row.readTable(loyaltyCardItems)),
+        )
         .toList();
   }
 
   Future<(VaultItemsData, LoyaltyCardItemsData)?> getById(String id) async {
     final query = select(vaultItems).join([
-      innerJoin(loyaltyCardItems, loyaltyCardItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(
+        loyaltyCardItems,
+        loyaltyCardItems.itemId.equalsExp(vaultItems.id),
+      ),
     ])..where(vaultItems.id.equals(id));
 
     final row = await query.getSingleOrNull();
@@ -37,12 +46,18 @@ class LoyaltyCardDao extends DatabaseAccessor<MainStore>
 
   Stream<List<(VaultItemsData, LoyaltyCardItemsData)>> watchAllLoyaltyCards() {
     final query = select(vaultItems).join([
-      innerJoin(loyaltyCardItems, loyaltyCardItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(
+        loyaltyCardItems,
+        loyaltyCardItems.itemId.equalsExp(vaultItems.id),
+      ),
     ])..orderBy([OrderingTerm.desc(vaultItems.modifiedAt)]);
 
     return query.watch().map(
       (rows) => rows
-          .map((row) => (row.readTable(vaultItems), row.readTable(loyaltyCardItems)))
+          .map(
+            (row) =>
+                (row.readTable(vaultItems), row.readTable(loyaltyCardItems)),
+          )
           .toList(),
     );
   }
@@ -66,10 +81,11 @@ class LoyaltyCardDao extends DatabaseAccessor<MainStore>
         LoyaltyCardItemsCompanion.insert(
           itemId: id,
           programName: dto.programName,
-          cardNumber: dto.cardNumber,
+          cardNumber: Value(dto.cardNumber),
           holderName: Value(dto.holderName),
           barcodeValue: Value(dto.barcodeValue),
           barcodeType: Value(dto.barcodeType),
+          password: Value(dto.password),
           pointsBalance: Value(dto.pointsBalance),
           tier: Value(dto.tier),
           expiryDate: Value(dto.expiryDate),
@@ -102,18 +118,19 @@ class LoyaltyCardDao extends DatabaseAccessor<MainStore>
         modifiedAt: Value(DateTime.now()),
       );
 
-      await (update(vaultItems)..where((v) => v.id.equals(id))).write(vaultCompanion);
+      await (update(
+        vaultItems,
+      )..where((v) => v.id.equals(id))).write(vaultCompanion);
 
       final loyaltyCompanion = LoyaltyCardItemsCompanion(
         programName: dto.programName != null
             ? Value(dto.programName!)
             : const Value.absent(),
-        cardNumber: dto.cardNumber != null
-            ? Value(dto.cardNumber!)
-            : const Value.absent(),
+        cardNumber: Value(dto.cardNumber),
         holderName: Value(dto.holderName),
         barcodeValue: Value(dto.barcodeValue),
         barcodeType: Value(dto.barcodeType),
+        password: Value(dto.password),
         pointsBalance: Value(dto.pointsBalance),
         tier: Value(dto.tier),
         expiryDate: Value(dto.expiryDate),
@@ -121,7 +138,9 @@ class LoyaltyCardDao extends DatabaseAccessor<MainStore>
         phoneNumber: Value(dto.phoneNumber),
       );
 
-      await (update(loyaltyCardItems)..where((i) => i.itemId.equals(id))).write(loyaltyCompanion);
+      await (update(
+        loyaltyCardItems,
+      )..where((i) => i.itemId.equals(id))).write(loyaltyCompanion);
 
       if (dto.tagsIds != null) {
         await db.vaultItemDao.syncTags(id, dto.tagsIds!);
@@ -135,7 +154,8 @@ class LoyaltyCardDao extends DatabaseAccessor<MainStore>
   Future<bool> incrementUsage(String id) => db.vaultItemDao.incrementUsage(id);
 
   @override
-  Future<bool> permanentDelete(String id) => db.vaultItemDao.permanentDelete(id);
+  Future<bool> permanentDelete(String id) =>
+      db.vaultItemDao.permanentDelete(id);
 
   @override
   Future<bool> restoreFromDeleted(String id) =>

@@ -12,7 +12,8 @@ class LoyaltyCardHistoryDao extends DatabaseAccessor<MainStore>
     with _$LoyaltyCardHistoryDaoMixin {
   LoyaltyCardHistoryDao(super.db);
 
-  Future<List<LoyaltyCardHistoryCardDto>> getAllLoyaltyCardHistoryCards() async {
+  Future<List<LoyaltyCardHistoryCardDto>>
+  getAllLoyaltyCardHistoryCards() async {
     final query =
         select(vaultItemHistory).join([
             innerJoin(
@@ -45,7 +46,8 @@ class LoyaltyCardHistoryDao extends DatabaseAccessor<MainStore>
     return query.watch().map((rows) => rows.map(_mapToCard).toList());
   }
 
-  Future<List<LoyaltyCardHistoryCardDto>> getLoyaltyCardHistoryCardsByOriginalId(
+  Future<List<LoyaltyCardHistoryCardDto>>
+  getLoyaltyCardHistoryCardsByOriginalId(
     String originalLoyaltyCardId,
     int offset,
     int limit,
@@ -112,7 +114,9 @@ class LoyaltyCardHistoryDao extends DatabaseAccessor<MainStore>
     return result ?? 0;
   }
 
-  Future<String> createLoyaltyCardHistory(CreateLoyaltyCardHistoryDto dto) async {
+  Future<String> createLoyaltyCardHistory(
+    CreateLoyaltyCardHistoryDto dto,
+  ) async {
     return db.transaction(() async {
       final companion = VaultItemHistoryCompanion.insert(
         itemId: dto.originalLoyaltyCardId,
@@ -139,10 +143,11 @@ class LoyaltyCardHistoryDao extends DatabaseAccessor<MainStore>
         LoyaltyCardHistoryCompanion.insert(
           historyId: historyId,
           programName: dto.programName,
-          cardNumber: dto.cardNumber,
+          cardNumber: Value(dto.cardNumber),
           holderName: Value(dto.holderName),
           barcodeValue: Value(dto.barcodeValue),
           barcodeType: Value(dto.barcodeType),
+          password: Value(dto.password),
           pointsBalance: Value(dto.pointsBalance),
           tier: Value(dto.tier),
           expiryDate: Value(dto.expiryDate),
@@ -155,7 +160,9 @@ class LoyaltyCardHistoryDao extends DatabaseAccessor<MainStore>
     });
   }
 
-  Future<int> deleteLoyaltyCardHistoryByOriginalId(String originalLoyaltyCardId) {
+  Future<int> deleteLoyaltyCardHistoryByOriginalId(
+    String originalLoyaltyCardId,
+  ) {
     return (delete(vaultItemHistory)..where(
           (h) =>
               h.itemId.equals(originalLoyaltyCardId) &
@@ -165,7 +172,9 @@ class LoyaltyCardHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<int> deleteLoyaltyCardHistoryById(String historyId) {
-    return (delete(vaultItemHistory)..where((h) => h.id.equals(historyId))).go();
+    return (delete(
+      vaultItemHistory,
+    )..where((h) => h.id.equals(historyId))).go();
   }
 
   LoyaltyCardHistoryCardDto _mapToCard(TypedResult row) {

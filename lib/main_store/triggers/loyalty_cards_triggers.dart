@@ -41,7 +41,7 @@
       );
       INSERT INTO loyalty_card_history (
         history_id, program_name, card_number, holder_name, barcode_value,
-        barcode_type, points_balance, tier, expiry_date, website, phone_number
+        barcode_type, points_balance, tier, expiry_date, website, phone_number, password
       )
       SELECT
         (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
@@ -54,7 +54,8 @@
         lci.tier,
         lci.expiry_date,
         lci.website,
-        lci.phone_number
+        lci.phone_number,
+        lci.password
       FROM loyalty_card_items lci
       WHERE lci.item_id = OLD.id;
     END;
@@ -65,7 +66,7 @@
     FOR EACH ROW
     WHEN (
       OLD.program_name != NEW.program_name OR
-      OLD.card_number != NEW.card_number OR
+      OLD.card_number IS NOT NEW.card_number OR
       OLD.holder_name IS NOT NEW.holder_name OR
       OLD.barcode_value IS NOT NEW.barcode_value OR
       OLD.barcode_type IS NOT NEW.barcode_type OR
@@ -73,7 +74,8 @@
       OLD.tier IS NOT NEW.tier OR
       OLD.expiry_date IS NOT NEW.expiry_date OR
       OLD.website IS NOT NEW.website OR
-      OLD.phone_number IS NOT NEW.phone_number
+      OLD.phone_number IS NOT NEW.phone_number OR
+      OLD.password IS NOT NEW.password
     ) AND COALESCE((SELECT value FROM store_settings WHERE key = 'history_enabled'), 'true') = 'true'
     BEGIN
       INSERT INTO vault_item_history (
@@ -105,7 +107,7 @@
 
       INSERT INTO loyalty_card_history (
         history_id, program_name, card_number, holder_name, barcode_value,
-        barcode_type, points_balance, tier, expiry_date, website, phone_number
+        barcode_type, points_balance, tier, expiry_date, website, phone_number, password
       ) VALUES (
         (SELECT id FROM vault_item_history WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
         OLD.program_name,
@@ -117,7 +119,8 @@
         OLD.tier,
         OLD.expiry_date,
         OLD.website,
-        OLD.phone_number
+        OLD.phone_number,
+        OLD.password
       );
     END;
   ''',
@@ -153,7 +156,7 @@
       );
       INSERT INTO loyalty_card_history (
         history_id, program_name, card_number, holder_name, barcode_value,
-        barcode_type, points_balance, tier, expiry_date, website, phone_number
+        barcode_type, points_balance, tier, expiry_date, website, phone_number, password
       )
       SELECT
         (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
@@ -166,7 +169,8 @@
         lci.tier,
         lci.expiry_date,
         lci.website,
-        lci.phone_number
+        lci.phone_number,
+        lci.password
       FROM loyalty_card_items lci
       WHERE lci.item_id = OLD.id;
     END;

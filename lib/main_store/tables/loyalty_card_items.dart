@@ -9,14 +9,14 @@ class LoyaltyCardItems extends Table {
 
   TextColumn get programName => text().withLength(min: 1, max: 255)();
 
-  TextColumn get cardNumber => text().withLength(min: 1, max: 255)();
+  TextColumn get cardNumber => text().withLength(min: 0, max: 255).nullable()();
 
   TextColumn get holderName => text().nullable()();
 
   TextColumn get barcodeValue => text().nullable()();
 
   TextColumn get barcodeType => text().nullable()();
-
+  TextColumn get password => text().nullable()();
   TextColumn get pointsBalance => text().nullable()();
 
   TextColumn get tier => text().nullable()();

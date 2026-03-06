@@ -27,7 +27,8 @@ class LoyaltyCardGridCard extends ConsumerStatefulWidget {
   final VoidCallback? onRestore;
 
   @override
-  ConsumerState<LoyaltyCardGridCard> createState() => _LoyaltyCardGridCardState();
+  ConsumerState<LoyaltyCardGridCard> createState() =>
+      _LoyaltyCardGridCardState();
 }
 
 class _LoyaltyCardGridCardState extends ConsumerState<LoyaltyCardGridCard> {
@@ -50,7 +51,13 @@ class _LoyaltyCardGridCardState extends ConsumerState<LoyaltyCardGridCard> {
   }
 
   Future<void> _copyNumber() async {
-    await Clipboard.setData(ClipboardData(text: widget.loyaltyCard.cardNumber));
+    if (widget.loyaltyCard.cardNumber == null) {
+      Toaster.warning(title: 'Номер карты отсутствует');
+      return;
+    }
+    await Clipboard.setData(
+      ClipboardData(text: widget.loyaltyCard.cardNumber!),
+    );
     setState(() => _numberCopied = true);
     Toaster.success(title: 'Номер карты скопирован');
     Future.delayed(const Duration(seconds: 2), () {
@@ -66,7 +73,8 @@ class _LoyaltyCardGridCardState extends ConsumerState<LoyaltyCardGridCard> {
 
     return BaseGridCard(
       title: card.name,
-      subtitle: '${card.programName} • ${_maskCardNumber(card.cardNumber)}',
+      subtitle:
+          '${card.programName} ${card.cardNumber ?? '• ${_maskCardNumber(card.cardNumber!)}'}',
       icon: Icons.loyalty,
       category: card.category,
       tags: card.tags,

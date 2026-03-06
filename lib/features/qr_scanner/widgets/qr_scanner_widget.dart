@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/features/qr_scanner/models/qr_scan_result.dart';
 import 'package:hoplixi/features/qr_scanner/screens/qr_scanner_with_camera_screen.dart';
 import 'package:hoplixi/features/qr_scanner/screens/qr_scanner_with_image_screen.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/widgets/titlebar.dart';
 import 'package:universal_platform/universal_platform.dart';
+
+export 'package:hoplixi/features/qr_scanner/models/qr_scan_result.dart';
 
 /// Режим сканирования QR-кода
 enum QrScannerMode {
@@ -33,7 +36,7 @@ enum QrScannerMode {
 /// ```
 class QrScannerWidget extends StatelessWidget {
   /// Callback, вызываемый при успешном сканировании QR-кода.
-  final ValueChanged<String> onResult;
+  final ValueChanged<QrScanResult> onResult;
 
   /// Callback, вызываемый при отмене сканирования.
   /// Если не указан, кнопка отмены не отображается.
@@ -56,6 +59,12 @@ class QrScannerWidget extends StatelessWidget {
   /// Компактный режим отображения (только кнопки без заголовков).
   final bool compact;
 
+  /// Включить сканирование QR-кодов камерой. По умолчанию true.
+  final bool enableQrCode;
+
+  /// Включить сканирование штрихкодов камерой (Code128, EAN, UPC, и др.). По умолчанию false.
+  final bool enableBarcode;
+
   const QrScannerWidget({
     super.key,
     required this.onResult,
@@ -65,6 +74,8 @@ class QrScannerWidget extends StatelessWidget {
     this.showCameraMode,
     this.showImageMode = true,
     this.compact = false,
+    this.enableQrCode = true,
+    this.enableBarcode = false,
   });
 
   bool get _showCameraMode => showCameraMode ?? !UniversalPlatform.isDesktop;
@@ -151,10 +162,14 @@ class QrScannerWidget extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    final scanLabel = enableBarcode && !enableQrCode
+        ? 'Сканировать штрихкод'
+        : (enableBarcode ? 'Сканировать код' : 'Сканировать QR-код');
+
     // Если доступен только один режим, показываем одну кнопку
     if (!_showCameraMode && showImageMode) {
       return SmoothButton(
-        label: 'Сканировать QR-код',
+        label: scanLabel,
         icon: const Icon(Icons.qr_code_scanner),
         type: SmoothButtonType.filled,
         isFullWidth: true,
@@ -164,7 +179,7 @@ class QrScannerWidget extends StatelessWidget {
 
     if (_showCameraMode && !showImageMode) {
       return SmoothButton(
-        label: 'Сканировать QR-код',
+        label: scanLabel,
         icon: const Icon(Icons.qr_code_scanner),
         type: SmoothButtonType.filled,
         isFullWidth: true,
@@ -182,7 +197,11 @@ class QrScannerWidget extends StatelessWidget {
           _ScannerOptionCard(
             icon: Icons.camera_alt,
             title: 'Камера',
-            description: 'Сканировать QR-код в реальном времени',
+            description: enableBarcode && !enableQrCode
+                ? 'Сканировать штрихкод в реальном времени'
+                : (enableBarcode
+                      ? 'Сканировать QR-код или штрихкод в реальном времени'
+                      : 'Сканировать QR-код в реальном времени'),
             iconColor: colorScheme.primary,
             onTap: () => _openCameraScanner(context),
           ),
@@ -204,8 +223,13 @@ class QrScannerWidget extends StatelessWidget {
 
   Future<void> _openCameraScanner(BuildContext context) async {
     final globalNavigator = Navigator.of(context, rootNavigator: true);
-    final result = await globalNavigator.push<String?>(
-      MaterialPageRoute(builder: (_) => const QrScannerWithCameraScreen()),
+    final result = await globalNavigator.push<QrScanResult?>(
+      MaterialPageRoute(
+        builder: (_) => QrScannerWithCameraScreen(
+          enableQrCode: enableQrCode,
+          enableBarcode: enableBarcode,
+        ),
+      ),
     );
 
     if (result != null) {
@@ -215,7 +239,11 @@ class QrScannerWidget extends StatelessWidget {
 
   Future<void> _openImageScanner(BuildContext context) async {
     final globalNavigator = Navigator.of(context, rootNavigator: true);
-    final result = await globalNavigator.push<String?>(
+    final imageScreen = QrScannerWithImageScreen(
+      enableQrCode: enableQrCode,
+      enableBarcode: enableBarcode,
+    );
+    final result = await globalNavigator.push<QrScanResult?>(
       MaterialPageRoute(
         builder: UniversalPlatform.isDesktop
             ? (_) => Column(
@@ -233,10 +261,10 @@ class QrScannerWidget extends StatelessWidget {
                       );
                     },
                   ),
-                  const Expanded(child: QrScannerWithImageScreen()),
+                  Expanded(child: imageScreen),
                 ],
               )
-            : (_) => const QrScannerWithImageScreen(),
+            : (_) => imageScreen,
       ),
     );
 
@@ -334,14 +362,16 @@ class _ScannerOptionCard extends StatelessWidget {
 ///   print('Scanned: $result');
 /// }
 /// ```
-Future<String?> showQrScannerDialog({
+Future<QrScanResult?> showQrScannerDialog({
   required BuildContext context,
   String? title,
   String? subtitle,
   bool? showCameraMode,
   bool showImageMode = true,
+  bool enableQrCode = true,
+  bool enableBarcode = false,
 }) async {
-  String? scannedResult;
+  QrScanResult? scannedResult;
 
   await showDialog<void>(
     context: context,
@@ -356,6 +386,8 @@ Future<String?> showQrScannerDialog({
             subtitle: subtitle ?? 'Выберите способ сканирования',
             showCameraMode: showCameraMode,
             showImageMode: showImageMode,
+            enableQrCode: enableQrCode,
+            enableBarcode: enableBarcode,
             onResult: (data) {
               scannedResult = data;
               Navigator.of(dialogContext).pop();
@@ -384,14 +416,16 @@ Future<String?> showQrScannerDialog({
 ///   print('Scanned: $result');
 /// }
 /// ```
-Future<String?> showQrScannerBottomSheet({
+Future<QrScanResult?> showQrScannerBottomSheet({
   required BuildContext context,
   String? title,
   String? subtitle,
   bool? showCameraMode,
   bool showImageMode = true,
+  bool enableQrCode = true,
+  bool enableBarcode = false,
 }) async {
-  String? scannedResult;
+  QrScanResult? scannedResult;
 
   await showModalBottomSheet<void>(
     context: context,
@@ -409,6 +443,8 @@ Future<String?> showQrScannerBottomSheet({
             subtitle: subtitle ?? 'Выберите способ сканирования',
             showCameraMode: showCameraMode,
             showImageMode: showImageMode,
+            enableQrCode: enableQrCode,
+            enableBarcode: enableBarcode,
             onResult: (data) {
               scannedResult = data;
               Navigator.of(sheetContext).pop();

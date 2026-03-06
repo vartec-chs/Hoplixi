@@ -11,10 +11,11 @@ sealed class CreateLoyaltyCardDto with _$CreateLoyaltyCardDto {
   const factory CreateLoyaltyCardDto({
     required String name,
     required String programName,
-    required String cardNumber,
+    String? cardNumber,
     String? holderName,
     String? barcodeValue,
     String? barcodeType,
+    String? password,
     String? pointsBalance,
     String? tier,
     DateTime? expiryDate,
@@ -39,6 +40,7 @@ sealed class UpdateLoyaltyCardDto with _$UpdateLoyaltyCardDto {
     String? holderName,
     String? barcodeValue,
     String? barcodeType,
+    String? password,
     String? pointsBalance,
     String? tier,
     DateTime? expiryDate,
@@ -63,10 +65,11 @@ sealed class GetLoyaltyCardDto with _$GetLoyaltyCardDto {
     required String id,
     required String name,
     required String programName,
-    required String cardNumber,
+    String? cardNumber,
     String? holderName,
     String? barcodeValue,
     String? barcodeType,
+    String? password,
     String? pointsBalance,
     String? tier,
     DateTime? expiryDate,
@@ -92,15 +95,18 @@ sealed class GetLoyaltyCardDto with _$GetLoyaltyCardDto {
 }
 
 @freezed
-sealed class LoyaltyCardCardDto with _$LoyaltyCardCardDto implements BaseCardDto {
+sealed class LoyaltyCardCardDto
+    with _$LoyaltyCardCardDto
+    implements BaseCardDto {
   const factory LoyaltyCardCardDto({
     required String id,
     required String name,
     required String programName,
-    required String cardNumber,
+    String? cardNumber,
     String? holderName,
     String? barcodeValue,
     String? barcodeType,
+    String? password,
     String? pointsBalance,
     String? tier,
     DateTime? expiryDate,

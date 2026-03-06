@@ -218,8 +218,8 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
                   child: InputDecorator(
                     decoration: primaryInputDecoration(
                       context,
-                      labelText: widget.label,
-                      hintText: widget.hintText,
+                      labelText: effectiveLabel,
+                      hintText: hasValue ? null : effectiveHintText,
                       enabled: widget.enabled,
                       isFocused: isFocused,
                       prefixIcon: Icon(
@@ -241,9 +241,9 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
                           : null,
                     ),
                     child: Text(
-                      effectiveNoteName ?? '',
+                      effectiveNoteName ?? effectiveHintText,
                       style: theme.textTheme.bodyLarge?.copyWith(
-                        color: widget.enabled
+                        color: !hasValue && widget.enabled
                             ? colorScheme.onSurface
                             : colorScheme.onSurface.withOpacity(0.38),
                       ),

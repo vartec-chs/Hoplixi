@@ -99,7 +99,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
 
     if (result != null && mounted) {
       final notifier = ref.read(otpFormProvider.notifier);
-      notifier.applyFromQrCode(result);
+      notifier.applyFromQrCode(result.text);
 
       // Синхронизируем контроллеры с новым состоянием
       WidgetsBinding.instance.addPostFrameCallback((_) {

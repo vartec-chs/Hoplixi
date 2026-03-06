@@ -76,7 +76,8 @@ class _LoyaltyCardListCardState extends ConsumerState<LoyaltyCardListCard> {
 
     return ExpandableListCard(
       title: card.name,
-      subtitle: '${card.programName} • ${_maskCardNumber(card.cardNumber)}',
+      subtitle:
+          '${card.programName} ${card.cardNumber ?? '• ${_maskCardNumber(card.cardNumber!)}'}',
       trailingSubtitle: trailingSubtitle,
       icon: Icons.loyalty,
       category: card.category,
@@ -101,12 +102,13 @@ class _LoyaltyCardListCardState extends ConsumerState<LoyaltyCardListCard> {
           icon: Icons.credit_card_outlined,
           successIcon: Icons.check,
           isSuccess: _numberCopied,
-          onPressed: () => _copy(card.cardNumber, 'Номер карты скопирован', () {
-            setState(() => _numberCopied = true);
-            Future.delayed(const Duration(seconds: 2), () {
-              if (mounted) setState(() => _numberCopied = false);
-            });
-          }),
+          onPressed: () =>
+              _copy(card.cardNumber ?? '', 'Номер карты скопирован', () {
+                setState(() => _numberCopied = true);
+                Future.delayed(const Duration(seconds: 2), () {
+                  if (mounted) setState(() => _numberCopied = false);
+                });
+              }),
         ),
         if (card.barcodeValue?.isNotEmpty == true)
           CardActionItem(
