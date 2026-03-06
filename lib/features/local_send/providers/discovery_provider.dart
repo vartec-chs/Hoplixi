@@ -29,7 +29,7 @@ final localDeviceIdProvider = Provider<String>((_) => const Uuid().v4());
 /// Автоматически удаляет устройства, которые не отвечали
 /// более 10 секунд.
 final discoveryProvider =
-    AsyncNotifierProvider<DiscoveryNotifier, List<DeviceInfo>>(
+    AsyncNotifierProvider.autoDispose<DiscoveryNotifier, List<DeviceInfo>>(
       DiscoveryNotifier.new,
     );
 

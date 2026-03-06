@@ -1,23 +1,23 @@
-import 'package:hoplixi/features/local_send/models/transfer_request.dart';
+import 'package:hoplixi/features/local_send/models/device_info.dart';
 import 'package:riverpod/riverpod.dart';
 
-/// Провайдер для входящего запроса на передачу.
+/// Провайдер для входящего запроса на соединение.
 ///
 /// Устанавливается signaling-сервером при получении
-/// `POST /api/prepare`. UI следит за этим провайдером
+/// prepare-запроса. UI следит за этим провайдером
 /// и показывает диалог подтверждения.
 final incomingRequestProvider =
-    NotifierProvider<IncomingRequestNotifier, TransferRequest?>(
+    NotifierProvider.autoDispose<IncomingRequestNotifier, DeviceInfo?>(
       IncomingRequestNotifier.new,
     );
 
-class IncomingRequestNotifier extends Notifier<TransferRequest?> {
+class IncomingRequestNotifier extends Notifier<DeviceInfo?> {
   @override
-  TransferRequest? build() => null;
+  DeviceInfo? build() => null;
 
   /// Устанавливает входящий запрос.
-  void setRequest(TransferRequest? request) {
-    state = request;
+  void setRequest(DeviceInfo? device) {
+    state = device;
   }
 
   /// Очищает запрос.

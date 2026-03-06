@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:hoplixi/core/logger/index.dart';
-import 'package:hoplixi/features/local_send/models/transfer_request.dart';
+import 'package:hoplixi/core/logger/index.dart' hide DeviceInfo;
+import 'package:hoplixi/features/local_send/models/device_info.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -35,7 +35,7 @@ class SignalingServer {
   // ── Внутреннее состояние ──
 
   PrepareStatus _prepareStatus = PrepareStatus.pending;
-  TransferRequest? _currentRequest;
+  DeviceInfo? _currentRequest;
 
   final List<String> _localIceCandidates = [];
   final List<String> _remoteIceCandidates = [];
@@ -44,7 +44,7 @@ class SignalingServer {
 
   /// Вызывается при получении prepare-запроса.
   /// UI должен показать диалог accept/reject.
-  void Function(TransferRequest request)? onPrepareRequest;
+  void Function(DeviceInfo peerDevice)? onPrepareRequest;
 
   /// Вызывается при получении SDP offer.
   void Function(String sdp)? onOfferReceived;
@@ -150,12 +150,16 @@ class SignalingServer {
     }
   }
 
-  /// Обрабатывает `prepare` — запрос на передачу.
+  /// Обрабатывает `prepare` — запрос на соединение.
   void _handlePrepare(Map<String, dynamic> message) {
     final data = message['data'] as Map<String, dynamic>?;
     if (data == null) return;
 
-    _currentRequest = TransferRequest.fromJson(data);
+    // Парсим только senderDevice.
+    final deviceData = data['senderDevice'] as Map<String, dynamic>?;
+    if (deviceData == null) return;
+
+    _currentRequest = DeviceInfo.fromJson(deviceData);
     _prepareStatus = PrepareStatus.pending;
 
     // Сбрасываем WebRTC-состояние.

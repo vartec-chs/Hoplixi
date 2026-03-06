@@ -5,30 +5,33 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/index.dart' hide DeviceInfo;
 import 'package:hoplixi/features/local_send/models/device_info.dart';
-import 'package:hoplixi/features/local_send/models/transfer_request.dart';
-import 'package:hoplixi/features/local_send/models/transfer_state.dart';
+import 'package:hoplixi/features/local_send/models/session_state.dart';
 import 'package:hoplixi/features/local_send/providers/discovery_provider.dart';
 import 'package:hoplixi/features/local_send/providers/incoming_request_provider.dart';
+import 'package:hoplixi/features/local_send/providers/session_history_provider.dart';
 import 'package:hoplixi/features/local_send/services/signaling_server.dart';
 import 'package:hoplixi/features/local_send/services/webrtc_transfer_service.dart';
-import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-/// Провайдер состояния передачи.
-final transferProvider = NotifierProvider<TransferNotifier, TransferState>(
-  TransferNotifier.new,
+/// Провайдер состояния сессии обмена данными.
+final transferProvider = NotifierProvider.autoDispose<SessionNotifier, SessionState>(
+  SessionNotifier.new,
 );
 
 /// Оркестрирует signaling-сервер, WebRTC-соединение
-/// и процесс передачи файлов/текста.
-class TransferNotifier extends Notifier<TransferState> {
+/// и процесс обмена файлами/текстом.
+///
+/// В отличие от одноразовой передачи, WebRTC-соединение
+/// сохраняется между операциями — устройства могут свободно
+/// обмениваться данными пока один из них не отключится.
+class SessionNotifier extends Notifier<SessionState> {
   SignalingServer? _signalingServer;
   WebRtcTransferService? _webrtc;
 
-  /// WebSocket-канал для связи с signaling-сервером получателя
-  /// (только sender flow).
+  /// WebSocket-канал для связи с signaling-сервером
+  /// удалённого устройства (только sender/initiator flow).
   WebSocketChannel? _wsChannel;
   StreamSubscription<dynamic>? _wsSubscription;
 
@@ -37,6 +40,10 @@ class TransferNotifier extends Notifier<TransferState> {
   String? _currentFileName;
   int _currentFileSize = 0;
   int _currentFileReceived = 0;
+  String? _currentFilePath;
+
+  /// Peer, с которым установлена или устанавливается сессия.
+  DeviceInfo? _connectedPeer;
 
   /// Completer для ожидания статуса prepare (accepted/rejected).
   Completer<bool>? _prepareCompleter;
@@ -45,10 +52,10 @@ class TransferNotifier extends Notifier<TransferState> {
   Completer<String>? _answerCompleter;
 
   @override
-  TransferState build() {
+  SessionState build() {
     ref.onDispose(_dispose);
     _startSignalingServer();
-    return const TransferState.idle();
+    return const SessionState.disconnected();
   }
 
   /// Запускает signaling-сервер и регистрирует порт
@@ -64,58 +71,42 @@ class TransferNotifier extends Notifier<TransferState> {
     _signalingServer!.onPrepareRequest = _onIncomingPrepare;
     _signalingServer!.onOfferReceived = _onOfferReceived;
 
-    logInfo('TransferNotifier: signaling on port $port');
+    logInfo('SessionNotifier: signaling on port $port');
   }
 
   // ══════════════════════════════════════════════
-  //  Отправитель (sender flow)
+  //  Инициатор соединения (initiator flow)
   // ══════════════════════════════════════════════
 
-  /// Отправляет запрос на передачу файлов/текста
-  /// выбранному устройству.
-  Future<void> sendToDevice({
-    required DeviceInfo target,
-    required List<File> files,
-    String? text,
-  }) async {
-    // Очищаем предыдущую сессию перед новой передачей.
-    await _cleanupCurrentTransfer();
+  /// Подключается к устройству и устанавливает
+  /// WebRTC-сессию.
+  Future<void> connectToDevice(DeviceInfo target) async {
+    await _cleanupCurrentSession();
 
-    state = const TransferState.preparing();
+    _connectedPeer = target;
+    state = SessionState.waitingApproval(peer: target);
 
     try {
       final selfId = ref.read(localDeviceIdProvider);
       final selfIp = await _getSelfIp();
+      final name = ref.read(localDeviceName);
+      final platform = ref.read(localDevicePlatform);
 
-      final fileMetadataList = <FileMetadata>[];
-      for (final file in files) {
-        final name = p.basename(file.path);
-        final size = await file.length();
-        final mime = lookupMimeType(file.path) ?? 'application/octet-stream';
-        fileMetadataList.add(
-          FileMetadata(name: name, size: size, mimeType: mime),
-        );
-      }
-
-      final request = TransferRequest(
-        senderDevice: DeviceInfo(
-          id: selfId,
-          name: Platform.localHostname,
-          ip: selfIp,
-          signalingPort: _signalingServer?.port ?? 0,
-          platform: _getDevicePlatform(),
-          lastSeen: DateTime.now().millisecondsSinceEpoch,
-        ),
-        files: fileMetadataList,
-        text: text,
+      final senderDevice = DeviceInfo(
+        id: selfId,
+        name: name,
+        ip: selfIp,
+        signalingPort: _signalingServer?.port ?? 0,
+        platform: platform,
+        lastSeen: DateTime.now().millisecondsSinceEpoch,
       );
 
-      // Подключаемся к signaling-серверу получателя по WebSocket.
+      // Подключаемся к signaling-серверу получателя.
       final wsUrl = Uri.parse('ws://${target.ip}:${target.signalingPort}');
       _wsChannel = WebSocketChannel.connect(wsUrl);
       await _wsChannel!.ready;
 
-      // Слушаем ответы от получателя.
+      // Слушаем ответы.
       _prepareCompleter = Completer<bool>();
       _answerCompleter = Completer<String>();
       _wsSubscription = _wsChannel!.stream.listen(
@@ -136,28 +127,29 @@ class TransferNotifier extends Notifier<TransferState> {
         },
       );
 
-      // Шлём prepare-запрос.
-      _wsSend({'type': 'prepare', 'data': request.toJson()});
+      // Шлём prepare-запрос (только device info).
+      _wsSend({
+        'type': 'prepare',
+        'data': {'senderDevice': senderDevice.toJson()},
+      });
 
-      state = const TransferState.waitingApproval();
-
-      // Ожидаем подтверждения (с таймаутом 60с).
+      // Ожидаем подтверждения (60с).
       final accepted = await _prepareCompleter!.future.timeout(
         const Duration(seconds: 60),
         onTimeout: () => false,
       );
 
       if (!accepted) {
-        state = const TransferState.rejected();
+        state = const SessionState.error(message: 'Запрос отклонён');
         await _disconnectWs();
         return;
       }
 
       // Подтверждено — запускаем WebRTC handshake.
-      state = const TransferState.connecting();
+      state = SessionState.connecting(peer: target);
 
       _webrtc = WebRtcTransferService();
-      _setupSenderCallbacks(files, text);
+      _setupCommonCallbacks();
 
       // Создаём offer.
       final offerJson = await _webrtc!.createOffer();
@@ -165,22 +157,22 @@ class TransferNotifier extends Notifier<TransferState> {
       // Отправляем offer через WebSocket.
       _wsSend({'type': 'offer', 'data': offerJson});
 
-      // Отправляем ICE candidates через WebSocket.
+      // ICE candidates.
       _webrtc!.onLocalIceCandidate = (candidateJson) {
         _wsSend({'type': 'ice', 'data': candidateJson});
       };
 
-      // Получаем answer (с таймаутом 30с).
+      // Получаем answer (30с).
       final answerJson = await _answerCompleter!.future.timeout(
         const Duration(seconds: 30),
         onTimeout: () => throw TimeoutException('Answer timeout'),
       );
       await _webrtc!.handleAnswer(answerJson);
 
-      // Ждём соединения — onConnected вызовет _startSending.
+      // Ждём onConnected → переход в connected.
     } on SocketException catch (e, s) {
-      logError('TransferNotifier.sendToDevice', error: e, stackTrace: s);
-      state = TransferState.error(
+      logError('connectToDevice', error: e, stackTrace: s);
+      state = SessionState.error(
         message:
             'Не удалось подключиться к устройству. '
             'Убедитесь, что оба устройства в одной сети. '
@@ -188,20 +180,20 @@ class TransferNotifier extends Notifier<TransferState> {
       );
       await _disconnectWs();
     } on TimeoutException catch (e) {
-      logError('TransferNotifier.sendToDevice: timeout', error: e);
-      state = const TransferState.error(
+      logError('connectToDevice: timeout', error: e);
+      state = const SessionState.error(
         message: 'Таймаут при подключении к устройству',
       );
       await _disconnectWs();
     } catch (e, s) {
-      logError('TransferNotifier.sendToDevice', error: e, stackTrace: s);
-      state = TransferState.error(message: e.toString());
+      logError('connectToDevice', error: e, stackTrace: s);
+      state = SessionState.error(message: e.toString());
       await _disconnectWs();
     }
   }
 
   /// Обрабатывает входящие сообщения от signaling-сервера
-  /// получателя (sender side).
+  /// удалённого устройства (sender side).
   void _handleSignalingResponse(dynamic rawMessage) {
     try {
       final message = jsonDecode(rawMessage as String) as Map<String, dynamic>;
@@ -217,7 +209,6 @@ class TransferNotifier extends Notifier<TransferState> {
           } else if (status == 'rejected') {
             _prepareCompleter?.complete(false);
           }
-        // 'pending' — просто игнорируем, ждём дальше.
 
         case 'answer':
           final data = message['data'] as String?;
@@ -231,104 +222,48 @@ class TransferNotifier extends Notifier<TransferState> {
             _webrtc?.addIceCandidate(data);
           }
 
-        case 'offer_ack':
-          // Подтверждение получения offer — ничего не делаем.
-          break;
-
-        case 'cancel_ack':
-          // Подтверждение отмены.
+        case 'offer_ack' || 'cancel_ack':
           break;
 
         default:
-          logInfo('TransferNotifier: unknown signaling response: $type');
+          logInfo('SessionNotifier: unknown signaling response: $type');
       }
     } catch (e, s) {
       logError(
-        'TransferNotifier: signaling response error',
+        'SessionNotifier: signaling response error',
         error: e,
         stackTrace: s,
       );
     }
   }
 
-  void _setupSenderCallbacks(List<File> files, String? text) {
-    _webrtc!.onConnected = () async {
-      logInfo('WebRTC connected — starting file transfer');
-
-      // Даём время DataChannel полностью открыться.
-      await Future<void>.delayed(const Duration(milliseconds: 200));
-
-      await _startSending(files, text);
-    };
-
-    _webrtc!.onError = (error) {
-      state = TransferState.error(message: error);
-    };
-
-    _webrtc!.onCancelled = () {
-      state = const TransferState.cancelled();
-    };
-  }
-
-  Future<void> _startSending(List<File> files, String? text) async {
-    // Сначала отправляем текст, если есть.
-    if (text != null && text.isNotEmpty) {
-      await _webrtc!.sendText(text);
-    }
-
-    for (var i = 0; i < files.length; i++) {
-      final file = files[i];
-      final fileName = p.basename(file.path);
-
-      state = TransferState.transferring(
-        progress: 0,
-        currentFile: fileName,
-        currentIndex: i,
-        totalFiles: files.length,
-      );
-
-      _webrtc!.onProgress = (sent, total) {
-        state = TransferState.transferring(
-          progress: sent / total,
-          currentFile: fileName,
-          currentIndex: i,
-          totalFiles: files.length,
-        );
-      };
-
-      await _webrtc!.sendFile(file);
-    }
-
-    _webrtc!.sendTransferComplete();
-    state = const TransferState.completed();
-  }
-
   // ══════════════════════════════════════════════
   //  Получатель (receiver flow)
   // ══════════════════════════════════════════════
 
-  void _onIncomingPrepare(TransferRequest request) {
+  void _onIncomingPrepare(DeviceInfo peerDevice) {
     // Показываем запрос в UI через provider.
-    ref.read(incomingRequestProvider.notifier).setRequest(request);
-    logInfo(
-      'Incoming transfer from ${request.senderDevice.name}: '
-      '${request.files.length} files',
-    );
+    _connectedPeer = peerDevice;
+    ref.read(incomingRequestProvider.notifier).setRequest(peerDevice);
+    logInfo('Incoming connection from ${peerDevice.name}');
   }
 
-  /// Принимает входящий запрос.
-  Future<void> acceptIncomingTransfer() async {
-    // Очищаем предыдущую сессию перед новой.
-    await _cleanupCurrentTransfer();
+  /// Принимает входящий запрос на соединение.
+  Future<void> acceptIncomingSession() async {
+    await _cleanupCurrentSession();
+
+    final peer = _connectedPeer;
+    if (peer == null) return;
 
     _signalingServer?.acceptTransfer();
-    state = const TransferState.connecting();
+    ref.read(incomingRequestProvider.notifier).clear();
+    state = SessionState.connecting(peer: peer);
 
-    // Настраиваем WebRTC для приёма.
+    // WebRTC для приёма.
     _webrtc = WebRtcTransferService();
-    _setupReceiverCallbacks();
+    _setupCommonCallbacks();
 
-    // Ждём offer от отправителя.
+    // Ждём offer.
     _signalingServer!.onOfferReceived = _onOfferReceived;
 
     // ICE candidates.
@@ -342,10 +277,11 @@ class TransferNotifier extends Notifier<TransferState> {
   }
 
   /// Отклоняет входящий запрос.
-  void rejectIncomingTransfer() {
+  void rejectIncomingSession() {
     _signalingServer?.rejectTransfer();
     ref.read(incomingRequestProvider.notifier).clear();
-    state = const TransferState.idle();
+    _connectedPeer = null;
+    state = const SessionState.disconnected();
   }
 
   Future<void> _onOfferReceived(String offerJson) async {
@@ -356,15 +292,77 @@ class TransferNotifier extends Notifier<TransferState> {
       _signalingServer?.setLocalAnswer(answerJson);
     } catch (e, s) {
       logError('_onOfferReceived error', error: e, stackTrace: s);
-      state = TransferState.error(message: e.toString());
+      state = SessionState.error(message: e.toString());
     }
   }
 
-  void _setupReceiverCallbacks() {
-    final request = ref.read(incomingRequestProvider);
+  // ══════════════════════════════════════════════
+  //  Отправка данных (внутри сессии)
+  // ══════════════════════════════════════════════
 
+  /// Отправляет файлы по установленному соединению.
+  Future<void> sendFiles(List<File> files) async {
+    final peer = _connectedPeer;
+    if (peer == null || _webrtc == null) return;
+
+    for (var i = 0; i < files.length; i++) {
+      final file = files[i];
+      final fileName = p.basename(file.path);
+
+      state = SessionState.transferring(
+        peer: peer,
+        progress: 0,
+        currentFile: fileName,
+        currentIndex: i,
+        totalFiles: files.length,
+        isSending: true,
+      );
+
+      _webrtc!.onProgress = (sent, total) {
+        state = SessionState.transferring(
+          peer: peer,
+          progress: sent / total,
+          currentFile: fileName,
+          currentIndex: i,
+          totalFiles: files.length,
+          isSending: true,
+        );
+      };
+
+      await _webrtc!.sendFile(file);
+
+      ref
+          .read(sessionHistoryProvider.notifier)
+          .add(HistoryItemType.fileSent, fileName, filePath: file.path);
+    }
+
+    _webrtc!.sendTransferComplete();
+
+    // Возвращаемся в connected — сессия не закрывается.
+    state = SessionState.connected(peer: peer);
+  }
+
+  /// Отправляет текст по установленному соединению.
+  Future<void> sendText(String text) async {
+    if (_webrtc == null) return;
+    await _webrtc!.sendText(text);
+
+    ref
+        .read(sessionHistoryProvider.notifier)
+        .add(HistoryItemType.textSent, text);
+  }
+
+  // ══════════════════════════════════════════════
+  //  Общие колбэки WebRTC
+  // ══════════════════════════════════════════════
+
+  void _setupCommonCallbacks() {
     _webrtc!.onConnected = () {
-      logInfo('WebRTC connected as receiver — ready');
+      logInfo('WebRTC connected — session active');
+      final peer = _connectedPeer;
+      if (peer != null) {
+        state = SessionState.connected(peer: peer);
+      }
     };
 
     _webrtc!.onFileStart = (fileName, fileSize) async {
@@ -374,18 +372,21 @@ class TransferNotifier extends Notifier<TransferState> {
 
       final downloadsDir = await _getDownloadsDir();
       final filePath = p.join(downloadsDir.path, fileName);
+      _currentFilePath = filePath;
       final file = File(filePath);
       _currentFileSink = file.openWrite();
 
-      final totalFiles = request?.files.length ?? 1;
-      final index = request?.files.indexWhere((f) => f.name == fileName) ?? 0;
-
-      state = TransferState.transferring(
-        progress: 0,
-        currentFile: fileName,
-        currentIndex: index >= 0 ? index : 0,
-        totalFiles: totalFiles,
-      );
+      final peer = _connectedPeer;
+      if (peer != null) {
+        state = SessionState.transferring(
+          peer: peer,
+          progress: 0,
+          currentFile: fileName,
+          currentIndex: 0,
+          totalFiles: 1,
+          isSending: false,
+        );
+      }
     };
 
     _webrtc!.onFileChunkReceived = (chunk) {
@@ -393,57 +394,86 @@ class TransferNotifier extends Notifier<TransferState> {
       _currentFileReceived += chunk.length;
 
       if (_currentFileSize > 0) {
-        final totalFiles = ref.read(incomingRequestProvider)?.files.length ?? 1;
-        final index =
-            ref
-                .read(incomingRequestProvider)
-                ?.files
-                .indexWhere((f) => f.name == _currentFileName) ??
-            0;
-
-        state = TransferState.transferring(
-          progress: _currentFileReceived / _currentFileSize,
-          currentFile: _currentFileName ?? '',
-          currentIndex: index >= 0 ? index : 0,
-          totalFiles: totalFiles,
-        );
+        final peer = _connectedPeer;
+        if (peer != null) {
+          state = SessionState.transferring(
+            peer: peer,
+            progress: _currentFileReceived / _currentFileSize,
+            currentFile: _currentFileName ?? '',
+            currentIndex: 0,
+            totalFiles: 1,
+            isSending: false,
+          );
+        }
       }
     };
 
     _webrtc!.onFileEnd = (fileName) async {
-      await _currentFileSink?.flush();
-      await _currentFileSink?.close();
-      _currentFileSink = null;
+      await _closeFileSink();
       logInfo('File received: $fileName');
+
+      ref
+          .read(sessionHistoryProvider.notifier)
+          .add(
+            HistoryItemType.fileReceived,
+            fileName,
+            filePath: _currentFilePath,
+          );
+      _currentFilePath = null;
+
+      // Возвращаемся в connected.
+      final peer = _connectedPeer;
+      if (peer != null) {
+        state = SessionState.connected(peer: peer);
+      }
     };
 
     _webrtc!.onTextReceived = (text) {
       logInfo('Text received: $text');
+
+      ref
+          .read(sessionHistoryProvider.notifier)
+          .add(HistoryItemType.textReceived, text);
     };
 
     _webrtc!.onTransferComplete = () {
-      state = const TransferState.completed();
-      // Не очищаем incomingRequestProvider здесь —
-      // диалог покажет «Получено!» с кнопкой «Закрыть».
+      // Партнёр завершил передачу — возвращаемся
+      // в connected.
+      final peer = _connectedPeer;
+      if (peer != null) {
+        state = SessionState.connected(peer: peer);
+      }
     };
 
     _webrtc!.onCancelled = () {
-      state = const TransferState.cancelled();
-      ref.read(incomingRequestProvider.notifier).clear();
+      state = const SessionState.error(message: 'Передача отменена');
     };
 
     _webrtc!.onError = (error) {
-      state = TransferState.error(message: error);
+      state = SessionState.error(message: error);
     };
   }
 
   // ══════════════════════════════════════════════
-  //  Общее
+  //  Управление сессией
   // ══════════════════════════════════════════════
 
-  /// Очищает текущую сессию передачи без сброса
-  /// signaling-сервера.
-  Future<void> _cleanupCurrentTransfer() async {
+  /// Отключается от peer и сбрасывает сессию.
+  Future<void> disconnect() async {
+    await _cleanupCurrentSession();
+    await _signalingServer?.reset();
+
+    ref.read(incomingRequestProvider.notifier).clear();
+    ref.read(sessionHistoryProvider.notifier).clear();
+    _connectedPeer = null;
+    state = const SessionState.disconnected();
+  }
+
+  /// Сбрасывает состояние (alias для disconnect).
+  Future<void> reset() async => disconnect();
+
+  /// Очищает текущую WebRTC/WS сессию.
+  Future<void> _cleanupCurrentSession() async {
     await _webrtc?.dispose();
     _webrtc = null;
 
@@ -461,40 +491,28 @@ class TransferNotifier extends Notifier<TransferState> {
       await _currentFileSink?.flush();
       await _currentFileSink?.close();
     } catch (_) {
-      // Файл уже закрыт или ошибка записи — игнорируем.
+      // Файл уже закрыт или ошибка записи.
     }
     _currentFileSink = null;
   }
 
-  /// Сбрасывает состояние.
-  Future<void> reset() async {
-    await _cleanupCurrentTransfer();
-
-    await _signalingServer?.reset();
-
-    ref.read(incomingRequestProvider.notifier).clear();
-    state = const TransferState.idle();
-  }
-
   Future<void> _dispose() async {
-    await _cleanupCurrentTransfer();
+    await _cleanupCurrentSession();
     await _signalingServer?.stop();
   }
 
   // ══════════════════════════════════════════════
-  //  WebSocket helpers (sender side)
+  //  WebSocket helpers (initiator side)
   // ══════════════════════════════════════════════
 
-  /// Отправляет JSON-сообщение по WebSocket.
   void _wsSend(Map<String, dynamic> message) {
     try {
       _wsChannel?.sink.add(jsonEncode(message));
     } catch (e) {
-      logError('TransferNotifier: WS send error', error: e);
+      logError('SessionNotifier: WS send error', error: e);
     }
   }
 
-  /// Отключается от WebSocket получателя.
   Future<void> _disconnectWs() async {
     await _wsSubscription?.cancel();
     _wsSubscription = null;
@@ -518,15 +536,6 @@ class TransferNotifier extends Notifier<TransferState> {
     }
 
     return '0.0.0.0';
-  }
-
-  String _getDevicePlatform() {
-    if (Platform.isAndroid) return 'android';
-    if (Platform.isIOS) return 'ios';
-    if (Platform.isMacOS) return 'macos';
-    if (Platform.isLinux) return 'linux';
-    if (Platform.isWindows) return 'windows';
-    return 'unknown';
   }
 
   Future<Directory> _getDownloadsDir() async {

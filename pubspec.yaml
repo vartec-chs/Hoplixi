@@ -127,6 +127,7 @@ dependencies:
   mdns_dart: ^2.2.1
   network_info_plus: ^7.0.0
   web_socket_channel: ^3.0.3
+  open_filex: ^4.7.0
 
 hooks:
   user_defines:
