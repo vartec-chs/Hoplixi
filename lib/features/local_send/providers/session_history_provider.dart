@@ -11,14 +11,7 @@ final sessionHistoryProvider =
 class SessionHistoryNotifier extends Notifier<List<HistoryItem>> {
   @override
   List<HistoryItem> build() {
-    _loadHistory();
     return [];
-  }
-
-  Future<void> _loadHistory() async {
-    final service = ref.read(localSendHistoryServiceProvider);
-    final items = await service.loadHistory();
-    state = items;
   }
 
   Future<void> _saveHistory() async {
@@ -43,6 +36,5 @@ class SessionHistoryNotifier extends Notifier<List<HistoryItem>> {
   /// Очищает историю и удаляет файл.
   void clear() {
     state = [];
-    ref.read(localSendHistoryServiceProvider).clearHistory();
   }
 }

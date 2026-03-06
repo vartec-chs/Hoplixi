@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/local_send/models/session_state.dart';
 import 'package:hoplixi/features/local_send/providers/incoming_request_provider.dart';
 import 'package:hoplixi/features/local_send/providers/transfer_provider.dart';
@@ -8,6 +9,7 @@ import 'package:hoplixi/features/local_send/widgets/device_list_section.dart';
 import 'package:hoplixi/features/local_send/widgets/local_send_status_section.dart';
 import 'package:hoplixi/features/local_send/widgets/receive_dialog.dart';
 import 'package:hoplixi/features/local_send/widgets/transferring_section.dart';
+import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 
 class LocalSendScreen extends ConsumerStatefulWidget {
@@ -28,6 +30,12 @@ class _LocalSendScreenState extends ConsumerState<LocalSendScreen> {
       appBar: AppBar(
         title: const Text('Local Send'),
         actions: [
+          if (sessionState is SessionDisconnected)
+            IconButton(
+              onPressed: () => context.push(AppRoutesPaths.localSendHistory),
+              icon: const Icon(Icons.history),
+              tooltip: 'История',
+            ),
           if (sessionState is SessionConnected ||
               sessionState is SessionTransferring)
             IconButton(
@@ -45,7 +53,7 @@ class _LocalSendScreenState extends ConsumerState<LocalSendScreen> {
               opacity: animation,
               child: SlideTransition(
                 position: Tween<Offset>(
-                  begin: const Offset(0.0, 0.05),
+                  begin: const Offset(-1.0, 0.0),
                   end: Offset.zero,
                 ).animate(animation),
                 child: child,

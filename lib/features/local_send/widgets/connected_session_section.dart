@@ -10,7 +10,7 @@ import 'package:hoplixi/features/local_send/models/history_item.dart';
 import 'package:hoplixi/features/local_send/providers/session_history_provider.dart';
 import 'package:hoplixi/features/local_send/providers/transfer_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
-import 'package:open_filex/open_filex.dart' as open_filex;
+import 'package:open_file/open_file.dart' as open_file;
 
 class ConnectedSessionSection extends ConsumerStatefulWidget {
   final DeviceInfo peer;
@@ -271,7 +271,7 @@ class _ConnectedSessionSectionState
         borderRadius: BorderRadius.circular(12),
         onTap: () {
           if (item.isFile && item.filePath != null) {
-            open_filex.OpenFilex.open(item.filePath!);
+            open_file.OpenFile.open(item.filePath!);
           } else if (!item.isFile) {
             Clipboard.setData(ClipboardData(text: item.content));
             Toaster.info(title: "Текст скопирован в буфер обмена");

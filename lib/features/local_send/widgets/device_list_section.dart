@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/local_send/models/device_info.dart';
@@ -13,9 +15,10 @@ class DeviceListSection extends ConsumerStatefulWidget {
 }
 
 class _DeviceListSectionState extends ConsumerState<DeviceListSection>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
+  late final AnimationController _searchController;
 
   @override
   void initState() {
@@ -29,11 +32,17 @@ class _DeviceListSectionState extends ConsumerState<DeviceListSection>
     _pulseAnimation = Tween<double>(begin: 0.6, end: 1.0).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+
+    _searchController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -138,7 +147,25 @@ class _DeviceListSectionState extends ConsumerState<DeviceListSection>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 40, color: colorScheme.onSurfaceVariant),
+          icon == Icons.search
+              ? AnimatedBuilder(
+                  animation: _searchController,
+                  builder: (_, child) => SlideTransition(
+                    position: AlwaysStoppedAnimation(
+                      Offset(
+                        sin(_searchController.value * 2 * pi) * 0.1,
+                        sin(_searchController.value * 4 * pi) * 0.1,
+                      ),
+                    ),
+                    child: child,
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 40,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                )
+              : Icon(icon, size: 40, color: colorScheme.onSurfaceVariant),
           const SizedBox(height: 8),
           Text(
             text,

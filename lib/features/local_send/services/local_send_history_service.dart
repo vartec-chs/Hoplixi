@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/local_send/models/history_item.dart';
-import 'package:hoplixi/features/local_send/providers/session_history_provider.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:path/path.dart' as p;
 
