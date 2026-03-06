@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/index.dart' hide DeviceInfo;
 import 'package:hoplixi/features/local_send/models/device_info.dart';
+import 'package:hoplixi/features/local_send/models/history_item.dart';
 import 'package:hoplixi/features/local_send/models/session_state.dart';
 import 'package:hoplixi/features/local_send/providers/discovery_provider.dart';
 import 'package:hoplixi/features/local_send/providers/incoming_request_provider.dart';

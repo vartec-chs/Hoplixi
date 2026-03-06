@@ -1,35 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-/// Тип элемента истории обмена.
-enum HistoryItemType { fileSent, fileReceived, textSent, textReceived }
-
-/// Один элемент истории обмена внутри сессии.
-class HistoryItem {
-  HistoryItem({
-    required this.type,
-    required this.content,
-    required this.timestamp,
-    this.filePath,
-  });
-
-  /// Тип: файл/текст, отправлен/получен.
-  final HistoryItemType type;
-
-  /// Имя файла или текст сообщения.
-  final String content;
-
-  /// Время события.
-  final DateTime timestamp;
-
-  /// Путь к файлу на диске (для полученных и отправленных файлов).
-  final String? filePath;
-
-  bool get isSent =>
-      type == HistoryItemType.fileSent || type == HistoryItemType.textSent;
-
-  bool get isFile =>
-      type == HistoryItemType.fileSent || type == HistoryItemType.fileReceived;
-}
+import 'package:hoplixi/features/local_send/models/history_item.dart';
+import 'package:hoplixi/features/local_send/services/local_send_history_service.dart';
 
 /// Провайдер истории обмена для текущей сессии.
 final sessionHistoryProvider =
@@ -39,9 +10,23 @@ final sessionHistoryProvider =
 
 class SessionHistoryNotifier extends Notifier<List<HistoryItem>> {
   @override
-  List<HistoryItem> build() => [];
+  List<HistoryItem> build() {
+    _loadHistory();
+    return [];
+  }
 
-  /// Добавляет элемент в историю.
+  Future<void> _loadHistory() async {
+    final service = ref.read(localSendHistoryServiceProvider);
+    final items = await service.loadHistory();
+    state = items;
+  }
+
+  Future<void> _saveHistory() async {
+    final service = ref.read(localSendHistoryServiceProvider);
+    await service.saveHistory(state);
+  }
+
+  /// Добавляет элемент в историю и сохраняет.
   void add(HistoryItemType type, String content, {String? filePath}) {
     state = [
       ...state,
@@ -52,10 +37,12 @@ class SessionHistoryNotifier extends Notifier<List<HistoryItem>> {
         filePath: filePath,
       ),
     ];
+    _saveHistory();
   }
 
-  /// Очищает историю (при отключении).
+  /// Очищает историю и удаляет файл.
   void clear() {
     state = [];
+    ref.read(localSendHistoryServiceProvider).clearHistory();
   }
 }

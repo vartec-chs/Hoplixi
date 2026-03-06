@@ -4,11 +4,13 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/local_send/models/device_info.dart';
+import 'package:hoplixi/features/local_send/models/history_item.dart';
 import 'package:hoplixi/features/local_send/providers/session_history_provider.dart';
 import 'package:hoplixi/features/local_send/providers/transfer_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
-import 'package:open_filex/open_filex.dart' as import_open_filex;
+import 'package:open_filex/open_filex.dart' as open_filex;
 
 class ConnectedSessionSection extends ConsumerStatefulWidget {
   final DeviceInfo peer;
@@ -269,12 +271,10 @@ class _ConnectedSessionSectionState
         borderRadius: BorderRadius.circular(12),
         onTap: () {
           if (item.isFile && item.filePath != null) {
-            import_open_filex.OpenFilex.open(item.filePath!);
+            open_filex.OpenFilex.open(item.filePath!);
           } else if (!item.isFile) {
             Clipboard.setData(ClipboardData(text: item.content));
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Текст скопирован в буфер обмена')),
-            );
+            Toaster.info(title: "Текст скопирован в буфер обмена");
           }
         },
         child: Padding(
