@@ -76,6 +76,7 @@ class SetupNotifier extends Notifier<SetupState> {
     Permission.camera,
     Permission.photos,
     Permission.manageExternalStorage,
+    Permission.locationWhenInUse,
   ];
 
   @override
