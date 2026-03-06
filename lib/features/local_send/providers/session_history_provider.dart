@@ -4,7 +4,7 @@ import 'package:hoplixi/features/local_send/services/local_send_history_service.
 
 /// Провайдер истории обмена для текущей сессии.
 final sessionHistoryProvider =
-    NotifierProvider<SessionHistoryNotifier, List<HistoryItem>>(
+    NotifierProvider.autoDispose<SessionHistoryNotifier, List<HistoryItem>>(
       SessionHistoryNotifier.new,
     );
 

@@ -47,7 +47,7 @@ class _LocalSendScreenState extends ConsumerState<LocalSendScreen> {
       ),
       body: SafeArea(
         child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 200),
           transitionBuilder: (child, animation) {
             return FadeTransition(
               opacity: animation,

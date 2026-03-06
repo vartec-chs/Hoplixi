@@ -601,8 +601,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
       ActionItem(
         icon: LucideIcons.send,
-        label: 'LocalSend (alpha)',
-        description: 'Отправка файлов другим устройствам',
+        label: 'LocalSend',
+        description: 'Отправка данных по локальной сети',
         onTap: () => context.push(AppRoutesPaths.localSendSend),
       ),
 
