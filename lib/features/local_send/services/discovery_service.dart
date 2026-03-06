@@ -25,9 +25,13 @@ class DiscoveryService {
 
   /// Получает локальный IPv4-адрес устройства.
   ///
+  /// Предпочитает реальные LAN-интерфейсы (Wi-Fi, Ethernet)
+  /// и пропускает VPN/tunnel-интерфейсы (tun, tap, utun, ppp и т.д.),
+  /// которые не поддерживают mDNS multicast.
+  ///
   /// На мобильных платформах использует [NetworkInfo] для получения
   /// Wi-Fi IP (требует разрешение на геолокацию).
-  /// На десктопе — [NetworkInterface.list()].
+  /// На десктопе — [NetworkInterface.list()] с фильтрацией.
   Future<String> getLocalIp() async {
     // На мобильных платформах пробуем network_info_plus
     // (требует location permission).
@@ -48,21 +52,87 @@ class DiscoveryService {
       }
     }
 
-    // Fallback: перебираем сетевые интерфейсы
-    // (работает на всех платформах без пермишенов).
+    // Fallback: перебираем сетевые интерфейсы с приоритизацией LAN.
     final interfaces = await NetworkInterface.list(
       type: InternetAddressType.IPv4,
     );
 
+    // Приоритет 0 (лучший) → 3 (худший).
+    NetworkInterface? best;
+    int bestScore = 999;
+
     for (final iface in interfaces) {
-      for (final addr in iface.addresses) {
-        if (!addr.isLoopback) {
-          return addr.address;
+      final name = iface.name.toLowerCase();
+      final score = _interfaceScore(name);
+      if (score < bestScore) {
+        for (final addr in iface.addresses) {
+          if (!addr.isLoopback) {
+            bestScore = score;
+            best = iface;
+            break;
+          }
         }
       }
     }
 
+    if (best != null) {
+      for (final addr in best.addresses) {
+        if (!addr.isLoopback) return addr.address;
+      }
+    }
+
     return '0.0.0.0';
+  }
+
+  /// Возвращает приоритетный балл интерфейса.
+  /// Меньше — лучше. VPN/tunnel-интерфейсы получают высокий балл.
+  int _interfaceScore(String name) {
+    // Явные VPN / tunnel интерфейсы — пропускаем в последнюю очередь.
+    const vpnPatterns = [
+      'tun',
+      'tap',
+      'utun',
+      'ppp',
+      'ipsec',
+      'l2tp',
+      'sstp',
+      'openvpn',
+      'wireguard',
+      'nordlynx',
+      'wg',
+      'vpn',
+      'veth',
+      'docker',
+      'virbr',
+      'vmnet',
+      'vboxnet',
+      'hyperv',
+    ];
+    for (final pat in vpnPatterns) {
+      if (name.startsWith(pat) || name.contains(pat)) return 100;
+    }
+
+    // Реальные Wi-Fi / Ethernet интерфейсы — высший приоритет.
+    const lanPatterns = [
+      'en',
+      'eth',
+      'wlan',
+      'wifi',
+      'wlp',
+      'enp',
+      'eno',
+      'ens',
+      'wi-fi',
+      'ethernet',
+      'local area connection',
+      'беспроводная',
+    ];
+    for (final pat in lanPatterns) {
+      if (name.startsWith(pat) || name.contains(pat)) return 0;
+    }
+
+    // Прочие — средний приоритет.
+    return 50;
   }
 
   /// Начинает рекламу текущего устройства через mDNS.

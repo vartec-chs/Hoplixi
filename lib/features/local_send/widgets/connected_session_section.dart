@@ -374,10 +374,12 @@ class _ConnectedSessionSectionState
       ),
     );
 
+    // Сохраняем текст до dispose, т.к. после него controller.text недоступен.
+    final trimmed = text?.trim();
     controller.dispose();
 
-    if (text != null && text.trim().isNotEmpty && mounted) {
-      await ref.read(transferProvider.notifier).sendText(text.trim());
+    if (trimmed != null && trimmed.isNotEmpty && mounted) {
+      await ref.read(transferProvider.notifier).sendText(trimmed);
     }
   }
 
