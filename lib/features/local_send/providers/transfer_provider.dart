@@ -17,9 +17,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 /// Провайдер состояния сессии обмена данными.
-final transferProvider = NotifierProvider.autoDispose<SessionNotifier, SessionState>(
-  SessionNotifier.new,
-);
+final transferProvider =
+    NotifierProvider.autoDispose<SessionNotifier, SessionState>(
+      SessionNotifier.new,
+    );
 
 /// Оркестрирует signaling-сервер, WebRTC-соединение
 /// и процесс обмена файлами/текстом.
@@ -450,6 +451,11 @@ class SessionNotifier extends Notifier<SessionState> {
       state = const SessionState.error(message: 'Передача отменена');
     };
 
+    _webrtc!.onDisconnected = () {
+      logInfo('Peer disconnected gracefully');
+      disconnect();
+    };
+
     _webrtc!.onError = (error) {
       state = SessionState.error(message: error);
     };
@@ -461,6 +467,9 @@ class SessionNotifier extends Notifier<SessionState> {
 
   /// Отключается от peer и сбрасывает сессию.
   Future<void> disconnect() async {
+    // Уведомляем другую сторону до закрытия каналов.
+    _webrtc?.sendDisconnect();
+    await Future<void>.delayed(const Duration(milliseconds: 100));
     await _cleanupCurrentSession();
     await _signalingServer?.reset();
 

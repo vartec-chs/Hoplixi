@@ -16,6 +16,7 @@ class DataChannelMessage {
   static const String textMessage = 'text_message';
   static const String transferComplete = 'transfer_complete';
   static const String cancel = 'cancel';
+  static const String disconnect = 'disconnect';
 }
 
 /// Сервис для P2P-передачи файлов и текста
@@ -58,6 +59,9 @@ class WebRtcTransferService {
 
   /// Передача отменена удалённой стороной.
   void Function()? onCancelled;
+
+  /// Удалённая сторона намеренно отключилась.
+  void Function()? onDisconnected;
 
   /// Локальный ICE candidate готов для отправки.
   void Function(String candidateJson)? onLocalIceCandidate;
@@ -251,6 +255,18 @@ class WebRtcTransferService {
     }
   }
 
+  /// Уведомляет удалённую сторону о намеренном отключении.
+  void sendDisconnect() {
+    if (_controlChannel == null) return;
+
+    try {
+      final msg = jsonEncode({'type': DataChannelMessage.disconnect});
+      _controlChannel!.send(RTCDataChannelMessage(msg));
+    } catch (e) {
+      logError('WebRtcTransfer: sendDisconnect error', error: e);
+    }
+  }
+
   /// Освобождает ресурсы.
   ///
   /// Сначала обнуляет все колбэки, чтобы предотвратить
@@ -298,6 +314,7 @@ class WebRtcTransferService {
     onProgress = null;
     onTransferComplete = null;
     onCancelled = null;
+    onDisconnected = null;
     onLocalIceCandidate = null;
     onConnected = null;
     onError = null;
@@ -351,6 +368,8 @@ class WebRtcTransferService {
             onTransferComplete?.call();
           case DataChannelMessage.cancel:
             onCancelled?.call();
+          case DataChannelMessage.disconnect:
+            onDisconnected?.call();
         }
       } catch (e) {
         logError('WebRtcTransfer: control message error', error: e);
