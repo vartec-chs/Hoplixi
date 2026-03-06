@@ -225,6 +225,11 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
               : 'Новая карта лояльности',
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.qr_code_scanner),
+            tooltip: 'Сканировать',
+            onPressed: _scanBarcode,
+          ),
           if (state.isSaving)
             const Padding(
               padding: EdgeInsets.all(16),

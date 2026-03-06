@@ -76,8 +76,9 @@ class _LoyaltyCardListCardState extends ConsumerState<LoyaltyCardListCard> {
 
     return ExpandableListCard(
       title: card.name,
-      subtitle:
-          '${card.programName} ${card.cardNumber ?? '• ${_maskCardNumber(card.cardNumber!)}'}',
+      subtitle: card.cardNumber?.isNotEmpty == true
+          ? '${card.programName}  •  ${_maskCardNumber(card.cardNumber!)}'
+          : card.programName,
       trailingSubtitle: trailingSubtitle,
       icon: Icons.loyalty,
       category: card.category,

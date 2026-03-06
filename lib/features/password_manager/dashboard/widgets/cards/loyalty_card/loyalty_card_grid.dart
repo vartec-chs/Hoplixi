@@ -73,8 +73,9 @@ class _LoyaltyCardGridCardState extends ConsumerState<LoyaltyCardGridCard> {
 
     return BaseGridCard(
       title: card.name,
-      subtitle:
-          '${card.programName} ${card.cardNumber ?? '• ${_maskCardNumber(card.cardNumber!)}'}',
+      subtitle: card.cardNumber?.isNotEmpty == true
+          ? '${card.programName}  •  ${_maskCardNumber(card.cardNumber!)}'
+          : card.programName,
       icon: Icons.loyalty,
       category: card.category,
       tags: card.tags,
