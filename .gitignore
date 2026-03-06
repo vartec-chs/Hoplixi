@@ -10,7 +10,8 @@
 .history
 .svn/
 .swiftpm/
-migrate_working_dir/
+.migrate_working_dir/
+tmp_docs/
 
 # IntelliJ related
 *.iml
