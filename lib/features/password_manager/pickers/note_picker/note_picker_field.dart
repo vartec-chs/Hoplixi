@@ -240,12 +240,21 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
                             )
                           : null,
                     ),
-                    child: Text(
-                      effectiveNoteName ?? effectiveHintText,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: !hasValue && widget.enabled
-                            ? colorScheme.onSurface
-                            : colorScheme.onSurface.withOpacity(0.38),
+                    child: IgnorePointer(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            hasValue ? effectiveNoteName! : effectiveHintText,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: hasValue
+                                  ? colorScheme.onSurface
+                                  : colorScheme.onSurface.withOpacity(0.6),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ),
                     ),
                   ),
