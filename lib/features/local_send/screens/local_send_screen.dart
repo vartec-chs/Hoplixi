@@ -28,6 +28,9 @@ class _LocalSendScreenState extends ConsumerState<LocalSendScreen>
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
 
+  /// Кэш notifier для безопасного доступа в dispose().
+  TransferNotifier? _transferNotifier;
+
   @override
   void initState() {
     super.initState();
@@ -46,12 +49,19 @@ class _LocalSendScreenState extends ConsumerState<LocalSendScreen>
   void dispose() {
     _pulseController.dispose();
     _textController.dispose();
+
+    // Используем кэшированный notifier — ref уже недоступен.
+    _transferNotifier?.reset();
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     _listenForIncomingRequests();
+
+    // Кэшируем notifier при каждом build.
+    _transferNotifier = ref.read(transferProvider.notifier);
 
     final transferState = ref.watch(transferProvider);
 

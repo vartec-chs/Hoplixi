@@ -7,24 +7,21 @@ import 'package:hoplixi/features/local_send/models/device_info.dart';
 import 'package:hoplixi/features/local_send/services/discovery_service.dart';
 import 'package:uuid/uuid.dart';
 
-/// Уникальный ID текущего устройства, генерируется один раз.
-final _deviceId = const Uuid().v4();
-
 /// Имя текущего устройства (hostname ОС).
-String get _deviceName => Platform.localHostname;
+final localDeviceName = Provider<String>((_) => Platform.localHostname);
 
 /// Платформа текущего устройства.
-String get _devicePlatform {
+final localDevicePlatform = Provider<String>((_) {
   if (Platform.isAndroid) return 'android';
   if (Platform.isIOS) return 'ios';
   if (Platform.isMacOS) return 'macos';
   if (Platform.isLinux) return 'linux';
   if (Platform.isWindows) return 'windows';
   return 'unknown';
-}
+});
 
 /// ID текущего устройства (из UUID при старте).
-final localDeviceIdProvider = Provider<String>((_) => _deviceId);
+final localDeviceIdProvider = Provider<String>((_) => const Uuid().v4());
 
 /// Провайдер списка обнаруженных устройств в локальной сети.
 ///
@@ -60,7 +57,7 @@ class DiscoveryNotifier extends AsyncNotifier<List<DeviceInfo>> {
     final selfId = ref.read(localDeviceIdProvider);
 
     // Запускаем слушатель.
-    await _service!.startListener(selfId);
+    await _service!.startDiscovery(selfId);
 
     // Подписываемся на стрим устройств.
     _subscription = _service!.devicesStream.listen((dynamic data) {
@@ -81,18 +78,20 @@ class DiscoveryNotifier extends AsyncNotifier<List<DeviceInfo>> {
   /// Запускает (или перезапускает) broadcast с текущим портом.
   Future<void> _restartBroadcast() async {
     final ip = await _service?.getLocalIp() ?? '0.0.0.0';
+    final name = ref.read(localDeviceName);
+    final platform = ref.read(localDevicePlatform);
 
     final selfInfo = DeviceInfo(
       id: ref.read(localDeviceIdProvider),
-      name: _deviceName,
+      name: name,
       ip: ip,
       signalingPort: _signalingPort,
-      platform: _devicePlatform,
+      platform: platform,
       lastSeen: DateTime.now().millisecondsSinceEpoch,
     );
 
     try {
-      await _service?.startBroadcast(selfInfo);
+      await _service?.startAdvertising(selfInfo);
     } catch (e) {
       logError('Discovery broadcast restart failed', error: e);
     }
@@ -136,9 +135,9 @@ class DiscoveryNotifier extends AsyncNotifier<List<DeviceInfo>> {
     }
   }
 
-  void _dispose() {
+  Future<void> _dispose() async {
     _subscription?.cancel();
     _cleanupTimer?.cancel();
-    _service?.dispose();
+    await _service?.dispose();
   }
 }

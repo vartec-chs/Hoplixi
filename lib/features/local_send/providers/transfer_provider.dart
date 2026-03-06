@@ -14,6 +14,7 @@ import 'package:hoplixi/features/local_send/services/webrtc_transfer_service.dar
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 /// Провайдер состояния передачи.
 final transferProvider = NotifierProvider<TransferNotifier, TransferState>(
@@ -26,20 +27,22 @@ class TransferNotifier extends Notifier<TransferState> {
   SignalingServer? _signalingServer;
   WebRtcTransferService? _webrtc;
 
-  /// Общий HTTP-клиент с увеличенными таймаутами.
-  HttpClient? _httpClient;
-
-  /// Максимальное количество повторных попыток HTTP-запроса.
-  static const int _maxRetries = 3;
-
-  /// Базовая задержка между повторными попытками.
-  static const Duration _retryDelay = Duration(seconds: 1);
+  /// WebSocket-канал для связи с signaling-сервером получателя
+  /// (только sender flow).
+  WebSocketChannel? _wsChannel;
+  StreamSubscription<dynamic>? _wsSubscription;
 
   // Для приёма файлов.
   IOSink? _currentFileSink;
   String? _currentFileName;
   int _currentFileSize = 0;
   int _currentFileReceived = 0;
+
+  /// Completer для ожидания статуса prepare (accepted/rejected).
+  Completer<bool>? _prepareCompleter;
+
+  /// Completer для ожидания SDP answer.
+  Completer<String>? _answerCompleter;
 
   @override
   TransferState build() {
@@ -75,11 +78,12 @@ class TransferNotifier extends Notifier<TransferState> {
     required List<File> files,
     String? text,
   }) async {
+    // Очищаем предыдущую сессию перед новой передачей.
+    await _cleanupCurrentTransfer();
+
     state = const TransferState.preparing();
 
     try {
-      _httpClient = _createHttpClient();
-
       final selfId = ref.read(localDeviceIdProvider);
       final selfIp = await _getSelfIp();
 
@@ -106,27 +110,46 @@ class TransferNotifier extends Notifier<TransferState> {
         text: text,
       );
 
-      // Шлём prepare-запрос на signaling-сервер получателя.
-      final prepareResponse = await _httpPost(
-        target,
-        '/api/prepare',
-        jsonEncode(request.toJson()),
+      // Подключаемся к signaling-серверу получателя по WebSocket.
+      final wsUrl = Uri.parse('ws://${target.ip}:${target.signalingPort}');
+      _wsChannel = WebSocketChannel.connect(wsUrl);
+      await _wsChannel!.ready;
+
+      // Слушаем ответы от получателя.
+      _prepareCompleter = Completer<bool>();
+      _answerCompleter = Completer<String>();
+      _wsSubscription = _wsChannel!.stream.listen(
+        _handleSignalingResponse,
+        onError: (Object error) {
+          logError('Signaling WS error', error: error);
+          if (!(_prepareCompleter?.isCompleted ?? true)) {
+            _prepareCompleter?.completeError(error);
+          }
+          if (!(_answerCompleter?.isCompleted ?? true)) {
+            _answerCompleter?.completeError(error);
+          }
+        },
+        onDone: () {
+          if (!(_prepareCompleter?.isCompleted ?? true)) {
+            _prepareCompleter?.complete(false);
+          }
+        },
       );
 
-      if (prepareResponse.statusCode != HttpStatus.ok) {
-        state = const TransferState.error(
-          message: 'Failed to send prepare request',
-        );
-        return;
-      }
+      // Шлём prepare-запрос.
+      _wsSend({'type': 'prepare', 'data': request.toJson()});
 
       state = const TransferState.waitingApproval();
 
-      // Polling статуса подтверждения.
-      final accepted = await _pollPrepareStatus(target);
+      // Ожидаем подтверждения (с таймаутом 60с).
+      final accepted = await _prepareCompleter!.future.timeout(
+        const Duration(seconds: 60),
+        onTimeout: () => false,
+      );
 
       if (!accepted) {
         state = const TransferState.rejected();
+        await _disconnectWs();
         return;
       }
 
@@ -139,26 +162,20 @@ class TransferNotifier extends Notifier<TransferState> {
       // Создаём offer.
       final offerJson = await _webrtc!.createOffer();
 
-      // Отправляем offer.
-      await _httpPost(target, '/api/offer', offerJson);
+      // Отправляем offer через WebSocket.
+      _wsSend({'type': 'offer', 'data': offerJson});
 
-      // Отправляем ICE candidates.
+      // Отправляем ICE candidates через WebSocket.
       _webrtc!.onLocalIceCandidate = (candidateJson) {
-        _httpPost(target, '/api/ice', candidateJson);
+        _wsSend({'type': 'ice', 'data': candidateJson});
       };
 
-      // Получаем answer.
-      final answerJson = await _pollForAnswer(target);
-      if (answerJson == null) {
-        state = const TransferState.error(
-          message: 'Failed to get answer from receiver',
-        );
-        return;
-      }
+      // Получаем answer (с таймаутом 30с).
+      final answerJson = await _answerCompleter!.future.timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw TimeoutException('Answer timeout'),
+      );
       await _webrtc!.handleAnswer(answerJson);
-
-      // Получаем ICE candidates получателя.
-      await _fetchRemoteIceCandidates(target);
 
       // Ждём соединения — onConnected вызовет _startSending.
     } on SocketException catch (e, s) {
@@ -169,9 +186,68 @@ class TransferNotifier extends Notifier<TransferState> {
             'Убедитесь, что оба устройства в одной сети. '
             '(${e.message})',
       );
+      await _disconnectWs();
+    } on TimeoutException catch (e) {
+      logError('TransferNotifier.sendToDevice: timeout', error: e);
+      state = const TransferState.error(
+        message: 'Таймаут при подключении к устройству',
+      );
+      await _disconnectWs();
     } catch (e, s) {
       logError('TransferNotifier.sendToDevice', error: e, stackTrace: s);
       state = TransferState.error(message: e.toString());
+      await _disconnectWs();
+    }
+  }
+
+  /// Обрабатывает входящие сообщения от signaling-сервера
+  /// получателя (sender side).
+  void _handleSignalingResponse(dynamic rawMessage) {
+    try {
+      final message = jsonDecode(rawMessage as String) as Map<String, dynamic>;
+      final type = message['type'] as String?;
+
+      switch (type) {
+        case 'prepare_status':
+          final data = message['data'] as Map<String, dynamic>?;
+          final status = data?['status'] as String?;
+
+          if (status == 'accepted') {
+            _prepareCompleter?.complete(true);
+          } else if (status == 'rejected') {
+            _prepareCompleter?.complete(false);
+          }
+        // 'pending' — просто игнорируем, ждём дальше.
+
+        case 'answer':
+          final data = message['data'] as String?;
+          if (data != null && !(_answerCompleter?.isCompleted ?? true)) {
+            _answerCompleter?.complete(data);
+          }
+
+        case 'ice':
+          final data = message['data'] as String?;
+          if (data != null) {
+            _webrtc?.addIceCandidate(data);
+          }
+
+        case 'offer_ack':
+          // Подтверждение получения offer — ничего не делаем.
+          break;
+
+        case 'cancel_ack':
+          // Подтверждение отмены.
+          break;
+
+        default:
+          logInfo('TransferNotifier: unknown signaling response: $type');
+      }
+    } catch (e, s) {
+      logError(
+        'TransferNotifier: signaling response error',
+        error: e,
+        stackTrace: s,
+      );
     }
   }
 
@@ -242,6 +318,9 @@ class TransferNotifier extends Notifier<TransferState> {
 
   /// Принимает входящий запрос.
   Future<void> acceptIncomingTransfer() async {
+    // Очищаем предыдущую сессию перед новой.
+    await _cleanupCurrentTransfer();
+
     _signalingServer?.acceptTransfer();
     state = const TransferState.connecting();
 
@@ -345,7 +424,7 @@ class TransferNotifier extends Notifier<TransferState> {
     _webrtc!.onTransferComplete = () {
       state = const TransferState.completed();
       // Не очищаем incomingRequestProvider здесь —
-      // диалог покажет "Получено!" с кнопкой "Закрыть".
+      // диалог покажет «Получено!» с кнопкой «Закрыть».
     };
 
     _webrtc!.onCancelled = () {
@@ -362,147 +441,69 @@ class TransferNotifier extends Notifier<TransferState> {
   //  Общее
   // ══════════════════════════════════════════════
 
-  /// Сбрасывает состояние.
-  Future<void> reset() async {
+  /// Очищает текущую сессию передачи без сброса
+  /// signaling-сервера.
+  Future<void> _cleanupCurrentTransfer() async {
     await _webrtc?.dispose();
     _webrtc = null;
 
-    _httpClient?.close(force: true);
-    _httpClient = null;
+    await _disconnectWs();
 
-    _currentFileSink?.close();
-    _currentFileSink = null;
+    await _closeFileSink();
     _currentFileName = null;
     _currentFileSize = 0;
     _currentFileReceived = 0;
+  }
 
-    _signalingServer?.reset();
+  /// Безопасно закрывает IOSink для принимаемого файла.
+  Future<void> _closeFileSink() async {
+    try {
+      await _currentFileSink?.flush();
+      await _currentFileSink?.close();
+    } catch (_) {
+      // Файл уже закрыт или ошибка записи — игнорируем.
+    }
+    _currentFileSink = null;
+  }
+
+  /// Сбрасывает состояние.
+  Future<void> reset() async {
+    await _cleanupCurrentTransfer();
+
+    await _signalingServer?.reset();
 
     ref.read(incomingRequestProvider.notifier).clear();
     state = const TransferState.idle();
   }
 
-  void _dispose() {
-    _webrtc?.dispose();
-    _signalingServer?.stop();
-    _httpClient?.close(force: true);
-    _httpClient = null;
+  Future<void> _dispose() async {
+    await _cleanupCurrentTransfer();
+    await _signalingServer?.stop();
   }
 
   // ══════════════════════════════════════════════
-  //  HTTP helpers
+  //  WebSocket helpers (sender side)
   // ══════════════════════════════════════════════
 
-  HttpClient _createHttpClient() {
-    final client = HttpClient();
-    client.connectionTimeout = const Duration(seconds: 10);
-    client.idleTimeout = const Duration(seconds: 30);
-    return client;
-  }
-
-  HttpClient get _client => _httpClient ??= _createHttpClient();
-
-  /// Выполняет POST-запрос с повторными попытками.
-  Future<HttpClientResponse> _httpPost(
-    DeviceInfo target,
-    String path,
-    String body, {
-    int retries = _maxRetries,
-  }) async {
-    final uri = Uri.parse('http://${target.ip}:${target.signalingPort}$path');
-
-    for (var attempt = 0; attempt < retries; attempt++) {
-      try {
-        final request = await _client.postUrl(uri);
-        request.headers.contentType = ContentType.json;
-        request.write(body);
-        return await request.close();
-      } on SocketException catch (e) {
-        logTrace(
-          'HTTP POST $path attempt ${attempt + 1}/$retries '
-          'failed: ${e.message}',
-        );
-
-        if (attempt == retries - 1) rethrow;
-
-        await Future<void>.delayed(_retryDelay * (attempt + 1));
-      }
-    }
-
-    // Недостижимо, но нужно для компилятора.
-    throw StateError('Unreachable');
-  }
-
-  /// Выполняет GET-запрос (без retry, для polling).
-  Future<String?> _httpGet(DeviceInfo target, String path) async {
-    final uri = Uri.parse('http://${target.ip}:${target.signalingPort}$path');
-
+  /// Отправляет JSON-сообщение по WebSocket.
+  void _wsSend(Map<String, dynamic> message) {
     try {
-      final request = await _client.getUrl(uri);
-      final response = await request.close();
-      return await response.transform(utf8.decoder).join();
-    } on SocketException catch (e) {
-      logTrace('HTTP GET $path failed: ${e.message}');
-      return null;
-    }
-  }
-
-  /// Polling статуса подтверждения (макс. 60с).
-  Future<bool> _pollPrepareStatus(DeviceInfo target) async {
-    for (var i = 0; i < 60; i++) {
-      await Future<void>.delayed(const Duration(seconds: 1));
-
-      try {
-        final body = await _httpGet(target, '/api/prepare/status');
-        if (body == null) continue;
-
-        final json = jsonDecode(body) as Map<String, dynamic>;
-        final status = json['status'] as String?;
-
-        if (status == 'accepted') return true;
-        if (status == 'rejected') return false;
-      } catch (e) {
-        logTrace('Polling prepare status error: $e');
-      }
-    }
-
-    return false; // Timeout.
-  }
-
-  /// Polling SDP answer (макс. 30с).
-  Future<String?> _pollForAnswer(DeviceInfo target) async {
-    for (var i = 0; i < 30; i++) {
-      await Future<void>.delayed(const Duration(seconds: 1));
-
-      try {
-        final body = await _httpGet(target, '/api/answer');
-        if (body == null) continue;
-
-        final json = jsonDecode(body);
-        if (json is Map && json.containsKey('sdp')) {
-          return body;
-        }
-      } catch (e) {
-        logTrace('Polling answer error: $e');
-      }
-    }
-
-    return null;
-  }
-
-  /// Fetch remote ICE candidates.
-  Future<void> _fetchRemoteIceCandidates(DeviceInfo target) async {
-    try {
-      final body = await _httpGet(target, '/api/ice');
-      if (body == null) return;
-
-      final candidates = jsonDecode(body) as List<dynamic>;
-      for (final c in candidates) {
-        await _webrtc?.addIceCandidate(c as String);
-      }
+      _wsChannel?.sink.add(jsonEncode(message));
     } catch (e) {
-      logTrace('Fetch ICE candidates error: $e');
+      logError('TransferNotifier: WS send error', error: e);
     }
+  }
+
+  /// Отключается от WebSocket получателя.
+  Future<void> _disconnectWs() async {
+    await _wsSubscription?.cancel();
+    _wsSubscription = null;
+
+    await _wsChannel?.sink.close();
+    _wsChannel = null;
+
+    _prepareCompleter = null;
+    _answerCompleter = null;
   }
 
   Future<String> _getSelfIp() async {
