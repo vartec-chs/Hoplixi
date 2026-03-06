@@ -9,6 +9,7 @@ import 'package:hoplixi/features/password_manager/forms/document_form/screens/do
 import 'package:hoplixi/features/password_manager/forms/file_form/screens/file_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/identity_form/screens/identity_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/license_key_form/screens/license_key_form_screen.dart';
+import 'package:hoplixi/features/password_manager/forms/loyalty_card_form/screens/loyalty_card_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/note_form/screens/note_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/otp_form/screens/otp_form_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/password_form/screens/password_form_screen.dart';
@@ -68,6 +69,8 @@ class EntityAddEdit extends StatelessWidget {
         return LicenseKeyFormScreen(licenseKeyId: id);
       case EntityType.recoveryCodes:
         return RecoveryCodesFormScreen(recoveryCodesId: id);
+      case EntityType.loyaltyCard:
+        return LoyaltyCardFormScreen(loyaltyCardId: id);
     }
   }
 }

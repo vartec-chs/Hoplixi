@@ -32,6 +32,7 @@ enum FilterTab {
       case EntityType.wifi:
       case EntityType.identity:
       case EntityType.licenseKey:
+      case EntityType.loyaltyCard:
       case EntityType.recoveryCodes:
         return [
           FilterTab.all,

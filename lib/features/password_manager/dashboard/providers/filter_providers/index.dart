@@ -16,3 +16,4 @@ export 'password_filter_provider.dart';
 export 'recovery_codes_filter_provider.dart';
 export 'ssh_keys_filter_provider.dart';
 export 'wifis_filter_provider.dart';
+export 'loyalty_cards_filter_provider.dart';

@@ -314,6 +314,8 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         return _fetchLicenseKeyHistory(offset, searchQuery);
       case EntityType.recoveryCodes:
         return _fetchRecoveryCodesHistory(offset, searchQuery);
+      case EntityType.loyaltyCard:
+        return _fetchLoyaltyCardHistory(offset, searchQuery);
     }
   }
 
@@ -726,6 +728,33 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
         .toList();
   }
 
+  Future<List<HistoryItem>> _fetchLoyaltyCardHistory(
+    int offset,
+    String? searchQuery,
+  ) async {
+    final dao = await ref.read(loyaltyCardHistoryDaoProvider.future);
+    final cards = await dao.getLoyaltyCardHistoryCardsByOriginalId(
+      _params.entityId,
+      offset,
+      pageSize,
+      searchQuery,
+    );
+
+    return cards
+        .map(
+          (card) => HistoryItem(
+            id: card.id,
+            originalEntityId: card.originalLoyaltyCardId,
+            entityType: EntityType.loyaltyCard,
+            action: card.action,
+            title: card.name,
+            subtitle: card.programName ?? card.cardNumber,
+            actionAt: card.actionAt,
+          ),
+        )
+        .toList();
+  }
+
   /// Получить общее количество записей
   Future<int> _getTotalCount({String? searchQuery}) async {
     switch (_params.entityType) {
@@ -807,6 +836,12 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
           _params.entityId,
           searchQuery,
         );
+      case EntityType.loyaltyCard:
+        final dao = await ref.read(loyaltyCardHistoryDaoProvider.future);
+        return dao.countLoyaltyCardHistoryByOriginalId(
+          _params.entityId,
+          searchQuery,
+        );
     }
   }
 
@@ -858,6 +893,9 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
       case EntityType.recoveryCodes:
         final dao = await ref.read(recoveryCodesHistoryDaoProvider.future);
         return await dao.deleteRecoveryCodesHistoryById(historyItemId) > 0;
+      case EntityType.loyaltyCard:
+        final dao = await ref.read(loyaltyCardHistoryDaoProvider.future);
+        return await dao.deleteLoyaltyCardHistoryById(historyItemId) > 0;
     }
   }
 
@@ -922,6 +960,12 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
       case EntityType.recoveryCodes:
         final dao = await ref.read(recoveryCodesHistoryDaoProvider.future);
         return await dao.deleteRecoveryCodesHistoryByRecoveryCodesId(
+              _params.entityId,
+            ) >=
+            0;
+      case EntityType.loyaltyCard:
+        final dao = await ref.read(loyaltyCardHistoryDaoProvider.future);
+        return await dao.deleteLoyaltyCardHistoryByOriginalId(
               _params.entityId,
             ) >=
             0;

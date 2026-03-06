@@ -431,6 +431,8 @@ String _getCategoryTypeLabel(CategoryType type) {
       return 'Лицензии';
     case CategoryType.recoveryCodes:
       return 'Коды восстановления';
+      case CategoryType.loyaltyCard:
+        return 'Карты лояльности';
     case CategoryType.mixed:
       return 'Смешанная';
   }
@@ -469,5 +471,7 @@ CategoryType _convertEntityTypeToCategoryType(EntityType entityType) {
       return CategoryType.licenseKey;
     case EntityType.recoveryCodes:
       return CategoryType.recoveryCodes;
+    case EntityType.loyaltyCard:
+      return CategoryType.loyaltyCard;
   }
 }

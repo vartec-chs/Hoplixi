@@ -47,3 +47,6 @@ export 'vault_item_history.dart';
 export 'vault_items.dart';
 export 'wifi_history.dart';
 export 'wifi_items.dart';
+
+export 'loyalty_card_items.dart';
+export 'loyalty_card_history.dart';

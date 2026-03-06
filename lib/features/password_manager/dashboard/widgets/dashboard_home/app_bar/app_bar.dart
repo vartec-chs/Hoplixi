@@ -162,6 +162,8 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
         return 'Поиск лицензий по продукту, ключу...';
       case EntityType.recoveryCodes:
         return 'Поиск recovery codes по заметкам...';
+      case EntityType.loyaltyCard:
+        return 'Поиск карт лояльности по названию, номеру...';
     }
   }
 

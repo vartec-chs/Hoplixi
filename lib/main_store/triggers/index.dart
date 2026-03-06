@@ -21,3 +21,5 @@ export 'ssh_keys_triggers.dart';
 // Триггеры временных меток
 export 'timestamps/index.dart';
 export 'wifis_triggers.dart';
+
+export 'loyalty_cards_triggers.dart';

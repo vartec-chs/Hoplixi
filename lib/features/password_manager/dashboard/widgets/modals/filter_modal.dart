@@ -23,6 +23,7 @@ import '../../providers/filter_providers/documents_filter_provider.dart';
 import '../../providers/filter_providers/files_filter_provider.dart';
 import '../../providers/filter_providers/identities_filter_provider.dart';
 import '../../providers/filter_providers/license_keys_filter_provider.dart';
+import '../../providers/filter_providers/loyalty_cards_filter_provider.dart';
 import '../../providers/filter_providers/notes_filter_provider.dart';
 import '../../providers/filter_providers/otp_filter_provider.dart';
 import '../../providers/filter_providers/password_filter_provider.dart';
@@ -50,6 +51,7 @@ class _InitialFilterValues {
   final IdentitiesFilter? identitiesFilter;
   final LicenseKeysFilter? licenseKeysFilter;
   final RecoveryCodesFilter? recoveryCodesFilter;
+  final LoyaltyCardsFilter? loyaltyCardsFilter;
 
   _InitialFilterValues({
     required this.baseFilter,
@@ -68,6 +70,7 @@ class _InitialFilterValues {
     this.identitiesFilter,
     this.licenseKeysFilter,
     this.recoveryCodesFilter,
+    this.loyaltyCardsFilter,
   });
 }
 
@@ -282,6 +285,11 @@ class _FilterModalActions extends ConsumerWidget {
               .read(recoveryCodesFilterProvider.notifier)
               .updateFilter(RecoveryCodesFilter(base: emptyBaseFilter));
           break;
+        case EntityType.loyaltyCard:
+          ref
+              .read(loyaltyCardsFilterProvider.notifier)
+              .updateFilter(LoyaltyCardsFilter(base: emptyBaseFilter));
+          break;
       }
 
       contentState.clearFields();
@@ -375,6 +383,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
   IdentitiesFilter? _localIdentitiesFilter;
   LicenseKeysFilter? _localLicenseKeysFilter;
   RecoveryCodesFilter? _localRecoveryCodesFilter;
+  LoyaltyCardsFilter? _localLoyaltyCardsFilter;
 
   // Типобезопасное хранение начальных значений для отката
   _InitialFilterValues? _initialValues;
@@ -442,6 +451,9 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         break;
       case EntityType.recoveryCodes:
         _localRecoveryCodesFilter = ref.read(recoveryCodesFilterProvider);
+        break;
+      case EntityType.loyaltyCard:
+        _localLoyaltyCardsFilter = ref.read(loyaltyCardsFilterProvider);
         break;
     }
 
@@ -575,6 +587,13 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         _initialValues = _InitialFilterValues(
           baseFilter: baseFilter,
           recoveryCodesFilter: recoveryCodesFilter,
+        );
+        break;
+      case EntityType.loyaltyCard:
+        final loyaltyCardsFilter = ref.read(loyaltyCardsFilterProvider);
+        _initialValues = _InitialFilterValues(
+          baseFilter: baseFilter,
+          loyaltyCardsFilter: loyaltyCardsFilter,
         );
         break;
     }
@@ -825,6 +844,12 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
                         .copyWith(base: updatedFilter);
                   }
                   break;
+                case EntityType.loyaltyCard:
+                  if (_localLoyaltyCardsFilter != null) {
+                    _localLoyaltyCardsFilter = _localLoyaltyCardsFilter!
+                        .copyWith(base: updatedFilter);
+                  }
+                  break;
               }
             });
             logDebug('FilterModal: Обновлены базовые фильтры локально');
@@ -1021,6 +1046,18 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
             logDebug('FilterModal: Обновлены фильтры recovery codes локально');
           },
         );
+      case EntityType.loyaltyCard:
+        return LoyaltyCardsFilterSection(
+          filter:
+              _localLoyaltyCardsFilter ??
+              LoyaltyCardsFilter(base: _localBaseFilter),
+          onChanged: (updatedFilter) {
+            setState(() {
+              _localLoyaltyCardsFilter = updatedFilter;
+            });
+            logDebug('FilterModal: Обновлены фильтры карт лояльности локально');
+          },
+        );
     }
   }
 
@@ -1056,6 +1093,8 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         return CategoryType.licenseKey;
       case EntityType.recoveryCodes:
         return CategoryType.recoveryCodes;
+      case EntityType.loyaltyCard:
+        return CategoryType.loyaltyCard;
     }
   }
 
@@ -1091,6 +1130,8 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         return TagType.licenseKey;
       case EntityType.recoveryCodes:
         return TagType.recoveryCodes;
+      case EntityType.loyaltyCard:
+        return TagType.loyaltyCard;
     }
   }
 
@@ -1312,6 +1353,16 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
                 .updateFilter(syncedFilter);
           }
           break;
+        case EntityType.loyaltyCard:
+          if (_localLoyaltyCardsFilter != null) {
+            final syncedFilter = _localLoyaltyCardsFilter!.copyWith(
+              base: _localBaseFilter,
+            );
+            ref
+                .read(loyaltyCardsFilterProvider.notifier)
+                .updateFilter(syncedFilter);
+          }
+          break;
       }
 
       logInfo('FilterModal: Локальные фильтры успешно применены к провайдерам');
@@ -1450,6 +1501,13 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
                 .updateFilterDebounced(_initialValues!.recoveryCodesFilter!);
           }
           break;
+        case EntityType.loyaltyCard:
+          if (_initialValues!.loyaltyCardsFilter != null) {
+            ref
+                .read(loyaltyCardsFilterProvider.notifier)
+                .updateFilterDebounced(_initialValues!.loyaltyCardsFilter!);
+          }
+          break;
       }
 
       // Восстановление локального состояния
@@ -1529,6 +1587,9 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           _localRecoveryCodesFilter = RecoveryCodesFilter(
             base: _localBaseFilter,
           );
+          break;
+        case EntityType.loyaltyCard:
+          _localLoyaltyCardsFilter = LoyaltyCardsFilter(base: _localBaseFilter);
           break;
       }
     });

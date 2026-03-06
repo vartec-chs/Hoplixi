@@ -44,6 +44,7 @@ class PaginatedListNotifier
   ProviderSubscription<IdentitiesFilter>? _identityFilterSubscription;
   ProviderSubscription<LicenseKeysFilter>? _licenseKeyFilterSubscription;
   ProviderSubscription<RecoveryCodesFilter>? _recoveryCodesFilterSubscription;
+  ProviderSubscription<LoyaltyCardsFilter>? _loyaltyCardFilterSubscription;
   ProviderSubscription<DataRefreshState>? _passwordRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _noteRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _bankCardRefreshSubscription;
@@ -58,6 +59,7 @@ class PaginatedListNotifier
   ProviderSubscription<DataRefreshState>? _identityRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _licenseKeyRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _recoveryCodesRefreshSubscription;
+  ProviderSubscription<DataRefreshState>? _loyaltyCardRefreshSubscription;
   ProviderSubscription<DataRefreshState>? _documentRefreshSubscription;
 
   int get pageSize {
@@ -352,6 +354,24 @@ class PaginatedListNotifier
           },
         );
         break;
+      case EntityType.loyaltyCard:
+        _loyaltyCardFilterSubscription = ref.listen(
+          loyaltyCardsFilterProvider,
+          (prev, next) {
+            if (prev != next) {
+              _resetAndLoad();
+            }
+          },
+        );
+        _loyaltyCardRefreshSubscription = ref.listen<DataRefreshState>(
+          dataRefreshTriggerProvider,
+          (previous, next) {
+            if (_shouldHandleRefresh(next, EntityType.loyaltyCard)) {
+              _resetAndLoad();
+            }
+          },
+        );
+        break;
     }
   }
 
@@ -388,6 +408,8 @@ class PaginatedListNotifier
     _licenseKeyFilterSubscription = null;
     _recoveryCodesFilterSubscription?.close();
     _recoveryCodesFilterSubscription = null;
+    _loyaltyCardFilterSubscription?.close();
+    _loyaltyCardFilterSubscription = null;
     _passwordRefreshSubscription?.close();
     _passwordRefreshSubscription = null;
     _noteRefreshSubscription?.close();
@@ -416,6 +438,8 @@ class PaginatedListNotifier
     _licenseKeyRefreshSubscription = null;
     _recoveryCodesRefreshSubscription?.close();
     _recoveryCodesRefreshSubscription = null;
+    _loyaltyCardRefreshSubscription?.close();
+    _loyaltyCardRefreshSubscription = null;
     _documentRefreshSubscription?.close();
     _documentRefreshSubscription = null;
   }
@@ -453,6 +477,8 @@ class PaginatedListNotifier
         return ref.read(licenseKeyFilterDaoProvider.future);
       case EntityType.recoveryCodes:
         return ref.read(recoveryCodesFilterDaoProvider.future);
+      case EntityType.loyaltyCard:
+        return ref.read(loyaltyCardFilterDaoProvider.future);
     }
   }
 
@@ -660,6 +686,21 @@ class PaginatedListNotifier
           offset: offset,
         );
         return recoveryCodesFilter.copyWith(base: base);
+      case EntityType.loyaltyCard:
+        final loyaltyCardsFilter = ref.read(loyaltyCardsFilterProvider);
+        final base = loyaltyCardsFilter.base.copyWith(
+          isFavorite:
+              loyaltyCardsFilter.base.isFavorite ?? tabFilter.isFavorite,
+          isArchived:
+              loyaltyCardsFilter.base.isArchived ?? tabFilter.isArchived,
+          isDeleted: loyaltyCardsFilter.base.isDeleted ?? tabFilter.isDeleted,
+          isFrequentlyUsed:
+              tabFilter.isFrequentlyUsed ??
+              loyaltyCardsFilter.base.isFrequentlyUsed,
+          limit: limit,
+          offset: offset,
+        );
+        return loyaltyCardsFilter.copyWith(base: base);
     }
   }
 

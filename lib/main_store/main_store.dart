@@ -24,6 +24,8 @@ import 'package:hoplixi/main_store/dao/history_dao/password_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/recovery_codes_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/ssh_key_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/wifi_history_dao.dart';
+import 'package:hoplixi/main_store/dao/loyalty_card_dao.dart';
+import 'package:hoplixi/main_store/dao/history_dao/loyalty_card_history_dao.dart';
 import 'package:hoplixi/main_store/dao/icon_dao.dart';
 import 'package:hoplixi/main_store/dao/identity_dao.dart';
 import 'package:hoplixi/main_store/dao/license_key_dao.dart';
@@ -95,6 +97,8 @@ part 'main_store.g.dart';
     BankCardHistory,
     FileHistory,
     DocumentHistory,
+    LoyaltyCardItems,
+    LoyaltyCardHistory
   ],
   daos: [
     StoreMetaDao,
@@ -114,6 +118,9 @@ part 'main_store.g.dart';
     CryptoWalletHistoryDao,
     WifiDao,
     WifiHistoryDao,
+    LoyaltyCardDao,
+    LoyaltyCardHistoryDao,
+    LoyaltyCardFilterDao,
     IdentityDao,
     IdentityHistoryDao,
     LicenseKeyDao,
@@ -227,6 +234,7 @@ class MainStore extends _$MainStore {
         licenseKeyItems,
         recoveryCodesItems,
         recoveryCodes,
+        // loyaltyCardItems,
         otpItems,
         noteItems,
         noteLinks,
@@ -267,6 +275,7 @@ class MainStore extends _$MainStore {
         ...filesHistoryDropTriggers,
         ...bankCardsHistoryDropTriggers,
         ...documentsDropTriggers,
+        ...loyaltyCardsHistoryDropTriggers,
       ]) {
         await customStatement(drop);
       }
@@ -300,6 +309,7 @@ class MainStore extends _$MainStore {
         ...bankCardsHistoryCreateTriggers,
         ...documentsHistoryCreateTriggers,
         ...documentsTriggers,
+        ...loyaltyCardsHistoryCreateTriggers,
       ]) {
         await customStatement(trigger);
       }

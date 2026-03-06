@@ -360,6 +360,8 @@ String _getTagTypeLabel(TagType type) {
       return 'Лицензии';
     case TagType.recoveryCodes:
       return 'Коды восстановления';
+      case TagType.loyaltyCard:
+        return 'Карты лояльности';
     case TagType.mixed:
       return 'Смешанная';
   }
@@ -398,5 +400,7 @@ TagType _convertEntityTypeToTagType(EntityType entityType) {
       return TagType.licenseKey;
     case EntityType.recoveryCodes:
       return TagType.recoveryCodes;
+    case EntityType.loyaltyCard:
+      return TagType.loyaltyCard;
   }
 }

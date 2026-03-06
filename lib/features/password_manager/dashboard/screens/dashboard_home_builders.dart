@@ -24,6 +24,8 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/identi
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/identity/identity_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/license_key/license_key_grid_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/license_key/license_key_list_card.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/loyalty_card/loyalty_card_grid.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/loyalty_card/loyalty_card_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/note/note_grid.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/note/note_list_card.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/otp/otp_grid.dart';
@@ -909,6 +911,31 @@ class DashboardHomeBuilders {
           },
         );
         break;
+      case EntityType.loyaltyCard:
+        if (item is! LoyaltyCardCardDto) return noCorrectType;
+        card = LoyaltyCardListCard(
+          loyaltyCard: item,
+          onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
+          onOpenHistory: () {
+            if (location !=
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.loyaltyCard,
+                  item.id,
+                )) {
+              context.push(
+                AppRoutesPaths.dashboardHistoryWithParams(
+                  EntityType.loyaltyCard,
+                  item.id,
+                ),
+              );
+            }
+          },
+        );
+        break;
     }
 
     // Обертка для долгого нажатия -> открытие view
@@ -1107,6 +1134,14 @@ class DashboardHomeBuilders {
             if (GoRouter.of(context).state.matchedLocation != path) {
               context.push(path);
             }
+          } else if (item is LoyaltyCardCardDto) {
+            final path = AppRoutesPaths.dashboardEntityEdit(
+              EntityType.loyaltyCard,
+              item.id,
+            );
+            if (GoRouter.of(context).state.matchedLocation != path) {
+              context.push(path);
+            }
           }
 
           return false;
@@ -1142,6 +1177,8 @@ class DashboardHomeBuilders {
           } else if (item is LicenseKeyCardDto) {
             itemName = item.name;
           } else if (item is RecoveryCodesCardDto) {
+            itemName = item.name;
+          } else if (item is LoyaltyCardCardDto) {
             itemName = item.name;
           }
 
@@ -1339,6 +1376,16 @@ class DashboardHomeBuilders {
         if (item is! RecoveryCodesCardDto) return noCorrectType;
         card = RecoveryCodesGridCard(
           recoveryCodes: item,
+          onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
+          onTogglePin: () => callbacks.onTogglePin(item.id),
+          onToggleArchive: () => callbacks.onToggleArchive(item.id),
+          onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
+          onRestore: () => callbacks.onRestore(item.id),
+        );
+      case EntityType.loyaltyCard:
+        if (item is! LoyaltyCardCardDto) return noCorrectType;
+        card = LoyaltyCardGridCard(
+          loyaltyCard: item,
           onToggleFavorite: () => callbacks.onToggleFavorite(item.id),
           onTogglePin: () => callbacks.onTogglePin(item.id),
           onToggleArchive: () => callbacks.onToggleArchive(item.id),

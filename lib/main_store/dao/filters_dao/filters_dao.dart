@@ -15,3 +15,4 @@ export 'password_filter_dao.dart';
 export 'recovery_codes_filter_dao.dart';
 export 'ssh_key_filter_dao.dart';
 export 'wifi_filter_dao.dart';
+export 'loyalty_card_filter_dao.dart';

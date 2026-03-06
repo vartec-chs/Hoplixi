@@ -21,7 +21,8 @@ enum EntityType {
   wifi('wifi', 'Wi-Fi', Icons.wifi),
   identity('identities', 'Идентификация', Icons.badge),
   licenseKey('license_keys', 'Лицензии', Icons.confirmation_number),
-  recoveryCodes('recovery_codes', 'Коды восстановления', Icons.password);
+  recoveryCodes('recovery_codes', 'Коды восстановления', Icons.password),
+  loyaltyCard('loyalty_cards', 'Карты лояльности', Icons.card_membership);
 
   const EntityType(this.id, this.label, this.icon);
 
@@ -98,6 +99,8 @@ extension EntityTypeX on EntityType {
         return TagType.licenseKey;
       case EntityType.recoveryCodes:
         return TagType.recoveryCodes;
+      case EntityType.loyaltyCard:
+        return TagType.loyaltyCard;
     }
   }
 
@@ -134,6 +137,8 @@ extension EntityTypeX on EntityType {
         return CategoryType.licenseKey;
       case EntityType.recoveryCodes:
         return CategoryType.recoveryCodes;
+      case EntityType.loyaltyCard:
+        return CategoryType.loyaltyCard;
     }
   }
 }

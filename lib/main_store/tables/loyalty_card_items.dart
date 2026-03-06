@@ -1,0 +1,35 @@
+﻿import 'package:drift/drift.dart';
+
+import 'vault_items.dart';
+
+@DataClassName('LoyaltyCardItemsData')
+class LoyaltyCardItems extends Table {
+  TextColumn get itemId =>
+      text().references(VaultItems, #id, onDelete: KeyAction.cascade)();
+
+  TextColumn get programName => text().withLength(min: 1, max: 255)();
+
+  TextColumn get cardNumber => text().withLength(min: 1, max: 255)();
+
+  TextColumn get holderName => text().nullable()();
+
+  TextColumn get barcodeValue => text().nullable()();
+
+  TextColumn get barcodeType => text().nullable()();
+
+  TextColumn get pointsBalance => text().nullable()();
+
+  TextColumn get tier => text().nullable()();
+
+  DateTimeColumn get expiryDate => dateTime().nullable()();
+
+  TextColumn get website => text().nullable()();
+
+  TextColumn get phoneNumber => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {itemId};
+
+  @override
+  String get tableName => 'loyalty_card_items';
+}

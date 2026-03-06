@@ -144,6 +144,8 @@ class EntityTypeFullDropdown extends StatelessWidget {
         return 'Лицензионные ключи и активации';
       case EntityType.recoveryCodes:
         return 'Резервные коды восстановления доступа';
+      case EntityType.loyaltyCard:
+        return 'Карты лояльности и бонусные программы';
     }
   }
 

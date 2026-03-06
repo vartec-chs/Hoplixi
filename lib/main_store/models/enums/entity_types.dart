@@ -18,6 +18,7 @@ enum VaultItemType {
   identity,
   licenseKey,
   recoveryCodes,
+  loyaltyCard,
 }
 
 extension VaultItemTypeX on VaultItemType {
@@ -53,6 +54,8 @@ extension VaultItemTypeX on VaultItemType {
         return 'licenseKey';
       case VaultItemType.recoveryCodes:
         return 'recoveryCodes';
+      case VaultItemType.loyaltyCard:
+        return 'loyaltyCard';
     }
   }
 
@@ -88,6 +91,8 @@ extension VaultItemTypeX on VaultItemType {
         return VaultItemType.licenseKey;
       case 'recoveryCodes':
         return VaultItemType.recoveryCodes;
+      case 'loyaltyCard':
+        return VaultItemType.loyaltyCard;
       default:
         throw ArgumentError('Invalid VaultItemType value: $value');
     }
@@ -110,6 +115,7 @@ enum CategoryType {
   identity,
   licenseKey,
   recoveryCodes,
+  loyaltyCard,
   mixed,
 }
 
@@ -129,6 +135,7 @@ enum TagType {
   identity,
   licenseKey,
   recoveryCodes,
+  loyaltyCard,
   mixed,
 }
 
@@ -214,6 +221,8 @@ extension CategoryTypeX on CategoryType {
         return 'licenseKey';
       case CategoryType.recoveryCodes:
         return 'recoveryCodes';
+      case CategoryType.loyaltyCard:
+        return 'loyaltyCard';
       case CategoryType.mixed:
         return 'mixed';
     }
@@ -251,6 +260,8 @@ extension CategoryTypeX on CategoryType {
         return CategoryType.licenseKey;
       case 'recoveryCodes':
         return CategoryType.recoveryCodes;
+      case 'loyaltyCard':
+        return CategoryType.loyaltyCard;
       case 'mixed':
         return CategoryType.mixed;
       default:
@@ -292,6 +303,8 @@ extension TagTypeX on TagType {
         return 'licenseKey';
       case TagType.recoveryCodes:
         return 'recoveryCodes';
+      case TagType.loyaltyCard:
+        return 'loyaltyCard';
       case TagType.mixed:
         return 'mixed';
     }
@@ -329,6 +342,8 @@ extension TagTypeX on TagType {
         return TagType.licenseKey;
       case 'recoveryCodes':
         return TagType.recoveryCodes;
+      case 'loyaltyCard':
+        return TagType.loyaltyCard;
       case 'mixed':
         return TagType.mixed;
       default:

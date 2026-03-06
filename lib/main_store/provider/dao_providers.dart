@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/main_store/dao/history_dao/loyalty_card_history_dao.dart';
+import 'package:hoplixi/main_store/dao/loyalty_card_dao.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/db_errors.dart';
 import 'package:riverpod/riverpod.dart';
@@ -223,4 +225,16 @@ final vaultItemDaoProvider = FutureProvider<VaultItemDao>(
 
 final storeSettingsDaoProvider = FutureProvider<StoreSettingsDao>(
   (ref) => _ensureDao(ref, (store) => StoreSettingsDao(store)),
+);
+
+final loyaltyCardDaoProvider = FutureProvider<LoyaltyCardDao>(
+  (ref) => _ensureDao(ref, (store) => LoyaltyCardDao(store)),
+);
+
+final loyaltyCardHistoryDaoProvider = FutureProvider<LoyaltyCardHistoryDao>(
+  (ref) => _ensureDao(ref, (store) => LoyaltyCardHistoryDao(store)),
+);
+
+final loyaltyCardFilterDaoProvider = FutureProvider<LoyaltyCardFilterDao>(
+  (ref) => _ensureDao(ref, (store) => LoyaltyCardFilterDao(store)),
 );
