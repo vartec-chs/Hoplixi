@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,80 +27,136 @@ class ConnectedSessionSection extends ConsumerStatefulWidget {
 
 class _ConnectedSessionSectionState
     extends ConsumerState<ConnectedSessionSection> {
+  bool _dragging = false;
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Column(
-      children: [
-        // Верхняя часть: пир + действия.
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return DropTarget(
+      onDragDone: (detail) async {
+        final files = detail.files.map((f) => File(f.path)).toList();
+        if (files.isNotEmpty) {
+          await ref.read(transferProvider.notifier).sendFiles(files);
+        }
+      },
+      onDragEntered: (_) => setState(() => _dragging = true),
+      onDragExited: (_) => setState(() => _dragging = false),
+      child: Stack(
+        children: [
+          Column(
             children: [
-              _buildConnectedPeerCard(widget.peer, colorScheme, textTheme),
-              const SizedBox(height: 20),
-              Text(
-                'Отправить',
-                style: textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
+              // Верхняя часть: пир + действия.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildConnectedPeerCard(
+                      widget.peer,
+                      colorScheme,
+                      textTheme,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Отправить',
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildCompactAction(
+                            icon: Icons.attach_file,
+                            label: 'Файлы',
+                            colorScheme: colorScheme,
+                            textTheme: textTheme,
+                            onTap: _pickAndSendFiles,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildCompactAction(
+                            icon: Icons.text_fields,
+                            label: 'Текст',
+                            colorScheme: colorScheme,
+                            textTheme: textTheme,
+                            onTap: _showSendTextDialog,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildCompactAction(
-                      icon: Icons.attach_file,
-                      label: 'Файлы',
-                      colorScheme: colorScheme,
-                      textTheme: textTheme,
-                      onTap: _pickAndSendFiles,
-                    ),
+              const SizedBox(height: 16),
+
+              // История обмена — скроллируемая.
+              Expanded(child: _buildHistoryList(colorScheme, textTheme)),
+
+              // Кнопка отключения — закреплена внизу.
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  12,
+                  8,
+                  12,
+                  MediaQuery.paddingOf(context).bottom + 12,
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: SmoothButton(
+                    onPressed: () {
+                      ref.read(transferProvider.notifier).disconnect();
+                    },
+                    icon: const Icon(Icons.link_off),
+                    label: 'Отключиться',
+                    variant: .error,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildCompactAction(
-                      icon: Icons.text_fields,
-                      label: 'Текст',
-                      colorScheme: colorScheme,
-                      textTheme: textTheme,
-                      onTap: _showSendTextDialog,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
           ),
-        ),
-        const SizedBox(height: 16),
-
-        // История обмена — скроллируемая.
-        Expanded(child: _buildHistoryList(colorScheme, textTheme)),
-
-        // Кнопка отключения — закреплена внизу.
-        Padding(
-          padding: EdgeInsets.fromLTRB(
-            12,
-            8,
-            12,
-            MediaQuery.paddingOf(context).bottom + 12,
-          ),
-          child: SizedBox(
-            width: double.infinity,
-            child: SmoothButton(
-              onPressed: () {
-                ref.read(transferProvider.notifier).disconnect();
-              },
-              icon: const Icon(Icons.link_off),
-              label: 'Отключиться',
-              variant: .error,
+          if (_dragging)
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary,
+                    width: 2,
+                  ),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.upload_file,
+                        size: 48,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Отпустите для отправки',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -386,6 +443,4 @@ class _ConnectedSessionSectionState
       await ref.read(transferProvider.notifier).sendText(trimmed);
     }
   }
-
- 
 }

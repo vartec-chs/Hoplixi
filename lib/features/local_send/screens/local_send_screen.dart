@@ -29,6 +29,16 @@ class _LocalSendScreenState extends ConsumerState<LocalSendScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Local Send'),
+        leading: IconButton(
+          onPressed: () => {
+            if (sessionState is SessionConnected ||
+                sessionState is SessionTransferring)
+              ref.read(transferProvider.notifier).disconnect()
+            else
+              context.pop(),
+          },
+          icon: const Icon(Icons.arrow_back),
+        ),
         actions: [
           if (sessionState is SessionDisconnected)
             IconButton(
