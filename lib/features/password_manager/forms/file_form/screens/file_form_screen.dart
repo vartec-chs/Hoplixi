@@ -1,9 +1,10 @@
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_button.dart';
+import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
@@ -31,6 +32,7 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
   String? _noteName;
+  bool _dragging = false;
 
   @override
   void initState() {
@@ -303,31 +305,43 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
 
   /// Секция выбора файла
   Widget _buildFilePickerSection(ThemeData theme, FileFormState state) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Файл *',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 8),
-        if (state.selectedFile != null)
-          _buildSelectedFileCard(theme, state)
-        else
-          _buildFilePickerButton(theme, state),
-        if (state.fileError != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              state.fileError!,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.error,
-              ),
+    return DropTarget(
+      onDragDone: (detail) async {
+        if (detail.files.isNotEmpty) {
+          setState(() => _dragging = false);
+          await ref
+              .read(fileFormProvider.notifier)
+              .setDroppedFile(detail.files.first);
+        }
+      },
+      onDragEntered: (_) => setState(() => _dragging = true),
+      onDragExited: (_) => setState(() => _dragging = false),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Файл *',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
             ),
           ),
-      ],
+          const SizedBox(height: 8),
+          if (state.selectedFile != null)
+            _buildSelectedFileCard(theme, state)
+          else
+            _buildFilePickerButton(theme, state),
+          if (state.fileError != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                state.fileError!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -336,15 +350,21 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
     return InkWell(
       onTap: _handlePickFile,
       borderRadius: BorderRadius.circular(12),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
         width: double.infinity,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
+          color: _dragging
+              ? theme.colorScheme.primary.withValues(alpha: 0.08)
+              : Colors.transparent,
           border: Border.all(
-            color: state.fileError != null
+            color: _dragging
+                ? theme.colorScheme.primary
+                : state.fileError != null
                 ? theme.colorScheme.error
                 : theme.colorScheme.outline,
-            width: 1.5,
+            width: _dragging ? 2 : 1.5,
             style: BorderStyle.solid,
           ),
           borderRadius: BorderRadius.circular(12),
@@ -352,24 +372,28 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
         child: Column(
           children: [
             Icon(
-              Icons.cloud_upload_outlined,
+              _dragging ? Icons.file_download : Icons.cloud_upload_outlined,
               size: 48,
               color: theme.colorScheme.primary,
             ),
             const SizedBox(height: 12),
             Text(
-              'Нажмите для выбора файла',
+              _dragging
+                  ? 'Отпустите для загрузки'
+                  : 'Нажмите или перетащите файл',
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: theme.colorScheme.primary,
+                fontWeight: _dragging ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              'Поддерживаются любые типы файлов',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+            if (!_dragging)
+              Text(
+                'Поддерживаются любые типы файлов',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
           ],
         ),
       ),

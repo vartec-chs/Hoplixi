@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cross_file/cross_file.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_doc_scanner/flutter_doc_scanner.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -208,6 +209,51 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
         tag: _logTag,
       );
       state = state.copyWith(pagesError: 'Ошибка при выборе файлов');
+    }
+  }
+
+  /// Добавить страницы из drag-and-drop
+  Future<void> addDroppedPages(List<XFile> xFiles) async {
+    try {
+      final newPages = <DocumentPageInfo>[];
+      final startPageNumber = state.pages.length + 1;
+
+      for (int i = 0; i < xFiles.length; i++) {
+        final xFile = xFiles[i];
+        final file = File(xFile.path);
+        final fileName = p.basename(xFile.path);
+        final fileSize = await file.length();
+        final mimeType = lookupMimeType(fileName) ?? 'application/octet-stream';
+
+        newPages.add(
+          DocumentPageInfo(
+            file: file,
+            fileName: fileName,
+            fileSize: fileSize,
+            mimeType: mimeType,
+            pageNumber: startPageNumber + i,
+            isPrimary: state.pages.isEmpty && i == 0,
+            isNew: true,
+          ),
+        );
+      }
+
+      final updatedPages = [...state.pages, ...newPages];
+      state = state.copyWith(
+        pages: updatedPages,
+        pagesError: null,
+        title: state.title.isEmpty && newPages.isNotEmpty
+            ? p.basenameWithoutExtension(newPages.first.fileName)
+            : state.title,
+      );
+    } catch (e, stack) {
+      logError(
+        'Failed to add dropped pages',
+        error: e,
+        stackTrace: stack,
+        tag: _logTag,
+      );
+      state = state.copyWith(pagesError: 'Ошибка при загрузке файлов');
     }
   }
 

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -31,6 +32,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
 
   late final TextEditingController _titleController;
   late final TextEditingController _descriptionController;
+  bool _dragging = false;
 
   @override
   void initState() {
@@ -246,43 +248,75 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
 
   /// Секция страниц документа
   Widget _buildPagesSection(ThemeData theme, DocumentFormState state) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return DropTarget(
+      onDragDone: (detail) async {
+        if (detail.files.isNotEmpty) {
+          setState(() => _dragging = false);
+          await ref
+              .read(documentFormProvider.notifier)
+              .addDroppedPages(detail.files);
+        }
+      },
+      onDragEntered: (_) => setState(() => _dragging = true),
+      onDragExited: (_) => setState(() => _dragging = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        decoration: state.pages.isNotEmpty && _dragging
+            ? BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: theme.colorScheme.primary, width: 2),
+              )
+            : const BoxDecoration(),
+        padding: state.pages.isNotEmpty && _dragging
+            ? const EdgeInsets.all(8)
+            : EdgeInsets.zero,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Страницы документа *',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Страницы документа *',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                if (state.pages.isNotEmpty)
+                  Text(
+                    _dragging
+                        ? 'Отпустите для добавления'
+                        : '${state.pageCount} стр. \u2022 ${state.formattedTotalSize}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: _dragging
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurfaceVariant,
+                      fontWeight: _dragging
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                    ),
+                  ),
+              ],
             ),
-            if (state.pages.isNotEmpty)
-              Text(
-                '${state.pageCount} стр. • ${state.formattedTotalSize}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+            const SizedBox(height: 8),
+            if (state.pages.isEmpty)
+              _buildAddPagesButton(theme, state)
+            else
+              _buildPagesList(theme, state),
+            if (state.pagesError != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  state.pagesError!,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
                 ),
               ),
           ],
         ),
-        const SizedBox(height: 8),
-        if (state.pages.isEmpty)
-          _buildAddPagesButton(theme, state)
-        else
-          _buildPagesList(theme, state),
-        if (state.pagesError != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              state.pagesError!,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.error,
-              ),
-            ),
-          ),
-      ],
+      ),
     );
   }
 
@@ -299,37 +333,49 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
       return InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
+            color: _dragging
+                ? theme.colorScheme.primary.withValues(alpha: 0.08)
+                : Colors.transparent,
             border: Border.all(
-              color: state.pagesError != null
+              color: _dragging
+                  ? theme.colorScheme.primary
+                  : state.pagesError != null
                   ? theme.colorScheme.error
                   : theme.colorScheme.outline,
-              width: 1.5,
+              width: _dragging ? 2 : 1.5,
             ),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
             children: [
-              Icon(icon, size: 48, color: theme.colorScheme.primary),
+              Icon(
+                _dragging ? Icons.file_download : icon,
+                size: 48,
+                color: theme.colorScheme.primary,
+              ),
               const SizedBox(height: 12),
               Text(
-                label,
+                _dragging ? 'Отпустите для добавления' : label,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.primary,
+                  fontWeight: _dragging ? FontWeight.w600 : FontWeight.normal,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 4),
-              Text(
-                subLabel,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+              if (!_dragging)
+                Text(
+                  subLabel,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
             ],
           ),
         ),

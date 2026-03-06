@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cross_file/cross_file.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
@@ -141,6 +142,37 @@ class FileFormNotifier extends Notifier<FileFormState> {
         tag: _logTag,
       );
       state = state.copyWith(fileError: 'Ошибка при выборе файла');
+    }
+  }
+
+  /// Установить файл из drag-and-drop
+  Future<void> setDroppedFile(XFile xFile) async {
+    try {
+      final file = File(xFile.path);
+      final fileName = p.basename(xFile.path);
+      final fileSize = await file.length();
+      final fileExtension = p.extension(fileName);
+      final mimeType = lookupMimeType(fileName) ?? 'application/octet-stream';
+
+      state = state.copyWith(
+        selectedFile: file,
+        selectedFileName: fileName,
+        selectedFileSize: fileSize,
+        selectedFileExtension: fileExtension,
+        selectedFileMimeType: mimeType,
+        fileError: null,
+        name: state.name.isEmpty
+            ? p.basenameWithoutExtension(fileName)
+            : state.name,
+      );
+    } catch (e, stack) {
+      logError(
+        'Failed to set dropped file',
+        error: e,
+        stackTrace: stack,
+        tag: _logTag,
+      );
+      state = state.copyWith(fileError: 'Ошибка при загрузке файла');
     }
   }
 

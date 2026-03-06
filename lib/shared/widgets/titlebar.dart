@@ -159,7 +159,7 @@ class _TitleBarState extends ConsumerState<TitleBar> {
                   if (isStoreOpen)
                     IconButton(
                       padding: const EdgeInsets.all(6),
-                      icon: const Icon(Icons.backup, size: 20),
+                      icon: const Icon(Icons.backup, size: 18),
                       tooltip: 'Создать бэкап',
                       constraints: constraints,
                       onPressed: _createBackupNow,
@@ -171,7 +171,7 @@ class _TitleBarState extends ConsumerState<TitleBar> {
 
                   if (widget.showLanguageSwitcher) ...[
                     const LanguageSwitcher(
-                      size: 20,
+                      size: 18,
                       style: LanguageSwitcherStyle.compact,
                       showCompactCode: true,
                     ),
@@ -180,13 +180,13 @@ class _TitleBarState extends ConsumerState<TitleBar> {
 
                   if (widget.showThemeSwitcher)
                     const ThemeSwitcher(
-                      size: 26,
+                      size: 22,
                       style: ThemeSwitcherStyle.animated,
                     ),
 
                   IconButton(
                     padding: const EdgeInsets.all(6),
-                    icon: const Icon(LucideIcons.minus, size: 20),
+                    icon: const Icon(LucideIcons.minus, size: 18),
                     tooltip: 'Свернуть',
                     constraints: constraints,
                     onPressed: () => windowManager.minimize(),
@@ -195,7 +195,7 @@ class _TitleBarState extends ConsumerState<TitleBar> {
                     padding: const EdgeInsets.all(6),
                     tooltip: 'Развернуть',
                     constraints: constraints,
-                    icon: const Icon(LucideIcons.maximize, size: 20),
+                    icon: const Icon(LucideIcons.maximize, size: 18),
                     onPressed: () => windowManager.maximize(),
                   ),
                   IconButton(
