@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/local_send/models/device_info.dart';
 import 'package:hoplixi/features/local_send/providers/discovery_provider.dart';
 import 'package:hoplixi/features/local_send/providers/transfer_provider.dart';
+import 'package:hoplixi/features/local_send/utils/platform_icons.dart';
 import 'package:hoplixi/features/local_send/widgets/device_card.dart';
 
 class DeviceListSection extends ConsumerStatefulWidget {
@@ -51,12 +52,62 @@ class _DeviceListSectionState extends ConsumerState<DeviceListSection>
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final devicesAsync = ref.watch(discoveryProvider);
+    final deviceName = ref.watch(localDeviceName);
+    final platform = ref.watch(localDevicePlatform);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Карточка своего устройства.
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: colorScheme.primary.withValues(alpha: 0.25),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    getPlatformIcon(platform),
+                    color: colorScheme.primary,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      deviceName,
+                      style: textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      'Это устройство',
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
           Row(
             children: [
               AnimatedBuilder(

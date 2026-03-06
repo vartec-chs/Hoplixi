@@ -47,15 +47,19 @@ class _LocalSendScreenState extends ConsumerState<LocalSendScreen> {
       ),
       body: SafeArea(
         child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 250),
           transitionBuilder: (child, animation) {
+            final curvedAnimation = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeInOut,
+            );
             return FadeTransition(
-              opacity: animation,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(-1.0, 0.0),
-                  end: Offset.zero,
-                ).animate(animation),
+              opacity: curvedAnimation,
+              child: ScaleTransition(
+                scale: Tween<double>(
+                  begin: 0.92,
+                  end: 1.0,
+                ).animate(curvedAnimation),
                 child: child,
               ),
             );

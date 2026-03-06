@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
 import 'package:hoplixi/features/local_send/models/device_info.dart';
+import 'package:hoplixi/features/local_send/utils/platform_icons.dart';
 
 /// Карточка обнаруженного устройства в локальной сети.
 ///
@@ -43,7 +43,7 @@ class DeviceCard extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    _platformIcon(device.platform),
+                    getPlatformIcon(device.platform),
                     color: colorScheme.onSurfaceVariant,
                     size: 24,
                   ),
@@ -75,14 +75,5 @@ class DeviceCard extends StatelessWidget {
     );
   }
 
-  IconData _platformIcon(String platform) {
-    return switch (platform) {
-      'android' => Icons.phone_android,
-      'ios' => Icons.phone_iphone,
-      'windows' => Icons.desktop_windows,
-      'macos' => Icons.laptop_mac,
-      'linux' => Icons.computer,
-      _ => Icons.devices,
-    };
-  }
+ 
 }

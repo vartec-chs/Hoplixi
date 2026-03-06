@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/local_send/models/device_info.dart';
 import 'package:hoplixi/features/local_send/providers/incoming_request_provider.dart';
 import 'package:hoplixi/features/local_send/providers/transfer_provider.dart';
+import 'package:hoplixi/features/local_send/utils/platform_icons.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 
 /// Диалог подтверждения входящего запроса на соединение.
@@ -62,7 +63,7 @@ class ReceiveDialog extends ConsumerWidget {
             shape: BoxShape.circle,
           ),
           child: Icon(
-            _platformIcon(peer.platform),
+            getPlatformIcon(peer.platform),
             color: colorScheme.onPrimaryContainer,
             size: 28,
           ),
@@ -118,16 +119,5 @@ class ReceiveDialog extends ConsumerWidget {
         ),
       ],
     );
-  }
-
-  IconData _platformIcon(String platform) {
-    return switch (platform) {
-      'android' => Icons.phone_android,
-      'ios' => Icons.phone_iphone,
-      'windows' => Icons.desktop_windows,
-      'macos' => Icons.laptop_mac,
-      'linux' => Icons.computer,
-      _ => Icons.devices,
-    };
   }
 }

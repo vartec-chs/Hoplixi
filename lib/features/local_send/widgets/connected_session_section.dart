@@ -9,7 +9,9 @@ import 'package:hoplixi/features/local_send/models/device_info.dart';
 import 'package:hoplixi/features/local_send/models/history_item.dart';
 import 'package:hoplixi/features/local_send/providers/session_history_provider.dart';
 import 'package:hoplixi/features/local_send/providers/transfer_provider.dart';
+import 'package:hoplixi/features/local_send/utils/platform_icons.dart';
 import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:open_file/open_file.dart' as open_file;
 
 class ConnectedSessionSection extends ConsumerStatefulWidget {
@@ -166,7 +168,7 @@ class _ConnectedSessionSectionState
               shape: BoxShape.circle,
             ),
             child: Icon(
-              _platformIcon(peer.platform),
+              getPlatformIcon(peer.platform),
               color: colorScheme.primary,
               size: 28,
             ),
@@ -349,14 +351,16 @@ class _ConnectedSessionSectionState
     final text = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
+        insetPadding: const EdgeInsets.all(12),
         title: const Text('Отправить текст'),
         content: TextField(
           controller: controller,
           maxLines: 5,
+          minLines: 1,
           autofocus: true,
-          decoration: InputDecoration(
-            hintText: 'Введите текст',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          decoration: primaryInputDecoration(
+            context,
+            labelText: 'Введите текст для отправки',
           ),
         ),
         actions: [
@@ -383,14 +387,5 @@ class _ConnectedSessionSectionState
     }
   }
 
-  IconData _platformIcon(String platform) {
-    return switch (platform) {
-      'android' => Icons.phone_android,
-      'ios' => Icons.phone_iphone,
-      'windows' => Icons.desktop_windows,
-      'macos' => Icons.laptop_mac,
-      'linux' => Icons.computer,
-      _ => Icons.devices,
-    };
-  }
+ 
 }
