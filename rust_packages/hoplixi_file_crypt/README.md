@@ -2,9 +2,8 @@
 
 **Hoplixi File Crypt** — это высокопроизводительная и безопасная библиотека на
 Rust для шифрования файлов и папок. Разработана для использования в
-production-средах, с упором на надежность, защиту от DoS-атак и бесшовную
-интеграцию с мобильными и десктопными приложениями на **Flutter** через
-`flutter_rust_bridge` (v2).
+production-средах, с упором на надежность, защиту от DoS-атак и удобную
+интеграцию через CLI и публичный Rust API.
 
 ## ✨ Основные возможности
 
@@ -33,18 +32,16 @@ production-средах, с упором на надежность, защиту
   RAII-защитников (Guard) гарантирует 100% удаление временных файлов даже при
   панике (panic) или ошибке в процессе шифрования. Временные данные никогда не
   утекают на диск в открытом виде после сбоя.
-- 📱 **Готовое Flutter API**: Содержит слой `api/crypt_api.rs`, полностью
-  совместимый с кодогенерацией
-  [flutter_rust_bridge](https://fzyzcjy.github.io/flutter_rust_bridge/).
-  Поддерживает шифрование нескольких файлов (Batch processing) и асинхронные
-  потоковые отчеты о прогрессе.
+- 🧩 **Публичный Rust API**: Библиотека предоставляет API для интеграции в
+  backend/desktop-сервисы и поддерживает batch-обработку файлов с асинхронным
+  отслеживанием прогресса.
 
 ## 🛠 Технологический стек
 
 - **Язык**: Rust (Edition 2024)
 - **Криптография**: `chacha20poly1305`, `argon2`, `hkdf`, `sha2`, `rand`
 - **Сжатие**: `sevenz-rust2`, `flate2` (Gzip)
-- **Интеграция**: `flutter_rust_bridge = "=2.11.1"`
+- **Интеграция**: CLI + Rust API
 - **Асинхронность**: `tokio`
 - **Сериализация**: `bincode`, `serde`
 
@@ -81,63 +78,9 @@ cargo build --release
 ./target/release/hoplixi-crypt decrypt <ПУТЬ_К_ФАЙЛУ.enc> <ПАПКА_ВЫХОДА> <ПАРОЛЬ>
 ```
 
-## 🚀 Интеграция с Flutter
-
-Проект компилируется как `cdylib` / `staticlib` и готов к использованию во
-Flutter.
-
-### В проекте Flutter (Dart)
-
-**Генерация биндингов:**
-
-```bash
-flutter_rust_bridge_codegen generate
-```
-
-**Подробная инструкция по использованию:** см.
-[docs-ai/crypt-api-usage.md](../../docs-ai/crypt-api-usage.md)
-
-**Пример использования из Dart:**
-
-```dart
-import 'package:your_app/src/rust/api/crypt_api.dart'; // Автосгенерированный файл
-
-void main() async {
-  // Шифрование одного файла
-  final encrypted = await encryptFile(
-    opts: FrbEncryptOptions(
-      inputPaths: ['/path/to/my_secret.pdf'],
-      outputDir: '/path/to/encrypted_folder',
-      password: 'super-secure-password',
-      gzipCompressed: true,
-    ),
-    onProgress: (event) {
-      print('${event.stage}: ${event.percentage.toStringAsFixed(1)}%');
-    },
-  );
-
-  print('Зашифровано с UUID: ${encrypted.uuid}');
-
-  // Батч-Дешифрование (несколько файлов)
-  final batchDecrypted = await decryptBatch(
-    opts: FrbDecryptOptions(
-      inputPaths: [encrypted.outputPath],
-      outputDir: '/path/to/decrypted_folder',
-      password: 'super-secure-password',
-    ),
-    onProgress: (event) {
-      print('Дешифруем ${event.currentFile}: ${event.percentage}%');
-    },
-  );
-
-  print('Успешно расшифровано: ${batchDecrypted.succeeded.length} файлов.');
-}
-```
-
 ## 📚 Использование напрямую из Rust
 
-Если вы хотите использовать библиотеку за пределами Flutter (например, для
-бэкенда):
+Если вы хотите использовать библиотеку как Rust API (например, в бэкенде):
 
 Добавьте зависимость в ваш `Cargo.toml`:
 
