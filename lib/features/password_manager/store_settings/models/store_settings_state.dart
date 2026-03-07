@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'store_settings_state.freezed.dart';
@@ -45,6 +46,12 @@ sealed class StoreSettingsState with _$StoreSettingsState {
     /// Новый интервал очистки истории в днях (в процессе редактирования)
     @Default(7) int newHistoryCleanupIntervalDays,
 
+    /// Закреплённые типы сущностей (хранятся как список идентификаторов)
+    @Default([]) List<String> pinnedEntityTypes,
+
+    /// Новые закреплённые типы (в процессе редактирования)
+    @Default([]) List<String> newPinnedEntityTypes,
+
     /// Ошибка валидации нового пароля
     @Default('') String newPassword,
 
@@ -82,7 +89,8 @@ sealed class StoreSettingsState with _$StoreSettingsState {
           newHistoryLimit != historyLimit ||
           newHistoryMaxAgeDays != historyMaxAgeDays ||
           newHistoryEnabled != historyEnabled ||
-          newHistoryCleanupIntervalDays != historyCleanupIntervalDays);
+          newHistoryCleanupIntervalDays != historyCleanupIntervalDays ||
+          !listEquals(newPinnedEntityTypes, pinnedEntityTypes));
 
   /// Проверка возможности смены пароля
   bool get canChangePassword =>

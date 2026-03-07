@@ -6,6 +6,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/base_filter_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/models/drawer_tag_filter_state.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
+import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:hoplixi/main_store/models/filter/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -50,7 +51,7 @@ class DrawerTagFilterNotifier extends AsyncNotifier<DrawerTagFilterState> {
       final tagDao = await ref.read(tagDaoProvider.future);
       final filter = TagsFilter.create(
         query: '',
-        types: [_entityType.toTagType()],
+        types: [_entityType.toTagType(), TagType.mixed],
         limit: _kTagPageSize,
         offset: 0,
       );
@@ -94,7 +95,7 @@ class DrawerTagFilterNotifier extends AsyncNotifier<DrawerTagFilterState> {
       final offset = reset ? 0 : s.offset;
       final filter = TagsFilter.create(
         query: s.searchQuery,
-        types: [_entityType.toTagType()],
+        types: [_entityType.toTagType(), TagType.mixed],
         limit: _kTagPageSize,
         offset: offset,
       );

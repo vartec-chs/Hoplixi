@@ -6,6 +6,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/base_filter_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/models/drawer_category_filter_state.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
+import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/models/filter/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -51,7 +52,7 @@ class DrawerCategoryFilterNotifier
       final categoryDao = await ref.read(categoryDaoProvider.future);
       final filter = CategoriesFilter.create(
         query: '',
-        types: [_entityType.toCategoryType()],
+        types: [_entityType.toCategoryType(), CategoryType.mixed],
         limit: _kCategoryPageSize,
         offset: 0,
       );
@@ -95,7 +96,7 @@ class DrawerCategoryFilterNotifier
       final offset = reset ? 0 : s.offset;
       final filter = CategoriesFilter.create(
         query: s.searchQuery,
-        types: [_entityType.toCategoryType()],
+        types: [_entityType.toCategoryType(), CategoryType.mixed],
         limit: _kCategoryPageSize,
         offset: offset,
       );

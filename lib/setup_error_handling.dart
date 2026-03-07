@@ -7,9 +7,8 @@ void setupErrorHandling() {
   // Handle Flutter errors
   FlutterError.onError = (FlutterErrorDetails details) {
     // Ignore specific debugNeedsLayout assertion error WoltModalSheet Flutter issue
-    if (details.exceptionAsString().contains(
-      "Failed assertion: line 3047 pos 12: '!debugNeedsLayout': is not true.",
-    )) {
+    final exceptionStr = details.exceptionAsString();
+    if (exceptionStr.contains("'!debugNeedsLayout': is not true.")) {
       return;
     }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/store_settings/widgets/change_password_section.dart';
+import 'package:hoplixi/features/password_manager/store_settings/widgets/pinned_entity_types_selector.dart';
 import 'package:hoplixi/features/password_manager/store_settings/widgets/store_settings_form.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
@@ -40,15 +41,25 @@ Future<bool?> showStoreSettingsModal(
               tooltip: 'Закрыть',
             ),
           ),
-          trailingNavBarWidget: Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: IconButton(
-              icon: const Icon(Icons.lock_outline),
-              onPressed: () {
-                pageIndexNotifier.value = 1;
-              },
-              tooltip: 'Сменить пароль',
-            ),
+          trailingNavBarWidget: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.push_pin_outlined),
+                onPressed: () {
+                  pageIndexNotifier.value = 2;
+                },
+                tooltip: 'Типы записей',
+              ),
+              IconButton(
+                icon: const Icon(Icons.lock_outline),
+                onPressed: () {
+                  pageIndexNotifier.value = 1;
+                },
+                tooltip: 'Сменить пароль',
+              ),
+              const SizedBox(width: 8),
+            ],
           ),
 
           child: const StoreSettingsForm(),
@@ -78,6 +89,33 @@ Future<bool?> showStoreSettingsModal(
           child: const Padding(
             padding: EdgeInsets.all(8.0),
             child: ChangePasswordSection(),
+          ),
+        ),
+
+        // Страница 3: Типы записей в навигации
+        WoltModalSheetPage(
+          surfaceTintColor: Colors.transparent,
+          hasTopBarLayer: true,
+          topBarTitle: Text(
+            'Типы записей в навигации',
+            style: Theme.of(
+              modalContext,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          isTopBarLayerAlwaysVisible: true,
+          leadingNavBarWidget: Padding(
+            padding: const EdgeInsets.only(left: 8.0),
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                pageIndexNotifier.value = 0;
+              },
+              tooltip: 'Назад',
+            ),
+          ),
+          child: const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: PinnedEntityTypesSelector(),
           ),
         ),
       ];

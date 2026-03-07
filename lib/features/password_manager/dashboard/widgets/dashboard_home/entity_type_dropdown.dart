@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/theme/index.dart';
+import 'package:hoplixi/features/password_manager/dashboard/providers/pinned_entity_types_provider.dart';
 
 import '../../models/entity_type.dart';
 
 /// Компактный выпадающий список для выбора типа сущности
-/// Используется в AppBar для переключения между типами
-class EntityTypeCompactDropdown extends StatelessWidget {
+/// Используется в AppBar для переключения между типами.
+/// Отображает только закреплённые типы (из [pinnedEntityTypesProvider]).
+class EntityTypeCompactDropdown extends ConsumerWidget {
   /// Callback при изменении типа сущности
   final ValueChanged<EntityType>? onEntityTypeChanged;
 
@@ -25,17 +28,25 @@ class EntityTypeCompactDropdown extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+
+    // Закреплённые типы из настроек
+    final availableTypes =
+        ref
+            .watch(pinnedEntityTypesProvider)
+            .whenOrNull(data: (types) => types) ??
+        EntityType.allTypes;
 
     // Получаем текущий тип из пути
     final pathParams = GoRouterState.of(context).pathParameters;
     final entityId = pathParams['entity'];
+    // Если текущий тип не входит в список закреплённых, берём первый в списке
+    final routeType = EntityType.fromId(entityId ?? '');
     final currentType =
-        EntityType.fromId(entityId ?? '') ?? EntityType.password;
-
-    // Получаем все доступные типы
-    final availableTypes = EntityType.allTypes;
+        (routeType != null && availableTypes.contains(routeType))
+        ? routeType
+        : availableTypes.first;
 
     if (availableTypes.isEmpty) {
       return const SizedBox.shrink();

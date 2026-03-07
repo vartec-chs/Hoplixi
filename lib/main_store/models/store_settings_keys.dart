@@ -7,6 +7,9 @@ class StoreSettingsKeys {
   static const String historyLastCleanupTimestamp =
       'history_last_cleanup_timestamp';
 
+  /// Закреплённые типы сущностей в выпадающем списке (JSON-массив id)
+  static const String pinnedEntityTypes = 'pinned_entity_types';
+
   // Private constructor to prevent instantiation
   StoreSettingsKeys._();
 }

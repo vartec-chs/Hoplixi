@@ -62,6 +62,11 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
           ? int.tryParse(historyCleanupIntervalDaysStr) ?? 7
           : 7;
 
+      final pinnedRaw = await settingsDao.getSetting(
+        StoreSettingsKeys.pinnedEntityTypes,
+      );
+      final pinnedIds = _parsePinnedEntityTypes(pinnedRaw);
+
       if (meta != null) {
         state = state.copyWith(
           name: meta.name,
@@ -76,6 +81,8 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
           newHistoryMaxAgeDays: historyMaxAgeDays,
           newHistoryEnabled: historyEnabled,
           newHistoryCleanupIntervalDays: historyCleanupIntervalDays,
+          pinnedEntityTypes: pinnedIds,
+          newPinnedEntityTypes: pinnedIds,
         );
       }
     } catch (e, s) {
@@ -140,6 +147,15 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
   void updateHistoryCleanupIntervalDays(int days) {
     state = state.copyWith(
       newHistoryCleanupIntervalDays: days,
+      saveError: null,
+      successMessage: null,
+    );
+  }
+
+  /// Обновить закреплённые типы сущностей
+  void updatePinnedEntityTypes(List<String> ids) {
+    state = state.copyWith(
+      newPinnedEntityTypes: ids,
       saveError: null,
       successMessage: null,
     );
@@ -218,6 +234,15 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         );
       }
 
+      if (!_listEquals(state.newPinnedEntityTypes, state.pinnedEntityTypes)) {
+        await settingsDao.setSetting(
+          StoreSettingsKeys.pinnedEntityTypes,
+          jsonEncode(state.newPinnedEntityTypes),
+        );
+        // Сбрасываем кэш провайдера закреплённых типов
+        ref.invalidate(storeSettingsDaoProvider);
+      }
+
       if (shouldCleanupHistory) {
         final cleanupService = await ref.read(
           storeCleanupServiceProvider.future,
@@ -234,6 +259,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         historyMaxAgeDays: state.newHistoryMaxAgeDays,
         historyEnabled: state.newHistoryEnabled,
         historyCleanupIntervalDays: state.newHistoryCleanupIntervalDays,
+        pinnedEntityTypes: state.newPinnedEntityTypes,
         successMessage: 'Настройки успешно сохранены',
       );
 
@@ -264,10 +290,29 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       newHistoryLimit: state.historyLimit,
       newHistoryMaxAgeDays: state.historyMaxAgeDays,
       newHistoryEnabled: state.historyEnabled,
+      newPinnedEntityTypes: state.pinnedEntityTypes,
       nameError: null,
       saveError: null,
       successMessage: null,
     );
+  }
+
+  /// Парсинг JSON-списка закреплённых типов
+  static List<String> _parsePinnedEntityTypes(String? raw) {
+    if (raw == null || raw.isEmpty) return const [];
+    try {
+      return (jsonDecode(raw) as List).cast<String>();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  static bool _listEquals(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   /// Очистить сообщения

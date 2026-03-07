@@ -5,9 +5,9 @@ targets:
         options:
           base_locale: ru
           fallback_strategy: base_locale
-          input_directory: ./lib/l10n
+          input_directory: lib/l10n
           input_file_pattern: .i18n.arb
-          output_directory: ./lib/generated/l10n
+          output_directory: lib/generated/l10n
           output_file_name: translations.g.dart
           lazy: true
           locale_handling: true
