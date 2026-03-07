@@ -619,6 +619,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         description: 'Просмотр логов',
         onTap: () => context.push(AppRoutesPaths.logs),
       ),
+      if (!MainConstants.isProduction) ...[
+        ActionItem(
+          icon: LucideIcons.box,
+          label: 'Component Showcase',
+          description: 'Тестовый экран для UI-компонентов',
+          onTap: () => context.push(AppRoutesPaths.componentShowcase),
+        ),
+      ],
     ];
   }
 

@@ -82,7 +82,11 @@ class EntityTypeCompactDropdown extends StatelessWidget {
             );
 
             // Навигация с помощью Go Router
-            context.go('/dashboard/${newType.id}');
+            String newPath = '/dashboard/${newType.id}';
+            if (GoRouterState.of(context).fullPath!.contains('/add')) {
+              newPath += '/add';
+            }
+            context.go(newPath);
 
             // Вызываем callback
             onEntityTypeChanged?.call(newType);
@@ -246,7 +250,11 @@ class EntityTypeFullDropdown extends StatelessWidget {
                 );
 
                 // Навигация с помощью Go Router
-                context.go('/dashboard/${newType.id}');
+                String newPath = '/dashboard/${newType.id}';
+                if (GoRouterState.of(context).fullPath!.contains('/add')) {
+                  newPath += '/add';
+                }
+                context.go(newPath);
 
                 // Вызываем callback
                 onEntityTypeChanged?.call(newType);

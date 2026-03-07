@@ -69,7 +69,7 @@ class _CategorySectionState extends ConsumerState<CategorySection> {
     );
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 200),
       child: categoryStateAsync.when(
         data: (state) => Container(
           key: ValueKey('data-${state.categories.length}'),

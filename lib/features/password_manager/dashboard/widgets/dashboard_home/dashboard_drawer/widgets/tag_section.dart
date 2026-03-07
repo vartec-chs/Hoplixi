@@ -47,7 +47,7 @@ class _TagSectionState extends ConsumerState<TagSection> {
     );
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 200),
       child: tagStateAsync.when(
         data: (state) => Container(
           key: ValueKey('data-${state.tags.length}'),
@@ -55,7 +55,9 @@ class _TagSectionState extends ConsumerState<TagSection> {
         ),
         loading: () => const Center(
           key: ValueKey('loading'),
-          child: CircularProgressIndicator(),
+          child: CircularProgressIndicator(
+           
+          ),
         ),
         error: (e, _) => Center(
           key: const ValueKey('error'),
