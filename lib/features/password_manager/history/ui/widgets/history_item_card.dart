@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/features/password_manager/history/models/history_item.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' show DateFormat;
 
 /// Карточка элемента истории
 class HistoryItemCard extends StatelessWidget {

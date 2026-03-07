@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/core/logger/models.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' show DateFormat;
+
+
 
 /// Виджет для отображения одной записи лога
 class LogEntryTile extends StatefulWidget {

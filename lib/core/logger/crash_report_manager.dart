@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/logger/models.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:path/path.dart' as path;
 
 /// Результат очистки краш-репортов

@@ -111,7 +111,6 @@ class _AppState extends ConsumerState<App> {
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return const AppLoadingScreen();
-
               }
 
               final themeMode = snapshot.data![0] as ThemeMode;
@@ -131,6 +130,7 @@ class _AppState extends ConsumerState<App> {
                   themeMode: themeMode,
                   localizationsDelegates: const [
                     S.delegate,
+
                     GlobalMaterialLocalizations.delegate,
                     GlobalCupertinoLocalizations.delegate,
                     GlobalWidgetsLocalizations.delegate,
