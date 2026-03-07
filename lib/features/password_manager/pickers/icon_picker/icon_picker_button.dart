@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -138,7 +137,7 @@ class _IconPickerButtonState extends ConsumerState<IconPickerButton> {
             child: Material(
               color: Colors.transparent,
               child: Tooltip(
-                message: S.of(context).pickersDeleteIcon,
+                message: "Удалить иконку",
                 child: InkWell(
                   onTap: _clearIcon,
                   customBorder: const CircleBorder(),
@@ -185,7 +184,7 @@ class _IconPickerButtonState extends ConsumerState<IconPickerButton> {
         ),
         const SizedBox(height: 8),
         Text(
-          widget.hintText ?? S.of(context).pickersSelectIconHint,
+          widget.hintText ?? "Выберите иконку",
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),

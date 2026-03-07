@@ -8,7 +8,7 @@ import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picke
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
-import 'package:hoplixi/generated/l10n.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 
 import '../providers/ssh_key_form_provider.dart';
 
@@ -63,8 +63,8 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
 
     if (!success) {
       Toaster.error(
-        title: S.of(context).saveError,
-        description: S.of(context).checkFormFieldsAndTryAgain,
+        title: context.t.dashboard_forms.save_error,
+        description: context.t.dashboard_forms.check_form_fields_and_try_again,
       );
     }
   }
@@ -79,8 +79,8 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
       if (!wasSaved && isSaved) {
         Toaster.success(
           title: widget.sshKeyId != null
-              ? S.of(context).sshKeyUpdated
-              : S.of(context).sshKeyCreated,
+              ? context.t.dashboard_forms.ssh_key_updated
+              : context.t.dashboard_forms.ssh_key_created,
         );
         ref.read(sshKeyFormProvider(widget.sshKeyId).notifier).resetSaved();
         if (context.mounted) context.pop(true);
@@ -93,7 +93,7 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
       error: (error, _) => Scaffold(
         appBar: AppBar(
           leading: const FormCloseButton(),
-          title: Text(S.of(context).formError),
+          title: Text(context.t.dashboard_forms.form_error),
         ),
         body: Center(child: Text('$error')),
       ),
@@ -127,8 +127,8 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
             leading: const FormCloseButton(),
             title: Text(
               state.isEditMode
-                  ? S.of(context).editSshKey
-                  : S.of(context).newSshKey,
+                  ? context.t.dashboard_forms.edit_ssh_key
+                  : context.t.dashboard_forms.new_ssh_key,
             ),
             actions: [
               if (state.isSaving)
@@ -152,7 +152,7 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                   controller: _nameController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).nameLabel,
+                    labelText: context.t.dashboard_forms.name_label,
                     errorText: state.nameError,
                   ),
                   onChanged: notifier.setName,
@@ -164,7 +164,7 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                   maxLines: 5,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).publicKeyRequiredLabel,
+                    labelText: context.t.dashboard_forms.public_key_required_label,
                     errorText: state.publicKeyError,
                   ),
                   onChanged: notifier.setPublicKey,
@@ -176,7 +176,7 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                   maxLines: 6,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).privateKeyRequiredLabel,
+                    labelText: context.t.dashboard_forms.private_key_required_label,
                     errorText: state.privateKeyError,
                   ),
                   onChanged: notifier.setPrivateKey,
@@ -186,7 +186,7 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                   controller: _keyTypeController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).keyTypeLabel,
+                    labelText: context.t.dashboard_forms.key_type_label,
                   ),
                   onChanged: notifier.setKeyType,
                 ),
@@ -195,7 +195,7 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                   controller: _fingerprintController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).fingerprintLabel,
+                    labelText: context.t.dashboard_forms.fingerprint_label,
                   ),
                   onChanged: notifier.setFingerprint,
                 ),
@@ -204,7 +204,7 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                   controller: _usageController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).usageLabel,
+                    labelText: context.t.dashboard_forms.usage_label,
                   ),
                   onChanged: notifier.setUsage,
                 ),
@@ -235,7 +235,7 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                   maxLines: 4,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).descriptionLabel,
+                    labelText: context.t.dashboard_forms.description_label,
                   ),
                   onChanged: notifier.setDescription,
                 ),
@@ -243,7 +243,7 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                 SwitchListTile(
                   value: state.addedToAgent,
                   onChanged: notifier.setAddedToAgent,
-                  title: Text(S.of(context).addedToSshAgentLabel),
+                  title: Text(context.t.dashboard_forms.added_to_ssh_agent_label),
                 ),
               ],
             ),

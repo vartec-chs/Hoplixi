@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_preferences/app_preferences.dart';
 import 'package:hoplixi/di_init.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 
 final localeProvider = AsyncNotifierProvider<LocaleProvider, Locale>(
   LocaleProvider.new,
@@ -26,6 +27,7 @@ class LocaleProvider extends AsyncNotifier<Locale> {
             WidgetsBinding.instance.platformDispatcher.locale.languageCode,
       );
 
+      LocaleSettings.setLocaleRaw(resolvedLocale.languageCode);
       state = AsyncData(resolvedLocale);
       return resolvedLocale;
     } catch (_) {
@@ -33,6 +35,7 @@ class LocaleProvider extends AsyncNotifier<Locale> {
         WidgetsBinding.instance.platformDispatcher.locale.languageCode,
       );
 
+      LocaleSettings.setLocaleRaw(resolvedLocale.languageCode);
       state = AsyncData(resolvedLocale);
       return resolvedLocale;
     }
@@ -57,6 +60,7 @@ class LocaleProvider extends AsyncNotifier<Locale> {
 
   Future<void> setLocaleCode(String languageCode, {bool persist = true}) async {
     final resolvedLocale = _resolveLocale(languageCode);
+    LocaleSettings.setLocaleRaw(resolvedLocale.languageCode);
     state = AsyncData(resolvedLocale);
 
     if (!persist) {

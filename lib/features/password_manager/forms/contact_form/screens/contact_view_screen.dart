@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/generated/l10n.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
@@ -43,7 +43,7 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
       final dao = await ref.read(contactDaoProvider.future);
       final row = await dao.getById(widget.contactId);
       if (row == null) {
-        Toaster.error(title: S.of(context).contactNotFound);
+        Toaster.error(title: context.t.dashboard_forms.contact_not_found);
         if (mounted) context.pop();
         return;
       }
@@ -62,7 +62,7 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
         _isEmergencyContact = details.isEmergencyContact;
       });
     } catch (e) {
-      Toaster.error(title: S.of(context).commonLoadError, description: '$e');
+      Toaster.error(title: context.t.dashboard_forms.common_load_error, description: '$e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -70,11 +70,11 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
 
   Future<void> _copyValue(String? value, String label) async {
     if (value == null || value.isEmpty) {
-      Toaster.warning(title: S.of(context).commonFieldMissing(label));
+      Toaster.warning(title: context.t.dashboard_forms.common_field_missing(Field: label));
       return;
     }
     await Clipboard.setData(ClipboardData(text: value));
-    Toaster.success(title: S.of(context).commonFieldCopied(label));
+    Toaster.success(title: context.t.dashboard_forms.common_field_copied(Field: label));
   }
 
   String _formatDate(DateTime value) {
@@ -83,11 +83,11 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = S.of(context);
+    final l10n = context.t.dashboard_forms;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.viewContact),
+        title: Text(l10n.view_contact),
         actions: [
           IconButton(
             tooltip: l10n.edit,
@@ -119,56 +119,56 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.warning_amber_rounded),
-                      title: Text(l10n.emergencyContactLabel),
+                      title: Text(l10n.emergency_contact_label),
                     ),
                   if (_phone?.isNotEmpty == true)
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.phoneLabel),
+                      title: Text(l10n.phone_label),
                       subtitle: Text(_phone!),
                       trailing: IconButton(
-                        onPressed: () => _copyValue(_phone, l10n.phoneLabel),
+                        onPressed: () => _copyValue(_phone, l10n.phone_label),
                         icon: const Icon(Icons.copy),
                       ),
                     ),
                   if (_email?.isNotEmpty == true)
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.emailLabel),
+                      title: Text(l10n.email_label),
                       subtitle: Text(_email!),
                       trailing: IconButton(
-                        onPressed: () => _copyValue(_email, l10n.emailLabel),
+                        onPressed: () => _copyValue(_email, l10n.email_label),
                         icon: const Icon(Icons.copy),
                       ),
                     ),
                   if (_jobTitle?.isNotEmpty == true)
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.jobTitleLabel),
+                      title: Text(l10n.job_title_label),
                       subtitle: Text(_jobTitle!),
                     ),
                   if (_address?.isNotEmpty == true)
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.addressLabel),
+                      title: Text(l10n.address_label),
                       subtitle: Text(_address!),
                     ),
                   if (_website?.isNotEmpty == true)
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.websiteLabel),
+                      title: Text(l10n.website_label),
                       subtitle: Text(_website!),
                     ),
                   if (_birthday != null)
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.birthdayLabel),
+                      title: Text(l10n.birthday_label),
                       subtitle: Text(_formatDate(_birthday!)),
                     ),
                   if (_description?.isNotEmpty == true)
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.descriptionLabel),
+                      title: Text(l10n.description_label),
                       subtitle: Text(_description!),
                     ),
                 ],

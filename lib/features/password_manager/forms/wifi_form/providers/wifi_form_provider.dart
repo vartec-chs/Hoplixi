@@ -1,7 +1,7 @@
 ﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
-import 'package:hoplixi/generated/l10n.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -64,14 +64,14 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
   void setName(String value) => _update(
     (s) => s.copyWith(
       name: value,
-      nameError: value.trim().isEmpty ? S.current.validationRequiredName : null,
+      nameError: value.trim().isEmpty ? t.dashboard_forms.validation_required_name : null,
     ),
   );
 
   void setSsid(String value) => _update(
     (s) => s.copyWith(
       ssid: value,
-      ssidError: value.trim().isEmpty ? S.current.validationRequiredSsid : null,
+      ssidError: value.trim().isEmpty ? t.dashboard_forms.validation_required_ssid : null,
     ),
   );
 
@@ -88,7 +88,7 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
   void setPriority(String value) {
     final v = value.trim();
     final err = v.isEmpty || int.tryParse(v) != null
-        ? null : S.current.validationMustBeInteger;
+        ? null : t.dashboard_forms.validation_must_be_integer;
     _update((s) => s.copyWith(priority: value, priorityError: err));
   }
 
@@ -107,14 +107,14 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
   bool validate() {
     final current = _current;
     final nameError = current.name.trim().isEmpty
-        ? S.current.validationRequiredName : null;
+        ? t.dashboard_forms.validation_required_name : null;
     final ssidError = current.ssid.trim().isEmpty
-        ? S.current.validationRequiredSsid
+        ? t.dashboard_forms.validation_required_ssid
         : null;
     final priorityError =
         current.priority.trim().isEmpty ||
             int.tryParse(current.priority.trim()) != null
-        ? null : S.current.validationMustBeInteger;
+        ? null : t.dashboard_forms.validation_must_be_integer;
 
     _update(
       (s) => s.copyWith(

@@ -1,4 +1,5 @@
 {
+	"@@locale": "en",
 	"certificatePemLabel": "Certificate PEM *",
 	"jobTitleLabel": "Job title",
 	"generatedAtIsoLabel": "Generated at (ISO8601)",

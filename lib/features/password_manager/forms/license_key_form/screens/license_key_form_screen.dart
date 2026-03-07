@@ -8,7 +8,7 @@ import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picke
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
-import 'package:hoplixi/generated/l10n.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 
 import '../providers/license_key_form_provider.dart';
 
@@ -85,8 +85,8 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
 
     if (!success) {
       Toaster.error(
-        title: S.of(context).saveError,
-        description: S.of(context).checkFormFieldsAndTryAgain,
+        title: context.t.dashboard_forms.save_error,
+        description: context.t.dashboard_forms.check_form_fields_and_try_again,
       );
     }
   }
@@ -101,8 +101,8 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
       if (!wasSaved && isSaved) {
         Toaster.success(
           title: widget.licenseKeyId != null
-              ? S.of(context).licenseUpdated
-              : S.of(context).licenseCreated,
+              ? context.t.dashboard_forms.license_updated
+              : context.t.dashboard_forms.license_created,
         );
         ref
             .read(licenseKeyFormProvider(widget.licenseKeyId).notifier)
@@ -117,7 +117,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
       error: (error, _) => Scaffold(
         appBar: AppBar(
           leading: const FormCloseButton(),
-          title: Text(S.of(context).formError),
+          title: Text(context.t.dashboard_forms.form_error),
         ),
         body: Center(child: Text('$error')),
       ),
@@ -174,8 +174,8 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
             leading: const FormCloseButton(),
             title: Text(
               state.isEditMode
-                  ? S.of(context).editLicense
-                  : S.of(context).newLicense,
+                  ? context.t.dashboard_forms.edit_license
+                  : context.t.dashboard_forms.new_license,
             ),
             actions: [
               if (state.isSaving)
@@ -199,7 +199,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   controller: _nameController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).nameLabel,
+                    labelText: context.t.dashboard_forms.name_label,
                     errorText: state.nameError,
                   ),
                   onChanged: notifier.setName,
@@ -209,7 +209,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   controller: _productController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).productLabel,
+                    labelText: context.t.dashboard_forms.product_label,
                     errorText: state.productError,
                   ),
                   onChanged: notifier.setProduct,
@@ -219,7 +219,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   controller: _licenseKeyController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).licenseKeyLabel,
+                    labelText: context.t.dashboard_forms.license_key_label,
                     errorText: state.licenseKeyError,
                   ),
                   onChanged: notifier.setLicenseKey,
@@ -229,7 +229,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   controller: _licenseTypeController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).licenseTypeLabel,
+                    labelText: context.t.dashboard_forms.license_type_label,
                   ),
                   onChanged: notifier.setLicenseType,
                 ),
@@ -239,7 +239,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   keyboardType: TextInputType.number,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).seatsCountLabel,
+                    labelText: context.t.dashboard_forms.seats_count_label,
                     errorText: state.seatsError,
                   ),
                   onChanged: notifier.setSeats,
@@ -250,7 +250,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   keyboardType: TextInputType.number,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).maxActivationsLabel,
+                    labelText: context.t.dashboard_forms.max_activations_label,
                     errorText: state.maxActivationsError,
                   ),
                   onChanged: notifier.setMaxActivations,
@@ -260,7 +260,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   controller: _activatedOnController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).activatedAtIsoLabel,
+                    labelText: context.t.dashboard_forms.activated_at_iso_label,
                     errorText: state.activatedOnError,
                   ),
                   onChanged: notifier.setActivatedOn,
@@ -270,7 +270,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   controller: _purchaseDateController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).purchaseDateIsoLabel,
+                    labelText: context.t.dashboard_forms.purchase_date_iso_label,
                     errorText: state.purchaseDateError,
                   ),
                   onChanged: notifier.setPurchaseDate,
@@ -280,7 +280,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   controller: _purchaseFromController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).purchasedFromLabel,
+                    labelText: context.t.dashboard_forms.purchased_from_label,
                   ),
                   onChanged: notifier.setPurchaseFrom,
                 ),
@@ -289,7 +289,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   controller: _orderIdController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).orderIdLabel,
+                    labelText: context.t.dashboard_forms.order_id_label,
                   ),
                   onChanged: notifier.setOrderId,
                 ),
@@ -298,7 +298,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   controller: _licenseFileIdController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).licenseFileIdLabel,
+                    labelText: context.t.dashboard_forms.license_file_id_label,
                   ),
                   onChanged: notifier.setLicenseFileId,
                 ),
@@ -307,7 +307,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   controller: _expiresAtController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).expiresAtIsoLabel,
+                    labelText: context.t.dashboard_forms.expires_at_iso_label,
                     errorText: state.expiresAtError,
                   ),
                   onChanged: notifier.setExpiresAt,
@@ -317,7 +317,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   controller: _supportContactController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).supportContactLabel,
+                    labelText: context.t.dashboard_forms.support_contact_label,
                   ),
                   onChanged: notifier.setSupportContact,
                 ),
@@ -351,7 +351,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   maxLines: 4,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).descriptionLabel,
+                    labelText: context.t.dashboard_forms.description_label,
                   ),
                   onChanged: notifier.setDescription,
                 ),

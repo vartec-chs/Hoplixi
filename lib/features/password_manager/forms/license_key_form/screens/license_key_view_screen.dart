@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/generated/l10n.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
@@ -47,7 +47,7 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
       final dao = await ref.read(licenseKeyDaoProvider.future);
       final row = await dao.getById(widget.licenseKeyId);
       if (row == null) {
-        Toaster.error(title: S.of(context).commonRecordNotFound);
+        Toaster.error(title: context.t.dashboard_forms.common_record_not_found);
         if (mounted) context.pop();
         return;
       }
@@ -71,7 +71,7 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
         _description = item.description;
       });
     } catch (e) {
-      Toaster.error(title: S.of(context).commonLoadError, description: '$e');
+      Toaster.error(title: context.t.dashboard_forms.common_load_error, description: '$e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -84,11 +84,11 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = S.of(context);
+    final l10n = context.t.dashboard_forms;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.viewLicense),
+        title: Text(l10n.view_license),
         actions: [
           IconButton(
             tooltip: l10n.edit,
@@ -110,59 +110,59 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
                 children: [
                   Text(_name, style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 12),
-                  ListTile(title: Text(l10n.productLabel), subtitle: Text(_product)),
+                  ListTile(title: Text(l10n.product_label), subtitle: Text(_product)),
                   ListTile(
-                    title: Text(l10n.licenseKeyLabel),
+                    title: Text(l10n.license_key_label),
                     subtitle: SelectableText(_licenseKey),
                   ),
                   if (_licenseType?.isNotEmpty == true)
                     ListTile(
-                      title: Text(l10n.licenseTypeLabel),
+                      title: Text(l10n.license_type_label),
                       subtitle: Text(_licenseType!),
                     ),
                   if (_seats != null)
                     ListTile(
-                      title: Text(l10n.seatsCountLabel),
+                      title: Text(l10n.seats_count_label),
                       subtitle: Text('$_seats'),
                     ),
                   if (_maxActivations != null)
                     ListTile(
-                      title: Text(l10n.maxActivationsLabel),
+                      title: Text(l10n.max_activations_label),
                       subtitle: Text('$_maxActivations'),
                     ),
                   ListTile(
-                    title: Text(l10n.activatedAtIsoLabel),
+                    title: Text(l10n.activated_at_iso_label),
                     subtitle: Text(_fmt(_activatedOn)),
                   ),
                   ListTile(
-                    title: Text(l10n.purchaseDateIsoLabel),
+                    title: Text(l10n.purchase_date_iso_label),
                     subtitle: Text(_fmt(_purchaseDate)),
                   ),
                   if (_purchaseFrom?.isNotEmpty == true)
                     ListTile(
-                      title: Text(l10n.purchasedFromLabel),
+                      title: Text(l10n.purchased_from_label),
                       subtitle: Text(_purchaseFrom!),
                     ),
                   if (_orderId?.isNotEmpty == true)
-                    ListTile(title: Text(l10n.orderIdLabel), subtitle: Text(_orderId!)),
+                    ListTile(title: Text(l10n.order_id_label), subtitle: Text(_orderId!)),
                   if (_licenseFileId?.isNotEmpty == true)
                     ListTile(
-                      title: Text(l10n.licenseFileIdLabel),
+                      title: Text(l10n.license_file_id_label),
                       subtitle: Text(_licenseFileId!),
                     ),
                   ListTile(
-                    title: Text(l10n.expiresAtIsoLabel),
+                    title: Text(l10n.expires_at_iso_label),
                     subtitle: Text(_fmt(_expiresAt)),
                   ),
                   if (_supportContact?.isNotEmpty == true)
                     ListTile(
-                      title: Text(l10n.supportContactLabel),
+                      title: Text(l10n.support_contact_label),
                       subtitle: Text(_supportContact!),
                     ),
                   if (_description?.isNotEmpty == true)
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.descriptionLabel),
+                      title: Text(l10n.description_label),
                       subtitle: Text(_description!),
                     ),
                 ],

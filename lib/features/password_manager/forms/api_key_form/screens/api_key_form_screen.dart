@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
@@ -6,7 +6,7 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_b
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
-import 'package:hoplixi/generated/l10n.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:intl/intl.dart' show DateFormat;
@@ -61,8 +61,8 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
 
     if (!success) {
       Toaster.error(
-        title: S.of(context).apiKeySaveError,
-        description: S.of(context).apiKeyCheckFieldsMessage,
+        title: context.t.dashboard_forms.api_key_save_error,
+        description: context.t.dashboard_forms.api_key_check_fields_message,
       );
     }
   }
@@ -77,8 +77,8 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
       if (!wasSaved && isSaved) {
         Toaster.success(
           title: widget.apiKeyId != null
-              ? S.of(context).apiKeyUpdated
-              : S.of(context).apiKeyCreated,
+              ? context.t.dashboard_forms.api_key_updated
+              : context.t.dashboard_forms.api_key_created,
         );
         ref.read(apiKeyFormProvider(widget.apiKeyId).notifier).resetSaved();
         if (context.mounted) context.pop(true);
@@ -91,7 +91,7 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
       error: (error, _) => Scaffold(
         appBar: AppBar(
           leading: const FormCloseButton(),
-          title: Text(S.of(context).apiKeyFormError),
+          title: Text(context.t.dashboard_forms.api_key_form_error),
         ),
         body: Center(child: Text('$error')),
       ),
@@ -120,8 +120,8 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
             leading: const FormCloseButton(),
             title: Text(
               state.isEditMode
-                  ? S.of(context).editApiKey
-                  : S.of(context).newApiKey,
+                  ? context.t.dashboard_forms.edit_api_key
+                  : context.t.dashboard_forms.new_api_key,
             ),
             actions: [
               if (state.isSaving)
@@ -145,7 +145,7 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                   controller: _nameController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).apiKeyNameLabel,
+                    labelText: context.t.dashboard_forms.api_key_name_label,
                     errorText: state.nameError,
                   ),
                   onChanged: ref
@@ -157,7 +157,7 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                   controller: _serviceController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).apiKeyServiceLabel,
+                    labelText: context.t.dashboard_forms.api_key_service_label,
                     errorText: state.serviceError,
                   ),
                   onChanged: ref
@@ -169,7 +169,7 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                   controller: _keyController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).apiKeyKeyLabel,
+                    labelText: context.t.dashboard_forms.api_key_key_label,
                     errorText: state.keyError,
                   ),
                   onChanged: ref
@@ -181,7 +181,7 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                   controller: _tokenTypeController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).apiKeyTokenTypeLabel,
+                    labelText: context.t.dashboard_forms.api_key_token_type_label,
                   ),
                   onChanged: ref
                       .read(apiKeyFormProvider(widget.apiKeyId).notifier)
@@ -192,7 +192,7 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                   controller: _environmentController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).apiKeyEnvironmentLabel,
+                    labelText: context.t.dashboard_forms.api_key_environment_label,
                   ),
                   onChanged: ref
                       .read(apiKeyFormProvider(widget.apiKeyId).notifier)
@@ -231,7 +231,7 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                   maxLines: 4,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).apiKeyDescriptionLabel,
+                    labelText: context.t.dashboard_forms.api_key_description_label,
                   ),
                   onChanged: ref
                       .read(apiKeyFormProvider(widget.apiKeyId).notifier)
@@ -249,8 +249,8 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                   readOnly: true,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).expirationDateLabel,
-                    hintText: S.of(context).selectDateTimeHint,
+                    labelText: context.t.dashboard_forms.expiration_date_label,
+                    hintText: context.t.dashboard_forms.select_date_time_hint,
                     suffixIcon: state.expiresAt != null
                         ? IconButton(
                             icon: const Icon(Icons.clear, size: 20),
@@ -296,7 +296,7 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                   onChanged: ref
                       .read(apiKeyFormProvider(widget.apiKeyId).notifier)
                       .setRevoked,
-                  title: Text(S.of(context).apiKeyRevokedLabel),
+                  title: Text(context.t.dashboard_forms.api_key_revoked_label),
                 ),
               ],
             ),

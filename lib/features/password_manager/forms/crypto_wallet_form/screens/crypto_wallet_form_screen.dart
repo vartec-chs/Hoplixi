@@ -8,7 +8,7 @@ import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picke
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
-import 'package:hoplixi/generated/l10n.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 
 import '../providers/crypto_wallet_form_provider.dart';
 
@@ -80,8 +80,8 @@ class _CryptoWalletFormScreenState
 
     if (!success) {
       Toaster.error(
-        title: S.of(context).saveError,
-        description: S.of(context).checkFormFieldsAndTryAgain,
+        title: context.t.dashboard_forms.save_error,
+        description: context.t.dashboard_forms.check_form_fields_and_try_again,
       );
     }
   }
@@ -98,8 +98,8 @@ class _CryptoWalletFormScreenState
       if (!wasSaved && isSaved) {
         Toaster.success(
           title: widget.cryptoWalletId != null
-              ? S.of(context).cryptoWalletUpdated
-              : S.of(context).cryptoWalletCreated,
+              ? context.t.dashboard_forms.crypto_wallet_updated
+              : context.t.dashboard_forms.crypto_wallet_created,
         );
         ref
             .read(cryptoWalletFormProvider(widget.cryptoWalletId).notifier)
@@ -114,7 +114,7 @@ class _CryptoWalletFormScreenState
       error: (error, _) => Scaffold(
         appBar: AppBar(
           leading: const FormCloseButton(),
-          title: Text(S.of(context).formError),
+          title: Text(context.t.dashboard_forms.form_error),
         ),
         body: Center(child: Text('$error')),
       ),
@@ -165,8 +165,8 @@ class _CryptoWalletFormScreenState
             leading: const FormCloseButton(),
             title: Text(
               state.isEditMode
-                  ? S.of(context).editCryptoWallet
-                  : S.of(context).newCryptoWallet,
+                  ? context.t.dashboard_forms.edit_crypto_wallet
+                  : context.t.dashboard_forms.new_crypto_wallet,
             ),
             actions: [
               if (state.isSaving)
@@ -190,7 +190,7 @@ class _CryptoWalletFormScreenState
                   controller: _nameController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).nameLabel,
+                    labelText: context.t.dashboard_forms.name_label,
                     errorText: state.nameError,
                   ),
                   onChanged: notifier.setName,
@@ -200,7 +200,7 @@ class _CryptoWalletFormScreenState
                   controller: _walletTypeController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).walletTypeLabel,
+                    labelText: context.t.dashboard_forms.wallet_type_label,
                     errorText: state.walletTypeError,
                   ),
                   onChanged: notifier.setWalletType,
@@ -212,7 +212,7 @@ class _CryptoWalletFormScreenState
                   maxLines: 4,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).mnemonicLabel,
+                    labelText: context.t.dashboard_forms.mnemonic_label,
                   ),
                   onChanged: notifier.setMnemonic,
                 ),
@@ -223,7 +223,7 @@ class _CryptoWalletFormScreenState
                   maxLines: 4,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).privateKeyLabel,
+                    labelText: context.t.dashboard_forms.private_key_label,
                   ),
                   onChanged: notifier.setPrivateKey,
                 ),
@@ -234,7 +234,7 @@ class _CryptoWalletFormScreenState
                   maxLines: 4,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).xprvLabel,
+                    labelText: context.t.dashboard_forms.xprv_label,
                   ),
                   onChanged: notifier.setXprv,
                 ),
@@ -243,7 +243,7 @@ class _CryptoWalletFormScreenState
                   controller: _xpubController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).xpubLabel,
+                    labelText: context.t.dashboard_forms.xpub_label,
                   ),
                   onChanged: notifier.setXpub,
                 ),
@@ -252,7 +252,7 @@ class _CryptoWalletFormScreenState
                   controller: _networkController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).networkLabel,
+                    labelText: context.t.dashboard_forms.network_label,
                   ),
                   onChanged: notifier.setNetwork,
                 ),
@@ -261,7 +261,7 @@ class _CryptoWalletFormScreenState
                   controller: _derivationPathController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).derivationPathLabel,
+                    labelText: context.t.dashboard_forms.derivation_path_label,
                   ),
                   onChanged: notifier.setDerivationPath,
                 ),
@@ -270,7 +270,7 @@ class _CryptoWalletFormScreenState
                   controller: _derivationSchemeController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).derivationSchemeLabel,
+                    labelText: context.t.dashboard_forms.derivation_scheme_label,
                   ),
                   onChanged: notifier.setDerivationScheme,
                 ),
@@ -281,7 +281,7 @@ class _CryptoWalletFormScreenState
                   maxLines: 4,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).addressesJsonLabel,
+                    labelText: context.t.dashboard_forms.addresses_json_label,
                   ),
                   onChanged: notifier.setAddresses,
                 ),
@@ -290,7 +290,7 @@ class _CryptoWalletFormScreenState
                   controller: _hardwareController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).hardwareDeviceLabel,
+                    labelText: context.t.dashboard_forms.hardware_device_label,
                   ),
                   onChanged: notifier.setHardwareDevice,
                 ),
@@ -324,7 +324,7 @@ class _CryptoWalletFormScreenState
                   maxLines: 4,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).descriptionLabel,
+                    labelText: context.t.dashboard_forms.description_label,
                   ),
                   onChanged: notifier.setDescription,
                 ),
@@ -332,7 +332,7 @@ class _CryptoWalletFormScreenState
                 SwitchListTile(
                   value: state.watchOnly,
                   onChanged: notifier.setWatchOnly,
-                  title: Text(S.of(context).watchOnlyLabel),
+                  title: Text(context.t.dashboard_forms.watch_only_label),
                 ),
               ],
             ),

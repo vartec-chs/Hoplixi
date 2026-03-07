@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/generated/l10n.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
@@ -48,7 +48,7 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
       final dao = await ref.read(certificateDaoProvider.future);
       final row = await dao.getById(widget.certificateId);
       if (row == null) {
-        Toaster.error(title: S.of(context).certificateNotFound);
+        Toaster.error(title: context.t.dashboard_forms.certificate_not_found);
         if (mounted) context.pop();
         return;
       }
@@ -67,7 +67,7 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
         _autoRenew = cert.autoRenew;
       });
     } catch (e) {
-      Toaster.error(title: S.of(context).commonLoadError, description: '$e');
+      Toaster.error(title: context.t.dashboard_forms.common_load_error, description: '$e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -84,7 +84,7 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
       final value = await dao.getPrivateKeyFieldById(widget.certificateId);
       if (value == null || value.isEmpty) {
         Toaster.warning(
-          title: S.of(context).commonFieldMissing(S.of(context).privateKeyLabel),
+          title: context.t.dashboard_forms.common_field_missing(Field: context.t.dashboard_forms.private_key_label),
         );
         return;
       }
@@ -94,7 +94,7 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
       });
     } catch (e) {
       Toaster.error(
-        title: S.of(context).commonErrorGettingField(S.of(context).privateKeyLabel),
+        title: context.t.dashboard_forms.common_error_getting_field(Field: context.t.dashboard_forms.private_key_label),
         description: '$e',
       );
     }
@@ -111,7 +111,7 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
       final value = await dao.getPasswordForPfxFieldById(widget.certificateId);
       if (value == null || value.isEmpty) {
         Toaster.warning(
-          title: S.of(context).commonFieldMissing(S.of(context).pfxPasswordLabel),
+          title: context.t.dashboard_forms.common_field_missing(Field: context.t.dashboard_forms.pfx_password_label),
         );
         return;
       }
@@ -121,7 +121,7 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
       });
     } catch (e) {
       Toaster.error(
-        title: S.of(context).commonErrorGettingField(S.of(context).pfxPasswordLabel),
+        title: context.t.dashboard_forms.common_error_getting_field(Field: context.t.dashboard_forms.pfx_password_label),
         description: '$e',
       );
     }
@@ -129,20 +129,20 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
 
   Future<void> _copyText(String title, String? value) async {
     if (value == null || value.isEmpty) {
-      Toaster.warning(title: S.of(context).commonFieldEmpty(title));
+      Toaster.warning(title: context.t.dashboard_forms.common_field_empty(Field: title));
       return;
     }
     await Clipboard.setData(ClipboardData(text: value));
-    Toaster.success(title: S.of(context).commonFieldCopied(title));
+    Toaster.success(title: context.t.dashboard_forms.common_field_copied(Field: title));
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = S.of(context);
+    final l10n = context.t.dashboard_forms;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.viewCertificate),
+        title: Text(l10n.view_certificate),
         actions: [
           IconButton(
             tooltip: l10n.edit,
@@ -166,21 +166,21 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
                   const SizedBox(height: 12),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.certificatePemLabel),
+                    title: Text(l10n.certificate_pem_label),
                     subtitle: SelectableText(_certificatePem),
                     trailing: IconButton(
                       onPressed: () =>
-                          _copyText(l10n.certificatePemLabel, _certificatePem),
+                          _copyText(l10n.certificate_pem_label, _certificatePem),
                       icon: const Icon(Icons.copy),
                     ),
                   ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.privateKeyLabel),
+                    title: Text(l10n.private_key_label),
                     subtitle: SelectableText(
                       _showPrivateKey
                           ? (_privateKey ?? '')
-                          : l10n.commonPressVisibilityToLoad,
+                          : l10n.common_press_visibility_to_load,
                     ),
                     trailing: Wrap(
                       spacing: 4,
@@ -193,7 +193,7 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
                         ),
                         IconButton(
                           onPressed: () =>
-                              _copyText(l10n.privateKeyLabel, _privateKey),
+                              _copyText(l10n.private_key_label, _privateKey),
                           icon: const Icon(Icons.copy),
                         ),
                       ],
@@ -201,11 +201,11 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
                   ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.pfxPasswordLabel),
+                    title: Text(l10n.pfx_password_label),
                     subtitle: Text(
                       _showPfxPassword
                           ? (_pfxPassword ?? '')
-                          : l10n.commonPressVisibilityToLoad,
+                          : l10n.common_press_visibility_to_load,
                     ),
                     trailing: Wrap(
                       spacing: 4,
@@ -218,39 +218,39 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
                         ),
                         IconButton(
                           onPressed: () =>
-                              _copyText(l10n.pfxPasswordLabel, _pfxPassword),
+                              _copyText(l10n.pfx_password_label, _pfxPassword),
                           icon: const Icon(Icons.copy),
                         ),
                       ],
                     ),
                   ),
                   if (_issuer?.isNotEmpty == true)
-                    ListTile(title: Text(l10n.issuerLabel), subtitle: Text(_issuer!)),
+                    ListTile(title: Text(l10n.issuer_label), subtitle: Text(_issuer!)),
                   if (_subject?.isNotEmpty == true)
-                    ListTile(title: Text(l10n.subjectLabel), subtitle: Text(_subject!)),
+                    ListTile(title: Text(l10n.subject_label), subtitle: Text(_subject!)),
                   if (_serialNumber?.isNotEmpty == true)
                     ListTile(
-                      title: Text(l10n.serialNumberLabel),
+                      title: Text(l10n.serial_number_label),
                       subtitle: Text(_serialNumber!),
                     ),
                   if (_fingerprint?.isNotEmpty == true)
                     ListTile(
-                      title: Text(l10n.fingerprintLabel),
+                      title: Text(l10n.fingerprint_label),
                       subtitle: Text(_fingerprint!),
                     ),
                   if (_ocspUrl?.isNotEmpty == true)
-                    ListTile(title: Text(l10n.ocspUrlLabel), subtitle: Text(_ocspUrl!)),
+                    ListTile(title: Text(l10n.ocsp_url_label), subtitle: Text(_ocspUrl!)),
                   if (_crlUrl?.isNotEmpty == true)
-                    ListTile(title: Text(l10n.crlUrlLabel), subtitle: Text(_crlUrl!)),
+                    ListTile(title: Text(l10n.crl_url_label), subtitle: Text(_crlUrl!)),
                   ListTile(
-                    title: Text(l10n.autoRenewLabel),
+                    title: Text(l10n.auto_renew_label),
                     subtitle:
-                        Text(_autoRenew ? l10n.commonEnabled : l10n.commonDisabled),
+                        Text(_autoRenew ? l10n.common_enabled : l10n.common_disabled),
                   ),
                   if (_description?.isNotEmpty == true)
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.descriptionLabel),
+                      title: Text(l10n.description_label),
                       subtitle: Text(_description!),
                     ),
                 ],

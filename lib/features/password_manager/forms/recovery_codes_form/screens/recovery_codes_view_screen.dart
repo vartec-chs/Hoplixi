@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/generated/l10n.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/dto/recovery_code_item_dto.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -43,7 +43,7 @@ class _RecoveryCodesViewScreenState
       final dao = await ref.read(recoveryCodesDaoProvider.future);
       final row = await dao.getById(widget.recoveryCodesId);
       if (row == null) {
-        Toaster.error(title: S.of(context).commonRecordNotFound);
+        Toaster.error(title: context.t.dashboard_forms.common_record_not_found);
         if (mounted) context.pop();
         return;
       }
@@ -76,7 +76,7 @@ class _RecoveryCodesViewScreenState
       });
     } catch (e) {
       if (mounted) {
-        Toaster.error(title: S.of(context).commonLoadError, description: '$e');
+        Toaster.error(title: context.t.dashboard_forms.common_load_error, description: '$e');
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -86,20 +86,20 @@ class _RecoveryCodesViewScreenState
   Future<void> _markUsed(RecoveryCodeItemDto code) async {
     final dao = await ref.read(recoveryCodesDaoProvider.future);
     await dao.markCodeUsed(code.id);
-    Toaster.success(title: S.of(context).codeMarkedUsed);
+    Toaster.success(title: context.t.dashboard_forms.code_marked_used);
     await _load();
   }
 
   Future<void> _markUnused(RecoveryCodeItemDto code) async {
     final dao = await ref.read(recoveryCodesDaoProvider.future);
     await dao.markCodeUnused(code.id);
-    Toaster.success(title: S.of(context).codeMarkedUnused);
+    Toaster.success(title: context.t.dashboard_forms.code_marked_unused);
     await _load();
   }
 
   Future<void> _copyCode(String code) async {
     await Clipboard.setData(ClipboardData(text: code));
-    if (mounted) Toaster.success(title: S.of(context).codeCopied);
+    if (mounted) Toaster.success(title: context.t.dashboard_forms.code_copied);
 
     final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
     await vaultItemDao.incrementUsage(widget.recoveryCodesId);
@@ -108,7 +108,7 @@ class _RecoveryCodesViewScreenState
   Future<void> _copyNextUnused() async {
     final next = _codes.where((c) => !c.used).firstOrNull;
     if (next == null) {
-      Toaster.error(title: S.of(context).noCodesYet);
+      Toaster.error(title: context.t.dashboard_forms.no_codes_yet);
       return;
     }
     await _copyCode(next.code);
@@ -121,11 +121,11 @@ class _RecoveryCodesViewScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(S.of(context).deleteCodeLabel),
+        title: Text(context.t.dashboard_forms.delete_code_label),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(S.of(context).clear),
+            child: Text(context.t.dashboard_forms.clear),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
@@ -143,11 +143,11 @@ class _RecoveryCodesViewScreenState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = S.of(context);
+    final l10n = context.t.dashboard_forms;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.viewRecoveryCodes),
+        title: Text(l10n.view_recovery_codes),
         actions: [
           IconButton(
             tooltip: l10n.edit,
@@ -189,7 +189,7 @@ class _RecoveryCodesViewScreenState
                             _StatChip(
                               icon: _oneTime ? Icons.looks_one : Icons.repeat,
                               label: _oneTime
-                                  ? l10n.oneTimeCodesLabel
+                                  ? l10n.one_time_codes_label
                                   : 'multi-use',
                             ),
                           ],
@@ -197,7 +197,7 @@ class _RecoveryCodesViewScreenState
                         if (_displayHint?.isNotEmpty == true) ...[
                           const SizedBox(height: 4),
                           Text(
-                            '${l10n.displayHintLabel}: $_displayHint',
+                            '${l10n.display_hint_label}: $_displayHint',
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
@@ -217,7 +217,7 @@ class _RecoveryCodesViewScreenState
                                 ? _copyNextUnused
                                 : null,
                             icon: const Icon(Icons.copy),
-                            label: Text(l10n.copyCodeAction),
+                            label: Text(l10n.copy_code_action),
                           ),
                         ),
                       ],
@@ -227,7 +227,7 @@ class _RecoveryCodesViewScreenState
                   // Ð¡Ð¿Ð¸ÑÐ¾Ðº ÐºÐ¾Ð´Ð¾Ð²
                   Expanded(
                     child: _codes.isEmpty
-                        ? Center(child: Text(l10n.noCodesYet))
+                        ? Center(child: Text(l10n.no_codes_yet))
                         : ListView.builder(
                             padding: const EdgeInsets.symmetric(vertical: 4),
                             itemCount: _codes.length,
@@ -297,7 +297,7 @@ class _CodeListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = S.of(context);
+    final l10n = context.t.dashboard_forms;
     final used = code.used;
     final textStyle = used
         ? Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -335,26 +335,26 @@ class _CodeListTile extends StatelessWidget {
           // ÐšÐ¾Ð¿Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ
           if (!used)
             IconButton(
-              tooltip: l10n.copyCodeAction,
+              tooltip: l10n.copy_code_action,
               icon: const Icon(Icons.copy, size: 18),
               onPressed: onCopy,
             ),
           // ÐžÑ‚Ð¼ÐµÑ‚Ð¸Ñ‚ÑŒ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ð½Ð½Ñ‹Ð¼ / ÑÐ½ÑÑ‚ÑŒ
           if (onMarkUsed != null)
             IconButton(
-              tooltip: l10n.markCodeUsedAction,
+              tooltip: l10n.mark_code_used_action,
               icon: const Icon(Icons.check, size: 18),
               onPressed: onMarkUsed,
             ),
           if (onMarkUnused != null)
             IconButton(
-              tooltip: l10n.markCodeUnusedAction,
+              tooltip: l10n.mark_code_unused_action,
               icon: const Icon(Icons.undo, size: 18),
               onPressed: onMarkUnused,
             ),
           // Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ
           IconButton(
-            tooltip: l10n.deleteCodeLabel,
+            tooltip: l10n.delete_code_label,
             icon: Icon(
               Icons.delete_outline,
               size: 18,

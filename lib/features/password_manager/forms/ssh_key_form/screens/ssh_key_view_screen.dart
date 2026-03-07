@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/generated/l10n.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
@@ -42,7 +42,7 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
       final dao = await ref.read(sshKeyDaoProvider.future);
       final row = await dao.getById(widget.sshKeyId);
       if (row == null) {
-        Toaster.error(title: S.of(context).sshKeyNotFound);
+        Toaster.error(title: context.t.dashboard_forms.ssh_key_not_found);
         if (mounted) context.pop();
         return;
       }
@@ -58,7 +58,7 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
         _addedToAgent = ssh.addedToAgent;
       });
     } catch (e) {
-      Toaster.error(title: S.of(context).commonLoadError, description: '$e');
+      Toaster.error(title: context.t.dashboard_forms.common_load_error, description: '$e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -75,7 +75,7 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
       final value = await dao.getPrivateKeyFieldById(widget.sshKeyId);
       if (value == null) {
         Toaster.error(
-          title: S.of(context).commonErrorGettingField(S.of(context).privateKeyLabel),
+          title: context.t.dashboard_forms.common_error_getting_field(Field: context.t.dashboard_forms.private_key_label),
         );
         return;
       }
@@ -85,7 +85,7 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
       });
     } catch (e) {
       Toaster.error(
-        title: S.of(context).commonErrorGettingField(S.of(context).privateKeyLabel),
+        title: context.t.dashboard_forms.common_error_getting_field(Field: context.t.dashboard_forms.private_key_label),
         description: '$e',
       );
     }
@@ -94,22 +94,22 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
   Future<void> _copyPrivateKey() async {
     final value = _privateKey;
     if (value == null || value.isEmpty) {
-      Toaster.warning(title: S.of(context).revealPrivateKeyFirst);
+      Toaster.warning(title: context.t.dashboard_forms.reveal_private_key_first);
       return;
     }
     await Clipboard.setData(ClipboardData(text: value));
     Toaster.success(
-      title: S.of(context).commonFieldCopied(S.of(context).privateKeyLabel),
+      title: context.t.dashboard_forms.common_field_copied(Field: context.t.dashboard_forms.private_key_label),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = S.of(context);
+    final l10n = context.t.dashboard_forms;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.viewSshKey),
+        title: Text(l10n.view_ssh_key),
         actions: [
           IconButton(
             tooltip: l10n.edit,
@@ -132,11 +132,11 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
                   const SizedBox(height: 16),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.privateKeyLabel),
+                    title: Text(l10n.private_key_label),
                     subtitle: SelectableText(
                       _showPrivateKey
                           ? (_privateKey ?? '')
-                          : l10n.commonPressVisibilityToLoad,
+                          : l10n.common_press_visibility_to_load,
                     ),
                     trailing: Wrap(
                       spacing: 4,
@@ -155,23 +155,23 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
                     ),
                   ),
                   if (_keyType?.isNotEmpty == true)
-                    ListTile(title: Text(l10n.keyTypeLabel), subtitle: Text(_keyType!)),
+                    ListTile(title: Text(l10n.key_type_label), subtitle: Text(_keyType!)),
                   if (_fingerprint?.isNotEmpty == true)
                     ListTile(
-                      title: Text(l10n.fingerprintLabel),
+                      title: Text(l10n.fingerprint_label),
                       subtitle: Text(_fingerprint!),
                     ),
                   if (_usage?.isNotEmpty == true)
-                    ListTile(title: Text(l10n.usageLabel), subtitle: Text(_usage!)),
+                    ListTile(title: Text(l10n.usage_label), subtitle: Text(_usage!)),
                   ListTile(
-                    title: Text(l10n.addedToSshAgentLabel),
+                    title: Text(l10n.added_to_ssh_agent_label),
                     subtitle: Text(
-                      _addedToAgent ? l10n.commonAdded : l10n.commonNotAdded,
+                      _addedToAgent ? l10n.common_added : l10n.common_not_added,
                     ),
                   ),
                   if (_description?.isNotEmpty == true)
                     ListTile(
-                      title: Text(l10n.descriptionLabel),
+                      title: Text(l10n.description_label),
                       subtitle: Text(_description!),
                       contentPadding: EdgeInsets.zero,
                     ),

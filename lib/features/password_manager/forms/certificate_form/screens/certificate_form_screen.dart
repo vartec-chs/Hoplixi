@@ -8,7 +8,7 @@ import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picke
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
-import 'package:hoplixi/generated/l10n.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 
 import '../providers/certificate_form_provider.dart';
 
@@ -73,8 +73,8 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
 
     if (!success) {
       Toaster.error(
-        title: S.of(context).saveError,
-        description: S.of(context).checkFormFieldsAndTryAgain,
+        title: context.t.dashboard_forms.save_error,
+        description: context.t.dashboard_forms.check_form_fields_and_try_again,
       );
     }
   }
@@ -89,8 +89,8 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
       if (!wasSaved && isSaved) {
         Toaster.success(
           title: widget.certificateId != null
-              ? S.of(context).certificateUpdated
-              : S.of(context).certificateCreated,
+              ? context.t.dashboard_forms.certificate_updated
+              : context.t.dashboard_forms.certificate_created,
         );
         ref
             .read(certificateFormProvider(widget.certificateId).notifier)
@@ -105,7 +105,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
       error: (error, _) => Scaffold(
         appBar: AppBar(
           leading: const FormCloseButton(),
-          title: Text(S.of(context).formError),
+          title: Text(context.t.dashboard_forms.form_error),
         ),
         body: Center(child: Text('$error')),
       ),
@@ -150,8 +150,8 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
             leading: const FormCloseButton(),
             title: Text(
               state.isEditMode
-                  ? S.of(context).editCertificate
-                  : S.of(context).newCertificate,
+                  ? context.t.dashboard_forms.edit_certificate
+                  : context.t.dashboard_forms.new_certificate,
             ),
             actions: [
               if (state.isSaving)
@@ -175,7 +175,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 controller: _nameController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: S.of(context).nameLabel,
+                  labelText: context.t.dashboard_forms.name_label,
                   errorText: state.nameError,
                 ),
                 onChanged: notifier.setName,
@@ -187,7 +187,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 maxLines: 8,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: S.of(context).certificatePemLabel,
+                  labelText: context.t.dashboard_forms.certificate_pem_label,
                   errorText: state.certificatePemError,
                 ),
                 onChanged: notifier.setCertificatePem,
@@ -199,7 +199,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 maxLines: 6,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: S.of(context).privateKeyLabel,
+                  labelText: context.t.dashboard_forms.private_key_label,
                 ),
                 onChanged: notifier.setPrivateKey,
               ),
@@ -208,7 +208,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 controller: _serialController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: S.of(context).serialNumberLabel,
+                  labelText: context.t.dashboard_forms.serial_number_label,
                 ),
                 onChanged: notifier.setSerialNumber,
               ),
@@ -217,7 +217,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 controller: _issuerController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: S.of(context).issuerLabel,
+                  labelText: context.t.dashboard_forms.issuer_label,
                 ),
                 onChanged: notifier.setIssuer,
               ),
@@ -226,7 +226,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 controller: _subjectController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: S.of(context).subjectLabel,
+                  labelText: context.t.dashboard_forms.subject_label,
                 ),
                 onChanged: notifier.setSubject,
               ),
@@ -235,7 +235,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 controller: _fingerprintController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: S.of(context).fingerprintLabel,
+                  labelText: context.t.dashboard_forms.fingerprint_label,
                 ),
                 onChanged: notifier.setFingerprint,
               ),
@@ -244,7 +244,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 controller: _ocspController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: S.of(context).ocspUrlLabel,
+                  labelText: context.t.dashboard_forms.ocsp_url_label,
                 ),
                 onChanged: notifier.setOcspUrl,
               ),
@@ -253,7 +253,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 controller: _crlController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: S.of(context).crlUrlLabel,
+                  labelText: context.t.dashboard_forms.crl_url_label,
                 ),
                 onChanged: notifier.setCrlUrl,
               ),
@@ -287,7 +287,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 maxLines: 4,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: S.of(context).descriptionLabel,
+                  labelText: context.t.dashboard_forms.description_label,
                 ),
                 onChanged: notifier.setDescription,
               ),
@@ -295,7 +295,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
               SwitchListTile(
                 value: state.autoRenew,
                 onChanged: notifier.setAutoRenew,
-                title: Text(S.of(context).autoRenewLabel),
+                title: Text(context.t.dashboard_forms.auto_renew_label),
               ),
             ],
           ),

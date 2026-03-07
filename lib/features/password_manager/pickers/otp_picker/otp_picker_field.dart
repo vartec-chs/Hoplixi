@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/pickers/otp_picker/otp_picker_modal.dart';
-import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -104,12 +103,11 @@ class _OtpPickerFieldState extends ConsumerState<OtpPickerField> {
 
   @override
   Widget build(BuildContext context) {
-    final s = S.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    final effectiveLabel = widget.label ?? s.pickersOtpLabel;
-    final effectiveHintText = widget.hintText ?? s.pickersSelectOtpHint;
+    final effectiveLabel = widget.label ?? "Выберите OTP";
+    final effectiveHintText = widget.hintText ?? "Выберите OTP";
 
     // Получаем эффективное название OTP
     String? effectiveOtpName = widget.selectedOtpName;
@@ -148,8 +146,8 @@ class _OtpPickerFieldState extends ConsumerState<OtpPickerField> {
 
         // Показываем временный текст пока загружается
         effectiveOtpName = otpDao.when(
-          data: (_) => _resolvedOtpName ?? s.pickersLoading,
-          loading: () => s.pickersLoading,
+          data: (_) => _resolvedOtpName ?? "Загрузка...",
+          loading: () => "Загрузка...",
           error: (_, _) => null,
         );
       }

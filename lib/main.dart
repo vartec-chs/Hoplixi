@@ -14,6 +14,7 @@ import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
 import 'package:hoplixi/core/services/services.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/core/utils/window_manager.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/global_key.dart';
 import 'package:hoplixi/run_sub_window_entry.dart';
 import 'package:hoplixi/rust/frb_generated.dart';
@@ -198,7 +199,11 @@ Future<void> _runGuiMode(_LaunchContext launchContext) async {
 
     final app = ProviderScope(
       observers: [LoggingProviderObserver()],
-      child: setupToastificationWrapper(App(filePath: launchContext.filePath)),
+      child: TranslationProvider(
+        child: setupToastificationWrapper(
+          App(filePath: launchContext.filePath),
+        ),
+      ),
     );
 
     runApp(app);

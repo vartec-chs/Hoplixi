@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_modal.dart';
-import 'package:hoplixi/generated/l10n.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
@@ -103,12 +102,12 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
 
   @override
   Widget build(BuildContext context) {
-    final s = S.of(context);
+
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    final effectiveLabel = widget.label ?? s.pickersNoteLabel;
-    final effectiveHintText = widget.hintText ?? s.selectNoteHint;
+    final effectiveLabel = widget.label ?? "Выберите заметку";
+    final effectiveHintText = widget.hintText ?? "Выберите заметку";
 
     // Получаем эффективное название заметки
     String? effectiveNoteName = widget.selectedNoteName;
@@ -143,8 +142,8 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
 
         // Показываем временный текст пока загружается
         effectiveNoteName = noteDao.when(
-          data: (_) => _resolvedNoteName ?? s.pickersLoading,
-          loading: () => s.pickersLoading,
+          data: (_) => _resolvedNoteName ?? "Загрузка...",
+          loading: () => "Загрузка...",
           error: (_, _) => null,
         );
       }

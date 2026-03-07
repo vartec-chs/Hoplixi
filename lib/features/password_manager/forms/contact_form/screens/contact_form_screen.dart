@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
@@ -6,7 +6,7 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_b
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
-import 'package:hoplixi/generated/l10n.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
@@ -66,8 +66,8 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
 
     if (!success) {
       Toaster.error(
-        title: S.of(context).saveError,
-        description: S.of(context).checkFormFieldsAndTryAgain,
+        title: context.t.dashboard_forms.save_error,
+        description: context.t.dashboard_forms.check_form_fields_and_try_again,
       );
     }
   }
@@ -97,8 +97,8 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
       if (!wasSaved && isSaved) {
         Toaster.success(
           title: widget.contactId != null
-              ? S.of(context).contactUpdated
-              : S.of(context).contactCreated,
+              ? context.t.dashboard_forms.contact_updated
+              : context.t.dashboard_forms.contact_created,
         );
         ref.read(contactFormProvider(widget.contactId).notifier).resetSaved();
         if (context.mounted) context.pop(true);
@@ -111,7 +111,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
       error: (error, _) => Scaffold(
         appBar: AppBar(
           leading: const FormCloseButton(),
-          title: Text(S.of(context).formError),
+          title: Text(context.t.dashboard_forms.form_error),
         ),
         body: Center(child: Text('$error')),
       ),
@@ -146,8 +146,8 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
             leading: const FormCloseButton(),
             title: Text(
               state.isEditMode
-                  ? S.of(context).editContact
-                  : S.of(context).newContact,
+                  ? context.t.dashboard_forms.edit_contact
+                  : context.t.dashboard_forms.new_contact,
             ),
             actions: [
               if (state.isSaving)
@@ -171,7 +171,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                   controller: _nameController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).contactNameLabel,
+                    labelText: context.t.dashboard_forms.contact_name_label,
                     errorText: state.nameError,
                   ),
                   onChanged: ref
@@ -183,7 +183,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                   controller: _phoneController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).phoneLabel,
+                    labelText: context.t.dashboard_forms.phone_label,
                   ),
                   onChanged: ref
                       .read(contactFormProvider(widget.contactId).notifier)
@@ -194,7 +194,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                   controller: _emailController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).emailFieldLabel,
+                    labelText: context.t.dashboard_forms.email_field_label,
                     errorText: state.emailError,
                   ),
                   onChanged: ref
@@ -206,7 +206,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                   controller: _companyController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).companyLabel,
+                    labelText: context.t.dashboard_forms.company_label,
                   ),
                   onChanged: ref
                       .read(contactFormProvider(widget.contactId).notifier)
@@ -217,7 +217,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                   controller: _jobTitleController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).jobTitleLabel,
+                    labelText: context.t.dashboard_forms.job_title_label,
                   ),
                   onChanged: ref
                       .read(contactFormProvider(widget.contactId).notifier)
@@ -228,7 +228,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                   controller: _addressController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).addressLabel,
+                    labelText: context.t.dashboard_forms.address_label,
                   ),
                   onChanged: ref
                       .read(contactFormProvider(widget.contactId).notifier)
@@ -239,7 +239,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                   controller: _websiteController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).websiteLabel,
+                    labelText: context.t.dashboard_forms.website_label,
                   ),
                   onChanged: ref
                       .read(contactFormProvider(widget.contactId).notifier)
@@ -248,10 +248,10 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                 const SizedBox(height: 12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text(S.of(context).birthdayLabel),
+                  title: Text(context.t.dashboard_forms.birthday_label),
                   subtitle: Text(
                     state.birthday == null
-                        ? S.of(context).notSpecified
+                        ? context.t.dashboard_forms.not_specified
                         : '${state.birthday!.day.toString().padLeft(2, '0')}.${state.birthday!.month.toString().padLeft(2, '0')}.${state.birthday!.year}',
                   ),
                   trailing: Wrap(
@@ -259,7 +259,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                     children: [
                       if (state.birthday != null)
                         IconButton(
-                          tooltip: S.of(context).clear,
+                          tooltip: context.t.dashboard_forms.clear,
                           icon: const Icon(Icons.clear),
                           onPressed: () => ref
                               .read(
@@ -268,7 +268,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                               .setBirthday(null),
                         ),
                       IconButton(
-                        tooltip: S.of(context).pickDate,
+                        tooltip: context.t.dashboard_forms.pick_date,
                         icon: const Icon(Icons.calendar_today),
                         onPressed: () => _pickBirthday(state.birthday),
                       ),
@@ -281,7 +281,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                   onChanged: ref
                       .read(contactFormProvider(widget.contactId).notifier)
                       .setEmergencyContact,
-                  title: Text(S.of(context).emergencyContactLabel),
+                  title: Text(context.t.dashboard_forms.emergency_contact_label),
                   contentPadding: EdgeInsets.zero,
                 ),
                 const SizedBox(height: 12),
@@ -320,7 +320,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                   maxLines: 4,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).descriptionLabel,
+                    labelText: context.t.dashboard_forms.description_label,
                   ),
                   onChanged: ref
                       .read(contactFormProvider(widget.contactId).notifier)

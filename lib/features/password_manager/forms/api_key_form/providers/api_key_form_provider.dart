@@ -1,7 +1,7 @@
 ﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
-import 'package:hoplixi/generated/l10n.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -111,19 +111,19 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
   }
 
   String? _validateName(String value) {
-    if (value.trim().isEmpty) return S.current.validationRequiredName;
+    if (value.trim().isEmpty) return t.dashboard_forms.validation_required_name;
     return null;
   }
 
   String? _validateService(String value) {
-    if (value.trim().isEmpty) return S.current.validationRequiredService;
+    if (value.trim().isEmpty) return t.dashboard_forms.validation_required_service;
     return null;
   }
 
   String? _validateKey(String value) {
     final v = value.trim();
-    if (v.isEmpty) return S.current.validationRequiredKey;
-    if (v.length < 8) return S.current.validationMin8Chars;
+    if (v.isEmpty) return t.dashboard_forms.validation_required_key;
+    if (v.length < 8) return t.dashboard_forms.validation_min8_chars;
     return null;
   }
 

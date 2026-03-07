@@ -6,7 +6,7 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_b
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
-import 'package:hoplixi/generated/l10n.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
@@ -59,8 +59,8 @@ class _RecoveryCodesFormScreenState
 
     if (!success) {
       Toaster.error(
-        title: S.of(context).saveError,
-        description: S.of(context).checkFormFieldsAndTryAgain,
+        title: context.t.dashboard_forms.save_error,
+        description: context.t.dashboard_forms.check_form_fields_and_try_again,
       );
     }
   }
@@ -77,8 +77,8 @@ class _RecoveryCodesFormScreenState
       if (!wasSaved && isSaved) {
         Toaster.success(
           title: widget.recoveryCodesId != null
-              ? S.of(context).recoveryCodesUpdated
-              : S.of(context).recoveryCodesCreated,
+              ? context.t.dashboard_forms.recovery_codes_updated
+              : context.t.dashboard_forms.recovery_codes_created,
         );
         ref
             .read(recoveryCodesFormProvider(widget.recoveryCodesId).notifier)
@@ -93,7 +93,7 @@ class _RecoveryCodesFormScreenState
       error: (error, _) => Scaffold(
         appBar: AppBar(
           leading: const FormCloseButton(),
-          title: Text(S.of(context).formError),
+          title: Text(context.t.dashboard_forms.form_error),
         ),
         body: Center(child: Text('$error')),
       ),
@@ -123,8 +123,8 @@ class _RecoveryCodesFormScreenState
             leading: const FormCloseButton(),
             title: Text(
               state.isEditMode
-                  ? S.of(context).editRecoveryCodes
-                  : S.of(context).newRecoveryCodes,
+                  ? context.t.dashboard_forms.edit_recovery_codes
+                  : context.t.dashboard_forms.new_recovery_codes,
             ),
             actions: [
               if (state.isSaving)
@@ -149,7 +149,7 @@ class _RecoveryCodesFormScreenState
                   controller: _nameController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).nameLabel,
+                    labelText: context.t.dashboard_forms.name_label,
                     errorText: state.nameError,
                   ),
                   onChanged: notifier.setName,
@@ -159,7 +159,7 @@ class _RecoveryCodesFormScreenState
                 // Существующие коды (только в режиме редактирования)
                 if (state.isEditMode && state.existingCodes.isNotEmpty) ...[
                   Text(
-                    S.of(context).codesLabel,
+                    context.t.dashboard_forms.codes_label,
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 8),
@@ -181,8 +181,8 @@ class _RecoveryCodesFormScreenState
                   maxLines: 10,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).codesLabel,
-                    hintText: S.of(context).pasteCodesHint,
+                    labelText: context.t.dashboard_forms.codes_label,
+                    hintText: context.t.dashboard_forms.paste_codes_hint,
                     errorText: state.codesInputError,
                   ),
                   onChanged: notifier.setCodesInput,
@@ -194,7 +194,7 @@ class _RecoveryCodesFormScreenState
                   controller: _generatedAtController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).generatedAtIsoLabel,
+                    labelText: context.t.dashboard_forms.generated_at_iso_label,
                     errorText: state.generatedAtError,
                   ),
                   onChanged: notifier.setGeneratedAt,
@@ -206,7 +206,7 @@ class _RecoveryCodesFormScreenState
                   controller: _displayHintController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).displayHintLabel,
+                    labelText: context.t.dashboard_forms.display_hint_label,
                   ),
                   onChanged: notifier.setDisplayHint,
                 ),
@@ -248,7 +248,7 @@ class _RecoveryCodesFormScreenState
                   maxLines: 4,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).descriptionLabel,
+                    labelText: context.t.dashboard_forms.description_label,
                   ),
                   onChanged: notifier.setDescription,
                 ),
@@ -258,7 +258,7 @@ class _RecoveryCodesFormScreenState
                 SwitchListTile(
                   value: state.oneTime,
                   onChanged: notifier.setOneTime,
-                  title: Text(S.of(context).oneTimeCodesLabel),
+                  title: Text(context.t.dashboard_forms.one_time_codes_label),
                 ),
               ],
             ),
@@ -317,7 +317,7 @@ class _ExistingCodeTile extends StatelessWidget {
               size: 18,
               color: Theme.of(context).colorScheme.error,
             ),
-            tooltip: S.of(context).deleteCodeLabel,
+            tooltip: context.t.dashboard_forms.delete_code_label,
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),

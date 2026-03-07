@@ -129,6 +129,8 @@ dependencies:
   web_socket_channel: ^3.0.3
   desktop_drop: ^0.7.0
   flutter_zxing: ^2.2.1
+  slang_flutter: ^4.13.0
+  slang: ^4.13.0
 
 hooks:
   user_defines:
@@ -150,6 +152,7 @@ dev_dependencies:
   freezed: ^3.2.5
   flutter_flavorizr: ^2.4.2
   intl_utils: ^2.8.14
+  slang_build_runner: ^4.13.0
 
 flutter:
   uses-material-design: true

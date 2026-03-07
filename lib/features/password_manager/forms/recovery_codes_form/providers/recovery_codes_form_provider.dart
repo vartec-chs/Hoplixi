@@ -1,7 +1,7 @@
 ﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
-import 'package:hoplixi/generated/l10n.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -80,7 +80,7 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
   void setName(String value) => _update(
     (s) => s.copyWith(
       name: value,
-      nameError: value.trim().isEmpty ? S.current.validationRequiredName : null,
+      nameError: value.trim().isEmpty ? t.dashboard_forms.validation_required_name : null,
     ),
   );
 
@@ -94,7 +94,7 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
         generatedAt: value,
         generatedAtError: v.isEmpty || DateTime.tryParse(v) != null
             ? null
-            : S.current.validationInvalidIso8601,
+            : t.dashboard_forms.validation_invalid_iso8601,
       ),
     );
   }
@@ -125,19 +125,19 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
   bool validate() {
     final c = _current;
     final nameError = c.name.trim().isEmpty
-        ? S.current.validationRequiredName
+        ? t.dashboard_forms.validation_required_name
         : null;
 
     // В режиме создания хотя бы один код обязателен
     final codesInputError = (!c.isEditMode && _parseCodes(c.codesInput).isEmpty)
-        ? S.current.validationAtLeastOneCode
+        ? t.dashboard_forms.validation_at_least_one_code
         : null;
 
     final generatedAtError =
         c.generatedAt.trim().isEmpty ||
             DateTime.tryParse(c.generatedAt.trim()) != null
         ? null
-        : S.current.validationInvalidIso8601;
+        : t.dashboard_forms.validation_invalid_iso8601;
 
     _update(
       (s) => s.copyWith(

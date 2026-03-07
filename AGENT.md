@@ -27,7 +27,10 @@ securely store and manage their passwords.
   for step-by-step instructions on adding a new vault entity (tables, DAO,
   filters, DTO, UI forms, cards, and integration points).
 - See [docs-ai/localization.md](docs-ai/localization.md) for localization rules
-  and workflow (currently supported locales: `en` and `ru`).
+  and workflow: slang-based code generation, namespace structure
+  (`lib/l10n/<feature>/<subtype>/`), ARB authoring rules, usage patterns
+  (`context.t.<namespace>.<key>`), and how to add a new localization module.
+  Currently supported locales: `ru` (base) and `en`.
 - See [docs-ai/crypt-api-usage.md](docs-ai/crypt-api-usage.md) for usage
   instructions of the Hoplixi File Crypt API from Dart.
 

@@ -1,0 +1,54 @@
+targets:
+  $default:
+    builders:
+      slang_build_runner:
+        options:
+          base_locale: ru
+          fallback_strategy: base_locale
+          input_directory: ./lib/l10n
+          input_file_pattern: .i18n.arb
+          output_directory: ./lib/generated/l10n
+          output_file_name: translations.g.dart
+          lazy: true
+          locale_handling: true
+          flutter_integration: true
+          namespaces: true
+          translate_var: t
+          enum_name: AppLocale
+          class_name: Translations
+          translation_class_visibility: private
+          key_case: snake
+          key_map_case: camel
+          param_case: pascal
+          sanitization:
+            enabled: true
+            prefix: k
+            case: camel
+          string_interpolation: dart
+          flat_map: false
+          translation_overrides: false
+          timestamp: true
+          statistics: true
+          maps:
+            - error.codes
+            - category
+            - iconNames
+          pluralization:
+            auto: cardinal
+            default_parameter: n
+            cardinal:
+              - someKey.apple
+            ordinal:
+              - someKey.place
+          obfuscation:
+            enabled: false
+            secret: somekey
+          format:
+            enabled: true
+            width: 150
+          autodoc:
+            enabled: true
+            locales:
+              - en
+              - ru
+          generate_enum: true

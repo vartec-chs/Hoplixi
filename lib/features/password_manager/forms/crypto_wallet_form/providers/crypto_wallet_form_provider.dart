@@ -1,7 +1,7 @@
 ﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
-import 'package:hoplixi/generated/l10n.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
@@ -69,13 +69,13 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
   void setName(String v) => _update(
     (s) => s.copyWith(
       name: v,
-      nameError: v.trim().isEmpty ? S.current.validationRequiredName : null,
+      nameError: v.trim().isEmpty ? t.dashboard_forms.validation_required_name : null,
     ),
   );
   void setWalletType(String v) => _update(
     (s) => s.copyWith(
       walletType: v,
-      walletTypeError: v.trim().isEmpty ? S.current.validationRequiredWalletType : null,
+      walletTypeError: v.trim().isEmpty ? t.dashboard_forms.validation_required_wallet_type : null,
     ),
   );
   void setMnemonic(String v) => _update((s) => s.copyWith(mnemonic: v));
@@ -101,8 +101,8 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
 
   bool validate() {
     final c = _current;
-    final nameError = c.name.trim().isEmpty ? S.current.validationRequiredName : null;
-    final walletTypeError = c.walletType.trim().isEmpty ? S.current.validationRequiredWalletType : null;
+    final nameError = c.name.trim().isEmpty ? t.dashboard_forms.validation_required_name : null;
+    final walletTypeError = c.walletType.trim().isEmpty ? t.dashboard_forms.validation_required_wallet_type : null;
 
     _update(
       (s) => s.copyWith(nameError: nameError, walletTypeError: walletTypeError),

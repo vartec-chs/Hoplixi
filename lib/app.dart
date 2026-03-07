@@ -14,7 +14,7 @@ import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
 import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/core/theme/theme_window_sync_service.dart';
 import 'package:hoplixi/di_init.dart';
-import 'package:hoplixi/generated/l10n.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/provider/decrypted_files_guard_provider.dart';
 import 'package:hoplixi/routing/router.dart';
 import 'package:hoplixi/shared/widgets/app_loading_screen.dart';
@@ -36,7 +36,7 @@ class App extends ConsumerStatefulWidget {
 class _AppState extends ConsumerState<App> {
   ProviderSubscription<AsyncValue<ThemeMode>>? _themeSyncSubscription;
   late final Future<ThemeMode> _initialThemeModeFuture;
-  late final Future<List<dynamic>> _initialThemeAndLocaleFuture;
+  // late final Future<List<dynamic>> _initialThemeAndLocaleFuture;
 
   ThemeMode _parseThemeMode(String? value) {
     switch (value) {
@@ -60,12 +60,13 @@ class _AppState extends ConsumerState<App> {
       return _parseThemeMode(savedMode);
     }();
 
-    _initialThemeAndLocaleFuture = Future.wait<dynamic>([
-      _initialThemeModeFuture,
-      ref.read(localeProvider.future),
-    ]);
+    // _initialThemeAndLocaleFuture = Future.wait<dynamic>([
+    //   _initialThemeModeFuture,
+    //   ref.read(localeProvider.future),
+    // ]);
 
     Future<void>(() {
+      ref.read(localeProvider.future);
       ref.read(launchDbPathProvider.notifier).setPath(widget.filePath);
       ref.read(decryptedFilesGuardProvider);
     });
@@ -101,21 +102,22 @@ class _AppState extends ConsumerState<App> {
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
-    final localeAsync = ref.watch(localeProvider);
+    // final localeAsync = ref.watch(localeProvider);
 
     return ShortcutWatcher(
       child: TrayWatcher(
         child: AppLifecycleObserver(
-          child: FutureBuilder<List<dynamic>>(
-            future: _initialThemeAndLocaleFuture,
+          child: FutureBuilder<ThemeMode>(
+            future: _initialThemeModeFuture,
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return const AppLoadingScreen();
               }
 
-              final themeMode = snapshot.data![0] as ThemeMode;
-              final initialLocale = snapshot.data![1] as Locale;
-              final activeLocale = localeAsync.value ?? initialLocale;
+              // final themeMode = snapshot.data![0] as ThemeMode;
+              // final initialLocale = snapshot.data![1] as Locale;
+              // final activeLocale = localeAsync.value ?? initialLocale;
+              final themeMode = snapshot.data!;
 
               logTrace('App build with theme mode: $themeMode');
               return animated_theme.ThemeProvider(
@@ -129,18 +131,17 @@ class _AppState extends ConsumerState<App> {
                   darkTheme: AppTheme.dark(context),
                   themeMode: themeMode,
                   localizationsDelegates: const [
-                    S.delegate,
-
                     GlobalMaterialLocalizations.delegate,
                     GlobalCupertinoLocalizations.delegate,
                     GlobalWidgetsLocalizations.delegate,
                     FlutterQuillLocalizations.delegate,
                   ],
-                  locale: activeLocale,
-                  supportedLocales: const [
-                    Locale('en', 'US'), // English
-                    Locale('ru', 'RU'), // Russian
-                  ],
+                  // locale: activeLocale,
+                  locale: TranslationProvider.of(
+                    context,
+                  ).flutterLocale, // use provider
+
+                  supportedLocales: AppLocaleUtils.supportedLocales,
                   debugShowCheckedModeBanner: false,
                   builder: (context, child) {
                     return animated_theme.ThemeSwitchingArea(

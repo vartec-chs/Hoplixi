@@ -8,7 +8,7 @@ import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picke
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
-import 'package:hoplixi/generated/l10n.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 
 import '../providers/identity_form_provider.dart';
 
@@ -84,8 +84,8 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
 
     if (!success) {
       Toaster.error(
-        title: S.of(context).saveError,
-        description: S.of(context).checkFormFieldsAndTryAgain,
+        title: context.t.dashboard_forms.save_error,
+        description: context.t.dashboard_forms.check_form_fields_and_try_again,
       );
     }
   }
@@ -100,8 +100,8 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
       if (!wasSaved && isSaved) {
         Toaster.success(
           title: widget.identityId != null
-              ? S.of(context).identityUpdated
-              : S.of(context).identityCreated,
+              ? context.t.dashboard_forms.identity_updated
+              : context.t.dashboard_forms.identity_created,
         );
         ref.read(identityFormProvider(widget.identityId).notifier).resetSaved();
         if (context.mounted) context.pop(true);
@@ -114,7 +114,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
       error: (error, _) => Scaffold(
         appBar: AppBar(
           leading: const FormCloseButton(),
-          title: Text(S.of(context).formError),
+          title: Text(context.t.dashboard_forms.form_error),
         ),
         body: Center(child: Text('$error')),
       ),
@@ -169,8 +169,8 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
             leading: const FormCloseButton(),
             title: Text(
               state.isEditMode
-                  ? S.of(context).editIdentity
-                  : S.of(context).newIdentity,
+                  ? context.t.dashboard_forms.edit_identity
+                  : context.t.dashboard_forms.new_identity,
             ),
             actions: [
               if (state.isSaving)
@@ -194,7 +194,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   controller: _nameController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).nameLabel,
+                    labelText: context.t.dashboard_forms.name_label,
                     errorText: state.nameError,
                   ),
                   onChanged: notifier.setName,
@@ -204,7 +204,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   controller: _idTypeController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).documentTypeRequiredLabel,
+                    labelText: context.t.dashboard_forms.document_type_required_label,
                     errorText: state.idTypeError,
                   ),
                   onChanged: notifier.setIdType,
@@ -214,7 +214,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   controller: _idNumberController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).documentNumberRequiredLabel,
+                    labelText: context.t.dashboard_forms.document_number_required_label,
                     errorText: state.idNumberError,
                   ),
                   onChanged: notifier.setIdNumber,
@@ -224,7 +224,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   controller: _fullNameController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).fullNameLabel,
+                    labelText: context.t.dashboard_forms.full_name_label,
                   ),
                   onChanged: notifier.setFullName,
                 ),
@@ -233,7 +233,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   controller: _dateOfBirthController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).birthDateIsoLabel,
+                    labelText: context.t.dashboard_forms.birth_date_iso_label,
                     errorText: state.dateOfBirthError,
                   ),
                   onChanged: notifier.setDateOfBirth,
@@ -243,7 +243,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   controller: _placeOfBirthController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).placeOfBirthLabel,
+                    labelText: context.t.dashboard_forms.place_of_birth_label,
                   ),
                   onChanged: notifier.setPlaceOfBirth,
                 ),
@@ -252,7 +252,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   controller: _nationalityController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).nationalityLabel,
+                    labelText: context.t.dashboard_forms.nationality_label,
                   ),
                   onChanged: notifier.setNationality,
                 ),
@@ -261,7 +261,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   controller: _issuingAuthorityController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).issuingAuthorityLabel,
+                    labelText: context.t.dashboard_forms.issuing_authority_label,
                   ),
                   onChanged: notifier.setIssuingAuthority,
                 ),
@@ -270,7 +270,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   controller: _issueDateController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).issueDateIsoLabel,
+                    labelText: context.t.dashboard_forms.issue_date_iso_label,
                     errorText: state.issueDateError,
                   ),
                   onChanged: notifier.setIssueDate,
@@ -280,7 +280,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   controller: _expiryDateController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).expiryDateIsoLabel,
+                    labelText: context.t.dashboard_forms.expiry_date_iso_label,
                     errorText: state.expiryDateError,
                   ),
                   onChanged: notifier.setExpiryDate,
@@ -292,7 +292,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   maxLines: 4,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).mrzLabel,
+                    labelText: context.t.dashboard_forms.mrz_label,
                   ),
                   onChanged: notifier.setMrz,
                 ),
@@ -301,7 +301,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   controller: _scanAttachmentIdController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).scanIdLabel,
+                    labelText: context.t.dashboard_forms.scan_id_label,
                   ),
                   onChanged: notifier.setScanAttachmentId,
                 ),
@@ -310,7 +310,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   controller: _photoAttachmentIdController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).photoIdLabel,
+                    labelText: context.t.dashboard_forms.photo_id_label,
                   ),
                   onChanged: notifier.setPhotoAttachmentId,
                 ),
@@ -341,7 +341,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   maxLines: 4,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: S.of(context).descriptionLabel,
+                    labelText: context.t.dashboard_forms.description_label,
                   ),
                   onChanged: notifier.setDescription,
                 ),
@@ -349,7 +349,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                 SwitchListTile(
                   value: state.verified,
                   onChanged: notifier.setVerified,
-                  title: Text(S.of(context).verifiedLabel),
+                  title: Text(context.t.dashboard_forms.verified_label),
                 ),
               ],
             ),

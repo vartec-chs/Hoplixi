@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/generated/l10n.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
@@ -42,7 +42,7 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
       final dao = await ref.read(apiKeyDaoProvider.future);
       final row = await dao.getById(widget.apiKeyId);
       if (row == null) {
-        Toaster.error(title: S.of(context).apiKeyNotFound);
+        Toaster.error(title: context.t.dashboard_forms.api_key_not_found);
         if (mounted) context.pop();
         return;
       }
@@ -58,7 +58,7 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
         _revoked = details.revoked;
       });
     } catch (e) {
-      Toaster.error(title: S.of(context).apiKeyLoadError, description: '$e');
+      Toaster.error(title: context.t.dashboard_forms.api_key_load_error, description: '$e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -74,7 +74,7 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
       final dao = await ref.read(apiKeyDaoProvider.future);
       final key = await dao.getKeyFieldById(widget.apiKeyId);
       if (key == null) {
-        Toaster.error(title: S.of(context).apiKeyRevealError);
+        Toaster.error(title: context.t.dashboard_forms.api_key_reveal_error);
         return;
       }
       setState(() {
@@ -82,28 +82,28 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
         _revealingKey = true;
       });
     } catch (e) {
-      Toaster.error(title: S.of(context).apiKeyGetKeyError, description: '$e');
+      Toaster.error(title: context.t.dashboard_forms.api_key_get_key_error, description: '$e');
     }
   }
 
   Future<void> _copyKey() async {
     final value = _realKey ?? _maskedKey;
     if (value == null || value.isEmpty) {
-      Toaster.warning(title: S.of(context).apiKeyEmpty);
+      Toaster.warning(title: context.t.dashboard_forms.api_key_empty);
       return;
     }
     await Clipboard.setData(ClipboardData(text: value));
-    Toaster.success(title: S.of(context).apiKeyCopied);
+    Toaster.success(title: context.t.dashboard_forms.api_key_copied);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(S.of(context).viewApiKey),
+        title: Text(context.t.dashboard_forms.view_api_key),
         actions: [
           IconButton(
-            tooltip: S.of(context).edit,
+            tooltip: context.t.dashboard_forms.edit,
             onPressed: () => context.push(
               AppRoutesPaths.dashboardEntityEdit(
                 EntityType.apiKey,
@@ -126,7 +126,7 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
                   const SizedBox(height: 16),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(S.of(context).apiKeyLabel),
+                    title: Text(context.t.dashboard_forms.api_key_label),
                     subtitle: Text(
                       _revealingKey
                           ? (_realKey ?? '')
@@ -152,25 +152,25 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
                   ),
                   if (_tokenType?.isNotEmpty == true)
                     ListTile(
-                      title: Text(S.of(context).tokenTypeLabel),
+                      title: Text(context.t.dashboard_forms.token_type_label),
                       subtitle: Text(_tokenType!),
                     ),
                   if (_environment?.isNotEmpty == true)
                     ListTile(
-                      title: Text(S.of(context).environmentLabel),
+                      title: Text(context.t.dashboard_forms.environment_label),
                       subtitle: Text(_environment!),
                     ),
                   ListTile(
-                    title: Text(S.of(context).apiKeyStatusLabel),
+                    title: Text(context.t.dashboard_forms.api_key_status_label),
                     subtitle: Text(
                       _revoked
-                          ? S.of(context).apiKeyRevokedStatus
-                          : S.of(context).apiKeyActiveStatus,
+                          ? context.t.dashboard_forms.api_key_revoked_status
+                          : context.t.dashboard_forms.api_key_active_status,
                     ),
                   ),
                   if (_description?.isNotEmpty == true)
                     ListTile(
-                      title: Text(S.of(context).descriptionLabel),
+                      title: Text(context.t.dashboard_forms.description_label),
                       subtitle: Text(_description!),
                       contentPadding: EdgeInsets.zero,
                     ),
