@@ -43,8 +43,6 @@ final localDeviceIdProvider = Provider<String>((_) => const Uuid().v4());
 /// Провайдер списка обнаруженных устройств в локальной сети.
 ///
 /// При инициализации запускает UDP broadcast + listener.
-/// Автоматически удаляет устройства, которые не отвечали
-/// более 10 секунд.
 final discoveryProvider =
     AsyncNotifierProvider.autoDispose<DiscoveryNotifier, List<DeviceInfo>>(
       DiscoveryNotifier.new,
@@ -52,8 +50,7 @@ final discoveryProvider =
 
 class DiscoveryNotifier extends AsyncNotifier<List<DeviceInfo>> {
   DiscoveryService? _service;
-  StreamSubscription<dynamic>? _subscription;
-  Timer? _cleanupTimer;
+  StreamSubscription<List<DeviceInfo>>? _subscription;
 
   /// Порт signaling-сервера (устанавливается провайдером
   /// передачи после старта сервера).
@@ -85,20 +82,12 @@ class DiscoveryNotifier extends AsyncNotifier<List<DeviceInfo>> {
     // Запускаем сканирование (занимает время из-за mDNS timeout).
     await _service!.startDiscovery(selfId);
 
-    // Подписываемся на стрим устройств.
-    _subscription = _service!.devicesStream.listen((dynamic data) {
-      if (data is DeviceInfo) {
-        _onDeviceFound(data);
-      }
+    // Подписываемся на стрим списка устройств.
+    _subscription = _service!.devicesStream.listen((devices) {
+      state = AsyncData(devices);
     });
 
-    // Периодическая очистка неактивных устройств (10с).
-    _cleanupTimer = Timer.periodic(
-      const Duration(seconds: 5),
-      (_) => _cleanupStaleDevices(),
-    );
-
-    return [];
+    return _service!.devices;
   }
 
   /// Запускает (или перезапускает) broadcast с текущим портом.
@@ -129,47 +118,8 @@ class DiscoveryNotifier extends AsyncNotifier<List<DeviceInfo>> {
     }
   }
 
-  void _onDeviceFound(DeviceInfo device) {
-    final currentList = state.value ?? [];
-
-    // Обновляем lastSeen или добавляем новое устройство.
-    final updated = device.copyWith(
-      lastSeen: DateTime.now().millisecondsSinceEpoch,
-    );
-
-    final existingIndex = currentList.indexWhere((d) => d.id == device.id);
-
-    List<DeviceInfo> newList;
-    if (existingIndex >= 0) {
-      newList = [...currentList];
-      newList[existingIndex] = updated;
-    } else {
-      newList = [...currentList, updated];
-      logInfo('Discovery: new device found: ${device.name} @ ${device.ip}');
-    }
-
-    state = AsyncData(newList);
-  }
-
-  void _cleanupStaleDevices() {
-    final currentList = state.value ?? [];
-    if (currentList.isEmpty) return;
-
-    final now = DateTime.now().millisecondsSinceEpoch;
-    const timeout = 10000; // 10 секунд.
-
-    final filtered = currentList.where((d) {
-      return now - d.lastSeen < timeout;
-    }).toList();
-
-    if (filtered.length != currentList.length) {
-      state = AsyncData(filtered);
-    }
-  }
-
   Future<void> _dispose() async {
     _subscription?.cancel();
-    _cleanupTimer?.cancel();
     await _service?.dispose();
   }
 }
