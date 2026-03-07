@@ -212,34 +212,63 @@ class _OtpPickerFieldState extends ConsumerState<OtpPickerField> {
                     setState(() => _isHovered = false);
                   }
                 },
-                child: InputDecorator(
-                  isFocused: isFocused,
-                  isEmpty: !hasValue,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: widget.label,
-                    hintText: widget.hintText,
-                    prefixIcon: const Icon(LucideIcons.smartphone),
-                    suffixIcon: hasValue && widget.enabled
-                        ? IconButton(
-                            icon: const Icon(Icons.close, size: 20),
-                            onPressed: _handleClear,
-                            tooltip: 'Очистить',
-                          )
-                        : Icon(
-                            Icons.arrow_drop_down,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  curve: Curves.easeInOut,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    color: _isHovered && widget.enabled
+                        ? colorScheme.onSurface.withOpacity(0.04)
+                        : Colors.transparent,
                   ),
-                  child: Text(
-                    effectiveOtpName ?? '',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: hasValue
-                          ? colorScheme.onSurface
-                          : colorScheme.onSurfaceVariant,
+                  child: InputDecorator(
+                    isFocused: isFocused,
+                    decoration: primaryInputDecoration(
+                      context,
+                      labelText: effectiveLabel,
+                      hintText: hasValue ? null : effectiveHintText,
+                      enabled: widget.enabled,
+                      isFocused: isFocused,
+                      prefixIcon: const Icon(LucideIcons.smartphone),
+                      suffixIcon: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (hasValue)
+                            ExcludeSemantics(
+                              child: IconButton(
+                                icon: const Icon(Icons.clear, size: 20),
+                                onPressed: widget.enabled ? _handleClear : null,
+                                tooltip: 'Очистить (Delete/Backspace)',
+                              ),
+                            ),
+                          ExcludeSemantics(
+                            child: Icon(
+                              Icons.arrow_drop_down,
+                              color: widget.enabled
+                                  ? colorScheme.onSurface
+                                  : colorScheme.onSurface.withOpacity(0.38),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    child: IgnorePointer(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            hasValue ? effectiveOtpName! : effectiveHintText,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: hasValue
+                                  ? colorScheme.onSurface
+                                  : colorScheme.onSurface.withOpacity(0.6),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
