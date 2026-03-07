@@ -10,6 +10,7 @@ import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:intl/intl.dart' show DateFormat;
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../providers/api_key_form_provider.dart';
 
@@ -147,6 +148,7 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                     context,
                     labelText: context.t.dashboard_forms.api_key_name_label,
                     errorText: state.nameError,
+                    prefixIcon: const Icon(LucideIcons.tag),
                   ),
                   onChanged: ref
                       .read(apiKeyFormProvider(widget.apiKeyId).notifier)
@@ -159,6 +161,7 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                     context,
                     labelText: context.t.dashboard_forms.api_key_service_label,
                     errorText: state.serviceError,
+                    prefixIcon: const Icon(LucideIcons.globe),
                   ),
                   onChanged: ref
                       .read(apiKeyFormProvider(widget.apiKeyId).notifier)
@@ -171,6 +174,7 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                     context,
                     labelText: context.t.dashboard_forms.api_key_key_label,
                     errorText: state.keyError,
+                    prefixIcon: const Icon(LucideIcons.key),
                   ),
                   onChanged: ref
                       .read(apiKeyFormProvider(widget.apiKeyId).notifier)
@@ -181,7 +185,9 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                   controller: _tokenTypeController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.api_key_token_type_label,
+                    labelText:
+                        context.t.dashboard_forms.api_key_token_type_label,
+                    prefixIcon: const Icon(LucideIcons.type),
                   ),
                   onChanged: ref
                       .read(apiKeyFormProvider(widget.apiKeyId).notifier)
@@ -192,7 +198,9 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                   controller: _environmentController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.api_key_environment_label,
+                    labelText:
+                        context.t.dashboard_forms.api_key_environment_label,
+                    prefixIcon: const Icon(LucideIcons.server),
                   ),
                   onChanged: ref
                       .read(apiKeyFormProvider(widget.apiKeyId).notifier)
@@ -231,7 +239,9 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                   maxLines: 4,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.api_key_description_label,
+                    labelText:
+                        context.t.dashboard_forms.api_key_description_label,
+                    prefixIcon: const Icon(LucideIcons.fileText),
                   ),
                   onChanged: ref
                       .read(apiKeyFormProvider(widget.apiKeyId).notifier)
@@ -251,6 +261,7 @@ class _ApiKeyFormScreenState extends ConsumerState<ApiKeyFormScreen> {
                     context,
                     labelText: context.t.dashboard_forms.expiration_date_label,
                     hintText: context.t.dashboard_forms.select_date_time_hint,
+                    prefixIcon: const Icon(LucideIcons.calendar),
                     suffixIcon: state.expiresAt != null
                         ? IconButton(
                             icon: const Icon(Icons.clear, size: 20),

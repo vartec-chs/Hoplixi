@@ -8,6 +8,7 @@ import 'package:hoplixi/features/password_manager/pickers/category_picker/catego
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/features/qr_scanner/widgets/qr_scanner_widget.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -93,8 +94,8 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
   Future<void> _handleScanQr() async {
     final result = await showQrScannerDialog(
       context: context,
-      title: 'Сканировать QR-код',
-      subtitle: 'Отсканируйте QR-код из приложения или сервиса',
+      title: context.t.dashboard_forms.scan_qr_code_title,
+      subtitle: context.t.dashboard_forms.scan_qr_code_subtitle,
     );
 
     if (result != null && mounted) {
@@ -107,8 +108,8 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
       });
 
       Toaster.success(
-        title: 'QR-код распознан',
-        description: 'Данные успешно загружены',
+        title: context.t.dashboard_forms.qr_code_recognized,
+        description: context.t.dashboard_forms.data_loaded_successfully,
       );
     }
   }
@@ -166,14 +167,16 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
 
     if (success) {
       Toaster.success(
-        title: widget.otpId != null ? 'OTP обновлён' : 'OTP создан',
-        description: 'Изменения успешно сохранены',
+        title: widget.otpId != null
+            ? context.t.dashboard_forms.otp_updated
+            : context.t.dashboard_forms.otp_created,
+        description: context.t.dashboard_forms.changes_saved_successfully,
       );
       context.pop(true);
     } else {
       Toaster.error(
-        title: 'Ошибка сохранения',
-        description: 'Не удалось сохранить OTP',
+        title: context.t.dashboard_forms.save_error,
+        description: context.t.dashboard_forms.failed_to_save_otp,
       );
     }
   }
@@ -193,19 +196,23 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.otpId != null ? 'Редактировать OTP' : 'Новый OTP'),
+        title: Text(
+          widget.otpId != null
+              ? context.t.dashboard_forms.edit_otp
+              : context.t.dashboard_forms.new_otp,
+        ),
         actions: [
           // Кнопка импорта OTP
           IconButton(
             icon: const Icon(LucideIcons.import),
-            tooltip: 'Импорт OTP',
+            tooltip: context.t.dashboard_forms.import_otp_tooltip,
             onPressed: () => context.go(AppRoutesPaths.otpImport),
           ),
           // Кнопка сканирования QR
           if (!state.isEditMode)
             IconButton(
               icon: const Icon(Icons.qr_code_scanner),
-              tooltip: 'Сканировать QR-код',
+              tooltip: context.t.dashboard_forms.scan_qr_code_tooltip,
               onPressed: _handleScanQr,
             ),
           if (state.isSaving)
@@ -288,7 +295,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Данные загружены из QR-кода',
+                      context.t.dashboard_forms.data_loaded_from_qr_code,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: colorScheme.primary,
                       ),
@@ -306,10 +313,10 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
             obscureText: _obscureSecret,
             decoration: primaryInputDecoration(
               context,
-              labelText: 'Секретный ключ (Base32) *',
+              labelText: context.t.dashboard_forms.otp_secret_key_label,
               hintText: 'JBSWY3DPEHPK3PXP',
               errorText: state.secretError,
-              helperText: 'Обычно находится в настройках 2FA сервиса',
+              helperText: context.t.dashboard_forms.otp_secret_helper_text,
               prefixIcon: const Icon(LucideIcons.key),
               suffixIcon: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -351,7 +358,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
             controller: _issuerController,
             decoration: primaryInputDecoration(
               context,
-              labelText: 'Сервис / Издатель',
+              labelText: context.t.dashboard_forms.otp_issuer_label,
               hintText: 'Google, GitHub, Steam...',
               prefixIcon: const Icon(LucideIcons.building),
             ),
@@ -366,7 +373,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
             controller: _accountNameController,
             decoration: primaryInputDecoration(
               context,
-              labelText: 'Имя аккаунта',
+              labelText: context.t.dashboard_forms.otp_account_name_label,
               hintText: 'email@example.com',
               prefixIcon: const Icon(LucideIcons.user),
             ),
@@ -380,7 +387,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
           // Расширенные настройки
           _buildExpandableSection(
             context: context,
-            title: 'Расширенные настройки',
+            title: context.t.dashboard_forms.advanced_settings,
             initiallyExpanded:
                 state.algorithm != AlgorithmOtp.SHA1 ||
                 state.digits != 6 ||
@@ -389,7 +396,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
               // Алгоритм
               _buildDropdownField<AlgorithmOtp>(
                 context: context,
-                label: 'Алгоритм',
+                label: context.t.dashboard_forms.algorithm_label,
                 value: state.algorithm,
                 items: AlgorithmOtp.values,
                 itemLabel: (item) => item.name,
@@ -404,7 +411,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
               // Количество цифр
               _buildDropdownField<int>(
                 context: context,
-                label: 'Количество цифр',
+                label: context.t.dashboard_forms.digits_count_label,
                 value: state.digits,
                 items: [6, 7, 8],
                 itemLabel: (item) => item.toString(),
@@ -421,7 +428,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
                 controller: _periodController,
                 decoration: primaryInputDecoration(
                   context,
-                  labelText: 'Период (секунды)',
+                  labelText: context.t.dashboard_forms.period_seconds_label,
                   hintText: '30',
                   errorText: state.periodError,
                   prefixIcon: const Icon(LucideIcons.clock),
@@ -441,8 +448,8 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
           CategoryPickerField(
             selectedCategoryId: state.categoryId,
             selectedCategoryName: state.categoryName,
-            label: 'Категория',
-            hintText: 'Выберите категорию',
+            label: context.t.dashboard_forms.pickers_category_label,
+            hintText: context.t.dashboard_forms.select_category_hint,
             filterByType: [CategoryType.totp, CategoryType.mixed],
             onCategorySelected: (categoryId, categoryName) {
               ref
@@ -456,8 +463,8 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
           TagPickerField(
             selectedTagIds: state.tagIds,
             selectedTagNames: state.tagNames,
-            label: 'Теги',
-            hintText: 'Выберите теги',
+            label: context.t.dashboard_forms.pickers_tags_label,
+            hintText: context.t.dashboard_forms.select_tags_hint,
             filterByType: [TagType.totp, TagType.mixed],
             onTagsSelected: (tagIds, tagNames) {
               ref.read(otpFormProvider.notifier).setTags(tagIds, tagNames);
@@ -469,7 +476,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
           NotePickerField(
             selectedNoteId: state.noteId,
             selectedNoteName: _noteName,
-            hintText: 'Выберите заметку',
+            hintText: context.t.dashboard_forms.select_note_hint,
             onNoteSelected: (noteId, noteName) {
               ref.read(otpFormProvider.notifier).setNoteId(noteId);
             },

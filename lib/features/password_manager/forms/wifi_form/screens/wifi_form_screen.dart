@@ -9,6 +9,7 @@ import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picke
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../providers/wifi_form_provider.dart';
 
@@ -184,6 +185,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                     context,
                     labelText: context.t.dashboard_forms.name_label,
                     errorText: state.nameError,
+                    prefixIcon: const Icon(LucideIcons.tag),
                   ),
                   onChanged: notifier.setName,
                 ),
@@ -194,6 +196,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                     context,
                     labelText: context.t.dashboard_forms.wifi_ssid_label,
                     errorText: state.ssidError,
+                    prefixIcon: const Icon(LucideIcons.wifi),
                   ),
                   onChanged: notifier.setSsid,
                 ),
@@ -203,6 +206,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.wifi_password_label,
+                    prefixIcon: const Icon(LucideIcons.lock),
                   ),
                   onChanged: notifier.setPassword,
                 ),
@@ -227,6 +231,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.description_label,
+                    prefixIcon: const Icon(LucideIcons.fileText),
                   ),
                   onChanged: notifier.setDescription,
                 ),
@@ -239,6 +244,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                       decoration: primaryInputDecoration(
                         context,
                         labelText: context.t.dashboard_forms.wifi_eap_method_label,
+                        prefixIcon: const Icon(LucideIcons.settings),
                       ),
                       onChanged: notifier.setEapMethod,
                     ),
@@ -248,6 +254,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                       decoration: primaryInputDecoration(
                         context,
                         labelText: context.t.dashboard_forms.wifi_username_label,
+                        prefixIcon: const Icon(LucideIcons.user),
                       ),
                       onChanged: notifier.setUsername,
                     ),
@@ -257,6 +264,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                       decoration: primaryInputDecoration(
                         context,
                         labelText: context.t.dashboard_forms.wifi_identity_label,
+                        prefixIcon: const Icon(LucideIcons.idCard),
                       ),
                       onChanged: notifier.setIdentity,
                     ),
@@ -266,6 +274,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                       decoration: primaryInputDecoration(
                         context,
                         labelText: context.t.dashboard_forms.wifi_domain_label,
+                        prefixIcon: const Icon(LucideIcons.globe),
                       ),
                       onChanged: notifier.setDomain,
                     ),
@@ -275,6 +284,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                       decoration: primaryInputDecoration(
                         context,
                         labelText: context.t.dashboard_forms.wifi_last_connected_bssid_label,
+                        prefixIcon: const Icon(LucideIcons.monitor),
                       ),
                       onChanged: notifier.setLastConnectedBssid,
                     ),
@@ -286,6 +296,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                         context,
                         labelText: context.t.dashboard_forms.wifi_priority_label,
                         errorText: state.priorityError,
+                        prefixIcon: const Icon(LucideIcons.arrowUpDown),
                       ),
                       onChanged: notifier.setPriority,
                     ),
@@ -296,6 +307,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                       decoration: primaryInputDecoration(
                         context,
                         labelText: context.t.dashboard_forms.wifi_qr_payload_label,
+                        prefixIcon: const Icon(LucideIcons.qrCode),
                       ),
                       onChanged: notifier.setQrCodePayload,
                     ),

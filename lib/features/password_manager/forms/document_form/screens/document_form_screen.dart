@@ -9,6 +9,7 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_b
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -156,8 +157,9 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
                             controller: _titleController,
                             decoration: primaryInputDecoration(
                               context,
-                              labelText: 'Название *',
-                              hintText: 'Введите название документа',
+                              labelText: context.t.dashboard_forms.name_label,
+                              hintText:
+                                  context.t.dashboard_forms.document_name_hint,
                               errorText: state.titleError,
                               prefixIcon: const Icon(LucideIcons.tag),
                             ),
@@ -177,8 +179,12 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
                           CategoryPickerField(
                             selectedCategoryId: state.categoryId,
                             selectedCategoryName: state.categoryName,
-                            label: 'Категория',
-                            hintText: 'Выберите категорию',
+                            label: context
+                                .t
+                                .dashboard_forms
+                                .pickers_category_label,
+                            hintText:
+                                context.t.dashboard_forms.select_category_hint,
                             filterByType: [
                               CategoryType.document,
                               CategoryType.mixed,
@@ -195,8 +201,9 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
                           TagPickerField(
                             selectedTagIds: state.tagIds,
                             selectedTagNames: state.tagNames,
-                            label: 'Теги',
-                            hintText: 'Выберите теги',
+                            label: context.t.dashboard_forms.pickers_tags_label,
+                            hintText:
+                                context.t.dashboard_forms.select_tags_hint,
                             filterByType: [TagType.document, TagType.mixed],
                             onTagsSelected: (tagIds, tagNames) {
                               ref
@@ -210,8 +217,9 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
                           NotePickerField(
                             selectedNoteId: state.noteId,
                             selectedNoteName: state.noteName,
-                            label: 'Заметка',
-                            hintText: 'Выберите заметку',
+                            label: context.t.dashboard_forms.pickers_note_label,
+                            hintText:
+                                context.t.dashboard_forms.select_note_hint,
                             onNoteSelected: (noteId, noteName) {
                               ref
                                   .read(documentFormProvider.notifier)
@@ -225,8 +233,12 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
                             controller: _descriptionController,
                             decoration: primaryInputDecoration(
                               context,
-                              labelText: 'Описание',
-                              hintText: 'Краткое описание документа',
+                              labelText:
+                                  context.t.dashboard_forms.description_label,
+                              hintText: context
+                                  .t
+                                  .dashboard_forms
+                                  .document_description_hint,
                               prefixIcon: const Icon(LucideIcons.fileText),
                             ),
                             maxLines: 3,
@@ -599,8 +611,8 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
       initialValue: state.documentType,
       decoration: primaryInputDecoration(
         context,
-        labelText: 'Тип документа',
-        hintText: 'Выберите тип',
+        labelText: context.t.dashboard_forms.document_type_required_label,
+        hintText: context.t.dashboard_forms.select_type_hint,
       ),
       items: [
         const DropdownMenuItem<String>(value: null, child: Text('Не указан')),

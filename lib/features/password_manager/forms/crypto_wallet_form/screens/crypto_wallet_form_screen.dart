@@ -6,9 +6,10 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_b
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
-import 'package:hoplixi/generated/l10n/translations.g.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../providers/crypto_wallet_form_provider.dart';
 
@@ -192,6 +193,7 @@ class _CryptoWalletFormScreenState
                     context,
                     labelText: context.t.dashboard_forms.name_label,
                     errorText: state.nameError,
+                    prefixIcon: const Icon(LucideIcons.tag),
                   ),
                   onChanged: notifier.setName,
                 ),
@@ -202,6 +204,7 @@ class _CryptoWalletFormScreenState
                     context,
                     labelText: context.t.dashboard_forms.wallet_type_label,
                     errorText: state.walletTypeError,
+                    prefixIcon: const Icon(LucideIcons.wallet),
                   ),
                   onChanged: notifier.setWalletType,
                 ),
@@ -213,6 +216,7 @@ class _CryptoWalletFormScreenState
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.mnemonic_label,
+                    prefixIcon: const Icon(LucideIcons.key),
                   ),
                   onChanged: notifier.setMnemonic,
                 ),
@@ -224,6 +228,7 @@ class _CryptoWalletFormScreenState
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.private_key_label,
+                    prefixIcon: const Icon(LucideIcons.key),
                   ),
                   onChanged: notifier.setPrivateKey,
                 ),
@@ -235,6 +240,7 @@ class _CryptoWalletFormScreenState
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.xprv_label,
+                    prefixIcon: const Icon(LucideIcons.eyeOff),
                   ),
                   onChanged: notifier.setXprv,
                 ),
@@ -244,6 +250,7 @@ class _CryptoWalletFormScreenState
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.xpub_label,
+                    prefixIcon: const Icon(LucideIcons.eye),
                   ),
                   onChanged: notifier.setXpub,
                 ),
@@ -253,6 +260,7 @@ class _CryptoWalletFormScreenState
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.network_label,
+                    prefixIcon: const Icon(LucideIcons.network),
                   ),
                   onChanged: notifier.setNetwork,
                 ),
@@ -262,6 +270,7 @@ class _CryptoWalletFormScreenState
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.derivation_path_label,
+                    prefixIcon: const Icon(LucideIcons.route),
                   ),
                   onChanged: notifier.setDerivationPath,
                 ),
@@ -271,6 +280,7 @@ class _CryptoWalletFormScreenState
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.derivation_scheme_label,
+                    prefixIcon: const Icon(LucideIcons.settings),
                   ),
                   onChanged: notifier.setDerivationScheme,
                 ),
@@ -282,6 +292,7 @@ class _CryptoWalletFormScreenState
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.addresses_json_label,
+                    prefixIcon: const Icon(LucideIcons.mapPin),
                   ),
                   onChanged: notifier.setAddresses,
                 ),
@@ -291,6 +302,7 @@ class _CryptoWalletFormScreenState
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.hardware_device_label,
+                    prefixIcon: const Icon(LucideIcons.cpu),
                   ),
                   onChanged: notifier.setHardwareDevice,
                 ),
@@ -325,6 +337,7 @@ class _CryptoWalletFormScreenState
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.description_label,
+                    prefixIcon: const Icon(LucideIcons.fileText),
                   ),
                   onChanged: notifier.setDescription,
                 ),

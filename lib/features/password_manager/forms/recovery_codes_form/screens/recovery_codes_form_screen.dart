@@ -9,6 +9,7 @@ import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picke
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../providers/recovery_codes_form_provider.dart';
 
@@ -151,6 +152,7 @@ class _RecoveryCodesFormScreenState
                     context,
                     labelText: context.t.dashboard_forms.name_label,
                     errorText: state.nameError,
+                    prefixIcon: const Icon(LucideIcons.tag),
                   ),
                   onChanged: notifier.setName,
                 ),
@@ -184,6 +186,7 @@ class _RecoveryCodesFormScreenState
                     labelText: context.t.dashboard_forms.codes_label,
                     hintText: context.t.dashboard_forms.paste_codes_hint,
                     errorText: state.codesInputError,
+                    prefixIcon: const Icon(LucideIcons.code),
                   ),
                   onChanged: notifier.setCodesInput,
                 ),
@@ -196,6 +199,7 @@ class _RecoveryCodesFormScreenState
                     context,
                     labelText: context.t.dashboard_forms.generated_at_iso_label,
                     errorText: state.generatedAtError,
+                    prefixIcon: const Icon(LucideIcons.calendar),
                   ),
                   onChanged: notifier.setGeneratedAt,
                 ),
@@ -207,6 +211,7 @@ class _RecoveryCodesFormScreenState
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.display_hint_label,
+                    prefixIcon: const Icon(LucideIcons.info),
                   ),
                   onChanged: notifier.setDisplayHint,
                 ),

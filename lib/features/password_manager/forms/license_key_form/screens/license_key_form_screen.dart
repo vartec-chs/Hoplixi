@@ -6,9 +6,10 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_b
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
-import 'package:hoplixi/generated/l10n/translations.g.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../providers/license_key_form_provider.dart';
 
@@ -201,6 +202,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                     context,
                     labelText: context.t.dashboard_forms.name_label,
                     errorText: state.nameError,
+                    prefixIcon: const Icon(LucideIcons.tag),
                   ),
                   onChanged: notifier.setName,
                 ),
@@ -211,6 +213,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                     context,
                     labelText: context.t.dashboard_forms.product_label,
                     errorText: state.productError,
+                    prefixIcon: const Icon(LucideIcons.package),
                   ),
                   onChanged: notifier.setProduct,
                 ),
@@ -221,6 +224,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                     context,
                     labelText: context.t.dashboard_forms.license_key_label,
                     errorText: state.licenseKeyError,
+                    prefixIcon: const Icon(LucideIcons.key),
                   ),
                   onChanged: notifier.setLicenseKey,
                 ),
@@ -230,6 +234,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.license_type_label,
+                    prefixIcon: const Icon(LucideIcons.type),
                   ),
                   onChanged: notifier.setLicenseType,
                 ),
@@ -241,6 +246,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                     context,
                     labelText: context.t.dashboard_forms.seats_count_label,
                     errorText: state.seatsError,
+                    prefixIcon: const Icon(LucideIcons.users),
                   ),
                   onChanged: notifier.setSeats,
                 ),
@@ -252,6 +258,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                     context,
                     labelText: context.t.dashboard_forms.max_activations_label,
                     errorText: state.maxActivationsError,
+                    prefixIcon: const Icon(LucideIcons.hash),
                   ),
                   onChanged: notifier.setMaxActivations,
                 ),
@@ -262,6 +269,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                     context,
                     labelText: context.t.dashboard_forms.activated_at_iso_label,
                     errorText: state.activatedOnError,
+                    prefixIcon: const Icon(LucideIcons.calendar),
                   ),
                   onChanged: notifier.setActivatedOn,
                 ),
@@ -270,8 +278,10 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   controller: _purchaseDateController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.purchase_date_iso_label,
+                    labelText:
+                        context.t.dashboard_forms.purchase_date_iso_label,
                     errorText: state.purchaseDateError,
+                    prefixIcon: const Icon(LucideIcons.calendar),
                   ),
                   onChanged: notifier.setPurchaseDate,
                 ),
@@ -281,6 +291,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.purchased_from_label,
+                    prefixIcon: const Icon(LucideIcons.shoppingCart),
                   ),
                   onChanged: notifier.setPurchaseFrom,
                 ),
@@ -290,6 +301,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.order_id_label,
+                    prefixIcon: const Icon(LucideIcons.hash),
                   ),
                   onChanged: notifier.setOrderId,
                 ),
@@ -299,6 +311,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.license_file_id_label,
+                    prefixIcon: const Icon(LucideIcons.file),
                   ),
                   onChanged: notifier.setLicenseFileId,
                 ),
@@ -309,6 +322,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                     context,
                     labelText: context.t.dashboard_forms.expires_at_iso_label,
                     errorText: state.expiresAtError,
+                    prefixIcon: const Icon(LucideIcons.calendar),
                   ),
                   onChanged: notifier.setExpiresAt,
                 ),
@@ -318,6 +332,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.support_contact_label,
+                    prefixIcon: const Icon(LucideIcons.headphones),
                   ),
                   onChanged: notifier.setSupportContact,
                 ),
@@ -352,6 +367,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.description_label,
+                    prefixIcon: const Icon(LucideIcons.fileText),
                   ),
                   onChanged: notifier.setDescription,
                 ),

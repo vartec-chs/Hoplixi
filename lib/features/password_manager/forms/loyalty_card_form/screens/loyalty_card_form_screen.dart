@@ -7,8 +7,10 @@ import 'package:hoplixi/features/password_manager/pickers/category_picker/catego
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/features/qr_scanner/widgets/qr_scanner_widget.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../providers/loyalty_card_form_provider.dart';
 
@@ -134,8 +136,8 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
   Future<void> _scanBarcode() async {
     final result = await showQrScannerDialog(
       context: context,
-      title: 'Сканировать код карты',
-      subtitle: 'Отсканируйте QR-код или штрихкод карты лояльности',
+      title: context.t.dashboard_forms.scan_card_title,
+      subtitle: context.t.dashboard_forms.scan_card_subtitle,
       enableQrCode: true,
       enableBarcode: true,
     );
@@ -153,8 +155,8 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
 
     if (!success) {
       Toaster.error(
-        title: 'Не удалось сохранить карту лояльности',
-        description: 'Проверьте поля формы и попробуйте снова',
+        title: context.t.dashboard_forms.save_error,
+        description: context.t.dashboard_forms.check_form_fields_and_try_again,
       );
     }
   }
@@ -206,8 +208,8 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
       if ((previous?.isSaved ?? false) == false && next.isSaved) {
         Toaster.success(
           title: widget.loyaltyCardId == null
-              ? 'Карта лояльности создана'
-              : 'Карта лояльности обновлена',
+              ? context.t.dashboard_forms.loyalty_card_created
+              : context.t.dashboard_forms.loyalty_card_updated,
         );
         ref.read(loyaltyCardFormProvider.notifier).resetSaved();
         if (context.mounted) context.pop(true);
@@ -221,8 +223,8 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
         leading: const FormCloseButton(),
         title: Text(
           state.isEditMode
-              ? 'Редактирование карты лояльности'
-              : 'Новая карта лояльности',
+              ? context.t.dashboard_forms.edit_loyalty_card
+              : context.t.dashboard_forms.new_loyalty_card,
         ),
         actions: [
           IconButton(
@@ -253,9 +255,9 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                     controller: _nameController,
                     decoration: primaryInputDecoration(
                       context,
-                      labelText: 'Название',
+                      labelText: context.t.dashboard_forms.name_label,
                       errorText: state.nameError,
-                      prefixIcon: const Icon(Icons.badge_outlined),
+                      prefixIcon: const Icon(LucideIcons.tag),
                     ),
                     onChanged: ref
                         .read(loyaltyCardFormProvider.notifier)
@@ -266,10 +268,10 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                     controller: _programNameController,
                     decoration: primaryInputDecoration(
                       context,
-                      labelText: 'Программа',
+                      labelText: context.t.dashboard_forms.program_name_label,
                       hintText: 'Например: Лента Club',
                       errorText: state.programNameError,
-                      prefixIcon: const Icon(Icons.storefront_outlined),
+                      prefixIcon: const Icon(LucideIcons.store),
                     ),
                     onChanged: ref
                         .read(loyaltyCardFormProvider.notifier)
@@ -280,10 +282,11 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                     controller: _cardNumberController,
                     decoration: primaryInputDecoration(
                       context,
-                      labelText: 'Номер карты',
+                      labelText:
+                          context.t.dashboard_forms.loyalty_card_number_label,
                       hintText: 'Номер карты или штрихкод обязательны',
                       errorText: state.cardOrBarcodeError,
-                      prefixIcon: const Icon(Icons.credit_card_outlined),
+                      prefixIcon: const Icon(LucideIcons.creditCard),
                     ),
                     onChanged: ref
                         .read(loyaltyCardFormProvider.notifier)
@@ -294,8 +297,8 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                     controller: _holderNameController,
                     decoration: primaryInputDecoration(
                       context,
-                      labelText: 'Владелец',
-                      prefixIcon: const Icon(Icons.person_outline),
+                      labelText: context.t.dashboard_forms.holder_name_label,
+                      prefixIcon: const Icon(LucideIcons.user),
                     ),
                     onChanged: ref
                         .read(loyaltyCardFormProvider.notifier)
@@ -308,8 +311,9 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                     decoration:
                         primaryInputDecoration(
                           context,
-                          labelText: 'PIN / Пароль',
-                          prefixIcon: const Icon(Icons.lock_outline),
+                          labelText:
+                              context.t.dashboard_forms.pin_password_label,
+                          prefixIcon: const Icon(LucideIcons.lock),
                         ).copyWith(
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -336,11 +340,14 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                           decoration:
                               primaryInputDecoration(
                                 context,
-                                labelText: 'Штрихкод',
+                                labelText: context
+                                    .t
+                                    .dashboard_forms
+                                    .barcode_value_label,
                                 errorText: state.cardOrBarcodeError != null
                                     ? ''
                                     : null,
-                                prefixIcon: const Icon(Icons.qr_code),
+                                prefixIcon: const Icon(LucideIcons.qrCode),
                               ).copyWith(
                                 suffixIcon: IconButton(
                                   icon: const Icon(Icons.qr_code_scanner),
@@ -359,11 +366,10 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                           controller: _barcodeTypeController,
                           decoration: primaryInputDecoration(
                             context,
-                            labelText: 'Тип штрихкода',
+                            labelText:
+                                context.t.dashboard_forms.barcode_type_label,
                             hintText: 'EAN-13, QR',
-                            prefixIcon: const Icon(
-                              Icons.qr_code_scanner_outlined,
-                            ),
+                            prefixIcon: const Icon(LucideIcons.scan),
                           ),
                           onChanged: ref
                               .read(loyaltyCardFormProvider.notifier)
@@ -380,8 +386,9 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                           controller: _pointsBalanceController,
                           decoration: primaryInputDecoration(
                             context,
-                            labelText: 'Баланс/бонусы',
-                            prefixIcon: const Icon(Icons.stars_outlined),
+                            labelText:
+                                context.t.dashboard_forms.points_balance_label,
+                            prefixIcon: const Icon(LucideIcons.star),
                           ),
                           onChanged: ref
                               .read(loyaltyCardFormProvider.notifier)
@@ -394,10 +401,8 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                           controller: _tierController,
                           decoration: primaryInputDecoration(
                             context,
-                            labelText: 'Уровень',
-                            prefixIcon: const Icon(
-                              Icons.workspace_premium_outlined,
-                            ),
+                            labelText: context.t.dashboard_forms.tier_label,
+                            prefixIcon: const Icon(LucideIcons.award),
                           ),
                           onChanged: ref
                               .read(loyaltyCardFormProvider.notifier)
@@ -414,9 +419,10 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                     decoration:
                         primaryInputDecoration(
                           context,
-                          labelText: 'Срок действия',
+                          labelText:
+                              context.t.dashboard_forms.expiration_date_label,
                           errorText: state.expiryDateError,
-                          prefixIcon: const Icon(Icons.event_outlined),
+                          prefixIcon: const Icon(LucideIcons.calendar),
                         ).copyWith(
                           suffixIcon: state.expiryDate.isNotEmpty
                               ? Row(
@@ -457,10 +463,10 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                           controller: _websiteController,
                           decoration: primaryInputDecoration(
                             context,
-                            labelText: 'Сайт',
+                            labelText: context.t.dashboard_forms.website_label,
                             hintText: 'https://example.com',
                             errorText: state.websiteError,
-                            prefixIcon: const Icon(Icons.public_outlined),
+                            prefixIcon: const Icon(LucideIcons.globe),
                           ),
                           onChanged: ref
                               .read(loyaltyCardFormProvider.notifier)
@@ -473,8 +479,8 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                           controller: _phoneNumberController,
                           decoration: primaryInputDecoration(
                             context,
-                            labelText: 'Телефон',
-                            prefixIcon: const Icon(Icons.phone_outlined),
+                            labelText: context.t.dashboard_forms.phone_label,
+                            prefixIcon: const Icon(LucideIcons.phone),
                           ),
                           onChanged: ref
                               .read(loyaltyCardFormProvider.notifier)
@@ -487,8 +493,8 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                   CategoryPickerField(
                     selectedCategoryId: state.categoryId,
                     selectedCategoryName: state.categoryName,
-                    label: 'Категория',
-                    hintText: 'Выберите категорию',
+                    label: context.t.dashboard_forms.pickers_category_label,
+                    hintText: context.t.dashboard_forms.select_category_hint,
                     filterByType: const [
                       CategoryType.loyaltyCard,
                       CategoryType.mixed,
@@ -501,8 +507,8 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                   TagPickerField(
                     selectedTagIds: state.tagIds,
                     selectedTagNames: state.tagNames,
-                    label: 'Теги',
-                    hintText: 'Выберите теги',
+                    label: context.t.dashboard_forms.pickers_tags_label,
+                    hintText: context.t.dashboard_forms.select_tags_hint,
                     filterByType: const [TagType.loyaltyCard, TagType.mixed],
                     onTagsSelected: ref
                         .read(loyaltyCardFormProvider.notifier)
@@ -512,8 +518,8 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                   NotePickerField(
                     selectedNoteId: state.noteId,
                     selectedNoteName: null,
-                    label: 'Заметка',
-                    hintText: 'Выберите заметку',
+                    label: context.t.dashboard_forms.pickers_note_label,
+                    hintText: context.t.dashboard_forms.select_note_hint,
                     onNoteSelected: (noteId, _) {
                       ref
                           .read(loyaltyCardFormProvider.notifier)
@@ -527,8 +533,8 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                     maxLines: 4,
                     decoration: primaryInputDecoration(
                       context,
-                      labelText: 'Описание',
-                      prefixIcon: const Icon(Icons.notes_outlined),
+                      labelText: context.t.dashboard_forms.description_label,
+                      prefixIcon: const Icon(LucideIcons.fileText),
                     ),
                     onChanged: ref
                         .read(loyaltyCardFormProvider.notifier)

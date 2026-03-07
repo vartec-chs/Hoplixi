@@ -6,9 +6,10 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_b
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
-import 'package:hoplixi/generated/l10n/translations.g.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../providers/certificate_form_provider.dart';
 
@@ -171,135 +172,145 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
             child: ListView(
               padding: formPadding,
               children: [
-              TextField(
-                controller: _nameController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: context.t.dashboard_forms.name_label,
-                  errorText: state.nameError,
+                TextField(
+                  controller: _nameController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: context.t.dashboard_forms.name_label,
+                    errorText: state.nameError,
+                    prefixIcon: const Icon(LucideIcons.tag),
+                  ),
+                  onChanged: notifier.setName,
                 ),
-                onChanged: notifier.setName,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _certificatePemController,
-                minLines: 3,
-                maxLines: 8,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: context.t.dashboard_forms.certificate_pem_label,
-                  errorText: state.certificatePemError,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _certificatePemController,
+                  minLines: 3,
+                  maxLines: 8,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: context.t.dashboard_forms.certificate_pem_label,
+                    errorText: state.certificatePemError,
+                    prefixIcon: const Icon(LucideIcons.fileText),
+                  ),
+                  onChanged: notifier.setCertificatePem,
                 ),
-                onChanged: notifier.setCertificatePem,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _privateKeyController,
-                minLines: 2,
-                maxLines: 6,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: context.t.dashboard_forms.private_key_label,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _privateKeyController,
+                  minLines: 2,
+                  maxLines: 6,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: context.t.dashboard_forms.private_key_label,
+                    prefixIcon: const Icon(LucideIcons.key),
+                  ),
+                  onChanged: notifier.setPrivateKey,
                 ),
-                onChanged: notifier.setPrivateKey,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _serialController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: context.t.dashboard_forms.serial_number_label,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _serialController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: context.t.dashboard_forms.serial_number_label,
+                    prefixIcon: const Icon(LucideIcons.hash),
+                  ),
+                  onChanged: notifier.setSerialNumber,
                 ),
-                onChanged: notifier.setSerialNumber,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _issuerController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: context.t.dashboard_forms.issuer_label,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _issuerController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: context.t.dashboard_forms.issuer_label,
+                    prefixIcon: const Icon(LucideIcons.building),
+                  ),
+                  onChanged: notifier.setIssuer,
                 ),
-                onChanged: notifier.setIssuer,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _subjectController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: context.t.dashboard_forms.subject_label,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _subjectController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: context.t.dashboard_forms.subject_label,
+                    prefixIcon: const Icon(LucideIcons.user),
+                  ),
+                  onChanged: notifier.setSubject,
                 ),
-                onChanged: notifier.setSubject,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _fingerprintController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: context.t.dashboard_forms.fingerprint_label,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _fingerprintController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: context.t.dashboard_forms.fingerprint_label,
+                    prefixIcon: const Icon(LucideIcons.fingerprintPattern),
+                  ),
+                  onChanged: notifier.setFingerprint,
                 ),
-                onChanged: notifier.setFingerprint,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _ocspController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: context.t.dashboard_forms.ocsp_url_label,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _ocspController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: context.t.dashboard_forms.ocsp_url_label,
+                    prefixIcon: const Icon(LucideIcons.globe),
+                  ),
+                  onChanged: notifier.setOcspUrl,
                 ),
-                onChanged: notifier.setOcspUrl,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _crlController,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: context.t.dashboard_forms.crl_url_label,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _crlController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: context.t.dashboard_forms.crl_url_label,
+                    prefixIcon: const Icon(LucideIcons.globe),
+                  ),
+                  onChanged: notifier.setCrlUrl,
                 ),
-                onChanged: notifier.setCrlUrl,
-              ),
-              const SizedBox(height: 12),
-              CategoryPickerField(
-                selectedCategoryId: state.categoryId,
-                selectedCategoryName: state.categoryName,
-                filterByType: const [
-                  CategoryType.certificate,
-                  CategoryType.mixed,
-                ],
-                onCategorySelected: notifier.setCategory,
-              ),
-              const SizedBox(height: 12),
-              TagPickerField(
-                selectedTagIds: state.tagIds,
-                selectedTagNames: state.tagNames,
-                filterByType: const [TagType.certificate, TagType.mixed],
-                onTagsSelected: notifier.setTags,
-              ),
-              const SizedBox(height: 12),
-              NotePickerField(
-                selectedNoteId: state.noteId,
-                selectedNoteName: state.noteName,
-                onNoteSelected: notifier.setNote,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _descriptionController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: context.t.dashboard_forms.description_label,
+                const SizedBox(height: 12),
+                CategoryPickerField(
+                  selectedCategoryId: state.categoryId,
+                  selectedCategoryName: state.categoryName,
+                  filterByType: const [
+                    CategoryType.certificate,
+                    CategoryType.mixed,
+                  ],
+                  onCategorySelected: notifier.setCategory,
                 ),
-                onChanged: notifier.setDescription,
-              ),
-              const SizedBox(height: 8),
-              SwitchListTile(
-                value: state.autoRenew,
-                onChanged: notifier.setAutoRenew,
-                title: Text(context.t.dashboard_forms.auto_renew_label),
-              ),
-            ],
+                const SizedBox(height: 12),
+                TagPickerField(
+                  selectedTagIds: state.tagIds,
+                  selectedTagNames: state.tagNames,
+                  filterByType: const [TagType.certificate, TagType.mixed],
+                  onTagsSelected: notifier.setTags,
+                ),
+                const SizedBox(height: 12),
+                NotePickerField(
+                  selectedNoteId: state.noteId,
+                  selectedNoteName: state.noteName,
+                  onNoteSelected: notifier.setNote,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _descriptionController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: context.t.dashboard_forms.description_label,
+                    prefixIcon: const Icon(LucideIcons.fileText),
+                  ),
+                  onChanged: notifier.setDescription,
+                ),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  value: state.autoRenew,
+                  onChanged: notifier.setAutoRenew,
+                  title: Text(context.t.dashboard_forms.auto_renew_label),
+                ),
+              ],
+            ),
           ),
-          )
         );
       },
     );

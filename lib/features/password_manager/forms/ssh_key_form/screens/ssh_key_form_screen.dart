@@ -6,9 +6,10 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_b
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
-import 'package:hoplixi/generated/l10n/translations.g.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../providers/ssh_key_form_provider.dart';
 
@@ -154,6 +155,7 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                     context,
                     labelText: context.t.dashboard_forms.name_label,
                     errorText: state.nameError,
+                    prefixIcon: const Icon(LucideIcons.tag),
                   ),
                   onChanged: notifier.setName,
                 ),
@@ -164,8 +166,10 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                   maxLines: 5,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.public_key_required_label,
+                    labelText:
+                        context.t.dashboard_forms.public_key_required_label,
                     errorText: state.publicKeyError,
+                    prefixIcon: const Icon(LucideIcons.key),
                   ),
                   onChanged: notifier.setPublicKey,
                 ),
@@ -176,8 +180,10 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                   maxLines: 6,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.private_key_required_label,
+                    labelText:
+                        context.t.dashboard_forms.private_key_required_label,
                     errorText: state.privateKeyError,
+                    prefixIcon: const Icon(LucideIcons.lock),
                   ),
                   onChanged: notifier.setPrivateKey,
                 ),
@@ -187,6 +193,7 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.key_type_label,
+                    prefixIcon: const Icon(LucideIcons.type),
                   ),
                   onChanged: notifier.setKeyType,
                 ),
@@ -196,6 +203,7 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.fingerprint_label,
+                    prefixIcon: const Icon(LucideIcons.fingerprintPattern),
                   ),
                   onChanged: notifier.setFingerprint,
                 ),
@@ -205,6 +213,7 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.usage_label,
+                    prefixIcon: const Icon(LucideIcons.info),
                   ),
                   onChanged: notifier.setUsage,
                 ),
@@ -236,6 +245,7 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.description_label,
+                    prefixIcon: const Icon(LucideIcons.fileText),
                   ),
                   onChanged: notifier.setDescription,
                 ),
@@ -243,7 +253,9 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                 SwitchListTile(
                   value: state.addedToAgent,
                   onChanged: notifier.setAddedToAgent,
-                  title: Text(context.t.dashboard_forms.added_to_ssh_agent_label),
+                  title: Text(
+                    context.t.dashboard_forms.added_to_ssh_agent_label,
+                  ),
                 ),
               ],
             ),

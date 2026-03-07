@@ -6,9 +6,10 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_b
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
-import 'package:hoplixi/generated/l10n/translations.g.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../providers/identity_form_provider.dart';
 
@@ -196,6 +197,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                     context,
                     labelText: context.t.dashboard_forms.name_label,
                     errorText: state.nameError,
+                    prefixIcon: const Icon(LucideIcons.tag),
                   ),
                   onChanged: notifier.setName,
                 ),
@@ -204,8 +206,10 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   controller: _idTypeController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.document_type_required_label,
+                    labelText:
+                        context.t.dashboard_forms.document_type_required_label,
                     errorText: state.idTypeError,
+                    prefixIcon: const Icon(LucideIcons.idCard),
                   ),
                   onChanged: notifier.setIdType,
                 ),
@@ -214,8 +218,12 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   controller: _idNumberController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.document_number_required_label,
+                    labelText: context
+                        .t
+                        .dashboard_forms
+                        .document_number_required_label,
                     errorText: state.idNumberError,
+                    prefixIcon: const Icon(LucideIcons.hash),
                   ),
                   onChanged: notifier.setIdNumber,
                 ),
@@ -225,6 +233,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.full_name_label,
+                    prefixIcon: const Icon(LucideIcons.user),
                   ),
                   onChanged: notifier.setFullName,
                 ),
@@ -235,6 +244,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                     context,
                     labelText: context.t.dashboard_forms.birth_date_iso_label,
                     errorText: state.dateOfBirthError,
+                    prefixIcon: const Icon(LucideIcons.calendar),
                   ),
                   onChanged: notifier.setDateOfBirth,
                 ),
@@ -244,6 +254,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.place_of_birth_label,
+                    prefixIcon: const Icon(LucideIcons.mapPin),
                   ),
                   onChanged: notifier.setPlaceOfBirth,
                 ),
@@ -253,6 +264,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.nationality_label,
+                    prefixIcon: const Icon(LucideIcons.flag),
                   ),
                   onChanged: notifier.setNationality,
                 ),
@@ -261,7 +273,9 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   controller: _issuingAuthorityController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.issuing_authority_label,
+                    labelText:
+                        context.t.dashboard_forms.issuing_authority_label,
+                    prefixIcon: const Icon(LucideIcons.building),
                   ),
                   onChanged: notifier.setIssuingAuthority,
                 ),
@@ -272,6 +286,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                     context,
                     labelText: context.t.dashboard_forms.issue_date_iso_label,
                     errorText: state.issueDateError,
+                    prefixIcon: const Icon(LucideIcons.calendar),
                   ),
                   onChanged: notifier.setIssueDate,
                 ),
@@ -282,6 +297,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                     context,
                     labelText: context.t.dashboard_forms.expiry_date_iso_label,
                     errorText: state.expiryDateError,
+                    prefixIcon: const Icon(LucideIcons.calendar),
                   ),
                   onChanged: notifier.setExpiryDate,
                 ),
@@ -293,6 +309,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.mrz_label,
+                    prefixIcon: const Icon(LucideIcons.code),
                   ),
                   onChanged: notifier.setMrz,
                 ),
@@ -302,6 +319,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.scan_id_label,
+                    prefixIcon: const Icon(LucideIcons.scan),
                   ),
                   onChanged: notifier.setScanAttachmentId,
                 ),
@@ -311,6 +329,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.photo_id_label,
+                    prefixIcon: const Icon(LucideIcons.camera),
                   ),
                   onChanged: notifier.setPhotoAttachmentId,
                 ),
@@ -318,7 +337,10 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                 CategoryPickerField(
                   selectedCategoryId: state.categoryId,
                   selectedCategoryName: state.categoryName,
-                  filterByType: const [CategoryType.identity, CategoryType.mixed],
+                  filterByType: const [
+                    CategoryType.identity,
+                    CategoryType.mixed,
+                  ],
                   onCategorySelected: notifier.setCategory,
                 ),
                 const SizedBox(height: 12),
@@ -342,6 +364,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.description_label,
+                    prefixIcon: const Icon(LucideIcons.fileText),
                   ),
                   onChanged: notifier.setDescription,
                 ),

@@ -7,6 +7,7 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_b
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
@@ -216,8 +217,9 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                             controller: _nameController,
                             decoration: primaryInputDecoration(
                               context,
-                              labelText: 'Название *',
-                              hintText: 'Введите название файла',
+                              labelText: context.t.dashboard_forms.name_label,
+                              hintText:
+                                  context.t.dashboard_forms.file_name_hint,
                               errorText: state.nameError,
                               prefixIcon: const Icon(LucideIcons.tag),
                             ),
@@ -233,8 +235,12 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                           CategoryPickerField(
                             selectedCategoryId: state.categoryId,
                             selectedCategoryName: state.categoryName,
-                            label: 'Категория',
-                            hintText: 'Выберите категорию',
+                            label: context
+                                .t
+                                .dashboard_forms
+                                .pickers_category_label,
+                            hintText:
+                                context.t.dashboard_forms.select_category_hint,
                             filterByType: [
                               CategoryType.file,
                               CategoryType.mixed,
@@ -251,8 +257,9 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                           TagPickerField(
                             selectedTagIds: state.tagIds,
                             selectedTagNames: state.tagNames,
-                            label: 'Теги',
-                            hintText: 'Выберите теги',
+                            label: context.t.dashboard_forms.pickers_tags_label,
+                            hintText:
+                                context.t.dashboard_forms.select_tags_hint,
                             filterByType: [TagType.file, TagType.mixed],
                             onTagsSelected: (tagIds, tagNames) {
                               ref
@@ -267,8 +274,12 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                             controller: _descriptionController,
                             decoration: primaryInputDecoration(
                               context,
-                              labelText: 'Описание',
-                              hintText: 'Краткое описание файла',
+                              labelText:
+                                  context.t.dashboard_forms.description_label,
+                              hintText: context
+                                  .t
+                                  .dashboard_forms
+                                  .file_description_hint,
                               prefixIcon: const Icon(LucideIcons.fileText),
                             ),
                             maxLines: 3,
@@ -284,7 +295,8 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                           NotePickerField(
                             selectedNoteId: state.noteId,
                             selectedNoteName: _noteName,
-                            hintText: 'Выберите заметку',
+                            hintText:
+                                context.t.dashboard_forms.select_note_hint,
                             onNoteSelected: (noteId, noteName) {
                               ref
                                   .read(fileFormProvider.notifier)

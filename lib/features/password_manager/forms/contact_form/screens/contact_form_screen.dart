@@ -9,6 +9,7 @@ import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picke
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../providers/contact_form_provider.dart';
 
@@ -173,6 +174,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                     context,
                     labelText: context.t.dashboard_forms.contact_name_label,
                     errorText: state.nameError,
+                    prefixIcon: const Icon(LucideIcons.user),
                   ),
                   onChanged: ref
                       .read(contactFormProvider(widget.contactId).notifier)
@@ -184,6 +186,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.phone_label,
+                    prefixIcon: const Icon(LucideIcons.phone),
                   ),
                   onChanged: ref
                       .read(contactFormProvider(widget.contactId).notifier)
@@ -196,6 +199,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                     context,
                     labelText: context.t.dashboard_forms.email_field_label,
                     errorText: state.emailError,
+                    prefixIcon: const Icon(LucideIcons.mail),
                   ),
                   onChanged: ref
                       .read(contactFormProvider(widget.contactId).notifier)
@@ -207,6 +211,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.company_label,
+                    prefixIcon: const Icon(LucideIcons.building),
                   ),
                   onChanged: ref
                       .read(contactFormProvider(widget.contactId).notifier)
@@ -218,6 +223,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.job_title_label,
+                    prefixIcon: const Icon(LucideIcons.briefcase),
                   ),
                   onChanged: ref
                       .read(contactFormProvider(widget.contactId).notifier)
@@ -229,6 +235,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.address_label,
+                    prefixIcon: const Icon(LucideIcons.mapPin),
                   ),
                   onChanged: ref
                       .read(contactFormProvider(widget.contactId).notifier)
@@ -240,6 +247,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.website_label,
+                    prefixIcon: const Icon(LucideIcons.globe),
                   ),
                   onChanged: ref
                       .read(contactFormProvider(widget.contactId).notifier)
@@ -281,7 +289,9 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                   onChanged: ref
                       .read(contactFormProvider(widget.contactId).notifier)
                       .setEmergencyContact,
-                  title: Text(context.t.dashboard_forms.emergency_contact_label),
+                  title: Text(
+                    context.t.dashboard_forms.emergency_contact_label,
+                  ),
                   contentPadding: EdgeInsets.zero,
                 ),
                 const SizedBox(height: 12),
@@ -321,6 +331,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.description_label,
+                    prefixIcon: const Icon(LucideIcons.fileText),
                   ),
                   onChanged: ref
                       .read(contactFormProvider(widget.contactId).notifier)

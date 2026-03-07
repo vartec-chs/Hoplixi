@@ -9,6 +9,7 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_b
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
@@ -129,7 +130,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
       }
     } catch (e) {
       Toaster.error(
-        title: 'Ошибка сканирования',
+        title: context.t.dashboard_forms.scan_error,
         description: 'Не удалось просканировать карту: $e',
       );
     }
@@ -143,14 +144,16 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
 
     if (success) {
       Toaster.success(
-        title: widget.bankCardId != null ? 'Карта обновлена' : 'Карта создана',
-        description: 'Изменения успешно сохранены',
+        title: widget.bankCardId != null
+            ? context.t.dashboard_forms.bank_card_updated
+            : context.t.dashboard_forms.bank_card_created,
+        description: context.t.dashboard_forms.changes_saved_successfully,
       );
       context.pop(true);
     } else {
       Toaster.error(
-        title: 'Ошибка сохранения',
-        description: 'Не удалось сохранить карту',
+        title: context.t.dashboard_forms.save_error,
+        description: context.t.dashboard_forms.failed_to_save_card,
       );
     }
   }
@@ -279,8 +282,8 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
       appBar: AppBar(
         title: Text(
           widget.bankCardId != null
-              ? 'Редактировать карту'
-              : 'Новая банковская карта',
+              ? context.t.dashboard_forms.edit_bank_card
+              : context.t.dashboard_forms.new_bank_card,
         ),
         actions: [
           if (state.isSaving)
@@ -350,8 +353,12 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                             controller: _nameController,
                             decoration: primaryInputDecoration(
                               context,
-                              labelText: 'Название карты *',
-                              hintText: 'Например: Основная карта',
+                              labelText: context
+                                  .t
+                                  .dashboard_forms
+                                  .bank_card_name_label,
+                              hintText:
+                                  context.t.dashboard_forms.bank_card_name_hint,
                               errorText: state.nameError,
                               prefixIcon: const Icon(LucideIcons.tag),
                             ),
@@ -368,8 +375,14 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                             controller: _cardholderNameController,
                             decoration: primaryInputDecoration(
                               context,
-                              labelText: 'Имя владельца *',
-                              hintText: 'Как на карте',
+                              labelText: context
+                                  .t
+                                  .dashboard_forms
+                                  .cardholder_name_label,
+                              hintText: context
+                                  .t
+                                  .dashboard_forms
+                                  .cardholder_on_card_hint,
                               errorText: state.cardholderNameError,
                               prefixIcon: const Icon(LucideIcons.user),
                             ),
@@ -387,7 +400,8 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                             controller: _cardNumberController,
                             decoration: primaryInputDecoration(
                               context,
-                              labelText: 'Номер карты *',
+                              labelText:
+                                  context.t.dashboard_forms.card_number_label,
                               hintText: '0000 0000 0000 0000',
                               errorText: state.cardNumberError,
                               prefixIcon: const Icon(LucideIcons.creditCard),
@@ -395,7 +409,10 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                                   ? IconButton(
                                       icon: const Icon(Icons.camera_alt),
                                       onPressed: _scanCard,
-                                      tooltip: 'Сканировать карту',
+                                      tooltip: context
+                                          .t
+                                          .dashboard_forms
+                                          .scan_card_tooltip,
                                     )
                                   : null,
                             ),
@@ -421,7 +438,10 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                                   controller: _expiryMonthController,
                                   decoration: primaryInputDecoration(
                                     context,
-                                    labelText: 'Месяц *',
+                                    labelText: context
+                                        .t
+                                        .dashboard_forms
+                                        .expiry_month_label,
                                     hintText: 'MM',
                                     errorText: state.expiryMonthError,
                                     prefixIcon: const Icon(
@@ -446,7 +466,10 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                                   controller: _expiryYearController,
                                   decoration: primaryInputDecoration(
                                     context,
-                                    labelText: 'Год *',
+                                    labelText: context
+                                        .t
+                                        .dashboard_forms
+                                        .expiry_year_label,
                                     hintText: 'YYYY',
                                     errorText: state.expiryYearError,
                                     prefixIcon: const Icon(
@@ -519,8 +542,10 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                             controller: _bankNameController,
                             decoration: primaryInputDecoration(
                               context,
-                              labelText: 'Название банка',
-                              hintText: 'Например: Сбербанк',
+                              labelText:
+                                  context.t.dashboard_forms.bank_name_label,
+                              hintText:
+                                  context.t.dashboard_forms.bank_name_hint,
                               prefixIcon: const Icon(LucideIcons.building),
                             ),
                             onChanged: (value) {
@@ -539,8 +564,14 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                                   controller: _accountNumberController,
                                   decoration: primaryInputDecoration(
                                     context,
-                                    labelText: 'Номер счета',
-                                    hintText: 'Опционально',
+                                    labelText: context
+                                        .t
+                                        .dashboard_forms
+                                        .account_number_label,
+                                    hintText: context
+                                        .t
+                                        .dashboard_forms
+                                        .optional_label,
                                     prefixIcon: const Icon(LucideIcons.hash),
                                   ),
                                   keyboardType: TextInputType.number,
@@ -558,7 +589,10 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                                   decoration: primaryInputDecoration(
                                     context,
                                     labelText: 'Routing Number',
-                                    hintText: 'Опционально',
+                                    hintText: context
+                                        .t
+                                        .dashboard_forms
+                                        .optional_label,
                                     prefixIcon: const Icon(LucideIcons.hash),
                                   ),
                                   keyboardType: TextInputType.number,
@@ -577,8 +611,12 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                           CategoryPickerField(
                             selectedCategoryId: state.categoryId,
                             selectedCategoryName: state.categoryName,
-                            label: 'Категория',
-                            hintText: 'Выберите категорию',
+                            label: context
+                                .t
+                                .dashboard_forms
+                                .pickers_category_label,
+                            hintText:
+                                context.t.dashboard_forms.select_category_hint,
                             filterByType: [
                               CategoryType.bankCard,
                               CategoryType.mixed,
@@ -595,8 +633,9 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                           TagPickerField(
                             selectedTagIds: state.tagIds,
                             selectedTagNames: state.tagNames,
-                            label: 'Теги',
-                            hintText: 'Выберите теги',
+                            label: context.t.dashboard_forms.pickers_tags_label,
+                            hintText:
+                                context.t.dashboard_forms.select_tags_hint,
                             filterByType: [TagType.bankCard, TagType.mixed],
                             onTagsSelected: (tagIds, tagNames) {
                               ref
@@ -611,7 +650,8 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                             controller: _descriptionController,
                             decoration: primaryInputDecoration(
                               context,
-                              labelText: 'Описание',
+                              labelText:
+                                  context.t.dashboard_forms.description_label,
                               hintText: 'Краткое описание',
                               prefixIcon: const Icon(LucideIcons.fileText),
                             ),
@@ -628,7 +668,8 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                           NotePickerField(
                             selectedNoteId: state.noteId,
                             selectedNoteName: _noteName,
-                            hintText: 'Выберите заметку',
+                            hintText:
+                                context.t.dashboard_forms.select_note_hint,
                             onNoteSelected: (noteId, noteName) {
                               ref
                                   .read(bankCardFormProvider.notifier)
