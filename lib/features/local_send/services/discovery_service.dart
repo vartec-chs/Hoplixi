@@ -254,22 +254,59 @@ class DiscoveryService {
     _sendBroadcastAnnounce(selfInfo);
   }
 
-  /// Отправляет один UDP broadcast-пакет с метаданными устройства.
-  void _sendBroadcastAnnounce(DeviceInfo selfInfo) {
+  /// Вычисляет subnet broadcast IPv4-адрес по IP (эвристика /24).
+  /// Возвращает null если адрес некорректен.
+  String? _subnetBroadcast(String ipv4) {
+    final parts = ipv4.split('.');
+    if (parts.length != 4) return null;
+    return '${parts[0]}.${parts[1]}.${parts[2]}.255';
+  }
+
+  /// Возвращает список broadcast-адресов для всех LAN-интерфейсов.
+  ///
+  /// VPN/virtual-интерфейсы (score >= 100) пропускаются.
+  /// Fallback: [255.255.255.255] если ни один интерфейс не найден.
+  Future<List<InternetAddress>> _broadcastTargets() async {
+    final interfaces = await NetworkInterface.list(
+      type: InternetAddressType.IPv4,
+    );
+    final targets = <InternetAddress>{};
+    for (final iface in interfaces) {
+      if (_interfaceScore(iface.name.toLowerCase()) >= 100) continue;
+      for (final addr in iface.addresses) {
+        if (addr.isLoopback) continue;
+        final bc = _subnetBroadcast(addr.address);
+        if (bc != null) targets.add(InternetAddress(bc));
+      }
+    }
+    if (targets.isEmpty) targets.add(InternetAddress('255.255.255.255'));
+    return targets.toList();
+  }
+
+  /// Отправляет один UDP broadcast-пакет на subnet broadcast каждого
+  /// активного LAN-интерфейса. Это гарантирует, что пакет уйдёт нужным
+  /// интерфейсом, а не дефолтным (VPN/virtual).
+  Future<void> _sendBroadcastAnnounce(DeviceInfo selfInfo) async {
     final socket = _udpSocket;
     if (socket == null) return;
-    try {
-      final payload = utf8.encode(
-        jsonEncode({
-          'id': selfInfo.id,
-          'name': selfInfo.name,
-          'platform': selfInfo.platform,
-          'signalingPort': selfInfo.signalingPort,
-        }),
-      );
-      socket.send(payload, InternetAddress('255.255.255.255'), kBroadcastPort);
-    } catch (e) {
-      logError('DiscoveryService: UDP broadcast send error', error: e);
+    final payload = utf8.encode(
+      jsonEncode({
+        'id': selfInfo.id,
+        'name': selfInfo.name,
+        'platform': selfInfo.platform,
+        'signalingPort': selfInfo.signalingPort,
+      }),
+    );
+    final targets = await _broadcastTargets();
+    for (final target in targets) {
+      try {
+        socket.send(payload, target, kBroadcastPort);
+      } catch (e) {
+        logError(
+          'DiscoveryService: UDP broadcast send error to ${target.address}',
+          error: e,
+        );
+      }
     }
   }
 
