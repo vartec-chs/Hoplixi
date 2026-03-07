@@ -9,15 +9,18 @@ const Duration kDeviceTtl = Duration(seconds: 10);
 /// Реестр обнаруженных устройств с TTL-очисткой и реактивным стримом.
 ///
 /// Каждое изменение реестра публикует обновлённый [List<DeviceInfo>]
-/// в [stream]. Использует [StreamController.broadcast(sync: true)] —
-/// события доставляются синхронно и не буферизуются, что исключает
-/// накопление невычитанных событий при медленном потребителе.
+/// в [stream]. Broadcast-стрим без буферизации для новых подписчиков;
+/// доставка асинхронная (через микротаск) — это безопасно при
+/// мобильных lifecycle-событиях, когда dispose может прийти
+/// во время обработки события.
 class DeviceRegistry {
   final _devices = <String, DeviceInfo>{};
 
-  // sync: true → немедленная доставка без async-очереди.
   // broadcast → не буферизует events для новых подписчиков.
-  final _controller = StreamController<List<DeviceInfo>>.broadcast(sync: true);
+  // sync: false (по умолчанию) → доставка через микротаск,
+  // что исключает «Bad state: Cannot add event after closing»
+  // при мобильных lifecycle-событиях.
+  final _controller = StreamController<List<DeviceInfo>>.broadcast();
 
   Timer? _cleanupTimer;
 
@@ -61,7 +64,12 @@ class DeviceRegistry {
   }
 
   void _emit() {
-    if (!_controller.isClosed) _controller.add(snapshot);
+    if (_controller.isClosed) return;
+    try {
+      _controller.add(snapshot);
+    } catch (_) {
+      // Контроллер закрылся между проверкой и add() — игнорируем.
+    }
   }
 
   void dispose() {

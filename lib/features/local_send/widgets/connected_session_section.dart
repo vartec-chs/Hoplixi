@@ -403,44 +403,76 @@ class _ConnectedSessionSectionState
   }
 
   Future<void> _showSendTextDialog() async {
-    final controller = TextEditingController();
+    if (!mounted) return;
 
     final text = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        insetPadding: const EdgeInsets.all(12),
-        title: const Text('Отправить текст'),
-        content: TextField(
-          controller: controller,
-          maxLines: 5,
-          minLines: 1,
-          autofocus: true,
-          decoration: primaryInputDecoration(
-            context,
-            labelText: 'Введите текст для отправки',
-          ),
-        ),
-        actions: [
-          SmoothButton(
-            onPressed: () => Navigator.pop(context),
-            label: 'Отмена',
-            type: .text,
-          ),
-          SmoothButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            label: 'Отправить',
-            type: .filled,
-          ),
-        ],
-      ),
+      builder: (context) => const _SendTextDialog(),
     );
 
-    // Сохраняем текст до dispose, т.к. после него controller.text недоступен.
-    final trimmed = text?.trim();
-    controller.dispose();
-
-    if (trimmed != null && trimmed.isNotEmpty && mounted) {
-      await ref.read(transferProvider.notifier).sendText(trimmed);
+    if (text != null && text.trim().isNotEmpty && mounted) {
+      await ref.read(transferProvider.notifier).sendText(text.trim());
     }
+  }
+}
+
+class _SendTextDialog extends StatefulWidget {
+  const _SendTextDialog();
+
+  @override
+  State<_SendTextDialog> createState() => _SendTextDialogState();
+}
+
+class _SendTextDialogState extends State<_SendTextDialog> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+    _focusNode = FocusNode();
+    // Запрашиваем фокус после завершения build-фазы диалога,
+    // чтобы не получить visitChildElements() called during build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      insetPadding: const EdgeInsets.all(12),
+      title: const Text('Отправить текст'),
+      content: TextField(
+        controller: _controller,
+        focusNode: _focusNode,
+        maxLines: 5,
+        minLines: 1,
+        decoration: primaryInputDecoration(
+          context,
+          labelText: 'Введите текст для отправки',
+        ),
+      ),
+      actions: [
+        SmoothButton(
+          onPressed: () => Navigator.pop(context),
+          label: 'Отмена',
+          type: .text,
+        ),
+        SmoothButton(
+          onPressed: () => Navigator.pop(context, _controller.text),
+          label: 'Отправить',
+          type: .filled,
+        ),
+      ],
+    );
   }
 }
