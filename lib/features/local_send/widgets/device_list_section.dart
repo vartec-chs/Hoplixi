@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/local_send/models/device_info.dart';
 import 'package:hoplixi/features/local_send/providers/discovery_provider.dart';
+import 'package:hoplixi/features/local_send/providers/discovery_settings_provider.dart';
 import 'package:hoplixi/features/local_send/providers/transfer_provider.dart';
 import 'package:hoplixi/features/local_send/utils/platform_icons.dart';
 import 'package:hoplixi/features/local_send/widgets/device_card.dart';
+import 'package:hoplixi/features/local_send/widgets/discovery_settings_sheet.dart';
 
 class DeviceListSection extends ConsumerStatefulWidget {
   const DeviceListSection({super.key});
@@ -47,6 +49,18 @@ class _DeviceListSectionState extends ConsumerState<DeviceListSection>
     super.dispose();
   }
 
+  void _openSettingsSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => const SafeArea(child: DiscoverySettingsSheet()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -54,6 +68,8 @@ class _DeviceListSectionState extends ConsumerState<DeviceListSection>
     final devicesAsync = ref.watch(discoveryProvider);
     final deviceName = ref.watch(localDeviceName);
     final platform = ref.watch(localDevicePlatform);
+    final discoverySettings = ref.watch(discoverySettingsProvider);
+    final forcedIp = discoverySettings.value?.forcedIp;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(12),
@@ -102,7 +118,38 @@ class _DeviceListSectionState extends ConsumerState<DeviceListSection>
                         color: colorScheme.primary,
                       ),
                     ),
+                    if (forcedIp != null) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.biotech_outlined,
+                            size: 12,
+                            color: colorScheme.tertiary,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            forcedIp,
+                            style: textTheme.labelSmall?.copyWith(
+                              color: colorScheme.tertiary,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined),
+                  iconSize: 20,
+                  tooltip: 'Настройки устройства',
+                  style: IconButton.styleFrom(
+                    foregroundColor: colorScheme.primary,
+                  ),
+                  onPressed: () => _openSettingsSheet(context),
                 ),
               ],
             ),
