@@ -131,6 +131,7 @@ dependencies:
   flutter_zxing: ^2.2.1
   slang_flutter: ^4.13.0
   slang: ^4.13.0
+  connectivity_plus: ^7.0.0
 
 hooks:
   user_defines:

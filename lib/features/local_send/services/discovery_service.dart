@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:hoplixi/core/logger/index.dart' hide DeviceInfo;
 import 'package:hoplixi/features/local_send/models/device_info.dart';
 import 'package:mdns_dart/mdns_dart.dart';
@@ -26,14 +27,25 @@ class DiscoveryService {
   /// null = все интерфейсы (поведение по умолчанию).
   NetworkInterface? _activeInterface;
 
-  /// UDP-сокет для широковещательного fallback-обнаружения.
-  RawDatagramSocket? _udpSocket;
+  /// UDP-сокеты для широковещательного fallback-обнаружения.
+  /// Ключ — IPv4-адрес интерфейса (или '0.0.0.0' для fallback-сокета).
+  final Map<String, RawDatagramSocket> _ifaceSockets = {};
 
   /// Таймер периодической рассылки UDP broadcast-анонсов.
   Timer? _broadcastSendTimer;
 
   /// ID текущего устройства для фильтрации входящих broadcast-пакетов.
   String? _selfId;
+
+  /// Последние параметры рекламы — для перезапуска после смены сети.
+  DeviceInfo? _lastSelfInfo;
+
+  /// Подписка на изменения сетевого подключения.
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+
+  /// Debounce-таймер перезапуска при смене сети (предотвращает множественные
+  /// рестарты при серии событий connectivity).
+  Timer? _connectivityDebounceTimer;
 
   final _devicesController = StreamController<DeviceInfo>.broadcast();
 
@@ -191,32 +203,96 @@ class DiscoveryService {
   // UDP broadcast fallback
   // ---------------------------------------------------------------------------
 
-  /// Создаёт UDP-сокет и запускает listener для приёма broadcast-анонсов.
-  ///
-  /// Вызывается один раз при старте обнаружения. При повторном вызове
-  /// предыдущий сокет закрывается и создаётся новый.
+  /// Создаёт UDP-сокет для каждого подходящего LAN-интерфейса и запускает
+  /// listener на каждом из них. При повторном вызове старые сокеты закрываются.
   Future<void> _startBroadcastSocket(String selfId) async {
     _selfId = selfId;
+    for (final s in _ifaceSockets.values) {
+      s.close();
+    }
+    _ifaceSockets.clear();
+
+    // На Android/iOS binding к конкретному IP запрещает broadcast-отправку
+    // (SocketException errno=1). Используем единый anyIPv4 сокет.
+    if (Platform.isAndroid || Platform.isIOS) {
+      try {
+        final socket = await RawDatagramSocket.bind(
+          InternetAddress.anyIPv4,
+          kBroadcastPort,
+          reuseAddress: true,
+        );
+        socket.broadcastEnabled = true;
+        socket.listen((event) {
+          if (event != RawSocketEvent.read) return;
+          final datagram = socket.receive();
+          if (datagram == null) return;
+          _handleBroadcast(datagram);
+        });
+        _ifaceSockets['0.0.0.0'] = socket;
+        logInfo('DiscoveryService: UDP broadcast socket on anyIPv4 (mobile)');
+      } catch (e) {
+        logError(
+          'DiscoveryService: failed to create mobile UDP socket',
+          error: e,
+        );
+      }
+      return;
+    }
+
     try {
-      _udpSocket?.close();
-      _udpSocket = await RawDatagramSocket.bind(
-        InternetAddress.anyIPv4,
-        kBroadcastPort,
-        reuseAddress: true,
+      final interfaces = await NetworkInterface.list(
+        type: InternetAddressType.IPv4,
       );
-      _udpSocket!.broadcastEnabled = true;
-      _udpSocket!.listen((event) {
-        if (event != RawSocketEvent.read) return;
-        final datagram = _udpSocket?.receive();
-        if (datagram == null) return;
-        _handleBroadcast(datagram);
-      });
-      logInfo(
-        'DiscoveryService: UDP broadcast listener started on port $kBroadcastPort',
-      );
+      for (final iface in interfaces) {
+        if (_interfaceScore(iface.name.toLowerCase()) >= 100) continue;
+        for (final addr in iface.addresses) {
+          if (addr.isLoopback) continue;
+          try {
+            final socket = await RawDatagramSocket.bind(
+              addr,
+              kBroadcastPort,
+              reuseAddress: true,
+            );
+            socket.broadcastEnabled = true;
+            socket.listen((event) {
+              if (event != RawSocketEvent.read) return;
+              final datagram = socket.receive();
+              if (datagram == null) return;
+              _handleBroadcast(datagram);
+            });
+            _ifaceSockets[addr.address] = socket;
+            logInfo(
+              'DiscoveryService: UDP socket on ${iface.name} (${addr.address})',
+            );
+          } catch (e) {
+            logError(
+              'DiscoveryService: failed to create socket for ${addr.address}',
+              error: e,
+            );
+          }
+        }
+      }
+
+      // Fallback: единый сокет на anyIPv4 если ни один интерфейс не подошёл.
+      if (_ifaceSockets.isEmpty) {
+        final socket = await RawDatagramSocket.bind(
+          InternetAddress.anyIPv4,
+          kBroadcastPort,
+          reuseAddress: true,
+        );
+        socket.broadcastEnabled = true;
+        socket.listen((event) {
+          if (event != RawSocketEvent.read) return;
+          final datagram = socket.receive();
+          if (datagram == null) return;
+          _handleBroadcast(datagram);
+        });
+        _ifaceSockets['0.0.0.0'] = socket;
+        logInfo('DiscoveryService: UDP broadcast fallback socket on anyIPv4');
+      }
     } catch (e) {
       logError(
-        'DiscoveryService: failed to start UDP broadcast listener',
+        'DiscoveryService: failed to start UDP broadcast sockets',
         error: e,
       );
     }
@@ -262,33 +338,11 @@ class DiscoveryService {
     return '${parts[0]}.${parts[1]}.${parts[2]}.255';
   }
 
-  /// Возвращает список broadcast-адресов для всех LAN-интерфейсов.
-  ///
-  /// VPN/virtual-интерфейсы (score >= 100) пропускаются.
-  /// Fallback: [255.255.255.255] если ни один интерфейс не найден.
-  Future<List<InternetAddress>> _broadcastTargets() async {
-    final interfaces = await NetworkInterface.list(
-      type: InternetAddressType.IPv4,
-    );
-    final targets = <InternetAddress>{};
-    for (final iface in interfaces) {
-      if (_interfaceScore(iface.name.toLowerCase()) >= 100) continue;
-      for (final addr in iface.addresses) {
-        if (addr.isLoopback) continue;
-        final bc = _subnetBroadcast(addr.address);
-        if (bc != null) targets.add(InternetAddress(bc));
-      }
-    }
-    if (targets.isEmpty) targets.add(InternetAddress('255.255.255.255'));
-    return targets.toList();
-  }
-
-  /// Отправляет один UDP broadcast-пакет на subnet broadcast каждого
-  /// активного LAN-интерфейса. Это гарантирует, что пакет уйдёт нужным
-  /// интерфейсом, а не дефолтным (VPN/virtual).
-  Future<void> _sendBroadcastAnnounce(DeviceInfo selfInfo) async {
-    final socket = _udpSocket;
-    if (socket == null) return;
+  /// Отправляет UDP broadcast-анонс с каждого per-interface сокета на
+  /// его subnet broadcast. Это гарантирует, что пакет уйдёт нужным
+  /// интерфейсом, а не дефолтным маршрутом (VPN/virtual).
+  void _sendBroadcastAnnounce(DeviceInfo selfInfo) {
+    if (_ifaceSockets.isEmpty) return;
     final payload = utf8.encode(
       jsonEncode({
         'id': selfInfo.id,
@@ -297,13 +351,16 @@ class DiscoveryService {
         'signalingPort': selfInfo.signalingPort,
       }),
     );
-    final targets = await _broadcastTargets();
-    for (final target in targets) {
+    for (final entry in _ifaceSockets.entries) {
+      final bcStr = entry.key == '0.0.0.0'
+          ? '255.255.255.255'
+          : _subnetBroadcast(entry.key);
+      if (bcStr == null) continue;
       try {
-        socket.send(payload, target, kBroadcastPort);
+        entry.value.send(payload, InternetAddress(bcStr), kBroadcastPort);
       } catch (e) {
         logError(
-          'DiscoveryService: UDP broadcast send error to ${target.address}',
+          'DiscoveryService: UDP broadcast send error to $bcStr',
           error: e,
         );
       }
@@ -320,8 +377,10 @@ class DiscoveryService {
   /// Если [selfInfo.ip] соответствует конкретному интерфейсу,
   /// сервер биндится только на него (multicastInterface).
   Future<void> startAdvertising(DeviceInfo selfInfo) async {
-    // Останавливаем предыдущий сервер при перезапуске.
-    await _stopServer();
+    _lastSelfInfo = selfInfo;
+    // Останавливаем предыдущий mDNS-сервер и broadcast-таймер.
+    // Сокеты не трогаем — они под управлением startDiscovery.
+    await _stopMdns();
 
     try {
       final ip = InternetAddress(selfInfo.ip);
@@ -387,6 +446,9 @@ class DiscoveryService {
 
     // Запускаем UDP broadcast listener (fallback при недоступности mDNS).
     await _startBroadcastSocket(selfId);
+
+    // Подписываемся на изменения сети для автоматического перезапуска.
+    _subscribeConnectivity();
 
     // Первый скан сразу.
     await _performDiscovery(selfId);
@@ -454,23 +516,74 @@ class DiscoveryService {
     );
   }
 
-  /// Останавливает mDNS-сервер и broadcast-отправку.
-  Future<void> _stopServer() async {
+  /// Останавливает mDNS-сервер и broadcast-таймер. Сокеты не закрывает.
+  Future<void> _stopMdns() async {
     _broadcastSendTimer?.cancel();
     _broadcastSendTimer = null;
     await _server?.stop();
     _server = null;
   }
 
-  /// Останавливает сервер и сканирование.
+  /// Останавливает mDNS, broadcast-отправку и закрывает все UDP-сокеты.
+  ///
+  /// Используется при полном перезапуске ([_restartAll]) и [dispose].
+  Future<void> _stopServer() async {
+    _connectivityDebounceTimer?.cancel();
+    _connectivityDebounceTimer = null;
+    await _stopMdns();
+    for (final s in _ifaceSockets.values) {
+      s.close();
+    }
+    _ifaceSockets.clear();
+  }
+
+  /// Подписывается на изменения сетевого подключения.
+  ///
+  /// При смене сети запускает debounced рестарт сервисов.
+  /// Повторный вызов заменяет предыдущую подписку.
+  void _subscribeConnectivity() {
+    _connectivitySubscription?.cancel();
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
+      results,
+    ) {
+      // Не реагируем на полное отсутствие сети — некому обнаруживать.
+      if (results.every((r) => r == ConnectivityResult.none)) return;
+      _connectivityDebounceTimer?.cancel();
+      _connectivityDebounceTimer = Timer(
+        const Duration(milliseconds: 1500),
+        _restartAll,
+      );
+    });
+  }
+
+  /// Полностью перезапускает обнаружение и рекламу после смены сети.
+  ///
+  /// Закрывает все сокеты и mDNS, затем пересоздаёт их с нуля.
+  /// Не выполняется если не было предыдущего запуска.
+  Future<void> _restartAll() async {
+    final selfInfo = _lastSelfInfo;
+    final selfId = _selfId;
+    if (selfInfo == null || selfId == null) return;
+
+    logInfo('DiscoveryService: network changed, restarting...');
+    _discoveryTimer?.cancel();
+    _discoveryTimer = null;
+    await _stopServer();
+
+    // Сначала discovery (создаёт сокеты), затем advertising
+    // (использует эти сокеты для первого immediate-анонса).
+    await startDiscovery(selfId);
+    await startAdvertising(selfInfo);
+  }
+
+  /// Останавливает все сервисы и освобождает ресурсы.
   Future<void> dispose() async {
+    _connectivitySubscription?.cancel();
+    _connectivitySubscription = null;
     _discoveryTimer?.cancel();
     _discoveryTimer = null;
 
-    await _stopServer();
-
-    _udpSocket?.close();
-    _udpSocket = null;
+    await _stopServer(); // отменяет debounce-таймер + stopMdns + закрывает сокеты
 
     await _devicesController.close();
 
