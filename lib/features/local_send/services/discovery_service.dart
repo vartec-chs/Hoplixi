@@ -20,6 +20,8 @@ class DiscoveryService {
   late final _transport = UdpBroadcastTransport(ifaceCache: _ifaceCache);
   final _registry = DeviceRegistry();
 
+  bool _isDisposed = false;
+
   MDNSServer? _server;
   Timer? _discoveryTimer;
   Timer? _broadcastSendTimer;
@@ -32,9 +34,7 @@ class DiscoveryService {
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   Timer? _connectivityDebounceTimer;
 
-  final _statusController = StreamController<DiscoveryStatus>.broadcast(
-    sync: true,
-  );
+  final _statusController = StreamController<DiscoveryStatus>.broadcast();
   DiscoveryStatus _status = DiscoveryStatus.stopped;
 
   Stream<List<DeviceInfo>> get devicesStream => _registry.stream;
@@ -46,9 +46,13 @@ class DiscoveryService {
   DiscoveryStatus get status => _status;
 
   void _setStatus(DiscoveryStatus s) {
-    if (_status == s) return;
+    if (_isDisposed || _status == s) return;
     _status = s;
-    if (!_statusController.isClosed) _statusController.add(s);
+    if (!_statusController.isClosed) {
+      try {
+        _statusController.add(s);
+      } catch (_) {}
+    }
   }
 
   Future<String> getLocalIp({String? forcedIp}) async {
@@ -150,9 +154,11 @@ class DiscoveryService {
   }
 
   Future<void> startAdvertising(DeviceInfo selfInfo) async {
+    if (_isDisposed) return;
     _lastSelfInfo = selfInfo;
 
     await _stopMdns();
+    if (_isDisposed) return;
 
     try {
       final ip = InternetAddress(selfInfo.ip);
@@ -200,6 +206,7 @@ class DiscoveryService {
   }
 
   Future<void> startDiscovery(String selfId) async {
+    if (_isDisposed) return;
     _setStatus(DiscoveryStatus.starting);
     _selfId = selfId;
 
@@ -207,6 +214,7 @@ class DiscoveryService {
     _discoveryTimer = null;
 
     await _transport.start(onReceive: _handleBroadcast);
+    if (_isDisposed) return;
     _subscribeConnectivity();
 
     await _performDiscovery(selfId);
@@ -220,6 +228,7 @@ class DiscoveryService {
   }
 
   Future<void> _performDiscovery(String selfId) async {
+    if (_isDisposed) return;
     try {
       final results = await MDNSClient.discover(
         kServiceType,
@@ -228,6 +237,7 @@ class DiscoveryService {
         networkInterface: _activeInterface,
         logger: (text) => logInfo(text, tag: 'DiscoveryService (mDNS Client)'),
       );
+      if (_isDisposed) return;
       for (final entry in results) {
         final device = _parseServiceEntry(entry);
         if (device == null || device.id == selfId) continue;
@@ -289,6 +299,7 @@ class DiscoveryService {
   }
 
   Future<void> _restartAll() async {
+    if (_isDisposed) return;
     final selfInfo = _lastSelfInfo;
     final selfId = _selfId;
     if (selfInfo == null || selfId == null) return;
@@ -298,19 +309,34 @@ class DiscoveryService {
     _discoveryTimer = null;
     _ifaceCache.invalidate();
     await _stopServer();
+    if (_isDisposed) return;
 
     await startDiscovery(selfId);
     await startAdvertising(selfInfo);
   }
 
   Future<void> dispose() async {
-    _setStatus(DiscoveryStatus.stopped);
+    if (_isDisposed) return;
+    _isDisposed = true;
+
+    // Синхронно отменяем все таймеры и подписки до любого await,
+    // чтобы никто не смог запустить новые операции.
     _connectivitySubscription?.cancel();
     _connectivitySubscription = null;
+    _connectivityDebounceTimer?.cancel();
+    _connectivityDebounceTimer = null;
     _discoveryTimer?.cancel();
     _discoveryTimer = null;
-    await _stopServer();
+    _broadcastSendTimer?.cancel();
+    _broadcastSendTimer = null;
+
+    // Async-очистка: mDNS + сокеты.
+    await _server?.stop();
+    _server = null;
+    _transport.stop();
+
     _registry.dispose();
+    _status = DiscoveryStatus.stopped;
     if (!_statusController.isClosed) _statusController.close();
     logInfo('DiscoveryService: disposed');
   }

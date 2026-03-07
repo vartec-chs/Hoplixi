@@ -56,6 +56,12 @@ class SessionNotifier extends Notifier<SessionState> {
   @override
   SessionState build() {
     ref.onDispose(_dispose);
+
+    // Держим discoveryProvider живым пока жив SessionNotifier.
+    // ref.listen (не ref.watch) — не вызывает rebuild этого нотифайера
+    // при изменениях списка устройств.
+    ref.listen(discoveryProvider, (_, __) {});
+
     _startSignalingServer();
     return const SessionState.disconnected();
   }
@@ -464,6 +470,16 @@ class SessionNotifier extends Notifier<SessionState> {
   // ══════════════════════════════════════════════
   //  Управление сессией
   // ══════════════════════════════════════════════
+
+  /// Останавливает WebRTC, signaling-сервер и регистрирует поля
+  /// без изменения [state]. Предназначен для вызова из dispose()
+  /// виджета (fire-and-forget) — не бросает исключений.
+  Future<void> stopServices() async {
+    try {
+      await _cleanupCurrentSession();
+      await _signalingServer?.stop();
+    } catch (_) {}
+  }
 
   /// Отключается от peer и сбрасывает сессию.
   Future<void> disconnect() async {

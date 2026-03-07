@@ -20,6 +20,22 @@ class LocalSendScreen extends ConsumerStatefulWidget {
 }
 
 class _LocalSendScreenState extends ConsumerState<LocalSendScreen> {
+  /// Сохраняем ссылку в initState, т.к. ref недоступен в dispose()
+  /// (BuildContext уже деактивирован в Riverpod 3.x).
+  late final SessionNotifier _sessionNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _sessionNotifier = ref.read(transferProvider.notifier);
+  }
+
+  @override
+  void dispose() {
+    _sessionNotifier.stopServices().ignore();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     _listenForIncomingRequests();

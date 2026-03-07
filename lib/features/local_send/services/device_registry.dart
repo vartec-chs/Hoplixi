@@ -15,6 +15,7 @@ const Duration kDeviceTtl = Duration(seconds: 10);
 /// во время обработки события.
 class DeviceRegistry {
   final _devices = <String, DeviceInfo>{};
+  bool _isDisposed = false;
 
   // broadcast → не буферизует events для новых подписчиков.
   // sync: false (по умолчанию) → доставка через микротаск,
@@ -39,6 +40,7 @@ class DeviceRegistry {
 
   /// Добавляет или обновляет устройство, фиксируя текущее время в [lastSeen].
   void upsert(DeviceInfo device) {
+    if (_isDisposed) return;
     final updated = device.copyWith(
       lastSeen: DateTime.now().millisecondsSinceEpoch,
     );
@@ -51,6 +53,7 @@ class DeviceRegistry {
   }
 
   void _removeExpired() {
+    if (_isDisposed) return;
     final cutoff =
         DateTime.now().millisecondsSinceEpoch - kDeviceTtl.inMilliseconds;
     final before = _devices.length;
@@ -73,6 +76,8 @@ class DeviceRegistry {
   }
 
   void dispose() {
+    if (_isDisposed) return;
+    _isDisposed = true;
     _cleanupTimer?.cancel();
     _cleanupTimer = null;
     if (!_controller.isClosed) _controller.close();
