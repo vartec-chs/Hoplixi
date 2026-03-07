@@ -9,6 +9,7 @@ import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picke
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../providers/recovery_codes_form_provider.dart';
@@ -27,16 +28,16 @@ class _RecoveryCodesFormScreenState
     extends ConsumerState<RecoveryCodesFormScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _codesInputController;
-  late final TextEditingController _generatedAtController;
   late final TextEditingController _displayHintController;
   late final TextEditingController _descriptionController;
+
+  static final _dateTimeFormat = DateFormat('dd.MM.yyyy HH:mm');
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController();
     _codesInputController = TextEditingController();
-    _generatedAtController = TextEditingController();
     _displayHintController = TextEditingController();
     _descriptionController = TextEditingController();
   }
@@ -45,10 +46,39 @@ class _RecoveryCodesFormScreenState
   void dispose() {
     _nameController.dispose();
     _codesInputController.dispose();
-    _generatedAtController.dispose();
     _displayHintController.dispose();
     _descriptionController.dispose();
     super.dispose();
+  }
+
+  /// Открывает выбор даты + времени и передаёт результат в [onChanged] в ISO 8601.
+  Future<void> _pickDateTime({
+    required BuildContext context,
+    required String current,
+    required void Function(String) onChanged,
+  }) async {
+    final initial = DateTime.tryParse(current) ?? DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(1900),
+      lastDate: DateTime(DateTime.now().year + 150),
+    );
+    if (date == null || !context.mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(initial),
+    );
+    if (time != null) {
+      final result = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
+      onChanged(result.toIso8601String());
+    }
   }
 
   Future<void> _save() async {
@@ -105,9 +135,6 @@ class _RecoveryCodesFormScreenState
         if (_codesInputController.text != state.codesInput) {
           _codesInputController.text = state.codesInput;
         }
-        if (_generatedAtController.text != state.generatedAt) {
-          _generatedAtController.text = state.generatedAt;
-        }
         if (_displayHintController.text != state.displayHint) {
           _displayHintController.text = state.displayHint;
         }
@@ -118,6 +145,12 @@ class _RecoveryCodesFormScreenState
         final notifier = ref.read(
           recoveryCodesFormProvider(widget.recoveryCodesId).notifier,
         );
+
+        final generatedAtDisplay = state.generatedAt.isNotEmpty
+            ? _dateTimeFormat.format(
+                DateTime.tryParse(state.generatedAt) ?? DateTime.now(),
+              )
+            : '';
 
         return Scaffold(
           appBar: AppBar(
@@ -194,14 +227,25 @@ class _RecoveryCodesFormScreenState
 
                 // Дата генерации
                 TextField(
-                  controller: _generatedAtController,
+                  controller: TextEditingController(text: generatedAtDisplay),
+                  readOnly: true,
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.generated_at_iso_label,
                     errorText: state.generatedAtError,
                     prefixIcon: const Icon(LucideIcons.calendar),
+                    suffixIcon: state.generatedAt.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: () => notifier.setGeneratedAt(''),
+                          )
+                        : null,
                   ),
-                  onChanged: notifier.setGeneratedAt,
+                  onTap: () => _pickDateTime(
+                    context: context,
+                    current: state.generatedAt,
+                    onChanged: notifier.setGeneratedAt,
+                  ),
                 ),
                 const SizedBox(height: 12),
 

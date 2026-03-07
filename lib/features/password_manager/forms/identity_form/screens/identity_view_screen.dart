@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
@@ -72,7 +72,10 @@ class _IdentityViewScreenState extends ConsumerState<IdentityViewScreen> {
         _verified = identity.verified;
       });
     } catch (e) {
-      Toaster.error(title: context.t.dashboard_forms.common_load_error, description: '$e');
+      Toaster.error(
+        title: context.t.dashboard_forms.common_load_error,
+        description: '$e',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -169,7 +172,9 @@ class _IdentityViewScreenState extends ConsumerState<IdentityViewScreen> {
                     ),
                   ListTile(
                     title: Text(l10n.verified_label),
-                    subtitle: Text(_verified ? l10n.common_yes : l10n.common_no),
+                    subtitle: Text(
+                      _verified ? l10n.common_yes : l10n.common_no,
+                    ),
                   ),
                   if (_description?.isNotEmpty == true)
                     ListTile(

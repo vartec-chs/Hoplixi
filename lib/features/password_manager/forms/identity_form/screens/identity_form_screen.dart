@@ -4,11 +4,14 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_button.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
+import 'package:hoplixi/features/password_manager/pickers/document_picker/document_picker.dart';
+import 'package:hoplixi/features/password_manager/pickers/file_picker/file_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../providers/identity_form_provider.dart';
@@ -27,16 +30,14 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
   late final TextEditingController _idTypeController;
   late final TextEditingController _idNumberController;
   late final TextEditingController _fullNameController;
-  late final TextEditingController _dateOfBirthController;
   late final TextEditingController _placeOfBirthController;
   late final TextEditingController _nationalityController;
   late final TextEditingController _issuingAuthorityController;
-  late final TextEditingController _issueDateController;
-  late final TextEditingController _expiryDateController;
   late final TextEditingController _mrzController;
-  late final TextEditingController _scanAttachmentIdController;
-  late final TextEditingController _photoAttachmentIdController;
   late final TextEditingController _descriptionController;
+
+  static final _dateFormat = DateFormat('dd.MM.yyyy');
+  static final _dateTimeFormat = DateFormat('dd.MM.yyyy HH:mm');
 
   @override
   void initState() {
@@ -45,15 +46,10 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
     _idTypeController = TextEditingController();
     _idNumberController = TextEditingController();
     _fullNameController = TextEditingController();
-    _dateOfBirthController = TextEditingController();
     _placeOfBirthController = TextEditingController();
     _nationalityController = TextEditingController();
     _issuingAuthorityController = TextEditingController();
-    _issueDateController = TextEditingController();
-    _expiryDateController = TextEditingController();
     _mrzController = TextEditingController();
-    _scanAttachmentIdController = TextEditingController();
-    _photoAttachmentIdController = TextEditingController();
     _descriptionController = TextEditingController();
   }
 
@@ -63,17 +59,60 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
     _idTypeController.dispose();
     _idNumberController.dispose();
     _fullNameController.dispose();
-    _dateOfBirthController.dispose();
     _placeOfBirthController.dispose();
     _nationalityController.dispose();
     _issuingAuthorityController.dispose();
-    _issueDateController.dispose();
-    _expiryDateController.dispose();
     _mrzController.dispose();
-    _scanAttachmentIdController.dispose();
-    _photoAttachmentIdController.dispose();
     _descriptionController.dispose();
     super.dispose();
+  }
+
+  /// Открывает выбор только даты и передаёт результат в [onChanged] в ISO 8601.
+  Future<void> _pickDate({
+    required BuildContext context,
+    required String current,
+    required void Function(String) onChanged,
+  }) async {
+    final initial = DateTime.tryParse(current) ?? DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(1900),
+      lastDate: DateTime(DateTime.now().year + 150),
+    );
+    if (date != null) {
+      onChanged(date.toIso8601String());
+    }
+  }
+
+  /// Открывает выбор даты + времени и передаёт результат в [onChanged] в ISO 8601.
+  Future<void> _pickDateTime({
+    required BuildContext context,
+    required String current,
+    required void Function(String) onChanged,
+  }) async {
+    final initial = DateTime.tryParse(current) ?? DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(1900),
+      lastDate: DateTime(DateTime.now().year + 150),
+    );
+    if (date == null || !context.mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(initial),
+    );
+    if (time != null) {
+      final result = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
+      onChanged(result.toIso8601String());
+    }
   }
 
   Future<void> _save() async {
@@ -132,9 +171,6 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
         if (_fullNameController.text != state.fullName) {
           _fullNameController.text = state.fullName;
         }
-        if (_dateOfBirthController.text != state.dateOfBirth) {
-          _dateOfBirthController.text = state.dateOfBirth;
-        }
         if (_placeOfBirthController.text != state.placeOfBirth) {
           _placeOfBirthController.text = state.placeOfBirth;
         }
@@ -144,19 +180,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
         if (_issuingAuthorityController.text != state.issuingAuthority) {
           _issuingAuthorityController.text = state.issuingAuthority;
         }
-        if (_issueDateController.text != state.issueDate) {
-          _issueDateController.text = state.issueDate;
-        }
-        if (_expiryDateController.text != state.expiryDate) {
-          _expiryDateController.text = state.expiryDate;
-        }
         if (_mrzController.text != state.mrz) _mrzController.text = state.mrz;
-        if (_scanAttachmentIdController.text != state.scanAttachmentId) {
-          _scanAttachmentIdController.text = state.scanAttachmentId;
-        }
-        if (_photoAttachmentIdController.text != state.photoAttachmentId) {
-          _photoAttachmentIdController.text = state.photoAttachmentId;
-        }
         if (_descriptionController.text != state.description) {
           _descriptionController.text = state.description;
         }
@@ -164,6 +188,23 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
         final notifier = ref.read(
           identityFormProvider(widget.identityId).notifier,
         );
+
+        // Отображаемые строки для полей-дейтпикеров
+        final dateOfBirthDisplay = state.dateOfBirth.isNotEmpty
+            ? _dateFormat.format(
+                DateTime.tryParse(state.dateOfBirth) ?? DateTime.now(),
+              )
+            : '';
+        final issueDateDisplay = state.issueDate.isNotEmpty
+            ? _dateTimeFormat.format(
+                DateTime.tryParse(state.issueDate) ?? DateTime.now(),
+              )
+            : '';
+        final expiryDateDisplay = state.expiryDate.isNotEmpty
+            ? _dateTimeFormat.format(
+                DateTime.tryParse(state.expiryDate) ?? DateTime.now(),
+              )
+            : '';
 
         return Scaffold(
           appBar: AppBar(
@@ -238,17 +279,31 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   onChanged: notifier.setFullName,
                 ),
                 const SizedBox(height: 12),
+
+                // Дата рождения — только дата
                 TextField(
-                  controller: _dateOfBirthController,
+                  controller: TextEditingController(text: dateOfBirthDisplay),
+                  readOnly: true,
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.birth_date_iso_label,
                     errorText: state.dateOfBirthError,
                     prefixIcon: const Icon(LucideIcons.calendar),
+                    suffixIcon: state.dateOfBirth.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: () => notifier.setDateOfBirth(''),
+                          )
+                        : null,
                   ),
-                  onChanged: notifier.setDateOfBirth,
+                  onTap: () => _pickDate(
+                    context: context,
+                    current: state.dateOfBirth,
+                    onChanged: notifier.setDateOfBirth,
+                  ),
                 ),
                 const SizedBox(height: 12),
+
                 TextField(
                   controller: _placeOfBirthController,
                   decoration: primaryInputDecoration(
@@ -280,28 +335,55 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   onChanged: notifier.setIssuingAuthority,
                 ),
                 const SizedBox(height: 12),
+
+                // Дата выдачи — дата + время
                 TextField(
-                  controller: _issueDateController,
+                  controller: TextEditingController(text: issueDateDisplay),
+                  readOnly: true,
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.issue_date_iso_label,
                     errorText: state.issueDateError,
                     prefixIcon: const Icon(LucideIcons.calendar),
+                    suffixIcon: state.issueDate.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: () => notifier.setIssueDate(''),
+                          )
+                        : null,
                   ),
-                  onChanged: notifier.setIssueDate,
+                  onTap: () => _pickDateTime(
+                    context: context,
+                    current: state.issueDate,
+                    onChanged: notifier.setIssueDate,
+                  ),
                 ),
                 const SizedBox(height: 12),
+
+                // Дата истечения — дата + время
                 TextField(
-                  controller: _expiryDateController,
+                  controller: TextEditingController(text: expiryDateDisplay),
+                  readOnly: true,
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.expiry_date_iso_label,
                     errorText: state.expiryDateError,
-                    prefixIcon: const Icon(LucideIcons.calendar),
+                    prefixIcon: const Icon(LucideIcons.calendarX),
+                    suffixIcon: state.expiryDate.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: () => notifier.setExpiryDate(''),
+                          )
+                        : null,
                   ),
-                  onChanged: notifier.setExpiryDate,
+                  onTap: () => _pickDateTime(
+                    context: context,
+                    current: state.expiryDate,
+                    onChanged: notifier.setExpiryDate,
+                  ),
                 ),
                 const SizedBox(height: 12),
+
                 TextField(
                   controller: _mrzController,
                   minLines: 2,
@@ -314,26 +396,25 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   onChanged: notifier.setMrz,
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  controller: _scanAttachmentIdController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: context.t.dashboard_forms.scan_id_label,
-                    prefixIcon: const Icon(LucideIcons.scan),
-                  ),
-                  onChanged: notifier.setScanAttachmentId,
+
+                // Скан документа → DocumentPickerField
+                DocumentPickerField(
+                  selectedDocumentId: state.scanAttachmentId,
+                  selectedDocumentTitle: state.scanAttachmentName,
+                  label: context.t.dashboard_forms.scan_id_label,
+                  onDocumentSelected: notifier.setScanAttachment,
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  controller: _photoAttachmentIdController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: context.t.dashboard_forms.photo_id_label,
-                    prefixIcon: const Icon(LucideIcons.camera),
-                  ),
-                  onChanged: notifier.setPhotoAttachmentId,
+
+                // Фото → FilePickerField
+                FilePickerField(
+                  selectedFileId: state.photoAttachmentId,
+                  selectedFileName: state.photoAttachmentName,
+                  label: context.t.dashboard_forms.photo_id_label,
+                  onFileSelected: notifier.setPhotoAttachment,
                 ),
                 const SizedBox(height: 12),
+
                 CategoryPickerField(
                   selectedCategoryId: state.categoryId,
                   selectedCategoryName: state.categoryName,

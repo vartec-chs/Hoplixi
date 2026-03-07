@@ -4,6 +4,7 @@ import 'vault_items.dart';
 
 @DataClassName('IdentityItemsData')
 class IdentityItems extends Table {
+  @ReferenceName('identityItem')
   TextColumn get itemId =>
       text().references(VaultItems, #id, onDelete: KeyAction.cascade)();
 
@@ -27,9 +28,17 @@ class IdentityItems extends Table {
 
   TextColumn get mrz => text().nullable()();
 
-  TextColumn get scanAttachmentId => text().nullable()();
+  /// Ссылка на скан-документ в хранилище (document_items → vault_items)
+  @ReferenceName('identityItemScanAttachment')
+  TextColumn get scanAttachmentId => text()
+      .references(VaultItems, #id, onDelete: KeyAction.setNull)
+      .nullable()();
 
-  TextColumn get photoAttachmentId => text().nullable()();
+  /// Ссылка на фото-файл в хранилище (file_items → vault_items)
+  @ReferenceName('identityItemPhotoAttachment')
+  TextColumn get photoAttachmentId => text()
+      .references(VaultItems, #id, onDelete: KeyAction.setNull)
+      .nullable()();
 
   BoolColumn get verified => boolean().withDefault(const Constant(false))();
 

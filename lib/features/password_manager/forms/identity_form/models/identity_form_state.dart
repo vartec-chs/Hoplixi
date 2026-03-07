@@ -18,8 +18,12 @@ sealed class IdentityFormState with _$IdentityFormState {
     @Default('') String issueDate,
     @Default('') String expiryDate,
     @Default('') String mrz,
-    @Default('') String scanAttachmentId,
-    @Default('') String photoAttachmentId,
+    // scanAttachmentId → ссылка на документ (document_items)
+    String? scanAttachmentId,
+    String? scanAttachmentName,
+    // photoAttachmentId → ссылка на файл (file_items)
+    String? photoAttachmentId,
+    String? photoAttachmentName,
     @Default('') String description,
     @Default(false) bool verified,
     String? noteId,

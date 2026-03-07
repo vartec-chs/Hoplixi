@@ -48,8 +48,8 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
       issueDate: identity.issueDate?.toIso8601String() ?? '',
       expiryDate: identity.expiryDate?.toIso8601String() ?? '',
       mrz: identity.mrz ?? '',
-      scanAttachmentId: identity.scanAttachmentId ?? '',
-      photoAttachmentId: identity.photoAttachmentId ?? '',
+      scanAttachmentId: identity.scanAttachmentId,
+      photoAttachmentId: identity.photoAttachmentId,
       description: item.description ?? '',
       verified: identity.verified,
       noteId: item.noteId,
@@ -69,17 +69,28 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
   String? _dateErr(String v) {
     final s = v.trim();
     if (s.isEmpty) return null;
-    return DateTime.tryParse(s) == null ? t.dashboard_forms.validation_invalid_iso8601 : null;
+    return DateTime.tryParse(s) == null
+        ? t.dashboard_forms.validation_invalid_iso8601
+        : null;
   }
 
   void setName(String v) => _update(
-    (s) => s.copyWith(name: v, nameError: _req(v, t.dashboard_forms.validation_required_name)),
+    (s) => s.copyWith(
+      name: v,
+      nameError: _req(v, t.dashboard_forms.validation_required_name),
+    ),
   );
   void setIdType(String v) => _update(
-    (s) => s.copyWith(idType: v, idTypeError: _req(v, t.dashboard_forms.validation_required_type)),
+    (s) => s.copyWith(
+      idType: v,
+      idTypeError: _req(v, t.dashboard_forms.validation_required_type),
+    ),
   );
   void setIdNumber(String v) => _update(
-    (s) => s.copyWith(idNumber: v, idNumberError: _req(v, t.dashboard_forms.validation_required_number)),
+    (s) => s.copyWith(
+      idNumber: v,
+      idNumberError: _req(v, t.dashboard_forms.validation_required_number),
+    ),
   );
   void setFullName(String v) => _update((s) => s.copyWith(fullName: v));
   void setDateOfBirth(String v) =>
@@ -93,10 +104,17 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
   void setExpiryDate(String v) =>
       _update((s) => s.copyWith(expiryDate: v, expiryDateError: _dateErr(v)));
   void setMrz(String v) => _update((s) => s.copyWith(mrz: v));
-  void setScanAttachmentId(String v) =>
-      _update((s) => s.copyWith(scanAttachmentId: v));
-  void setPhotoAttachmentId(String v) =>
-      _update((s) => s.copyWith(photoAttachmentId: v));
+
+  /// Установить выбранный скан-документ (document_items)
+  void setScanAttachment(String? id, String? name) => _update(
+    (s) => s.copyWith(scanAttachmentId: id, scanAttachmentName: name),
+  );
+
+  /// Установить выбранное фото-вложение (file_items)
+  void setPhotoAttachment(String? id, String? name) => _update(
+    (s) => s.copyWith(photoAttachmentId: id, photoAttachmentName: name),
+  );
+
   void setDescription(String v) => _update((s) => s.copyWith(description: v));
   void setVerified(bool v) => _update((s) => s.copyWith(verified: v));
   void setNote(String? id, String? name) =>
@@ -109,8 +127,14 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
   bool validate() {
     final c = _current;
     final nameError = _req(c.name, t.dashboard_forms.validation_required_name);
-    final idTypeError = _req(c.idType, t.dashboard_forms.validation_required_type);
-    final idNumberError = _req(c.idNumber, t.dashboard_forms.validation_required_number);
+    final idTypeError = _req(
+      c.idType,
+      t.dashboard_forms.validation_required_type,
+    );
+    final idNumberError = _req(
+      c.idNumber,
+      t.dashboard_forms.validation_required_number,
+    );
     final dateOfBirthError = _dateErr(c.dateOfBirth);
     final issueDateError = _dateErr(c.issueDate);
     final expiryDateError = _dateErr(c.expiryDate);
@@ -169,8 +193,8 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
             issueDate: parseDate(c.issueDate),
             expiryDate: parseDate(c.expiryDate),
             mrz: clean(c.mrz),
-            scanAttachmentId: clean(c.scanAttachmentId),
-            photoAttachmentId: clean(c.photoAttachmentId),
+            scanAttachmentId: c.scanAttachmentId,
+            photoAttachmentId: c.photoAttachmentId,
             verified: c.verified,
             description: clean(c.description),
             noteId: c.noteId,
@@ -204,8 +228,8 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
             issueDate: parseDate(c.issueDate),
             expiryDate: parseDate(c.expiryDate),
             mrz: clean(c.mrz),
-            scanAttachmentId: clean(c.scanAttachmentId),
-            photoAttachmentId: clean(c.photoAttachmentId),
+            scanAttachmentId: c.scanAttachmentId,
+            photoAttachmentId: c.photoAttachmentId,
             verified: c.verified,
             description: clean(c.description),
             noteId: c.noteId,
@@ -229,4 +253,3 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
-

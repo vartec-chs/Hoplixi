@@ -1,9 +1,11 @@
 import 'package:drift/drift.dart';
 
 import 'vault_item_history.dart';
+import 'vault_items.dart';
 
 @DataClassName('IdentityHistoryData')
 class IdentityHistory extends Table {
+  @ReferenceName('identityHistoryEntry')
   TextColumn get historyId =>
       text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
 
@@ -27,9 +29,17 @@ class IdentityHistory extends Table {
 
   TextColumn get mrz => text().nullable()();
 
-  TextColumn get scanAttachmentId => text().nullable()();
+  /// Ссылка на скан-документ в хранилище (document_items → vault_items)
+  @ReferenceName('identityHistoryScanAttachment')
+  TextColumn get scanAttachmentId => text()
+      .references(VaultItems, #id, onDelete: KeyAction.setNull)
+      .nullable()();
 
-  TextColumn get photoAttachmentId => text().nullable()();
+  /// Ссылка на фото-файл в хранилище (file_items → vault_items)
+  @ReferenceName('identityHistoryPhotoAttachment')
+  TextColumn get photoAttachmentId => text()
+      .references(VaultItems, #id, onDelete: KeyAction.setNull)
+      .nullable()();
 
   BoolColumn get verified => boolean().withDefault(const Constant(false))();
 
