@@ -182,7 +182,7 @@ class _FilePickerMultiContentState
                     controller: _scrollController,
                     shrinkWrap: true,
                     itemCount: data.files.length + (data.isLoadingMore ? 1 : 0),
-                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    separatorBuilder: (_, _) => const Divider(height: 1),
                     itemBuilder: (context, index) {
                       if (index == data.files.length) {
                         return const Padding(

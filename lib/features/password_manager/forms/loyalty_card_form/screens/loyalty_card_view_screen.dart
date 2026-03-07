@@ -62,8 +62,9 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
     if (vault.categoryId != null) {
       final categoryDao = await ref.read(categoryDaoProvider.future);
       final category = await categoryDao.getCategoryById(vault.categoryId!);
-      if (mounted && category != null)
+      if (mounted && category != null) {
         setState(() => _categoryName = category.name);
+      }
     }
 
     final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
@@ -71,8 +72,9 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
     if (tagIds.isNotEmpty) {
       final tagDao = await ref.read(tagDaoProvider.future);
       final tags = await tagDao.getTagsByIds(tagIds);
-      if (mounted)
+      if (mounted) {
         setState(() => _tagNames = tags.map((tag) => tag.name).toList());
+      }
     }
   }
 
