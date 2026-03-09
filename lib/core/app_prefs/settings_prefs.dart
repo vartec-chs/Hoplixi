@@ -5,7 +5,10 @@ part 'settings_prefs.g.dart';
 
 @Prefs()
 class SettingsPrefs {
-  @Pref(defaultValue: ThemeMode.system)
+  @Pref(
+    defaultValue: ThemeMode.system,
+    serializer: EnumPrefSerializer,
+  )
   static const themeMode = PrefKey<ThemeMode>();
 
   static const language = PrefKey<String>();

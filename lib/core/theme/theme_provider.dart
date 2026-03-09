@@ -39,11 +39,11 @@ class ThemeProvider extends AsyncNotifier<ThemeMode> {
     try {
       final storage = getIt.get<PreferencesService>();
       if (themeMode == ThemeMode.light) {
-        await storage.settingsPrefs.themeMode.set(ThemeMode.light.name);
+        await storage.settingsPrefs.themeMode.set(ThemeMode.light);
       } else if (themeMode == ThemeMode.dark) {
-        await storage.settingsPrefs.themeMode.set(ThemeMode.dark.name);
+        await storage.settingsPrefs.themeMode.set(ThemeMode.dark);
       } else {
-        await storage.settingsPrefs.themeMode.set(ThemeMode.system.name);
+        await storage.settingsPrefs.themeMode.set(ThemeMode.system);
       }
     } catch (e) {
       // logError(

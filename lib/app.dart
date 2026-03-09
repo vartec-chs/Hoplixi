@@ -39,17 +39,6 @@ class _AppState extends ConsumerState<App> {
   late final Future<ThemeMode> _initialThemeModeFuture;
   // late final Future<List<dynamic>> _initialThemeAndLocaleFuture;
 
-  ThemeMode _parseThemeMode(String? value) {
-    switch (value) {
-      case 'light':
-        return ThemeMode.light;
-      case 'dark':
-        return ThemeMode.dark;
-      case 'system':
-      default:
-        return ThemeMode.system;
-    }
-  }
 
   @override
   void initState() {
@@ -58,7 +47,7 @@ class _AppState extends ConsumerState<App> {
     _initialThemeModeFuture = () async {
       final storage = getIt.get<PreferencesService>().settingsPrefs;
       final savedMode = await storage.getThemeMode();
-      return _parseThemeMode(savedMode);
+      return savedMode;
     }();
 
     // _initialThemeAndLocaleFuture = Future.wait<dynamic>([
