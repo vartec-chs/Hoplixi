@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/app_preferences/app_preference_keys.dart';
+import 'package:hoplixi/core/app_prefs/auth_prefs.dart';
 import 'package:hoplixi/core/services/services.dart';
 import 'package:hoplixi/core/theme/theme_switcher.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
@@ -10,6 +10,7 @@ import 'package:hoplixi/features/settings/ui/widgets/settings_section_card.dart'
 import 'package:hoplixi/features/settings/ui/widgets/settings_tile.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 import 'package:hoplixi/shared/widgets/language_switcher.dart';
+import 'package:typed_prefs/typed_prefs.dart';
 import 'package:universal_platform/universal_platform.dart';
 
 /// Секция настроек внешнего вида
@@ -36,7 +37,7 @@ class GeneralSettingsSection extends ConsumerWidget {
     final launchAtStartupService = getIt<LaunchAtStartupService>();
 
     final launchAtStartupEnabled =
-        settings[AppKeys.launchAtStartupEnabled.key] as bool? ?? false;
+        settings['launch_at_startup_enabled'] as bool? ?? false;
 
     return SettingsSectionCard(
       title: 'Общие',
@@ -62,7 +63,7 @@ class GeneralSettingsSection extends ConsumerWidget {
                 return;
               }
 
-              await notifier.setBool(AppKeys.launchAtStartupEnabled.key, value);
+              await notifier.setBool('launch_at_startup_enabled', value);
               Toaster.success(
                 title: value ? 'Автозапуск включен' : 'Автозапуск выключен',
               );
@@ -83,10 +84,8 @@ class SecuritySettingsSection extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
 
-    final biometricEnabled =
-        settings[AppKeys.biometricEnabled.key] as bool? ?? false;
-    final autoLockTimeout =
-        settings[AppKeys.autoLockTimeout.key] as int? ?? 300;
+    final biometricEnabled = settings['biometric_enabled'] as bool? ?? false;
+    final autoLockTimeout = settings['auto_lock_timeout'] as int? ?? 300;
 
     return SettingsSectionCard(
       title: 'Безопасность',
@@ -96,11 +95,7 @@ class SecuritySettingsSection extends ConsumerWidget {
           subtitle: 'Использовать отпечаток пальца или Face ID',
           leading: const Icon(Icons.fingerprint),
           value: biometricEnabled,
-          onChanged: (value) => notifier.setBoolWithBiometric(
-            AppKeys.biometricEnabled.key,
-            value,
-            reason: 'Подтвердите изменение настройки биометрии',
-          ),
+          onChanged: (value) => notifier.setBool('biometric_enabled', value),
         ),
         const Divider(height: 1),
         SettingsTile(
@@ -164,7 +159,7 @@ class SecuritySettingsSection extends ConsumerWidget {
     );
 
     if (result != null) {
-      await notifier.setInt(AppKeys.autoLockTimeout.key, result);
+      await notifier.setInt('auto_lock_timeout', result);
     }
   }
 
@@ -215,11 +210,7 @@ class SecuritySettingsSection extends ConsumerWidget {
     );
 
     if (result != null && result.isNotEmpty) {
-      await notifier.setStringWithBiometric(
-        AppKeys.pinCode.key,
-        result,
-        reason: 'Подтвердите изменение PIN-кода',
-      );
+      await getIt<PreferencesService>().authPrefs.setPinCode(result);
     }
   }
 }
@@ -233,9 +224,8 @@ class SyncSettingsSection extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
 
-    final autoSyncEnabled =
-        settings[AppKeys.autoSyncEnabled.key] as bool? ?? false;
-    final lastSyncTime = settings[AppKeys.lastSyncTime.key] as int?;
+    final autoSyncEnabled = settings['auto_sync_enabled'] as bool? ?? false;
+    final lastSyncTime = settings['last_sync_time'] as int?;
 
     return SettingsSectionCard(
       title: 'Синхронизация',
@@ -245,8 +235,7 @@ class SyncSettingsSection extends ConsumerWidget {
           subtitle: 'Синхронизировать данные автоматически',
           leading: const Icon(Icons.sync),
           value: autoSyncEnabled,
-          onChanged: (value) =>
-              notifier.setBool(AppKeys.autoSyncEnabled.key, value),
+          onChanged: (value) => notifier.setBool('auto_sync_enabled', value),
         ),
         if (lastSyncTime != null) ...[
           const Divider(height: 1),
@@ -313,15 +302,13 @@ class BackupSettingsSection extends ConsumerWidget {
     final notifier = ref.read(settingsProvider.notifier);
     final mainStoreNotifier = ref.read(mainStoreProvider.notifier);
 
-    final autoBackupEnabled =
-        settings[AppKeys.autoBackupEnabled.key] as bool? ?? false;
-    final backupPath = settings[AppKeys.backupPath.key] as String?;
-    final backupScopeRaw = settings[AppKeys.backupScope.key] as String?;
+    final autoBackupEnabled = settings['auto_backup_enabled'] as bool? ?? false;
+    final backupPath = settings['backup_path'] as String?;
+    final backupScopeRaw = settings['backup_scope'] as String?;
     final backupScope = _parseScope(backupScopeRaw);
     final backupIntervalMinutes =
-        settings[AppKeys.backupIntervalMinutes.key] as int? ?? 360;
-    final backupMaxPerStore =
-        settings[AppKeys.backupMaxPerStore.key] as int? ?? 10;
+        settings['backup_interval_minutes'] as int? ?? 360;
+    final backupMaxPerStore = settings['backup_max_per_store'] as int? ?? 10;
 
     return SettingsSectionCard(
       title: 'Резервное копирование',
@@ -332,7 +319,7 @@ class BackupSettingsSection extends ConsumerWidget {
           leading: const Icon(Icons.backup),
           value: autoBackupEnabled,
           onChanged: (value) async {
-            await notifier.setBool(AppKeys.autoBackupEnabled.key, value);
+            await notifier.setBool('auto_backup_enabled', value);
 
             if (value) {
               mainStoreNotifier.startPeriodicBackup(
@@ -491,7 +478,7 @@ class BackupSettingsSection extends ConsumerWidget {
 
     if (result == null) return;
 
-    await notifier.setString(AppKeys.backupScope.key, result.name);
+    await notifier.setString('backup_scope', result.name);
 
     if (autoBackupEnabled) {
       mainStoreNotifier.startPeriodicBackup(
@@ -536,7 +523,7 @@ class BackupSettingsSection extends ConsumerWidget {
 
     if (result == null) return;
 
-    await notifier.setInt(AppKeys.backupIntervalMinutes.key, result);
+    await notifier.setInt('backup_interval_minutes', result);
 
     if (autoBackupEnabled) {
       mainStoreNotifier.startPeriodicBackup(
@@ -581,7 +568,7 @@ class BackupSettingsSection extends ConsumerWidget {
 
     if (result == null) return;
 
-    await notifier.setInt(AppKeys.backupMaxPerStore.key, result);
+    await notifier.setInt('backup_max_per_store', result);
 
     if (autoBackupEnabled) {
       mainStoreNotifier.startPeriodicBackup(
@@ -638,7 +625,7 @@ class BackupSettingsSection extends ConsumerWidget {
     );
 
     if (result != null && result.isNotEmpty) {
-      await notifier.setString(AppKeys.backupPath.key, result);
+      await notifier.setString('backup_path', result);
 
       if (autoBackupEnabled) {
         mainStoreNotifier.startPeriodicBackup(

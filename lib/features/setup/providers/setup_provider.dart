@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/app_preferences/app_preferences.dart';
+import 'package:hoplixi/core/app_prefs/auth_prefs.dart';
+import 'package:hoplixi/core/app_prefs/system_prefs.dart';
 import 'package:hoplixi/core/theme/theme_provider.dart';
 import 'package:hoplixi/di_init.dart';
 import 'package:hoplixi/features/setup/providers/setup_completed_provider.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:typed_prefs/typed_prefs.dart';
 import 'package:universal_platform/universal_platform.dart';
 
 /// Состояние мастера настройки
@@ -69,7 +71,7 @@ class SetupState {
 /// Провайдер состояния мастера настройки
 class SetupNotifier extends Notifier<SetupState> {
   late final LocalAuthentication _localAuth;
-  late final AppStorageService _storage;
+  late final PreferencesService _storage;
 
   /// Требуемые разрешения для мобильных платформ
   static const List<Permission> requiredPermissions = [
@@ -82,7 +84,7 @@ class SetupNotifier extends Notifier<SetupState> {
   @override
   SetupState build() {
     _localAuth = LocalAuthentication();
-    _storage = getIt<AppStorageService>();
+    _storage = getIt<PreferencesService>();
 
     // Определяем количество страниц в зависимости от платформы
     final totalPages = UniversalPlatform.isDesktop ? 3 : 4;
@@ -195,14 +197,14 @@ class SetupNotifier extends Notifier<SetupState> {
         );
 
         if (authenticated) {
-          await _storage.set(AppKeys.biometricEnabled, true);
+          await _storage.authPrefs.setBiometricEnabled(true);
           state = state.copyWith(biometricEnabled: true);
         }
       } catch (e) {
         // Аутентификация не удалась
       }
     } else {
-      await _storage.set(AppKeys.biometricEnabled, false);
+      await _storage.authPrefs.setBiometricEnabled(false);
       state = state.copyWith(biometricEnabled: false);
     }
   }
@@ -240,7 +242,7 @@ class SetupNotifier extends Notifier<SetupState> {
 
   /// Завершить настройку
   Future<void> completeSetup() async {
-    await _storage.set(AppKeys.setupCompleted, true);
+    await _storage.systemPrefs.setSetupCompleted(true);
     // Обновляем провайдер, который отвечает за флаг завершения setup,
     // чтобы редиректы и слушатели получили актуальное значение.
     await ref.read(setupCompletedNotifierProvider.notifier).markAsCompleted();

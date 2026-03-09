@@ -1,207 +1,115 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/app_preferences/app_key.dart';
-import 'package:hoplixi/core/app_preferences/app_preference_keys.dart';
-import 'package:hoplixi/core/app_preferences/app_storage_service.dart';
-import 'package:hoplixi/core/app_preferences/storage_errors.dart';
+import 'package:hoplixi/core/app_prefs/auth_prefs.dart';
+import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
+import 'package:hoplixi/core/app_prefs/system_prefs.dart';
 import 'package:hoplixi/core/localization/locale_provider.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/di_init.dart';
+import 'package:typed_prefs/typed_prefs.dart';
 
-/// Провайдер для работы с настройками
 class SettingsNotifier extends Notifier<Map<String, dynamic>> {
-  late final AppStorageService _storage;
+  late final PreferencesService _service;
+
+  SettingsPrefsStore get _settings => _service.settingsPrefs;
+  SystemPrefsStore get _system => _service.systemPrefs;
+  AuthPrefsStore get _auth => _service.authPrefs;
 
   @override
   Map<String, dynamic> build() {
-    _storage = getIt<AppStorageService>();
+    _service = getIt<PreferencesService>();
     _loadSettings();
     return {};
   }
 
-  /// Загрузить все настройки
   Future<void> _loadSettings() async {
-    final settings = <String, dynamic>{};
-
-    // Загружаем все ключи
-    for (final key in AppKeys.getAllKeys()) {
-      try {
-        dynamic value;
-
-        // Используем специализированные методы на основе проверки runtimeType
-        final typeString = key.runtimeType.toString();
-        if (typeString.contains('AppKey<String>')) {
-          value = await _storage.getString(key as AppKey<String>);
-        } else if (typeString.contains('AppKey<int>')) {
-          value = await _storage.getInt(key as AppKey<int>);
-        } else if (typeString.contains('AppKey<bool>')) {
-          value = await _storage.getBool(key as AppKey<bool>);
-        } else if (typeString.contains('AppKey<double>')) {
-          value = await _storage.getDouble(key as AppKey<double>);
-        } else if (typeString.contains('List<String>')) {
-          value = await _storage.getStringList(key as AppKey<List<String>>);
-        } else {
-          // Для неизвестных типов пропускаем
-          logError('Unknown key type: $typeString for key ${key.key}');
-          continue;
-        }
-
-        if (value != null) {
-          settings[key.key] = value;
-        }
-      } catch (e, s) {
-        logError('Error loading setting ${key.key}', error: e, stackTrace: s);
-      }
+    try {
+      final raw = <String, dynamic>{
+        'theme_mode': await _settings.getThemeMode(),
+        'language': await _settings.getLanguage(),
+        'launch_at_startup_enabled': await _settings.getLaunchAtStartupEnabled(),
+        'auto_lock_timeout': await _settings.getAutoLockTimeout(),
+        'auto_sync_enabled': await _settings.getAutoSyncEnabled(),
+        'auto_backup_enabled': await _settings.getAutoBackupEnabled(),
+        'backup_path': await _settings.getBackupPath(),
+        'backup_scope': await _settings.getBackupScope(),
+        'backup_interval_minutes': await _settings.getBackupIntervalMinutes(),
+        'backup_max_per_store': await _settings.getBackupMaxPerStore(),
+        'is_first_launch': await _system.getIsFirstLaunch(),
+        'setup_completed': await _system.getSetupCompleted(),
+        'last_sync_time': await _system.getLastSyncTime(),
+        'biometric_enabled': await _auth.getBiometricEnabled(),
+        'pin_attempts': await _auth.getPinAttempts(),
+      };
+      raw.removeWhere((_, v) => v == null);
+      state = raw;
+    } catch (e, s) {
+      logError('Error loading settings', error: e, stackTrace: s);
     }
-
-    state = settings;
   }
 
-  /// Получить значение настройки
-  T? getSetting<T>(String key) {
-    return state[key] as T?;
-  }
+  T? getSetting<T>(String key) => state[key] as T?;
 
-  /// Установить строковое значение
   Future<void> setString(String key, String value) async {
-    final appKey = AppKeys.getAllKeys().firstWhere((k) => k.key == key);
-    final result = await _storage.setString(appKey as AppKey<String>, value);
-    if (result) {
-      state = {...state, key: value};
-
-      if (key == AppKeys.language.key) {
-        await ref
-            .read(localeProvider.notifier)
-            .setLocaleCode(value, persist: false);
-      }
+    switch (key) {
+      case 'language':
+        await _settings.setLanguage(value);
+        await ref.read(localeProvider.notifier).setLocaleCode(value, persist: false);
+      case 'backup_path':
+        await _settings.setBackupPath(value);
+      case 'backup_scope':
+        await _settings.setBackupScope(value);
+      default:
+        logError('Unknown string key: $key');
+        return;
     }
+    state = {...state, key: value};
   }
 
-  /// Установить булево значение (без биометрии)
   Future<void> setBool(String key, bool value) async {
-    final appKey = AppKeys.getAllKeys().firstWhere((k) => k.key == key);
-    final result = await _storage.setBool(appKey as AppKey<bool>, value);
-    if (result) {
-      state = {...state, key: value};
+    switch (key) {
+      case 'launch_at_startup_enabled':
+        await _settings.setLaunchAtStartupEnabled(value);
+      case 'auto_sync_enabled':
+        await _settings.setAutoSyncEnabled(value);
+      case 'auto_backup_enabled':
+        await _settings.setAutoBackupEnabled(value);
+      case 'is_first_launch':
+        await _system.setIsFirstLaunch(value);
+      case 'setup_completed':
+        await _system.setSetupCompleted(value);
+      case 'biometric_enabled':
+        await _auth.setBiometricEnabled(value);
+      default:
+        logError('Unknown bool key: $key');
+        return;
     }
+    state = {...state, key: value};
   }
 
-  /// Установить целочисленное значение
   Future<void> setInt(String key, int value) async {
-    final appKey = AppKeys.getAllKeys().firstWhere((k) => k.key == key);
-    final result = await _storage.setInt(appKey as AppKey<int>, value);
-    if (result) {
-      state = {...state, key: value};
+    switch (key) {
+      case 'auto_lock_timeout':
+        await _settings.setAutoLockTimeout(value);
+      case 'backup_interval_minutes':
+        await _settings.setBackupIntervalMinutes(value);
+      case 'backup_max_per_store':
+        await _settings.setBackupMaxPerStore(value);
+      case 'last_sync_time':
+        await _system.setLastSyncTime(value);
+      case 'pin_attempts':
+        await _auth.setPinAttempts(value);
+      default:
+        logError('Unknown int key: $key');
+        return;
     }
+    state = {...state, key: value};
   }
 
-  /// Установить булево значение с биометрией
-  Future<void> setBoolWithBiometric(
-    String key,
-    bool value, {
-    String? reason,
-  }) async {
-    final appKey = AppKeys.getAllKeys().firstWhere((k) => k.key == key);
-    final result = await _storage.setBoolWithBiometric(
-      appKey as AppKey<bool>,
-      value,
-      biometricReason: reason ?? 'Подтвердите изменение настройки',
-    );
-
-    result.fold(
-      (success) {
-        state = {...state, key: value};
-        Toaster.success(
-          title: 'Настройка обновлена',
-          description: 'Изменения сохранены',
-        );
-      },
-      (error) {
-        error.when(
-          biometricAuthFailed: (message) {
-            Toaster.error(title: 'Ошибка аутентификации', description: message);
-          },
-          biometricAuthCanceled: () {
-            Toaster.info(
-              title: 'Отменено',
-              description: 'Аутентификация отменена пользователем',
-            );
-          },
-          biometricNotAvailable: () {
-            Toaster.warning(
-              title: 'Биометрия недоступна',
-              description:
-                  'На устройстве не настроена биометрическая аутентификация',
-            );
-          },
-          unsupportedType: (typeName) {
-            Toaster.error(
-              title: 'Ошибка',
-              description: 'Неподдерживаемый тип данных: $typeName',
-            );
-          },
-        );
-      },
-    );
-  }
-
-  /// Установить строковое значение с биометрией
-  Future<void> setStringWithBiometric(
-    String key,
-    String value, {
-    String? reason,
-  }) async {
-    final appKey = AppKeys.getAllKeys().firstWhere((k) => k.key == key);
-    final result = await _storage.setStringWithBiometric(
-      appKey as AppKey<String>,
-      value,
-      biometricReason: reason ?? 'Подтвердите изменение настройки',
-    );
-
-    result.fold(
-      (success) {
-        state = {...state, key: value};
-        Toaster.success(
-          title: 'Настройка обновлена',
-          description: 'Изменения сохранены',
-        );
-      },
-      (error) {
-        error.when(
-          biometricAuthFailed: (message) {
-            Toaster.error(title: 'Ошибка аутентификации', description: message);
-          },
-          biometricAuthCanceled: () {
-            Toaster.info(
-              title: 'Отменено',
-              description: 'Аутентификация отменена пользователем',
-            );
-          },
-          biometricNotAvailable: () {
-            Toaster.warning(
-              title: 'Биометрия недоступна',
-              description:
-                  'На устройстве не настроена биометрическая аутентификация',
-            );
-          },
-          unsupportedType: (typeName) {
-            Toaster.error(
-              title: 'Ошибка',
-              description: 'Неподдерживаемый тип данных: $typeName',
-            );
-          },
-        );
-      },
-    );
-  }
-
-  /// Перезагрузить настройки
-  Future<void> reload() async {
-    await _loadSettings();
-  }
+  Future<void> reload() async => _loadSettings();
 }
 
 final settingsProvider =
     NotifierProvider<SettingsNotifier, Map<String, dynamic>>(
       SettingsNotifier.new,
     );
+

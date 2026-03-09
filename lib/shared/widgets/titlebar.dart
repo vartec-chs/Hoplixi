@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/app_preferences/app_preference_keys.dart';
+import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/settings/providers/settings_provider.dart';
+import 'package:hoplixi/di_init.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 import 'package:hoplixi/shared/widgets/close_database_button.dart';
 import 'package:hoplixi/shared/widgets/language_switcher.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:typed_prefs/typed_prefs.dart';
 import 'package:window_manager/window_manager.dart';
 
 class TitleBar extends ConsumerStatefulWidget {
@@ -52,11 +53,10 @@ class _TitleBarState extends ConsumerState<TitleBar> {
   }
 
   Future<void> _createBackupNow() async {
-    final settings = ref.read(settingsProvider);
-    final backupPath = settings[AppKeys.backupPath.key] as String?;
-    final scopeRaw = settings[AppKeys.backupScope.key] as String?;
-    final backupMaxPerStore =
-        settings[AppKeys.backupMaxPerStore.key] as int? ?? 10;
+    final store = getIt<PreferencesService>().settingsPrefs;
+    final backupPath = await store.getBackupPath();
+    final scopeRaw = await store.getBackupScope();
+    final backupMaxPerStore = await store.getBackupMaxPerStore();
     final scope = _parseBackupScope(scopeRaw);
 
     final result = await ref

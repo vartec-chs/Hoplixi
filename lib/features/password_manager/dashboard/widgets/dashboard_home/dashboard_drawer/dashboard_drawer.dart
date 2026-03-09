@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/app_preferences/app_preference_keys.dart';
+import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/di_init.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/providers/drawer_category_filter_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/providers/drawer_tag_filter_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/widgets/category_section.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/widgets/tag_section.dart';
-import 'package:hoplixi/features/settings/providers/settings_provider.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/widgets/close_database_button.dart';
+import 'package:typed_prefs/typed_prefs.dart';
 
 /// Drawer с фильтрацией по категориям и тегам (для мобильных устройств)
 class DashboardDrawer extends ConsumerWidget {
@@ -54,11 +55,10 @@ class _DashboardDrawerContentState
   }
 
   Future<void> _createBackupNow() async {
-    final settings = ref.read(settingsProvider);
-    final backupPath = settings[AppKeys.backupPath.key] as String?;
-    final scopeRaw = settings[AppKeys.backupScope.key] as String?;
-    final backupMaxPerStore =
-        settings[AppKeys.backupMaxPerStore.key] as int? ?? 10;
+    final store = getIt<PreferencesService>().settingsPrefs;
+    final backupPath = await store.getBackupPath();
+    final scopeRaw = await store.getBackupScope();
+    final backupMaxPerStore = await store.getBackupMaxPerStore();
     final scope = _parseBackupScope(scopeRaw);
 
     final result = await ref

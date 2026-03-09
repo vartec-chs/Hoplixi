@@ -2,9 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/app_preferences/app_preferences.dart';
+import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/di_init.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
+import 'package:typed_prefs/typed_prefs.dart';
 
 final localeProvider = AsyncNotifierProvider<LocaleProvider, Locale>(
   LocaleProvider.new,
@@ -19,8 +20,8 @@ class LocaleProvider extends AsyncNotifier<Locale> {
     state = const AsyncValue.loading();
 
     try {
-      final storage = getIt.get<AppStorageService>();
-      final savedLanguageCode = await storage.get(AppKeys.language);
+      final storage = getIt.get<PreferencesService>();
+      final savedLanguageCode = await storage.settingsPrefs.language.get();
 
       final resolvedLocale = _resolveLocale(
         savedLanguageCode ??
@@ -68,8 +69,8 @@ class LocaleProvider extends AsyncNotifier<Locale> {
     }
 
     try {
-      final storage = getIt.get<AppStorageService>();
-      await storage.set(AppKeys.language, resolvedLocale.languageCode);
+      final storage = getIt.get<PreferencesService>();
+      await storage.settingsPrefs.language.set(resolvedLocale.languageCode);
     } catch (_) {}
   }
 }

@@ -1,15 +1,19 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
-import 'package:hoplixi/core/app_preferences/app_preferences.dart';
 import 'package:hoplixi/core/services/services.dart';
 import 'package:hoplixi/main_store/services/db_history_services.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:typed_prefs/typed_prefs.dart';
 
 final getIt = GetIt.instance;
 
 Future<void> setupDI() async {
   // Инициализация FlutterSecureStorage
-  getIt.registerSingleton<FlutterSecureStorage>(setupSecureStorage());
+  final secureStorage = setupSecureStorage();
+  getIt.registerSingleton<FlutterSecureStorage>(secureStorage);
+  final sharedPreferencesService = await SharedPreferences.getInstance();
+  getIt.registerSingleton<SharedPreferences>(sharedPreferencesService);
 
   // Инициализация LocalAuthentication и LocalAuthService (до AppStorageService)
   getIt.registerLazySingleton<LocalAuthentication>(() => LocalAuthentication());
@@ -17,11 +21,12 @@ Future<void> setupDI() async {
   getIt.registerSingleton<LocalAuthService>(localAuthService);
 
   // Инициализация унифицированного сервиса хранения с поддержкой биометрии
-  final appStorageService = await AppStorageService.init(
-    secureStorage: getIt<FlutterSecureStorage>(),
-    localAuthService: localAuthService,
+  final appStorageService = await PreferencesService.initialize(
+    secureStorage: secureStorage,
+    sharedPreferences: sharedPreferencesService,
   );
-  getIt.registerSingleton<AppStorageService>(appStorageService);
+
+  getIt.registerSingleton<PreferencesService>(appStorageService);
 
   // Инициализация HiveBoxManager
   final hiveBoxManager = HiveBoxManager(getIt<FlutterSecureStorage>());
@@ -40,8 +45,8 @@ Future<void> setupDI() async {
 
 FlutterSecureStorage setupSecureStorage() {
   return const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+    aOptions: AndroidOptions(storageCipherAlgorithm: .AES_CBC_PKCS7Padding),
+    iOptions: IOSOptions(accessibility: .first_unlock, synchronizable: false),
     lOptions: LinuxOptions(),
     wOptions: WindowsOptions(),
     mOptions: MacOsOptions(),

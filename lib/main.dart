@@ -5,8 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_single_instance/flutter_single_instance.dart';
-import 'package:hoplixi/core/app_preferences/app_preference_keys.dart';
-import 'package:hoplixi/core/app_preferences/app_storage_service.dart';
+import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/index.dart';
 import 'package:hoplixi/core/logger/rust_log_bridge.dart';
@@ -22,6 +21,7 @@ import 'package:hoplixi/setup_error_handling.dart';
 import 'package:hoplixi/setup_tray.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:toastification/toastification.dart';
+import 'package:typed_prefs/typed_prefs.dart';
 import 'package:universal_platform/universal_platform.dart';
 
 import 'app.dart';
@@ -297,7 +297,7 @@ Future<void> _applyInstallConfig() async {
 
   try {
     await InstallConfigService.applyIfPresent(
-      storage: getIt<AppStorageService>(),
+      storage: getIt<PreferencesService>(),
       launchAtStartupService: getIt<LaunchAtStartupService>(),
     );
   } catch (error, stackTrace) {
@@ -315,28 +315,20 @@ Future<void> _syncLaunchAtStartupPreference() async {
   }
 
   try {
-    final appStorageService = getIt<AppStorageService>();
+    final store = getIt<PreferencesService>().settingsPrefs;
     final launchAtStartupService = getIt<LaunchAtStartupService>();
 
     await launchAtStartupService.setup();
     final systemEnabled = await launchAtStartupService.isEnabled();
 
-    final hasStoredValue = await appStorageService.containsKey(
-      AppKeys.launchAtStartupEnabled,
-    );
+    final hasStoredValue = await store.launchAtStartupEnabled.get() != null;
 
     if (!hasStoredValue) {
-      await appStorageService.setBool(
-        AppKeys.launchAtStartupEnabled,
-        systemEnabled,
-      );
+      await store.setLaunchAtStartupEnabled(systemEnabled);
       return;
     }
 
-    final desiredValue = await appStorageService.getOrDefault(
-      AppKeys.launchAtStartupEnabled,
-      false,
-    );
+    final desiredValue = await store.getLaunchAtStartupEnabled();
 
     final appliedValue = await launchAtStartupService.setEnabled(desiredValue);
     if (appliedValue != desiredValue) {

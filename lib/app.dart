@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/app_preferences/app_preferences.dart';
+import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/localization/locale_provider.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
@@ -22,6 +22,7 @@ import 'package:hoplixi/shared/widgets/desktop_shell.dart';
 import 'package:hoplixi/shared/widgets/watchers/lifecycle/app_lifecycle_observer.dart';
 import 'package:hoplixi/shared/widgets/watchers/shortcut_watcher.dart';
 import 'package:hoplixi/shared/widgets/watchers/tray_watcher.dart';
+import 'package:typed_prefs/typed_prefs.dart';
 import 'package:universal_platform/universal_platform.dart';
 
 class App extends ConsumerStatefulWidget {
@@ -55,8 +56,8 @@ class _AppState extends ConsumerState<App> {
     super.initState();
 
     _initialThemeModeFuture = () async {
-      final storage = getIt.get<AppStorageService>();
-      final savedMode = await storage.get(AppKeys.themeMode);
+      final storage = getIt.get<PreferencesService>().settingsPrefs;
+      final savedMode = await storage.getThemeMode();
       return _parseThemeMode(savedMode);
     }();
 

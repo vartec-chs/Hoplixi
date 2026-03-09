@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:path/path.dart' as path;
+import 'package:typed_prefs/typed_prefs.dart';
 
-import '../app_preferences/app_preference_keys.dart';
-import '../app_preferences/app_storage_service.dart';
 import '../logger/index.dart';
 import 'launch_at_startup_service.dart';
 
@@ -32,7 +32,7 @@ class InstallConfigService {
   /// Вызовите один раз при запуске приложения после инициализации DI.
   /// Безопасно вызывать повторно: если файл отсутствует — ничего не происходит.
   static Future<void> applyIfPresent({
-    required AppStorageService storage,
+    required PreferencesService storage,
     required LaunchAtStartupService launchAtStartupService,
   }) async {
     if (!Platform.isWindows) {
@@ -100,7 +100,7 @@ class InstallConfigService {
   /// Применяет язык из конфига, если ключ ещё не задан.
   static Future<void> _applyLanguage(
     Map<String, dynamic> json,
-    AppStorageService storage,
+    PreferencesService storage,
   ) async {
     final rawLang = json['lang'];
     if (rawLang is! String || rawLang.isEmpty) {
@@ -108,7 +108,7 @@ class InstallConfigService {
     }
 
     // Уже задан пользователем — не перезаписываем
-    final existing = await storage.getString(AppKeys.language);
+    final existing = await storage.settingsPrefs.language.get();
     if (existing != null) {
       return;
     }
@@ -116,14 +116,14 @@ class InstallConfigService {
     // Inno Setup возвращает полное имя языка ('russian', 'english' и т.д.).
     // Приводим к двухбуквенному коду ISO 639-1.
     final langCode = _normalizeLanguageCode(rawLang);
-    await storage.setString(AppKeys.language, langCode);
+    await storage.settingsPrefs.language.set(langCode);
     _log.info('Язык установлен из install_config.json: $langCode');
   }
 
   /// Применяет настройку автозапуска из конфига, если ключ ещё не задан.
   static Future<void> _applyAutorun(
     Map<String, dynamic> json,
-    AppStorageService storage,
+    PreferencesService storage,
     LaunchAtStartupService launchAtStartupService,
   ) async {
     final rawAutorun = json['autorun'];
@@ -138,12 +138,12 @@ class InstallConfigService {
     }
 
     // Уже задан пользователем — не перезаписываем
-    final existing = await storage.getBool(AppKeys.launchAtStartupEnabled);
+    final existing = await storage.settingsPrefs.launchAtStartupEnabled.get();
     if (existing != null) {
       return;
     }
 
-    await storage.setBool(AppKeys.launchAtStartupEnabled, autorunEnabled);
+    await storage.settingsPrefs.launchAtStartupEnabled.set(autorunEnabled);
 
     if (autorunEnabled) {
       await launchAtStartupService.setEnabled(true);

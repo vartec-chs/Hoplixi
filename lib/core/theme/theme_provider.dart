@@ -2,8 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/app_preferences/app_preferences.dart';
+import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/di_init.dart';
+import 'package:typed_prefs/typed_prefs.dart';
 
 final themeProvider = AsyncNotifierProvider<ThemeProvider, ThemeMode>(
   ThemeProvider.new,
@@ -14,14 +15,15 @@ class ThemeProvider extends AsyncNotifier<ThemeMode> {
   FutureOr<ThemeMode> build() async {
     state = const AsyncValue.loading();
     try {
-      final storage = getIt.get<AppStorageService>();
-      String? themeMode = await storage.get(AppKeys.themeMode);
-      if (themeMode == 'light') {
-        state = const AsyncData(ThemeMode.light);
-        return ThemeMode.light;
-      } else if (themeMode == 'dark') {
-        state = const AsyncData(ThemeMode.dark);
-        return ThemeMode.dark;
+      final storage = getIt.get<PreferencesService>();
+      final themeMode = await storage.settingsPrefs.themeMode.get();
+      if (themeMode != null) {
+        final mode = ThemeMode.values.firstWhere(
+          (e) => e.name == themeMode,
+          orElse: () => ThemeMode.system,
+        );
+        state = AsyncData(mode);
+        return mode;
       } else {
         state = const AsyncData(ThemeMode.system);
         return ThemeMode.system;
@@ -35,13 +37,13 @@ class ThemeProvider extends AsyncNotifier<ThemeMode> {
   /// Сохраняет текущую тему в SharedPreferences
   Future<void> _saveTheme(ThemeMode themeMode) async {
     try {
-      final storage = getIt.get<AppStorageService>();
+      final storage = getIt.get<PreferencesService>();
       if (themeMode == ThemeMode.light) {
-        await storage.set(AppKeys.themeMode, 'light');
+        await storage.settingsPrefs.themeMode.set(ThemeMode.light.name);
       } else if (themeMode == ThemeMode.dark) {
-        await storage.set(AppKeys.themeMode, 'dark');
+        await storage.settingsPrefs.themeMode.set(ThemeMode.dark.name);
       } else {
-        await storage.set(AppKeys.themeMode, 'system');
+        await storage.settingsPrefs.themeMode.set(ThemeMode.system.name);
       }
     } catch (e) {
       // logError(
