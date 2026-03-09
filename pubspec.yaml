@@ -133,7 +133,7 @@ dependencies:
   slang: ^4.13.0
   connectivity_plus: ^7.0.0
   typed_prefs:
-    version: ^1.0.3
+    version: ^1.0.4
     git: https://github.com/vartec-chs/typed_prefs_flutter
 
 hooks:

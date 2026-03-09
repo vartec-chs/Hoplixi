@@ -92,7 +92,15 @@ class SecuritySettingsSection extends ConsumerWidget {
           leading: const Icon(Icons.fingerprint),
           value: biometricEnabled,
           onChanged: (value) =>
-              getIt<PreferencesService>().authPrefs.setBiometricEnabled(value),
+              getIt<PreferencesService>().authPrefs.setBiometricEnabled(
+                value,
+                onWriteError: (failure) {
+                  Toaster.error(
+                    title: 'Не удалось обновить настройку',
+                    description: failure.error.toString(),
+                  );
+                },
+              ),
         ),
         const Divider(height: 1),
         SettingsTile(
