@@ -4,7 +4,7 @@ part 'auth_prefs.g.dart';
 
 @Prefs(protected: true)
 class AuthPrefs {
-  @Pref(defaultValue: false)
+  @Pref(defaultValue: false, writePolicy: 'biometric')
   static const biometricEnabled = PrefKey<bool>();
 
   static const pinCode = PrefKey<String>();

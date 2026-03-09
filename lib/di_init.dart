@@ -6,6 +6,8 @@ import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:typed_prefs/typed_prefs.dart';
 
+import './core/app_prefs/app_prefs.dart';
+
 final getIt = GetIt.instance;
 
 Future<void> setupDI() async {
@@ -16,14 +18,16 @@ Future<void> setupDI() async {
   getIt.registerSingleton<SharedPreferences>(sharedPreferencesService);
 
   // Инициализация LocalAuthentication и LocalAuthService (до AppStorageService)
-  getIt.registerLazySingleton<LocalAuthentication>(() => LocalAuthentication());
-  final localAuthService = LocalAuthService(LocalAuthentication());
+  final localAuth = LocalAuthentication();
+  getIt.registerLazySingleton<LocalAuthentication>(() => localAuth);
+  final localAuthService = LocalAuthService(localAuth);
   getIt.registerSingleton<LocalAuthService>(localAuthService);
 
   // Инициализация унифицированного сервиса хранения с поддержкой биометрии
   final appStorageService = await PreferencesService.initialize(
     secureStorage: secureStorage,
     sharedPreferences: sharedPreferencesService,
+    writePolicies: {'biometric': BiometricAuthPolicy(localAuth)},
   );
 
   getIt.registerSingleton<PreferencesService>(appStorageService);

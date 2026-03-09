@@ -1,3 +1,4 @@
+import 'package:local_auth/local_auth.dart';
 import "package:typed_prefs/typed_prefs.dart";
 
 import 'auth_prefs.dart';
@@ -12,3 +13,27 @@ class AppPrefs {
   static const system = PrefGroupKey<SystemPrefs>();
   static const auth = PrefGroupKey<AuthPrefs>();
 }
+
+class BiometricAuthPolicy implements PreferenceWritePolicy {
+  final LocalAuthentication _auth;
+  final String localizedReason;
+
+  const BiometricAuthPolicy(
+    this._auth, {
+    this.localizedReason = 'Authenticate to change secure settings',
+  });
+
+  @override
+  Future<void> authorize<T>(PreferenceWriteRequest<T> request) async {
+    final authenticated = await _auth.authenticate(
+      localizedReason: localizedReason,
+    );
+    if (!authenticated) {
+      throw const PreferenceWriteDeniedException(
+        'Biometric authentication failed or was cancelled.',
+      );
+    }
+  }
+}
+
+
