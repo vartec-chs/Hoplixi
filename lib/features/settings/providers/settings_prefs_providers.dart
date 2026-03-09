@@ -1,0 +1,48 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/core/app_prefs/auth_prefs.dart';
+import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
+import 'package:hoplixi/core/app_prefs/system_prefs.dart';
+import 'package:hoplixi/di_init.dart';
+import 'package:typed_prefs/typed_prefs.dart';
+
+final launchAtStartupEnabledProvider = StreamProvider<bool>(
+  (ref) =>
+      getIt<PreferencesService>().settingsPrefs.watchLaunchAtStartupEnabled(),
+);
+
+final autoLockTimeoutProvider = StreamProvider<int>(
+  (ref) => getIt<PreferencesService>().settingsPrefs.watchAutoLockTimeout(),
+);
+
+final biometricEnabledProvider = StreamProvider<bool>(
+  (ref) => getIt<PreferencesService>().authPrefs.watchBiometricEnabled(),
+);
+
+final autoSyncEnabledProvider = StreamProvider<bool>(
+  (ref) => getIt<PreferencesService>().settingsPrefs.watchAutoSyncEnabled(),
+);
+
+final lastSyncTimeProvider = StreamProvider<int?>(
+  (ref) => getIt<PreferencesService>().systemPrefs.watchLastSyncTime(),
+);
+
+final autoBackupEnabledProvider = StreamProvider<bool>(
+  (ref) => getIt<PreferencesService>().settingsPrefs.watchAutoBackupEnabled(),
+);
+
+final backupPathProvider = StreamProvider<String?>(
+  (ref) => getIt<PreferencesService>().settingsPrefs.watchBackupPath(),
+);
+
+final backupScopeProvider = StreamProvider<String?>(
+  (ref) => getIt<PreferencesService>().settingsPrefs.watchBackupScope(),
+);
+
+final backupIntervalMinutesProvider = StreamProvider<int>(
+  (ref) =>
+      getIt<PreferencesService>().settingsPrefs.watchBackupIntervalMinutes(),
+);
+
+final backupMaxPerStoreProvider = StreamProvider<int>(
+  (ref) => getIt<PreferencesService>().settingsPrefs.watchBackupMaxPerStore(),
+);

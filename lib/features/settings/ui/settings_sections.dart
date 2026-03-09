@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_prefs/auth_prefs.dart';
+import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/services/services.dart';
 import 'package:hoplixi/core/theme/theme_switcher.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/di_init.dart';
-import 'package:hoplixi/features/settings/providers/settings_provider.dart';
+import 'package:hoplixi/features/settings/providers/settings_prefs_providers.dart';
 import 'package:hoplixi/features/settings/ui/widgets/settings_section_card.dart';
 import 'package:hoplixi/features/settings/ui/widgets/settings_tile.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
@@ -32,12 +33,9 @@ class GeneralSettingsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider);
-    final notifier = ref.read(settingsProvider.notifier);
     final launchAtStartupService = getIt<LaunchAtStartupService>();
-
     final launchAtStartupEnabled =
-        settings['launch_at_startup_enabled'] as bool? ?? false;
+        ref.watch(launchAtStartupEnabledProvider).value ?? false;
 
     return SettingsSectionCard(
       title: 'Общие',
@@ -63,7 +61,8 @@ class GeneralSettingsSection extends ConsumerWidget {
                 return;
               }
 
-              await notifier.setBool('launch_at_startup_enabled', value);
+              await getIt<PreferencesService>().settingsPrefs
+                  .setLaunchAtStartupEnabled(value);
               Toaster.success(
                 title: value ? 'Автозапуск включен' : 'Автозапуск выключен',
               );
@@ -81,11 +80,8 @@ class SecuritySettingsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider);
-    final notifier = ref.read(settingsProvider.notifier);
-
-    final biometricEnabled = settings['biometric_enabled'] as bool? ?? false;
-    final autoLockTimeout = settings['auto_lock_timeout'] as int? ?? 300;
+    final biometricEnabled = ref.watch(biometricEnabledProvider).value ?? false;
+    final autoLockTimeout = ref.watch(autoLockTimeoutProvider).value ?? 300;
 
     return SettingsSectionCard(
       title: 'Безопасность',
@@ -95,7 +91,8 @@ class SecuritySettingsSection extends ConsumerWidget {
           subtitle: 'Использовать отпечаток пальца или Face ID',
           leading: const Icon(Icons.fingerprint),
           value: biometricEnabled,
-          onChanged: (value) => notifier.setBool('biometric_enabled', value),
+          onChanged: (value) =>
+              getIt<PreferencesService>().authPrefs.setBiometricEnabled(value),
         ),
         const Divider(height: 1),
         SettingsTile(
@@ -103,8 +100,7 @@ class SecuritySettingsSection extends ConsumerWidget {
           subtitle: _formatTimeout(autoLockTimeout),
           leading: const Icon(Icons.lock_clock),
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-          onTap: () =>
-              _showTimeoutDialog(context, ref, notifier, autoLockTimeout),
+          onTap: () => _showTimeoutDialog(context, autoLockTimeout),
         ),
         // const Divider(height: 1),
         // SettingsTile(
@@ -112,7 +108,7 @@ class SecuritySettingsSection extends ConsumerWidget {
         //   subtitle: 'Установить новый PIN-код',
         //   leading: const Icon(Icons.pin),
         //   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        //   onTap: () => _showChangePinDialog(context, ref, notifier),
+        // onTap: () => _showChangePinDialog(context),
         // ),
       ],
     );
@@ -127,8 +123,6 @@ class SecuritySettingsSection extends ConsumerWidget {
 
   Future<void> _showTimeoutDialog(
     BuildContext context,
-    WidgetRef ref,
-    SettingsNotifier notifier,
     int currentTimeout,
   ) async {
     final timeouts = {
@@ -159,15 +153,13 @@ class SecuritySettingsSection extends ConsumerWidget {
     );
 
     if (result != null) {
-      await notifier.setInt('auto_lock_timeout', result);
+      await getIt<PreferencesService>().settingsPrefs.setAutoLockTimeout(
+        result,
+      );
     }
   }
 
-  Future<void> _showChangePinDialog(
-    BuildContext context,
-    WidgetRef ref,
-    SettingsNotifier notifier,
-  ) async {
+  Future<void> _showChangePinDialog(BuildContext context) async {
     final controller = TextEditingController();
 
     final result = await showDialog<String>(
@@ -221,11 +213,8 @@ class SyncSettingsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider);
-    final notifier = ref.read(settingsProvider.notifier);
-
-    final autoSyncEnabled = settings['auto_sync_enabled'] as bool? ?? false;
-    final lastSyncTime = settings['last_sync_time'] as int?;
+    final autoSyncEnabled = ref.watch(autoSyncEnabledProvider).value ?? false;
+    final lastSyncTime = ref.watch(lastSyncTimeProvider).value;
 
     return SettingsSectionCard(
       title: 'Синхронизация',
@@ -235,7 +224,8 @@ class SyncSettingsSection extends ConsumerWidget {
           subtitle: 'Синхронизировать данные автоматически',
           leading: const Icon(Icons.sync),
           value: autoSyncEnabled,
-          onChanged: (value) => notifier.setBool('auto_sync_enabled', value),
+          onChanged: (value) => getIt<PreferencesService>().settingsPrefs
+              .setAutoSyncEnabled(value),
         ),
         if (lastSyncTime != null) ...[
           const Divider(height: 1),
@@ -298,17 +288,16 @@ class BackupSettingsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider);
-    final notifier = ref.read(settingsProvider.notifier);
     final mainStoreNotifier = ref.read(mainStoreProvider.notifier);
 
-    final autoBackupEnabled = settings['auto_backup_enabled'] as bool? ?? false;
-    final backupPath = settings['backup_path'] as String?;
-    final backupScopeRaw = settings['backup_scope'] as String?;
+    final autoBackupEnabled =
+        ref.watch(autoBackupEnabledProvider).value ?? false;
+    final backupPath = ref.watch(backupPathProvider).value;
+    final backupScopeRaw = ref.watch(backupScopeProvider).value;
     final backupScope = _parseScope(backupScopeRaw);
     final backupIntervalMinutes =
-        settings['backup_interval_minutes'] as int? ?? 360;
-    final backupMaxPerStore = settings['backup_max_per_store'] as int? ?? 10;
+        ref.watch(backupIntervalMinutesProvider).value ?? 360;
+    final backupMaxPerStore = ref.watch(backupMaxPerStoreProvider).value ?? 10;
 
     return SettingsSectionCard(
       title: 'Резервное копирование',
@@ -319,7 +308,8 @@ class BackupSettingsSection extends ConsumerWidget {
           leading: const Icon(Icons.backup),
           value: autoBackupEnabled,
           onChanged: (value) async {
-            await notifier.setBool('auto_backup_enabled', value);
+            await getIt<PreferencesService>().settingsPrefs
+                .setAutoBackupEnabled(value);
 
             if (value) {
               mainStoreNotifier.startPeriodicBackup(
@@ -344,7 +334,6 @@ class BackupSettingsSection extends ConsumerWidget {
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
           onTap: () => _showBackupScopeDialog(
             context,
-            notifier,
             mainStoreNotifier,
             backupScope,
             autoBackupEnabled,
@@ -361,7 +350,6 @@ class BackupSettingsSection extends ConsumerWidget {
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
           onTap: () => _showBackupIntervalDialog(
             context,
-            notifier,
             mainStoreNotifier,
             backupIntervalMinutes,
             autoBackupEnabled,
@@ -378,7 +366,6 @@ class BackupSettingsSection extends ConsumerWidget {
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
           onTap: () => _showBackupMaxCountDialog(
             context,
-            notifier,
             mainStoreNotifier,
             backupMaxPerStore,
             autoBackupEnabled,
@@ -395,7 +382,6 @@ class BackupSettingsSection extends ConsumerWidget {
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
           onTap: () => _showBackupPathDialog(
             context,
-            notifier,
             mainStoreNotifier,
             autoBackupEnabled,
             backupIntervalMinutes,
@@ -448,7 +434,6 @@ class BackupSettingsSection extends ConsumerWidget {
 
   Future<void> _showBackupScopeDialog(
     BuildContext context,
-    SettingsNotifier notifier,
     MainStoreAsyncNotifier mainStoreNotifier,
     BackupScope currentScope,
     bool autoBackupEnabled,
@@ -478,7 +463,7 @@ class BackupSettingsSection extends ConsumerWidget {
 
     if (result == null) return;
 
-    await notifier.setString('backup_scope', result.name);
+    await getIt<PreferencesService>().settingsPrefs.setBackupScope(result.name);
 
     if (autoBackupEnabled) {
       mainStoreNotifier.startPeriodicBackup(
@@ -493,7 +478,6 @@ class BackupSettingsSection extends ConsumerWidget {
 
   Future<void> _showBackupIntervalDialog(
     BuildContext context,
-    SettingsNotifier notifier,
     MainStoreAsyncNotifier mainStoreNotifier,
     int currentIntervalMinutes,
     bool autoBackupEnabled,
@@ -523,7 +507,9 @@ class BackupSettingsSection extends ConsumerWidget {
 
     if (result == null) return;
 
-    await notifier.setInt('backup_interval_minutes', result);
+    await getIt<PreferencesService>().settingsPrefs.setBackupIntervalMinutes(
+      result,
+    );
 
     if (autoBackupEnabled) {
       mainStoreNotifier.startPeriodicBackup(
@@ -538,7 +524,6 @@ class BackupSettingsSection extends ConsumerWidget {
 
   Future<void> _showBackupMaxCountDialog(
     BuildContext context,
-    SettingsNotifier notifier,
     MainStoreAsyncNotifier mainStoreNotifier,
     int currentMaxCount,
     bool autoBackupEnabled,
@@ -568,7 +553,9 @@ class BackupSettingsSection extends ConsumerWidget {
 
     if (result == null) return;
 
-    await notifier.setInt('backup_max_per_store', result);
+    await getIt<PreferencesService>().settingsPrefs.setBackupMaxPerStore(
+      result,
+    );
 
     if (autoBackupEnabled) {
       mainStoreNotifier.startPeriodicBackup(
@@ -583,7 +570,6 @@ class BackupSettingsSection extends ConsumerWidget {
 
   Future<void> _showBackupPathDialog(
     BuildContext context,
-    SettingsNotifier notifier,
     MainStoreAsyncNotifier mainStoreNotifier,
     bool autoBackupEnabled,
     int backupIntervalMinutes,
@@ -625,7 +611,7 @@ class BackupSettingsSection extends ConsumerWidget {
     );
 
     if (result != null && result.isNotEmpty) {
-      await notifier.setString('backup_path', result);
+      await getIt<PreferencesService>().settingsPrefs.setBackupPath(result);
 
       if (autoBackupEnabled) {
         mainStoreNotifier.startPeriodicBackup(

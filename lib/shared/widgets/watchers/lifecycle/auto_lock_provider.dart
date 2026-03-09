@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/settings/providers/settings_provider.dart';
+import 'package:hoplixi/features/settings/providers/settings_prefs_providers.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 import 'package:hoplixi/shared/widgets/watchers/lifecycle/app_lifecycle_provider.dart';
 
@@ -41,13 +41,12 @@ class AutoLockNotifier extends Notifier<AutoLockState> {
   @override
   AutoLockState build() {
     // Загружаем таймаут из настроек
-    final settings = ref.watch(settingsProvider);
-    final timeout = settings['auto_lock_timeout'] as int? ?? 300;
+    final timeout = ref.watch(autoLockTimeoutProvider).value ?? 300;
 
     // Слушаем изменения настроек таймаута
-    ref.listen(settingsProvider, (previous, next) {
-      final newTimeout = next['auto_lock_timeout'] as int? ?? 300;
-      final oldTimeout = previous?['auto_lock_timeout'] as int? ?? 300;
+    ref.listen(autoLockTimeoutProvider, (previous, next) {
+      final newTimeout = next.value ?? 300;
+      final oldTimeout = previous?.value ?? 300;
 
       if (newTimeout != oldTimeout) {
         logInfo(
