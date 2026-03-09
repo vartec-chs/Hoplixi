@@ -424,14 +424,129 @@ Global Riverpod providers for app-wide state.
 - **AppLifecycleProvider** - Riverpod provider for lifecycle state
 - **AutoLockProvider** - Auto-lock functionality based on inactivity
 
-### App Preferences (`core/app_preferences/`)
+### App Preferences (`core/app_prefs/`)
 
-Unified storage service for SharedPreferences and FlutterSecureStorage:
+Built on `typed_prefs` — type-safe, code-generated preferences layer over
+`SharedPreferences` and `flutter_secure_storage`.
 
-- Use `AppKey` with `isProtected: false` for SharedPreferences
-- Use `AppKey` with `isProtected: true` for FlutterSecureStorage
-- `AppPreferenceKeys` - Predefined keys for app settings
-- `AppStorageService` - Unified service for reading/writing preferences
+**Initialization** — call once before `runApp()`:
+
+```dart
+await PreferencesService.initialize(
+  writePolicies: {'biometric': BiometricAuthPolicy(LocalAuthentication())},
+);
+```
+
+**Access** — use `PreferencesService.instance` anywhere after initialization:
+
+```dart
+final prefs = PreferencesService.instance.appPrefs;
+```
+
+**Groups:**
+
+| Group            | Class           | Storage                  | Write policy |
+| ---------------- | --------------- | ------------------------ | ------------ |
+| `prefs.auth`     | `AuthPrefs`     | `flutter_secure_storage` | `biometric`  |
+| `prefs.settings` | `SettingsPrefs` | `SharedPreferences`      | —            |
+| `prefs.system`   | `SystemPrefs`   | `SharedPreferences`      | —            |
+
+**`AuthPrefs`** (all keys protected + `biometric` write policy):
+
+- `biometricEnabled` — `bool`, default `false`
+- `pinCode` — `String?`
+- `pinAttempts` — `int`, default `0`
+
+**`SettingsPrefs`**:
+
+- `themeMode` — `ThemeMode`, default `ThemeMode.system`
+- `language` — `String?`
+- `launchAtStartupEnabled` — `bool`, default `false`
+- `autoLockTimeout` — `int` (seconds), default `0`
+- `autoSyncEnabled` — `bool`, default `false`
+- `autoBackupEnabled` — `bool`, default `false`
+- `backupPath` — `String?`
+- `backupScope` — `String?`
+- `backupIntervalMinutes` — `int`, default `60`
+- `backupMaxPerStore` — `int`, default `10`
+
+**`SystemPrefs`**:
+
+- `isFirstLaunch` — `bool`, default `true`
+- `setupCompleted` — `bool`, default `false`
+- `lastSyncTime` — `int?` (Unix ms)
+
+**Usage examples:**
+
+```dart
+final prefs = PreferencesService.instance.appPrefs;
+
+// Read
+final theme = await prefs.settings.getThemeMode();
+final isFirst = await prefs.system.getIsFirstLaunch();
+
+// Write (triggers biometric policy for auth group)
+await prefs.auth.setBiometricEnabled(true);
+await prefs.settings.setThemeMode(ThemeMode.dark);
+
+// Reactive
+prefs.settings.watchThemeMode().listen((mode) { ... });
+```
+
+**Adding or modifying keys:**
+
+1. Edit the corresponding `*_prefs.dart` file
+2. Run `dart run build_runner build --delete-conflicting-outputs`
+3. The generated `*.g.dart` file is updated automatically — do not edit it
+   manually
+
+**Write policies** — runtime guards registered at initialization:
+
+- `'biometric'` — requires `LocalAuthentication` confirmation before any
+  `set`/`remove` on keys that declare `writePolicy: 'biometric'`
+- Declare at class level via `@Prefs(writePolicy: 'biometric')` or per-key via
+  `@Pref(writePolicy: 'biometric')`
+
+Когда ключ или группа имеют `writePolicy`, кодогенератор добавляет
+необязательный параметр `PreferenceWriteErrorCallback? onWriteError` ко всем
+методам `set*` и `remove*`:
+
+```dart
+Future<void> setBiometricEnabled(
+  bool value, {
+  PreferenceWriteErrorCallback? onWriteError,
+}) => biometricEnabled.set(value, onWriteError: onWriteError);
+```
+
+Обработка варианта отказа политики:
+
+- **`onWriteError` передан** — колбэк вызывается с объектом
+  `PreferenceWriteDeniedException`, исключение не пробрасывается дальше.
+- **`onWriteError` не передан** — метод выбрасывает
+  `PreferenceWriteDeniedException` в await-точке, который необходимо
+  перехватить.
+
+```dart
+// ✅ Через колбэк — удобно в UI
+await prefs.auth.setBiometricEnabled(
+  true,
+  onWriteError: (error) {
+    Toaster.error(title: 'Требуется аутентификация');
+  },
+);
+
+// ✅ Через try/catch — удобно в провайдерах/сервисах
+try {
+  await prefs.auth.setBiometricEnabled(true);
+} on PreferenceWriteDeniedException catch (e) {
+  // пользователь отменил биометрию или аутентификация не прошла
+  logWarning('setBiometricEnabled denied: $e');
+}
+```
+
+Если политика не зарегистрирована в `PreferencesService.initialize()`, то
+`set`/`remove` также выбрасывает исключение — убедитесь, что все используемые
+политики переданы при инициализации.
 
 ### Theme (`core/theme/`)
 
