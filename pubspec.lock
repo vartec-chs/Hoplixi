@@ -763,10 +763,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_riverpod
-      sha256: e2026c72738a925a60db30258ff1f29974e40716749f3c9850aabf34ffc1a14c
+      sha256: "4e166be88e1dbbaa34a280bdb744aeae73b7ef25fdf8db7a3bb776760a3648e2"
       url: "https://pub.dev"
     source: hosted
-    version: "3.2.1"
+    version: "3.3.1"
   flutter_rust_bridge:
     dependency: "direct main"
     description:
@@ -877,10 +877,10 @@ packages:
     dependency: "direct main"
     description:
       name: font_awesome_flutter
-      sha256: b9011df3a1fa02993630b8fb83526368cf2206a711259830325bab2f1d2a4eb0
+      sha256: "09dcde8ab90ffae1a7d65ff2ef96fc62a17ad9d0ce7c127b317ded676b0d5935"
       url: "https://pub.dev"
     source: hosted
-    version: "10.12.0"
+    version: "11.0.0"
   freezed:
     dependency: "direct dev"
     description:
@@ -1898,10 +1898,10 @@ packages:
     dependency: "direct main"
     description:
       name: result_dart
-      sha256: "0666b21fbdf697b3bdd9986348a380aa204b3ebe7c146d8e4cdaa7ce735e6054"
+      sha256: "80096f0928e276c024e53cf1bb2aaffd5a94623dac8fdfa5cb3529e82b51eb3c"
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.1"
+    version: "2.2.0"
   riverpod:
     dependency: transitive
     description:
@@ -2166,10 +2166,10 @@ packages:
     dependency: "direct main"
     description:
       name: sqlite3
-      sha256: b7cf6b37667f6a921281797d2499ffc60fb878b161058d422064f0ddc78f6aa6
+      sha256: f8f8ba7f9454f2761d4b416e030c4528ebc45e9290798d848f4dc08890c42a7c
       url: "https://pub.dev"
     source: hosted
-    version: "3.1.6"
+    version: "3.1.7"
   sqlparser:
     dependency: transitive
     description:
@@ -2290,6 +2290,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+  typed_prefs:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "76cc6332374a7d5fc87dab2a9992431e8c06813c"
+      url: "https://github.com/vartec-chs/typed_prefs_flutter"
+    source: git
+    version: "1.0.1"
   universal_platform:
     dependency: "direct main"
     description:
