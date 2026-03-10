@@ -80,6 +80,9 @@ class _FloatingNavBarState extends State<FloatingNavBar>
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(kFloatingNavBarBorderRadius),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.18),
+        ),
         boxShadow: [
           BoxShadow(
             color: Theme.of(

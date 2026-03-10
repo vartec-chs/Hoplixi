@@ -91,6 +91,11 @@ class _MobileDashboardLayoutState extends State<MobileDashboardLayout>
   void didUpdateWidget(covariant MobileDashboardLayout oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.uri != widget.uri) {
+      // Не анимируем при переключении между сущностями
+      // (/dashboard/:entityA → /dashboard/:entityB).
+      final entityChanged = oldWidget.entity != widget.entity;
+      if (entityChanged) return;
+
       // Сброс opacity и запуск fade-in при смене маршрута.
       _fadeController.value = 0.0;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -125,7 +130,10 @@ class _MobileDashboardLayoutState extends State<MobileDashboardLayout>
           Positioned.fill(
             child: FadeTransition(
               opacity: _fadeController,
-              child: widget.child,
+              child: KeyedSubtree(
+                key: ValueKey(widget.uri),
+                child: widget.child,
+              ),
             ),
           ),
 

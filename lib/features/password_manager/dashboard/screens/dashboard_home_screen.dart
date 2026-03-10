@@ -384,41 +384,43 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
           _showCloseDatabaseDialog();
         }
       },
-      child: RefreshIndicator(
-        onRefresh: () => ref
-            .read(paginatedListProvider(widget.entityType).notifier)
-            .refresh(),
-        child: CustomScrollView(
-          controller: _scrollController,
-          slivers: [
-            DashboardSliverAppBar(
-              entityType: widget.entityType,
-              expandedHeight: 176.0,
-              collapsedHeight: 60.0,
-              pinned: true,
-              floating: false,
-              snap: false,
-              showEntityTypeSelector: true,
-              onMenuPressed: !disableAppBarMenu
-                  ? null
-                  : () {
-                      final scope = DashboardDrawerScope.of(context);
-                      if (scope != null) {
-                        scope.openDrawer();
-                      } else {
-                        Scaffold.of(context).openDrawer();
-                      }
-                    },
-            ),
-            SliverToBoxAdapter(
-              child: DashboardListToolBar(
+      child: Scaffold(
+        body: RefreshIndicator(
+          onRefresh: () => ref
+              .read(paginatedListProvider(widget.entityType).notifier)
+              .refresh(),
+          child: CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              DashboardSliverAppBar(
                 entityType: widget.entityType,
-                viewMode: viewMode,
-                listState: asyncValue,
+                expandedHeight: 176.0,
+                collapsedHeight: 60.0,
+                pinned: true,
+                floating: false,
+                snap: false,
+                showEntityTypeSelector: true,
+                onMenuPressed: !disableAppBarMenu
+                    ? null
+                    : () {
+                        final scope = DashboardDrawerScope.of(context);
+                        if (scope != null) {
+                          scope.openDrawer();
+                        } else {
+                          Scaffold.of(context).openDrawer();
+                        }
+                      },
               ),
-            ),
-            _buildContentSliver(asyncValue, viewMode),
-          ],
+              SliverToBoxAdapter(
+                child: DashboardListToolBar(
+                  entityType: widget.entityType,
+                  viewMode: viewMode,
+                  listState: asyncValue,
+                ),
+              ),
+              _buildContentSliver(asyncValue, viewMode),
+            ],
+          ),
         ),
       ),
     );
