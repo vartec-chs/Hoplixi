@@ -7,6 +7,8 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
+import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_viewer.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Экран просмотра пароля (только чтение, с возможностью копирования)
@@ -26,6 +28,7 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
   String? _categoryName;
   List<String> _tagNames = [];
   String? _noteName;
+  List<CustomFieldEntry> _customFields = [];
 
   @override
   void initState() {
@@ -76,6 +79,14 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
       if (mounted && noteRecord != null) {
         setState(() => _noteName = noteRecord.$1.name);
       }
+    }
+
+    final customFieldDao = await ref.read(customFieldDaoProvider.future);
+    final rows = await customFieldDao.getByItemId(widget.passwordId);
+    if (mounted) {
+      setState(
+        () => _customFields = rows.map(CustomFieldEntry.fromData).toList(),
+      );
     }
   }
 
@@ -145,7 +156,12 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
                       () => _copy(_password!.$2.url!, 'URL'),
                     ),
                   if (_categoryName != null)
-                    _info(theme, LucideIcons.folder, 'Категория', _categoryName!),
+                    _info(
+                      theme,
+                      LucideIcons.folder,
+                      'Категория',
+                      _categoryName!,
+                    ),
                   if (_tagNames.isNotEmpty) _tags(theme),
                   if (_password!.$1.description?.isNotEmpty ?? false)
                     _info(
@@ -156,6 +172,11 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
                     ),
                   if (_noteName != null)
                     _info(theme, LucideIcons.stickyNote, 'Заметка', _noteName!),
+                  if (_customFields.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    CustomFieldsViewer(fields: _customFields),
+                    const SizedBox(height: 12),
+                  ],
                   const SizedBox(height: 24),
                   FilledButton.icon(
                     onPressed: _edit,

@@ -4,6 +4,8 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/dto/password_dto.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
 import '../models/password_form_state.dart';
 
@@ -50,6 +52,8 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
       final otpDao = await ref.read(otpDaoProvider.future);
       final linkedOtp = await otpDao.getByPasswordItemId(passwordId);
 
+      final customFields = await loadCustomFields(ref, passwordId);
+
       state = PasswordFormState(
         isEditMode: true,
         editingPasswordId: passwordId,
@@ -66,6 +70,7 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
         tagNames: tagRecords.map((tag) => tag.name).toList(),
         otpId: linkedOtp?.$1.id,
         otpName: linkedOtp?.$1.name ?? linkedOtp?.$2.accountName,
+        customFields: customFields,
         isLoading: false,
       );
     } catch (e, stack) {
@@ -116,6 +121,11 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
   /// Обновить поле description
   void setDescription(String value) {
     state = state.copyWith(description: value);
+  }
+
+  /// Обновить кастомные поля
+  void setCustomFields(List<CustomFieldEntry> fields) {
+    state = state.copyWith(customFields: fields);
   }
 
   /// Обновить поле noteId
@@ -271,6 +281,11 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
           final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
           await vaultItemDao.syncTags(state.editingPasswordId!, state.tagIds);
           await _updateOtpLink(state.editingPasswordId!);
+          await saveCustomFields(
+            ref,
+            state.editingPasswordId!,
+            state.customFields,
+          );
 
           logInfo('Password updated: ${state.editingPasswordId}', tag: _logTag);
           state = state.copyWith(isSaving: false, isSaved: true);
@@ -311,6 +326,7 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
 
         final passwordId = await dao.createPassword(dto);
         await _updateOtpLink(passwordId);
+        await saveCustomFields(ref, passwordId, state.customFields);
 
         logInfo('Password created: $passwordId', tag: _logTag);
         state = state.copyWith(isSaving: false, isSaved: true);

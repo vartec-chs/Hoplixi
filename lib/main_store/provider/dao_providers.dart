@@ -219,6 +219,10 @@ final documentFilterDaoProvider = FutureProvider<DocumentFilterDao>(
   (ref) => _ensureDao(ref, (store) => DocumentFilterDao(store)),
 );
 
+final customFieldDaoProvider = FutureProvider<CustomFieldDao>(
+  (ref) => _ensureDao(ref, (store) => CustomFieldDao(store)),
+);
+
 final vaultItemDaoProvider = FutureProvider<VaultItemDao>(
   (ref) => _ensureDao(ref, (store) => VaultItemDao(store)),
 );
