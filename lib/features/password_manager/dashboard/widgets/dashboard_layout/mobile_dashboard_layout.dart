@@ -3,6 +3,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/dashboard_drawer.dart';
 import 'package:universal_platform/universal_platform.dart';
 
+import 'dashboard_drawer_scope.dart';
 import 'dashboard_layout_constants.dart';
 import 'widgets/fab_builder.dart';
 import 'widgets/floating_nav_bar.dart';
@@ -16,6 +17,13 @@ import 'widgets/floating_nav_bar.dart';
 /// При смене маршрута контент плавно появляется через fade-in анимацию.
 /// Используется fade-in-only (без crossfade), чтобы избежать конфликтов
 /// GlobalKey — в дереве всегда только один экземпляр child.
+///
+/// **Архитектура:** Navigator content размещён ВНЕ Scaffold.body, чтобы
+/// избежать вложенных `_RenderLayoutBuilder` (Scaffold._BodyBuilder).
+/// Дочерние экраны (form/view) имеют свои Scaffold, и если они находятся
+/// внутри внешнего Scaffold.body, при смене маршрута внутренний
+/// `_RenderLayoutBuilder` мутируется во время `performLayout` внешнего,
+/// что вызывает assertion error. Scaffold используется только для drawer.
 class MobileDashboardLayout extends StatefulWidget {
   /// Текущий entity (passwords, notes, etc.)
   final String entity;
@@ -64,6 +72,10 @@ class MobileDashboardLayout extends StatefulWidget {
 class _MobileDashboardLayoutState extends State<MobileDashboardLayout>
     with SingleTickerProviderStateMixin {
   late final AnimationController _fadeController;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  /// Флаг открытости drawer — управляет IgnorePointer на Scaffold-обёртке.
+  bool _isDrawerOpen = false;
 
   @override
   void initState() {
@@ -79,10 +91,11 @@ class _MobileDashboardLayoutState extends State<MobileDashboardLayout>
   void didUpdateWidget(covariant MobileDashboardLayout oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.uri != widget.uri) {
-      // Сброс и запуск fade-in при смене маршрута
-      _fadeController
-        ..value = 0.0
-        ..forward();
+      // Сброс opacity и запуск fade-in при смене маршрута.
+      _fadeController.value = 0.0;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _fadeController.forward();
+      });
     }
   }
 
@@ -92,29 +105,53 @@ class _MobileDashboardLayoutState extends State<MobileDashboardLayout>
     super.dispose();
   }
 
+  void _openDrawer() {
+    _scaffoldKey.currentState?.openDrawer();
+  }
+
   @override
   Widget build(BuildContext context) {
     final systemPadding = MediaQuery.of(context).viewPadding;
 
-    return Scaffold(
-      extendBody: true,
-      drawer: DashboardDrawer(
-        entityType: EntityType.fromId(widget.entity) ?? EntityType.password,
-      ),
-      body: Stack(
+    // DashboardDrawerScope предоставляет openDrawer() потомкам
+    // (в частности DashboardHomeScreen), т.к. Navigator content
+    // находится вне Scaffold и Scaffold.of(context) недоступен.
+    return DashboardDrawerScope(
+      openDrawer: _openDrawer,
+      child: Stack(
         children: [
-          // Контент из роутера с fade-in анимацией при смене маршрута
+          // 1. Navigator content — вне Scaffold.body, чтобы избежать
+          //    вложенных _RenderLayoutBuilder (Scaffold._BodyBuilder).
           Positioned.fill(
             child: FadeTransition(
               opacity: _fadeController,
-              child: KeyedSubtree(
-                key: ValueKey(widget.uri),
-                child: widget.child,
+              child: widget.child,
+            ),
+          ),
+
+          // 2. Scaffold ТОЛЬКО для drawer. Body пустой (SizedBox.expand),
+          //    поэтому его _BodyBuilder._RenderLayoutBuilder не конфликтует
+          //    с _RenderLayoutBuilder дочерних Scaffold-ов в Navigator.
+          //    IgnorePointer когда drawer закрыт — touches проходят к content.
+          Positioned.fill(
+            child: IgnorePointer(
+              ignoring: !_isDrawerOpen,
+              child: Scaffold(
+                key: _scaffoldKey,
+                backgroundColor: Colors.transparent,
+                onDrawerChanged: (isOpen) {
+                  setState(() => _isDrawerOpen = isOpen);
+                },
+                drawer: DashboardDrawer(
+                  entityType:
+                      EntityType.fromId(widget.entity) ?? EntityType.password,
+                ),
+                body: const SizedBox.expand(),
               ),
             ),
           ),
 
-          // Floating bottom navigation bar
+          // 3. Floating bottom navigation bar
           Positioned(
             bottom: UniversalPlatform.isDesktop
                 ? kBottomNavNotchMargin
@@ -152,7 +189,7 @@ class _MobileDashboardLayoutState extends State<MobileDashboardLayout>
             ),
           ),
 
-          // FAB выше floating nav
+          // 4. FAB выше floating nav
           Positioned(
             bottom: widget.showBottomNav && UniversalPlatform.isDesktop
                 ? kFloatingNavFabBottomOffset + kFloatingNavBarHeight + 5

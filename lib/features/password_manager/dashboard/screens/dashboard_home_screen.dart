@@ -12,6 +12,7 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/list_provi
 import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_builders.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/app_bar/app_bar_widgets.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_list_toolbar.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_layout/dashboard_drawer_scope.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -400,7 +401,14 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
               showEntityTypeSelector: true,
               onMenuPressed: !disableAppBarMenu
                   ? null
-                  : () => Scaffold.of(context).openDrawer(),
+                  : () {
+                      final scope = DashboardDrawerScope.of(context);
+                      if (scope != null) {
+                        scope.openDrawer();
+                      } else {
+                        Scaffold.of(context).openDrawer();
+                      }
+                    },
             ),
             SliverToBoxAdapter(
               child: DashboardListToolBar(

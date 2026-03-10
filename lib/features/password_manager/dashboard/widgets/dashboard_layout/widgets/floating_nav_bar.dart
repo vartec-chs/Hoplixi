@@ -92,60 +92,59 @@ class _FloatingNavBarState extends State<FloatingNavBar>
       ),
       child: SizedBox(
         height: kFloatingNavBarHeight,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final totalWidth = constraints.maxWidth;
-            final itemWidth = totalWidth / itemCount;
-
-            return Stack(
-              children: [
-                // Скользящий индикатор с явной анимацией
-                AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, child) {
-                    final position = _positionAnimation.value;
-                    final left =
-                        position * itemWidth +
-                        kSegmentIndicatorHorizontalPadding;
-                    final indicatorWidth =
-                        itemWidth - kSegmentIndicatorHorizontalPadding * 2;
-
-                    return Positioned(
-                      left: left,
-                      top: kSegmentIndicatorVerticalPadding,
-                      bottom: kSegmentIndicatorVerticalPadding,
-                      width: indicatorWidth,
-                      child: child!,
-                    );
-                  },
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer.withValues(
-                        alpha: 0.1,
+        child: Stack(
+          children: [
+            // Скользящий индикатор: Align+FractionallySizedBox вместо
+            // LayoutBuilder+Positioned, чтобы не вызывать markNeedsLayout
+            // в invokeLayoutCallback и не получать _RenderLayoutBuilder-конфликт.
+            AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                final position = _positionAnimation.value;
+                // Выравнивание: левый край индикатора = position * (W / n)
+                // → alignX = 2 * position / (n - 1) - 1 для n > 1.
+                final alignX = itemCount > 1
+                    ? 2.0 * position / (itemCount - 1) - 1.0
+                    : 0.0;
+                return Align(
+                  alignment: Alignment(alignX, 0),
+                  child: FractionallySizedBox(
+                    widthFactor: 1.0 / itemCount,
+                    heightFactor: 1.0,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: kSegmentIndicatorHorizontalPadding,
+                        vertical: kSegmentIndicatorVerticalPadding,
                       ),
-                      borderRadius: BorderRadius.circular(24),
+                      child: child,
                     ),
                   ),
+                );
+              },
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(24),
                 ),
-                // Элементы навигации
-                Row(
-                  children: widget.destinations
-                      .asMap()
-                      .entries
-                      .map(
-                        (entry) => Expanded(
-                          child: FloatingNavItem(
-                            destination: entry.value,
-                            isSelected: widget.selectedIndex == entry.key,
-                            onTap: () => widget.onItemSelected(entry.key),
-                          ),
-                        ),
-                      )
-                      .toList(),
-                ),
-              ],
-            );
-          },
+              ),
+            ),
+            // Элементы навигации
+            Row(
+              children: widget.destinations
+                  .asMap()
+                  .entries
+                  .map(
+                    (entry) => Expanded(
+                      child: FloatingNavItem(
+                        destination: entry.value,
+                        isSelected: widget.selectedIndex == entry.key,
+                        onTap: () => widget.onItemSelected(entry.key),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
         ),
       ),
     );
