@@ -26,6 +26,8 @@ export 'identity_items.dart';
 export 'item_tags.dart';
 export 'license_key_history.dart';
 export 'license_key_items.dart';
+export 'loyalty_card_history.dart';
+export 'loyalty_card_items.dart';
 export 'note_history.dart';
 export 'note_items.dart';
 export 'note_links.dart';
@@ -41,12 +43,12 @@ export 'ssh_key_items.dart';
 export 'store_meta_table.dart';
 export 'store_settings.dart';
 export 'tags.dart';
+// --- Кастомные поля ---
+export 'vault_item_custom_fields.dart';
+export 'vault_item_custom_fields_history.dart';
 // --- История ---
 export 'vault_item_history.dart';
 // --- Базовая таблица ---
 export 'vault_items.dart';
 export 'wifi_history.dart';
 export 'wifi_items.dart';
-
-export 'loyalty_card_items.dart';
-export 'loyalty_card_history.dart';

@@ -7,6 +7,7 @@ import 'package:hoplixi/main_store/dao/category_dao.dart';
 import 'package:hoplixi/main_store/dao/certificate_dao.dart';
 import 'package:hoplixi/main_store/dao/contact_dao.dart';
 import 'package:hoplixi/main_store/dao/crypto_wallet_dao.dart';
+import 'package:hoplixi/main_store/dao/custom_field_dao.dart';
 import 'package:hoplixi/main_store/dao/document_dao.dart';
 import 'package:hoplixi/main_store/dao/file_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/api_key_history_dao.dart';
@@ -14,21 +15,22 @@ import 'package:hoplixi/main_store/dao/history_dao/bank_card_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/certificate_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/contact_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/crypto_wallet_history_dao.dart';
+import 'package:hoplixi/main_store/dao/history_dao/custom_field_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/document_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/file_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/identity_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/license_key_history_dao.dart';
+import 'package:hoplixi/main_store/dao/history_dao/loyalty_card_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/note_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/otp_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/password_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/recovery_codes_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/ssh_key_history_dao.dart';
 import 'package:hoplixi/main_store/dao/history_dao/wifi_history_dao.dart';
-import 'package:hoplixi/main_store/dao/loyalty_card_dao.dart';
-import 'package:hoplixi/main_store/dao/history_dao/loyalty_card_history_dao.dart';
 import 'package:hoplixi/main_store/dao/icon_dao.dart';
 import 'package:hoplixi/main_store/dao/identity_dao.dart';
 import 'package:hoplixi/main_store/dao/license_key_dao.dart';
+import 'package:hoplixi/main_store/dao/loyalty_card_dao.dart';
 import 'package:hoplixi/main_store/dao/note_dao.dart';
 import 'package:hoplixi/main_store/dao/note_link_dao.dart';
 import 'package:hoplixi/main_store/dao/otp_dao.dart';
@@ -76,6 +78,9 @@ part 'main_store.g.dart';
     DocumentPages,
     // --- Теги (единая таблица) ---
     ItemTags,
+    // --- Кастомные поля ---
+    VaultItemCustomFields,
+    VaultItemCustomFieldsHistory,
     // --- Вспомогательные ---
     Categories,
     Tags,
@@ -98,7 +103,7 @@ part 'main_store.g.dart';
     FileHistory,
     DocumentHistory,
     LoyaltyCardItems,
-    LoyaltyCardHistory
+    LoyaltyCardHistory,
   ],
   daos: [
     StoreMetaDao,
@@ -154,6 +159,8 @@ part 'main_store.g.dart';
     IdentityFilterDao,
     LicenseKeyFilterDao,
     RecoveryCodesFilterDao,
+    CustomFieldDao,
+    CustomFieldHistoryDao,
   ],
 )
 class MainStore extends _$MainStore {
@@ -276,6 +283,7 @@ class MainStore extends _$MainStore {
         ...bankCardsHistoryDropTriggers,
         ...documentsDropTriggers,
         ...loyaltyCardsHistoryDropTriggers,
+        ...customFieldsHistoryDropTriggers,
       ]) {
         await customStatement(drop);
       }
@@ -310,6 +318,7 @@ class MainStore extends _$MainStore {
         ...documentsHistoryCreateTriggers,
         ...documentsTriggers,
         ...loyaltyCardsHistoryCreateTriggers,
+        ...customFieldsHistoryCreateTriggers,
       ]) {
         await customStatement(trigger);
       }

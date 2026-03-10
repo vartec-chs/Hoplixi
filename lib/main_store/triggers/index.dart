@@ -9,10 +9,12 @@ export 'bank_cards_triggers.dart';
 export 'certificates_triggers.dart';
 export 'contacts_triggers.dart';
 export 'crypto_wallets_triggers.dart';
+export 'custom_fields_triggers.dart';
 export 'documents_triggers.dart';
 export 'files_triggers.dart';
 export 'identities_triggers.dart';
 export 'license_keys_triggers.dart';
+export 'loyalty_cards_triggers.dart';
 export 'notes_triggers.dart';
 export 'otps_triggers.dart';
 export 'passwords_triggers.dart';
@@ -21,5 +23,3 @@ export 'ssh_keys_triggers.dart';
 // Триггеры временных меток
 export 'timestamps/index.dart';
 export 'wifis_triggers.dart';
-
-export 'loyalty_cards_triggers.dart';

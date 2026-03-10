@@ -287,6 +287,26 @@ Type-specific table for API keys.
 
 ---
 
+## Table: vault_item_custom_fields
+
+User-defined custom fields for any vault item. Allows attaching arbitrary
+key-value pairs to a vault item. Sensitive values (`fieldType = concealed`) are
+stored encrypted in `value`.
+
+| Column    | Type | Constraints                            | Description                                                  |
+| --------- | ---- | -------------------------------------- | ------------------------------------------------------------ |
+| id        | Text | Primary Key, UUID v4                   | Unique identifier                                            |
+| itemId    | Text | FK to vault_items.id (cascade)         | Vault item ref                                               |
+| label     | Text | min: 1, max: 255                       | Display name of the field                                    |
+| value     | Text | nullable                               | Field value; encrypted when fieldType = concealed            |
+| fieldType | Text | enum: CustomFieldType, default: 'text' | Field type: text, concealed, url, email, phone, date, number |
+| sortOrder | Int  | default: 0                             | Display order (0-based, ascending)                           |
+
+**CustomFieldType enum values:** `text`, `concealed`, `url`, `email`, `phone`,
+`date`, `number`
+
+---
+
 ## Table: api_key_history
 
 History table for API key-specific fields.
