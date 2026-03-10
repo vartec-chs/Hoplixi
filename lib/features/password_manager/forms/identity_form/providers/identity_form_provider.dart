@@ -5,6 +5,9 @@ import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
+import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
+
 import '../models/identity_form_state.dart';
 
 final identityFormProvider = AsyncNotifierProvider.autoDispose
@@ -33,6 +36,7 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
     final tagIds = await vaultItemDao.getTagIds(id);
     final tagDao = await ref.read(tagDaoProvider.future);
     final tags = await tagDao.getTagsByIds(tagIds);
+    final customFields = await loadCustomFields(ref, id);
 
     return IdentityFormState(
       isEditMode: true,
@@ -56,6 +60,7 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
       categoryId: item.categoryId,
       tagIds: tagIds,
       tagNames: tags.map((t) => t.name).toList(),
+      customFields: customFields,
     );
   }
 
@@ -123,6 +128,10 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
       _update((s) => s.copyWith(categoryId: id, categoryName: name));
   void setTags(List<String> ids, List<String> names) =>
       _update((s) => s.copyWith(tagIds: ids, tagNames: names));
+
+  void setCustomFields(List<CustomFieldEntry> fields) {
+    _update((s) => s.copyWith(customFields: fields));
+  }
 
   bool validate() {
     final c = _current;
@@ -208,6 +217,12 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
           return false;
         }
 
+        await saveCustomFields(
+          ref,
+          c.editingIdentityId!,
+          c.customFields,
+        );
+
         ref
             .read(dataRefreshTriggerProvider.notifier)
             .triggerEntityUpdate(
@@ -238,6 +253,8 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
           ),
         );
 
+
+        await saveCustomFields(ref, id, c.customFields);
         ref
             .read(dataRefreshTriggerProvider.notifier)
             .triggerEntityAdd(EntityType.identity, entityId: id);

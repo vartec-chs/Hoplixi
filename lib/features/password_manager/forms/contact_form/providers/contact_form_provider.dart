@@ -5,6 +5,9 @@ import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
+import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
+
 import '../models/contact_form_state.dart';
 
 final contactFormProvider = AsyncNotifierProvider.autoDispose
@@ -37,6 +40,7 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
     final tagIds = await vaultItemDao.getTagIds(id);
     final tagDao = await ref.read(tagDaoProvider.future);
     final tags = await tagDao.getTagsByIds(tagIds);
+    final customFields = await loadCustomFields(ref, id);
 
     return ContactFormState(
       isEditMode: true,
@@ -55,6 +59,7 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
       categoryId: item.categoryId,
       tagIds: tagIds,
       tagNames: tags.map((tag) => tag.name).toList(),
+      customFields: customFields,
     );
   }
 
@@ -118,6 +123,10 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
     _update((s) => s.copyWith(tagIds: tagIds, tagNames: tagNames));
   }
 
+  void setCustomFields(List<CustomFieldEntry> fields) {
+    _update((s) => s.copyWith(customFields: fields));
+  }
+
   String? _validateName(String value) {
     if (value.trim().isEmpty) return t.dashboard_forms.validation_required_contact_name;
     return null;
@@ -179,6 +188,12 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
           return false;
         }
 
+        await saveCustomFields(
+          ref,
+          current.editingContactId!,
+          current.customFields,
+        );
+
         ref
             .read(dataRefreshTriggerProvider.notifier)
             .triggerEntityUpdate(
@@ -204,6 +219,8 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
           ),
         );
 
+
+        await saveCustomFields(ref, id, current.customFields);
         ref
             .read(dataRefreshTriggerProvider.notifier)
             .triggerEntityAdd(EntityType.contact, entityId: id);

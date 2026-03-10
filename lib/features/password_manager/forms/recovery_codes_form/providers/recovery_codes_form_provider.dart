@@ -5,6 +5,9 @@ import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
+import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
+
 import '../models/recovery_codes_form_state.dart';
 
 final recoveryCodesFormProvider = AsyncNotifierProvider.autoDispose
@@ -38,6 +41,7 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
     final tagIds = await vaultItemDao.getTagIds(id);
     final tagDao = await ref.read(tagDaoProvider.future);
     final tags = await tagDao.getTagsByIds(tagIds);
+    final customFields = await loadCustomFields(ref, id);
 
     // Загружаем существующие коды
     final codesRaw = await dao.getCodesForItem(id);
@@ -67,6 +71,7 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
       categoryId: item.categoryId,
       tagIds: tagIds,
       tagNames: tags.map((t) => t.name).toList(),
+      customFields: customFields,
     );
   }
 
@@ -110,6 +115,10 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
       _update((s) => s.copyWith(categoryId: id, categoryName: name));
   void setTags(List<String> ids, List<String> names) =>
       _update((s) => s.copyWith(tagIds: ids, tagNames: names));
+
+  void setCustomFields(List<CustomFieldEntry> fields) {
+    _update((s) => s.copyWith(customFields: fields));
+  }
 
   /// Пометить существующий код для удаления при сохранении.
   /// Код исчезает из списка немедленно; фактическое удаление — в [save].
@@ -208,6 +217,12 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
           return false;
         }
 
+        await saveCustomFields(
+          ref,
+          c.editingRecoveryCodesId!,
+          c.customFields,
+        );
+
         ref
             .read(dataRefreshTriggerProvider.notifier)
             .triggerEntityUpdate(
@@ -229,6 +244,8 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
           ),
         );
 
+
+        await saveCustomFields(ref, id, c.customFields);
         ref
             .read(dataRefreshTriggerProvider.notifier)
             .triggerEntityAdd(EntityType.recoveryCodes, entityId: id);

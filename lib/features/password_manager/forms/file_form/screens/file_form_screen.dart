@@ -11,6 +11,8 @@ import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_editor.dart';
+import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_editor.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../models/file_form_state.dart';
@@ -302,6 +304,13 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                                   .read(fileFormProvider.notifier)
                                   .setNoteId(noteId);
                             },
+                          ),
+                          const SizedBox(height: 16),
+                          CustomFieldsEditor(
+                            fields: state.customFields,
+                            onChanged: ref
+                                .read(fileFormProvider.notifier)
+                                .setCustomFields,
                           ),
                         ],
                       ),

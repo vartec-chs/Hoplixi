@@ -4,6 +4,8 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/dto/loyalty_card_dto.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
 import '../models/loyalty_card_form_state.dart';
 
@@ -38,6 +40,7 @@ class LoyaltyCardFormNotifier extends Notifier<LoyaltyCardFormState> {
       final tagIds = await vaultItemDao.getTagIds(loyaltyCardId);
       final tagDao = await ref.read(tagDaoProvider.future);
       final tagRecords = await tagDao.getTagsByIds(tagIds);
+      final customFields = await loadCustomFields(ref, loyaltyCardId);
       String? categoryName;
       if (vault.categoryId != null) {
         final categoryDao = await ref.read(categoryDaoProvider.future);
@@ -66,6 +69,7 @@ class LoyaltyCardFormNotifier extends Notifier<LoyaltyCardFormState> {
         categoryName: categoryName,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
+        customFields: customFields,
         isLoading: false,
       );
     } catch (e, stackTrace) {
@@ -137,6 +141,10 @@ class LoyaltyCardFormNotifier extends Notifier<LoyaltyCardFormState> {
 
   void setTags(List<String> tagIds, List<String> tagNames) {
     state = state.copyWith(tagIds: tagIds, tagNames: tagNames);
+  }
+
+  void setCustomFields(List<CustomFieldEntry> fields) {
+    state = state.copyWith(customFields: fields);
   }
 
   String? _validateName(String value) {
@@ -256,6 +264,12 @@ class LoyaltyCardFormNotifier extends Notifier<LoyaltyCardFormState> {
           return false;
         }
 
+        await saveCustomFields(
+          ref,
+          state.editingLoyaltyCardId!,
+          state.customFields,
+        );
+
         ref
             .read(dataRefreshTriggerProvider.notifier)
             .triggerEntityUpdate(
@@ -299,6 +313,7 @@ class LoyaltyCardFormNotifier extends Notifier<LoyaltyCardFormState> {
         );
 
         final loyaltyCardId = await dao.createLoyaltyCard(dto);
+        await saveCustomFields(ref, loyaltyCardId, state.customFields);
         ref
             .read(dataRefreshTriggerProvider.notifier)
             .triggerEntityAdd(EntityType.loyaltyCard, entityId: loyaltyCardId);

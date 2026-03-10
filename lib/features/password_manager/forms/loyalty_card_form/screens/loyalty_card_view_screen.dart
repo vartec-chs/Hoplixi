@@ -8,6 +8,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -301,6 +302,7 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
                       'Описание',
                       _loyaltyCard!.$1.description!,
                     ),
+                  CustomFieldsViewSection(itemId: widget.loyaltyCardId),
                   const SizedBox(height: 24),
                   FilledButton.icon(
                     onPressed: _edit,

@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
 part 'identity_form_state.freezed.dart';
 
@@ -32,6 +33,7 @@ sealed class IdentityFormState with _$IdentityFormState {
     String? categoryName,
     @Default([]) List<String> tagIds,
     @Default([]) List<String> tagNames,
+    @Default([]) List<CustomFieldEntry> customFields,
     String? nameError,
     String? idTypeError,
     String? idNumberError,

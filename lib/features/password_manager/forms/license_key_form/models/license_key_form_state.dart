@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
 part 'license_key_form_state.freezed.dart';
 
@@ -27,6 +28,7 @@ sealed class LicenseKeyFormState with _$LicenseKeyFormState {
     String? categoryName,
     @Default([]) List<String> tagIds,
     @Default([]) List<String> tagNames,
+    @Default([]) List<CustomFieldEntry> customFields,
     String? nameError,
     String? productError,
     String? licenseKeyError,

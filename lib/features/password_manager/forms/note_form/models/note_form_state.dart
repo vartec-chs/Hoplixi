@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
 part 'note_form_state.freezed.dart';
 
@@ -30,6 +31,7 @@ sealed class NoteFormState with _$NoteFormState {
     String? categoryName,
     @Default([]) List<String> tagIds,
     @Default([]) List<String> tagNames,
+    @Default([]) List<CustomFieldEntry> customFields,
 
     // Связи с другими заметками (отслеживание для синхронизации)
     @Default([]) List<String> linkedNoteIds,

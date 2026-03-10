@@ -5,6 +5,9 @@ import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
+import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
+
 import '../models/ssh_key_form_state.dart';
 
 final sshKeyFormProvider = AsyncNotifierProvider.autoDispose
@@ -33,6 +36,7 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
     final tagIds = await vaultItemDao.getTagIds(id);
     final tagDao = await ref.read(tagDaoProvider.future);
     final tags = await tagDao.getTagsByIds(tagIds);
+    final customFields = await loadCustomFields(ref, id);
 
     return SshKeyFormState(
       isEditMode: true,
@@ -49,6 +53,7 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
       categoryId: item.categoryId,
       tagIds: tagIds,
       tagNames: tags.map((tag) => tag.name).toList(),
+      customFields: customFields,
     );
   }
 
@@ -94,6 +99,10 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
   );
   void setTags(List<String> tagIds, List<String> tagNames) =>
       _update((s) => s.copyWith(tagIds: tagIds, tagNames: tagNames));
+
+  void setCustomFields(List<CustomFieldEntry> fields) {
+    _update((s) => s.copyWith(customFields: fields));
+  }
 
   bool validate() {
     final current = _current;
@@ -155,6 +164,12 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
           return false;
         }
 
+        await saveCustomFields(
+          ref,
+          current.editingSshKeyId!,
+          current.customFields,
+        );
+
         ref
             .read(dataRefreshTriggerProvider.notifier)
             .triggerEntityUpdate(
@@ -178,6 +193,8 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
           ),
         );
 
+
+        await saveCustomFields(ref, id, current.customFields);
         ref
             .read(dataRefreshTriggerProvider.notifier)
             .triggerEntityAdd(EntityType.sshKey, entityId: id);

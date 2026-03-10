@@ -5,6 +5,9 @@ import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
+import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
+
 import '../models/license_key_form_state.dart';
 
 final licenseKeyFormProvider = AsyncNotifierProvider.autoDispose
@@ -35,6 +38,7 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
     final tagIds = await vaultItemDao.getTagIds(id);
     final tagDao = await ref.read(tagDaoProvider.future);
     final tags = await tagDao.getTagsByIds(tagIds);
+    final customFields = await loadCustomFields(ref, id);
 
     return LicenseKeyFormState(
       isEditMode: true,
@@ -57,6 +61,7 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
       categoryId: item.categoryId,
       tagIds: tagIds,
       tagNames: tags.map((t) => t.name).toList(),
+      customFields: customFields,
     );
   }
 
@@ -124,6 +129,10 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
       _update((s) => s.copyWith(categoryId: id, categoryName: name));
   void setTags(List<String> ids, List<String> names) =>
       _update((s) => s.copyWith(tagIds: ids, tagNames: names));
+
+  void setCustomFields(List<CustomFieldEntry> fields) {
+    _update((s) => s.copyWith(customFields: fields));
+  }
 
   bool validate() {
     final c = _current;
@@ -214,6 +223,12 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
           return false;
         }
 
+        await saveCustomFields(
+          ref,
+          c.editingLicenseKeyId!,
+          c.customFields,
+        );
+
         ref
             .read(dataRefreshTriggerProvider.notifier)
             .triggerEntityUpdate(
@@ -243,6 +258,8 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
           ),
         );
 
+
+        await saveCustomFields(ref, id, c.customFields);
         ref
             .read(dataRefreshTriggerProvider.notifier)
             .triggerEntityAdd(EntityType.licenseKey, entityId: id);

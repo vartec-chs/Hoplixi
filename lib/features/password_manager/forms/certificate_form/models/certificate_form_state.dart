@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
 part 'certificate_form_state.freezed.dart';
 
@@ -24,6 +25,7 @@ sealed class CertificateFormState with _$CertificateFormState {
     String? categoryName,
     @Default([]) List<String> tagIds,
     @Default([]) List<String> tagNames,
+    @Default([]) List<CustomFieldEntry> customFields,
     String? nameError,
     String? certificatePemError,
     @Default(false) bool isSaving,

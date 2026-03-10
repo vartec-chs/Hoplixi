@@ -5,6 +5,9 @@ import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
+import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
+
 import '../models/crypto_wallet_form_state.dart';
 
 final cryptoWalletFormProvider = AsyncNotifierProvider.autoDispose
@@ -35,6 +38,7 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
     final tagIds = await vaultItemDao.getTagIds(id);
     final tagDao = await ref.read(tagDaoProvider.future);
     final tags = await tagDao.getTagsByIds(tagIds);
+    final customFields = await loadCustomFields(ref, id);
 
     return CryptoWalletFormState(
       isEditMode: true,
@@ -56,6 +60,7 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
       categoryId: item.categoryId,
       tagIds: tagIds,
       tagNames: tags.map((t) => t.name).toList(),
+      customFields: customFields,
     );
   }
 
@@ -98,6 +103,10 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
       _update((s) => s.copyWith(categoryId: id, categoryName: name));
   void setTags(List<String> ids, List<String> names) =>
       _update((s) => s.copyWith(tagIds: ids, tagNames: names));
+
+  void setCustomFields(List<CustomFieldEntry> fields) {
+    _update((s) => s.copyWith(customFields: fields));
+  }
 
   bool validate() {
     final c = _current;
@@ -152,6 +161,12 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
           return false;
         }
 
+        await saveCustomFields(
+          ref,
+          c.editingCryptoWalletId!,
+          c.customFields,
+        );
+
         ref
             .read(dataRefreshTriggerProvider.notifier)
             .triggerEntityUpdate(
@@ -180,6 +195,8 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
           ),
         );
 
+
+        await saveCustomFields(ref, id, c.customFields);
         ref
             .read(dataRefreshTriggerProvider.notifier)
             .triggerEntityAdd(EntityType.cryptoWallet, entityId: id);

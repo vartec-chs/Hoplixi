@@ -10,6 +10,7 @@ import 'package:hoplixi/main_store/models/dto/document_dto.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Экран просмотра документа (только чтение)
@@ -180,6 +181,7 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
                       'Описание',
                       _document!.$1.description!,
                     ),
+                  CustomFieldsViewSection(itemId: widget.documentId),
                   const SizedBox(height: 24),
                   FilledButton.icon(
                     onPressed: _edit,

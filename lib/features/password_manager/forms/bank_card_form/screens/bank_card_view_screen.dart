@@ -8,6 +8,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Экран просмотра банковской карты (только чтение)
@@ -206,6 +207,7 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
                       'Описание',
                       _bankCard!.$1.description!,
                     ),
+                  CustomFieldsViewSection(itemId: widget.bankCardId),
                   const SizedBox(height: 24),
                   FilledButton.icon(
                     onPressed: _edit,

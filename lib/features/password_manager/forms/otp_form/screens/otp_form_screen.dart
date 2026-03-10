@@ -13,6 +13,8 @@ import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_editor.dart';
+import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_editor.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../models/otp_form_state.dart';
@@ -480,6 +482,11 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
             onNoteSelected: (noteId, noteName) {
               ref.read(otpFormProvider.notifier).setNoteId(noteId);
             },
+          ),
+          const SizedBox(height: 16),
+          CustomFieldsEditor(
+            fields: state.customFields,
+            onChanged: ref.read(otpFormProvider.notifier).setCustomFields,
           ),
           const SizedBox(height: 24),
         ],

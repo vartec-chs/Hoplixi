@@ -7,6 +7,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_view_section.dart';
 
 class ContactViewScreen extends ConsumerStatefulWidget {
   const ContactViewScreen({super.key, required this.contactId});
@@ -171,6 +172,7 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
                       title: Text(l10n.description_label),
                       subtitle: Text(_description!),
                     ),
+                  CustomFieldsViewSection(itemId: widget.contactId),
                 ],
               ),
       ),

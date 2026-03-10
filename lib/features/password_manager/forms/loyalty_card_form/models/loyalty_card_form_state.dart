@@ -1,4 +1,5 @@
 ﻿import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
 part 'loyalty_card_form_state.freezed.dart';
 
@@ -25,6 +26,7 @@ sealed class LoyaltyCardFormState with _$LoyaltyCardFormState {
     String? categoryName,
     @Default([]) List<String> tagIds,
     @Default([]) List<String> tagNames,
+    @Default([]) List<CustomFieldEntry> customFields,
     String? nameError,
     String? programNameError,
     String? cardOrBarcodeError,

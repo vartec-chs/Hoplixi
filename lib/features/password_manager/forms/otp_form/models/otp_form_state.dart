@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 
 part 'otp_form_state.freezed.dart';
@@ -31,6 +32,7 @@ sealed class OtpFormState with _$OtpFormState {
     String? categoryName,
     @Default([]) List<String> tagIds,
     @Default([]) List<String> tagNames,
+    @Default([]) List<CustomFieldEntry> customFields,
     String? passwordId,
 
     // Ошибки валидации

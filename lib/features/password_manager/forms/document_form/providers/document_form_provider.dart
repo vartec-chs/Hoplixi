@@ -15,6 +15,8 @@ import 'package:hoplixi/main_store/services/index.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
 import '../models/document_form_state.dart';
 
@@ -57,6 +59,7 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
       final tagIds = await vaultItemDao.getTagIds(documentId);
       final tagDao = await ref.read(tagDaoProvider.future);
       final tagRecords = await tagDao.getTagsByIds(tagIds);
+      final customFields = await loadCustomFields(ref, documentId);
 
       // Получаем категорию документа
       String? categoryName;
@@ -133,6 +136,7 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
         categoryName: categoryName,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
+        customFields: customFields,
         noteId: vault.noteId,
         noteName: noteName,
         isLoading: false,
@@ -461,6 +465,10 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
     state = state.copyWith(tagIds: tagIds, tagNames: tagNames);
   }
 
+  void setCustomFields(List<CustomFieldEntry> fields) {
+    state = state.copyWith(customFields: fields);
+  }
+
   /// Валидация названия
   String? _validateTitle(String value) {
     if (value.trim().isEmpty) {
@@ -559,6 +567,8 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
       },
     );
 
+    await saveCustomFields(ref, documentId, state.customFields);
+
     logInfo('Document created: $documentId', tag: _logTag);
     state = state.copyWith(isSaving: false, isSaved: true);
 
@@ -616,6 +626,8 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
         },
       );
     }
+
+    await saveCustomFields(ref, documentId, state.customFields);
 
     logInfo('Document updated: $documentId', tag: _logTag);
     state = state.copyWith(isSaving: false, isSaved: true);

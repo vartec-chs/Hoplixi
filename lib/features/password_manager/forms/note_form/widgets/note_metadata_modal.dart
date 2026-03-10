@@ -6,6 +6,7 @@ import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/modal_sheet_close_button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_editor.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 import '../providers/note_form_provider.dart';
@@ -198,6 +199,12 @@ class _NoteMetadataFormState extends ConsumerState<_NoteMetadataForm> {
             onTagsSelected: (tagIds, tagNames) {
               ref.read(noteFormProvider.notifier).setTags(tagIds, tagNames);
             },
+          ),
+          const SizedBox(height: 8),
+
+          CustomFieldsEditor(
+            fields: state.customFields,
+            onChanged: ref.read(noteFormProvider.notifier).setCustomFields,
           ),
           const SizedBox(height: 8),
 

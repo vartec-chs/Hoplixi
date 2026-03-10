@@ -11,6 +11,7 @@ import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:otp/otp.dart';
 
@@ -250,6 +251,7 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
                   if (_categoryName != null)
                     _info(theme, LucideIcons.folder, 'Категория', _categoryName!),
                   if (_tagNames.isNotEmpty) _tags(theme),
+                  CustomFieldsViewSection(itemId: widget.otpId),
                   const SizedBox(height: 24),
                   FilledButton.icon(
                     onPressed: _edit,

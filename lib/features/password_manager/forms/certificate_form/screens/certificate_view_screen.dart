@@ -7,6 +7,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_view_section.dart';
 
 class CertificateViewScreen extends ConsumerStatefulWidget {
   const CertificateViewScreen({super.key, required this.certificateId});
@@ -253,6 +254,7 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
                       title: Text(l10n.description_label),
                       subtitle: Text(_description!),
                     ),
+                  CustomFieldsViewSection(itemId: widget.certificateId),
                 ],
               ),
       ),

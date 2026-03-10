@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
 part 'document_form_state.freezed.dart';
 
@@ -82,6 +83,7 @@ sealed class DocumentFormState with _$DocumentFormState {
     String? categoryName,
     @Default([]) List<String> tagIds,
     @Default([]) List<String> tagNames,
+    @Default([]) List<CustomFieldEntry> customFields,
     String? noteId,
     String? noteName,
 

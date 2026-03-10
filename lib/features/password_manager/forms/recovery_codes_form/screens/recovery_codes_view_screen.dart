@@ -8,6 +8,7 @@ import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/dto/recovery_code_item_dto.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_view_section.dart';
 
 class RecoveryCodesViewScreen extends ConsumerStatefulWidget {
   const RecoveryCodesViewScreen({super.key, required this.recoveryCodesId});
@@ -208,6 +209,7 @@ class _RecoveryCodesViewScreenState
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
+                        CustomFieldsViewSection(itemId: widget.recoveryCodesId),
                         const SizedBox(height: 12),
                         // ÐšÐ½Ð¾Ð¿ÐºÐ° Ð±Ñ‹ÑÑ‚Ñ€Ð¾Ð³Ð¾ ÐºÐ¾Ð¿Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð¸Ñ ÑÐ»ÐµÐ´ÑƒÑŽÑ‰ÐµÐ³Ð¾ Ð½ÐµÐ¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ð½Ð½Ð¾Ð³Ð¾
                         SizedBox(

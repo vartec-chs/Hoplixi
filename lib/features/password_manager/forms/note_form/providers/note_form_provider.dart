@@ -7,6 +7,8 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/dto/note_dto.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
 import '../models/note_form_state.dart';
 
@@ -49,6 +51,7 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
       final tagIds = await vaultItemDao.getTagIds(noteId);
       final tagDao = await ref.read(tagDaoProvider.future);
       final tagRecords = await tagDao.getTagsByIds(tagIds);
+      final customFields = await loadCustomFields(ref, noteId);
 
       state = NoteFormState(
         isEditMode: true,
@@ -60,6 +63,7 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
         categoryId: vault.categoryId,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
+        customFields: customFields,
         isLoading: false,
         originalTitle: vault.name,
         originalDeltaJson: noteItem.deltaJson,
@@ -192,6 +196,10 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
     );
   }
 
+  void setCustomFields(List<CustomFieldEntry> fields) {
+    state = state.copyWith(customFields: fields, hasUnsavedChanges: true);
+  }
+
   /// Валидация заголовка
   String? _validateTitle(String value) {
     if (value.trim().isEmpty) {
@@ -253,6 +261,8 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
           final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
           await vaultItemDao.syncTags(state.editingNoteId!, state.tagIds);
 
+          await saveCustomFields(ref, state.editingNoteId!, state.customFields);
+
           logInfo('Note updated: ${state.editingNoteId}', tag: _logTag);
           state = state.copyWith(
             isSaving: false,
@@ -291,6 +301,8 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
         );
 
         final noteId = await dao.createNote(dto);
+
+        await saveCustomFields(ref, noteId, state.customFields);
 
         logInfo('Note created: $noteId', tag: _logTag);
         state = state.copyWith(

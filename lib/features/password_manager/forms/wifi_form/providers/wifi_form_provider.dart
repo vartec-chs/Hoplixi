@@ -5,6 +5,9 @@ import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
+import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
+
 import '../models/wifi_form_state.dart';
 
 final wifiFormProvider = AsyncNotifierProvider.autoDispose
@@ -31,6 +34,7 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
     final tagIds = await vaultItemDao.getTagIds(id);
     final tagDao = await ref.read(tagDaoProvider.future);
     final tags = await tagDao.getTagsByIds(tagIds);
+    final customFields = await loadCustomFields(ref, id);
 
     return WifiFormState(
       isEditMode: true,
@@ -52,6 +56,7 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
       categoryId: item.categoryId,
       tagIds: tagIds,
       tagNames: tags.map((t) => t.name).toList(),
+      customFields: customFields,
     );
   }
 
@@ -103,6 +108,10 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
   );
   void setTags(List<String> tagIds, List<String> tagNames) =>
       _update((s) => s.copyWith(tagIds: tagIds, tagNames: tagNames));
+
+  void setCustomFields(List<CustomFieldEntry> fields) {
+    _update((s) => s.copyWith(customFields: fields));
+  }
 
   bool validate() {
     final current = _current;
@@ -169,6 +178,12 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
           return false;
         }
 
+        await saveCustomFields(
+          ref,
+          current.editingWifiId!,
+          current.customFields,
+        );
+
         ref
             .read(dataRefreshTriggerProvider.notifier)
             .triggerEntityUpdate(
@@ -197,6 +212,8 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
           ),
         );
 
+
+        await saveCustomFields(ref, id, current.customFields);
         ref
             .read(dataRefreshTriggerProvider.notifier)
             .triggerEntityAdd(EntityType.wifi, entityId: id);

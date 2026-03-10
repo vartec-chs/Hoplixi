@@ -4,6 +4,8 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/data_refre
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
 import '../models/api_key_form_state.dart';
 
@@ -37,6 +39,7 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
     final tagIds = await vaultItemDao.getTagIds(id);
     final tagDao = await ref.read(tagDaoProvider.future);
     final tags = await tagDao.getTagsByIds(tagIds);
+    final customFields = await loadCustomFields(ref, id);
 
     return ApiKeyFormState(
       isEditMode: true,
@@ -53,6 +56,7 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
       categoryId: item.categoryId,
       tagIds: tagIds,
       tagNames: tags.map((tag) => tag.name).toList(),
+      customFields: customFields,
     );
   }
 
@@ -109,6 +113,9 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
   void setTags(List<String> tagIds, List<String> tagNames) {
     _update((s) => s.copyWith(tagIds: tagIds, tagNames: tagNames));
   }
+
+  void setCustomFields(List<CustomFieldEntry> fields) =>
+      _update((s) => s.copyWith(customFields: fields));
 
   String? _validateName(String value) {
     if (value.trim().isEmpty) return t.dashboard_forms.validation_required_name;
@@ -186,6 +193,12 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
           return false;
         }
 
+        await saveCustomFields(
+          ref,
+          current.editingApiKeyId!,
+          current.customFields,
+        );
+
         ref
             .read(dataRefreshTriggerProvider.notifier)
             .triggerEntityUpdate(
@@ -209,6 +222,8 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
             maskedKey: masked,
           ),
         );
+
+        await saveCustomFields(ref, id, current.customFields);
 
         ref
             .read(dataRefreshTriggerProvider.notifier)

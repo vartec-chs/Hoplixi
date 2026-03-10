@@ -5,6 +5,8 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/data_refre
 import 'package:hoplixi/main_store/models/dto/bank_card_dto.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
 import '../models/bank_card_form_state.dart';
 
@@ -47,6 +49,7 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
       final tagIds = await vaultItemDao.getTagIds(bankCardId);
       final tagDao = await ref.read(tagDaoProvider.future);
       final tagRecords = await tagDao.getTagsByIds(tagIds);
+      final customFields = await loadCustomFields(ref, bankCardId);
 
       state = BankCardFormState(
         isEditMode: true,
@@ -67,6 +70,7 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
         categoryId: vault.categoryId,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
+        customFields: customFields,
         isLoading: false,
       );
     } catch (e, stack) {
@@ -165,6 +169,10 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
   /// Обновить теги
   void setTags(List<String> tagIds, List<String> tagNames) {
     state = state.copyWith(tagIds: tagIds, tagNames: tagNames);
+  }
+
+  void setCustomFields(List<CustomFieldEntry> fields) {
+    state = state.copyWith(customFields: fields);
   }
 
   /// Установить фокус на CVV
@@ -312,6 +320,11 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
         if (success) {
           final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
           await vaultItemDao.syncTags(state.editingBankCardId!, state.tagIds);
+          await saveCustomFields(
+            ref,
+            state.editingBankCardId!,
+            state.customFields,
+          );
 
           logInfo(
             'Bank card updated: ${state.editingBankCardId}',
@@ -371,6 +384,8 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
           final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
           await vaultItemDao.syncTags(bankCardId, state.tagIds);
         }
+
+        await saveCustomFields(ref, bankCardId, state.customFields);
 
         logInfo('Bank card created: $bankCardId', tag: _logTag);
         state = state.copyWith(isSaving: false, isSaved: true);

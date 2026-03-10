@@ -11,6 +11,7 @@ import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picke
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_editor.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -454,6 +455,11 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                   value: state.verified,
                   onChanged: notifier.setVerified,
                   title: Text(context.t.dashboard_forms.verified_label),
+                ),
+                const SizedBox(height: 12),
+                CustomFieldsEditor(
+                  fields: state.customFields,
+                  onChanged: notifier.setCustomFields,
                 ),
               ],
             ),

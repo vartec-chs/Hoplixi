@@ -9,6 +9,7 @@ import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picke
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_editor.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../providers/wifi_form_provider.dart';
@@ -322,6 +323,11 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                       value: state.hidden,
                       onChanged: notifier.setHidden,
                       title: Text(context.t.dashboard_forms.wifi_hidden_network_label),
+                    ),
+                    const SizedBox(height: 12),
+                    CustomFieldsEditor(
+                      fields: state.customFields,
+                      onChanged: notifier.setCustomFields,
                     ),
                   ],
                 ),

@@ -11,6 +11,8 @@ import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/main_store/provider/service_providers.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
+import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
 import '../models/file_form_state.dart';
 
@@ -53,6 +55,7 @@ class FileFormNotifier extends Notifier<FileFormState> {
       final tagIds = await vaultItemDao.getTagIds(fileId);
       final tagDao = await ref.read(tagDaoProvider.future);
       final tagRecords = await tagDao.getTagsByIds(tagIds);
+      final customFields = await loadCustomFields(ref, fileId);
 
       // Получаем FileMetadata через metadataId
       String? existingFileName;
@@ -83,6 +86,7 @@ class FileFormNotifier extends Notifier<FileFormState> {
         noteId: vault.noteId,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
+        customFields: customFields,
         isLoading: false,
       );
     } catch (e, stack) {
@@ -212,6 +216,10 @@ class FileFormNotifier extends Notifier<FileFormState> {
     state = state.copyWith(tagIds: tagIds, tagNames: tagNames);
   }
 
+  void setCustomFields(List<CustomFieldEntry> fields) {
+    state = state.copyWith(customFields: fields);
+  }
+
   /// Валидация имени
   String? _validateName(String value) {
     if (value.trim().isEmpty) {
@@ -290,6 +298,8 @@ class FileFormNotifier extends Notifier<FileFormState> {
 
           // Синхронизация тегов уже происходит в dao.updateFile() через dto.tagsIds
 
+          await saveCustomFields(ref, state.editingFileId!, state.customFields);
+
           logInfo('File updated: ${state.editingFileId}', tag: _logTag);
           state = state.copyWith(isSaving: false, isSaved: true);
 
@@ -329,6 +339,8 @@ class FileFormNotifier extends Notifier<FileFormState> {
             state = state.copyWith(uploadProgress: percentage / 100.0);
           },
         );
+
+        await saveCustomFields(ref, fileId, state.customFields);
 
         logInfo('File created: $fileId', tag: _logTag);
         state = state.copyWith(isSaving: false, isSaved: true);

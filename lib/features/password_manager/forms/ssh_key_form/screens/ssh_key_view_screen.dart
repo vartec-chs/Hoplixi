@@ -7,6 +7,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_view_section.dart';
 
 class SshKeyViewScreen extends ConsumerStatefulWidget {
   const SshKeyViewScreen({super.key, required this.sshKeyId});
@@ -175,6 +176,7 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
                       subtitle: Text(_description!),
                       contentPadding: EdgeInsets.zero,
                     ),
+                  CustomFieldsViewSection(itemId: widget.sshKeyId),
                 ],
               ),
       ),

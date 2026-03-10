@@ -10,6 +10,7 @@ import 'package:hoplixi/main_store/models/dto/file_dto.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Экран просмотра файла (только чтение)
@@ -227,6 +228,7 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
                       'Описание',
                       _file!.$1.description!,
                     ),
+                  CustomFieldsViewSection(itemId: widget.fileId),
                   const SizedBox(height: 24),
                   FilledButton.icon(
                     onPressed: _edit,

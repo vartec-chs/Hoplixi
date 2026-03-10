@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
 part 'api_key_form_state.freezed.dart';
 
@@ -20,6 +21,7 @@ sealed class ApiKeyFormState with _$ApiKeyFormState {
     String? categoryName,
     @Default([]) List<String> tagIds,
     @Default([]) List<String> tagNames,
+    @Default([]) List<CustomFieldEntry> customFields,
     DateTime? expiresAt,
     String? nameError,
     String? serviceError,

@@ -7,6 +7,8 @@ import 'package:hoplixi/features/password_manager/forms/otp_form/utils/otp_uri_p
 import 'package:hoplixi/main_store/models/dto/otp_dto.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
 import '../models/otp_form_state.dart';
 
@@ -51,6 +53,7 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
       final tagIds = await vaultItemDao.getTagIds(otpId);
       final tagDao = await ref.read(tagDaoProvider.future);
       final tagRecords = await tagDao.getTagsByIds(tagIds);
+      final customFields = await loadCustomFields(ref, otpId);
 
       // Декодируем секрет из bytes обратно в base32 для отображения
       final secretBytes = otpItem.secret;
@@ -76,6 +79,7 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
         passwordId: otpItem.passwordItemId,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
+        customFields: customFields,
         isLoading: false,
       );
     } catch (e, stack) {
@@ -181,6 +185,10 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
     state = state.copyWith(tagIds: tagIds, tagNames: tagNames);
   }
 
+  void setCustomFields(List<CustomFieldEntry> fields) {
+    state = state.copyWith(customFields: fields);
+  }
+
   /// Обновить связь с паролем
   void setPasswordId(String? passwordId) {
     state = state.copyWith(passwordId: passwordId);
@@ -282,6 +290,7 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
         if (success) {
           final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
           await vaultItemDao.syncTags(state.editingOtpId!, state.tagIds);
+          await saveCustomFields(ref, state.editingOtpId!, state.customFields);
 
           logInfo('OTP updated: ${state.editingOtpId}', tag: _logTag);
           state = state.copyWith(isSaving: false, isSaved: true);
@@ -324,6 +333,8 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
         );
 
         final otpId = await dao.createOtp(dto);
+
+        await saveCustomFields(ref, otpId, state.customFields);
 
         logInfo('OTP created: $otpId', tag: _logTag);
         state = state.copyWith(isSaving: false, isSaved: true);
