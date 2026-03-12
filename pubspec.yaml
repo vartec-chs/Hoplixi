@@ -122,7 +122,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   flutter_lucide: ^1.8.2
-  sqlite3: ^3.1.7
+  sqlite3: ^3.2.0
   go_transitions: ^0.8.3
   mdns_dart: ^2.2.1
   network_info_plus: ^7.0.0
