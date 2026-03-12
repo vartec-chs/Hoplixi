@@ -37,8 +37,6 @@ class App extends ConsumerStatefulWidget {
 class _AppState extends ConsumerState<App> {
   ProviderSubscription<AsyncValue<ThemeMode>>? _themeSyncSubscription;
   late final Future<ThemeMode> _initialThemeModeFuture;
-  // late final Future<List<dynamic>> _initialThemeAndLocaleFuture;
-
 
   @override
   void initState() {
@@ -50,10 +48,6 @@ class _AppState extends ConsumerState<App> {
       return savedMode;
     }();
 
-    // _initialThemeAndLocaleFuture = Future.wait<dynamic>([
-    //   _initialThemeModeFuture,
-    //   ref.read(localeProvider.future),
-    // ]);
 
     Future<void>(() {
       ref.read(localeProvider.future);
@@ -92,7 +86,6 @@ class _AppState extends ConsumerState<App> {
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
-    // final localeAsync = ref.watch(localeProvider);
 
     return ShortcutWatcher(
       child: TrayWatcher(
@@ -104,9 +97,6 @@ class _AppState extends ConsumerState<App> {
                 return const AppLoadingScreen();
               }
 
-              // final themeMode = snapshot.data![0] as ThemeMode;
-              // final initialLocale = snapshot.data![1] as Locale;
-              // final activeLocale = localeAsync.value ?? initialLocale;
               final themeMode = snapshot.data!;
 
               logTrace('App build with theme mode: $themeMode');
