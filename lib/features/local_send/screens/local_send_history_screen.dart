@@ -137,6 +137,8 @@ class LocalSendHistoryScreen extends ConsumerWidget {
     final iconColor = item.isSent ? colorScheme.primary : colorScheme.tertiary;
 
     final directionLabel = item.isSent ? 'Отправлено' : 'Получено';
+    final deviceName = item.deviceName?.trim();
+    final hasDeviceName = deviceName != null && deviceName.isNotEmpty;
 
     final timestamp = item.timestamp;
     final now = DateTime.now();
@@ -197,6 +199,18 @@ class LocalSendHistoryScreen extends ConsumerWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
+                      if (hasDeviceName) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          deviceName,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: iconColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                       const SizedBox(height: 2),
                       Text(
                         '$directionLabel • $dateStr',

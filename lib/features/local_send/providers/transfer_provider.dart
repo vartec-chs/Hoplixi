@@ -341,7 +341,12 @@ class SessionNotifier extends Notifier<SessionState> {
 
       ref
           .read(sessionHistoryProvider.notifier)
-          .add(HistoryItemType.fileSent, fileName, filePath: file.path);
+          .add(
+            HistoryItemType.fileSent,
+            fileName,
+            deviceName: peer.name,
+            filePath: file.path,
+          );
     }
 
     _webrtc!.sendTransferComplete();
@@ -357,7 +362,7 @@ class SessionNotifier extends Notifier<SessionState> {
 
     ref
         .read(sessionHistoryProvider.notifier)
-        .add(HistoryItemType.textSent, text);
+        .add(HistoryItemType.textSent, text, deviceName: _connectedPeer?.name);
   }
 
   // ══════════════════════════════════════════════
@@ -420,17 +425,19 @@ class SessionNotifier extends Notifier<SessionState> {
       await _closeFileSink();
       logInfo('File received: $fileName');
 
+      final peer = _connectedPeer;
+
       ref
           .read(sessionHistoryProvider.notifier)
           .add(
             HistoryItemType.fileReceived,
             fileName,
+            deviceName: peer?.name,
             filePath: _currentFilePath,
           );
       _currentFilePath = null;
 
       // Возвращаемся в connected.
-      final peer = _connectedPeer;
       if (peer != null) {
         state = SessionState.connected(peer: peer);
       }
@@ -441,7 +448,11 @@ class SessionNotifier extends Notifier<SessionState> {
 
       ref
           .read(sessionHistoryProvider.notifier)
-          .add(HistoryItemType.textReceived, text);
+          .add(
+            HistoryItemType.textReceived,
+            text,
+            deviceName: _connectedPeer?.name,
+          );
     };
 
     _webrtc!.onTransferComplete = () {

@@ -20,13 +20,19 @@ class SessionHistoryNotifier extends Notifier<List<HistoryItem>> {
   }
 
   /// Добавляет элемент в историю и сохраняет.
-  void add(HistoryItemType type, String content, {String? filePath}) {
+  void add(
+    HistoryItemType type,
+    String content, {
+    String? deviceName,
+    String? filePath,
+  }) {
     state = [
       ...state,
       HistoryItem(
         type: type,
         content: content,
         timestamp: DateTime.now(),
+        deviceName: deviceName,
         filePath: filePath,
       ),
     ];

@@ -318,6 +318,8 @@ class _ConnectedSessionSectionState
     final directionLabel = item.isSent ? 'Отправлено' : 'Получено';
 
     final iconColor = item.isSent ? colorScheme.primary : colorScheme.tertiary;
+    final deviceName = item.deviceName?.trim();
+    final hasDeviceName = deviceName != null && deviceName.isNotEmpty;
 
     final time =
         '${item.timestamp.hour.toString().padLeft(2, '0')}'
@@ -360,6 +362,16 @@ class _ConnectedSessionSectionState
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (hasDeviceName)
+                      Text(
+                        deviceName,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: iconColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     Text(
                       '$directionLabel • $time',
                       style: textTheme.bodySmall?.copyWith(

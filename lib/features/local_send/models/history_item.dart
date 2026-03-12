@@ -13,6 +13,7 @@ sealed class HistoryItem with _$HistoryItem {
     required HistoryItemType type,
     required String content,
     required DateTime timestamp,
+    String? deviceName,
     String? filePath,
   }) = _HistoryItem;
 
