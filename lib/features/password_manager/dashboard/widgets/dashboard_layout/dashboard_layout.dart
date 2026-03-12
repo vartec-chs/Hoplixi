@@ -1,68 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/dashboard_drawer.dart';
 import 'package:hoplixi/routing/paths.dart';
 
+import 'dashboard_drawer_scope.dart';
 import 'dashboard_layout_constants.dart';
-import 'desktop_dashboard_layout.dart';
-import 'mobile_dashboard_layout.dart';
+import 'desktop_three_column_layout.dart';
+import 'keyboard_shortcuts.dart';
 import 'screen_protection_wrapper.dart';
+import 'widgets/fab_builder.dart';
+import 'widgets/floating_nav_bar.dart';
 
-// =============================================================================
-// Full Center Paths
-// =============================================================================
-
-/// Пути, которые должны отображаться в full-center режиме
 const List<String> _fullCenterPaths = [AppRoutesPaths.notesGraph];
 
-// =============================================================================
-// DashboardLayout Widget
-// =============================================================================
-
-/// DashboardLayout — виджет-оболочка, управляющий навигацией
-/// для password manager dashboard.
-///
-/// Автоматически переключается между mobile и desktop layout
-/// в зависимости от размера экрана.
-///
-/// Контент (включая DashboardHomeScreen) определяется роутингом
-/// и передаётся как [child].
-class DashboardLayout extends StatelessWidget {
-  /// Текущее состояние роутера
+class AppNavigationShell extends StatefulWidget {
   final GoRouterState state;
-
-  /// Контент из роутера (deepest matched route)
   final Widget child;
 
-  const DashboardLayout({required this.state, required this.child, super.key});
+  const AppNavigationShell({required this.state, required this.child, super.key});
 
-  // ===========================================================================
-  // Helpers
-  // ===========================================================================
+  @override
+  State<AppNavigationShell> createState() => _AppNavigationShellState();
+}
+
+class _AppNavigationShellState extends State<AppNavigationShell> {
+  final GlobalKey<ScaffoldState> _mobileScaffoldKey =
+      GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
 
   String _currentEntity() {
-    final ent = state.pathParameters['entity'];
+    final ent = widget.state.pathParameters['entity'];
     return (ent != null && EntityType.allTypesString.contains(ent))
         ? ent
         : EntityType.allTypesString.first;
   }
 
-  bool _isFullCenter(String location) {
-    return _fullCenterPaths.contains(location);
-  }
+  bool _isFullCenter(String location) => _fullCenterPaths.contains(location);
 
-  /// Проверяет, есть ли sub-маршрут панели (add, edit, view,
-  /// categories, tags, icons, history и т.д.).
-  ///
-  /// На desktop используется для side-by-side режима:
-  /// DashboardHomeScreen + правая панель.
-  ///
-  /// Примечание: full-center маршруты (graph) обрабатываются
-  /// отдельно через [_isFullCenter] и имеют приоритет.
-  bool _hasPanel(String location) {
+  bool _isBaseRoute(String location) {
     final segments = Uri.parse(location).pathSegments;
-    return segments.length >= kMinPathSegmentsForPanel;
+    return segments.length == kPathSegmentsForEntity;
   }
 
   bool _shouldShowFAB(String location) {
@@ -78,6 +58,8 @@ class DashboardLayout extends StatelessWidget {
   }
 
   bool _shouldShowBottomNav(String location) {
+    if (_isFullCenter(location)) return false;
+
     final segments = Uri.parse(location).pathSegments;
     if (segments.length < kPathSegmentsForEntity) return false;
     if (segments.length == kPathSegmentsForEntity) return true;
@@ -88,12 +70,11 @@ class DashboardLayout extends StatelessWidget {
     return false;
   }
 
-  int? _selectedRailIndex() {
-    final location = state.uri.toString();
+  int _selectedRailIndex(String location) {
     final segments = Uri.parse(location).pathSegments;
     if (segments.length < kMinPathSegmentsForPanel) return kHomeIndex;
-    final action = segments[2];
-    switch (action) {
+
+    switch (segments[2]) {
       case 'categories':
         return kCategoriesIndex;
       case 'tags':
@@ -107,85 +88,237 @@ class DashboardLayout extends StatelessWidget {
     }
   }
 
-  bool _isMobileLayout(BuildContext context) {
-    return MediaQuery.sizeOf(context).width < MainConstants.kMobileBreakpoint;
-  }
-
-  String? _getCurrentAction() {
-    final uri = state.uri.toString();
-    final segments = Uri.parse(uri).pathSegments;
+  String? _currentAction(String location) {
+    final segments = Uri.parse(location).pathSegments;
     if (segments.length >= kMinPathSegmentsForPanel) {
       return segments[2];
     }
     return null;
   }
 
-  List<NavigationRailDestination> _getDestinations(String entity) {
+  List<NavigationRailDestination> _destinations(String entity) {
     return entity == EntityType.note.id
         ? [...kBaseDestinations, kGraphDestination]
         : kBaseDestinations;
   }
 
-  // ===========================================================================
-  // Build
-  // ===========================================================================
+  void _openDrawer() {
+    _mobileScaffoldKey.currentState?.openDrawer();
+  }
+
+  void _onNavItemSelected(BuildContext context, int index, String entity) {
+    final currentUri = widget.state.uri.toString();
+    String targetPath;
+
+    if (index == kHomeIndex) {
+      targetPath = '/dashboard/$entity';
+    } else if (index >= kCategoriesIndex && index <= kIconsIndex) {
+      targetPath = '/dashboard/$entity/${kDashboardActions[index - 1]}';
+    } else if (index == kGraphIndex && entity == EntityType.note.id) {
+      targetPath = AppRoutesPaths.notesGraph;
+    } else {
+      return;
+    }
+
+    if (currentUri == targetPath) return;
+    context.go(targetPath);
+  }
+
+  void _handleGoBack(String entity) {
+    if (!context.mounted) return;
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
+    context.go('/dashboard/$entity');
+  }
+
+  void _handleCreateEntity(String entity) {
+    if (!context.mounted) return;
+    context.go('/dashboard/$entity/add');
+  }
+
+  void _handleOpenTags(String entity) {
+    if (!context.mounted) return;
+    context.go('/dashboard/$entity/tags');
+  }
+
+  void _handleOpenCategories(String entity) {
+    if (!context.mounted) return;
+    context.go('/dashboard/$entity/categories');
+  }
+
+  void _handleOpenIcons(String entity) {
+    if (!context.mounted) return;
+    context.go('/dashboard/$entity/icons');
+  }
+
+  Widget _buildMobileShell(
+    BuildContext context, {
+    required String entity,
+    required String location,
+    required int currentIndex,
+    required List<NavigationRailDestination> destinations,
+  }) {
+    final showBottomNav = _shouldShowBottomNav(location);
+    final showFAB = _shouldShowFAB(location);
+    final entityType = EntityType.fromId(entity) ?? EntityType.password;
+    final systemPadding = MediaQuery.of(context).viewPadding;
+
+    return DashboardDrawerScope(
+      openDrawer: _openDrawer,
+      child: Stack(
+        children: [
+          Positioned.fill(child: widget.child),
+          if (showBottomNav)
+            Positioned(
+              left: kFloatingNavMarginHorizontal,
+              right: kFloatingNavMarginHorizontal,
+              bottom: systemPadding.bottom + 12,
+              child: FloatingNavBar(
+                destinations: destinations,
+                selectedIndex: currentIndex,
+                onItemSelected: (index) =>
+                    _onNavItemSelected(context, index, entity),
+              ),
+            ),
+          if (showFAB)
+            Positioned(
+              right: kFloatingNavMarginHorizontal,
+              bottom: showBottomNav
+                  ? systemPadding.bottom +
+                        kFloatingNavBarHeight +
+                        kFloatingNavFabBottomOffset
+                  : systemPadding.bottom + kFloatingNavFabBottomOffset,
+              child: DashboardFabBuilder(
+                context: context,
+                entity: entity,
+                currentAction: _currentAction(location),
+                isMobile: true,
+              ).buildExpandableFAB(),
+            ),
+          Positioned.fill(
+            child: IgnorePointer(
+              ignoring: !_isDrawerOpen,
+              child: Scaffold(
+                key: _mobileScaffoldKey,
+                backgroundColor: Colors.transparent,
+                onDrawerChanged: (isOpen) {
+                  setState(() => _isDrawerOpen = isOpen);
+                },
+                drawer: DashboardDrawer(entityType: entityType),
+                body: const SizedBox.expand(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopShell(
+    BuildContext context, {
+    required String entity,
+    required String location,
+    required int currentIndex,
+    required List<NavigationRailDestination> destinations,
+  }) {
+    final theme = Theme.of(context);
+    final entityType = EntityType.fromId(entity) ?? EntityType.password;
+    final shellChild = _isFullCenter(location)
+        ? widget.child
+        : DesktopThreeColumnLayout(
+            entityType: entityType,
+            panelIdentity: location,
+            rightPanel: _isBaseRoute(location) ? null : widget.child,
+          );
+
+    return CallbackShortcuts(
+      bindings: <ShortcutActivator, VoidCallback>{
+        kShortcutGoBack: () => _handleGoBack(entity),
+        kShortcutCreateEntity: () => _handleCreateEntity(entity),
+        kShortcutOpenTags: () => _handleOpenTags(entity),
+        kShortcutOpenCategories: () => _handleOpenCategories(entity),
+        kShortcutOpenIcons: () => _handleOpenIcons(entity),
+      },
+      child: Focus(
+        autofocus: true,
+        child: Scaffold(
+          body: Row(
+            children: [
+              NavigationRail(
+                unselectedIconTheme: IconThemeData(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                unselectedLabelTextStyle: TextStyle(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w400,
+                ),
+                selectedIconTheme: IconThemeData(
+                  color: theme.colorScheme.onPrimary,
+                ),
+                selectedLabelTextStyle: TextStyle(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w400,
+                ),
+                indicatorColor: theme.colorScheme.primaryContainer,
+                indicatorShape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    kIndicatorBorderRadius,
+                  ),
+                ),
+                backgroundColor: theme.colorScheme.surfaceContainerLowest,
+                selectedIndex: currentIndex,
+                onDestinationSelected: (index) =>
+                    _onNavItemSelected(context, index, entity),
+                labelType: NavigationRailLabelType.all,
+                destinations: destinations,
+                leading: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: DashboardFabBuilder(
+                    context: context,
+                    entity: entity,
+                    currentAction: null,
+                    isMobile: false,
+                  ).buildExpandableFAB(),
+                ),
+              ),
+              const VerticalDivider(width: 1, thickness: 1),
+              Expanded(child: shellChild),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final uri = state.uri.toString();
+    final location = widget.state.uri.toString();
     final entity = _currentEntity();
-    final isMobile = _isMobileLayout(context);
-    final isFullCenter = _isFullCenter(uri);
-    final destinations = _getDestinations(entity);
+    final currentIndex = _selectedRailIndex(location);
+    final destinations = _destinations(entity);
+    final isMobile =
+        MediaQuery.sizeOf(context).width < MainConstants.kMobileBreakpoint;
 
-    void onNavItemSelected(int index) {
-      final currentUri = state.uri.toString();
-      String targetPath;
+    final shell = isMobile
+        ? _buildMobileShell(
+            context,
+            entity: entity,
+            location: location,
+            currentIndex: currentIndex,
+            destinations: destinations,
+          )
+        : _buildDesktopShell(
+            context,
+            entity: entity,
+            location: location,
+            currentIndex: currentIndex,
+            destinations: destinations,
+          );
 
-      if (index == kHomeIndex) {
-        targetPath = '/dashboard/$entity';
-      } else if (index >= kCategoriesIndex && index <= kIconsIndex) {
-        targetPath = '/dashboard/$entity/${kDashboardActions[index - 1]}';
-      } else if (index == kGraphIndex && entity == EntityType.note.id) {
-        targetPath = AppRoutesPaths.notesGraph;
-      } else {
-        return;
-      }
-
-      if (currentUri == targetPath) return;
-      context.go(targetPath);
-    }
-
-    final Widget layout;
-
-    if (isMobile) {
-      final showBottomNav = _shouldShowBottomNav(uri) && !isFullCenter;
-      final showFAB = _shouldShowFAB(uri);
-
-      layout = MobileDashboardLayout(
-        entity: entity,
-        uri: uri,
-        showBottomNav: showBottomNav,
-        showFAB: showFAB,
-        currentAction: _getCurrentAction(),
-        destinations: destinations,
-        selectedIndex: _selectedRailIndex() ?? kHomeIndex,
-        onNavItemSelected: onNavItemSelected,
-        child: child,
-      );
-    } else {
-      layout = DesktopDashboardLayout(
-        entity: entity,
-        uri: uri,
-        hasPanel: _hasPanel(uri),
-        isFullCenter: isFullCenter,
-        destinations: destinations,
-        selectedIndex: _selectedRailIndex(),
-        onNavItemSelected: onNavItemSelected,
-        child: child,
-      );
-    }
-
-    return ScreenProtectionWrapper(child: layout);
+    return ScreenProtectionWrapper(child: shell);
   }
 }
+
+

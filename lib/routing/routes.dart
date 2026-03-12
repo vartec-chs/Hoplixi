@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/archive_storage/ui/archive_screen.dart';
 import 'package:hoplixi/features/cloud_sync/auth/ui/auth_login_screen.dart';
 import 'package:hoplixi/features/cloud_sync/auth/ui/tokens_screen.dart';
@@ -32,6 +33,26 @@ import 'package:hoplixi/features/settings/screens/settings_screen.dart';
 import 'package:hoplixi/features/setup/screens/setup_screen.dart';
 import 'package:hoplixi/global_key.dart';
 import 'package:hoplixi/routing/paths.dart';
+
+Page<void> buildResponsivePage({
+  required BuildContext context,
+  required GoRouterState state,
+  required Widget child,
+  bool isBaseRoute = false,
+}) {
+  final isMobile =
+      MediaQuery.sizeOf(context).width < MainConstants.kMobileBreakpoint;
+
+  if (isMobile) {
+    if (isBaseRoute) {
+      return NoTransitionPage<void>(key: state.pageKey, child: child);
+    }
+
+    return MaterialPage<void>(key: state.pageKey, child: child);
+  }
+
+  return NoTransitionPage<void>(key: state.pageKey, child: child);
+}
 
 final List<RouteBase> appRoutes = [
   GoRoute(
@@ -86,54 +107,45 @@ final List<RouteBase> appRoutes = [
     path: AppRoutesPaths.archiveStore,
     builder: (context, state) => const ArchiveScreen(),
   ),
-
   GoRoute(
     path: AppRoutesPaths.settings,
     builder: (context, state) => const SettingsScreen(),
   ),
-
   GoRoute(
     path: AppRoutesPaths.oauthApps,
     builder: (context, state) => const OAuthAppsScreen(),
   ),
-
   GoRoute(
     path: AppRoutesPaths.oauthTokens,
     builder: (context, state) => const TokensScreen(),
   ),
-
   GoRoute(
     path: AppRoutesPaths.oauthLogin,
     builder: (context, state) => const OAuthLoginScreen(),
   ),
-
   GoRoute(
     path: '/dashboard',
     redirect: (context, state) => '/dashboard/${EntityType.password.id}',
   ),
-
   ShellRoute(
     navigatorKey: dashboardNavigatorKey,
     builder: (context, state, child) {
-      return DashboardLayout(state: state, child: child);
+      return AppNavigationShell(state: state, child: child);
     },
-
     routes: [
       GoRoute(
         path: '/dashboard/:entity',
         name: 'entity',
         pageBuilder: (context, state) {
           final entity = EntityType.fromId(state.pathParameters['entity']!)!;
-          return NoTransitionPage<void>(
-            key: state.pageKey,
-            child: DashboardHomeScreen(
-              // key: ValueKey('dashboard_home_${entity.id}'),
-              entityType: entity,
-            ),
+          return buildResponsivePage(
+            context: context,
+            state: state,
+            isBaseRoute: true,
+            child: DashboardHomeScreen(entityType: entity),
           );
         },
         routes: [
-          // categories + nested add/edit
           GoRoute(
             path: 'categories',
             name: 'entity_categories',
@@ -141,8 +153,9 @@ final List<RouteBase> appRoutes = [
               final entity = EntityType.fromId(
                 state.pathParameters['entity']!,
               )!;
-              return NoTransitionPage<void>(
-                key: state.pageKey,
+              return buildResponsivePage(
+                context: context,
+                state: state,
                 child: CategoryManagerScreen(entity: entity),
               );
             },
@@ -150,28 +163,37 @@ final List<RouteBase> appRoutes = [
               GoRoute(
                 path: 'add',
                 name: 'entity_categories_add',
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final entity = EntityType.fromId(
                     state.pathParameters['entity']!,
                   )!;
-                  return CategoryFormScreen(forEntity: entity);
+                  return buildResponsivePage(
+                    context: context,
+                    state: state,
+                    child: CategoryFormScreen(forEntity: entity),
+                  );
                 },
               ),
               GoRoute(
                 path: 'edit/:id',
                 name: 'entity_categories_edit',
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final entity = EntityType.fromId(
                     state.pathParameters['entity']!,
                   )!;
                   final id = state.pathParameters['id']!;
-                  return CategoryFormScreen(forEntity: entity, categoryId: id);
+                  return buildResponsivePage(
+                    context: context,
+                    state: state,
+                    child: CategoryFormScreen(
+                      forEntity: entity,
+                      categoryId: id,
+                    ),
+                  );
                 },
               ),
             ],
           ),
-
-          // tags + add/edit
           GoRoute(
             path: 'tags',
             name: 'entity_tags',
@@ -179,8 +201,9 @@ final List<RouteBase> appRoutes = [
               final entity = EntityType.fromId(
                 state.pathParameters['entity']!,
               )!;
-              return NoTransitionPage<void>(
-                key: state.pageKey,
+              return buildResponsivePage(
+                context: context,
+                state: state,
                 child: TagsManagerScreen(entity: entity),
               );
             },
@@ -188,28 +211,34 @@ final List<RouteBase> appRoutes = [
               GoRoute(
                 path: 'add',
                 name: 'entity_tags_add',
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final entity = EntityType.fromId(
                     state.pathParameters['entity']!,
                   )!;
-                  return TagFormScreen(entityType: entity);
+                  return buildResponsivePage(
+                    context: context,
+                    state: state,
+                    child: TagFormScreen(entityType: entity),
+                  );
                 },
               ),
               GoRoute(
                 path: 'edit/:id',
                 name: 'entity_tags_edit',
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final id = state.pathParameters['id']!;
                   final entity = EntityType.fromId(
                     state.pathParameters['entity']!,
                   )!;
-                  return TagFormScreen(tagId: id, entityType: entity);
+                  return buildResponsivePage(
+                    context: context,
+                    state: state,
+                    child: TagFormScreen(tagId: id, entityType: entity),
+                  );
                 },
               ),
             ],
           ),
-
-          // icons + add/edit
           GoRoute(
             path: 'icons',
             name: 'entity_icons',
@@ -217,8 +246,9 @@ final List<RouteBase> appRoutes = [
               final entity = EntityType.fromId(
                 state.pathParameters['entity']!,
               )!;
-              return NoTransitionPage<void>(
-                key: state.pageKey,
+              return buildResponsivePage(
+                context: context,
+                state: state,
                 child: IconManagerScreen(entity: entity),
               );
             },
@@ -226,86 +256,102 @@ final List<RouteBase> appRoutes = [
               GoRoute(
                 path: 'add',
                 name: 'entity_icons_add',
-                builder: (context, state) {
-                  return const IconFormScreen();
+                pageBuilder: (context, state) {
+                  return buildResponsivePage(
+                    context: context,
+                    state: state,
+                    child: const IconFormScreen(),
+                  );
                 },
               ),
               GoRoute(
                 path: 'edit/:id',
                 name: 'entity_icons_edit',
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final id = state.pathParameters['id']!;
-                  return IconFormScreen(iconId: id);
+                  return buildResponsivePage(
+                    context: context,
+                    state: state,
+                    child: IconFormScreen(iconId: id),
+                  );
                 },
               ),
             ],
           ),
-
-          // add/edit для основной сущности
           GoRoute(
             path: 'add',
             name: 'entity_add',
-            builder: (context, state) {
+            pageBuilder: (context, state) {
               final entity = EntityType.fromId(
                 state.pathParameters['entity']!,
               )!;
-              return EntityAddEdit(entity: entity, isEdit: false);
+              return buildResponsivePage(
+                context: context,
+                state: state,
+                child: EntityAddEdit(entity: entity, isEdit: false),
+              );
             },
           ),
           GoRoute(
             path: 'edit/:id',
             name: 'entity_edit',
-            builder: (context, state) {
+            pageBuilder: (context, state) {
               final entity = EntityType.fromId(
                 state.pathParameters['entity']!,
               )!;
               final id = state.pathParameters['id']!;
-              return EntityAddEdit(entity: entity, isEdit: true, id: id);
+              return buildResponsivePage(
+                context: context,
+                state: state,
+                child: EntityAddEdit(entity: entity, isEdit: true, id: id),
+              );
             },
           ),
           GoRoute(
             path: 'view/:id',
             name: 'entity_view',
-            builder: (context, state) {
+            pageBuilder: (context, state) {
               final entity = EntityType.fromId(
                 state.pathParameters['entity']!,
               )!;
               final id = state.pathParameters['id']!;
-              return EntityView(entity: entity, id: id);
+              return buildResponsivePage(
+                context: context,
+                state: state,
+                child: EntityView(entity: entity, id: id),
+              );
             },
           ),
-
           GoRoute(
-            path: 'graph', // -> /dashboard/:entity/notesGraph
+            path: 'graph',
             name: 'entity_notes_graph',
             redirect: (context, state) {
               final ent = state.pathParameters['entity'];
-              // Разрешаем только для notes — для других сущностей редиректим на /dashboard/:entity
               if (ent != 'notes') return '/dashboard/$ent';
               return null;
             },
             pageBuilder: (context, state) {
-              // final ent = state.pathParameters['entity']!;
               return NoTransitionPage<void>(
                 key: state.pageKey,
                 child: const NotesGraphScreen(),
               );
             },
           ),
-
-          /// histoyry/:id
           GoRoute(
             path: 'history/:id',
             name: 'entity_history',
-            builder: (context, state) {
+            pageBuilder: (context, state) {
               final entity = EntityType.fromId(
                 state.pathParameters['entity']!,
               )!;
               final id = state.pathParameters['id']!;
-              return HistoryScreen(entityType: entity, entityId: id);
+              return buildResponsivePage(
+                context: context,
+                state: state,
+                child: HistoryScreen(entityType: entity, entityId: id),
+              );
             },
           ),
-
           GoRoute(
             path: 'migrate',
             name: 'entity_migrate',
@@ -318,9 +364,14 @@ final List<RouteBase> appRoutes = [
               }
               return null;
             },
-            builder: (context, state) => const PasswordMigrationScreen(),
+            pageBuilder: (context, state) {
+              return buildResponsivePage(
+                context: context,
+                state: state,
+                child: const PasswordMigrationScreen(),
+              );
+            },
           ),
-
           GoRoute(
             path: 'import',
             name: 'entity_import',
@@ -333,7 +384,13 @@ final List<RouteBase> appRoutes = [
               }
               return null;
             },
-            builder: (context, state) => const ImportOtpScreen(),
+            pageBuilder: (context, state) {
+              return buildResponsivePage(
+                context: context,
+                state: state,
+                child: const ImportOtpScreen(),
+              );
+            },
           ),
         ],
       ),
