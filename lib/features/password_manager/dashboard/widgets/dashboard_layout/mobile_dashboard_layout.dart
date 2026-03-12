@@ -137,29 +137,7 @@ class _MobileDashboardLayoutState extends State<MobileDashboardLayout>
             ),
           ),
 
-          // 2. Scaffold ТОЛЬКО для drawer. Body пустой (SizedBox.expand),
-          //    поэтому его _BodyBuilder._RenderLayoutBuilder не конфликтует
-          //    с _RenderLayoutBuilder дочерних Scaffold-ов в Navigator.
-          //    IgnorePointer когда drawer закрыт — touches проходят к content.
-          Positioned.fill(
-            child: IgnorePointer(
-              ignoring: !_isDrawerOpen,
-              child: Scaffold(
-                key: _scaffoldKey,
-                backgroundColor: Colors.transparent,
-                onDrawerChanged: (isOpen) {
-                  setState(() => _isDrawerOpen = isOpen);
-                },
-                drawer: DashboardDrawer(
-                  entityType:
-                      EntityType.fromId(widget.entity) ?? EntityType.password,
-                ),
-                body: const SizedBox.expand(),
-              ),
-            ),
-          ),
-
-          // 3. Floating bottom navigation bar
+          // 2. Floating bottom navigation bar
           Positioned(
             bottom: UniversalPlatform.isDesktop
                 ? kBottomNavNotchMargin
@@ -197,7 +175,7 @@ class _MobileDashboardLayoutState extends State<MobileDashboardLayout>
             ),
           ),
 
-          // 4. FAB выше floating nav
+          // 3. FAB выше floating nav
           Positioned(
             bottom: widget.showBottomNav && UniversalPlatform.isDesktop
                 ? kFloatingNavFabBottomOffset + kFloatingNavBarHeight + 5
@@ -230,6 +208,28 @@ class _MobileDashboardLayoutState extends State<MobileDashboardLayout>
                     ).buildExpandableFAB(),
                   ),
                 ),
+              ),
+            ),
+          ),
+
+          // 4. Scaffold ТОЛЬКО для drawer. Body пустой (SizedBox.expand),
+          //    поэтому его _BodyBuilder._RenderLayoutBuilder не конфликтует
+          //    с _RenderLayoutBuilder дочерних Scaffold-ов в Navigator.
+          //    Расположен последним в Stack, чтобы drawer перекрывал nav и FAB.
+          Positioned.fill(
+            child: IgnorePointer(
+              ignoring: !_isDrawerOpen,
+              child: Scaffold(
+                key: _scaffoldKey,
+                backgroundColor: Colors.transparent,
+                onDrawerChanged: (isOpen) {
+                  setState(() => _isDrawerOpen = isOpen);
+                },
+                drawer: DashboardDrawer(
+                  entityType:
+                      EntityType.fromId(widget.entity) ?? EntityType.password,
+                ),
+                body: const SizedBox.expand(),
               ),
             ),
           ),
