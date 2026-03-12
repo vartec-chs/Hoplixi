@@ -1,13 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:hoplixi/core/app_paths.dart';
-import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/main_store/dao/index.dart';
+import 'package:hoplixi/di_init.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/main_store_manager.dart';
 import 'package:hoplixi/main_store/models/db_errors.dart';
@@ -15,10 +11,8 @@ import 'package:hoplixi/main_store/models/db_state.dart';
 import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_store/provider/db_history_provider.dart';
 import 'package:hoplixi/main_store/services/db_key_derivation_service.dart';
-import 'package:hoplixi/main_store/services/file_storage_service.dart';
-import 'package:hoplixi/main_store/services/main_store_storage_service.dart';
-import 'package:hoplixi/main_store/services/store_cleanup_service.dart';
-import 'package:path/path.dart' as p;
+import 'package:hoplixi/main_store/services/main_store_backup_service.dart';
+import 'package:hoplixi/main_store/services/main_store_maintenance_service.dart';
 
 enum BackupScope { databaseOnly, encryptedFilesOnly, full }
 
@@ -38,8 +32,7 @@ class BackupResult {
 
 final _mainStoreManagerProvider = FutureProvider<MainStoreManager>((ref) async {
   final dbHistoryService = await ref.read(dbHistoryProvider.future);
-  const secureStorage = FlutterSecureStorage();
-  final keyService = DbKeyDerivationService(secureStorage);
+  final keyService = DbKeyDerivationService(getIt<FlutterSecureStorage>());
   final manager = MainStoreManager(dbHistoryService, keyService);
 
   // Cleanup on dispose
@@ -62,8 +55,7 @@ final mainStoreProvider =
 
 /// state provider
 final mainStoreStateProvider = FutureProvider<DatabaseState>((ref) async {
-  final state = await ref.watch(mainStoreProvider.future);
-  return state;
+  return ref.watch(mainStoreProvider.future);
 });
 
 /// Провайдер для получения MainStoreManager по готовности
@@ -119,32 +111,13 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
 
   /// Completer для блокировки параллельных операций (защита от race condition)
   Completer<void>? _operationLock;
-  final MainStoreStorageService _storageService = MainStoreStorageService();
+  final MainStoreBackupService _backupService = MainStoreBackupService();
+  final MainStoreMaintenanceService _maintenanceService =
+      MainStoreMaintenanceService();
 
   /// Получить текущее значение состояния или дефолтное
   DatabaseState get _currentState {
     return state.value ?? const DatabaseState(status: DatabaseStatus.idle);
-  }
-
-  Future<void> _cleanupDecryptedAttachmentsDir(String? dirPath) async {
-    if (dirPath == null || dirPath.isEmpty) return;
-
-    final directory = Directory(dirPath);
-    if (!await directory.exists()) return;
-
-    await for (final entity in directory.list(recursive: false)) {
-      try {
-        await entity.delete(recursive: true);
-      } catch (e) {
-        logWarning(
-          'Failed to delete decrypted entity: ${entity.path}',
-
-          tag: _logTag,
-        );
-      }
-    }
-
-    logInfo('Decrypted attachments directory cleaned: $dirPath', tag: _logTag);
   }
 
   /// Установить новое состояние
@@ -210,90 +183,6 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     return const DatabaseState(status: DatabaseStatus.idle);
   }
 
-  Future<String?> _findDatabaseFileInStoreDir(String storeDirPath) async {
-    final storeDir = Directory(storeDirPath);
-    if (!await storeDir.exists()) {
-      return null;
-    }
-
-    await for (final entity in storeDir.list(recursive: false)) {
-      if (entity is File && entity.path.endsWith(MainConstants.dbExtension)) {
-        return entity.path;
-      }
-    }
-
-    return null;
-  }
-
-  Future<void> _copyDirectoryRecursive({
-    required Directory source,
-    required Directory destination,
-  }) async {
-    if (!await source.exists()) return;
-    if (!await destination.exists()) {
-      await destination.create(recursive: true);
-    }
-
-    await for (final entity in source.list(recursive: false)) {
-      final name = p.basename(entity.path);
-      final targetPath = p.join(destination.path, name);
-
-      if (entity is File) {
-        await entity.copy(targetPath);
-      } else if (entity is Directory) {
-        await _copyDirectoryRecursive(
-          source: entity,
-          destination: Directory(targetPath),
-        );
-      }
-    }
-  }
-
-  Future<String> _resolveDefaultBackupsDir() async {
-    return await AppPaths.backupsPath;
-  }
-
-  Future<void> _enforceBackupRetention({
-    required String backupRootPath,
-    required String storeName,
-    required int maxBackupsPerStore,
-  }) async {
-    if (maxBackupsPerStore <= 0) return;
-
-    final rootDir = Directory(backupRootPath);
-    if (!await rootDir.exists()) return;
-
-    final prefix = '${storeName}_backup_';
-    final backups = <Directory>[];
-
-    await for (final entity in rootDir.list(recursive: false)) {
-      if (entity is! Directory) continue;
-      final name = p.basename(entity.path);
-      if (name.startsWith(prefix)) {
-        backups.add(entity);
-      }
-    }
-
-    if (backups.length <= maxBackupsPerStore) return;
-
-    backups.sort((a, b) {
-      final aName = p.basename(a.path);
-      final bName = p.basename(b.path);
-      return aName.compareTo(bName);
-    });
-
-    final toDeleteCount = backups.length - maxBackupsPerStore;
-    for (int i = 0; i < toDeleteCount; i++) {
-      final dir = backups[i];
-      try {
-        await dir.delete(recursive: true);
-        logInfo('Old backup removed by retention: ${dir.path}', tag: _logTag);
-      } catch (e) {
-        logWarning('Failed to remove old backup: ${dir.path}', tag: _logTag);
-      }
-    }
-  }
-
   Future<BackupResult?> createBackup({
     BackupScope scope = BackupScope.full,
     String? outputDirPath,
@@ -312,78 +201,34 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         return null;
       }
 
-      final backupRootPath = outputDirPath ?? await _resolveDefaultBackupsDir();
-      final backupRootDir = Directory(backupRootPath);
-      if (!await backupRootDir.exists()) {
-        await backupRootDir.create(recursive: true);
-      }
+      final attachmentsPath =
+          scope == BackupScope.encryptedFilesOnly || scope == BackupScope.full
+          ? await getAttachmentsPath()
+          : null;
 
-      final retentionLimit = maxBackupsPerStore <= 0 ? 1 : maxBackupsPerStore;
-
-      final now = DateTime.now();
-      final timestamp = now
-          .toIso8601String()
-          .replaceAll(':', '-')
-          .replaceAll('.', '-');
-      final storeName = (_currentState.name ?? 'store').replaceAll(
-        RegExp(r'[^a-zA-Z0-9_-]'),
-        '_',
-      );
-
-      final backupDir = Directory(
-        p.join(backupRootPath, '${storeName}_backup_$timestamp'),
-      );
-      await backupDir.create(recursive: true);
-
-      if (scope == BackupScope.databaseOnly || scope == BackupScope.full) {
-        final dbFilePath = await _findDatabaseFileInStoreDir(storeDirPath);
-        if (dbFilePath == null) {
-          throw Exception('Database file not found for backup');
-        }
-
-        final dbFile = File(dbFilePath);
-        await dbFile.copy(p.join(backupDir.path, p.basename(dbFile.path)));
-      }
-
-      if (scope == BackupScope.encryptedFilesOnly ||
-          scope == BackupScope.full) {
-        final attachmentsPath = await getAttachmentsPath();
-        if (attachmentsPath == null || attachmentsPath.isEmpty) {
-          throw Exception('Encrypted attachments path not found for backup');
-        }
-
-        await _copyDirectoryRecursive(
-          source: Directory(attachmentsPath),
-          destination: Directory(p.join(backupDir.path, 'attachments')),
-        );
-      }
-
-      final manifestFile = File(p.join(backupDir.path, 'backup_manifest.json'));
-      await manifestFile.writeAsString(
-        jsonEncode({
-          'createdAt': now.toIso8601String(),
-          'storeName': _currentState.name,
-          'storePath': storeDirPath,
-          'scope': scope.name,
-          'periodic': periodic,
-        }),
+      final backupData = await _backupService.createBackup(
+        storeDirPath: storeDirPath,
+        storeName: _currentState.name ?? 'store',
+        includeDatabase:
+            scope == BackupScope.databaseOnly || scope == BackupScope.full,
+        includeEncryptedFiles:
+            scope == BackupScope.encryptedFilesOnly ||
+            scope == BackupScope.full,
+        attachmentsPath: attachmentsPath,
+        outputDirPath: outputDirPath,
+        periodic: periodic,
+        maxBackupsPerStore: maxBackupsPerStore,
       );
 
       logInfo(
-        'Backup created successfully: ${backupDir.path} (scope: ${scope.name})',
+        'Backup created successfully: ${backupData.backupPath} (scope: ${scope.name})',
         tag: _logTag,
       );
 
-      await _enforceBackupRetention(
-        backupRootPath: backupRootPath,
-        storeName: storeName,
-        maxBackupsPerStore: retentionLimit,
-      );
-
       return BackupResult(
-        backupPath: backupDir.path,
+        backupPath: backupData.backupPath,
         scope: scope,
-        createdAt: now,
+        createdAt: backupData.createdAt,
         periodic: periodic,
       );
     } catch (e, stackTrace) {
@@ -637,7 +482,9 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         return false;
       }
 
-      await _cleanupDecryptedAttachmentsDir(decryptedPathBeforeClose);
+      await _maintenanceService.cleanupDecryptedAttachmentsDir(
+        decryptedPathBeforeClose,
+      );
 
       // Успех - переводим в idle состояние
       _setState(const DatabaseState(status: DatabaseStatus.closed));
@@ -697,7 +544,9 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       return null;
     });
 
-    await _cleanupDecryptedAttachmentsDir(decryptedPathBeforeLock);
+    await _maintenanceService.cleanupDecryptedAttachmentsDir(
+      decryptedPathBeforeLock,
+    );
 
     _setState(
       _currentState.copyWith(
@@ -720,32 +569,16 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   /// Выполнить стартовую чистку
   Future<void> _runStartupCleanup() async {
     try {
-      // Создаём StoreCleanupService напрямую, минуя цепочку провайдеров,
-      // чтобы избежать CircularDependencyError: mainStoreProvider →
-      // storeCleanupServiceProvider → mainStoreManagerProvider → mainStoreProvider.
       final store = _manager.currentStore;
       if (store == null) return;
 
       final storePath = _manager.currentStorePath;
       if (storePath == null || storePath.isEmpty) return;
 
-      final attachmentsPath = _storageService.getAttachmentsPath(storePath);
-      final decryptedPath = _storageService.getDecryptedAttachmentsPath(
-        storePath,
+      await _maintenanceService.runStartupCleanup(
+        store: store,
+        storePath: storePath,
       );
-
-      final fileStorageService = FileStorageService(
-        store,
-        attachmentsPath,
-        decryptedPath,
-      );
-      final settingsDao = StoreSettingsDao(store);
-      final cleanupService = StoreCleanupService(
-        settingsDao,
-        fileStorageService,
-      );
-
-      await cleanupService.performFullCleanup(ignoreInterval: false);
     } catch (e, s) {
       logError('Startup cleanup failed: $e', stackTrace: s, tag: _logTag);
     }
@@ -927,8 +760,8 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       await dbHistoryService.deleteByPath(path);
 
       if (deleteFromDisk &&
-          await _storageService.storageDirectoryExists(path)) {
-        await _storageService.deleteStorageDirectory(path);
+          await _maintenanceService.storageDirectoryExists(path)) {
+        await _maintenanceService.deleteStorageDirectory(path);
       }
 
       _setState(const DatabaseState(status: DatabaseStatus.idle));
@@ -974,7 +807,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         await _manager.closeStore();
       }
 
-      if (!await _storageService.storageDirectoryExists(path)) {
+      if (!await _maintenanceService.storageDirectoryExists(path)) {
         _setErrorState(
           DatabaseState(
             status: DatabaseStatus.error,
@@ -988,7 +821,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         return false;
       }
 
-      await _storageService.deleteStorageDirectory(path);
+      await _maintenanceService.deleteStorageDirectory(path);
 
       final dbHistoryService = await ref.read(dbHistoryProvider.future);
       final historyDeleted = await dbHistoryService.deleteByPath(path);
@@ -1046,7 +879,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         return null;
       }
 
-      return _storageService.getAttachmentsPath(storePath);
+      return _maintenanceService.getAttachmentsPath(storePath);
     } catch (e, stackTrace) {
       logError(
         'Unexpected error getting attachments path: $e',
@@ -1076,7 +909,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         return null;
       }
 
-      return _storageService.getDecryptedAttachmentsPath(storePath);
+      return _maintenanceService.getDecryptedAttachmentsPath(storePath);
     } catch (e, stackTrace) {
       logError(
         'Unexpected error getting decrypted attachments path: $e',
@@ -1107,7 +940,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         return null;
       }
 
-      final path = await _storageService.createSubfolder(
+      final path = await _maintenanceService.createSubfolder(
         storePath: storePath,
         folderName: folderName,
       );
