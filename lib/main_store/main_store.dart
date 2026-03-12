@@ -1,57 +1,17 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/main_store/dao/api_key_dao.dart';
-import 'package:hoplixi/main_store/dao/bank_card_dao.dart';
-import 'package:hoplixi/main_store/dao/category_dao.dart';
-import 'package:hoplixi/main_store/dao/certificate_dao.dart';
-import 'package:hoplixi/main_store/dao/contact_dao.dart';
-import 'package:hoplixi/main_store/dao/crypto_wallet_dao.dart';
-import 'package:hoplixi/main_store/dao/custom_field_dao.dart';
-import 'package:hoplixi/main_store/dao/document_dao.dart';
-import 'package:hoplixi/main_store/dao/file_dao.dart';
-import 'package:hoplixi/main_store/dao/history_dao/api_key_history_dao.dart';
-import 'package:hoplixi/main_store/dao/history_dao/bank_card_history_dao.dart';
-import 'package:hoplixi/main_store/dao/history_dao/certificate_history_dao.dart';
-import 'package:hoplixi/main_store/dao/history_dao/contact_history_dao.dart';
-import 'package:hoplixi/main_store/dao/history_dao/crypto_wallet_history_dao.dart';
-import 'package:hoplixi/main_store/dao/history_dao/custom_field_history_dao.dart';
-import 'package:hoplixi/main_store/dao/history_dao/document_history_dao.dart';
-import 'package:hoplixi/main_store/dao/history_dao/file_history_dao.dart';
-import 'package:hoplixi/main_store/dao/history_dao/identity_history_dao.dart';
-import 'package:hoplixi/main_store/dao/history_dao/license_key_history_dao.dart';
-import 'package:hoplixi/main_store/dao/history_dao/loyalty_card_history_dao.dart';
-import 'package:hoplixi/main_store/dao/history_dao/note_history_dao.dart';
-import 'package:hoplixi/main_store/dao/history_dao/otp_history_dao.dart';
-import 'package:hoplixi/main_store/dao/history_dao/password_history_dao.dart';
-import 'package:hoplixi/main_store/dao/history_dao/recovery_codes_history_dao.dart';
-import 'package:hoplixi/main_store/dao/history_dao/ssh_key_history_dao.dart';
-import 'package:hoplixi/main_store/dao/history_dao/wifi_history_dao.dart';
-import 'package:hoplixi/main_store/dao/icon_dao.dart';
-import 'package:hoplixi/main_store/dao/identity_dao.dart';
-import 'package:hoplixi/main_store/dao/license_key_dao.dart';
-import 'package:hoplixi/main_store/dao/loyalty_card_dao.dart';
-import 'package:hoplixi/main_store/dao/note_dao.dart';
-import 'package:hoplixi/main_store/dao/note_link_dao.dart';
-import 'package:hoplixi/main_store/dao/otp_dao.dart';
-import 'package:hoplixi/main_store/dao/password_dao.dart';
-import 'package:hoplixi/main_store/dao/recovery_codes_dao.dart';
-import 'package:hoplixi/main_store/dao/ssh_key_dao.dart';
-import 'package:hoplixi/main_store/dao/store_meta_dao.dart';
-import 'package:hoplixi/main_store/dao/store_settings_dao.dart';
-import 'package:hoplixi/main_store/dao/vault_item_dao.dart';
-import 'package:hoplixi/main_store/dao/wifi_dao.dart';
+import 'package:hoplixi/main_store/dao/index.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:hoplixi/main_store/tables/index.dart';
 import 'package:hoplixi/main_store/triggers/index.dart';
 import 'package:uuid/uuid.dart';
 
-import './dao/filters_dao/filters_dao.dart';
-
 part 'main_store.g.dart';
 
 @DriftDatabase(
   tables: [
+    // --- Мета-таблицы ---
     StoreMetaTable,
     StoreSettings,
     // --- Базовая таблица ---
@@ -161,6 +121,8 @@ part 'main_store.g.dart';
     RecoveryCodesFilterDao,
     CustomFieldDao,
     CustomFieldHistoryDao,
+    DocumentFilterDao,
+    TagDao,
   ],
 )
 class MainStore extends _$MainStore {

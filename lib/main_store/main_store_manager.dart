@@ -1,14 +1,4 @@
-import 'dart:convert';
-import 'dart:io';
-import 'dart:math' as math;
-
-import 'package:crypto/crypto.dart';
-import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:file_crypto/file_crypto.dart';
-import 'package:flutter/services.dart';
 import 'package:hoplixi/core/app_paths.dart';
-import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/db_errors.dart';
@@ -16,10 +6,10 @@ import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_store/models/store_key_config.dart';
 import 'package:hoplixi/main_store/services/db_history_services.dart';
 import 'package:hoplixi/main_store/services/db_key_derivation_service.dart';
-import 'package:path/path.dart' as p;
+import 'package:hoplixi/main_store/services/main_store_connection_service.dart';
+import 'package:hoplixi/main_store/services/main_store_metadata_service.dart';
+import 'package:hoplixi/main_store/services/main_store_storage_service.dart';
 import 'package:result_dart/result_dart.dart';
-import 'package:sqlite3/sqlite3.dart';
-import 'package:uuid/uuid.dart';
 
 /// Менеджер для управления хранилищами MainStore
 ///
@@ -27,18 +17,25 @@ import 'package:uuid/uuid.dart';
 /// зашифрованными хранилищами паролей на основе Drift + SQLCipher
 class MainStoreManager {
   static const String _logTag = 'MainStoreManager';
-  static const String _dbExtension = MainConstants.dbExtension;
-  static const String _attachmentsFolder = 'attachments';
-  static const String _decryptedAttachmentsFolder = 'attachments_decrypted';
 
   final DatabaseHistoryService _dbHistoryService;
   final DbKeyDerivationService _keyService;
-  final _uuid = const Uuid();
+  final MainStoreStorageService _storageService;
+  final MainStoreConnectionService _connectionService;
+  final MainStoreMetadataService _metadataService;
 
   MainStore? _currentStore;
   String? _currentStorePath;
 
-  MainStoreManager(this._dbHistoryService, this._keyService);
+  MainStoreManager(
+    this._dbHistoryService,
+    this._keyService, {
+    MainStoreStorageService? storageService,
+    MainStoreConnectionService? connectionService,
+    MainStoreMetadataService? metadataService,
+  }) : _storageService = storageService ?? MainStoreStorageService(),
+       _connectionService = connectionService ?? MainStoreConnectionService(),
+       _metadataService = metadataService ?? MainStoreMetadataService();
 
   /// Проверка, открыто ли хранилище
   bool get isStoreOpen => _currentStore != null && _currentStorePath != null;
@@ -69,72 +66,15 @@ class MainStoreManager {
         );
       }
 
-      // Нормализация имени папки
-      late final String normalizedName;
-      try {
-        normalizedName = _normalizeStorageName(dto.name);
-      } on DatabaseError catch (e) {
-        return Failure(e);
-      }
-
       final storagePath = await AppPaths.appStoragePath;
-      final storageDir = Directory(p.join(storagePath, normalizedName));
-
-      // Проверка существования папки
-      if (await storageDir.exists()) {
-        final existingDbFile = await _findDatabaseFile(storageDir.path);
-        if (existingDbFile != null) {
-          return Failure(
-            DatabaseError.validationError(
-              message: 'Хранилище с таким именем уже существует',
-              data: {'path': storageDir.path},
-              timestamp: DateTime.now(),
-            ),
-          );
-        } else {
-          final noSpacesName = dto.name.replaceAll(RegExp(r'\s+'), '');
-          final backupName = 'do_not_contain_db_file_$noSpacesName';
-          var backupPath = p.join(storagePath, backupName);
-
-          var backupDir = Directory(backupPath);
-          var counter = 1;
-          while (await backupDir.exists()) {
-            backupPath = p.join(storagePath, '${backupName}_$counter');
-            backupDir = Directory(backupPath);
-            counter++;
-          }
-
-          await storageDir.rename(backupPath);
-          logInfo(
-            'Renamed directory without db file to: $backupPath',
-            tag: _logTag,
-          );
-        }
-      }
-
-      // Создание папки хранилища
-      await storageDir.create(recursive: true);
-      logInfo('Created storage directory: ${storageDir.path}', tag: _logTag);
-
-      // Создание подпапки attachments
-      final attachmentsDir = Directory(
-        p.join(storageDir.path, _attachmentsFolder),
+      final preparedStorage = await _storageService.prepareNewStorageDirectory(
+        baseStoragePath: storagePath,
+        storeName: dto.name,
       );
-      await attachmentsDir.create(recursive: true);
-      logInfo('Created attachments directory', tag: _logTag);
+      final storageDir = preparedStorage.storageDir;
 
-      // Генерация соли и хеширование пароля (для верификации на открытии)
-      final salt = _uuid.v4();
-      final passwordHash = _hashPassword(dto.password, salt);
-
-      // Генерация криптографически безопасного случайного ключа для шифрования attachments
-      final attachmentKey = _generateSecureKey();
-
-      // --- Argon2-деривация ключа для SQLCipher ---
-      // Генерация уникальной Argon2-соли для этого хранилища
       final argon2Salt = DbKeyDerivationService.generateSalt();
 
-      // Сохранение конфига ключа рядом с файлом БД (до создания соединения)
       final keyConfig = StoreKeyConfig(
         argon2Salt: argon2Salt,
         useDeviceKey: dto.useDeviceKey,
@@ -145,22 +85,24 @@ class MainStoreManager {
         tag: _logTag,
       );
 
-      // Деривация PRAGMA key: masterKey=Argon2(pwd,salt) [→ HKDF(masterKey,device)]
       final pragmaKey = await _keyService.derivePragmaKey(
         dto.password,
         argon2Salt,
         useDeviceKey: dto.useDeviceKey,
       );
 
-      // Путь к файлу БД
-      final dbFilePath = _getDbFilePath(storageDir.path, normalizedName);
+      final dbFilePath = _storageService.getDatabaseFilePath(
+        storageDir.path,
+        preparedStorage.normalizedName,
+      );
 
-      // Создание соединения с БД
-      final dbResult = await _createDatabaseConnection(dbFilePath, pragmaKey);
+      final dbResult = await _connectionService.createDatabaseConnection(
+        dbFilePath,
+        pragmaKey,
+      );
 
       if (dbResult.isError()) {
-        // Удаляем созданную папку при ошибке
-        await storageDir.delete(recursive: true);
+        await _storageService.deleteStorageDirectory(storageDir.path);
         return dbResult.fold(
           (_) => Success(
             StoreInfoDto(
@@ -180,21 +122,12 @@ class MainStoreManager {
       _currentStore = database;
       _currentStorePath = storageDir.path;
 
-      // Создание записи метаданных в БД
-      final storeId = _uuid.v4();
-      await database
-          .into(database.storeMetaTable)
-          .insert(
-            StoreMetaTableCompanion.insert(
-              id: Value(storeId),
-              name: dto.name,
-              description: Value(dto.description),
-              passwordHash: passwordHash,
-              salt: salt,
-              attachmentKey: attachmentKey,
-              version: const Value('1.0.0'),
-            ),
-          );
+      final storeId = await _metadataService.createStoreMetadata(
+        database: database,
+        name: dto.name,
+        description: dto.description,
+        password: dto.password,
+      );
 
       logInfo('Created store metadata with id: $storeId', tag: _logTag);
 
@@ -212,6 +145,8 @@ class MainStoreManager {
 
       // Получение информации о созданном хранилище
       return getStoreInfo();
+    } on DatabaseError catch (e) {
+      return Failure(e);
     } catch (e, stackTrace) {
       logError(
         'Failed to create store: $e',
@@ -245,29 +180,12 @@ class MainStoreManager {
         _currentStorePath = null;
       }
 
-      // Проверка существования директории или файла БД
-      final storageDir = Directory(dto.path);
-      final dbFile = File(dto.path);
+      final actualStoragePath = await _storageService
+          .resolveExistingStoragePath(dto.path);
 
-      String actualStoragePath = dto.path;
-
-      if (await storageDir.exists()) {
-        actualStoragePath = dto.path;
-      } else if (await dbFile.exists() && dto.path.endsWith(_dbExtension)) {
-        // Если это файл БД, получить путь к директории
-        actualStoragePath = p.dirname(dto.path);
-      } else {
-        return Failure(
-          DatabaseError.recordNotFound(
-            message: 'Директория хранилища или файл БД не найдены',
-            data: {'path': dto.path},
-            timestamp: DateTime.now(),
-          ),
-        );
-      }
-
-      // Поиск файла БД
-      final dbFilePath = await _findDatabaseFile(actualStoragePath);
+      final dbFilePath = await _storageService.findDatabaseFile(
+        actualStoragePath,
+      );
       if (dbFilePath == null) {
         return Failure(
           DatabaseError.recordNotFound(
@@ -280,12 +198,9 @@ class MainStoreManager {
 
       logInfo('Found database file: $dbFilePath', tag: _logTag);
 
-      // --- Деривация PRAGMA key ---
-      // Читаем store_key.json (null → старое хранилище без Argon2)
       final keyConfig = await StoreKeyConfig.readFrom(actualStoragePath);
       final String pragmaKey;
       if (keyConfig != null) {
-        // Новый формат: Argon2 [+ HKDF device key]
         pragmaKey = await _keyService.derivePragmaKey(
           dto.password,
           keyConfig.argon2Salt,
@@ -304,8 +219,10 @@ class MainStoreManager {
         );
       }
 
-      // Создание соединения с БД
-      final dbResult = await _createDatabaseConnection(dbFilePath, pragmaKey);
+      final dbResult = await _connectionService.createDatabaseConnection(
+        dbFilePath,
+        pragmaKey,
+      );
 
       if (dbResult.isError()) {
         return dbResult.fold(
@@ -325,11 +242,10 @@ class MainStoreManager {
 
       final database = dbResult.getOrThrow();
 
-      // Проверка пароля и получение метаданных
-      final verifyResult = await _verifyPassword(database, dto.password);
-      if (verifyResult.isError()) {
+      final storeMetaResult = await _metadataService.getStoreMeta(database);
+      if (storeMetaResult.isError()) {
         await database.close();
-        return verifyResult.fold(
+        return storeMetaResult.fold(
           (_) => Success(
             StoreInfoDto(
               id: '',
@@ -344,22 +260,17 @@ class MainStoreManager {
         );
       }
 
-      final storeMeta = verifyResult.getOrThrow();
+      final storeMeta = storeMetaResult.getOrThrow();
 
       _currentStore = database;
       _currentStorePath = actualStoragePath;
 
-      // Обновление времени последнего доступа
-      await database
-          .update(database.storeMetaTable)
-          .replace(storeMeta.copyWith(lastOpenedAt: DateTime.now()));
+      await _metadataService.updateLastOpenedAt(database);
 
-      // Обновление или создание записи в истории
       final existingHistory = await _dbHistoryService.getByPath(
         actualStoragePath,
       );
       if (existingHistory == null) {
-        // Создаем новую запись в истории, если ее нет
         await _dbHistoryService.create(
           path: actualStoragePath,
           dbId: storeMeta.id,
@@ -370,7 +281,6 @@ class MainStoreManager {
         );
         logInfo('Created new history entry for opened store', tag: _logTag);
       } else {
-        // Обновляем время последнего доступа для существующей записи
         await _dbHistoryService.updateLastAccessed(actualStoragePath);
         logInfo('Updated existing history entry', tag: _logTag);
       }
@@ -378,6 +288,8 @@ class MainStoreManager {
       logInfo('Store opened successfully', tag: _logTag);
 
       return getStoreInfo();
+    } on DatabaseError catch (e) {
+      return Failure(e);
     } catch (e, stackTrace) {
       logError(
         'Failed to open store: $e',
@@ -443,29 +355,7 @@ class MainStoreManager {
         );
       }
 
-      final query = _currentStore!.select(_currentStore!.storeMetaTable);
-      final meta = await query.getSingleOrNull();
-
-      if (meta == null) {
-        return Failure(
-          DatabaseError.recordNotFound(
-            message: 'Метаданные хранилища не найдены',
-            timestamp: DateTime.now(),
-          ),
-        );
-      }
-
-      final dto = StoreInfoDto(
-        id: meta.id,
-        name: meta.name,
-        description: meta.description,
-        createdAt: meta.createdAt,
-        modifiedAt: meta.modifiedAt,
-        lastOpenedAt: meta.lastOpenedAt,
-        version: meta.version,
-      );
-
-      return Success(dto);
+      return _metadataService.getStoreInfo(_currentStore!);
     } catch (e, stackTrace) {
       logError(
         'Failed to get store info: $e',
@@ -497,47 +387,15 @@ class MainStoreManager {
       }
 
       logInfo('Updating store metadata', tag: _logTag);
-
-      final query = _currentStore!.select(_currentStore!.storeMetaTable);
-      final currentMeta = await query.getSingleOrNull();
-
-      if (currentMeta == null) {
-        return Failure(
-          DatabaseError.recordNotFound(
-            message: 'Метаданные хранилища не найдены',
-            timestamp: DateTime.now(),
-          ),
-        );
+      final result = await _metadataService.updateStore(_currentStore!, dto);
+      if (result.isError()) {
+        return result;
       }
 
-      // Подготовка обновлений
-      var updatedMeta = currentMeta.copyWith(modifiedAt: DateTime.now());
-
-      if (dto.name != null) {
-        updatedMeta = updatedMeta.copyWith(name: dto.name);
-      }
-
-      if (dto.description != null) {
-        updatedMeta = updatedMeta.copyWith(description: Value(dto.description));
-      }
-
-      // Обновление пароля, если указано
       if (dto.password != null) {
-        final newSalt = _uuid.v4();
-        final newPasswordHash = _hashPassword(dto.password!, newSalt);
-        updatedMeta = updatedMeta.copyWith(
-          passwordHash: newPasswordHash,
-          salt: newSalt,
-        );
         logInfo('Password updated for store', tag: _logTag);
       }
 
-      // Сохранение изменений
-      await _currentStore!
-          .update(_currentStore!.storeMetaTable)
-          .replace(updatedMeta);
-
-      // Обновление в истории
       if (_currentStorePath != null) {
         final historyEntry = await _dbHistoryService.getByPath(
           _currentStorePath!,
@@ -560,7 +418,7 @@ class MainStoreManager {
 
       logInfo('Store metadata updated successfully', tag: _logTag);
 
-      return getStoreInfo();
+      return result;
     } catch (e, stackTrace) {
       logError(
         'Failed to update store: $e',
@@ -575,468 +433,5 @@ class MainStoreManager {
         ),
       );
     }
-  }
-
-  /// Удалить хранилище
-  ///
-  /// [path] - путь к директории хранилища
-  /// [deleteFromDisk] - удалить файлы с диска (по умолчанию true)
-  AsyncResultDart<Unit, DatabaseError> deleteStore(
-    String path, {
-    bool deleteFromDisk = true,
-  }) async {
-    try {
-      logInfo('Deleting store at: $path', tag: _logTag);
-
-      // Закрыть, если это текущее хранилище
-      if (_currentStorePath == path && isStoreOpen) {
-        await closeStore();
-      }
-
-      // Удаление из истории
-      await _dbHistoryService.deleteByPath(path);
-
-      // Удаление с диска
-      if (deleteFromDisk) {
-        final storageDir = Directory(path);
-        if (await storageDir.exists()) {
-          await storageDir.delete(recursive: true);
-          logInfo('Store deleted from disk', tag: _logTag);
-        }
-      }
-
-      logInfo('Store deleted successfully', tag: _logTag);
-
-      return const Success(unit);
-    } catch (e, stackTrace) {
-      logError(
-        'Failed to delete store: $e',
-        stackTrace: stackTrace,
-        tag: _logTag,
-      );
-      return Failure(
-        DatabaseError.deleteFailed(
-          message: 'Не удалось удалить хранилище: $e',
-          timestamp: DateTime.now(),
-          stackTrace: stackTrace,
-        ),
-      );
-    }
-  }
-
-  /// Удалить хранилище только из истории
-  ///
-  /// Файлы хранилища на диске остаются нетронутыми
-  /// [path] - путь к директории хранилища
-  AsyncResultDart<Unit, DatabaseError> deleteStoreFromHistory(
-    String path,
-  ) async {
-    try {
-      logInfo('Deleting store from history: $path', tag: _logTag);
-
-      // Удаление из истории
-      await _dbHistoryService.deleteByPath(path);
-
-      logInfo('Store removed from history successfully', tag: _logTag);
-
-      return const Success(unit);
-    } catch (e, stackTrace) {
-      logError(
-        'Failed to delete store from history: $e',
-        stackTrace: stackTrace,
-        tag: _logTag,
-      );
-      return Failure(
-        DatabaseError.deleteFailed(
-          message: 'Не удалось удалить хранилище из истории: $e',
-          timestamp: DateTime.now(),
-          stackTrace: stackTrace,
-        ),
-      );
-    }
-  }
-
-  /// Удалить файлы хранилища с диска
-  ///
-  /// Запись в истории остается нетронутой
-  /// [path] - путь к директории хранилища
-  AsyncResultDart<Unit, DatabaseError> deleteStoreFromDisk(String path) async {
-    try {
-      logInfo('Deleting store files from disk: $path', tag: _logTag);
-
-      // Закрыть, если это текущее хранилище
-      if (_currentStorePath == path && isStoreOpen) {
-        await closeStore();
-      }
-
-      // Удаление с диска
-      final storageDir = Directory(path);
-      if (await storageDir.exists()) {
-        await storageDir.delete(recursive: true);
-        logInfo('Store files deleted from disk', tag: _logTag);
-      } else {
-        return Failure(
-          DatabaseError.recordNotFound(
-            message: 'Директория хранилища не найдена',
-            data: {'path': path},
-            timestamp: DateTime.now(),
-          ),
-        );
-      }
-
-      logInfo('Store files deleted successfully', tag: _logTag);
-
-      return const Success(unit);
-    } catch (e, stackTrace) {
-      logError(
-        'Failed to delete store files from disk: $e',
-        stackTrace: stackTrace,
-        tag: _logTag,
-      );
-      return Failure(
-        DatabaseError.deleteFailed(
-          message: 'Не удалось удалить файлы хранилища с диска: $e',
-          timestamp: DateTime.now(),
-          stackTrace: stackTrace,
-        ),
-      );
-    }
-  }
-
-  /// Создать подпапку в текущем хранилище
-  ///
-  /// [folderName] - имя подпапки
-  /// Возвращает полный путь к созданной папке
-  AsyncResultDart<String, DatabaseError> createSubfolder(
-    String folderName,
-  ) async {
-    try {
-      if (!isStoreOpen || _currentStorePath == null) {
-        return Failure(
-          DatabaseError.notInitialized(
-            message: 'Хранилище не открыто',
-            timestamp: DateTime.now(),
-          ),
-        );
-      }
-
-      late final String normalizedName;
-      try {
-        normalizedName = _normalizeStorageName(folderName);
-      } on DatabaseError catch (e) {
-        return Failure(e);
-      }
-
-      final subfolderPath = p.join(_currentStorePath!, normalizedName);
-      final subfolder = Directory(subfolderPath);
-
-      if (await subfolder.exists()) {
-        return Failure(
-          DatabaseError.validationError(
-            message: 'Папка с таким именем уже существует',
-            data: {'path': subfolderPath},
-            timestamp: DateTime.now(),
-          ),
-        );
-      }
-
-      await subfolder.create(recursive: true);
-      logInfo('Created subfolder: $normalizedName', tag: _logTag);
-
-      return Success(subfolderPath);
-    } catch (e, stackTrace) {
-      logError(
-        'Failed to create subfolder: $e',
-        stackTrace: stackTrace,
-        tag: _logTag,
-      );
-      return Failure(
-        DatabaseError.unknown(
-          message: 'Не удалось создать подпапку: $e',
-          timestamp: DateTime.now(),
-          stackTrace: stackTrace,
-        ),
-      );
-    }
-  }
-
-  /// Получить путь к папке вложений
-  AsyncResultDart<String, DatabaseError> getAttachmentsPath() async {
-    try {
-      if (!isStoreOpen || _currentStorePath == null) {
-        return Failure(
-          DatabaseError.notInitialized(
-            message: 'Хранилище не открыто',
-            timestamp: DateTime.now(),
-          ),
-        );
-      }
-
-      final attachmentsPath = p.join(_currentStorePath!, _attachmentsFolder);
-      return Success(attachmentsPath);
-    } catch (e) {
-      return Failure(
-        DatabaseError.unknown(
-          message: 'Не удалось получить путь к вложениям: $e',
-          timestamp: DateTime.now(),
-        ),
-      );
-    }
-  }
-
-  /// Получить путь к папке вложений расшифрованного файла
-  AsyncResultDart<String, DatabaseError>
-  getDecryptedAttachmentsDirPath() async {
-    try {
-      if (!isStoreOpen || _currentStorePath == null) {
-        return Failure(
-          DatabaseError.notInitialized(
-            message: 'Хранилище не открыто',
-            timestamp: DateTime.now(),
-          ),
-        );
-      }
-
-      final decryptedAttachmentsPath = p.join(
-        _currentStorePath!,
-        _decryptedAttachmentsFolder,
-      );
-      return Success(decryptedAttachmentsPath);
-    } catch (e) {
-      return Failure(
-        DatabaseError.unknown(
-          message: 'Не удалось получить путь к расшифрованным вложениям: $e',
-          timestamp: DateTime.now(),
-        ),
-      );
-    }
-  }
-
-  // === Приватные методы ===
-
-  /// Нормализовать имя папки хранилища
-  ///
-  /// Выбрасывает [DatabaseError.validationError] если имя пустое после нормализации
-  String _normalizeStorageName(String name) {
-    // Удаляем лишние пробелы по краям
-    var normalized = name.trim();
-
-    // Заменяем пробелы на подчеркивания
-    normalized = normalized.replaceAll(RegExp(r'\s+'), '_');
-
-    // Удаляем недопустимые символы для файловой системы
-    normalized = normalized.replaceAll(RegExp(r'[<>:"/\\|?*]'), '');
-
-    // Если имя пустое после нормализации, выбрасываем ошибку
-    if (normalized.isEmpty) {
-      throw DatabaseError.validationError(
-        message: 'Имя хранилища содержит только недопустимые символы',
-        data: {'originalName': name},
-        timestamp: DateTime.now(),
-      );
-    }
-
-    return normalized;
-  }
-
-  /// Получить путь к файлу БД
-  String _getDbFilePath(String storagePath, String storageName) {
-    return p.join(storagePath, '$storageName$_dbExtension');
-  }
-
-  /// Найти файл БД в директории
-  Future<String?> _findDatabaseFile(String storagePath) async {
-    try {
-      final dir = Directory(storagePath);
-      final files = await dir.list().toList();
-
-      for (final file in files) {
-        if (file is File && file.path.endsWith(_dbExtension)) {
-          return file.path;
-        }
-      }
-
-      return null;
-    } catch (e) {
-      logError('Failed to find database file: $e', tag: _logTag);
-      return null;
-    }
-  }
-
-  static bool _debugCheckHasCipher(Database database) {
-    return database.select('PRAGMA cipher;').isNotEmpty;
-  }
-
-  static Future<void> _driftIsolateSetup(RootIsolateToken token) async {
-    BackgroundIsolateBinaryMessenger.ensureInitialized(token);
-  }
-
-  /// Создать соединение с БД с шифрованием
-  ///
-  /// [pragmaKey] — либо строка `x'<hex>'` (Argon2-деривация), либо
-  /// сырой пароль (обратная совместимость со старыми БД).
-  AsyncResultDart<MainStore, DatabaseError> _createDatabaseConnection(
-    String dbFilePath,
-    String pragmaKey,
-  ) async {
-    try {
-      logInfo('Creating database connection', tag: _logTag);
-      final token = RootIsolateToken.instance!;
-
-      final executor = NativeDatabase.createInBackground(
-        File(dbFilePath),
-        isolateSetup: () => _driftIsolateSetup(token),
-        setup: (rawDb) {
-          // rawDb.execute('PRAGMA legacy = 4');
-          if (!_debugCheckHasCipher(rawDb)) {
-            throw UnsupportedError(
-              'This database needs to run with SQLCipher, but that library is '
-              'not available!',
-            );
-          }
-
-          // Отключаем двойные кавычки для строковых литералов, чтобы избежать проблем с паролями, содержащими кавычки
-          rawDb.config.doubleQuotedStringLiterals = false;
-
-          // Регистрация функции exp для SQLite для сортировки по времени
-          rawDb.createFunction(
-            functionName: 'exp',
-            argumentCount: const AllowedArgumentCount(1),
-            deterministic: true,
-            directOnly: true,
-            function: (args) {
-              if (args.isEmpty || args[0] == null) {
-                return 1.0;
-              }
-              try {
-                final value = (args[0] as num).toDouble();
-                // Ограничиваем значение, чтобы избежать overflow
-                if (value > 100) {
-                  return double.infinity;
-                }
-                if (value < -100) {
-                  return 0.0;
-                }
-                final result = math.exp(value);
-                // Проверка на infinity и NaN
-                if (result.isInfinite || result.isNaN) {
-                  return 1.0;
-                }
-
-                return result;
-              } catch (e) {
-                return 1.0;
-              }
-            },
-          );
-          // Raw hex key (Argon2): PRAGMA key = "x'<hex>'";
-          // Legacy текстовый пароль:  PRAGMA key = '<escaped>';
-          if (pragmaKey.startsWith("x'")) {
-            rawDb.execute('PRAGMA key = "$pragmaKey";');
-          } else {
-            final escaped = pragmaKey.replaceAll("'", "''");
-            rawDb.execute("PRAGMA key = '$escaped';");
-          }
-
-          rawDb.execute("PRAGMA cipher_compatibility = 4;");
-        },
-      );
-
-      final database = MainStore(executor);
-
-      // Проверка соединения (попытка выполнить простой запрос)
-      try {
-        await database.customSelect('SELECT 1;').getSingle();
-        logInfo('Database connection established', tag: _logTag);
-      } catch (e) {
-        await database.close();
-        logError('Failed to verify database connection: $e', tag: _logTag);
-        return Failure(
-          DatabaseError.invalidPassword(
-            message: 'Неверный пароль или поврежденная база данных (error: $e)',
-            timestamp: DateTime.now(),
-          ),
-        );
-      }
-
-      return Success(database);
-    } catch (e, stackTrace) {
-      logError(
-        'Failed to create database connection: $e',
-        stackTrace: stackTrace,
-        tag: _logTag,
-      );
-      return Failure(
-        DatabaseError.connectionFailed(
-          message: 'Не удалось подключиться к базе данных: $e',
-          timestamp: DateTime.now(),
-          stackTrace: stackTrace,
-        ),
-      );
-    }
-  }
-
-  /// Проверить пароль и получить метаданные
-  AsyncResultDart<StoreMeta, DatabaseError> _verifyPassword(
-    MainStore database,
-    String password,
-  ) async {
-    try {
-      final query = database.select(database.storeMetaTable);
-      final meta = await query.getSingleOrNull();
-
-      if (meta == null) {
-        return Failure(
-          DatabaseError.recordNotFound(
-            message: 'Метаданные хранилища не найдены',
-            timestamp: DateTime.now(),
-          ),
-        );
-      }
-
-      // Проверка хеша пароля
-      final expectedHash = _hashPassword(password, meta.salt);
-      if (expectedHash != meta.passwordHash) {
-        return Failure(
-          DatabaseError.invalidPassword(
-            message: 'Неверный пароль',
-            timestamp: DateTime.now(),
-          ),
-        );
-      }
-
-      return Success(meta);
-    } catch (e, stackTrace) {
-      logError(
-        'Failed to verify password: $e',
-        stackTrace: stackTrace,
-        tag: _logTag,
-      );
-      return Failure(
-        DatabaseError.queryFailed(
-          message: 'Не удалось проверить пароль: $e',
-          timestamp: DateTime.now(),
-          stackTrace: stackTrace,
-        ),
-      );
-    }
-  }
-
-  /// Хешировать пароль с солью
-  String _hashPassword(String password, String salt) {
-    final bytes = utf8.encode(password + salt);
-    final digest = sha512.convert(bytes);
-    return digest.toString();
-  }
-
-  /// Генерировать криптографически безопасный случайный ключ
-  ///
-  /// Создает 32-байтовый (256-бит) ключ используя криптографически
-  /// безопасный генератор случайных чисел для шифрования attachments
-  ///
-  /// Возвращает Base64-закодированный ключ
-  String _generateSecureKey() {
-    final bytes = KeyDerivationService.generateSecureRandomBytes(32);
-    return base64Encode(bytes);
   }
 }

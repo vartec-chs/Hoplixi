@@ -38,3 +38,5 @@ export 'store_settings_dao.dart';
 export 'tag_dao.dart';
 export 'vault_item_dao.dart';
 export 'wifi_dao.dart';
+export 'loyalty_card_dao.dart';
+export 'history_dao/loyalty_card_history_dao.dart';

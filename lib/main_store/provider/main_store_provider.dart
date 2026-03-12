@@ -16,6 +16,7 @@ import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_store/provider/db_history_provider.dart';
 import 'package:hoplixi/main_store/services/db_key_derivation_service.dart';
 import 'package:hoplixi/main_store/services/file_storage_service.dart';
+import 'package:hoplixi/main_store/services/main_store_storage_service.dart';
 import 'package:hoplixi/main_store/services/store_cleanup_service.dart';
 import 'package:path/path.dart' as p;
 
@@ -118,6 +119,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
 
   /// Completer для блокировки параллельных операций (защита от race condition)
   Completer<void>? _operationLock;
+  final MainStoreStorageService _storageService = MainStoreStorageService();
 
   /// Получить текущее значение состояния или дефолтное
   DatabaseState get _currentState {
@@ -724,13 +726,13 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       final store = _manager.currentStore;
       if (store == null) return;
 
-      final attachmentsPathResult = await _manager.getAttachmentsPath();
-      final attachmentsPath = attachmentsPathResult.getOrNull();
-      if (attachmentsPath == null) return;
+      final storePath = _manager.currentStorePath;
+      if (storePath == null || storePath.isEmpty) return;
 
-      final decryptedPathResult = await _manager
-          .getDecryptedAttachmentsDirPath();
-      final decryptedPath = decryptedPathResult.getOrNull() ?? '';
+      final attachmentsPath = _storageService.getAttachmentsPath(storePath);
+      final decryptedPath = _storageService.getDecryptedAttachmentsPath(
+        storePath,
+      );
 
       final fileStorageService = FileStorageService(
         store,
@@ -917,30 +919,22 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         _currentState.copyWith(status: DatabaseStatus.loading, error: null),
       );
 
-      // Вызываем удаление хранилища
-      final result = await _manager.deleteStore(
-        path,
-        deleteFromDisk: deleteFromDisk,
-      );
+      if (_manager.currentStorePath == path && _manager.isStoreOpen) {
+        await _manager.closeStore();
+      }
 
-      return result.fold(
-        (_) {
-          // Успех - переводим в idle состояние
-          _setState(const DatabaseState(status: DatabaseStatus.idle));
+      final dbHistoryService = await ref.read(dbHistoryProvider.future);
+      await dbHistoryService.deleteByPath(path);
 
-          logInfo('Store deleted successfully', tag: _logTag);
-          return true;
-        },
-        (error) {
-          // Ошибка - сохраняем в состоянии с автосбросом
-          _setErrorState(
-            DatabaseState(status: DatabaseStatus.error, error: error),
-          );
+      if (deleteFromDisk &&
+          await _storageService.storageDirectoryExists(path)) {
+        await _storageService.deleteStorageDirectory(path);
+      }
 
-          logError('Failed to delete store: ${error.message}', tag: _logTag);
-          return false;
-        },
-      );
+      _setState(const DatabaseState(status: DatabaseStatus.idle));
+
+      logInfo('Store deleted successfully', tag: _logTag);
+      return true;
     } catch (e, stackTrace) {
       logError(
         'Unexpected error deleting store: $e',
@@ -976,45 +970,38 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         _currentState.copyWith(status: DatabaseStatus.loading, error: null),
       );
 
-      // Вызываем удаление хранилища с диска
-      final result = await _manager.deleteStoreFromDisk(path);
-      final historyResult = await _manager.deleteStoreFromHistory(path);
+      if (_manager.currentStorePath == path && _manager.isStoreOpen) {
+        await _manager.closeStore();
+      }
 
-      final resultDeleteFromDisk = result.fold(
-        (_) {
-          // Успех - переводим в idle состояние
-          _setState(const DatabaseState(status: DatabaseStatus.idle));
+      if (!await _storageService.storageDirectoryExists(path)) {
+        _setErrorState(
+          DatabaseState(
+            status: DatabaseStatus.error,
+            error: DatabaseError.recordNotFound(
+              message: 'Директория хранилища не найдена',
+              data: {'path': path},
+              timestamp: DateTime.now(),
+            ),
+          ),
+        );
+        return false;
+      }
 
-          logInfo('Store deleted from disk successfully', tag: _logTag);
-          return true;
-        },
-        (error) {
-          // Ошибка - сохраняем в состоянии с автосбросом
-          _setErrorState(
-            DatabaseState(status: DatabaseStatus.error, error: error),
-          );
+      await _storageService.deleteStorageDirectory(path);
 
-          logError(
-            'Failed to delete store from disk: ${error.message}',
-            tag: _logTag,
-          );
-          return false;
-        },
-      );
+      final dbHistoryService = await ref.read(dbHistoryProvider.future);
+      final historyDeleted = await dbHistoryService.deleteByPath(path);
+      if (historyDeleted) {
+        logInfo('Store history entry deleted successfully', tag: _logTag);
+      } else {
+        logWarning('Failed to delete store history entry: $path', tag: _logTag);
+      }
 
-      historyResult.fold(
-        (_) {
-          logInfo('Store history entry deleted successfully', tag: _logTag);
-        },
-        (error) {
-          logError(
-            'Failed to delete store history entry: ${error.message}',
-            tag: _logTag,
-          );
-        },
-      );
+      _setState(const DatabaseState(status: DatabaseStatus.idle));
 
-      return resultDeleteFromDisk;
+      logInfo('Store deleted from disk successfully', tag: _logTag);
+      return true;
     } catch (e, stackTrace) {
       logError(
         'Unexpected error deleting store from disk: $e',
@@ -1050,15 +1037,16 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         return null;
       }
 
-      final result = await _manager.getAttachmentsPath();
-
-      return result.fold((path) => path, (error) {
+      final storePath = _manager.currentStorePath;
+      if (storePath == null || storePath.isEmpty) {
         logError(
-          'Failed to get attachments path: ${error.message}',
+          'Failed to get attachments path: store path is null',
           tag: _logTag,
         );
         return null;
-      });
+      }
+
+      return _storageService.getAttachmentsPath(storePath);
     } catch (e, stackTrace) {
       logError(
         'Unexpected error getting attachments path: $e',
@@ -1079,15 +1067,16 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         return null;
       }
 
-      final result = await _manager.getDecryptedAttachmentsDirPath();
-
-      return result.fold((path) => path, (error) {
+      final storePath = _manager.currentStorePath;
+      if (storePath == null || storePath.isEmpty) {
         logError(
-          'Failed to get decrypted attachments path: ${error.message}',
+          'Failed to get decrypted attachments path: store path is null',
           tag: _logTag,
         );
         return null;
-      });
+      }
+
+      return _storageService.getDecryptedAttachmentsPath(storePath);
     } catch (e, stackTrace) {
       logError(
         'Unexpected error getting decrypted attachments path: $e',
@@ -1109,21 +1098,22 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         return null;
       }
 
-      final result = await _manager.createSubfolder(folderName);
+      final storePath = _manager.currentStorePath;
+      if (storePath == null || storePath.isEmpty) {
+        logError(
+          'Failed to create subfolder: store path is null',
+          tag: _logTag,
+        );
+        return null;
+      }
 
-      return result.fold(
-        (path) {
-          logInfo('Subfolder created: $path', tag: _logTag);
-          return path;
-        },
-        (error) {
-          logError(
-            'Failed to create subfolder: ${error.message}',
-            tag: _logTag,
-          );
-          return null;
-        },
+      final path = await _storageService.createSubfolder(
+        storePath: storePath,
+        folderName: folderName,
       );
+
+      logInfo('Subfolder created: $path', tag: _logTag);
+      return path;
     } catch (e, stackTrace) {
       logError(
         'Unexpected error creating subfolder: $e',

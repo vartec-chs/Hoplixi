@@ -4,6 +4,7 @@ import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 import 'package:hoplixi/main_store/services/document_storage_service.dart';
 import 'package:hoplixi/main_store/services/file_storage_service.dart';
+import 'package:hoplixi/main_store/services/main_store_storage_service.dart';
 import 'package:hoplixi/main_store/services/store_cleanup_service.dart';
 
 /// Провайдер для FileStorageService
@@ -16,11 +17,16 @@ final fileStorageServiceProvider = FutureProvider<FileStorageService>((
     throw DatabaseError.notInitialized(timestamp: DateTime.now());
   }
 
-  final attachmentsPathResult = await manager.getAttachmentsPath();
-  final attachmentsPath = attachmentsPathResult.getOrThrow();
-  final decryptedAttachmentsPathResult = await manager
-      .getDecryptedAttachmentsDirPath();
-  final decryptedAttachmentsPath = decryptedAttachmentsPathResult.getOrThrow();
+  final storePath = manager.currentStorePath;
+  if (storePath == null || storePath.isEmpty) {
+    throw DatabaseError.notInitialized(timestamp: DateTime.now());
+  }
+
+  final storageService = MainStoreStorageService();
+  final attachmentsPath = storageService.getAttachmentsPath(storePath);
+  final decryptedAttachmentsPath = storageService.getDecryptedAttachmentsPath(
+    storePath,
+  );
 
   return FileStorageService(store, attachmentsPath, decryptedAttachmentsPath);
 });
