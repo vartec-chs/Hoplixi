@@ -10,3 +10,4 @@ export 'main_store_connection_service.dart';
 export 'main_store_maintenance_service.dart';
 export 'main_store_metadata_service.dart';
 export 'main_store_storage_service.dart';
+export 'store_manifest_service.dart';

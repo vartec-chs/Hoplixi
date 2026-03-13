@@ -4,11 +4,14 @@ import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/db_errors.dart';
 import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_store/models/store_key_config.dart';
+import 'package:hoplixi/main_store/models/store_manifest.dart';
 import 'package:hoplixi/main_store/services/db_history_services.dart';
 import 'package:hoplixi/main_store/services/db_key_derivation_service.dart';
 import 'package:hoplixi/main_store/services/main_store_connection_service.dart';
 import 'package:hoplixi/main_store/services/main_store_metadata_service.dart';
 import 'package:hoplixi/main_store/services/main_store_storage_service.dart';
+import 'package:hoplixi/main_store/services/store_key_config_service.dart';
+import 'package:hoplixi/main_store/services/store_manifest_service.dart';
 import 'package:result_dart/result_dart.dart';
 
 /// Менеджер для управления хранилищами MainStore
@@ -131,6 +134,17 @@ class MainStoreManager {
 
       logInfo('Created store metadata with id: $storeId', tag: _logTag);
 
+      try {
+        await _writeCurrentStoreManifest();
+        logInfo('Wrote store_manifest.json', tag: _logTag);
+      } on DatabaseError {
+        await database.close();
+        _currentStore = null;
+        _currentStorePath = null;
+        await _storageService.deleteStorageDirectory(storageDir.path);
+        rethrow;
+      }
+
       // Добавление в историю
       await _dbHistoryService.create(
         path: storageDir.path,
@@ -175,9 +189,7 @@ class MainStoreManager {
 
       // Проверка, открыто ли уже хранилище
       if (isStoreOpen) {
-        await _currentStore?.close();
-        _currentStore = null;
-        _currentStorePath = null;
+        await _closeCurrentStore();
       }
 
       final actualStoragePath = await _storageService
@@ -198,7 +210,7 @@ class MainStoreManager {
 
       logInfo('Found database file: $dbFilePath', tag: _logTag);
 
-      final keyConfig = await StoreKeyConfig.readFrom(actualStoragePath);
+      final keyConfig = await StoreKeyConfigService.readFrom(actualStoragePath);
       final String pragmaKey;
       if (keyConfig != null) {
         pragmaKey = await _keyService.derivePragmaKey(
@@ -320,13 +332,13 @@ class MainStoreManager {
 
       logInfo('Closing store', tag: _logTag);
 
-      await _currentStore?.close();
-      _currentStore = null;
-      _currentStorePath = null;
+      await _closeCurrentStore();
 
       logInfo('Store closed successfully', tag: _logTag);
 
       return const Success(unit);
+    } on DatabaseError catch (e) {
+      return Failure(e);
     } catch (e, stackTrace) {
       logError(
         'Failed to close store: $e',
@@ -431,6 +443,68 @@ class MainStoreManager {
           timestamp: DateTime.now(),
           stackTrace: stackTrace,
         ),
+      );
+    }
+  }
+
+  Future<void> _closeCurrentStore() async {
+    if (!isStoreOpen) {
+      throw DatabaseError.notInitialized(
+        message: 'Хранилище не открыто',
+        timestamp: DateTime.now(),
+      );
+    }
+
+    DatabaseError? manifestError;
+    try {
+      await _writeCurrentStoreManifest();
+      logInfo('Updated store_manifest.json before close', tag: _logTag);
+    } on DatabaseError catch (error) {
+      manifestError = error;
+    }
+
+    await _currentStore?.close();
+    _currentStore = null;
+    _currentStorePath = null;
+
+    if (manifestError != null) {
+      throw manifestError;
+    }
+  }
+
+  Future<void> _writeCurrentStoreManifest() async {
+    final storagePath = _currentStorePath;
+    if (_currentStore == null || storagePath == null) {
+      throw DatabaseError.notInitialized(
+        message: 'Хранилище не открыто',
+        timestamp: DateTime.now(),
+      );
+    }
+
+    final storeInfoResult = await getStoreInfo();
+    if (storeInfoResult.isError()) {
+      throw storeInfoResult.fold(
+        (_) => DatabaseError.queryFailed(
+          message: 'Не удалось получить информацию о хранилище для манифеста',
+          timestamp: DateTime.now(),
+        ),
+        (error) => error,
+      );
+    }
+
+    final storeInfo = storeInfoResult.getOrThrow();
+    final manifest = StoreManifest(
+      storeId: storeInfo.id,
+      lastModified: storeInfo.modifiedAt.millisecondsSinceEpoch,
+    );
+
+    try {
+      await StoreManifestService.writeTo(storagePath, manifest);
+    } catch (e, stackTrace) {
+      throw DatabaseError.updateFailed(
+        message: 'Не удалось записать store_manifest.json: $e',
+        timestamp: DateTime.now(),
+        stackTrace: stackTrace,
       );
     }
   }

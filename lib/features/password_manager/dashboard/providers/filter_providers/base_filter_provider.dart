@@ -11,6 +11,7 @@ final baseFilterProvider = NotifierProvider<BaseFilterNotifier, BaseFilter>(
 
 class BaseFilterNotifier extends Notifier<BaseFilter> {
   static const String _logTag = 'BaseFilterNotifier';
+
   Timer? _debounceTimer;
   static const _debounceDuration = Duration(milliseconds: 300);
 
