@@ -84,7 +84,7 @@ class ActionButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           child: Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
+              horizontal: 12.0,
               vertical: 12.0,
             ),
             child: Row(
@@ -131,16 +131,18 @@ class ActionButton extends StatelessWidget {
                       // Описание (если есть)
                       if (description != null) ...[
                         const SizedBox(height: 4),
-                        Text(
-                          description!,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: isDisabled
-                                ? disabledForegroundColor
-                                : foregroundColor.withOpacity(0.65),
-                            height: 1.3,
+                        Flexible(
+                          child: Text(
+                            description!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: isDisabled
+                                  ? disabledForegroundColor
+                                  : foregroundColor.withOpacity(0.65),
+                              height: 1.3,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ],

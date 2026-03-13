@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/local_send/models/history_item.dart';
 import 'package:hoplixi/features/local_send/providers/persisted_history_provider.dart';
+import 'package:hoplixi/features/local_send/widgets/import_store_archive_dialog.dart';
+import 'package:hoplixi/main_store/services/archive_service.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:open_file/open_file.dart' as open_file;
 
@@ -173,7 +175,7 @@ class LocalSendHistoryScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: () => _handleTap(item),
+          onTap: () => _handleTap(context, ref, item),
           onLongPress: () => _showItemMenu(context, ref, item, originalIndex),
           child: Padding(
             padding: const EdgeInsets.all(12),
@@ -237,11 +239,24 @@ class LocalSendHistoryScreen extends ConsumerWidget {
     );
   }
 
-  void _handleTap(HistoryItem item) {
+  Future<void> _handleTap(
+    BuildContext context,
+    WidgetRef ref,
+    HistoryItem item,
+  ) async {
     if (item.isFile && item.filePath != null) {
-      open_file.OpenFile.open(item.filePath!);
+      if (!item.isSent && ArchiveService.isStoreArchiveFile(item.filePath!)) {
+        await showStoreArchiveImportDialog(
+          context,
+          ref,
+          archivePath: item.filePath!,
+        );
+        return;
+      }
+
+      await open_file.OpenFile.open(item.filePath!);
     } else if (!item.isFile) {
-      Clipboard.setData(ClipboardData(text: item.content));
+      await Clipboard.setData(ClipboardData(text: item.content));
       Toaster.info(title: 'Текст скопирован в буфер обмена');
     }
   }

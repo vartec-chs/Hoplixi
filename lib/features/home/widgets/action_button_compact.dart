@@ -75,7 +75,7 @@ class ActionButtonCompact extends StatelessWidget {
           onTap: isDisabled ? null : onTap,
           borderRadius: BorderRadius.circular(18),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(12.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -110,7 +110,7 @@ class ActionButtonCompact extends StatelessWidget {
                     letterSpacing: isPrimary ? 0.5 : 0,
                   ),
                   textAlign: TextAlign.center,
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 // Описание (если есть)

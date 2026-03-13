@@ -489,6 +489,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
           ),
 
+          // кнопка настроек
+          Positioned(
+            top: UniversalPlatform.isMobile
+                ? MediaQuery.of(context).padding.top
+                : 36,
+            right: 12,
+            child: IconButton(
+              icon: const Icon(LucideIcons.settings),
+              color: Colors.white.withOpacity(0.8),
+              tooltip: 'Настройки',
+              onPressed: () => context.push(AppRoutesPaths.settings),
+            ),
+          ),
+
           // 2. Карточка БД (фиксированная) + скроллируемый контент ниже
           if (hasRecentDb)
             Positioned.fill(
@@ -547,7 +561,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12.0),
                         child: isSmallScreen
-                            ? _buildVerticalList(items)
+                            ? _buildCompactGrid(items)
                             : _buildWideGrid(items),
                       ),
                     );
@@ -576,12 +590,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         description: 'Новое хранилище',
         onTap: () => context.push(AppRoutesPaths.createStore),
       ),
-      ActionItem(
-        icon: LucideIcons.settings,
-        label: 'Настройки',
-        description: 'Конфигурация',
-        onTap: () => context.push(AppRoutesPaths.settings),
-      ),
+      // ActionItem(
+      //   icon: LucideIcons.settings,
+      //   label: 'Настройки',
+      //   description: 'Конфигурация',
+      //   onTap: () => context.push(AppRoutesPaths.settings),
+      // ),
       ActionItem(
         icon: LucideIcons.key,
         label: 'Генератор',
@@ -602,8 +616,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ActionItem(
         icon: LucideIcons.send,
         label: 'LocalSend',
-        description: 'Отправка данных по локальной сети',
+        description:
+            'Отправка данных по локальной сети в том числе и хранилища',
         onTap: () => context.push(AppRoutesPaths.localSendSend),
+      ),
+
+      ActionItem(
+        icon: LucideIcons.archive,
+        label: 'Архивация хранилища',
+        description: 'Упаковать хранилище в архив или распаковать из архива',
+        onTap: () => context.push(AppRoutesPaths.archiveStore),
       ),
 
       // --- TEST ITEMS ---
@@ -636,8 +658,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
-      mainAxisSpacing: 6,
-      crossAxisSpacing: 6,
+      mainAxisSpacing: 12,
+      crossAxisSpacing: 12,
       childAspectRatio: 1.0,
       children: items
           .map(
