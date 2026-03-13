@@ -24,14 +24,19 @@ class DesktopThreeColumnLayout extends StatefulWidget {
 }
 
 class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _panelController;
   late final CurvedAnimation _panelAnimation;
   late final AnimationController _fadeController;
 
+  Widget? _displayedRightPanel;
+  String? _displayedPanelIdentity;
+
   @override
   void initState() {
     super.initState();
+    _displayedRightPanel = widget.rightPanel;
+    _displayedPanelIdentity = widget.panelIdentity;
     _panelController = AnimationController(
       vsync: this,
       duration: kPanelAnimationDuration,
@@ -47,6 +52,7 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
       duration: kFadeAnimationDuration,
       value: widget.rightPanel == null ? 0.0 : 1.0,
     );
+    _panelController.addStatusListener(_handlePanelStatusChange);
   }
 
   @override
@@ -55,24 +61,40 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
 
     if (widget.rightPanel == null) {
       _panelController.reverse();
-      _fadeController.value = 0.0;
       return;
     }
 
-    if (oldWidget.rightPanel == null) {
-      _panelController.forward();
-    }
+    final panelChanged = oldWidget.panelIdentity != widget.panelIdentity;
+    final openedPanel = oldWidget.rightPanel == null;
 
-    if (oldWidget.rightPanel == null ||
-        oldWidget.panelIdentity != widget.panelIdentity) {
+    if (openedPanel || panelChanged) {
+      setState(() {
+        _displayedRightPanel = widget.rightPanel;
+        _displayedPanelIdentity = widget.panelIdentity;
+      });
       _fadeController
         ..value = 0.0
         ..forward();
+    }
+
+    if (openedPanel) {
+      _panelController.forward();
+    }
+  }
+
+  void _handlePanelStatusChange(AnimationStatus status) {
+    if (status == AnimationStatus.dismissed && mounted) {
+      setState(() {
+        _displayedRightPanel = null;
+        _displayedPanelIdentity = null;
+      });
+      _fadeController.value = 0.0;
     }
   }
 
   @override
   void dispose() {
+    _panelController.removeStatusListener(_handlePanelStatusChange);
     _panelAnimation.dispose();
     _panelController.dispose();
     _fadeController.dispose();
@@ -94,11 +116,11 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
           0.0,
           constraints.maxWidth,
         );
-        final panelMaxWidth = contentWidth / 2;
+        final panelMaxWidth = (contentWidth / 2);
 
         return Row(
           children: [
-            if (showDrawerAsPanel) _buildLeftPanel(context, canShowBoth),
+            _buildLeftPanel(context, canShowBoth),
             Expanded(
               child: DashboardHomeScreen(
                 key: ValueKey('desktop_home_${widget.entityType.id}'),
@@ -109,7 +131,7 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
               animation: _panelAnimation,
               builder: (context, child) {
                 final width = _panelAnimation.value * panelMaxWidth;
-                if (width < 1 || widget.rightPanel == null) {
+                if (width < 1 || _displayedRightPanel == null) {
                   return const SizedBox.shrink();
                 }
 
@@ -119,18 +141,24 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
                     const VerticalDivider(width: 1, thickness: 1),
                     SizedBox(
                       width: width - 1,
-                      child: ClipRect(child: child),
+                      child: ClipRect(
+                        child: OverflowBox(
+                          alignment: Alignment.centerLeft,
+                          maxWidth: panelMaxWidth - 1,
+                          child: child,
+                        ),
+                      ),
                     ),
                   ],
                 );
               },
-              child: widget.rightPanel == null
+              child: _displayedRightPanel == null
                   ? null
                   : FadeTransition(
                       opacity: _fadeController,
                       child: KeyedSubtree(
-                        key: ValueKey(widget.panelIdentity),
-                        child: widget.rightPanel!,
+                        key: ValueKey(_displayedPanelIdentity),
+                        child: _displayedRightPanel!,
                       ),
                     ),
             ),

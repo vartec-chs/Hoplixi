@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
@@ -20,7 +19,11 @@ class AppNavigationShell extends StatefulWidget {
   final GoRouterState state;
   final Widget child;
 
-  const AppNavigationShell({required this.state, required this.child, super.key});
+  const AppNavigationShell({
+    required this.state,
+    required this.child,
+    super.key,
+  });
 
   @override
   State<AppNavigationShell> createState() => _AppNavigationShellState();
@@ -188,7 +191,8 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
               bottom: showBottomNav
                   ? systemPadding.bottom +
                         kFloatingNavBarHeight +
-                        kFloatingNavFabBottomOffset
+                        kFloatingNavFabBottomOffset +
+                        10
                   : systemPadding.bottom + kFloatingNavFabBottomOffset,
               child: DashboardFabBuilder(
                 context: context,
@@ -246,41 +250,42 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
         child: Scaffold(
           body: Row(
             children: [
-              NavigationRail(
-                unselectedIconTheme: IconThemeData(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                unselectedLabelTextStyle: TextStyle(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w400,
-                ),
-                selectedIconTheme: IconThemeData(
-                  color: theme.colorScheme.onPrimary,
-                ),
-                selectedLabelTextStyle: TextStyle(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w400,
-                ),
-                indicatorColor: theme.colorScheme.primaryContainer,
-                indicatorShape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    kIndicatorBorderRadius,
+              SizedBox(
+                width: kNavigationRailWidth,
+                child: NavigationRail(
+                  unselectedIconTheme: IconThemeData(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
-                ),
-                backgroundColor: theme.colorScheme.surfaceContainerLowest,
-                selectedIndex: currentIndex,
-                onDestinationSelected: (index) =>
-                    _onNavItemSelected(context, index, entity),
-                labelType: NavigationRailLabelType.all,
-                destinations: destinations,
-                leading: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: DashboardFabBuilder(
-                    context: context,
-                    entity: entity,
-                    currentAction: null,
-                    isMobile: false,
-                  ).buildExpandableFAB(),
+                  unselectedLabelTextStyle: TextStyle(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  selectedIconTheme: IconThemeData(
+                    color: theme.colorScheme.onPrimary,
+                  ),
+                  selectedLabelTextStyle: TextStyle(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  indicatorColor: theme.colorScheme.primaryContainer,
+                  indicatorShape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(kIndicatorBorderRadius),
+                  ),
+                  backgroundColor: theme.colorScheme.surfaceContainerLowest,
+                  selectedIndex: currentIndex,
+                  onDestinationSelected: (index) =>
+                      _onNavItemSelected(context, index, entity),
+                  labelType: NavigationRailLabelType.all,
+                  destinations: destinations,
+                  leading: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: DashboardFabBuilder(
+                      context: context,
+                      entity: entity,
+                      currentAction: null,
+                      isMobile: false,
+                    ).buildExpandableFAB(),
+                  ),
                 ),
               ),
               const VerticalDivider(width: 1, thickness: 1),
@@ -320,5 +325,3 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
     return ScreenProtectionWrapper(child: shell);
   }
 }
-
-

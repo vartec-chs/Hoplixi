@@ -337,7 +337,7 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
       ref.read(baseFilterProvider.notifier).setEntityType(widget.entityType.id);
     });
 
-    final disableAppBarMenu = MediaQuery.of(context).size.width <= 1000;
+    final disableAppBarMenu = MediaQuery.of(context).size.width <= 700;
 
     // Начальная синхронизация при первом построении
     if (_isFirstBuild) {

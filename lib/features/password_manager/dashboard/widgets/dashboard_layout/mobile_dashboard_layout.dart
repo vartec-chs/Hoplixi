@@ -128,13 +128,7 @@ class _MobileDashboardLayoutState extends State<MobileDashboardLayout>
           // 1. Navigator content — вне Scaffold.body, чтобы избежать
           //    вложенных _RenderLayoutBuilder (Scaffold._BodyBuilder).
           Positioned.fill(
-            child: FadeTransition(
-              opacity: _fadeController,
-              child: KeyedSubtree(
-                key: ValueKey(widget.uri),
-                child: widget.child,
-              ),
-            ),
+            child: KeyedSubtree(key: ValueKey(widget.uri), child: widget.child),
           ),
 
           // 2. Floating bottom navigation bar
@@ -178,7 +172,10 @@ class _MobileDashboardLayoutState extends State<MobileDashboardLayout>
           // 3. FAB выше floating nav
           Positioned(
             bottom: widget.showBottomNav && UniversalPlatform.isDesktop
-                ? kFloatingNavFabBottomOffset + kFloatingNavBarHeight + 5
+                ? systemPadding.bottom +
+                      kFloatingNavFabBottomOffset +
+                      kFloatingNavBarHeight +
+                      50
                 : systemPadding.bottom +
                       kFloatingNavFabBottomOffset +
                       kFloatingNavBarHeight,

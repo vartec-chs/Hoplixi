@@ -32,7 +32,9 @@ const double kLeftPanelWidth = 260.0;
 /// Минимальная ширина экрана для одновременного показа
 /// левой и правой панелей. Ниже этого значения левая панель
 /// скрывается с анимацией при открытии правой.
-const double kBothPanelsBreakpoint = 1000.0;
+const double kBothPanelsBreakpoint = 1200.0;
+
+const double kNavigationRailWidth = 84.0;
 
 /// Ширина разделителя
 const double kDividerWidth = 2.0;

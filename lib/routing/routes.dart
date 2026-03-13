@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
@@ -44,14 +47,18 @@ Page<void> buildResponsivePage({
       MediaQuery.sizeOf(context).width < MainConstants.kMobileBreakpoint;
 
   if (isMobile) {
-    if (isBaseRoute) {
-      return NoTransitionPage<void>(key: state.pageKey, child: child);
+    // if (isBaseRoute) {
+    //   return MaterialPage<void>(key: state.pageKey, child: child);
+    // }
+
+    if (Platform.isIOS || Platform.isMacOS) {
+      return CupertinoPage<void>(key: state.pageKey, child: child);
     }
 
     return MaterialPage<void>(key: state.pageKey, child: child);
   }
 
-  return NoTransitionPage<void>(key: state.pageKey, child: child);
+  return MaterialPage<void>(key: state.pageKey, child: child);
 }
 
 final List<RouteBase> appRoutes = [
