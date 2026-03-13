@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/core/app_paths.dart';
+import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/core/logger/index.dart' hide DeviceInfo;
 import 'package:hoplixi/features/local_send/models/device_info.dart';
 import 'package:hoplixi/features/local_send/models/history_item.dart';
@@ -12,6 +14,9 @@ import 'package:hoplixi/features/local_send/providers/incoming_request_provider.
 import 'package:hoplixi/features/local_send/providers/session_history_provider.dart';
 import 'package:hoplixi/features/local_send/services/signaling_server.dart';
 import 'package:hoplixi/features/local_send/services/webrtc_transfer_service.dart';
+import 'package:hoplixi/main_store/models/store_folder_info.dart';
+import 'package:hoplixi/main_store/provider/archive_provider.dart';
+import 'package:hoplixi/main_store/services/archive_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -355,6 +360,65 @@ class SessionNotifier extends Notifier<SessionState> {
     state = SessionState.connected(peer: peer);
   }
 
+  /// Архивирует хранилище и отправляет его как ZIP-файл.
+  Future<void> sendStoreArchive(
+    StoreFolderInfo store, {
+    String? password,
+  }) async {
+    final peer = _connectedPeer;
+    if (peer == null || _webrtc == null) return;
+
+    final archiveService = ref.read(archiveServiceProvider);
+    final outputPath = await _buildStoreArchivePath(store.storeName);
+
+    state = SessionState.transferring(
+      peer: peer,
+      progress: 0,
+      currentFile: 'Подготовка архива ${store.storeName}',
+      currentIndex: 0,
+      totalFiles: 1,
+      isSending: true,
+    );
+
+    try {
+      final result = await archiveService.archiveStore(
+        store.folderPath,
+        outputPath,
+        password: password,
+        onProgress: (current, total, fileName) {
+          state = SessionState.transferring(
+            peer: peer,
+            progress: total <= 0 ? 0 : current / total,
+            currentFile: 'Архивация: $fileName',
+            currentIndex: 0,
+            totalFiles: 1,
+            isSending: true,
+          );
+        },
+      );
+
+      if (result.isError()) {
+        final error = result.fold((_) => null, (error) => error);
+        Toaster.error(
+          title: 'Ошибка архивации',
+          description:
+              error?.message ?? 'Не удалось подготовить архив хранилища',
+        );
+        state = SessionState.connected(peer: peer);
+        return;
+      }
+
+      await sendFiles([File(result.getOrThrow())]);
+    } catch (e, s) {
+      logError('sendStoreArchive', error: e, stackTrace: s);
+      Toaster.error(
+        title: 'Ошибка отправки',
+        description: 'Не удалось отправить хранилище: $e',
+      );
+      state = SessionState.connected(peer: peer);
+    }
+  }
+
   /// Отправляет текст по установленному соединению.
   Future<void> sendText(String text) async {
     if (_webrtc == null) return;
@@ -580,5 +644,21 @@ class SessionNotifier extends Notifier<SessionState> {
         await getDownloadsDirectory() ??
         await getApplicationDocumentsDirectory();
     return dir;
+  }
+
+  Future<String> _buildStoreArchivePath(String storeName) async {
+    final tempPath = await AppPaths.tempPath;
+    final archiveDir = Directory(p.join(tempPath, 'local_send_store_archives'));
+    if (!await archiveDir.exists()) {
+      await archiveDir.create(recursive: true);
+    }
+
+    final safeStoreName = storeName
+        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
+        .trim();
+    return p.join(
+      archiveDir.path,
+      '${safeStoreName.isEmpty ? 'store' : safeStoreName}${ArchiveService.storeArchiveFileSuffix}',
+    );
   }
 }

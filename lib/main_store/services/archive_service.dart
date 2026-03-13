@@ -72,6 +72,22 @@ class _IsolateResult {
 }
 
 class ArchiveService {
+  static const String storeArchiveFileSuffix = ' (store).zip';
+
+  static bool isStoreArchiveFile(String archivePath) {
+    final fileName = p.basename(archivePath).toLowerCase();
+    return fileName.endsWith(storeArchiveFileSuffix.toLowerCase());
+  }
+
+  static String suggestedStoreFolderName(String archivePath) {
+    final fileName = p.basename(archivePath);
+    if (isStoreArchiveFile(archivePath)) {
+      return fileName.substring(0, fileName.length - storeArchiveFileSuffix.length);
+    }
+
+    return p.basenameWithoutExtension(archivePath);
+  }
+
   /// Архивация хранилища
   /// [storePath] - путь к папке хранилища
   /// [outputPath] - путь куда сохранить архив (включая имя файла)
@@ -166,10 +182,10 @@ class ArchiveService {
         );
       }
 
-      final storagesPath = basePath ?? await AppPaths.appStoragePath;
-      final storeName = p.basenameWithoutExtension(archivePath);
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final targetPath = p.join(storagesPath, '${storeName}_$timestamp');
+      final storagesPath = basePath ?? await AppPaths.appStoragesPath;
+      final rawStoreName = suggestedStoreFolderName(archivePath).trim();
+      final storeName = rawStoreName.isEmpty ? 'imported_store' : rawStoreName;
+      final targetPath = await _buildUniqueStoreTargetPath(storagesPath, storeName);
 
       final targetDir = Directory(targetPath);
       await targetDir.create(recursive: true);
@@ -260,6 +276,25 @@ class ArchiveService {
       file.writeContent(outputStream, freeMemory: true);
     } finally {
       await outputStream.close();
+    }
+  }
+
+  static Future<String> _buildUniqueStoreTargetPath(
+    String storagesPath,
+    String storeName,
+  ) async {
+    var suffix = 0;
+
+    while (true) {
+      final candidateName = suffix == 0 ? storeName : '${storeName}_$suffix';
+      final candidatePath = p.join(storagesPath, candidateName);
+      final candidateDir = Directory(candidatePath);
+
+      if (!await candidateDir.exists()) {
+        return candidatePath;
+      }
+
+      suffix++;
     }
   }
 }

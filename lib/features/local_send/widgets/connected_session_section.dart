@@ -5,12 +5,16 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/local_send/models/device_info.dart';
 import 'package:hoplixi/features/local_send/models/history_item.dart';
 import 'package:hoplixi/features/local_send/providers/session_history_provider.dart';
 import 'package:hoplixi/features/local_send/providers/transfer_provider.dart';
 import 'package:hoplixi/features/local_send/utils/platform_icons.dart';
+import 'package:hoplixi/features/local_send/widgets/send_store_dialog.dart';
+import 'package:hoplixi/main_store/provider/archive_provider.dart';
+import 'package:hoplixi/main_store/services/archive_service.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:open_file/open_file.dart' as open_file;
@@ -88,6 +92,17 @@ class _ConnectedSessionSectionState
                           ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: _buildCompactAction(
+                        icon: Icons.inventory_2_outlined,
+                        label: 'Хранилище',
+                        colorScheme: colorScheme,
+                        textTheme: textTheme,
+                        onTap: _showSendStoreDialog,
+                      ),
                     ),
                   ],
                 ),
@@ -330,14 +345,7 @@ class _ConnectedSessionSectionState
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          if (item.isFile && item.filePath != null) {
-            open_file.OpenFile.open(item.filePath!);
-          } else if (!item.isFile) {
-            Clipboard.setData(ClipboardData(text: item.content));
-            Toaster.info(title: "Текст скопирован в буфер обмена");
-          }
-        },
+        onTap: () => _handleHistoryItemTap(item),
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
@@ -426,6 +434,77 @@ class _ConnectedSessionSectionState
       await ref.read(transferProvider.notifier).sendText(text.trim());
     }
   }
+
+  Future<void> _showSendStoreDialog() async {
+    if (!mounted) return;
+
+    final result = await showDialog<SendStoreDialogResult>(
+      context: context,
+      builder: (context) => const SendStoreDialog(),
+    );
+
+    if (result == null || !mounted) {
+      return;
+    }
+
+    await ref.read(transferProvider.notifier).sendStoreArchive(
+      result.store,
+      password: result.archivePassword,
+    );
+  }
+
+  Future<void> _handleHistoryItemTap(HistoryItem item) async {
+    if (item.isFile && item.filePath != null) {
+      if (!item.isSent && ArchiveService.isStoreArchiveFile(item.filePath!)) {
+        await _showImportStoreArchiveDialog(item.filePath!);
+        return;
+      }
+
+      await open_file.OpenFile.open(item.filePath!);
+      return;
+    }
+
+    if (!item.isFile) {
+      await Clipboard.setData(ClipboardData(text: item.content));
+      Toaster.info(title: 'Текст скопирован в буфер обмена');
+    }
+  }
+
+  Future<void> _showImportStoreArchiveDialog(String archivePath) async {
+    if (!mounted) return;
+
+    final password = await showDialog<String?>(
+      context: context,
+      builder: (context) => _ImportStoreArchiveDialog(archivePath: archivePath),
+    );
+
+    if (password == null || !mounted) {
+      return;
+    }
+
+    final archiveService = ref.read(archiveServiceProvider);
+    final storagesPath = await AppPaths.appStoragesPath;
+    final result = await archiveService.unarchiveStore(
+      archivePath,
+      password: password.isEmpty ? null : password,
+      basePath: storagesPath,
+    );
+
+    result.fold(
+      (extractedPath) {
+        Toaster.success(
+          title: 'Хранилище импортировано',
+          description: 'Распаковано в ${Directory(extractedPath).path}',
+        );
+      },
+      (error) {
+        Toaster.error(
+          title: 'Ошибка импорта',
+          description: error.message,
+        );
+      },
+    );
+  }
 }
 
 class _SendTextDialog extends StatefulWidget {
@@ -482,6 +561,75 @@ class _SendTextDialogState extends State<_SendTextDialog> {
         SmoothButton(
           onPressed: () => Navigator.pop(context, _controller.text),
           label: 'Отправить',
+          type: .filled,
+        ),
+      ],
+    );
+  }
+}
+
+class _ImportStoreArchiveDialog extends StatefulWidget {
+  final String archivePath;
+
+  const _ImportStoreArchiveDialog({required this.archivePath});
+
+  @override
+  State<_ImportStoreArchiveDialog> createState() =>
+      _ImportStoreArchiveDialogState();
+}
+
+class _ImportStoreArchiveDialogState extends State<_ImportStoreArchiveDialog> {
+  late final TextEditingController _passwordController;
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final archiveName = ArchiveService.suggestedStoreFolderName(
+      widget.archivePath,
+    );
+
+    return AlertDialog(
+      insetPadding: const EdgeInsets.all(12),
+      title: const Text('Импортировать хранилище'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Получен архив хранилища "$archiveName". Импортировать его в локальную папку хранилищ?',
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _passwordController,
+            obscureText: true,
+            decoration: primaryInputDecoration(
+              context,
+              labelText: 'Пароль ZIP (если есть)',
+              hintText: 'Оставьте пустым для архива без пароля',
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        SmoothButton(
+          onPressed: () => Navigator.pop(context, null),
+          label: 'Нет',
+          type: .text,
+        ),
+        SmoothButton(
+          onPressed: () => Navigator.pop(context, _passwordController.text.trim()),
+          label: 'Импортировать',
           type: .filled,
         ),
       ],

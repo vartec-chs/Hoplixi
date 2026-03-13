@@ -73,7 +73,7 @@ class Step4Confirmation extends ConsumerWidget {
                 ),
                 if (state.pathType == PathType.standard)
                   FutureBuilder<String>(
-                    future: AppPaths.appStoragePath,
+                    future: AppPaths.appStoragesPath,
                     builder: (context, snapshot) {
                       if (!snapshot.hasData) return const SizedBox.shrink();
                       return Padding(

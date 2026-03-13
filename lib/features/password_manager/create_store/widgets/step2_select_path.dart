@@ -45,7 +45,7 @@ class Step2SelectPath extends ConsumerWidget {
             isSelected: state.pathType == PathType.standard,
             onTap: () => notifier.setPathType(PathType.standard),
             trailing: FutureBuilder<String>(
-              future: AppPaths.appStoragePath,
+              future: AppPaths.appStoragesPath,
               builder: (context, snapshot) {
                 if (!snapshot.hasData) return const SizedBox.shrink();
                 return Padding(

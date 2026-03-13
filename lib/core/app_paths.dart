@@ -7,7 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 class AppPaths {
-  static Future<String> get appStoragePath async =>
+  static Future<String> get appStoragesPath async =>
       await _getApplicationStoragePath();
   static Future<String> get tempPath async => await _getTempPath();
   static Future<String> get boxDbPath async => await _getBoxDbPath();

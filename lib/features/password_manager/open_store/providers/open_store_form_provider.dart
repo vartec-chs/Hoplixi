@@ -225,7 +225,7 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
         return [];
       }
 
-      final storagePath = await AppPaths.appStoragePath;
+      final storagePath = await AppPaths.appStoragesPath;
       if (!_isMounted) {
         return [];
       }

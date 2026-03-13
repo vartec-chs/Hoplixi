@@ -69,7 +69,7 @@ class MainStoreManager {
         );
       }
 
-      final storagePath = await AppPaths.appStoragePath;
+      final storagePath = await AppPaths.appStoragesPath;
       final preparedStorage = await _storageService.prepareNewStorageDirectory(
         baseStoragePath: storagePath,
         storeName: dto.name,
