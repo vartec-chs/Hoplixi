@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
@@ -167,40 +167,88 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
     final showFAB = _shouldShowFAB(location);
     final entityType = EntityType.fromId(entity) ?? EntityType.password;
     final systemPadding = MediaQuery.of(context).viewPadding;
+    final navBottom = systemPadding.bottom + 12;
+    final fabBottom = showBottomNav
+        ? systemPadding.bottom +
+              kFloatingNavBarHeight +
+              kFloatingNavFabBottomOffset +
+              10
+        : systemPadding.bottom + kFloatingNavFabBottomOffset;
 
     return DashboardDrawerScope(
       openDrawer: _openDrawer,
       child: Stack(
         children: [
-          Positioned.fill(child: widget.child),
-          if (showBottomNav)
-            Positioned(
-              left: kFloatingNavMarginHorizontal,
-              right: kFloatingNavMarginHorizontal,
-              bottom: systemPadding.bottom + 12,
-              child: FloatingNavBar(
-                destinations: destinations,
-                selectedIndex: currentIndex,
-                onItemSelected: (index) =>
-                    _onNavItemSelected(context, index, entity),
+          Positioned.fill(
+            child: KeyedSubtree(key: ValueKey(location), child: widget.child),
+          ),
+          Positioned(
+            left: kFloatingNavMarginHorizontal,
+            right: kFloatingNavMarginHorizontal,
+            bottom: navBottom,
+            child: IgnorePointer(
+              ignoring: !showBottomNav,
+              child: AnimatedSlide(
+                offset: showBottomNav ? Offset.zero : const Offset(0, 1.5),
+                duration: kScaleAnimationDuration,
+                curve: showBottomNav
+                    ? Curves.easeOutCubic
+                    : Curves.easeInCubic,
+                child: AnimatedOpacity(
+                  opacity: showBottomNav ? 1.0 : 0.0,
+                  duration: kFadeAnimationDuration,
+                  curve: Curves.easeInOut,
+                  child: AnimatedScale(
+                    scale: showBottomNav ? 1.0 : 0.95,
+                    duration: kScaleAnimationDuration,
+                    curve: showBottomNav
+                        ? Curves.easeOutBack
+                        : Curves.easeIn,
+                    child: FloatingNavBar(
+                      destinations: destinations,
+                      selectedIndex: currentIndex,
+                      onItemSelected: (index) =>
+                          _onNavItemSelected(context, index, entity),
+                    ),
+                  ),
+                ),
               ),
             ),
-          if (showFAB)
-            Positioned(
-              right: kFloatingNavMarginHorizontal,
-              bottom: showBottomNav
-                  ? systemPadding.bottom +
-                        kFloatingNavBarHeight +
-                        kFloatingNavFabBottomOffset +
-                        10
-                  : systemPadding.bottom + kFloatingNavFabBottomOffset,
-              child: DashboardFabBuilder(
-                context: context,
-                entity: entity,
-                currentAction: _currentAction(location),
-                isMobile: true,
-              ).buildExpandableFAB(),
+          ),
+          AnimatedPositioned(
+            right: kFloatingNavMarginHorizontal,
+            bottom: fabBottom,
+            duration: kScaleAnimationDuration,
+            curve: showBottomNav ? Curves.easeOutCubic : Curves.easeInCubic,
+            child: IgnorePointer(
+              ignoring: !showFAB,
+              child: AnimatedSlide(
+                offset: showFAB ? Offset.zero : const Offset(0, 1.5),
+                duration: kScaleAnimationDuration,
+                curve: showFAB
+                    ? Curves.easeOutCubic
+                    : Curves.easeInCubic,
+                child: AnimatedOpacity(
+                  opacity: showFAB ? 1.0 : 0.0,
+                  duration: kFadeAnimationDuration,
+                  curve: Curves.easeInOut,
+                  child: AnimatedScale(
+                    scale: showFAB ? 1.0 : 0.95,
+                    duration: kScaleAnimationDuration,
+                    curve: showFAB
+                        ? Curves.easeOutBack
+                        : Curves.easeIn,
+                    child: DashboardFabBuilder(
+                      context: context,
+                      entity: entity,
+                      currentAction: _currentAction(location),
+                      isMobile: true,
+                    ).buildExpandableFAB(),
+                  ),
+                ),
+              ),
             ),
+          ),
           Positioned.fill(
             child: IgnorePointer(
               ignoring: !_isDrawerOpen,
@@ -325,3 +373,5 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
     return ScreenProtectionWrapper(child: shell);
   }
 }
+
+
