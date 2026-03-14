@@ -2,13 +2,17 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/di_init.dart';
 import 'package:hoplixi/features/password_manager/store_settings/models/store_settings_state.dart';
 import 'package:hoplixi/main_store/models/store_settings_keys.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/main_store/provider/db_history_provider.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 import 'package:hoplixi/main_store/provider/service_providers.dart';
+import 'package:hoplixi/main_store/services/db_key_derivation_service.dart';
+import 'package:hoplixi/main_store/services/store_key_config_service.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
@@ -372,10 +376,26 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         return const Failure('Не удалось определить текущее хранилище');
       }
 
-      // База уже открыта с текущим паролем, поэтому проверка не требуется
-      // Меняем пароль через SQLCipher PRAGMA rekey
+      final keyConfig = await StoreKeyConfigService.readFrom(currentPath);
+      if (keyConfig == null) {
+        state = state.copyWith(
+          isChangingPassword: false,
+          saveError:
+              'Не найден store_key.json. Смена пароля доступна только для новых хранилищ.',
+        );
+        return const Failure(
+          'Не найден store_key.json. Смена пароля доступна только для новых хранилищ.',
+        );
+      }
 
-      final result = await daoResult.changePassword(state.newPassword);
+      final keyService = DbKeyDerivationService(getIt<FlutterSecureStorage>());
+      final newPragmaKey = await keyService.derivePragmaKey(
+        state.newPassword,
+        keyConfig.argon2Salt,
+        useDeviceKey: keyConfig.useDeviceKey,
+      );
+
+      final result = await daoResult.changePassword(newPragmaKey);
 
       final resultException = result.exceptionOrNull();
 

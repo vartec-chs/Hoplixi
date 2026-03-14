@@ -114,16 +114,13 @@ class StoreMetaDao extends DatabaseAccessor<MainStore>
     return result > 0;
   }
 
-  /// Изменить пароль базы данных (SQLCipher PRAGMA rekey)
-  /// не работает
-  AsyncResultDart<bool, String> changePassword(String newPassword) async {
-    // PRAGMA не поддерживает параметры, нужна прямая подстановка
-    // Экранируем одинарные кавычки в пароле
+  /// Изменить ключ шифрования базы данных (SQLCipher PRAGMA rekey)
+  ///
+  /// [newPragmaKey] должен быть в формате SQLCipher,
+  /// например: x'<64-символьный hex>'
+  AsyncResultDart<bool, String> changePassword(String newPragmaKey) async {
     try {
-      final escapedPassword = newPassword.replaceAll("'", "''");
-      await db.customStatement("PRAGMA wal_checkpoint(FULL);");
-      await db.customStatement("PRAGMA journal_mode = DELETE;");
-      await db.customStatement("PRAGMA rekey = '$escapedPassword';");
+      await db.customStatement('PRAGMA rekey = "$newPragmaKey";');
       await db.customSelect('SELECT 1').getSingle();
 
       return const Success(true);
