@@ -283,6 +283,124 @@ onPressed: () async {
 
 ---
 
+## UI, формы и `TextEditingController`
+
+Базовое правило: `TextEditingController` живёт в UI, а значение поля и
+бизнес-правила живут в Riverpod state.
+
+По умолчанию предпочитай простой поток данных:
+
+- UI читает state через `ref.watch(...)`;
+- пользовательский ввод отправляется в `.notifier`-методы;
+- UI не пишет в провайдер через прямой доступ к `.state`.
+
+Если нужна двусторонняя синхронизация (`Controller ↔ State`), например для
+`reset`, предзаполнения формы, загрузки черновика или внешнего обновления поля,
+используй `ConsumerStatefulWidget` + `ref.listenManual(...)`.
+
+```dart
+final nameFieldProvider =
+    NotifierProvider<NameFieldNotifier, String>(NameFieldNotifier.new);
+
+class NameFieldNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+
+  void setName(String value) {
+    state = value;
+  }
+
+  void reset() {
+    state = '';
+  }
+}
+
+class NameField extends ConsumerStatefulWidget {
+  const NameField({super.key});
+
+  @override
+  ConsumerState<NameField> createState() => _NameFieldState();
+}
+
+class _NameFieldState extends ConsumerState<NameField> {
+  late final TextEditingController controller;
+  late final ProviderSubscription<String> nameSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    controller = TextEditingController(text: ref.read(nameFieldProvider));
+    controller.addListener(_onControllerChanged);
+
+    nameSubscription = ref.listenManual<String>(
+      nameFieldProvider,
+      (previous, next) {
+        if (controller.text == next) return;
+
+        controller.value = controller.value.copyWith(
+          text: next,
+          selection: TextSelection.collapsed(offset: next.length),
+          composing: TextRange.empty,
+        );
+      },
+    );
+  }
+
+  void _onControllerChanged() {
+    ref.read(nameFieldProvider.notifier).setName(controller.text);
+  }
+
+  @override
+  void dispose() {
+    controller.removeListener(_onControllerChanged);
+    nameSubscription.close();
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(controller: controller);
+  }
+}
+```
+
+Зачем так:
+
+- UI не знает внутреннюю модель мутаций, а вызывает `setName()` / `reset()`;
+- провайдер остаётся единственным source of truth;
+- сравнение `if (controller.text == next) return;` защищает от лишнего цикла
+  синхронизации;
+- `ref.listenManual(...)` подходит для подписки в `initState()` и корректно
+  закрывается в `dispose()`.
+
+Если state формы хранится объектом (`FormState`, DTO, Freezed-модель), слушай не
+весь объект, а конкретное поле через `select`, чтобы не обновлять контроллер от
+нерелевантных изменений:
+
+```dart
+nameSubscription = ref.listenManual<String>(
+  profileFormProvider.select((state) => state.name),
+  (previous, next) {
+    if (controller.text == next) return;
+    controller.value = controller.value.copyWith(
+      text: next,
+      selection: TextSelection.collapsed(offset: next.length),
+      composing: TextRange.empty,
+    );
+  },
+);
+```
+
+Не делай так в новом коде:
+
+- `ref.read(nameProvider.notifier).state = controller.text;`
+- хранение `TextEditingController` внутри провайдера;
+- обновление контроллера из `build()`.
+
+---
+
 ## Производительность
 
 - Сначала профилирование, потом оптимизация.
