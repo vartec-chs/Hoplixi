@@ -48,6 +48,9 @@ class SessionNotifier extends Notifier<SessionState> {
   int _currentFileSize = 0;
   int _currentFileReceived = 0;
   String? _currentFilePath;
+  final List<List<int>> _pendingFileChunks = [];
+  bool _currentFileEndReceived = false;
+  bool _isFinalizingCurrentFile = false;
 
   /// Peer, с которым установлена или устанавливается сессия.
   DeviceInfo? _connectedPeer;
@@ -443,15 +446,26 @@ class SessionNotifier extends Notifier<SessionState> {
     };
 
     _webrtc!.onFileStart = (fileName, fileSize) async {
+      await _closeFileSink();
+      _pendingFileChunks.clear();
       _currentFileName = fileName;
       _currentFileSize = fileSize;
       _currentFileReceived = 0;
+      _currentFileEndReceived = false;
+      _isFinalizingCurrentFile = false;
+      _currentFilePath = null;
 
       final downloadsDir = await _getDownloadsDir();
+      if (_currentFileName != fileName) {
+        return;
+      }
+
       final filePath = p.join(downloadsDir.path, fileName);
       _currentFilePath = filePath;
       final file = File(filePath);
       _currentFileSink = file.openWrite();
+      _flushPendingFileChunks();
+      unawaited(_maybeFinalizeIncomingFile());
 
       final peer = _connectedPeer;
       if (peer != null) {
@@ -467,44 +481,18 @@ class SessionNotifier extends Notifier<SessionState> {
     };
 
     _webrtc!.onFileChunkReceived = (chunk) {
-      _currentFileSink?.add(chunk);
-      _currentFileReceived += chunk.length;
-
-      if (_currentFileSize > 0) {
-        final peer = _connectedPeer;
-        if (peer != null) {
-          state = SessionState.transferring(
-            peer: peer,
-            progress: _currentFileReceived / _currentFileSize,
-            currentFile: _currentFileName ?? '',
-            currentIndex: 0,
-            totalFiles: 1,
-            isSending: false,
-          );
-        }
-      }
+      _handleIncomingFileChunk(chunk);
     };
 
     _webrtc!.onFileEnd = (fileName) async {
-      await _closeFileSink();
-      logInfo('File received: $fileName');
-
-      final peer = _connectedPeer;
-
-      ref
-          .read(sessionHistoryProvider.notifier)
-          .add(
-            HistoryItemType.fileReceived,
-            fileName,
-            deviceName: peer?.name,
-            filePath: _currentFilePath,
-          );
-      _currentFilePath = null;
-
-      // Возвращаемся в connected.
-      if (peer != null) {
-        state = SessionState.connected(peer: peer);
+      if (_currentFileName != null && _currentFileName != fileName) {
+        logInfo(
+          'SessionNotifier: file_end for unexpected file '
+          '$fileName, current file: $_currentFileName',
+        );
       }
+      _currentFileEndReceived = true;
+      await _maybeFinalizeIncomingFile();
     };
 
     _webrtc!.onTextReceived = (text) {
@@ -581,9 +569,7 @@ class SessionNotifier extends Notifier<SessionState> {
     await _disconnectWs();
 
     await _closeFileSink();
-    _currentFileName = null;
-    _currentFileSize = 0;
-    _currentFileReceived = 0;
+    _resetIncomingFileState();
   }
 
   /// Безопасно закрывает IOSink для принимаемого файла.
@@ -595,6 +581,143 @@ class SessionNotifier extends Notifier<SessionState> {
       // Файл уже закрыт или ошибка записи.
     }
     _currentFileSink = null;
+  }
+
+  void _handleIncomingFileChunk(List<int> chunk) {
+    if (_currentFileName == null) {
+      logInfo('SessionNotifier: chunk received without active file');
+      return;
+    }
+
+    if (_currentFileSink == null) {
+      _pendingFileChunks.add(List<int>.from(chunk));
+      return;
+    }
+
+    try {
+      final writableChunk = _trimChunkToExpectedSize(chunk);
+      if (writableChunk.isEmpty) {
+        return;
+      }
+
+      _currentFileSink!.add(writableChunk);
+      _currentFileReceived += writableChunk.length;
+      _updateIncomingTransferProgress();
+
+      if (_currentFileEndReceived &&
+          _currentFileReceived >= _currentFileSize &&
+          !_isFinalizingCurrentFile) {
+        unawaited(_maybeFinalizeIncomingFile());
+      }
+    } catch (e, s) {
+      logError(
+        'SessionNotifier: failed to write file chunk',
+        error: e,
+        stackTrace: s,
+      );
+      state = SessionState.error(message: 'Не удалось записать принимаемый файл');
+    }
+  }
+
+  List<int> _trimChunkToExpectedSize(List<int> chunk) {
+    if (_currentFileSize <= 0) {
+      return chunk;
+    }
+
+    final remaining = _currentFileSize - _currentFileReceived;
+    if (remaining <= 0) {
+      logInfo(
+        'SessionNotifier: extra chunk ignored for '
+        '${_currentFileName ?? 'unknown file'}',
+      );
+      return const [];
+    }
+
+    if (chunk.length <= remaining) {
+      return chunk;
+    }
+
+    logInfo(
+      'SessionNotifier: trimming oversized chunk for '
+      '${_currentFileName ?? 'unknown file'}',
+    );
+    return chunk.sublist(0, remaining);
+  }
+
+  void _flushPendingFileChunks() {
+    if (_currentFileSink == null || _pendingFileChunks.isEmpty) {
+      return;
+    }
+
+    final pendingChunks = List<List<int>>.from(_pendingFileChunks);
+    _pendingFileChunks.clear();
+    for (final pendingChunk in pendingChunks) {
+      _handleIncomingFileChunk(pendingChunk);
+    }
+  }
+
+  void _updateIncomingTransferProgress() {
+    if (_currentFileSize <= 0) {
+      return;
+    }
+
+    final peer = _connectedPeer;
+    if (peer == null) {
+      return;
+    }
+
+    state = SessionState.transferring(
+      peer: peer,
+      progress: _currentFileReceived / _currentFileSize,
+      currentFile: _currentFileName ?? '',
+      currentIndex: 0,
+      totalFiles: 1,
+      isSending: false,
+    );
+  }
+
+  Future<void> _maybeFinalizeIncomingFile() async {
+    if (_isFinalizingCurrentFile ||
+        !_currentFileEndReceived ||
+        _currentFileName == null ||
+        _currentFileSink == null ||
+        _currentFileReceived < _currentFileSize) {
+      return;
+    }
+
+    _isFinalizingCurrentFile = true;
+    final completedFileName = _currentFileName!;
+    final completedFilePath = _currentFilePath;
+
+    await _closeFileSink();
+    logInfo('File received: $completedFileName');
+
+    final peer = _connectedPeer;
+
+    ref
+        .read(sessionHistoryProvider.notifier)
+        .add(
+          HistoryItemType.fileReceived,
+          completedFileName,
+          deviceName: peer?.name,
+          filePath: completedFilePath,
+        );
+    _webrtc?.sendFileReceived(completedFileName);
+    _resetIncomingFileState();
+
+    if (peer != null) {
+      state = SessionState.connected(peer: peer);
+    }
+  }
+
+  void _resetIncomingFileState() {
+    _currentFileName = null;
+    _currentFileSize = 0;
+    _currentFileReceived = 0;
+    _currentFilePath = null;
+    _pendingFileChunks.clear();
+    _currentFileEndReceived = false;
+    _isFinalizingCurrentFile = false;
   }
 
   Future<void> _dispose() async {

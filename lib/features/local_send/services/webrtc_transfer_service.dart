@@ -13,6 +13,7 @@ const int kChunkSize = 16 * 1024;
 class DataChannelMessage {
   static const String fileStart = 'file_start';
   static const String fileEnd = 'file_end';
+  static const String fileReceived = 'file_received';
   static const String textMessage = 'text_message';
   static const String transferComplete = 'transfer_complete';
   static const String cancel = 'cancel';
@@ -36,6 +37,8 @@ class WebRtcTransferService {
   /// игнорируются, т.к. Disconnected/Failed — нормальное
   /// поведение при закрытии соединения.
   bool _isTransferDone = false;
+  Completer<void>? _fileReceivedCompleter;
+  String? _pendingFileAckName;
 
   // ── Колбэки ──
 
@@ -182,52 +185,80 @@ class WebRtcTransferService {
 
     final fileName = file.path.split(Platform.pathSeparator).last;
     final fileSize = await file.length();
+    _pendingFileAckName = fileName;
+    _fileReceivedCompleter = Completer<void>();
 
-    // Уведомляем о начале файла.
-    final startMsg = jsonEncode({
-      'type': DataChannelMessage.fileStart,
-      'name': fileName,
-      'size': fileSize,
-    });
-    _controlChannel!.send(RTCDataChannelMessage(startMsg));
+    try {
+      // Уведомляем о начале файла.
+      final startMsg = jsonEncode({
+        'type': DataChannelMessage.fileStart,
+        'name': fileName,
+        'size': fileSize,
+      });
+      _controlChannel!.send(RTCDataChannelMessage(startMsg));
 
-    // Ждём чтобы control-сообщение дошло раньше данных.
-    await Future<void>.delayed(const Duration(milliseconds: 50));
+      // Ждём чтобы control-сообщение дошло раньше данных.
+      await Future<void>.delayed(const Duration(milliseconds: 50));
 
-    // Стримим файл чанками.
-    final stream = file.openRead();
-    var bytesSent = 0;
+      // Стримим файл чанками.
+      final stream = file.openRead();
+      var bytesSent = 0;
 
-    await for (final chunk in stream) {
-      final bytes = Uint8List.fromList(chunk);
+      await for (final chunk in stream) {
+        final bytes = Uint8List.fromList(chunk);
 
-      // Разбиваем большие чанки.
-      for (var offset = 0; offset < bytes.length; offset += kChunkSize) {
-        final end = (offset + kChunkSize > bytes.length)
-            ? bytes.length
-            : offset + kChunkSize;
-        final subChunk = bytes.sublist(offset, end);
+        // Разбиваем большие чанки.
+        for (var offset = 0; offset < bytes.length; offset += kChunkSize) {
+          final end = (offset + kChunkSize > bytes.length)
+              ? bytes.length
+              : offset + kChunkSize;
+          final subChunk = bytes.sublist(offset, end);
 
-        _dataChannel!.send(RTCDataChannelMessage.fromBinary(subChunk));
-        bytesSent += subChunk.length;
-        onProgress?.call(bytesSent, fileSize);
+          _dataChannel!.send(RTCDataChannelMessage.fromBinary(subChunk));
+          bytesSent += subChunk.length;
+          onProgress?.call(bytesSent, fileSize);
 
-        // Даём DataChannel время на отправку, чтобы
-        // не переполнить буфер.
-        if ((_dataChannel!.bufferedAmount ?? 0) > kChunkSize * 16) {
-          await _waitForBufferDrain();
+          // Даём DataChannel время на отправку, чтобы
+          // не переполнить буфер.
+          if ((_dataChannel!.bufferedAmount ?? 0) > kChunkSize * 16) {
+            await _waitForBufferDrain();
+          }
         }
       }
+
+      // Уведомляем о конце файла.
+      final endMsg = jsonEncode({
+        'type': DataChannelMessage.fileEnd,
+        'name': fileName,
+      });
+      _controlChannel!.send(RTCDataChannelMessage(endMsg));
+
+      await _fileReceivedCompleter!.future.timeout(
+        const Duration(seconds: 30),
+        onTimeout: () =>
+            throw TimeoutException('File receive ack timeout: $fileName'),
+      );
+
+      logInfo('WebRtcTransfer: file sent: $fileName ($fileSize bytes)');
+    } finally {
+      _pendingFileAckName = null;
+      _fileReceivedCompleter = null;
     }
+  }
 
-    // Уведомляем о конце файла.
-    final endMsg = jsonEncode({
-      'type': DataChannelMessage.fileEnd,
-      'name': fileName,
-    });
-    _controlChannel!.send(RTCDataChannelMessage(endMsg));
+  /// Подтверждает, что файл полностью записан на стороне получателя.
+  void sendFileReceived(String fileName) {
+    if (_controlChannel == null) return;
 
-    logInfo('WebRtcTransfer: file sent: $fileName ($fileSize bytes)');
+    try {
+      final msg = jsonEncode({
+        'type': DataChannelMessage.fileReceived,
+        'name': fileName,
+      });
+      _controlChannel!.send(RTCDataChannelMessage(msg));
+    } catch (e) {
+      logError('WebRtcTransfer: sendFileReceived error', error: e);
+    }
   }
 
   /// Уведомляет удалённую сторону о завершении передачи.
@@ -318,6 +349,8 @@ class WebRtcTransferService {
     onLocalIceCandidate = null;
     onConnected = null;
     onError = null;
+    _pendingFileAckName = null;
+    _fileReceivedCompleter = null;
   }
 
   // ── Private ──
@@ -363,6 +396,12 @@ class WebRtcTransferService {
             onFileStart?.call(json['name'] as String, json['size'] as int);
           case DataChannelMessage.fileEnd:
             onFileEnd?.call(json['name'] as String);
+          case DataChannelMessage.fileReceived:
+            final fileName = json['name'] as String?;
+            if (fileName == _pendingFileAckName &&
+                !(_fileReceivedCompleter?.isCompleted ?? true)) {
+              _fileReceivedCompleter?.complete();
+            }
           case DataChannelMessage.transferComplete:
             _isTransferDone = true;
             onTransferComplete?.call();

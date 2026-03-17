@@ -2295,10 +2295,10 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "7acac9cdb386e3ae891999269d7e34818535ec2a"
+      resolved-ref: a0c6dde5a092de1c576896cb154f78e3e56de42a
       url: "https://github.com/vartec-chs/typed_prefs_flutter"
     source: git
-    version: "1.0.4"
+    version: "1.1.0"
   universal_platform:
     dependency: "direct main"
     description:

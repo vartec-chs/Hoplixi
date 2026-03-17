@@ -29,9 +29,9 @@ class FloatingNavItem extends StatelessWidget {
 
     return Material(
       color: Colors.transparent,
-      child: InkWell(
+      child: GestureDetector(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(kFloatingNavItemBorderRadius),
+
         child: Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(

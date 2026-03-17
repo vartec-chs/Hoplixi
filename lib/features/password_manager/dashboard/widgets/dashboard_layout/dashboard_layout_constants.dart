@@ -80,7 +80,7 @@ const double kFloatingNavMarginBottom = 24.0;
 const double kFloatingNavBarBorderRadius = 28.0;
 
 /// Высота плавающей навигационной панели
-const double kFloatingNavBarHeight = 66.0;
+const double kFloatingNavBarHeight = 58.0;
 
 /// Радиус размытия тени плавающей навигации
 const double kFloatingNavShadowBlurRadius = 20.0;
