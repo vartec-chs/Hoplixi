@@ -70,6 +70,7 @@ class EntityTypeCompactDropdown extends ConsumerWidget {
             theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
         borderRadius: BorderRadius.circular(12),
         dropdownColor: fillColor,
+        menuMaxHeight: MediaQuery.of(context).size.height * 0.8,
         items: availableTypes.map((type) {
           return DropdownMenuItem<EntityType>(
             value: type,
