@@ -34,6 +34,8 @@ final transferProvider =
 /// сохраняется между операциями — устройства могут свободно
 /// обмениваться данными пока один из них не отключится.
 class SessionNotifier extends Notifier<SessionState> {
+  static const Duration _incomingFileTimeout = Duration(seconds: 20);
+
   SignalingServer? _signalingServer;
   WebRtcTransferService? _webrtc;
 
@@ -51,6 +53,7 @@ class SessionNotifier extends Notifier<SessionState> {
   final List<List<int>> _pendingFileChunks = [];
   bool _currentFileEndReceived = false;
   bool _isFinalizingCurrentFile = false;
+  Timer? _incomingFileTimeoutTimer;
 
   /// Peer, с которым установлена или устанавливается сессия.
   DeviceInfo? _connectedPeer;
@@ -321,46 +324,51 @@ class SessionNotifier extends Notifier<SessionState> {
     final peer = _connectedPeer;
     if (peer == null || _webrtc == null) return;
 
-    for (var i = 0; i < files.length; i++) {
-      final file = files[i];
-      final fileName = p.basename(file.path);
+    try {
+      for (var i = 0; i < files.length; i++) {
+        final file = files[i];
+        final fileName = p.basename(file.path);
 
-      state = SessionState.transferring(
-        peer: peer,
-        progress: 0,
-        currentFile: fileName,
-        currentIndex: i,
-        totalFiles: files.length,
-        isSending: true,
-      );
-
-      _webrtc!.onProgress = (sent, total) {
         state = SessionState.transferring(
           peer: peer,
-          progress: sent / total,
+          progress: 0,
           currentFile: fileName,
           currentIndex: i,
           totalFiles: files.length,
           isSending: true,
         );
-      };
 
-      await _webrtc!.sendFile(file);
-
-      ref
-          .read(sessionHistoryProvider.notifier)
-          .add(
-            HistoryItemType.fileSent,
-            fileName,
-            deviceName: peer.name,
-            filePath: file.path,
+        _webrtc!.onProgress = (sent, total) {
+          state = SessionState.transferring(
+            peer: peer,
+            progress: sent / total,
+            currentFile: fileName,
+            currentIndex: i,
+            totalFiles: files.length,
+            isSending: true,
           );
+        };
+
+        await _webrtc!.sendFile(file);
+
+        ref
+            .read(sessionHistoryProvider.notifier)
+            .add(
+              HistoryItemType.fileSent,
+              fileName,
+              deviceName: peer.name,
+              filePath: file.path,
+            );
+      }
+
+      _webrtc!.sendTransferComplete();
+
+      // Возвращаемся в connected — сессия не закрывается.
+      state = SessionState.connected(peer: peer);
+    } catch (e, s) {
+      logError('sendFiles', error: e, stackTrace: s);
+      state = SessionState.error(message: 'Не удалось завершить передачу файлов');
     }
-
-    _webrtc!.sendTransferComplete();
-
-    // Возвращаемся в connected — сессия не закрывается.
-    state = SessionState.connected(peer: peer);
   }
 
   /// Архивирует хранилище и отправляет его как ZIP-файл.
@@ -464,6 +472,7 @@ class SessionNotifier extends Notifier<SessionState> {
       _currentFilePath = filePath;
       final file = File(filePath);
       _currentFileSink = file.openWrite();
+      _restartIncomingFileTimeout();
       _flushPendingFileChunks();
       unawaited(_maybeFinalizeIncomingFile());
 
@@ -492,6 +501,7 @@ class SessionNotifier extends Notifier<SessionState> {
         );
       }
       _currentFileEndReceived = true;
+      _restartIncomingFileTimeout();
       await _maybeFinalizeIncomingFile();
     };
 
@@ -508,6 +518,18 @@ class SessionNotifier extends Notifier<SessionState> {
     };
 
     _webrtc!.onTransferComplete = () {
+      if (_currentFileName != null &&
+          _currentFileReceived < _currentFileSize &&
+          !_isFinalizingCurrentFile) {
+        unawaited(
+          _abortIncomingFile(
+            message: 'Передача прервана: файл получен не полностью',
+            notifyPeer: false,
+          ),
+        );
+        return;
+      }
+
       // Партнёр завершил передачу — возвращаемся
       // в connected.
       final peer = _connectedPeer;
@@ -517,6 +539,7 @@ class SessionNotifier extends Notifier<SessionState> {
     };
 
     _webrtc!.onCancelled = () {
+      unawaited(_discardPartialIncomingFile());
       state = const SessionState.error(message: 'Передача отменена');
     };
 
@@ -563,6 +586,7 @@ class SessionNotifier extends Notifier<SessionState> {
 
   /// Очищает текущую WebRTC/WS сессию.
   Future<void> _cleanupCurrentSession() async {
+    _cancelIncomingFileTimeout();
     await _webrtc?.dispose();
     _webrtc = null;
 
@@ -602,6 +626,7 @@ class SessionNotifier extends Notifier<SessionState> {
 
       _currentFileSink!.add(writableChunk);
       _currentFileReceived += writableChunk.length;
+      _restartIncomingFileTimeout();
       _updateIncomingTransferProgress();
 
       if (_currentFileEndReceived &&
@@ -686,6 +711,7 @@ class SessionNotifier extends Notifier<SessionState> {
     }
 
     _isFinalizingCurrentFile = true;
+    _cancelIncomingFileTimeout();
     final completedFileName = _currentFileName!;
     final completedFilePath = _currentFilePath;
 
@@ -702,15 +728,17 @@ class SessionNotifier extends Notifier<SessionState> {
           deviceName: peer?.name,
           filePath: completedFilePath,
         );
-    _webrtc?.sendFileReceived(completedFileName);
     _resetIncomingFileState();
 
     if (peer != null) {
       state = SessionState.connected(peer: peer);
     }
+
+    _webrtc?.sendFileReceived(completedFileName);
   }
 
   void _resetIncomingFileState() {
+    _cancelIncomingFileTimeout();
     _currentFileName = null;
     _currentFileSize = 0;
     _currentFileReceived = 0;
@@ -718,6 +746,68 @@ class SessionNotifier extends Notifier<SessionState> {
     _pendingFileChunks.clear();
     _currentFileEndReceived = false;
     _isFinalizingCurrentFile = false;
+  }
+
+  void _restartIncomingFileTimeout() {
+    if (_currentFileName == null || _isFinalizingCurrentFile) {
+      return;
+    }
+
+    _incomingFileTimeoutTimer?.cancel();
+    _incomingFileTimeoutTimer = Timer(_incomingFileTimeout, () {
+      unawaited(
+        _abortIncomingFile(
+          message: 'Приём файла прерван: таймаут ожидания данных',
+        ),
+      );
+    });
+  }
+
+  void _cancelIncomingFileTimeout() {
+    _incomingFileTimeoutTimer?.cancel();
+    _incomingFileTimeoutTimer = null;
+  }
+
+  Future<void> _abortIncomingFile({
+    required String message,
+    bool notifyPeer = true,
+  }) async {
+    if (_currentFileName == null && _currentFileSink == null) {
+      state = SessionState.error(message: message);
+      return;
+    }
+
+    final failedFileName = _currentFileName;
+    logInfo('SessionNotifier: aborting incoming file ${failedFileName ?? ''}');
+
+    if (notifyPeer) {
+      _webrtc?.cancelTransfer();
+    }
+
+    await _discardPartialIncomingFile();
+    state = SessionState.error(message: message);
+  }
+
+  Future<void> _discardPartialIncomingFile() async {
+    final partialPath = _currentFilePath;
+    await _closeFileSink();
+
+    if (partialPath != null) {
+      final partialFile = File(partialPath);
+      if (await partialFile.exists()) {
+        try {
+          await partialFile.delete();
+        } catch (e, s) {
+          logError(
+            'SessionNotifier: failed to delete partial file',
+            error: e,
+            stackTrace: s,
+          );
+        }
+      }
+    }
+
+    _resetIncomingFileState();
   }
 
   Future<void> _dispose() async {
