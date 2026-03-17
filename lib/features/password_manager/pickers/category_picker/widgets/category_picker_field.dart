@@ -80,6 +80,8 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
 
   /// Закэшированные имена категорий (для режима фильтра)
   List<String> _resolvedCategoryNames = [];
+  bool _isResolvingCategoryName = false;
+  bool _isResolvingCategoryNames = false;
 
   /// Состояние наведения курсора
   bool _isHovered = false;
@@ -88,6 +90,7 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
   void initState() {
     super.initState();
     _internalFocusNode = FocusNode();
+    _syncResolvedCategoryData();
   }
 
   @override
@@ -105,6 +108,18 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
       widget.selectedCategoryIds,
     )) {
       _resolvedCategoryNames = [];
+    }
+
+    if (oldWidget.selectedCategoryId != widget.selectedCategoryId ||
+        oldWidget.selectedCategoryName != widget.selectedCategoryName ||
+        !_listEquals(oldWidget.selectedCategoryIds, widget.selectedCategoryIds) ||
+        !_listEquals(
+          oldWidget.selectedCategoryNames,
+          widget.selectedCategoryNames,
+        )) {
+      _isResolvingCategoryName = false;
+      _isResolvingCategoryNames = false;
+      _syncResolvedCategoryData();
     }
   }
 
@@ -175,6 +190,75 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
     }
   }
 
+  Future<void> _syncResolvedCategoryData() async {
+    if (widget.isFilter) {
+      await _syncResolvedCategoryNames();
+      return;
+    }
+
+    await _syncResolvedCategoryName();
+  }
+
+  Future<void> _syncResolvedCategoryName() async {
+    final categoryId = widget.selectedCategoryId;
+    final categoryName = widget.selectedCategoryName;
+
+    if (categoryName != null && categoryName.isNotEmpty) {
+      _resolvedCategoryName = categoryName;
+      _isResolvingCategoryName = false;
+      return;
+    }
+
+    if (categoryId == null || categoryId.isEmpty) {
+      _resolvedCategoryName = null;
+      _isResolvingCategoryName = false;
+      return;
+    }
+
+    if (!_isResolvingCategoryName && mounted) {
+      setState(() => _isResolvingCategoryName = true);
+    }
+
+    final info = await ref.read(categoryInfoProvider(categoryId).future);
+    if (!mounted || widget.selectedCategoryId != categoryId) return;
+
+    setState(() {
+      _resolvedCategoryName = info?.name;
+      _isResolvingCategoryName = false;
+    });
+  }
+
+  Future<void> _syncResolvedCategoryNames() async {
+    final categoryIds = widget.selectedCategoryIds;
+    final categoryNames = widget.selectedCategoryNames;
+
+    if (categoryNames.isNotEmpty) {
+      _resolvedCategoryNames = categoryNames;
+      _isResolvingCategoryNames = false;
+      return;
+    }
+
+    if (categoryIds.isEmpty) {
+      _resolvedCategoryNames = [];
+      _isResolvingCategoryNames = false;
+      return;
+    }
+
+    if (!_isResolvingCategoryNames && mounted) {
+      setState(() => _isResolvingCategoryNames = true);
+    }
+
+    final infos = await ref.read(categoriesInfoProvider(categoryIds).future);
+    if (!mounted || !_listEquals(widget.selectedCategoryIds, categoryIds)) {
+      return;
+    }
+
+    setState(() {
+      _resolvedCategoryNames = infos.map((i) => i.name).toList();
+      _isResolvingCategoryNames = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -187,76 +271,30 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
     String? effectiveCategoryName = widget.selectedCategoryName;
     List<String> effectiveCategoryNames = widget.selectedCategoryNames;
 
-    // Автоматически загружаем имя категории по ID, если имя не передано
     if (!widget.isFilter) {
-      // Одиночный режим
       if (widget.selectedCategoryId != null &&
           widget.selectedCategoryId!.isNotEmpty &&
           (widget.selectedCategoryName == null ||
               widget.selectedCategoryName!.isEmpty)) {
-        // Используем кэш, если уже загружено
         if (_resolvedCategoryName != null) {
           effectiveCategoryName = _resolvedCategoryName;
         } else {
-          // Загружаем через провайдер
-          final categoryInfoAsync = ref.watch(
-            categoryInfoProvider(widget.selectedCategoryId!),
-          );
-
-          categoryInfoAsync.whenData((info) {
-            if (info != null && _resolvedCategoryName != info.name) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  setState(() {
-                    _resolvedCategoryName = info.name;
-                  });
-                }
-              });
-            }
-          });
-
-          // Показываем временный текст пока загружается
-          effectiveCategoryName = categoryInfoAsync.when(
-            data: (info) => info?.name,
-            loading: () => "Загрузка...",
-            error: (_, _) => null,
-          );
+          effectiveCategoryName = _isResolvingCategoryName
+              ? "Загрузка..."
+              : null;
         }
       }
     } else {
-      // Режим фильтра - множественный выбор
       if (widget.selectedCategoryIds.isNotEmpty &&
           widget.selectedCategoryNames.isEmpty) {
-        // Используем кэш, если уже загружено
         if (_resolvedCategoryNames.isNotEmpty &&
             _resolvedCategoryNames.length ==
                 widget.selectedCategoryIds.length) {
           effectiveCategoryNames = _resolvedCategoryNames;
         } else {
-          // Загружаем через провайдер
-          final categoriesInfoAsync = ref.watch(
-            categoriesInfoProvider(widget.selectedCategoryIds),
-          );
-
-          categoriesInfoAsync.whenData((infos) {
-            final names = infos.map((i) => i.name).toList();
-            if (!_listEquals(_resolvedCategoryNames, names)) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  setState(() {
-                    _resolvedCategoryNames = names;
-                  });
-                }
-              });
-            }
-          });
-
-          // Показываем временный текст пока загружается
-          effectiveCategoryNames = categoriesInfoAsync.when(
-            data: (infos) => infos.map((i) => i.name).toList(),
-            loading: () => ["Загрузка..."],
-            error: (_, _) => [],
-          );
+          effectiveCategoryNames = _isResolvingCategoryNames
+              ? ["Загрузка..."]
+              : [];
         }
       }
     }

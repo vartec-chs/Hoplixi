@@ -35,6 +35,10 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
   late final TextEditingController _counterController;
 
   String? _noteName;
+  bool _isDisposing = false;
+  OtpFormState? _pendingStateSync;
+  OtpFormState? _pendingPreviousStateSync;
+  bool _isStateSyncScheduled = false;
 
   @override
   void initState() {
@@ -53,7 +57,6 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
     _secretController.addListener(_onSecretChanged);
     _periodController.addListener(_onPeriodChanged);
     _counterController.addListener(_onCounterChanged);
-
     _otpFormSubscription = ref.listenManual<OtpFormState>(
       otpFormProvider,
       _onOtpFormStateChanged,
@@ -61,7 +64,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
+      if (!mounted || _isDisposing) return;
 
       final notifier = ref.read(otpFormProvider.notifier);
       if (widget.otpId != null) {
@@ -73,6 +76,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
   }
 
   void _onTabChanged() {
+    if (_isDisposing) return;
     if (_tabController.indexIsChanging) return;
 
     final notifier = ref.read(otpFormProvider.notifier);
@@ -84,51 +88,78 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
   }
 
   void _onIssuerChanged() {
+    if (_isDisposing) return;
     final value = _issuerController.text;
     if (ref.read(otpFormProvider).issuer == value) return;
     ref.read(otpFormProvider.notifier).setIssuer(value);
   }
 
   void _onAccountNameChanged() {
+    if (_isDisposing) return;
     final value = _accountNameController.text;
     if (ref.read(otpFormProvider).accountName == value) return;
     ref.read(otpFormProvider.notifier).setAccountName(value);
   }
 
   void _onSecretChanged() {
+    if (_isDisposing) return;
     final value = _secretController.text;
     if (ref.read(otpFormProvider).secret == value) return;
     ref.read(otpFormProvider.notifier).setSecret(value);
   }
 
   void _onPeriodChanged() {
+    if (_isDisposing) return;
     final value = int.tryParse(_periodController.text) ?? 30;
     if (ref.read(otpFormProvider).period == value) return;
     ref.read(otpFormProvider.notifier).setPeriod(value);
   }
 
   void _onCounterChanged() {
+    if (_isDisposing) return;
     final value = int.tryParse(_counterController.text);
     if (ref.read(otpFormProvider).counter == value) return;
     ref.read(otpFormProvider.notifier).setCounter(value);
   }
 
   void _onOtpFormStateChanged(OtpFormState? previous, OtpFormState next) {
-    if (!mounted) return;
+    if (!mounted || _isDisposing) return;
 
-    _syncTextController(_issuerController, next.issuer);
-    _syncTextController(_accountNameController, next.accountName);
-    _syncTextController(_secretController, next.secret);
-    _syncTextController(_periodController, next.period.toString());
-    _syncTextController(_counterController, next.counter?.toString() ?? '');
-    _syncTabController(next.otpType);
+    _pendingPreviousStateSync = previous;
+    _pendingStateSync = next;
 
-    if (previous?.noteId != next.noteId) {
-      _handleNoteIdChanged(next.noteId);
-    }
+    if (_isStateSyncScheduled) return;
+    _isStateSyncScheduled = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _isStateSyncScheduled = false;
+      if (!mounted || _isDisposing) return;
+
+      final queuedState = _pendingStateSync;
+      final queuedPreviousState = _pendingPreviousStateSync;
+      _pendingStateSync = null;
+      _pendingPreviousStateSync = null;
+
+      if (queuedState == null) return;
+
+      _syncTextController(_issuerController, queuedState.issuer);
+      _syncTextController(_accountNameController, queuedState.accountName);
+      _syncTextController(_secretController, queuedState.secret);
+      _syncTextController(_periodController, queuedState.period.toString());
+      _syncTextController(
+        _counterController,
+        queuedState.counter?.toString() ?? '',
+      );
+      _syncTabController(queuedState.otpType);
+
+      if (queuedPreviousState?.noteId != queuedState.noteId) {
+        _handleNoteIdChanged(queuedState.noteId);
+      }
+    });
   }
 
   void _syncTextController(TextEditingController controller, String value) {
+    if (_isDisposing) return;
     if (controller.text == value) return;
 
     controller.value = controller.value.copyWith(
@@ -140,11 +171,12 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
 
   void _syncTabController(OtpType otpType) {
     final targetIndex = otpType == OtpType.totp ? 0 : 1;
-    if (_tabController.index == targetIndex) return;
-    _tabController.animateTo(targetIndex);
+    if (_isDisposing || _tabController.index == targetIndex) return;
+    _tabController.index = targetIndex;
   }
 
   void _handleNoteIdChanged(String? noteId) {
+    if (_isDisposing) return;
     if (noteId == null) {
       if (_noteName == null) return;
       setState(() => _noteName = null);
@@ -156,6 +188,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
 
   @override
   void dispose() {
+    _isDisposing = true;
     _otpFormSubscription?.close();
     _tabController.removeListener(_onTabChanged);
     _issuerController.removeListener(_onIssuerChanged);
@@ -179,7 +212,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
       subtitle: context.t.dashboard_forms.scan_qr_code_subtitle,
     );
 
-    if (result != null && mounted) {
+    if (result != null && mounted && !_isDisposing) {
       ref.read(otpFormProvider.notifier).applyFromQrCode(result.text);
 
       Toaster.success(
@@ -192,7 +225,11 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
   Future<void> _loadNoteName(String noteId) async {
     final noteDao = await ref.read(noteDaoProvider.future);
     final record = await noteDao.getById(noteId);
-    if (!mounted || ref.read(otpFormProvider).noteId != noteId) return;
+    if (!mounted ||
+        _isDisposing ||
+        ref.read(otpFormProvider).noteId != noteId) {
+      return;
+    }
 
     setState(() {
       _noteName = record?.$1.name;
@@ -203,7 +240,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
     final notifier = ref.read(otpFormProvider.notifier);
     final success = await notifier.save();
 
-    if (!mounted) return;
+    if (!mounted || _isDisposing) return;
 
     if (success) {
       Toaster.success(

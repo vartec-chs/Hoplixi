@@ -46,7 +46,7 @@ class _TotpListCardState extends ConsumerState<TotpListCard> {
 
   @override
   void dispose() {
-    _stopTimerAndClearSecret();
+    _stopTimerAndClearSecret(updateState: false);
     super.dispose();
   }
 
@@ -102,10 +102,16 @@ class _TotpListCardState extends ConsumerState<TotpListCard> {
     }
   }
 
-  void _stopTimerAndClearSecret() {
+  void _stopTimerAndClearSecret({bool updateState = true}) {
     _totpTimer?.cancel();
     _totpTimer = null;
     _clearSecret();
+
+    if (!updateState || !mounted) {
+      _remainingSeconds = 0;
+      return;
+    }
+
     setState(() => _remainingSeconds = 0);
   }
 

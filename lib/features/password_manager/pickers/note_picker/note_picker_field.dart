@@ -53,6 +53,7 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
 
   /// Закэшированное название заметки (для случая, когда передан только ID)
   String? _resolvedNoteName;
+  bool _isResolvingNoteName = false;
 
   /// Состояние наведения курсора
   bool _isHovered = false;
@@ -61,6 +62,7 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
   void initState() {
     super.initState();
     _internalFocusNode = FocusNode();
+    _syncResolvedNoteName();
   }
 
   @override
@@ -68,8 +70,11 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
     super.didUpdateWidget(oldWidget);
 
     // Сбрасываем кэш если изменился ID заметки
-    if (oldWidget.selectedNoteId != widget.selectedNoteId) {
+    if (oldWidget.selectedNoteId != widget.selectedNoteId ||
+        oldWidget.selectedNoteName != widget.selectedNoteName) {
       _resolvedNoteName = null;
+      _isResolvingNoteName = false;
+      _syncResolvedNoteName();
     }
   }
 
@@ -100,6 +105,37 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
     }
   }
 
+  Future<void> _syncResolvedNoteName() async {
+    final noteId = widget.selectedNoteId;
+    final noteName = widget.selectedNoteName;
+
+    if (noteName != null && noteName.isNotEmpty) {
+      _resolvedNoteName = noteName;
+      _isResolvingNoteName = false;
+      return;
+    }
+
+    if (noteId == null || noteId.isEmpty) {
+      _resolvedNoteName = null;
+      _isResolvingNoteName = false;
+      return;
+    }
+
+    if (!_isResolvingNoteName && mounted) {
+      setState(() => _isResolvingNoteName = true);
+    }
+
+    final noteDao = await ref.read(noteDaoProvider.future);
+    final note = await noteDao.getById(noteId);
+
+    if (!mounted || widget.selectedNoteId != noteId) return;
+
+    setState(() {
+      _resolvedNoteName = note?.$1.name;
+      _isResolvingNoteName = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -112,41 +148,10 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
     // Получаем эффективное название заметки
     String? effectiveNoteName = widget.selectedNoteName;
 
-    // Автоматически загружаем название заметки по ID, если название не передано
     if (widget.selectedNoteId != null &&
         widget.selectedNoteId!.isNotEmpty &&
         (widget.selectedNoteName == null || widget.selectedNoteName!.isEmpty)) {
-      // Используем кэш, если уже загружено
-      if (_resolvedNoteName != null) {
-        effectiveNoteName = _resolvedNoteName;
-      } else {
-        // Загружаем через провайдер
-        final noteDao = ref.watch(noteDaoProvider);
-
-        noteDao.when(
-          data: (dao) {
-            // Загружаем асинхронно
-            dao.getById(widget.selectedNoteId!).then((note) {
-              if (note != null && _resolvedNoteName != note.$1.name) {
-                if (mounted) {
-                  setState(() {
-                    _resolvedNoteName = note.$1.name;
-                  });
-                }
-              }
-            });
-          },
-          loading: () {},
-          error: (_, _) {},
-        );
-
-        // Показываем временный текст пока загружается
-        effectiveNoteName = noteDao.when(
-          data: (_) => _resolvedNoteName ?? "Загрузка...",
-          loading: () => "Загрузка...",
-          error: (_, _) => null,
-        );
-      }
+      effectiveNoteName = _resolvedNoteName ?? (_isResolvingNoteName ? "Загрузка..." : null);
     }
 
     // Определяем наличие значения
