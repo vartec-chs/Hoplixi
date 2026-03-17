@@ -71,7 +71,7 @@ class SessionNotifier extends Notifier<SessionState> {
     // Держим discoveryProvider живым пока жив SessionNotifier.
     // ref.listen (не ref.watch) — не вызывает rebuild этого нотифайера
     // при изменениях списка устройств.
-    ref.listen(discoveryProvider, (_, __) {});
+    ref.listen(discoveryProvider, (_, _) {});
 
     _startSignalingServer();
     return const SessionState.disconnected();
@@ -367,7 +367,7 @@ class SessionNotifier extends Notifier<SessionState> {
       state = SessionState.connected(peer: peer);
     } catch (e, s) {
       logError('sendFiles', error: e, stackTrace: s);
-      state = SessionState.error(message: 'Не удалось завершить передачу файлов');
+      state = const SessionState.error(message: 'Не удалось завершить передачу файлов');
     }
   }
 
@@ -640,7 +640,7 @@ class SessionNotifier extends Notifier<SessionState> {
         error: e,
         stackTrace: s,
       );
-      state = SessionState.error(message: 'Не удалось записать принимаемый файл');
+      state = const SessionState.error(message: 'Не удалось записать принимаемый файл');
     }
   }
 

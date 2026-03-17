@@ -13,6 +13,7 @@
 /// `(SELECT COUNT(*) FROM vault_items WHERE id = OLD.item_id) > 0` —
 /// это предотвращает создание сирот при каскадном удалении, когда
 /// родительская строка vault_items уже была удалена.
+library;
 
 // UUID v4 helper, используемый во всех trigger INSERT-ах
 const _uuid =

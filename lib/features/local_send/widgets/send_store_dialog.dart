@@ -130,7 +130,7 @@ class _SendStoreDialogState extends State<SendStoreDialog> {
         ),
         const SizedBox(height: 16),
         DropdownButtonFormField<StoreFolderInfo>(
-          value: selectedStore,
+          initialValue: selectedStore,
           decoration: primaryInputDecoration(
             context,
             labelText: 'Хранилище',

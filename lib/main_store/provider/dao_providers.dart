@@ -1,6 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_store/dao/history_dao/loyalty_card_history_dao.dart';
-import 'package:hoplixi/main_store/dao/loyalty_card_dao.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/db_errors.dart';
 import 'package:riverpod/riverpod.dart';
