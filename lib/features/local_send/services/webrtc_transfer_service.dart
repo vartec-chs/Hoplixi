@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter_webrtc/flutter_webrtc.dart';
@@ -26,6 +27,7 @@ class WebRtcTransferService {
   RTCPeerConnection? _peerConnection;
   RTCDataChannel? _controlChannel;
   RTCDataChannel? _dataChannel;
+  bool _isDisposed = false;
 
   /// Флаг: соединение уже было установлено.
   /// Предотвращает повторный вызов [onConnected]
@@ -85,6 +87,7 @@ class WebRtcTransferService {
 
   /// Создаёт PeerConnection и SDP offer (отправитель).
   Future<String> createOffer() async {
+    _isDisposed = false;
     await _createPeerConnection();
 
     // Создаём DataChannel для control-сообщений.
@@ -112,6 +115,7 @@ class WebRtcTransferService {
   /// Обрабатывает полученный SDP offer и создаёт answer
   /// (получатель).
   Future<String> handleOffer(String offerJson) async {
+    _isDisposed = false;
     await _createPeerConnection();
 
     // Слушаем входящие DataChannel.
@@ -173,7 +177,7 @@ class WebRtcTransferService {
       'type': DataChannelMessage.textMessage,
       'text': text,
     });
-    _controlChannel!.send(RTCDataChannelMessage(message));
+    await _sendControlMessage(message);
   }
 
   /// Отправляет один файл через DataChannel.
@@ -195,7 +199,7 @@ class WebRtcTransferService {
         'name': fileName,
         'size': fileSize,
       });
-      _controlChannel!.send(RTCDataChannelMessage(startMsg));
+      await _sendControlMessage(startMsg);
 
       // Ждём чтобы control-сообщение дошло раньше данных.
       await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -214,9 +218,12 @@ class WebRtcTransferService {
               : offset + kChunkSize;
           final subChunk = bytes.sublist(offset, end);
 
-          _dataChannel!.send(RTCDataChannelMessage.fromBinary(subChunk));
+          await _sendDataChunk(subChunk);
           bytesSent += subChunk.length;
-          onProgress?.call(bytesSent, fileSize);
+          final visualProgressBytes = bytesSent >= fileSize
+              ? math.max(fileSize - 1, 0)
+              : bytesSent;
+          onProgress?.call(visualProgressBytes, fileSize);
 
           // Даём DataChannel время на отправку, чтобы
           // не переполнить буфер.
@@ -231,13 +238,15 @@ class WebRtcTransferService {
         'type': DataChannelMessage.fileEnd,
         'name': fileName,
       });
-      _controlChannel!.send(RTCDataChannelMessage(endMsg));
+      await _sendControlMessage(endMsg);
 
       await _fileReceivedCompleter!.future.timeout(
         const Duration(seconds: 30),
         onTimeout: () =>
             throw TimeoutException('File receive ack timeout: $fileName'),
       );
+
+      onProgress?.call(fileSize, fileSize);
 
       logInfo('WebRtcTransfer: file sent: $fileName ($fileSize bytes)');
     } finally {
@@ -247,7 +256,7 @@ class WebRtcTransferService {
   }
 
   /// Подтверждает, что файл полностью записан на стороне получателя.
-  void sendFileReceived(String fileName) {
+  Future<void> sendFileReceived(String fileName) async {
     if (_controlChannel == null) return;
 
     try {
@@ -255,44 +264,44 @@ class WebRtcTransferService {
         'type': DataChannelMessage.fileReceived,
         'name': fileName,
       });
-      _controlChannel!.send(RTCDataChannelMessage(msg));
+      await _sendControlMessage(msg);
     } catch (e) {
       logError('WebRtcTransfer: sendFileReceived error', error: e);
     }
   }
 
   /// Уведомляет удалённую сторону о завершении передачи.
-  void sendTransferComplete() {
+  Future<void> sendTransferComplete() async {
     if (_controlChannel == null) return;
 
     _isTransferDone = true;
     try {
       final msg = jsonEncode({'type': DataChannelMessage.transferComplete});
-      _controlChannel!.send(RTCDataChannelMessage(msg));
+      await _sendControlMessage(msg);
     } catch (e) {
       logError('WebRtcTransfer: sendTransferComplete error', error: e);
     }
   }
 
   /// Отменяет передачу.
-  void cancelTransfer() {
+  Future<void> cancelTransfer() async {
     if (_controlChannel == null) return;
 
     try {
       final msg = jsonEncode({'type': DataChannelMessage.cancel});
-      _controlChannel!.send(RTCDataChannelMessage(msg));
+      await _sendControlMessage(msg);
     } catch (e) {
       logError('WebRtcTransfer: cancelTransfer error', error: e);
     }
   }
 
   /// Уведомляет удалённую сторону о намеренном отключении.
-  void sendDisconnect() {
+  Future<void> sendDisconnect() async {
     if (_controlChannel == null) return;
 
     try {
       final msg = jsonEncode({'type': DataChannelMessage.disconnect});
-      _controlChannel!.send(RTCDataChannelMessage(msg));
+      await _sendControlMessage(msg);
     } catch (e) {
       logError('WebRtcTransfer: sendDisconnect error', error: e);
     }
@@ -309,22 +318,17 @@ class WebRtcTransferService {
     // во время очистки, не вызвали ошибок.
     _clearCallbacks();
     _isTransferDone = true;
+    _isDisposed = true;
 
-    final control = _controlChannel;
-    final data = _dataChannel;
     final peer = _peerConnection;
 
+    // flutter_webrtc close() у RTCDataChannel может прислать late-event
+    // после закрытия внутренних StreamController. Это и даёт
+    // "Bad state: Cannot add event after closing". Оставляем закрытие
+    // peer connection на стороне PeerConnection.
     _controlChannel = null;
     _dataChannel = null;
     _peerConnection = null;
-
-    try {
-      await control?.close();
-    } catch (_) {}
-
-    try {
-      await data?.close();
-    } catch (_) {}
 
     try {
       await peer?.close();
@@ -426,20 +430,47 @@ class WebRtcTransferService {
 
   Future<void> _waitForBufferDrain() async {
     while (_dataChannel != null &&
+        !_isDisposed &&
         (_dataChannel!.bufferedAmount ?? 0) > kChunkSize * 4) {
       await Future<void>.delayed(const Duration(milliseconds: 10));
     }
   }
 
+  Future<void> _sendControlMessage(String text) async {
+    final channel = _controlChannel;
+    if (!_isChannelOpen(channel)) {
+      throw StateError('Control DataChannel is not open');
+    }
+
+    await channel!.send(RTCDataChannelMessage(text));
+  }
+
+  Future<void> _sendDataChunk(Uint8List chunk) async {
+    final channel = _dataChannel;
+    if (!_isChannelOpen(channel)) {
+      throw StateError('Data DataChannel is not open');
+    }
+
+    await channel!.send(RTCDataChannelMessage.fromBinary(chunk));
+  }
+
+  bool _isChannelOpen(RTCDataChannel? channel) {
+    if (_isDisposed || channel == null) {
+      return false;
+    }
+
+    return channel.state == RTCDataChannelState.RTCDataChannelOpen;
+  }
+
   void _ensureControlChannel() {
-    if (_controlChannel == null) {
-      throw StateError('Control DataChannel is not initialized');
+    if (!_isChannelOpen(_controlChannel)) {
+      throw StateError('Control DataChannel is not initialized or closed');
     }
   }
 
   void _ensureDataChannel() {
-    if (_dataChannel == null) {
-      throw StateError('Data DataChannel is not initialized');
+    if (!_isChannelOpen(_dataChannel)) {
+      throw StateError('Data DataChannel is not initialized or closed');
     }
   }
 }

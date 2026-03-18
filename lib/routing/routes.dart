@@ -13,6 +13,7 @@ import 'package:hoplixi/features/home/crypt_test_screen.dart';
 import 'package:hoplixi/features/home/home_screen.dart';
 import 'package:hoplixi/features/local_send/screens/local_send_history_screen.dart';
 import 'package:hoplixi/features/local_send/screens/local_send_screen.dart';
+import 'package:hoplixi/features/local_send/screens/local_send_transfer_screen.dart';
 import 'package:hoplixi/features/logs_viewer/screens/logs_tabs_screen.dart';
 import 'package:hoplixi/features/password_manager/create_store/create_store_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
@@ -89,6 +90,10 @@ final List<RouteBase> appRoutes = [
   GoRoute(
     path: AppRoutesPaths.localSendSend,
     builder: (context, state) => const LocalSendScreen(),
+  ),
+  GoRoute(
+    path: AppRoutesPaths.localSendTransfer,
+    builder: (context, state) => const LocalSendTransferScreen(),
   ),
   GoRoute(
     path: AppRoutesPaths.localSendHistory,

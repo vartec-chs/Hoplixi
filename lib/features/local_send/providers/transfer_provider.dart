@@ -4,13 +4,14 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_paths.dart';
-import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/core/logger/index.dart' hide DeviceInfo;
+import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/local_send/models/device_info.dart';
 import 'package:hoplixi/features/local_send/models/history_item.dart';
 import 'package:hoplixi/features/local_send/models/session_state.dart';
 import 'package:hoplixi/features/local_send/providers/discovery_provider.dart';
 import 'package:hoplixi/features/local_send/providers/incoming_request_provider.dart';
+import 'package:hoplixi/features/local_send/providers/local_send_route_state_provider.dart';
 import 'package:hoplixi/features/local_send/providers/session_history_provider.dart';
 import 'package:hoplixi/features/local_send/services/signaling_server.dart';
 import 'package:hoplixi/features/local_send/services/webrtc_transfer_service.dart';
@@ -22,10 +23,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 /// Провайдер состояния сессии обмена данными.
-final transferProvider =
-    NotifierProvider.autoDispose<SessionNotifier, SessionState>(
-      SessionNotifier.new,
-    );
+final transferProvider = NotifierProvider<SessionNotifier, SessionState>(
+  SessionNotifier.new,
+);
 
 /// Оркестрирует signaling-сервер, WebRTC-соединение
 /// и процесс обмена файлами/текстом.
@@ -68,13 +68,17 @@ class SessionNotifier extends Notifier<SessionState> {
   SessionState build() {
     ref.onDispose(_dispose);
 
-    // Держим discoveryProvider живым пока жив SessionNotifier.
-    // ref.listen (не ref.watch) — не вызывает rebuild этого нотифайера
-    // при изменениях списка устройств.
-    ref.listen(discoveryProvider, (_, _) {});
-
     _startSignalingServer();
     return const SessionState.disconnected();
+  }
+
+  void _setSessionState(SessionState nextState) {
+    state = nextState;
+    ref.read(localSendRouteStateProvider.notifier).syncWithSession(nextState);
+  }
+
+  void _resetRouteState() {
+    ref.read(localSendRouteStateProvider.notifier).showDiscovery();
   }
 
   /// Запускает signaling-сервер и регистрирует порт
@@ -103,7 +107,7 @@ class SessionNotifier extends Notifier<SessionState> {
     await _cleanupCurrentSession();
 
     _connectedPeer = target;
-    state = SessionState.waitingApproval(peer: target);
+    _setSessionState(SessionState.waitingApproval(peer: target));
 
     try {
       final selfId = ref.read(localDeviceIdProvider);
@@ -159,13 +163,13 @@ class SessionNotifier extends Notifier<SessionState> {
       );
 
       if (!accepted) {
-        state = const SessionState.error(message: 'Запрос отклонён');
+        _setSessionState(const SessionState.error(message: 'Запрос отклонён'));
         await _disconnectWs();
         return;
       }
 
       // Подтверждено — запускаем WebRTC handshake.
-      state = SessionState.connecting(peer: target);
+      _setSessionState(SessionState.connecting(peer: target));
 
       _webrtc = WebRtcTransferService();
       _setupCommonCallbacks();
@@ -191,22 +195,26 @@ class SessionNotifier extends Notifier<SessionState> {
       // Ждём onConnected → переход в connected.
     } on SocketException catch (e, s) {
       logError('connectToDevice', error: e, stackTrace: s);
-      state = SessionState.error(
-        message:
-            'Не удалось подключиться к устройству. '
-            'Убедитесь, что оба устройства в одной сети. '
-            '(${e.message})',
+      _setSessionState(
+        SessionState.error(
+          message:
+              'Не удалось подключиться к устройству. '
+              'Убедитесь, что оба устройства в одной сети. '
+              '(${e.message})',
+        ),
       );
       await _disconnectWs();
     } on TimeoutException catch (e) {
       logError('connectToDevice: timeout', error: e);
-      state = const SessionState.error(
-        message: 'Таймаут при подключении к устройству',
+      _setSessionState(
+        const SessionState.error(
+          message: 'Таймаут при подключении к устройству',
+        ),
       );
       await _disconnectWs();
     } catch (e, s) {
       logError('connectToDevice', error: e, stackTrace: s);
-      state = SessionState.error(message: e.toString());
+      _setSessionState(SessionState.error(message: e.toString()));
       await _disconnectWs();
     }
   }
@@ -276,7 +284,7 @@ class SessionNotifier extends Notifier<SessionState> {
 
     _signalingServer?.acceptTransfer();
     ref.read(incomingRequestProvider.notifier).clear();
-    state = SessionState.connecting(peer: peer);
+    _setSessionState(SessionState.connecting(peer: peer));
 
     // WebRTC для приёма.
     _webrtc = WebRtcTransferService();
@@ -300,7 +308,7 @@ class SessionNotifier extends Notifier<SessionState> {
     _signalingServer?.rejectTransfer();
     ref.read(incomingRequestProvider.notifier).clear();
     _connectedPeer = null;
-    state = const SessionState.disconnected();
+    _setSessionState(const SessionState.disconnected());
   }
 
   Future<void> _onOfferReceived(String offerJson) async {
@@ -311,7 +319,7 @@ class SessionNotifier extends Notifier<SessionState> {
       _signalingServer?.setLocalAnswer(answerJson);
     } catch (e, s) {
       logError('_onOfferReceived error', error: e, stackTrace: s);
-      state = SessionState.error(message: e.toString());
+      _setSessionState(SessionState.error(message: e.toString()));
     }
   }
 
@@ -329,23 +337,27 @@ class SessionNotifier extends Notifier<SessionState> {
         final file = files[i];
         final fileName = p.basename(file.path);
 
-        state = SessionState.transferring(
-          peer: peer,
-          progress: 0,
-          currentFile: fileName,
-          currentIndex: i,
-          totalFiles: files.length,
-          isSending: true,
-        );
-
-        _webrtc!.onProgress = (sent, total) {
-          state = SessionState.transferring(
+        _setSessionState(
+          SessionState.transferring(
             peer: peer,
-            progress: sent / total,
+            progress: 0,
             currentFile: fileName,
             currentIndex: i,
             totalFiles: files.length,
             isSending: true,
+          ),
+        );
+
+        _webrtc!.onProgress = (sent, total) {
+          _setSessionState(
+            SessionState.transferring(
+              peer: peer,
+              progress: sent / total,
+              currentFile: fileName,
+              currentIndex: i,
+              totalFiles: files.length,
+              isSending: true,
+            ),
           );
         };
 
@@ -361,13 +373,17 @@ class SessionNotifier extends Notifier<SessionState> {
             );
       }
 
-      _webrtc!.sendTransferComplete();
+      await _webrtc!.sendTransferComplete();
 
       // Возвращаемся в connected — сессия не закрывается.
-      state = SessionState.connected(peer: peer);
+      _setSessionState(SessionState.connected(peer: peer));
     } catch (e, s) {
       logError('sendFiles', error: e, stackTrace: s);
-      state = const SessionState.error(message: 'Не удалось завершить передачу файлов');
+      _setSessionState(
+        const SessionState.error(
+          message: 'Не удалось завершить передачу файлов',
+        ),
+      );
     }
   }
 
@@ -382,13 +398,15 @@ class SessionNotifier extends Notifier<SessionState> {
     final archiveService = ref.read(archiveServiceProvider);
     final outputPath = await _buildStoreArchivePath(store.storeName);
 
-    state = SessionState.transferring(
-      peer: peer,
-      progress: 0,
-      currentFile: 'Подготовка архива ${store.storeName}',
-      currentIndex: 0,
-      totalFiles: 1,
-      isSending: true,
+    _setSessionState(
+      SessionState.transferring(
+        peer: peer,
+        progress: 0,
+        currentFile: 'Подготовка архива ${store.storeName}',
+        currentIndex: 0,
+        totalFiles: 1,
+        isSending: true,
+      ),
     );
 
     try {
@@ -397,13 +415,15 @@ class SessionNotifier extends Notifier<SessionState> {
         outputPath,
         password: password,
         onProgress: (current, total, fileName) {
-          state = SessionState.transferring(
-            peer: peer,
-            progress: total <= 0 ? 0 : current / total,
-            currentFile: 'Архивация: $fileName',
-            currentIndex: 0,
-            totalFiles: 1,
-            isSending: true,
+          _setSessionState(
+            SessionState.transferring(
+              peer: peer,
+              progress: total <= 0 ? 0 : current / total,
+              currentFile: 'Архивация: $fileName',
+              currentIndex: 0,
+              totalFiles: 1,
+              isSending: true,
+            ),
           );
         },
       );
@@ -415,7 +435,7 @@ class SessionNotifier extends Notifier<SessionState> {
           description:
               error?.message ?? 'Не удалось подготовить архив хранилища',
         );
-        state = SessionState.connected(peer: peer);
+        _setSessionState(SessionState.connected(peer: peer));
         return;
       }
 
@@ -426,7 +446,7 @@ class SessionNotifier extends Notifier<SessionState> {
         title: 'Ошибка отправки',
         description: 'Не удалось отправить хранилище: $e',
       );
-      state = SessionState.connected(peer: peer);
+      _setSessionState(SessionState.connected(peer: peer));
     }
   }
 
@@ -449,7 +469,7 @@ class SessionNotifier extends Notifier<SessionState> {
       logInfo('WebRTC connected — session active');
       final peer = _connectedPeer;
       if (peer != null) {
-        state = SessionState.connected(peer: peer);
+        _setSessionState(SessionState.connected(peer: peer));
       }
     };
 
@@ -478,13 +498,15 @@ class SessionNotifier extends Notifier<SessionState> {
 
       final peer = _connectedPeer;
       if (peer != null) {
-        state = SessionState.transferring(
-          peer: peer,
-          progress: 0,
-          currentFile: fileName,
-          currentIndex: 0,
-          totalFiles: 1,
-          isSending: false,
+        _setSessionState(
+          SessionState.transferring(
+            peer: peer,
+            progress: 0,
+            currentFile: fileName,
+            currentIndex: 0,
+            totalFiles: 1,
+            isSending: false,
+          ),
         );
       }
     };
@@ -534,13 +556,13 @@ class SessionNotifier extends Notifier<SessionState> {
       // в connected.
       final peer = _connectedPeer;
       if (peer != null) {
-        state = SessionState.connected(peer: peer);
+        _setSessionState(SessionState.connected(peer: peer));
       }
     };
 
     _webrtc!.onCancelled = () {
       unawaited(_discardPartialIncomingFile());
-      state = const SessionState.error(message: 'Передача отменена');
+      _setSessionState(const SessionState.error(message: 'Передача отменена'));
     };
 
     _webrtc!.onDisconnected = () {
@@ -549,7 +571,7 @@ class SessionNotifier extends Notifier<SessionState> {
     };
 
     _webrtc!.onError = (error) {
-      state = SessionState.error(message: error);
+      _setSessionState(SessionState.error(message: error));
     };
   }
 
@@ -565,12 +587,14 @@ class SessionNotifier extends Notifier<SessionState> {
       await _cleanupCurrentSession();
       await _signalingServer?.stop();
     } catch (_) {}
+    ref.invalidate(discoveryProvider);
+    _resetRouteState();
   }
 
   /// Отключается от peer и сбрасывает сессию.
   Future<void> disconnect() async {
     // Уведомляем другую сторону до закрытия каналов.
-    _webrtc?.sendDisconnect();
+    unawaited(_webrtc?.sendDisconnect());
     await Future<void>.delayed(const Duration(milliseconds: 100));
     await _cleanupCurrentSession();
     await _signalingServer?.reset();
@@ -578,7 +602,7 @@ class SessionNotifier extends Notifier<SessionState> {
     ref.read(incomingRequestProvider.notifier).clear();
     ref.read(sessionHistoryProvider.notifier).clear();
     _connectedPeer = null;
-    state = const SessionState.disconnected();
+    _setSessionState(const SessionState.disconnected());
   }
 
   /// Сбрасывает состояние (alias для disconnect).
@@ -598,18 +622,28 @@ class SessionNotifier extends Notifier<SessionState> {
 
   /// Безопасно закрывает IOSink для принимаемого файла.
   Future<void> _closeFileSink() async {
+    final sink = _currentFileSink;
+    _currentFileSink = null;
+
     try {
-      await _currentFileSink?.flush();
-      await _currentFileSink?.close();
+      await sink?.flush();
+      await sink?.close();
     } catch (_) {
       // Файл уже закрыт или ошибка записи.
     }
-    _currentFileSink = null;
   }
 
   void _handleIncomingFileChunk(List<int> chunk) {
     if (_currentFileName == null) {
       logInfo('SessionNotifier: chunk received without active file');
+      return;
+    }
+
+    if (_isFinalizingCurrentFile) {
+      logInfo(
+        'SessionNotifier: chunk ignored while finalizing '
+        '${_currentFileName ?? 'unknown file'}',
+      );
       return;
     }
 
@@ -640,7 +674,11 @@ class SessionNotifier extends Notifier<SessionState> {
         error: e,
         stackTrace: s,
       );
-      state = const SessionState.error(message: 'Не удалось записать принимаемый файл');
+      _setSessionState(
+        const SessionState.error(
+          message: 'Не удалось записать принимаемый файл',
+        ),
+      );
     }
   }
 
@@ -691,13 +729,15 @@ class SessionNotifier extends Notifier<SessionState> {
       return;
     }
 
-    state = SessionState.transferring(
-      peer: peer,
-      progress: _currentFileReceived / _currentFileSize,
-      currentFile: _currentFileName ?? '',
-      currentIndex: 0,
-      totalFiles: 1,
-      isSending: false,
+    _setSessionState(
+      SessionState.transferring(
+        peer: peer,
+        progress: _currentFileReceived / _currentFileSize,
+        currentFile: _currentFileName ?? '',
+        currentIndex: 0,
+        totalFiles: 1,
+        isSending: false,
+      ),
     );
   }
 
@@ -731,10 +771,10 @@ class SessionNotifier extends Notifier<SessionState> {
     _resetIncomingFileState();
 
     if (peer != null) {
-      state = SessionState.connected(peer: peer);
+      _setSessionState(SessionState.connected(peer: peer));
     }
 
-    _webrtc?.sendFileReceived(completedFileName);
+    unawaited(_webrtc?.sendFileReceived(completedFileName));
   }
 
   void _resetIncomingFileState() {
@@ -773,7 +813,7 @@ class SessionNotifier extends Notifier<SessionState> {
     bool notifyPeer = true,
   }) async {
     if (_currentFileName == null && _currentFileSink == null) {
-      state = SessionState.error(message: message);
+      _setSessionState(SessionState.error(message: message));
       return;
     }
 
@@ -781,11 +821,11 @@ class SessionNotifier extends Notifier<SessionState> {
     logInfo('SessionNotifier: aborting incoming file ${failedFileName ?? ''}');
 
     if (notifyPeer) {
-      _webrtc?.cancelTransfer();
+      unawaited(_webrtc?.cancelTransfer());
     }
 
     await _discardPartialIncomingFile();
-    state = SessionState.error(message: message);
+    _setSessionState(SessionState.error(message: message));
   }
 
   Future<void> _discardPartialIncomingFile() async {
@@ -813,6 +853,8 @@ class SessionNotifier extends Notifier<SessionState> {
   Future<void> _dispose() async {
     await _cleanupCurrentSession();
     await _signalingServer?.stop();
+    ref.invalidate(discoveryProvider);
+    _resetRouteState();
   }
 
   // ══════════════════════════════════════════════

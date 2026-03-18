@@ -10,6 +10,7 @@ class AppRoutesPaths {
 
   /// LocalSend — экран отправки файлов по локальной сети.
   static const String localSendSend = '/localsend/send';
+  static const String localSendTransfer = '/localsend/transfer';
   static const String localSendHistory = '/localsend/history';
 
   // Add other route paths as needed

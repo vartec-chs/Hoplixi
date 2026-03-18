@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/features/local_send/providers/transfer_provider.dart';
 import 'package:hoplixi/features/setup/providers/setup_completed_provider.dart';
 import 'package:hoplixi/global_key.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
@@ -17,6 +18,7 @@ import 'package:window_manager/window_manager.dart';
 final routerProvider = Provider<GoRouter>((ref) {
   // Listen to the RouterRefreshNotifier to trigger refreshes
   final refreshNotifier = ref.watch(routerRefreshNotifierProvider.notifier);
+  String? previousLocation;
 
   final router = GoRouter(
     initialLocation: '/',
@@ -93,6 +95,21 @@ final routerProvider = Provider<GoRouter>((ref) {
           return AppRoutesPaths.home;
         }
       }
+
+      // final localSendRouteState = ref.read(localSendRouteStateProvider);
+      // final isLocalSendRoute = currentPath.startsWith('/localsend');
+
+      // if (isLocalSendRoute &&
+      //     localSendRouteState == LocalSendRouteState.transfer &&
+      //     currentPath != AppRoutesPaths.localSendTransfer) {
+      //   return AppRoutesPaths.localSendTransfer;
+      // }
+
+      // if (currentPath == AppRoutesPaths.localSendTransfer &&
+      //     localSendRouteState == LocalSendRouteState.discovery) {
+      //   return AppRoutesPaths.localSendSend;
+      // }
+
       return null;
     },
   );
@@ -100,6 +117,14 @@ final routerProvider = Provider<GoRouter>((ref) {
   router.routerDelegate.addListener(() {
     final loc = router.state.path;
     logTrace('Router location changed: $loc');
+
+    final wasInLocalSend = previousLocation?.startsWith('/localsend') ?? false;
+    final isInLocalSend = loc?.startsWith('/localsend') ?? false;
+
+    if (wasInLocalSend && !isInLocalSend) {
+      ref.read(transferProvider.notifier).stopServices().ignore();
+    }
+
     if (loc == AppRoutesPaths.home) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ref.read(titlebarStateProvider.notifier).setBackgroundTransparent(true);
@@ -111,6 +136,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             .setBackgroundTransparent(false);
       });
     }
+
+    previousLocation = loc;
   });
 
   ref.onDispose(() {
