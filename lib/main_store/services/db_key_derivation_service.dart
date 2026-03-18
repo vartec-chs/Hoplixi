@@ -7,7 +7,7 @@ import 'package:cryptography/cryptography.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 
-/// Сервис деривации ключей для шифрования SQLCipher базы данных.
+/// Сервис деривации ключей для шифрования SQLite3 Multiple Ciphers базы данных.
 ///
 /// Реализует двухэтапную схему получения ключа:
 ///
@@ -16,7 +16,7 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 /// finalKey  = HKDF(masterKey, device_secret)     // если useDeviceKey = true
 /// ```
 ///
-/// Полученный ключ передаётся в SQLCipher через:
+/// Полученный ключ передаётся в SQLite3 Multiple Ciphers через:
 /// ```dart
 /// rawDb.execute("PRAGMA key = \"x'<hexKey>'\";");
 /// ```
@@ -40,7 +40,7 @@ class DbKeyDerivationService {
   static const String _deviceKeyStorageKey = 'hoplixi_db_device_secret_v1';
 
   // --- Info-строка для HKDF (контекст деривации) ---
-  static const String _hkdfInfo = 'hoplixi-sqlcipher-v1';
+  static const String _hkdfInfo = 'hoplixi-SQLite3 Multiple Ciphers-v1';
 
   final FlutterSecureStorage _secureStorage;
 
@@ -50,7 +50,7 @@ class DbKeyDerivationService {
   // Публичный API
   // ─────────────────────────────────────────────────────────────────────────
 
-  /// Вычислить ключ шифрования для SQLCipher PRAGMA.
+  /// Вычислить ключ шифрования для SQLite3 Multiple Ciphers PRAGMA.
   ///
   /// [password]     — мастер-пароль пользователя
   /// [salt]         — Argon2-соль (base64), уникальная для каждого хранилища.
@@ -65,7 +65,7 @@ class DbKeyDerivationService {
     bool useDeviceKey = false,
   }) async {
     logInfo(
-      'Deriving SQLCipher PRAGMA key (useDeviceKey=$useDeviceKey)',
+      'Deriving SQLite3 Multiple Ciphers PRAGMA key (useDeviceKey=$useDeviceKey)',
       tag: _logTag,
     );
 

@@ -94,8 +94,8 @@ Use these vetted, cross-platform crates for common tasks:
 - **Cryptography**: `ring`, `aes-gcm` (pure Rust implementations preferred for
   portability)
 - **HTTP Client**: `reqwest` (ensure OpenSSL/TLS compatibility on Android/iOS)
-- **Key-Value Store**: `sled` (if SQLCipher/Drift is insufficient for specific
-  needs)
+- **Key-Value Store**: `sled` (if SQLite3 Multiple Ciphers/Drift is insufficient
+  for specific needs)
 
 ## Build & deployment
 

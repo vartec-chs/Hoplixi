@@ -114,9 +114,9 @@ class StoreMetaDao extends DatabaseAccessor<MainStore>
     return result > 0;
   }
 
-  /// Изменить ключ шифрования базы данных (SQLCipher PRAGMA rekey)
+  /// Изменить ключ шифрования базы данных (SQLite3 Multiple Ciphers PRAGMA rekey)
   ///
-  /// [newPragmaKey] должен быть в формате SQLCipher,
+  /// [newPragmaKey] должен быть в формате SQLite3 Multiple Ciphers,
   /// например: x'<64-символьный hex>'
   AsyncResultDart<bool, String> changePassword(String newPragmaKey) async {
     try {

@@ -17,7 +17,7 @@ import 'package:result_dart/result_dart.dart';
 /// Менеджер для управления хранилищами MainStore
 ///
 /// Отвечает за создание, открытие, закрытие и управление
-/// зашифрованными хранилищами паролей на основе Drift + SQLCipher
+/// зашифрованными хранилищами паролей на основе Drift + SQLite3 Multiple Ciphers
 class MainStoreManager {
   static const String _logTag = 'MainStoreManager';
 

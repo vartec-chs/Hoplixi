@@ -9,7 +9,7 @@ import 'package:hoplixi/main_store/models/db_errors.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:sqlite3/sqlite3.dart';
 
-/// Сервис создания SQLCipher-подключения для MainStore.
+/// Сервис создания SQLite3 Multiple Ciphers-подключения для MainStore.
 class MainStoreConnectionService {
   static const String _logTag = 'MainStoreConnectionService';
 
@@ -27,7 +27,7 @@ class MainStoreConnectionService {
         setup: (rawDb) {
           if (!_debugCheckHasCipher(rawDb)) {
             throw UnsupportedError(
-              'This database needs to run with SQLCipher, but that library is '
+              'This database needs to run with SQLite3 Multiple Ciphers, but that library is '
               'not available!',
             );
           }

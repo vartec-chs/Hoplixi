@@ -39,7 +39,7 @@ securely store and manage their passwords.
 - Flutter
 - Dart
 - SQLite
-- SQLCipher
+- SQLite3 Multiple Ciphers
 - Riverpod
 - Freezed
 - GoRouter
@@ -616,7 +616,8 @@ detailed navigation recipes and examples.
 
 ## Main Store (`lib/main_store/`)
 
-Manages SQLCipher-encrypted Drift database for password manager data:
+Manages SQLite3 Multiple Ciphers-encrypted Drift database for password manager
+data:
 
 See
 [docs-ai/add-new-vault-entity-guide.md](docs-ai/add-new-vault-entity-guide.md)
@@ -625,7 +626,7 @@ filters, DTO, UI forms/cards, and integration points).
 
 ### Core Files
 
-- **main_store_manager.dart** - Wraps Drift + SQLCipher, returns
+- **main_store_manager.dart** - Wraps Drift + SQLite3 Multiple Ciphers, returns
   `AsyncResult<StoreInfoDto, DatabaseError>`. Never throw exceptions, always
   propagate results.
 - **main_store.dart** - Hosts tables, DAOs, and schema version. Bump
