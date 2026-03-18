@@ -7,17 +7,27 @@ import 'package:hoplixi/main_store/services/archive_service.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
+class _ImportStoreArchiveDialogResult {
+  final String? password;
+  final bool replaceExistingIfNewer;
+
+  const _ImportStoreArchiveDialogResult({
+    required this.password,
+    required this.replaceExistingIfNewer,
+  });
+}
+
 Future<void> showStoreArchiveImportDialog(
   BuildContext context,
   WidgetRef ref, {
   required String archivePath,
 }) async {
-  final password = await showDialog<String?>(
+  final importOptions = await showDialog<_ImportStoreArchiveDialogResult?>(
     context: context,
     builder: (context) => ImportStoreArchiveDialog(archivePath: archivePath),
   );
 
-  if (password == null) {
+  if (importOptions == null) {
     return;
   }
 
@@ -25,8 +35,11 @@ Future<void> showStoreArchiveImportDialog(
   final storagesPath = await AppPaths.appStoragesPath;
   final result = await archiveService.unarchiveStore(
     archivePath,
-    password: password.isEmpty ? null : password,
+    password: importOptions.password?.isEmpty ?? true
+        ? null
+        : importOptions.password,
     basePath: storagesPath,
+    replaceExistingIfNewer: importOptions.replaceExistingIfNewer,
   );
 
   result.fold(
@@ -37,10 +50,7 @@ Future<void> showStoreArchiveImportDialog(
       );
     },
     (error) {
-      Toaster.error(
-        title: 'Ошибка импорта',
-        description: error.message,
-      );
+      Toaster.error(title: 'Ошибка импорта', description: error.message);
     },
   );
 }
@@ -57,6 +67,7 @@ class ImportStoreArchiveDialog extends StatefulWidget {
 
 class _ImportStoreArchiveDialogState extends State<ImportStoreArchiveDialog> {
   late final TextEditingController _passwordController;
+  var _replaceExistingIfNewer = false;
 
   @override
   void initState() {
@@ -96,6 +107,20 @@ class _ImportStoreArchiveDialogState extends State<ImportStoreArchiveDialog> {
               hintText: 'Оставьте пустым для архива без пароля',
             ),
           ),
+          const SizedBox(height: 12),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            value: _replaceExistingIfNewer,
+            onChanged: (value) {
+              setState(() {
+                _replaceExistingIfNewer = value;
+              });
+            },
+            title: const Text('Заменять существующее хранилище'),
+            subtitle: const Text(
+              'Если архив новее локального хранилища с тем же store ID, старая версия будет перенесена в backups.',
+            ),
+          ),
         ],
       ),
       actions: [
@@ -105,7 +130,15 @@ class _ImportStoreArchiveDialogState extends State<ImportStoreArchiveDialog> {
           type: .text,
         ),
         SmoothButton(
-          onPressed: () => Navigator.pop(context, _passwordController.text.trim()),
+          onPressed: () {
+            Navigator.pop(
+              context,
+              _ImportStoreArchiveDialogResult(
+                password: _passwordController.text.trim(),
+                replaceExistingIfNewer: _replaceExistingIfNewer,
+              ),
+            );
+          },
           label: 'Импортировать',
           type: .filled,
         ),

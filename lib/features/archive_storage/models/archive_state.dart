@@ -38,6 +38,9 @@ sealed class ArchiveScreenState with _$ArchiveScreenState {
     /// Путь к архиву для импорта
     String? importPath,
 
+    /// Заменять локальное хранилище, если архив новее по manifest.
+    @Default(false) bool replaceExistingIfNewer,
+
     /// Идёт ли процесс разархивации
     @Default(false) bool isUnarchiving,
 

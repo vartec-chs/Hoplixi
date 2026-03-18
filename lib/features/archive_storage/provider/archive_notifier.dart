@@ -38,6 +38,11 @@ class ArchiveNotifier extends Notifier<ArchiveScreenState> {
     state = state.copyWith(password: password);
   }
 
+  /// Установка флага замены существующего хранилища при более свежем архиве.
+  void setReplaceExistingIfNewer(bool value) {
+    state = state.copyWith(replaceExistingIfNewer: value);
+  }
+
   /// Выбор пути для сохранения архива
   Future<void> pickExportPath() async {
     try {
@@ -148,6 +153,7 @@ class ArchiveNotifier extends Notifier<ArchiveScreenState> {
       final result = await archiveService.unarchiveStore(
         importPath,
         password: state.password,
+        replaceExistingIfNewer: state.replaceExistingIfNewer,
         onProgress: (current, total, fileName) {
           state = state.copyWith(
             progress: current / total,
@@ -197,6 +203,7 @@ class ArchiveNotifier extends Notifier<ArchiveScreenState> {
       exportPath: null,
       importPath: null,
       password: null,
+      replaceExistingIfNewer: false,
     );
   }
 }

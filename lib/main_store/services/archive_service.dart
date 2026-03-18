@@ -5,17 +5,14 @@ import 'package:archive/archive_io.dart';
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_store/models/db_errors.dart';
+import 'package:hoplixi/main_store/models/store_manifest.dart';
+import 'package:hoplixi/main_store/services/store_manifest_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:result_dart/result_dart.dart' as rd;
 
-/// Callback для отслеживания прогресса архивации/разархивации
-/// [current] - текущий обработанный файл
-/// [total] - общее количество файлов
-/// [fileName] - имя текущего обрабатываемого файла
 typedef ArchiveProgressCallback =
     void Function(int current, int total, String fileName);
 
-/// Параметры для архивации в изоляте
 class _ArchiveParams {
   final String storePath;
   final String outputPath;
@@ -30,7 +27,6 @@ class _ArchiveParams {
   });
 }
 
-/// Параметры для разархивации в изоляте
 class _UnarchiveParams {
   final String archivePath;
   final String? password;
@@ -45,7 +41,6 @@ class _UnarchiveParams {
   });
 }
 
-/// Сообщение о прогрессе
 class _ProgressMessage {
   final int current;
   final int total;
@@ -54,7 +49,6 @@ class _ProgressMessage {
   _ProgressMessage(this.current, this.total, this.fileName);
 }
 
-/// Результат работы изолята
 class _IsolateResult {
   final bool success;
   final String? data;
@@ -72,6 +66,7 @@ class _IsolateResult {
 }
 
 class ArchiveService {
+  static const String _logTag = 'ArchiveService';
   static const String storeArchiveFileSuffix = ' (store).zip';
 
   static bool isStoreArchiveFile(String archivePath) {
@@ -82,17 +77,15 @@ class ArchiveService {
   static String suggestedStoreFolderName(String archivePath) {
     final fileName = p.basename(archivePath);
     if (isStoreArchiveFile(archivePath)) {
-      return fileName.substring(0, fileName.length - storeArchiveFileSuffix.length);
+      return fileName.substring(
+        0,
+        fileName.length - storeArchiveFileSuffix.length,
+      );
     }
 
     return p.basenameWithoutExtension(archivePath);
   }
 
-  /// Архивация хранилища
-  /// [storePath] - путь к папке хранилища
-  /// [outputPath] - путь куда сохранить архив (включая имя файла)
-  /// [password] - пароль для архива (опционально)
-  /// [onProgress] - callback для отслеживания прогресса
   Future<rd.ResultDart<String, DatabaseError>> archiveStore(
     String storePath,
     String outputPath, {
@@ -112,7 +105,6 @@ class ArchiveService {
       final outFile = File(outputPath);
       await outFile.parent.create(recursive: true);
 
-      // Создаём порт для получения сообщений из изолята
       final receivePort = ReceivePort();
       final isolate = await Isolate.spawn(
         _archiveInIsolate,
@@ -139,39 +131,34 @@ class ArchiveService {
       isolate.kill();
 
       if (result?.success == true) {
-        logInfo('Хранилище заархивировано: $outputPath', tag: 'ArchiveService');
+        logInfo('Store archived: $outputPath', tag: _logTag);
         return rd.Success(outputPath);
-      } else {
-        return rd.Failure(
-          DatabaseError.archiveFailed(
-            message: result?.error ?? 'Неизвестная ошибка архивации',
-          ),
-        );
       }
-    } catch (e, s) {
-      logError(
-        'Ошибка при архивации: $e',
-        stackTrace: s,
-        tag: 'ArchiveService',
+
+      return rd.Failure(
+        DatabaseError.archiveFailed(
+          message: result?.error ?? 'Неизвестная ошибка архивации',
+        ),
       );
+    } catch (e, s) {
+      logError('Archive failed: $e', stackTrace: s, tag: _logTag);
       return rd.Failure(
         DatabaseError.archiveFailed(message: e.toString(), stackTrace: s),
       );
     }
   }
 
-  /// Разархивация хранилища
-  /// [archivePath] - путь к файлу архива
-  /// [password] - пароль от архива (опционально)
-  /// [basePath] - базовый путь для распаковки (по умолчанию AppPaths.appStoragePath)
-  /// [onProgress] - callback для отслеживания прогресса
-  /// Возвращает путь к папке с разархивированным хранилищем
   Future<rd.ResultDart<String, DatabaseError>> unarchiveStore(
     String archivePath, {
     String? password,
     String? basePath,
+    bool replaceExistingIfNewer = false,
     ArchiveProgressCallback? onProgress,
   }) async {
+    String? stagingPath;
+    String? backupPath;
+    String? backupRestoreTargetPath;
+
     try {
       final archiveFile = File(archivePath);
       if (!await archiveFile.exists()) {
@@ -185,19 +172,20 @@ class ArchiveService {
       final storagesPath = basePath ?? await AppPaths.appStoragesPath;
       final rawStoreName = suggestedStoreFolderName(archivePath).trim();
       final storeName = rawStoreName.isEmpty ? 'imported_store' : rawStoreName;
-      final targetPath = await _buildUniqueStoreTargetPath(storagesPath, storeName);
 
-      final targetDir = Directory(targetPath);
-      await targetDir.create(recursive: true);
+      stagingPath = await _buildTemporaryStoreTargetPath(
+        storagesPath,
+        storeName,
+      );
+      await Directory(stagingPath).create(recursive: true);
 
-      // Создаём порт для получения сообщений из изолята
       final receivePort = ReceivePort();
       final isolate = await Isolate.spawn(
         _unarchiveInIsolate,
         _UnarchiveParams(
           archivePath: archivePath,
           password: password,
-          targetPath: targetPath,
+          targetPath: stagingPath,
           sendPort: receivePort.sendPort,
         ),
       );
@@ -216,54 +204,80 @@ class ArchiveService {
       receivePort.close();
       isolate.kill();
 
-      if (result?.success == true) {
-        logInfo(
-          'Хранилище разархивировано: $targetPath',
-          tag: 'ArchiveService',
-        );
-        return rd.Success(targetPath);
-      } else if (result?.isInvalidPassword == true) {
-        // Удаляем созданную папку при ошибке
-        await _cleanupDirectory(targetPath);
-        return rd.Failure(
-          DatabaseError.archiveInvalidPassword(
-            message: result?.error ?? 'Неверный пароль для архива',
-          ),
-        );
-      } else {
-        // Удаляем созданную папку при ошибке
-        await _cleanupDirectory(targetPath);
+      if (result?.success != true) {
+        await _cleanupDirectory(stagingPath);
+
+        if (result?.isInvalidPassword == true) {
+          return rd.Failure(
+            DatabaseError.archiveInvalidPassword(
+              message: result?.error ?? 'Неверный пароль для архива',
+            ),
+          );
+        }
+
         return rd.Failure(
           DatabaseError.unarchiveFailed(
             message: result?.error ?? 'Неизвестная ошибка разархивации',
           ),
         );
       }
-    } catch (e, s) {
-      logError(
-        'Ошибка при разархивации: $e',
-        stackTrace: s,
-        tag: 'ArchiveService',
+
+      final finalTargetPath = await _resolveFinalTargetPath(
+        storagesPath: storagesPath,
+        storeName: storeName,
+        stagingPath: stagingPath,
+        replaceExistingIfNewer: replaceExistingIfNewer,
       );
+
+      if (p.normalize(finalTargetPath) != p.normalize(stagingPath)) {
+        final existingTargetDir = Directory(finalTargetPath);
+        if (await existingTargetDir.exists()) {
+          backupRestoreTargetPath = finalTargetPath;
+          backupPath = await _moveStoreToBackups(finalTargetPath);
+        }
+
+        await _promoteUnarchivedStore(
+          stagingPath: stagingPath,
+          targetPath: finalTargetPath,
+        );
+      }
+
+      logInfo('Store unarchived: $finalTargetPath', tag: _logTag);
+      return rd.Success(finalTargetPath);
+    } catch (e, s) {
+      if (backupPath != null && backupRestoreTargetPath != null) {
+        await _restoreStoreFromBackup(
+          backupPath: backupPath,
+          targetPath: backupRestoreTargetPath,
+        );
+      }
+
+      if (stagingPath != null) {
+        await _cleanupDirectory(stagingPath);
+      }
+
+      logError('Unarchive failed: $e', stackTrace: s, tag: _logTag);
       return rd.Failure(
         DatabaseError.unarchiveFailed(message: e.toString(), stackTrace: s),
       );
     }
   }
 
-  /// Удаляет директорию если она существует
   static Future<void> _cleanupDirectory(String path) async {
     try {
       final dir = Directory(path);
       if (await dir.exists()) {
         await dir.delete(recursive: true);
       }
-    } catch (e) {
-      logError('Не удалось удалить папку $path: $e', tag: 'ArchiveService');
+    } catch (e, s) {
+      logError(
+        'Failed to delete directory $path: $e',
+        stackTrace: s,
+        tag: _logTag,
+      );
     }
   }
 
-  /// Записывает содержимое архивного файла на диск потоково
   static Future<void> _writeFileContentStreaming(
     ArchiveFile file,
     String outputPath,
@@ -271,11 +285,151 @@ class ArchiveService {
     final outputStream = OutputFileStream(outputPath);
 
     try {
-      // Используем writeContent для потоковой записи
-      // freeMemory: true освобождает память после записи
       file.writeContent(outputStream, freeMemory: true);
     } finally {
       await outputStream.close();
+    }
+  }
+
+  static Future<String> _resolveFinalTargetPath({
+    required String storagesPath,
+    required String storeName,
+    required String stagingPath,
+    required bool replaceExistingIfNewer,
+  }) async {
+    if (!replaceExistingIfNewer) {
+      return _buildUniqueStoreTargetPath(storagesPath, storeName);
+    }
+
+    final importedManifest = await StoreManifestService.readFrom(stagingPath);
+    if (importedManifest == null) {
+      return _buildUniqueStoreTargetPath(storagesPath, storeName);
+    }
+
+    final existingStore = await StoreManifestService.findLatestByStoreId(
+      storagesPath,
+      importedManifest.storeId,
+      excludedPaths: {stagingPath},
+    );
+
+    if (existingStore == null) {
+      return _buildUniqueStoreTargetPath(storagesPath, storeName);
+    }
+
+    if (!_shouldReplaceExistingStore(
+      importedManifest: importedManifest,
+      existingManifest: existingStore.manifest,
+    )) {
+      return _buildUniqueStoreTargetPath(storagesPath, storeName);
+    }
+
+    logInfo(
+      'Replacing existing store ${existingStore.storagePath} with newer archive '
+      'version for storeId=${importedManifest.storeId}',
+      tag: _logTag,
+    );
+
+    return existingStore.storagePath;
+  }
+
+  static bool _shouldReplaceExistingStore({
+    required StoreManifest importedManifest,
+    required StoreManifest existingManifest,
+  }) {
+    return importedManifest.lastModified > existingManifest.lastModified;
+  }
+
+  static Future<void> _promoteUnarchivedStore({
+    required String stagingPath,
+    required String targetPath,
+  }) async {
+    final stagingDir = Directory(stagingPath);
+    if (!await stagingDir.exists()) {
+      throw StateError('Staging directory does not exist: $stagingPath');
+    }
+
+    final targetDir = Directory(targetPath);
+    if (await targetDir.exists()) {
+      throw StateError('Target directory already exists: $targetPath');
+    }
+
+    await targetDir.parent.create(recursive: true);
+    await stagingDir.rename(targetPath);
+  }
+
+  static Future<String> _moveStoreToBackups(String storePath) async {
+    final backupsPath = await AppPaths.backupsPath;
+    final timestamp = DateTime.now()
+        .toIso8601String()
+        .replaceAll(':', '-')
+        .replaceAll('.', '-');
+    final storeFolderName = p.basename(storePath);
+    var backupPath = p.join(
+      backupsPath,
+      '${storeFolderName}_backup_$timestamp',
+    );
+    var suffix = 1;
+
+    while (await Directory(backupPath).exists()) {
+      backupPath = p.join(
+        backupsPath,
+        '${storeFolderName}_backup_${timestamp}_$suffix',
+      );
+      suffix++;
+    }
+
+    await Directory(storePath).rename(backupPath);
+    logInfo('Store moved to backups: $backupPath', tag: _logTag);
+    return backupPath;
+  }
+
+  static Future<void> _restoreStoreFromBackup({
+    required String backupPath,
+    required String targetPath,
+  }) async {
+    try {
+      final backupDir = Directory(backupPath);
+      if (!await backupDir.exists()) {
+        return;
+      }
+
+      final targetDir = Directory(targetPath);
+      if (await targetDir.exists()) {
+        return;
+      }
+
+      await backupDir.rename(targetPath);
+      logWarning(
+        'Restored store from backup after failed replacement: $targetPath',
+        tag: _logTag,
+      );
+    } catch (e, s) {
+      logError(
+        'Failed to restore store from backup $backupPath: $e',
+        stackTrace: s,
+        tag: _logTag,
+      );
+    }
+  }
+
+  static Future<String> _buildTemporaryStoreTargetPath(
+    String storagesPath,
+    String storeName,
+  ) async {
+    var suffix = 0;
+
+    while (true) {
+      final candidateName = suffix == 0
+          ? '.__unarchive_$storeName'
+          : '.__unarchive_${storeName}_$suffix';
+      final candidatePath = p.join(storagesPath, candidateName);
+      final candidateDir = Directory(candidatePath);
+
+      if (!await candidateDir.exists()) {
+        return candidatePath;
+      }
+
+      suffix++;
     }
   }
 
@@ -299,7 +453,6 @@ class ArchiveService {
   }
 }
 
-/// Top-level функция для архивации в изоляте
 void _archiveInIsolate(_ArchiveParams params) async {
   try {
     final storeDir = Directory(params.storePath);
@@ -331,7 +484,6 @@ void _archiveInIsolate(_ArchiveParams params) async {
   }
 }
 
-/// Архивация без пароля в изоляте
 Future<void> _archiveWithoutPasswordStreamingIsolate({
   required List<File> files,
   required String storePath,
@@ -343,10 +495,10 @@ Future<void> _archiveWithoutPasswordStreamingIsolate({
   encoder.create(outputPath);
 
   try {
-    for (var i = 0; i < files.length; i++) {
-      final file = files[i];
+    for (var index = 0; index < files.length; index++) {
+      final file = files[index];
       final relativePath = p.relative(file.path, from: storePath);
-      sendPort.send(_ProgressMessage(i + 1, totalFiles, relativePath));
+      sendPort.send(_ProgressMessage(index + 1, totalFiles, relativePath));
       await encoder.addFile(file);
     }
   } finally {
@@ -354,7 +506,6 @@ Future<void> _archiveWithoutPasswordStreamingIsolate({
   }
 }
 
-/// Архивация с паролем в изоляте
 Future<void> _archiveWithPasswordStreamingIsolate({
   required List<File> files,
   required String storePath,
@@ -368,10 +519,10 @@ Future<void> _archiveWithPasswordStreamingIsolate({
   try {
     final archive = Archive();
 
-    for (var i = 0; i < files.length; i++) {
-      final file = files[i];
+    for (var index = 0; index < files.length; index++) {
+      final file = files[index];
       final relativePath = p.relative(file.path, from: storePath);
-      sendPort.send(_ProgressMessage(i + 1, totalFiles, relativePath));
+      sendPort.send(_ProgressMessage(index + 1, totalFiles, relativePath));
 
       final inputStream = InputFileStream(file.path);
       final archiveFile = ArchiveFile.stream(relativePath, inputStream);
@@ -384,7 +535,6 @@ Future<void> _archiveWithPasswordStreamingIsolate({
   }
 }
 
-/// Top-level функция для разархивации в изоляте
 void _unarchiveInIsolate(_UnarchiveParams params) async {
   try {
     final inputStream = InputFileStream(params.archivePath);
@@ -395,7 +545,7 @@ void _unarchiveInIsolate(_UnarchiveParams params) async {
         password: params.password,
       );
 
-      final fileEntries = archive.where((f) => f.isFile).toList();
+      final fileEntries = archive.where((file) => file.isFile).toList();
       final totalFiles = fileEntries.length;
       var currentFile = 0;
 
@@ -426,7 +576,6 @@ void _unarchiveInIsolate(_UnarchiveParams params) async {
     params.sendPort.send(_IsolateResult.success(params.targetPath));
   } catch (e) {
     final errorMessage = e.toString();
-    // Определяем ошибку неверного пароля по характерным сообщениям
     final isInvalidPassword = _isPasswordError(errorMessage);
     params.sendPort.send(
       _IsolateResult.error(errorMessage, isInvalidPassword: isInvalidPassword),
@@ -434,10 +583,6 @@ void _unarchiveInIsolate(_UnarchiveParams params) async {
   }
 }
 
-/// Определяет, является ли ошибка ошибкой неверного пароля
-/// При неверном пароле библиотека archive выбрасывает FormatException
-/// с характерными сообщениями о CRC, checksum или corrupted данных
-/// При отсутствии пароля для защищённого архива может быть Null check ошибка
 bool _isPasswordError(String errorMessage) {
   final lowerMessage = errorMessage.toLowerCase();
   return lowerMessage.contains('crc') ||

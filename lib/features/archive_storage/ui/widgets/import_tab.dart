@@ -29,15 +29,13 @@ class _ImportTabState extends ConsumerState<ImportTab> {
     final notifier = ref.read(archiveNotifierProvider.notifier);
 
     ref.listen(archiveNotifierProvider, (prev, next) {
-      // Показываем успех только если состояние изменилось с false на true
       if (next.isSuccess &&
           next.successMessage != null &&
           (prev == null || !prev.isSuccess)) {
         Toaster.success(title: 'Успех', description: next.successMessage!);
       }
-      // Показываем ошибку только если она новая
+
       if (next.error != null && (prev == null || prev.error != next.error)) {
-        // Специальное сообщение для ошибки неверного пароля
         final isPasswordError = next.error is ArchiveInvalidPasswordError;
         Toaster.error(
           title: isPasswordError ? 'Неверный пароль' : 'Ошибка импорта',
@@ -53,7 +51,6 @@ class _ImportTabState extends ConsumerState<ImportTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Выбор файла архива
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -96,8 +93,6 @@ class _ImportTabState extends ConsumerState<ImportTab> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // Пароль (опционально)
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -105,7 +100,7 @@ class _ImportTabState extends ConsumerState<ImportTab> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Пароль (если требуется)',
+                    'Параметры импорта',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 16),
@@ -122,13 +117,23 @@ class _ImportTabState extends ConsumerState<ImportTab> {
                       notifier.setPassword(value.isEmpty ? null : value);
                     },
                   ),
+                  const SizedBox(height: 12),
+                  SwitchListTile.adaptive(
+                    contentPadding: EdgeInsets.zero,
+                    value: state.replaceExistingIfNewer,
+                    onChanged: state.isUnarchiving
+                        ? null
+                        : notifier.setReplaceExistingIfNewer,
+                    title: const Text('Заменять существующее хранилище'),
+                    subtitle: const Text(
+                      'Если найдено хранилище с тем же store ID и архив новее по manifest, текущая версия будет перенесена в backups.',
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 24),
-
-          // Прогресс
           if (state.isUnarchiving) ...[
             Card(
               child: Padding(
@@ -162,19 +167,19 @@ class _ImportTabState extends ConsumerState<ImportTab> {
             ),
             const SizedBox(height: 16),
           ],
-
-          // Информация
-          const Card(
+          Card(
             child: Padding(
-              padding: EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, size: 20),
-                  SizedBox(width: 12),
+                  const Icon(Icons.info_outline, size: 20),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Хранилище будет импортировано в папку storages с автоматически сгенерированным именем',
-                      style: TextStyle(fontSize: 12),
+                      state.replaceExistingIfNewer
+                          ? 'Если архив новее локального хранилища с тем же store ID, существующая папка будет перенесена в backups, а архив займёт её место.'
+                          : 'Хранилище будет импортировано в папку storages с автоматически сгенерированным именем.',
+                      style: const TextStyle(fontSize: 12),
                     ),
                   ),
                 ],
@@ -182,8 +187,6 @@ class _ImportTabState extends ConsumerState<ImportTab> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // Кнопка импорта или начать заново
           if (state.isSuccess)
             SmoothButton(
               label: 'Начать заново',
