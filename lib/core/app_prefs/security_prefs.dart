@@ -1,13 +1,17 @@
 import "package:typed_prefs/typed_prefs.dart";
 
-part 'auth_prefs.g.dart';
+part 'security_prefs.g.dart';
 
 @Prefs(protected: true, writePolicy: 'biometric')
-class AuthPrefs {
+class SecurityPrefs {
   @Pref(defaultValue: false)
   static const biometricEnabled = PrefKey<bool>();
 
   static const pinCode = PrefKey<String>();
+
+  // Защита dashboard от записи экрана и скриншотов
+  @Pref(defaultValue: true)
+  static const preventScreenCaptureOnDashboard = PrefKey<bool>();
 
   @Pref(defaultValue: 0)
   static const pinAttempts = PrefKey<int>();

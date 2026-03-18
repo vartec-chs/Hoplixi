@@ -1,7 +1,7 @@
 import 'package:riverpod/src/framework.dart';
 
-import 'app_logger.dart';
 import '../constants/main_constants.dart';
+import 'app_logger.dart';
 
 final class LoggingProviderObserver extends ProviderObserver {
   static const String _logTag = 'RiverpodObserver';
@@ -30,8 +30,13 @@ final class LoggingProviderObserver extends ProviderObserver {
     Object? previousValue,
     Object? newValue,
   ) {
+    if (MainConstants.isProduction) {
+      super.didUpdateProvider(context, previousValue, newValue);
+      return;
+    }
+
     logInfo(
-      '[RIVERPOD] ⬆️ UPDATE ${context.provider.name ?? context.provider.runtimeType}: ${MainConstants.isProduction ? '[PROD]' : previousValue} → ${MainConstants.isProduction ? '[PROD]' : newValue}',
+      '[RIVERPOD] ⬆️ UPDATE ${context.provider.name ?? context.provider.runtimeType}: $previousValue → $newValue',
       tag: _logTag,
     );
     super.didUpdateProvider(context, previousValue, newValue);

@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/app_prefs/auth_prefs.dart';
+import 'package:hoplixi/core/app_prefs/security_prefs.dart';
 import 'package:hoplixi/core/services/local_auth_failure.dart';
 import 'package:hoplixi/core/services/local_auth_service.dart';
 import 'package:hoplixi/core/theme/index.dart';
@@ -126,7 +126,7 @@ class RecentDatabaseCard extends ConsumerWidget {
     // Если пароль сохранен, проверяем биометрию
     if (entry.savePassword && password != null) {
       final storageService = getIt<PreferencesService>();
-      final isBiometricEnabled = await storageService.authPrefs.biometricEnabled.get() ?? false;
+      final isBiometricEnabled = await storageService.securityPrefs.biometricEnabled.get() ?? false;
 
       if (isBiometricEnabled) {
         final localAuthService = getIt<LocalAuthService>();

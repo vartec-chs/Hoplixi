@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/app_prefs/auth_prefs.dart';
+import 'package:hoplixi/core/app_prefs/security_prefs.dart';
 import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/services/services.dart';
 import 'package:hoplixi/core/theme/theme_switcher.dart';
@@ -81,6 +81,8 @@ class SecuritySettingsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final biometricEnabled = ref.watch(biometricEnabledProvider).value ?? false;
+    final preventScreenCaptureOnDashboard =
+        ref.watch(preventScreenCaptureOnDashboardProvider).value ?? true;
     final autoLockTimeout = ref.watch(autoLockTimeoutProvider).value ?? 300;
 
     return SettingsSectionCard(
@@ -92,7 +94,7 @@ class SecuritySettingsSection extends ConsumerWidget {
           leading: const Icon(Icons.fingerprint),
           value: biometricEnabled,
           onChanged: (value) =>
-              getIt<PreferencesService>().authPrefs.setBiometricEnabled(
+              getIt<PreferencesService>().securityPrefs.setBiometricEnabled(
                 value,
                 onWriteError: (failure) {
                   Toaster.error(
@@ -102,6 +104,26 @@ class SecuritySettingsSection extends ConsumerWidget {
                 },
               ),
         ),
+        if (UniversalPlatform.isMobile) ...[
+          const Divider(height: 1),
+          SettingsSwitchTile(
+            title: 'Защита скриншотов на дашборде',
+            subtitle:
+                'Запрещать скриншоты и запись экрана на мобильном дашборде',
+            leading: const Icon(Icons.visibility_off_outlined),
+            value: preventScreenCaptureOnDashboard,
+            onChanged: (value) => getIt<PreferencesService>().securityPrefs
+                .setPreventScreenCaptureOnDashboard(
+                  value,
+                  onWriteError: (failure) {
+                    Toaster.error(
+                      title: 'Не удалось обновить настройку',
+                      description: failure.error.toString(),
+                    );
+                  },
+                ),
+          ),
+        ],
         const Divider(height: 1),
         SettingsTile(
           title: 'Таймаут автоблокировки',
@@ -210,7 +232,7 @@ class SecuritySettingsSection extends ConsumerWidget {
     );
 
     if (result != null && result.isNotEmpty) {
-      await getIt<PreferencesService>().authPrefs.setPinCode(result);
+      await getIt<PreferencesService>().securityPrefs.setPinCode(result);
     }
   }
 }

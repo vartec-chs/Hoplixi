@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/app_prefs/auth_prefs.dart';
+import 'package:hoplixi/core/app_prefs/security_prefs.dart';
 import 'package:hoplixi/core/app_prefs/system_prefs.dart';
 import 'package:hoplixi/core/theme/theme_provider.dart';
 import 'package:hoplixi/di_init.dart';
@@ -197,14 +197,14 @@ class SetupNotifier extends Notifier<SetupState> {
         );
 
         if (authenticated) {
-          await _storage.authPrefs.setBiometricEnabled(true);
+          await _storage.securityPrefs.biometricEnabled.set(true);
           state = state.copyWith(biometricEnabled: true);
         }
       } catch (e) {
         // Аутентификация не удалась
       }
     } else {
-      await _storage.authPrefs.setBiometricEnabled(false);
+      await _storage.securityPrefs.biometricEnabled.set(false);
       state = state.copyWith(biometricEnabled: false);
     }
   }

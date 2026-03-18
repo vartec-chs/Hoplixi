@@ -1,7 +1,9 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/providers/screen_protection_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/dashboard_drawer.dart';
 import 'package:hoplixi/routing/paths.dart';
 
@@ -9,7 +11,6 @@ import 'dashboard_drawer_scope.dart';
 import 'dashboard_layout_constants.dart';
 import 'desktop_three_column_layout.dart';
 import 'keyboard_shortcuts.dart';
-import 'screen_protection_wrapper.dart';
 import 'widgets/fab_builder.dart';
 import 'widgets/floating_nav_bar.dart';
 
@@ -191,9 +192,7 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
               child: AnimatedSlide(
                 offset: showBottomNav ? Offset.zero : const Offset(0, 1.5),
                 duration: kScaleAnimationDuration,
-                curve: showBottomNav
-                    ? Curves.easeOutCubic
-                    : Curves.easeInCubic,
+                curve: showBottomNav ? Curves.easeOutCubic : Curves.easeInCubic,
                 child: AnimatedOpacity(
                   opacity: showBottomNav ? 1.0 : 0.0,
                   duration: kFadeAnimationDuration,
@@ -201,9 +200,7 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
                   child: AnimatedScale(
                     scale: showBottomNav ? 1.0 : 0.95,
                     duration: kScaleAnimationDuration,
-                    curve: showBottomNav
-                        ? Curves.easeOutBack
-                        : Curves.easeIn,
+                    curve: showBottomNav ? Curves.easeOutBack : Curves.easeIn,
                     child: FloatingNavBar(
                       destinations: destinations,
                       selectedIndex: currentIndex,
@@ -225,9 +222,7 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
               child: AnimatedSlide(
                 offset: showFAB ? Offset.zero : const Offset(0, 1.5),
                 duration: kScaleAnimationDuration,
-                curve: showFAB
-                    ? Curves.easeOutCubic
-                    : Curves.easeInCubic,
+                curve: showFAB ? Curves.easeOutCubic : Curves.easeInCubic,
                 child: AnimatedOpacity(
                   opacity: showFAB ? 1.0 : 0.0,
                   duration: kFadeAnimationDuration,
@@ -235,9 +230,7 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
                   child: AnimatedScale(
                     scale: showFAB ? 1.0 : 0.95,
                     duration: kScaleAnimationDuration,
-                    curve: showFAB
-                        ? Curves.easeOutBack
-                        : Curves.easeIn,
+                    curve: showFAB ? Curves.easeOutBack : Curves.easeIn,
                     child: DashboardFabBuilder(
                       context: context,
                       entity: entity,
@@ -370,8 +363,12 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
             destinations: destinations,
           );
 
-    return ScreenProtectionWrapper(child: shell);
+    return Consumer(
+      builder: (context, ref, child) {
+        ref.watch(dashboardScreenProtectionProvider);
+        return child!;
+      },
+      child: shell,
+    );
   }
 }
-
-

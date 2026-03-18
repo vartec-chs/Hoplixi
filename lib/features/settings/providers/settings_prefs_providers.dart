@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/app_prefs/auth_prefs.dart';
+import 'package:hoplixi/core/app_prefs/security_prefs.dart';
 import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/app_prefs/system_prefs.dart';
 import 'package:hoplixi/di_init.dart';
@@ -15,7 +15,12 @@ final autoLockTimeoutProvider = StreamProvider<int>(
 );
 
 final biometricEnabledProvider = StreamProvider<bool>(
-  (ref) => getIt<PreferencesService>().authPrefs.watchBiometricEnabled(),
+  (ref) => getIt<PreferencesService>().securityPrefs.watchBiometricEnabled(),
+);
+
+final preventScreenCaptureOnDashboardProvider = StreamProvider<bool>(
+  (ref) => getIt<PreferencesService>().securityPrefs
+      .watchPreventScreenCaptureOnDashboard(),
 );
 
 final autoSyncEnabledProvider = StreamProvider<bool>(
