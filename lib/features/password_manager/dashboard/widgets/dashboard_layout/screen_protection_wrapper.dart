@@ -1,21 +1,20 @@
 import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
-import 'package:screen_protector/screen_protector.dart';
-import 'package:universal_platform/universal_platform.dart';
+import 'package:no_screenshot/no_screenshot.dart';
 
 /// Обёртка для максимальной защиты экрана.
 ///
-/// Активирует защиту только на Android и iOS:
-/// - **Android**: `protectDataLeakageOn` — включает FLAG_SECURE,
-///   что предотвращает скриншоты, запись экрана и скрывает
-///   содержимое в app switcher.
-/// - **iOS**: `preventScreenshotOn` — предотвращает скриншоты
-///   и запись экрана; `protectDataLeakageWithBlur` — размывает
-///   содержимое при переходе в фон (app switcher).
+/// Активирует защиту через `no_screenshot` на всех поддерживаемых платформах.
 ///
-/// На других платформах (desktop, web) виджет просто
-/// отображает [child] без каких-либо действий.
+/// Поддержка зависит от платформы:
+/// - **Android / iOS / macOS / Windows**: нативная защита через API пакета.
+/// - **Linux**: best-effort, состояние отслеживается, но compositor может
+///   не позволить реально скрыть содержимое.
+/// - **Web**: best-effort, пакет включает лишь браузерные deterrents.
+///
+/// Виджет по-прежнему просто отображает [child], но состояние защиты
+/// применяется через пакет для любой поддерживаемой платформы.
 class ScreenProtectionWrapper extends StatefulWidget {
   /// Дочерний виджет, оборачиваемый защитой.
   final Widget child;
@@ -45,14 +44,8 @@ class _ScreenProtectionWrapperState extends State<ScreenProtectionWrapper> {
   }
 
   Future<void> _activateProtection() async {
-    if (!_isMobilePlatform) return;
-
     try {
-      if (UniversalPlatform.isAndroid) {
-        await _activateAndroidProtection();
-      } else if (UniversalPlatform.isIOS) {
-        await _activateIOSProtection();
-      }
+      await NoScreenshot.instance.screenshotOff();
 
       _isProtectionActive = true;
       developer.log(
@@ -73,11 +66,7 @@ class _ScreenProtectionWrapperState extends State<ScreenProtectionWrapper> {
     if (!_isProtectionActive) return;
 
     try {
-      if (UniversalPlatform.isAndroid) {
-        await _deactivateAndroidProtection();
-      } else if (UniversalPlatform.isIOS) {
-        await _deactivateIOSProtection();
-      }
+      await NoScreenshot.instance.screenshotOn();
 
       _isProtectionActive = false;
       developer.log(
@@ -95,48 +84,6 @@ class _ScreenProtectionWrapperState extends State<ScreenProtectionWrapper> {
   }
 
   // ===========================================================================
-  // Android Protection
-  // ===========================================================================
-
-  /// На Android `protectDataLeakageOn()` устанавливает
-  /// FLAG_SECURE на окно активности, что одновременно:
-  /// - Предотвращает скриншоты
-  /// - Предотвращает запись экрана
-  /// - Скрывает содержимое в app switcher
-  Future<void> _activateAndroidProtection() async {
-    await ScreenProtector.protectDataLeakageOn();
-  }
-
-  Future<void> _deactivateAndroidProtection() async {
-    await ScreenProtector.protectDataLeakageOff();
-  }
-
-  // ===========================================================================
-  // iOS Protection
-  // ===========================================================================
-
-  /// На iOS используем комбинацию методов:
-  /// - `preventScreenshotOn` — предотвращает скриншоты
-  ///   и запись экрана
-  /// - `protectDataLeakageWithBlur` — размывает содержимое
-  ///   при переходе в фон (app switcher)
-  Future<void> _activateIOSProtection() async {
-    await ScreenProtector.preventScreenshotOn();
-    await ScreenProtector.protectDataLeakageWithBlur();
-  }
-
-  Future<void> _deactivateIOSProtection() async {
-    await ScreenProtector.preventScreenshotOff();
-    await ScreenProtector.protectDataLeakageWithBlurOff();
-  }
-
-  // ===========================================================================
-  // Helpers
-  // ===========================================================================
-
-  bool get _isMobilePlatform =>
-      UniversalPlatform.isAndroid || UniversalPlatform.isIOS;
-
   @override
   Widget build(BuildContext context) => widget.child;
 }

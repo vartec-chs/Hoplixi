@@ -3,8 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/settings/providers/settings_prefs_providers.dart';
-import 'package:screen_protector/screen_protector.dart';
-import 'package:universal_platform/universal_platform.dart';
+import 'package:no_screenshot/no_screenshot.dart';
 
 final dashboardScreenProtectionProvider =
     NotifierProvider<DashboardScreenProtectionNotifier, bool>(
@@ -45,12 +44,6 @@ final class DashboardScreenProtectionNotifier extends Notifier<bool> {
       return;
     }
 
-    if (!_isMobilePlatform) {
-      _lastAppliedValue = enabled;
-      state = enabled;
-      return;
-    }
-
     try {
       if (enabled) {
         if (!_isProtectionActive) {
@@ -76,38 +69,15 @@ final class DashboardScreenProtectionNotifier extends Notifier<bool> {
   }
 
   Future<void> _activateProtection() async {
-    if (UniversalPlatform.isAndroid) {
-      await ScreenProtector.protectDataLeakageOn();
-      await ScreenProtector.preventScreenshotOn();
-      return;
-    }
-
-    if (UniversalPlatform.isIOS) {
-      await ScreenProtector.preventScreenshotOn();
-      await ScreenProtector.protectDataLeakageWithBlur();
-    }
+    await NoScreenshot.instance.screenshotOff();
   }
 
   Future<void> _deactivateProtection() async {
-    if (!_isMobilePlatform || !_isProtectionActive) {
+    if (!_isProtectionActive) {
       return;
     }
 
-    if (UniversalPlatform.isAndroid) {
-      await ScreenProtector.protectDataLeakageOff();
-      await ScreenProtector.preventScreenshotOff();
-      _isProtectionActive = false;
-      return;
-    }
-
-    if (UniversalPlatform.isIOS) {
-      await ScreenProtector.preventScreenshotOff();
-      await ScreenProtector.protectDataLeakageWithBlurOff();
-    }
-
+    await NoScreenshot.instance.screenshotOn();
     _isProtectionActive = false;
   }
-
-  bool get _isMobilePlatform =>
-      UniversalPlatform.isAndroid || UniversalPlatform.isIOS;
 }

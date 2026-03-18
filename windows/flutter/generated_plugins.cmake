@@ -11,6 +11,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_secure_storage_windows
   flutter_webrtc
   local_auth_windows
+  no_screenshot
   open_dir_windows
   pasteboard
   permission_handler_windows

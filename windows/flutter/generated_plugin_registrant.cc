@@ -14,6 +14,7 @@
 #include <flutter_secure_storage_windows/flutter_secure_storage_windows_plugin.h>
 #include <flutter_webrtc/flutter_web_r_t_c_plugin.h>
 #include <local_auth_windows/local_auth_plugin.h>
+#include <no_screenshot/no_screenshot_plugin_c_api.h>
 #include <open_dir_windows/open_dir_windows_plugin_c_api.h>
 #include <pasteboard/pasteboard_plugin.h>
 #include <permission_handler_windows/permission_handler_windows_plugin.h>
@@ -39,6 +40,8 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("FlutterWebRTCPlugin"));
   LocalAuthPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("LocalAuthPlugin"));
+  NoScreenshotPluginCApiRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("NoScreenshotPluginCApi"));
   OpenDirWindowsPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("OpenDirWindowsPluginCApi"));
   PasteboardPluginRegisterWithRegistrar(
