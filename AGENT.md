@@ -790,6 +790,24 @@ Use MCP server `context7` when:
 - Best practices are version-dependent
 - There is missing information in docs-ai
 
+## Структура одной единицы хранилища
+
+```text
+store_name/
+│   store_key.json
+│   store_manifest.json
+│   store_name.hplxdb
+├───attachments_decrypted/
+└───attachments/
+```
+
+store_key.json - содержит salt и флаг useDeviceKey для генерации ключа
+шифрования из пароля и/или устройства. store_manifest.json - содержит метаданные
+хранилища (uuid, дату обновления). store_name.hplxdb - зашифрованная база данных
+SQLite3 Multiple Ciphers. attachments_decrypted/ - временная папка для
+расшифрованных файлов (может не существовать). attachments/ - папка для
+зашифрованных файлов.
+
 ## Dart & Flutter MCP Server
 
 The MCP server provides authoritative, version-aware information about Dart,
