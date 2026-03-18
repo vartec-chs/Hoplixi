@@ -13,6 +13,10 @@ class SecurityPrefs {
   @Pref(defaultValue: true)
   static const preventScreenCaptureOnDashboard = PrefKey<bool>();
 
+  // Дополнение к защите dashboard: blur overlay в app switcher / recents
+  @Pref(defaultValue: false)
+  static const dashboardScreenBlurOverlayEnabled = PrefKey<bool>();
+
   @Pref(defaultValue: 0)
   static const pinAttempts = PrefKey<int>();
 }

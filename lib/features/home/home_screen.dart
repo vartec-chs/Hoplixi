@@ -548,24 +548,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           // 3. Центрированный экран без недавней БД
           if (!hasRecentDb)
             Positioned.fill(
-              top: 220 + MediaQuery.of(context).padding.top + 16,
-              child: SafeArea(
-                top: false,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isSmallScreen = constraints.maxWidth < 500;
-                    final items = _buildActionItems(context);
+              top: 220 + MediaQuery.of(context).padding.top + 12,
+              child: MediaQuery.removePadding(
+                context: context,
+                removeTop: true,
+                child: SafeArea(
+                  top: false,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isSmallScreen = constraints.maxWidth < 500;
+                      final items = _buildActionItems(context);
 
-                    return SingleChildScrollView(
-                      padding: EdgeInsets.zero,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                        child: isSmallScreen
-                            ? _buildCompactGrid(items)
-                            : _buildWideGrid(items),
-                      ),
-                    );
-                  },
+                      return SingleChildScrollView(
+                        padding: EdgeInsets.zero,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                          child: isSmallScreen
+                              ? _buildCompactGrid(items)
+                              : _buildWideGrid(items),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
             ),

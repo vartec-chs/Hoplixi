@@ -23,6 +23,11 @@ final preventScreenCaptureOnDashboardProvider = StreamProvider<bool>(
       .watchPreventScreenCaptureOnDashboard(),
 );
 
+final dashboardScreenBlurOverlayEnabledProvider = StreamProvider<bool>(
+  (ref) => getIt<PreferencesService>().securityPrefs
+      .watchDashboardScreenBlurOverlayEnabled(),
+);
+
 final autoSyncEnabledProvider = StreamProvider<bool>(
   (ref) => getIt<PreferencesService>().settingsPrefs.watchAutoSyncEnabled(),
 );

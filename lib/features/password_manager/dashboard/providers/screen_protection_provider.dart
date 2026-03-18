@@ -14,19 +14,34 @@ final class DashboardScreenProtectionNotifier extends Notifier<bool> {
   static const String _logTag = 'DashboardScreenProtection';
 
   bool _isProtectionActive = false;
-  bool? _lastAppliedValue;
+  String? _lastAppliedSignature;
 
   @override
   bool build() {
     final enabled =
         ref.watch(preventScreenCaptureOnDashboardProvider).value ?? true;
+    final blurEnabled =
+        ref.watch(dashboardScreenBlurOverlayEnabledProvider).value ?? false;
 
     ref.listen(preventScreenCaptureOnDashboardProvider, (previous, next) {
       final previousValue = previous?.value ?? true;
       final nextValue = next.value ?? true;
 
       if (previousValue != nextValue) {
-        unawaited(_applyProtection(nextValue));
+        final currentBlurEnabled =
+            ref.read(dashboardScreenBlurOverlayEnabledProvider).value ?? false;
+        unawaited(_applyProtection(nextValue, currentBlurEnabled));
+      }
+    });
+
+    ref.listen(dashboardScreenBlurOverlayEnabledProvider, (previous, next) {
+      final previousValue = previous?.value ?? false;
+      final nextValue = next.value ?? false;
+
+      if (previousValue != nextValue) {
+        final currentEnabled =
+            ref.read(preventScreenCaptureOnDashboardProvider).value ?? true;
+        unawaited(_applyProtection(currentEnabled, nextValue));
       }
     });
 
@@ -34,12 +49,13 @@ final class DashboardScreenProtectionNotifier extends Notifier<bool> {
       unawaited(_deactivateProtection());
     });
 
-    unawaited(_applyProtection(enabled));
+    unawaited(_applyProtection(enabled, blurEnabled));
     return enabled;
   }
 
-  Future<void> _applyProtection(bool enabled) async {
-    if (_lastAppliedValue == enabled) {
+  Future<void> _applyProtection(bool enabled, bool blurEnabled) async {
+    final signature = '$enabled:$blurEnabled';
+    if (_lastAppliedSignature == signature) {
       state = enabled;
       return;
     }
@@ -47,9 +63,11 @@ final class DashboardScreenProtectionNotifier extends Notifier<bool> {
     try {
       if (enabled) {
         if (!_isProtectionActive) {
-          await _activateProtection();
+          await _activateProtection(blurEnabled);
           _isProtectionActive = true;
           logInfo('Dashboard screen protection enabled', tag: _logTag);
+        } else {
+          await _applyProtectionMode(blurEnabled);
         }
       } else if (_isProtectionActive) {
         await _deactivateProtection();
@@ -57,7 +75,7 @@ final class DashboardScreenProtectionNotifier extends Notifier<bool> {
         logInfo('Dashboard screen protection disabled', tag: _logTag);
       }
 
-      _lastAppliedValue = enabled;
+      _lastAppliedSignature = signature;
       state = enabled;
     } catch (error, stackTrace) {
       logError(
@@ -68,7 +86,16 @@ final class DashboardScreenProtectionNotifier extends Notifier<bool> {
     }
   }
 
-  Future<void> _activateProtection() async {
+  Future<void> _activateProtection(bool blurEnabled) async {
+    await _applyProtectionMode(blurEnabled);
+  }
+
+  Future<void> _applyProtectionMode(bool blurEnabled) async {
+    if (blurEnabled) {
+      await NoScreenshot.instance.screenshotWithBlur(blurRadius: 30.0);
+      return;
+    }
+
     await NoScreenshot.instance.screenshotOff();
   }
 

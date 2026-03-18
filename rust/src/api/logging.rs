@@ -111,9 +111,16 @@ pub fn install_rust_log_bridge(level: i32) -> Result<(), String> {
         return Ok(());
     }
 
-    log::set_logger(&FRB_RUST_LOGGER).map_err(|err| format!("Failed to set rust logger: {err}"))?;
-
-    let _ = LOGGER_INIT.set(());
+    match log::set_logger(&FRB_RUST_LOGGER) {
+        Ok(()) => {
+            let _ = LOGGER_INIT.set(());
+        }
+        Err(_) => {
+            // Some runtimes or dependencies install a global logger before Dart
+            // attaches the bridge. Keep startup idempotent and reuse that setup.
+            let _ = LOGGER_INIT.set(());
+        }
+    }
     log::set_max_level(filter);
 
     Ok(())

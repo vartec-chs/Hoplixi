@@ -83,6 +83,8 @@ class SecuritySettingsSection extends ConsumerWidget {
     final biometricEnabled = ref.watch(biometricEnabledProvider).value ?? false;
     final preventScreenCaptureOnDashboard =
         ref.watch(preventScreenCaptureOnDashboardProvider).value ?? true;
+    final dashboardBlurOverlayEnabled =
+        ref.watch(dashboardScreenBlurOverlayEnabledProvider).value ?? false;
     final autoLockTimeout = ref.watch(autoLockTimeoutProvider).value ?? 300;
 
     return SettingsSectionCard(
@@ -104,26 +106,40 @@ class SecuritySettingsSection extends ConsumerWidget {
                 },
               ),
         ),
-        if (UniversalPlatform.isMobile) ...[
-          const Divider(height: 1),
-          SettingsSwitchTile(
-            title: 'Защита скриншотов на дашборде',
-            subtitle:
-                'Запрещать скриншоты и запись экрана на мобильном дашборде',
-            leading: const Icon(Icons.visibility_off_outlined),
-            value: preventScreenCaptureOnDashboard,
-            onChanged: (value) => getIt<PreferencesService>().securityPrefs
-                .setPreventScreenCaptureOnDashboard(
-                  value,
-                  onWriteError: (failure) {
-                    Toaster.error(
-                      title: 'Не удалось обновить настройку',
-                      description: failure.error.toString(),
-                    );
-                  },
-                ),
-          ),
-        ],
+        const Divider(height: 1),
+        SettingsSwitchTile(
+          title: 'Защита скриншотов на дашборде',
+          subtitle: 'Запрещать скриншоты и запись экрана на дашборде',
+          leading: const Icon(Icons.visibility_off_outlined),
+          value: preventScreenCaptureOnDashboard,
+          onChanged: (value) => getIt<PreferencesService>().securityPrefs
+              .setPreventScreenCaptureOnDashboard(
+                value,
+                onWriteError: (failure) {
+                  Toaster.error(
+                    title: 'Не удалось обновить настройку',
+                    description: failure.error.toString(),
+                  );
+                },
+              ),
+        ),
+        SettingsSwitchTile(
+          title: 'Blur overlay в переключателе приложений',
+          subtitle:
+              'Размывать содержимое при сворачивании приложения и в recents',
+          leading: const Icon(Icons.blur_on_outlined),
+          value: dashboardBlurOverlayEnabled,
+          onChanged: (value) => getIt<PreferencesService>().securityPrefs
+              .setDashboardScreenBlurOverlayEnabled(
+                value,
+                onWriteError: (failure) {
+                  Toaster.error(
+                    title: 'Не удалось обновить настройку',
+                    description: failure.error.toString(),
+                  );
+                },
+              ),
+        ),
         const Divider(height: 1),
         SettingsTile(
           title: 'Таймаут автоблокировки',

@@ -3,13 +3,9 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use anyhow::Context;
-use hoplixi_file_crypt::{
-    DecryptOptions, EncryptOptions, FileCrypt,
-};
-use hoplixi_file_crypt::config::{
-    DEFAULT_DESKTOP_CHUNK_SIZE, DEFAULT_MOBILE_CHUNK_SIZE,
-};
+use hoplixi_file_crypt::config::{DEFAULT_DESKTOP_CHUNK_SIZE, DEFAULT_MOBILE_CHUNK_SIZE};
 use hoplixi_file_crypt::progress::{ProgressEvent, ProgressStage};
+use hoplixi_file_crypt::{DecryptOptions, EncryptOptions, FileCrypt};
 
 use crate::frb_generated::StreamSink;
 
@@ -30,20 +26,12 @@ pub enum FrbProgressStage {
 impl From<ProgressStage> for FrbProgressStage {
     fn from(stage: ProgressStage) -> Self {
         match stage {
-            ProgressStage::CompressingDirectory => {
-                FrbProgressStage::CompressingDirectory
-            }
-            ProgressStage::CompressingGzip => {
-                FrbProgressStage::CompressingGzip
-            }
+            ProgressStage::CompressingDirectory => FrbProgressStage::CompressingDirectory,
+            ProgressStage::CompressingGzip => FrbProgressStage::CompressingGzip,
             ProgressStage::Encrypting => FrbProgressStage::Encrypting,
             ProgressStage::Decrypting => FrbProgressStage::Decrypting,
-            ProgressStage::DecompressingGzip => {
-                FrbProgressStage::DecompressingGzip
-            }
-            ProgressStage::DecompressingDirectory => {
-                FrbProgressStage::DecompressingDirectory
-            }
+            ProgressStage::DecompressingGzip => FrbProgressStage::DecompressingGzip,
+            ProgressStage::DecompressingDirectory => FrbProgressStage::DecompressingDirectory,
             ProgressStage::Done => FrbProgressStage::Done,
         }
     }
@@ -217,11 +205,7 @@ pub struct FrbEncryptOptions {
 
 impl FrbEncryptOptions {
     /// Minimal constructor: only the required fields.
-    pub fn simple(
-        input_path: String,
-        output_dir: String,
-        password: String,
-    ) -> Self {
+    pub fn simple(input_path: String, output_dir: String, password: String) -> Self {
         FrbEncryptOptions {
             input_path,
             output_dir,
@@ -253,11 +237,7 @@ pub struct FrbDecryptOptions {
 
 impl FrbDecryptOptions {
     /// Minimal constructor.
-    pub fn simple(
-        input_path: String,
-        output_dir: String,
-        password: String,
-    ) -> Self {
+    pub fn simple(input_path: String, output_dir: String, password: String) -> Self {
         FrbDecryptOptions {
             input_path,
             output_dir,
@@ -424,18 +404,14 @@ fn build_decrypt_opts(
 ///   }
 /// }
 /// ```
-pub async fn encrypt_file(
-    opts: FrbEncryptOptions,
-    sink: StreamSink<FrbEncryptEvent>,
-) {
+pub async fn encrypt_file(opts: FrbEncryptOptions, sink: StreamSink<FrbEncryptEvent>) {
     let chunk_size = opts.chunk_size.bytes();
     let sink = Arc::new(sink);
     let sink_clone = Arc::clone(&sink);
 
     let progress_cb: hoplixi_file_crypt::progress::ProgressCallback =
         Arc::new(move |event: ProgressEvent| {
-            let _ = sink_clone
-                .add(FrbEncryptEvent::Progress(event.into()));
+            let _ = sink_clone.add(FrbEncryptEvent::Progress(event.into()));
         });
 
     let engine = FileCrypt::with_chunk_size(chunk_size);
@@ -451,9 +427,7 @@ pub async fn encrypt_file(
             let _ = sink.add(FrbEncryptEvent::Done(frb_result));
         }
         Err(e) => {
-            let _ = sink.add(FrbEncryptEvent::Error(
-                format!("{e:#}"),
-            ));
+            let _ = sink.add(FrbEncryptEvent::Error(format!("{e:#}")));
         }
     }
 }
@@ -474,18 +448,14 @@ pub async fn encrypt_file(
 ///   }
 /// }
 /// ```
-pub async fn decrypt_file(
-    opts: FrbDecryptOptions,
-    sink: StreamSink<FrbDecryptEvent>,
-) {
+pub async fn decrypt_file(opts: FrbDecryptOptions, sink: StreamSink<FrbDecryptEvent>) {
     let chunk_size = opts.chunk_size.bytes();
     let sink = Arc::new(sink);
     let sink_clone = Arc::clone(&sink);
 
     let progress_cb: hoplixi_file_crypt::progress::ProgressCallback =
         Arc::new(move |event: ProgressEvent| {
-            let _ = sink_clone
-                .add(FrbDecryptEvent::Progress(event.into()));
+            let _ = sink_clone.add(FrbDecryptEvent::Progress(event.into()));
         });
 
     let engine = FileCrypt::with_chunk_size(chunk_size);
@@ -508,9 +478,7 @@ pub async fn decrypt_file(
             let _ = sink.add(FrbDecryptEvent::Done(frb_result));
         }
         Err(e) => {
-            let _ = sink.add(FrbDecryptEvent::Error(
-                format!("{e:#}"),
-            ));
+            let _ = sink.add(FrbDecryptEvent::Error(format!("{e:#}")));
         }
     }
 }
@@ -551,14 +519,12 @@ pub async fn encrypt_batch(
 
         let progress_cb: hoplixi_file_crypt::progress::ProgressCallback =
             Arc::new(move |event: ProgressEvent| {
-                let _ = sink_file.add(
-                    FrbBatchEncryptEvent::FileProgress {
-                        file_index,
-                        total_files,
-                        current_file: current_file_clone.clone(),
-                        progress: event.into(),
-                    },
-                );
+                let _ = sink_file.add(FrbBatchEncryptEvent::FileProgress {
+                    file_index,
+                    total_files,
+                    current_file: current_file_clone.clone(),
+                    progress: event.into(),
+                });
             });
 
         let metadata = if opts.metadata.is_empty() {
@@ -584,10 +550,7 @@ pub async fn encrypt_batch(
         match engine.encrypt(internal_opts).await {
             Ok(result) => {
                 let frb_result = FrbEncryptResult {
-                    output_path: result
-                        .output_path
-                        .to_string_lossy()
-                        .into_owned(),
+                    output_path: result.output_path.to_string_lossy().into_owned(),
                     uuid: result.uuid,
                     original_size: result.original_size,
                 };
@@ -639,14 +602,12 @@ pub async fn decrypt_batch(
 
         let progress_cb: hoplixi_file_crypt::progress::ProgressCallback =
             Arc::new(move |event: ProgressEvent| {
-                let _ = sink_file.add(
-                    FrbBatchDecryptEvent::FileProgress {
-                        file_index,
-                        total_files,
-                        current_file: current_file_clone.clone(),
-                        progress: event.into(),
-                    },
-                );
+                let _ = sink_file.add(FrbBatchDecryptEvent::FileProgress {
+                    file_index,
+                    total_files,
+                    current_file: current_file_clone.clone(),
+                    progress: event.into(),
+                });
             });
 
         let internal_opts = DecryptOptions {
@@ -663,19 +624,14 @@ pub async fn decrypt_batch(
             Ok(result) => {
                 let frb_metadata = FrbDecryptedMetadata {
                     original_filename: result.metadata.original_filename,
-                    original_extension: result
-                        .metadata
-                        .original_extension,
+                    original_extension: result.metadata.original_extension,
                     gzip_compressed: result.metadata.gzip_compressed,
                     original_size: result.metadata.original_size,
                     uuid: result.metadata.uuid,
                     metadata: map_to_kv(result.metadata.metadata),
                 };
                 let frb_result = FrbDecryptResult {
-                    output_path: result
-                        .output_path
-                        .to_string_lossy()
-                        .into_owned(),
+                    output_path: result.output_path.to_string_lossy().into_owned(),
                     metadata: frb_metadata,
                 };
                 let _ = sink.add(FrbBatchDecryptEvent::FileDone {
