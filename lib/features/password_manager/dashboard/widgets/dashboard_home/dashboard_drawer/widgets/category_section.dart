@@ -7,6 +7,8 @@ import 'package:hoplixi/main_store/models/dto/category_dto.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
+import '../colors.dart';
+
 class CategorySection extends ConsumerStatefulWidget {
   const CategorySection({super.key, required this.entityType});
 
@@ -210,7 +212,11 @@ class _CategoryTreeTile extends StatelessWidget {
     final theme = Theme.of(context);
     final category = entry.category;
     final isSelected = selectedIds.contains(category.id);
-    final color = _parseColor(category.color, theme.colorScheme.primary);
+    final color = ColorsHelper.parseColor(
+      category.color,
+      theme.colorScheme.primary,
+    );
+    final checkColor = ColorsHelper.onColorFor(color);
     final indent = depth * 16.0;
 
     if (entry.hasChildren) {
@@ -219,8 +225,12 @@ class _CategoryTreeTile extends StatelessWidget {
         child: ExpansionTile(
           tilePadding: EdgeInsets.only(left: indent, right: 8),
           leading: Checkbox(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
             value: isSelected,
             onChanged: (_) => onToggle(category.id),
+            checkColor: checkColor,
             fillColor: WidgetStateProperty.resolveWith(
               (s) => s.contains(WidgetState.selected) ? color : null,
             ),
@@ -252,6 +262,11 @@ class _CategoryTreeTile extends StatelessWidget {
     }
 
     return CheckboxListTile(
+      checkboxShape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(6),
+      ),
+      checkColor: checkColor,
+      controlAffinity: .leading,
       contentPadding: EdgeInsets.only(left: indent, right: 8),
       value: isSelected,
       onChanged: (_) => onToggle(category.id),
@@ -269,11 +284,5 @@ class _CategoryTreeTile extends StatelessWidget {
           : null,
       dense: true,
     );
-  }
-
-  Color _parseColor(String? hex, Color fallback) {
-    if (hex == null || hex.isEmpty) return fallback;
-    final value = int.tryParse(hex.replaceFirst('#', ''), radix: 16);
-    return value != null ? Color(0xFF000000 | value) : fallback;
   }
 }

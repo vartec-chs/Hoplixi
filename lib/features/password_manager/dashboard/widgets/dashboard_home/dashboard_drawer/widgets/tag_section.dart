@@ -6,6 +6,7 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_ho
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/providers/drawer_tag_filter_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import '../colors.dart';
 
 class TagSection extends ConsumerStatefulWidget {
   const TagSection({super.key, required this.entityType});
@@ -55,9 +56,7 @@ class _TagSectionState extends ConsumerState<TagSection> {
         ),
         loading: () => const Center(
           key: ValueKey('loading'),
-          child: CircularProgressIndicator(
-           
-          ),
+          child: CircularProgressIndicator(),
         ),
         error: (e, _) => Center(
           key: const ValueKey('error'),
@@ -152,6 +151,18 @@ class _TagSectionState extends ConsumerState<TagSection> {
                     final isSelected = state.selectedIds.contains(tag.id);
 
                     return CheckboxListTile(
+                      checkboxShape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      checkColor: ColorsHelper.onColorFor(
+                        ColorsHelper.parseColor(tag.color, theme.colorScheme.primary),
+                      ),
+                      fillColor: WidgetStateProperty.resolveWith(
+                        (s) => s.contains(WidgetState.selected)
+                            ? ColorsHelper.parseColor(tag.color, theme.colorScheme.primary)
+                            : null,
+                      ),
+                      controlAffinity: .leading,
                       value: isSelected,
                       onChanged: (_) => notifier.toggle(tag.id),
                       title: Text(tag.name),
@@ -174,4 +185,6 @@ class _TagSectionState extends ConsumerState<TagSection> {
       ],
     );
   }
+
+
 }
