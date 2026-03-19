@@ -3,40 +3,36 @@ import 'package:hoplixi/features/password_manager/migration/passwords/services/p
 import 'package:hoplixi/main_store/models/dto/password_dto.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 
+const _messageNotChanged = Object();
+
 class PasswordMigrationState {
   final bool isLoading;
-  final String? error;
-  final String? generatedFilePath;
-  final String? importFilePath;
-  final List<CreatePasswordDto>? parsedPasswords;
+  final String? message;
+  final bool isSuccess;
 
   const PasswordMigrationState({
     this.isLoading = false,
-    this.error,
-    this.generatedFilePath,
-    this.importFilePath,
-    this.parsedPasswords,
+    this.message,
+    this.isSuccess = false,
   });
 
   PasswordMigrationState copyWith({
     bool? isLoading,
-    String? error,
-    String? generatedFilePath,
-    String? importFilePath,
-    List<CreatePasswordDto>? parsedPasswords,
+    Object? message = _messageNotChanged,
+    bool? isSuccess,
   }) {
     return PasswordMigrationState(
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
-      generatedFilePath: generatedFilePath ?? this.generatedFilePath,
-      importFilePath: importFilePath ?? this.importFilePath,
-      parsedPasswords: parsedPasswords ?? this.parsedPasswords,
+      message: identical(message, _messageNotChanged)
+          ? this.message
+          : message as String?,
+      isSuccess: isSuccess ?? this.isSuccess,
     );
   }
 }
 
 class PasswordMigrationNotifier extends AsyncNotifier<PasswordMigrationState> {
-  late PasswordMigrationService _service;
+  late final PasswordMigrationService _service;
 
   @override
   Future<PasswordMigrationState> build() async {
@@ -44,99 +40,75 @@ class PasswordMigrationNotifier extends AsyncNotifier<PasswordMigrationState> {
     if (manager == null || manager.currentStore == null) {
       throw Exception('Database is not initialized');
     }
+
     _service = PasswordMigrationService(manager.currentStore!.passwordDao);
     return const PasswordMigrationState();
   }
 
-  Future<void> generateTemplate(int count, String path) async {
-    state = AsyncData(state.value!.copyWith(isLoading: true, error: null));
+  Future<bool> savePasswords(List<CreatePasswordDto> passwords) async {
+    final currentState = state.value;
+    if (currentState == null) {
+      return false;
+    }
 
-    final result = await _service.generateTemplate(count, path);
+    if (passwords.isEmpty) {
+      state = AsyncData(
+        currentState.copyWith(
+          message: 'Добавьте хотя бы одну карточку для импорта.',
+          isSuccess: false,
+        ),
+      );
+      return false;
+    }
 
-    result.fold(
-      (generatedPath) {
-        state = AsyncData(
-          state.value!.copyWith(
-            isLoading: false,
-            generatedFilePath: generatedPath,
-            importFilePath: generatedPath, // Auto-set for import
-          ),
-        );
-      },
-      (error) {
-        state = AsyncData(
-          state.value!.copyWith(isLoading: false, error: error.toString()),
-        );
-      },
+    state = AsyncData(
+      currentState.copyWith(isLoading: true, message: null, isSuccess: false),
     );
-  }
-
-  Future<void> selectFile(String path) async {
-    state = AsyncData(state.value!.copyWith(importFilePath: path, error: null));
-  }
-
-  Future<void> parseImportFile(String path) async {
-    state = AsyncData(state.value!.copyWith(isLoading: true, error: null));
-
-    final result = await _service.parseImportFile(path);
-
-    result.fold(
-      (passwords) {
-        state = AsyncData(
-          state.value!.copyWith(isLoading: false, parsedPasswords: passwords),
-        );
-      },
-      (error) {
-        state = AsyncData(
-          state.value!.copyWith(isLoading: false, error: error.toString()),
-        );
-      },
-    );
-  }
-
-  Future<void> savePasswords(
-    List<CreatePasswordDto> passwords,
-    String filePath,
-  ) async {
-    state = AsyncData(state.value!.copyWith(isLoading: true, error: null));
 
     final result = await _service.savePasswords(passwords);
 
-    await result.fold(
-      (_) async {
-        // Delete file on success
-        final _ = await _service.deleteImportFile(filePath);
+    return result.fold(
+      (count) {
         state = AsyncData(
-          state.value!.copyWith(
+          PasswordMigrationState(
             isLoading: false,
-            parsedPasswords: null, // Clear after import
+            message: 'Импортировано паролей: $count.',
+            isSuccess: true,
           ),
         );
+        return true;
       },
       (error) {
         state = AsyncData(
-          state.value!.copyWith(isLoading: false, error: error.toString()),
+          PasswordMigrationState(
+            isLoading: false,
+            message: error.toString(),
+            isSuccess: false,
+          ),
         );
+        return false;
       },
     );
   }
 
-  void clearError() {
-    if (state.value != null) {
-      state = AsyncData(
-        PasswordMigrationState(
-          isLoading: state.value!.isLoading,
-          error: null,
-          generatedFilePath: state.value!.generatedFilePath,
-          importFilePath: state.value!.importFilePath,
-          parsedPasswords: state.value!.parsedPasswords,
-        ),
-      );
+  void clearMessage() {
+    final currentState = state.value;
+    if (currentState == null) {
+      return;
     }
+
+    state = AsyncData(currentState.copyWith(message: null, isSuccess: false));
   }
 
-  void setError(String error) {
-    state = AsyncData(state.value!.copyWith(error: error));
+  void setError(String message) {
+    final currentState = state.value;
+    if (currentState == null) {
+      return;
+    }
+
+    state = AsyncData(
+      currentState.copyWith(message: message, isSuccess: false),
+    );
   }
 }
 

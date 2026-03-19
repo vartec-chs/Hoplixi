@@ -224,6 +224,10 @@ class _CategoryTreeTile extends StatelessWidget {
         data: theme.copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           tilePadding: EdgeInsets.only(left: indent, right: 8),
+          childrenPadding: EdgeInsets.zero,
+          dense: true,
+          visualDensity: VisualDensity.compact,
+          minTileHeight: 0,
           leading: Checkbox(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(6),
