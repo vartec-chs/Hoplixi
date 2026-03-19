@@ -176,6 +176,7 @@ class _CategoryCardState extends State<CategoryCard>
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Верхняя часть: иконка и меню
@@ -190,7 +191,7 @@ class _CategoryCardState extends State<CategoryCard>
                         ],
                       ),
 
-                      const Spacer(),
+                      const SizedBox(height: 18),
 
                       // Название категории
                       Text(

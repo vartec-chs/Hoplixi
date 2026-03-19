@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/managers/category_manager/providers/category_filter_provider.dart';
+import 'package:hoplixi/features/password_manager/managers/category_manager/providers/category_pagination_provider.dart';
 import 'package:hoplixi/features/password_manager/managers/category_manager/providers/category_tree_provider.dart';
+import 'package:hoplixi/main_store/models/filter/index.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 import '../widgets/category_manager_app_bar.dart';
+import '../widgets/category_manager_filter_bar.dart';
+import '../widgets/category_manager_filtered_list_view.dart';
 import '../widgets/category_tree_view.dart';
 
 class CategoryManagerScreen extends ConsumerStatefulWidget {
@@ -40,14 +45,28 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
       return;
     }
 
+    final hasActiveFilters = ref
+        .read(categoryFilterProvider)
+        .hasActiveConstraints;
     final position = _scrollController.position;
     if (position.pixels >= position.maxScrollExtent - 240) {
-      ref.read(categoryTreeProvider.notifier).loadMoreRoots();
+      if (hasActiveFilters) {
+        ref.read(categoryListProvider.notifier).loadMore();
+      } else {
+        ref.read(categoryTreeProvider.notifier).loadMoreRoots();
+      }
     }
   }
 
   void _refresh() {
-    ref.read(categoryTreeProvider.notifier).refresh();
+    final hasActiveFilters = ref
+        .read(categoryFilterProvider)
+        .hasActiveConstraints;
+    if (hasActiveFilters) {
+      ref.read(categoryListProvider.notifier).refresh();
+    } else {
+      ref.read(categoryTreeProvider.notifier).refresh();
+    }
   }
 
   bool _isMobileLayout(BuildContext context) {
@@ -56,12 +75,23 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final hasActiveFilters = ref.watch(
+      categoryFilterProvider.select((filter) => filter.hasActiveConstraints),
+    );
+
     return Scaffold(
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
           const CategoryManagerAppBar(),
-          CategoryTreeView(entity: widget.entity, onRefresh: _refresh),
+          const CategoryManagerFilterBar(),
+          if (hasActiveFilters)
+            CategoryManagerFilteredListView(
+              entity: widget.entity,
+              onRefresh: _refresh,
+            )
+          else
+            CategoryTreeView(entity: widget.entity, onRefresh: _refresh),
         ],
       ),
       floatingActionButton: _isMobileLayout(context)
