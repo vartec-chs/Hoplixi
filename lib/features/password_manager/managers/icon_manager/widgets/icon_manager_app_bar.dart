@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
+import 'package:hoplixi/main_store/models/enums/index.dart';
 import 'package:hoplixi/main_store/models/filter/icons_filter.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
+
 import '../provider/icon_filter_provider.dart';
 
 /// SliverAppBar для экрана управления иконками
@@ -15,45 +17,85 @@ class IconManagerAppBar extends ConsumerStatefulWidget {
 
 class _IconManagerAppBarState extends ConsumerState<IconManagerAppBar> {
   late final TextEditingController _searchController;
+  late final ProviderSubscription<IconsFilter> _filterSubscription;
   bool _isSearchActive = false;
 
   @override
   void initState() {
     super.initState();
-    _searchController = TextEditingController();
+    final filter = ref.read(iconFilterProvider);
+    _isSearchActive = filter.query.isNotEmpty;
+    _searchController = TextEditingController(text: filter.query);
+    _filterSubscription = ref.listenManual(iconFilterProvider, (
+      previous,
+      next,
+    ) {
+      if (_searchController.text != next.query) {
+        _searchController.value = TextEditingValue(
+          text: next.query,
+          selection: TextSelection.collapsed(offset: next.query.length),
+        );
+      }
+      if (!_isSearchActive && next.query.isNotEmpty && mounted) {
+        setState(() => _isSearchActive = true);
+      }
+    });
   }
 
   @override
   void dispose() {
+    _filterSubscription.close();
     _searchController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final filter = ref.watch(iconFilterProvider);
+    final activeFiltersCount = _countActiveFilters(filter);
+    final hasSearchText = _searchController.text.isNotEmpty;
+
     return SliverAppBar(
       floating: true,
       pinned: true,
       snap: false,
       title: _isSearchActive
-          ? TextField(
-              controller: _searchController,
-              autofocus: true,
-              decoration: primaryInputDecoration(
-                context,
-                hintText: 'Поиск иконок...',
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    ref.read(iconFilterProvider.notifier).updateQuery('');
-                  },
+          ? SizedBox(
+              height: 44,
+              child: TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: primaryInputDecoration(
+                  context,
+                  hintText: 'Поиск иконок...',
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  suffixIcon: hasSearchText
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            ref
+                                .read(iconFilterProvider.notifier)
+                                .updateQuery('');
+                            setState(() {});
+                          },
+                        )
+                      : null,
+                  constraints: const BoxConstraints(
+                    minHeight: 44,
+                    maxHeight: 44,
+                  ),
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                 ),
+                onChanged: (value) {
+                  ref.read(iconFilterProvider.notifier).updateQuery(value);
+                  setState(() {});
+                },
               ),
-              onChanged: (value) {
-                // Используем встроенный дебаунсинг в updateQuery
-                ref.read(iconFilterProvider.notifier).updateQuery(value);
-              },
             )
           : const Text('Иконки'),
       actions: [
@@ -150,7 +192,11 @@ class _IconManagerAppBarState extends ConsumerState<IconManagerAppBar> {
           },
         ),
         IconButton(
-          icon: const Icon(Icons.filter_list),
+          icon: Badge(
+            isLabelVisible: activeFiltersCount > 0,
+            label: Text('$activeFiltersCount'),
+            child: const Icon(Icons.filter_list),
+          ),
           onPressed: () {
             _showFilterDialog(context);
           },
@@ -158,6 +204,17 @@ class _IconManagerAppBarState extends ConsumerState<IconManagerAppBar> {
         ),
       ],
     );
+  }
+
+  int _countActiveFilters(IconsFilter filter) {
+    var count = 0;
+    if (filter.type != null && filter.type!.trim().isNotEmpty) {
+      count++;
+    }
+    if (filter.createdAfter != null || filter.createdBefore != null) {
+      count++;
+    }
+    return count;
   }
 
   void _showFilterDialog(BuildContext context) {
@@ -187,22 +244,35 @@ class _IconManagerAppBarState extends ConsumerState<IconManagerAppBar> {
             ),
             child: StatefulBuilder(
               builder: (context, setState) => Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Фильтр по типу
-                    TextField(
+                    DropdownButtonFormField<String?>(
+                      value: typeFilter?.trim().isEmpty == true
+                          ? null
+                          : typeFilter,
+                      isExpanded: true,
                       decoration: primaryInputDecoration(
                         context,
                         labelText: 'Тип иконки',
-                        hintText: 'Например: svg, png',
                       ),
-                      controller: TextEditingController(text: typeFilter ?? ''),
+                      items: [
+                        const DropdownMenuItem<String?>(
+                          value: null,
+                          child: Text('Любой'),
+                        ),
+                        for (final type in const [IconType.svg, IconType.png])
+                          DropdownMenuItem<String?>(
+                            value: type.value,
+                            child: Text(type.value.toUpperCase()),
+                          ),
+                      ],
                       onChanged: (value) {
                         setState(() {
-                          typeFilter = value.isEmpty ? null : value;
+                          typeFilter = value;
                         });
                       },
                     ),

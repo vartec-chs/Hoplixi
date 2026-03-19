@@ -9,7 +9,6 @@ import 'package:hoplixi/main_store/models/filter/index.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 import '../widgets/category_manager_app_bar.dart';
-import '../widgets/category_manager_filter_bar.dart';
 import '../widgets/category_manager_filtered_list_view.dart';
 import '../widgets/category_tree_view.dart';
 
@@ -84,7 +83,6 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
         controller: _scrollController,
         slivers: [
           const CategoryManagerAppBar(),
-          const CategoryManagerFilterBar(),
           if (hasActiveFilters)
             CategoryManagerFilteredListView(
               entity: widget.entity,

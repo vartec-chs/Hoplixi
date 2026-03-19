@@ -5,15 +5,13 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
-import 'package:hoplixi/main_store/models/filter/tags_filter.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
-import 'package:hoplixi/shared/ui/text_field.dart';
 
-import 'providers/tag_filter_provider.dart';
 import 'providers/tag_pagination_provider.dart';
 import 'widgets/tag_card.dart';
+import 'widgets/tags_manager_app_bar.dart';
 
 class TagsManagerScreen extends ConsumerStatefulWidget {
   final EntityType entity;
@@ -25,9 +23,35 @@ class TagsManagerScreen extends ConsumerStatefulWidget {
 }
 
 class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) {
+      return;
+    }
+
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 240) {
+      ref.read(tagListProvider.notifier).loadMore();
+    }
+  }
+
+  void _refresh() {
+    ref.read(tagListProvider.notifier).refresh();
   }
 
   bool _isMobileLayout(BuildContext context) {
@@ -36,99 +60,17 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentSortField = ref.watch(
-      tagFilterProvider.select((filter) => filter.sortField),
-    );
     final tagState = ref.watch(tagListProvider);
+    final paginationState = tagState.value;
+    final showBottomLoader =
+        paginationState?.isLoading == true &&
+        (paginationState?.items.isNotEmpty ?? false);
 
     return Scaffold(
       body: CustomScrollView(
+        controller: _scrollController,
         slivers: [
-          SliverAppBar(
-            floating: true,
-            pinned: true,
-            snap: false,
-            title: const Text('Теги'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: () {
-                  final searchQuery = ref.read(tagFilterProvider).query;
-                  _showSearchDialog(
-                    context,
-                    initialValue: searchQuery,
-                    onSearch: (value) {
-                      ref.read(tagFilterProvider.notifier).updateQuery(value);
-                    },
-                  );
-                },
-                tooltip: 'Поиск',
-              ),
-              PopupMenuButton<TagsSortField>(
-                icon: const Icon(Icons.sort),
-                tooltip: 'Сортировка',
-                onSelected: (sortField) async {
-                  if (sortField != currentSortField) {
-                    await ref
-                        .read(tagFilterProvider.notifier)
-                        .updateSortField(sortField);
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: TagsSortField.name,
-                    child: Row(
-                      children: [
-                        if (currentSortField == TagsSortField.name)
-                          const Icon(Icons.check, size: 20),
-                        if (currentSortField == TagsSortField.name)
-                          const SizedBox(width: 8),
-                        const Text('По названию'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: TagsSortField.type,
-                    child: Row(
-                      children: [
-                        if (currentSortField == TagsSortField.type)
-                          const Icon(Icons.check, size: 20),
-                        if (currentSortField == TagsSortField.type)
-                          const SizedBox(width: 8),
-                        const Text('По типу'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: TagsSortField.createdAt,
-                    child: Row(
-                      children: [
-                        if (currentSortField == TagsSortField.createdAt)
-                          const Icon(Icons.check, size: 20),
-                        if (currentSortField == TagsSortField.createdAt)
-                          const SizedBox(width: 8),
-                        const Text('По дате создания'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: TagsSortField.modifiedAt,
-                    child: Row(
-                      children: [
-                        if (currentSortField == TagsSortField.modifiedAt)
-                          const Icon(Icons.check, size: 20),
-                        if (currentSortField == TagsSortField.modifiedAt)
-                          const SizedBox(width: 8),
-                        const Text('По дате изменения'),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          // SliverToBoxAdapter(child: TagPickerField()),
+          const TagsManagerAppBar(),
           tagState.when(
             data: (state) {
               if (state.items.isEmpty) {
@@ -136,56 +78,22 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
                   child: Center(child: Text('Теги не найдены')),
                 );
               }
+
               return SliverPadding(
                 padding: const EdgeInsets.all(16),
                 sliver: SliverList.separated(
                   itemBuilder: (context, index) {
-                    if (index == state.items.length && state.hasMore) {
-                      // Загружаем следующую страницу при достижении конца
-                      Future.microtask(
-                        () => ref.read(tagListProvider.notifier).loadMore(),
-                      );
-                      return const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    }
-                    if (index >= state.items.length) {
-                      return null;
-                    }
                     final tag = state.items[index];
                     return TagCard(
                       tag: tag,
-                      onTap: () {
-                        context
-                            .push<bool>(
-                              AppRoutesPaths.tagsEdit(widget.entity, tag.id),
-                            )
-                            .then((edited) {
-                              if (edited == true) {
-                                ref.read(tagListProvider.notifier).refresh();
-                              }
-                            });
-                      },
-                      onEdit: () {
-                        context
-                            .push<bool>(
-                              AppRoutesPaths.tagsEdit(widget.entity, tag.id),
-                            )
-                            .then((edited) {
-                              if (edited == true) {
-                                ref.read(tagListProvider.notifier).refresh();
-                              }
-                            });
-                      },
+                      onTap: () => _openEdit(tag.id),
+                      onEdit: () => _openEdit(tag.id),
                       onDelete: () => _handleDeleteTag(context, ref, tag),
                     );
                   },
                   separatorBuilder: (context, index) =>
                       const SizedBox(height: 12),
-                  itemCount: state.hasMore
-                      ? state.items.length + 1
-                      : state.items.length,
+                  itemCount: state.items.length,
                 ),
               );
             },
@@ -200,8 +108,7 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
                     const Text('Ошибка загрузки тегов'),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () =>
-                          ref.read(tagListProvider.notifier).refresh(),
+                      onPressed: _refresh,
                       child: const Text('Повторить'),
                     ),
                   ],
@@ -209,6 +116,19 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
               ),
             ),
           ),
+          if (showBottomLoader)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
       floatingActionButton: _isMobileLayout(context)
@@ -223,7 +143,7 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
                 );
                 result.then((added) {
                   if (added == true) {
-                    ref.read(tagListProvider.notifier).refresh();
+                    _refresh();
                   }
                 });
               },
@@ -233,41 +153,14 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
     );
   }
 
-  static void _showSearchDialog(
-    BuildContext context, {
-    required String initialValue,
-    required Function(String) onSearch,
-  }) {
-    final controller = TextEditingController(text: initialValue);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Поиск тегов'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: primaryInputDecoration(
-            context,
-            labelText: 'Введите название...',
-          ),
-        ),
-        actions: [
-          SmoothButton(
-            onPressed: () => Navigator.pop(context),
-            label: 'Отмена',
-            variant: .error,
-            type: .text,
-          ),
-          SmoothButton(
-            onPressed: () {
-              onSearch(controller.text);
-              Navigator.pop(context);
-            },
-            label: 'Найти',
-          ),
-        ],
-      ),
-    );
+  void _openEdit(String tagId) {
+    context.push<bool>(AppRoutesPaths.tagsEdit(widget.entity, tagId)).then((
+      edited,
+    ) {
+      if (edited == true) {
+        _refresh();
+      }
+    });
   }
 
   Future<void> _handleDeleteTag(
@@ -301,9 +194,8 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
         final tagDao = await ref.read(tagDaoProvider.future);
         await tagDao.deleteTag(tag.id);
 
-        // Уведомляем об удалении тега
         ref.read(managerRefreshTriggerProvider.notifier).triggerTagRefresh();
-        ref.read(tagListProvider.notifier).refresh();
+        _refresh();
 
         if (context.mounted) {
           Toaster.success(

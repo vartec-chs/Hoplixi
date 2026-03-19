@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/managers/category_manager/providers/category_filter_provider.dart';
 import 'package:hoplixi/main_store/models/enums/index.dart';
@@ -7,210 +8,35 @@ import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
-class CategoryManagerFilterBar extends ConsumerStatefulWidget {
-  const CategoryManagerFilterBar({super.key});
-
-  @override
-  ConsumerState<CategoryManagerFilterBar> createState() =>
-      _CategoryManagerFilterBarState();
+int countCategoryManagerFilters(CategoriesFilter filter) {
+  var count = 0;
+  count += filter.types.whereType<CategoryType>().length;
+  if (filter.color != null && filter.color!.trim().isNotEmpty) {
+    count++;
+  }
+  if (filter.hasIcon != null) {
+    count++;
+  }
+  if (filter.hasDescription != null) {
+    count++;
+  }
+  return count;
 }
 
-class _CategoryManagerFilterBarState
-    extends ConsumerState<CategoryManagerFilterBar> {
-  late final TextEditingController _controller;
-  late final ProviderSubscription<CategoriesFilter> _filterSubscription;
+Future<void> showCategoryManagerFilterSheet(
+  BuildContext context,
+  WidgetRef ref,
+  CategoriesFilter filter,
+) async {
+  final selectedTypes = filter.types.whereType<CategoryType>().toSet();
+  final colorController = TextEditingController(text: filter.color ?? '');
+  var hasIcon = filter.hasIcon;
+  var hasDescription = filter.hasDescription;
 
-  @override
-  void initState() {
-    super.initState();
-    final initialQuery = ref.read(categoryFilterProvider).query;
-    _controller = TextEditingController(text: initialQuery);
-    _filterSubscription = ref.listenManual(categoryFilterProvider, (
-      previous,
-      next,
-    ) {
-      if (_controller.text == next.query) {
-        return;
-      }
-
-      _controller.value = TextEditingValue(
-        text: next.query,
-        selection: TextSelection.collapsed(offset: next.query.length),
-      );
-    });
-  }
-
-  @override
-  void dispose() {
-    _filterSubscription.close();
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final filter = ref.watch(categoryFilterProvider);
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration: primaryInputDecoration(
-                      context,
-                      hintText: 'Поиск категорий...',
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      suffixIcon: _controller.text.isNotEmpty
-                          ? IconButton(
-                              tooltip: 'Очистить поиск',
-                              onPressed: () {
-                                _controller.clear();
-                                ref
-                                    .read(categoryFilterProvider.notifier)
-                                    .updateQuery('');
-                                setState(() {});
-                              },
-                              icon: const Icon(Icons.close_rounded),
-                            )
-                          : null,
-                    ),
-                    onChanged: (value) {
-                      ref
-                          .read(categoryFilterProvider.notifier)
-                          .updateQuery(value);
-                      setState(() {});
-                    },
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton.filledTonal(
-                  tooltip: 'Фильтры',
-                  onPressed: () => _showFiltersSheet(context, filter),
-                  icon: Badge(
-                    isLabelVisible: _activeFilterCount(filter) > 0,
-                    label: Text('${_activeFilterCount(filter)}'),
-                    child: const Icon(Icons.tune_rounded),
-                  ),
-                ),
-              ],
-            ),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOutCubic,
-              child: !_hasVisibleFilterChips(filter)
-                  ? const SizedBox.shrink()
-                  : Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          for (final type
-                              in filter.types.whereType<CategoryType>())
-                            InputChip(
-                              label: Text(_typeLabel(type)),
-                              onDeleted: () {
-                                final nextTypes = filter.types
-                                    .whereType<CategoryType>()
-                                    .where((item) => item != type)
-                                    .cast<CategoryType?>()
-                                    .toList(growable: false);
-                                ref
-                                    .read(categoryFilterProvider.notifier)
-                                    .updateFilter(
-                                      filter.copyWith(types: nextTypes),
-                                    );
-                              },
-                            ),
-                          if (filter.hasIcon != null)
-                            InputChip(
-                              label: Text(
-                                filter.hasIcon! ? 'С иконкой' : 'Без иконки',
-                              ),
-                              onDeleted: () {
-                                ref
-                                    .read(categoryFilterProvider.notifier)
-                                    .updateFilter(
-                                      filter.copyWith(hasIcon: null),
-                                    );
-                              },
-                            ),
-                          if (filter.hasDescription != null)
-                            InputChip(
-                              label: Text(
-                                filter.hasDescription!
-                                    ? 'С описанием'
-                                    : 'Без описания',
-                              ),
-                              onDeleted: () {
-                                ref
-                                    .read(categoryFilterProvider.notifier)
-                                    .updateFilter(
-                                      filter.copyWith(hasDescription: null),
-                                    );
-                              },
-                            ),
-                          ActionChip(
-                            avatar: Icon(
-                              Icons.restart_alt_rounded,
-                              size: 18,
-                              color: colorScheme.primary,
-                            ),
-                            label: const Text('Сбросить'),
-                            onPressed: () {
-                              _controller.clear();
-                              ref.read(categoryFilterProvider.notifier).reset();
-                              setState(() {});
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  int _activeFilterCount(CategoriesFilter filter) {
-    var count = 0;
-    count += filter.types.whereType<CategoryType>().length;
-    if (filter.hasIcon != null) {
-      count++;
-    }
-    if (filter.hasDescription != null) {
-      count++;
-    }
-    return count;
-  }
-
-  bool _hasVisibleFilterChips(CategoriesFilter filter) {
-    return filter.types.whereType<CategoryType>().isNotEmpty ||
-        filter.hasIcon != null ||
-        filter.hasDescription != null;
-  }
-
-  Future<void> _showFiltersSheet(
-    BuildContext context,
-    CategoriesFilter filter,
-  ) async {
-    final selectedTypes = filter.types.whereType<CategoryType>().toSet();
-    var hasIcon = filter.hasIcon;
-    var hasDescription = filter.hasDescription;
-
+  try {
     await WoltModalSheet.show<void>(
       context: context,
       barrierDismissible: true,
-      useRootNavigator: true,
-      useSafeArea: true,
       pageListBuilder: (modalSheetContext) => [
         WoltModalSheetPage(
           hasTopBarLayer: true,
@@ -249,7 +75,7 @@ class _CategoryManagerFilterBarState
                         children: [
                           for (final type in CategoryType.values)
                             FilterChip(
-                              label: Text(_typeLabel(type)),
+                              label: Text(categoryTypeLabel(type)),
                               selected: selectedTypes.contains(type),
                               onSelected: (selected) {
                                 setModalState(() {
@@ -262,6 +88,41 @@ class _CategoryManagerFilterBarState
                               },
                             ),
                         ],
+                      ),
+                      const SizedBox(height: 20),
+                      TextField(
+                        controller: colorController,
+                        readOnly: true,
+                        decoration: primaryInputDecoration(
+                          context,
+                          labelText: 'Цвет',
+                          hintText: 'Нажмите, чтобы выбрать',
+                          prefixIcon: const Icon(Icons.palette_outlined),
+                          suffixIcon: colorController.text.trim().isNotEmpty
+                              ? IconButton(
+                                  tooltip: 'Сбросить цвет',
+                                  onPressed: () {
+                                    colorController.clear();
+                                    setModalState(() {});
+                                  },
+                                  icon: const Icon(Icons.close_rounded),
+                                )
+                              : null,
+                        ),
+                        onTap: () async {
+                          final pickedColor = await _showCategoryColorPicker(
+                            context,
+                            initialColor:
+                                _parseFilterColor(colorController.text) ??
+                                Theme.of(context).colorScheme.primary,
+                          );
+                          if (pickedColor == null) {
+                            return;
+                          }
+
+                          colorController.text = _colorToFilterHex(pickedColor);
+                          setModalState(() {});
+                        },
                       ),
                       const SizedBox(height: 20),
                       Text(
@@ -330,6 +191,7 @@ class _CategoryManagerFilterBarState
                             child: SmoothButton(
                               onPressed: () {
                                 selectedTypes.clear();
+                                colorController.clear();
                                 hasIcon = null;
                                 hasDescription = null;
                                 setModalState(() {});
@@ -349,6 +211,10 @@ class _CategoryManagerFilterBarState
                                         types: selectedTypes
                                             .cast<CategoryType?>()
                                             .toList(growable: false),
+                                        color:
+                                            colorController.text.trim().isEmpty
+                                            ? null
+                                            : colorController.text.trim(),
                                         hasIcon: hasIcon,
                                         hasDescription: hasDescription,
                                       ),
@@ -369,10 +235,63 @@ class _CategoryManagerFilterBarState
         ),
       ],
     );
+  } finally {
+    colorController.dispose();
   }
 }
 
-String _typeLabel(CategoryType type) {
+Future<Color?> _showCategoryColorPicker(
+  BuildContext context, {
+  required Color initialColor,
+}) {
+  var pickerColor = initialColor;
+
+  return showDialog<Color>(
+    context: context,
+    builder: (dialogContext) {
+      return AlertDialog(
+        title: const Text('Выберите цвет'),
+        content: SingleChildScrollView(
+          child: ColorPicker(
+            pickerColor: pickerColor,
+            onColorChanged: (color) => pickerColor = color,
+            pickerAreaHeightPercent: 0.8,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(pickerColor),
+            child: const Text('Выбрать'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+Color? _parseFilterColor(String? colorHex) {
+  final normalized = colorHex?.replaceAll('#', '').trim();
+  if (normalized == null || normalized.isEmpty) {
+    return null;
+  }
+
+  final value = int.tryParse(normalized, radix: 16);
+  if (value == null) {
+    return null;
+  }
+
+  return Color(0xFF000000 | value);
+}
+
+String _colorToFilterHex(Color color) {
+  return color.value.toRadixString(16).substring(2).toUpperCase();
+}
+
+String categoryTypeLabel(CategoryType type) {
   return switch (type) {
     CategoryType.note => 'Заметки',
     CategoryType.password => 'Пароли',
@@ -385,7 +304,7 @@ String _typeLabel(CategoryType type) {
     CategoryType.sshKey => 'SSH ключи',
     CategoryType.certificate => 'Сертификаты',
     CategoryType.cryptoWallet => 'Криптокошельки',
-    CategoryType.wifi => 'Wi‑Fi',
+    CategoryType.wifi => 'Wi-Fi',
     CategoryType.identity => 'Профили',
     CategoryType.licenseKey => 'Лицензионные ключи',
     CategoryType.recoveryCodes => 'Коды восстановления',
