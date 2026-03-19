@@ -42,6 +42,105 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
     );
   }
 
+  Future<Map<String, int>> _countItemsForCategories(
+    List<String> categoryIds,
+  ) async {
+    if (categoryIds.isEmpty) {
+      return const {};
+    }
+
+    final countExpr = db.vaultItems.id.count();
+    final query = selectOnly(db.vaultItems)
+      ..addColumns([db.vaultItems.categoryId, countExpr])
+      ..where(db.vaultItems.categoryId.isIn(categoryIds))
+      ..where(db.vaultItems.isDeleted.equals(false))
+      ..groupBy([db.vaultItems.categoryId]);
+
+    final rows = await query.get();
+    final result = <String, int>{for (final id in categoryIds) id: 0};
+
+    for (final row in rows) {
+      final categoryId = row.read(db.vaultItems.categoryId);
+      if (categoryId != null) {
+        result[categoryId] = row.read(countExpr) ?? 0;
+      }
+    }
+
+    return result;
+  }
+
+  Future<Map<String, bool>> _getHasChildrenMap(List<String> categoryIds) async {
+    if (categoryIds.isEmpty) {
+      return const {};
+    }
+
+    final countExpr = categories.id.count();
+    final query = selectOnly(categories)
+      ..addColumns([categories.parentId, countExpr])
+      ..where(categories.parentId.isIn(categoryIds))
+      ..groupBy([categories.parentId]);
+
+    final rows = await query.get();
+    final result = <String, bool>{for (final id in categoryIds) id: false};
+
+    for (final row in rows) {
+      final parentId = row.read(categories.parentId);
+      if (parentId != null) {
+        result[parentId] = (row.read(countExpr) ?? 0) > 0;
+      }
+    }
+
+    return result;
+  }
+
+  Future<List<CategoryCardDto>> _toCardDtos(
+    List<CategoriesData> entries,
+  ) async {
+    if (entries.isEmpty) {
+      return const [];
+    }
+
+    final ids = entries.map((entry) => entry.id).toList(growable: false);
+    final itemCounts = await _countItemsForCategories(ids);
+
+    return [
+      for (final entry in entries)
+        CategoryCardDto(
+          id: entry.id,
+          name: entry.name,
+          type: entry.type.value,
+          color: entry.color,
+          iconId: entry.iconId,
+          parentId: entry.parentId,
+          itemsCount: itemCounts[entry.id] ?? 0,
+        ),
+    ];
+  }
+
+  Future<List<CategoryTreeNode>> _toLazyTreeNodes(
+    List<CategoriesData> entries,
+  ) async {
+    if (entries.isEmpty) {
+      return const [];
+    }
+
+    final cards = await _toCardDtos(entries);
+    final hasChildrenMap = await _getHasChildrenMap(
+      cards.map((card) => card.id).toList(growable: false),
+    );
+
+    return [
+      for (final card in cards)
+        CategoryTreeNode(
+          category: card,
+          hasChildren: hasChildrenMap[card.id] ?? false,
+          isExpanded: false,
+          isChildrenLoaded: false,
+          isLoadingChildren: false,
+        ),
+    ];
+  }
+
   // ---------------------------------------------------------------------------
   // Простые выборки
   // ---------------------------------------------------------------------------
@@ -58,7 +157,7 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
     final list = await (select(
       categories,
     )..orderBy([(c) => OrderingTerm.asc(c.name)])).get();
-    return Future.wait(list.map(_toCardDto));
+    return _toCardDtos(list);
   }
 
   /// Получить только корневые категории (без родителя).
@@ -68,7 +167,7 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
               ..where((c) => c.parentId.isNull())
               ..orderBy([(c) => OrderingTerm.asc(c.name)]))
             .get();
-    return Future.wait(list.map(_toCardDto));
+    return _toCardDtos(list);
   }
 
   /// Получить прямые подкатегории указанной категории.
@@ -78,7 +177,29 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
               ..where((c) => c.parentId.equals(parentId))
               ..orderBy([(c) => OrderingTerm.asc(c.name)]))
             .get();
-    return Future.wait(list.map(_toCardDto));
+    return _toCardDtos(list);
+  }
+
+  Future<List<CategoryTreeNode>> getRootCategoryNodesPaginated({
+    required int limit,
+    required int offset,
+  }) async {
+    final list =
+        await (select(categories)
+              ..where((c) => c.parentId.isNull())
+              ..orderBy([(c) => OrderingTerm.asc(c.name)])
+              ..limit(limit, offset: offset))
+            .get();
+    return _toLazyTreeNodes(list);
+  }
+
+  Future<List<CategoryTreeNode>> getSubcategoryNodes(String parentId) async {
+    final list =
+        await (select(categories)
+              ..where((c) => c.parentId.equals(parentId))
+              ..orderBy([(c) => OrderingTerm.asc(c.name)]))
+            .get();
+    return _toLazyTreeNodes(list);
   }
 
   /// Построить дерево категорий: возвращает список корневых узлов
@@ -89,21 +210,7 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
     )..orderBy([(c) => OrderingTerm.asc(c.name)])).get();
 
     // Строим DTO для всех категорий
-    final cards = <CategoryCardDto>[];
-    for (final c in all) {
-      final itemsCount = await countItemsInCategory(c.id);
-      cards.add(
-        CategoryCardDto(
-          id: c.id,
-          name: c.name,
-          type: c.type.value,
-          color: c.color,
-          iconId: c.iconId,
-          parentId: c.parentId,
-          itemsCount: itemsCount,
-        ),
-      );
-    }
+    final cards = await _toCardDtos(all);
 
     // Группируем по parentId
     final childrenMap = <String, List<CategoryCardDto>>{};
@@ -121,6 +228,8 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
       return CategoryTreeNode(
         category: cat,
         children: children.map(buildNode).toList(),
+        hasChildren: children.isNotEmpty,
+        isChildrenLoaded: true,
       );
     }
 
@@ -140,8 +249,8 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
       watchAllCategories().asyncMap((_) => getCategoryTree());
 
   /// Смотреть категории карточки с автообновлением.
-  Stream<List<CategoryCardDto>> watchCategoryCards() => watchAllCategories()
-      .asyncMap((list) => Future.wait(list.map(_toCardDto)));
+  Stream<List<CategoryCardDto>> watchCategoryCards() =>
+      watchAllCategories().asyncMap(_toCardDtos);
 
   /// Смотреть категории по типу.
   Stream<List<CategoryCardDto>> watchCategoriesByType(String type) =>
@@ -149,7 +258,7 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
             ..where((c) => c.type.equals(type))
             ..orderBy([(c) => OrderingTerm.asc(c.name)]))
           .watch()
-          .asyncMap((list) => Future.wait(list.map(_toCardDto)));
+          .asyncMap(_toCardDtos);
 
   // ---------------------------------------------------------------------------
   // CRUD
@@ -216,15 +325,13 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
     CategoriesFilter filter,
   ) async {
     final list = await getCategoriesFiltered(filter);
-    return Future.wait(list.map(_toCardDto));
+    return _toCardDtos(list);
   }
 
   /// Смотреть отфильтрованные категории карточки с автообновлением.
   Stream<List<CategoryCardDto>> watchCategoryCardsFiltered(
     CategoriesFilter filter,
-  ) => watchCategoriesFiltered(
-    filter,
-  ).asyncMap((list) => Future.wait(list.map(_toCardDto)));
+  ) => watchCategoriesFiltered(filter).asyncMap(_toCardDtos);
 
   /// Получить с пагинацией.
   Future<List<CategoryCardDto>> getCategoryCardsPaginated({
@@ -236,7 +343,7 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
               ..orderBy([(c) => OrderingTerm.asc(c.name)])
               ..limit(limit, offset: offset))
             .get();
-    return Future.wait(list.map(_toCardDto));
+    return _toCardDtos(list);
   }
 
   // ---------------------------------------------------------------------------
