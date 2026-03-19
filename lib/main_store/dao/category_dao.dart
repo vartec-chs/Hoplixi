@@ -93,6 +93,34 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
     return result;
   }
 
+  Future<Map<String, bool>> _getHasChildrenMapForTypes({
+    required List<String> categoryIds,
+    required List<String> typeValues,
+  }) async {
+    if (categoryIds.isEmpty) {
+      return const {};
+    }
+
+    final countExpr = categories.id.count();
+    final query = selectOnly(categories)
+      ..addColumns([categories.parentId, countExpr])
+      ..where(categories.parentId.isIn(categoryIds))
+      ..where(categories.type.isIn(typeValues))
+      ..groupBy([categories.parentId]);
+
+    final rows = await query.get();
+    final result = <String, bool>{for (final id in categoryIds) id: false};
+
+    for (final row in rows) {
+      final parentId = row.read(categories.parentId);
+      if (parentId != null) {
+        result[parentId] = (row.read(countExpr) ?? 0) > 0;
+      }
+    }
+
+    return result;
+  }
+
   Future<List<CategoryCardDto>> _toCardDtos(
     List<CategoriesData> entries,
   ) async {
@@ -193,6 +221,41 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
     return _toLazyTreeNodes(list);
   }
 
+  Future<List<CategoryTreeNode>> getFilteredRootCategoryNodesPaginated({
+    required List<CategoryType> types,
+    required int limit,
+    required int offset,
+  }) async {
+    final typeValues = types.map((type) => type.value).toList(growable: false);
+    final list =
+        await (select(categories)
+              ..where((c) => c.parentId.isNull())
+              ..where((c) => c.type.isIn(typeValues))
+              ..orderBy([(c) => OrderingTerm.asc(c.name)])
+              ..limit(limit, offset: offset))
+            .get();
+    if (list.isEmpty) {
+      return const [];
+    }
+
+    final cards = await _toCardDtos(list);
+    final hasChildrenMap = await _getHasChildrenMapForTypes(
+      categoryIds: cards.map((card) => card.id).toList(growable: false),
+      typeValues: typeValues,
+    );
+
+    return [
+      for (final card in cards)
+        CategoryTreeNode(
+          category: card,
+          hasChildren: hasChildrenMap[card.id] ?? false,
+          isExpanded: false,
+          isChildrenLoaded: false,
+          isLoadingChildren: false,
+        ),
+    ];
+  }
+
   Future<List<CategoryTreeNode>> getSubcategoryNodes(String parentId) async {
     final list =
         await (select(categories)
@@ -200,6 +263,39 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
               ..orderBy([(c) => OrderingTerm.asc(c.name)]))
             .get();
     return _toLazyTreeNodes(list);
+  }
+
+  Future<List<CategoryTreeNode>> getFilteredSubcategoryNodes({
+    required String parentId,
+    required List<CategoryType> types,
+  }) async {
+    final typeValues = types.map((type) => type.value).toList(growable: false);
+    final list =
+        await (select(categories)
+              ..where((c) => c.parentId.equals(parentId))
+              ..where((c) => c.type.isIn(typeValues))
+              ..orderBy([(c) => OrderingTerm.asc(c.name)]))
+            .get();
+    if (list.isEmpty) {
+      return const [];
+    }
+
+    final cards = await _toCardDtos(list);
+    final hasChildrenMap = await _getHasChildrenMapForTypes(
+      categoryIds: cards.map((card) => card.id).toList(growable: false),
+      typeValues: typeValues,
+    );
+
+    return [
+      for (final card in cards)
+        CategoryTreeNode(
+          category: card,
+          hasChildren: hasChildrenMap[card.id] ?? false,
+          isExpanded: false,
+          isChildrenLoaded: false,
+          isLoadingChildren: false,
+        ),
+    ];
   }
 
   /// Построить дерево категорий: возвращает список корневых узлов

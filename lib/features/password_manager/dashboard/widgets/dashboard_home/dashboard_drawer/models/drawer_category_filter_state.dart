@@ -1,16 +1,48 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hoplixi/main_store/models/dto/category_dto.dart';
+import 'package:hoplixi/main_store/models/dto/category_tree_node.dart';
 
-part 'drawer_category_filter_state.freezed.dart';
+class DrawerCategoryFilterState {
+  const DrawerCategoryFilterState({
+    this.roots = const [],
+    this.searchResults = const [],
+    this.selectedIds = const [],
+    this.isLoading = false,
+    this.isLoadingMore = false,
+    this.hasMore = false,
+    this.offset = 0,
+    this.searchQuery = '',
+  });
 
-@freezed
-sealed class DrawerCategoryFilterState with _$DrawerCategoryFilterState {
-  const factory DrawerCategoryFilterState({
-    @Default(<CategoryCardDto>[]) List<CategoryCardDto> categories,
-    @Default(<String>[]) List<String> selectedIds,
-    @Default(false) bool isLoading,
-    @Default(false) bool hasMore,
-    @Default(0) int offset,
-    @Default('') String searchQuery,
-  }) = _DrawerCategoryFilterState;
+  final List<CategoryTreeNode> roots;
+  final List<CategoryCardDto> searchResults;
+  final List<String> selectedIds;
+  final bool isLoading;
+  final bool isLoadingMore;
+  final bool hasMore;
+  final int offset;
+  final String searchQuery;
+
+  bool get isSearching => searchQuery.trim().isNotEmpty;
+
+  DrawerCategoryFilterState copyWith({
+    List<CategoryTreeNode>? roots,
+    List<CategoryCardDto>? searchResults,
+    List<String>? selectedIds,
+    bool? isLoading,
+    bool? isLoadingMore,
+    bool? hasMore,
+    int? offset,
+    String? searchQuery,
+  }) {
+    return DrawerCategoryFilterState(
+      roots: roots ?? this.roots,
+      searchResults: searchResults ?? this.searchResults,
+      selectedIds: selectedIds ?? this.selectedIds,
+      isLoading: isLoading ?? this.isLoading,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      hasMore: hasMore ?? this.hasMore,
+      offset: offset ?? this.offset,
+      searchQuery: searchQuery ?? this.searchQuery,
+    );
+  }
 }

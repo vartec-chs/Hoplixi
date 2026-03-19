@@ -4,6 +4,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/models/drawer_category_filter_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/providers/drawer_category_filter_provider.dart';
 import 'package:hoplixi/main_store/models/dto/category_dto.dart';
+import 'package:hoplixi/main_store/models/dto/category_tree_node.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
@@ -74,7 +75,9 @@ class _CategorySectionState extends ConsumerState<CategorySection> {
       duration: const Duration(milliseconds: 200),
       child: categoryStateAsync.when(
         data: (state) => Container(
-          key: ValueKey('data-${state.categories.length}'),
+          key: ValueKey(
+            'data-${state.searchResults.length}-${state.roots.length}-${state.searchQuery}',
+          ),
           child: _buildData(state, theme, notifier),
         ),
         loading: () => const Center(
@@ -99,7 +102,13 @@ class _CategorySectionState extends ConsumerState<CategorySection> {
     ThemeData theme,
     DrawerCategoryFilterNotifier notifier,
   ) {
-    final tree = _buildTree(state.categories);
+    final searchTree = state.isSearching
+        ? _buildTree(state.searchResults)
+        : null;
+    final hasVisibleContent = state.isSearching
+        ? state.searchResults.isNotEmpty
+        : state.roots.isNotEmpty;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -129,7 +138,6 @@ class _CategorySectionState extends ConsumerState<CategorySection> {
           ),
         ),
         const SizedBox(height: 8.0),
-
         SizedBox(
           height: 40.0,
           child: TextField(
@@ -142,9 +150,8 @@ class _CategorySectionState extends ConsumerState<CategorySection> {
           ),
         ),
         const SizedBox(height: 8.0),
-
         Expanded(
-          child: state.categories.isEmpty && !state.isLoading
+          child: !hasVisibleContent && !state.isLoading
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -160,14 +167,26 @@ class _CategorySectionState extends ConsumerState<CategorySection> {
                   controller: _scrollController,
                   child: Column(
                     children: [
-                      for (final root in tree)
-                        _CategoryTreeTile(
-                          entry: root,
-                          selectedIds: state.selectedIds,
-                          onToggle: notifier.toggle,
-                          depth: 0,
-                        ),
-                      if (state.isLoading)
+                      if (state.isSearching) ...[
+                        for (final root in searchTree!)
+                          _CategoryTreeTile(
+                            entry: root,
+                            selectedIds: state.selectedIds,
+                            onToggle: notifier.toggle,
+                            depth: 0,
+                          ),
+                      ] else ...[
+                        for (var index = 0; index < state.roots.length; index++)
+                          _LazyCategoryTreeTile(
+                            node: state.roots[index],
+                            selectedIds: state.selectedIds,
+                            onToggle: notifier.toggle,
+                            onExpandChanged: notifier.toggleExpand,
+                            depth: 0,
+                          ),
+                      ],
+                      if (state.isLoadingMore ||
+                          (state.isLoading && hasVisibleContent))
                         const Padding(
                           padding: EdgeInsets.all(16.0),
                           child: Center(child: CircularProgressIndicator()),
@@ -180,10 +199,6 @@ class _CategorySectionState extends ConsumerState<CategorySection> {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Модель узла дерева
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _CategoryTreeEntry {
   _CategoryTreeEntry({required this.category});
@@ -228,6 +243,9 @@ class _CategoryTreeTile extends StatelessWidget {
           dense: true,
           visualDensity: VisualDensity.compact,
           minTileHeight: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           leading: Checkbox(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(6),
@@ -269,8 +287,236 @@ class _CategoryTreeTile extends StatelessWidget {
       checkboxShape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(6),
       ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       checkColor: checkColor,
-      controlAffinity: .leading,
+      controlAffinity: ListTileControlAffinity.leading,
+      contentPadding: EdgeInsets.only(left: indent, right: 8),
+      value: isSelected,
+      onChanged: (_) => onToggle(category.id),
+      fillColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? color : null,
+      ),
+      title: Text(
+        category.name,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+        ),
+      ),
+      subtitle: category.itemsCount > 0
+          ? Text('${category.itemsCount} элементов')
+          : null,
+      dense: true,
+    );
+  }
+}
+
+class _LazyCategoryTreeTile extends StatelessWidget {
+  const _LazyCategoryTreeTile({
+    required this.node,
+    required this.selectedIds,
+    required this.onToggle,
+    required this.onExpandChanged,
+    required this.depth,
+  });
+
+  final CategoryTreeNode node;
+  final List<String> selectedIds;
+  final ValueChanged<String> onToggle;
+  final void Function(String categoryId, bool expanded) onExpandChanged;
+  final int depth;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final category = node.category;
+    final isSelected = selectedIds.contains(category.id);
+    final color = ColorsHelper.parseColor(
+      category.color,
+      theme.colorScheme.primary,
+    );
+    final checkColor = ColorsHelper.onColorFor(color);
+    final indent = depth * 16.0;
+
+    if (node.hasChildren) {
+      return Padding(
+        padding: EdgeInsets.only(left: indent),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => onExpandChanged(category.id, !node.isExpanded),
+              onLongPress: () => onToggle(category.id),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                padding: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Checkbox(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      value: isSelected,
+                      onChanged: (_) => onToggle(category.id),
+                      checkColor: checkColor,
+                      fillColor: WidgetStateProperty.resolveWith(
+                        (s) => s.contains(WidgetState.selected) ? color : null,
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              category.name,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                            Text(
+                              '${category.itemsCount} эл.',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 180),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: ScaleTransition(
+                            scale: animation,
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: node.isLoadingChildren
+                          ? const SizedBox(
+                              key: ValueKey('loader'),
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : AnimatedRotation(
+                              key: ValueKey('arrow-${node.isExpanded}'),
+                              turns: node.isExpanded ? 0.5 : 0,
+                              duration: const Duration(milliseconds: 220),
+                              curve: Curves.easeOutCubic,
+                              child: Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                color: isSelected
+                                    ? color
+                                    : theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            ClipRect(
+              child: AnimatedSize(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.topCenter,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) {
+                    final offsetAnimation = Tween<Offset>(
+                      begin: const Offset(0, -0.04),
+                      end: Offset.zero,
+                    ).animate(animation);
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: offsetAnimation,
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: !node.isExpanded
+                      ? const SizedBox.shrink(key: ValueKey('collapsed'))
+                      : node.isLoadingChildren
+                      ? const Padding(
+                          key: ValueKey('loading'),
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Center(
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        )
+                      : Column(
+                          key: ValueKey(
+                            'children-${category.id}-${node.children.length}',
+                          ),
+                          children: [
+                            for (
+                              var index = 0;
+                              index < node.children.length;
+                              index++
+                            )
+                              TweenAnimationBuilder<double>(
+                                key: ValueKey(
+                                  '${category.id}-child-${node.children[index].category.id}',
+                                ),
+                                tween: Tween(begin: 0, end: 1),
+                                duration: Duration(
+                                  milliseconds: 160 + (index * 35),
+                                ),
+                                curve: Curves.easeOutCubic,
+                                builder: (context, value, child) {
+                                  return Opacity(
+                                    opacity: value,
+                                    child: Transform.translate(
+                                      offset: Offset(0, (1 - value) * 8),
+                                      child: child,
+                                    ),
+                                  );
+                                },
+                                child: _LazyCategoryTreeTile(
+                                  node: node.children[index],
+                                  selectedIds: selectedIds,
+                                  onToggle: onToggle,
+                                  onExpandChanged: onExpandChanged,
+                                  depth: depth + 1,
+                                ),
+                              ),
+                          ],
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return CheckboxListTile(
+      checkboxShape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(6),
+      ),
+      checkColor: checkColor,
+      controlAffinity: ListTileControlAffinity.leading,
       contentPadding: EdgeInsets.only(left: indent, right: 8),
       value: isSelected,
       onChanged: (_) => onToggle(category.id),
