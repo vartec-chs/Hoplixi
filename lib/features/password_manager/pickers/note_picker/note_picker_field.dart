@@ -138,7 +138,6 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
 
   @override
   Widget build(BuildContext context) {
-
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -151,7 +150,8 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
     if (widget.selectedNoteId != null &&
         widget.selectedNoteId!.isNotEmpty &&
         (widget.selectedNoteName == null || widget.selectedNoteName!.isEmpty)) {
-      effectiveNoteName = _resolvedNoteName ?? (_isResolvingNoteName ? "Загрузка..." : null);
+      effectiveNoteName =
+          _resolvedNoteName ?? (_isResolvingNoteName ? "Загрузка..." : null);
     }
 
     // Определяем наличие значения
@@ -232,17 +232,27 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
                             ? colorScheme.primary
                             : colorScheme.onSurfaceVariant,
                       ),
-                      suffixIcon: hasValue && widget.enabled
-                          ? IconButton(
-                              icon: Icon(
-                                Icons.clear,
-                                size: 20,
-                                color: colorScheme.onSurfaceVariant,
+                      suffixIcon: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (hasValue)
+                            ExcludeSemantics(
+                              child: IconButton(
+                                icon: const Icon(Icons.clear, size: 20),
+                                onPressed: widget.enabled ? _handleClear : null,
+                                tooltip: 'Очистить (Delete/Backspace)',
                               ),
-                              onPressed: _handleClear,
-                              tooltip: 'Очистить',
-                            )
-                          : null,
+                            ),
+                          ExcludeSemantics(
+                            child: Icon(
+                              Icons.arrow_drop_down,
+                              color: widget.enabled
+                                  ? colorScheme.onSurface
+                                  : colorScheme.onSurface.withOpacity(0.38),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     child: IgnorePointer(
                       child: Padding(

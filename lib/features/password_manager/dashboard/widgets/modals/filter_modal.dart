@@ -673,7 +673,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           isFilter: true,
           selectedCategoryIds: _selectedCategoryIds,
           selectedCategoryNames: _selectedCategoryNames,
-          filterByType: [_getCategoryType(entityType)],
+          filterByType: [_getCategoryType(entityType), CategoryType.mixed],
           onCategoriesSelected: (ids, names) {
             setState(() {
               _selectedCategoryIds = ids;
@@ -705,7 +705,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           isFilter: true,
           selectedTagIds: _selectedTagIds,
           selectedTagNames: _selectedTagNames,
-          filterByType: [_getTagType(entityType)],
+          filterByType: [_getTagType(entityType), TagType.mixed],
           onTagsSelected: (ids, names) {
             setState(() {
               _selectedTagIds = ids;

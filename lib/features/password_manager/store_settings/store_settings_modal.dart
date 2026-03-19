@@ -26,11 +26,15 @@ Future<bool?> showStoreSettingsModal(
         WoltModalSheetPage(
           surfaceTintColor: Colors.transparent,
           hasTopBarLayer: true,
-          topBarTitle: Text(
-            'Настройки хранилища',
-            style: Theme.of(
-              modalContext,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+          topBarTitle: Builder(
+            builder: (context) {
+              return Text(
+                'Настройки хранилища',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+              );
+            },
           ),
           isTopBarLayerAlwaysVisible: true,
           leadingNavBarWidget: Padding(
@@ -69,11 +73,15 @@ Future<bool?> showStoreSettingsModal(
         WoltModalSheetPage(
           surfaceTintColor: Colors.transparent,
           hasTopBarLayer: true,
-          topBarTitle: Text(
-            'Смена пароля',
-            style: Theme.of(
-              modalContext,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+          topBarTitle: Builder(
+            builder: (context) {
+              return Text(
+                'Смена пароля',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+              );
+            },
           ),
           isTopBarLayerAlwaysVisible: true,
           leadingNavBarWidget: Padding(
@@ -96,11 +104,15 @@ Future<bool?> showStoreSettingsModal(
         WoltModalSheetPage(
           surfaceTintColor: Colors.transparent,
           hasTopBarLayer: true,
-          topBarTitle: Text(
-            'Типы записей в навигации',
-            style: Theme.of(
-              modalContext,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+          topBarTitle: Builder(
+            builder: (context) {
+              return Text(
+                'Типы записей в навигации',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+              );
+            },
           ),
           isTopBarLayerAlwaysVisible: true,
           leadingNavBarWidget: Padding(
