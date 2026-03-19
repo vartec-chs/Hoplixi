@@ -128,7 +128,9 @@ class _CategorySectionState extends ConsumerState<CategorySection> {
                       type: SmoothButtonType.text,
                     ),
                   IconButton(
-                    icon: const Icon(Icons.refresh),
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    iconSize: 20,
+                    icon: const Icon(Icons.refresh, size: 20),
                     onPressed: notifier.reload,
                     tooltip: 'Обновить категории',
                   ),

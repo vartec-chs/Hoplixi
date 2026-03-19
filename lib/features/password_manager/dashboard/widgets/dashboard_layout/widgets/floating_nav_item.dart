@@ -27,54 +27,52 @@ class FloatingNavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Material(
-      color: Colors.transparent,
-      child: GestureDetector(
-        onTap: onTap,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
 
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: kFloatingNavItemPaddingH,
-              vertical: kFloatingNavItemPaddingV,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedDefaultTextStyle(
-                  duration: kSegmentIndicatorDuration,
-                  curve: Curves.easeOutCubic,
-                  style: TextStyle(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: kFloatingNavItemPaddingH,
+            vertical: kFloatingNavItemPaddingV,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedDefaultTextStyle(
+                duration: kSegmentIndicatorDuration,
+                curve: Curves.easeOutCubic,
+                style: TextStyle(
+                  color: isSelected
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
+                ),
+                child: IconTheme(
+                  data: IconThemeData(
                     color: isSelected
                         ? colorScheme.primary
                         : colorScheme.onSurfaceVariant,
+                    size: kFloatingNavIconSize,
                   ),
-                  child: IconTheme(
-                    data: IconThemeData(
-                      color: isSelected
-                          ? colorScheme.primary
-                          : colorScheme.onSurfaceVariant,
-                      size: kFloatingNavIconSize,
-                    ),
-                    child: destination.icon,
-                  ),
+                  child: destination.icon,
                 ),
-                const SizedBox(height: kFloatingNavLabelSpacing),
-                AnimatedDefaultTextStyle(
-                  duration: kSegmentIndicatorDuration,
-                  curve: Curves.easeOutCubic,
-                  style: TextStyle(
-                    fontSize: kFloatingNavLabelFontSize,
-                    color: isSelected
-                        ? colorScheme.primary
-                        : colorScheme.onSurfaceVariant,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                  ),
-                  child: Text((destination.label as Text).data ?? ''),
+              ),
+              const SizedBox(height: kFloatingNavLabelSpacing),
+              AnimatedDefaultTextStyle(
+                duration: kSegmentIndicatorDuration,
+                curve: Curves.easeOutCubic,
+                style: TextStyle(
+                  fontSize: kFloatingNavLabelFontSize,
+                  color: isSelected
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 ),
-              ],
-            ),
+                child: Text((destination.label as Text).data ?? ''),
+              ),
+            ],
           ),
         ),
       ),

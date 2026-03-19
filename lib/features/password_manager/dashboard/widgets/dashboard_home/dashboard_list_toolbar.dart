@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/list_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/current_view_mode_provider.dart';
@@ -118,9 +119,37 @@ class _DashboardListToolBarState extends ConsumerState<DashboardListToolBar> {
     });
   }
 
+  Future<bool> _confirmGridViewForSmallScreen() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Переключиться на карточки?'),
+          content: const Text(
+            'На маленьких экранах карточки могут быть менее удобны и не выполнять полный функционал. Продолжить?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Отмена'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Продолжить'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return confirmed ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     // Используем кешированное значение если оно есть и не показываем индикатор
+    final isSmallScreen =
+        MediaQuery.sizeOf(context).width < MainConstants.kMobileBreakpoint;
     final displayCount = _showLoadingIndicator
         ? null
         : (_cachedTotalCount ??
@@ -176,7 +205,18 @@ class _DashboardListToolBarState extends ConsumerState<DashboardListToolBar> {
               widget.viewMode == ViewMode.list,
               widget.viewMode == ViewMode.grid,
             ],
-            onPressed: (i) {
+            onPressed: (i) async {
+              if (i == 1 && isSmallScreen) {
+                final confirmed = await _confirmGridViewForSmallScreen();
+                if (!confirmed || !mounted) {
+                  return;
+                }
+              }
+
+              if (!mounted) {
+                return;
+              }
+
               ref
                   .read(currentViewModeProvider.notifier)
                   .setViewMode(i == 0 ? ViewMode.list : ViewMode.grid);

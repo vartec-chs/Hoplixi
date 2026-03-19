@@ -104,12 +104,15 @@ class _BaseGridCardState extends State<BaseGridCard>
         children: [
           Card(
             margin: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: MouseRegion(
               onEnter: (_) => _onHoverChanged(true),
               onExit: (_) => _onHoverChanged(false),
               child: InkWell(
                 onTap: widget.onTap,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
                 child: Padding(
                   padding: EdgeInsets.all(cardPadding),
                   child: Column(
@@ -123,7 +126,7 @@ class _BaseGridCardState extends State<BaseGridCard>
                             height: isMobile ? 32 : 40,
                             decoration: BoxDecoration(
                               color: theme.colorScheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
                               widget.icon,

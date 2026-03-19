@@ -6,6 +6,7 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_ho
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/providers/drawer_tag_filter_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+
 import '../colors.dart';
 
 class TagSection extends ConsumerStatefulWidget {
@@ -95,7 +96,12 @@ class _TagSectionState extends ConsumerState<TagSection> {
                       type: SmoothButtonType.text,
                     ),
                   IconButton(
-                    icon: const Icon(Icons.refresh),
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
+                    iconSize: 20,
+                    icon: const Icon(Icons.refresh, size: 20),
                     onPressed: notifier.reload,
                     tooltip: 'Обновить теги',
                   ),
@@ -155,11 +161,17 @@ class _TagSectionState extends ConsumerState<TagSection> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       checkColor: ColorsHelper.onColorFor(
-                        ColorsHelper.parseColor(tag.color, theme.colorScheme.primary),
+                        ColorsHelper.parseColor(
+                          tag.color,
+                          theme.colorScheme.primary,
+                        ),
                       ),
                       fillColor: WidgetStateProperty.resolveWith(
                         (s) => s.contains(WidgetState.selected)
-                            ? ColorsHelper.parseColor(tag.color, theme.colorScheme.primary)
+                            ? ColorsHelper.parseColor(
+                                tag.color,
+                                theme.colorScheme.primary,
+                              )
                             : null,
                       ),
                       controlAffinity: .leading,
@@ -185,6 +197,4 @@ class _TagSectionState extends ConsumerState<TagSection> {
       ],
     );
   }
-
-
 }

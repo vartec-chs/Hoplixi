@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Редактор кастомных полей — переиспользуемый виджет для любых форм сущностей.
@@ -102,6 +103,8 @@ class _CustomFieldRowState extends State<_CustomFieldRow> {
   late final TextEditingController _labelCtrl;
   late final TextEditingController _valueCtrl;
 
+  static final _dateTimeFormat = DateFormat('dd.MM.yyyy HH:mm');
+
   @override
   void initState() {
     super.initState();
@@ -132,6 +135,7 @@ class _CustomFieldRowState extends State<_CustomFieldRow> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isConcealed = widget.entry.fieldType == CustomFieldType.concealed;
+    final isDateField = widget.entry.fieldType == CustomFieldType.date;
 
     return Card(
       elevation: 0,
@@ -181,6 +185,7 @@ class _CustomFieldRowState extends State<_CustomFieldRow> {
             TextField(
               controller: _valueCtrl,
               obscureText: isConcealed && widget.entry.isObscured,
+              readOnly: isDateField,
               decoration: primaryInputDecoration(
                 context,
                 labelText: 'Значение',
@@ -198,6 +203,12 @@ class _CustomFieldRowState extends State<_CustomFieldRow> {
                             isObscured: !widget.entry.isObscured,
                           ),
                         ),
+                      )
+                    : isDateField
+                    ? IconButton(
+                        icon: const Icon(LucideIcons.calendar, size: 18),
+                        tooltip: 'Выбрать дату и время',
+                        onPressed: _pickDateTime,
                       )
                     : null,
               ),
@@ -217,8 +228,51 @@ class _CustomFieldRowState extends State<_CustomFieldRow> {
     CustomFieldType.url => TextInputType.url,
     CustomFieldType.phone => TextInputType.phone,
     CustomFieldType.number => TextInputType.number,
+    CustomFieldType.date => TextInputType.datetime,
     _ => TextInputType.text,
   };
+
+  Future<void> _pickDateTime() async {
+    final initial = _parseDateTime(_valueCtrl.text) ?? DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(1900),
+      lastDate: DateTime(DateTime.now().year + 150),
+    );
+    if (date == null || !context.mounted) return;
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(initial),
+    );
+    if (time == null || !context.mounted) return;
+
+    final result = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
+    );
+    final formatted = _dateTimeFormat.format(result);
+    _valueCtrl.text = formatted;
+    widget.onChanged(widget.entry.copyWith(value: formatted));
+  }
+
+  DateTime? _parseDateTime(String? value) {
+    final text = value?.trim();
+    if (text == null || text.isEmpty) return null;
+
+    final iso = DateTime.tryParse(text);
+    if (iso != null) return iso;
+
+    try {
+      return _dateTimeFormat.parseStrict(text);
+    } catch (_) {
+      return null;
+    }
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

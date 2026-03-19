@@ -137,7 +137,7 @@ class _ExpandableListCardState extends State<ExpandableListCard>
           margin: EdgeInsets.zero,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
             children: [_buildHeader(theme), _buildExpandedContent(theme)],
