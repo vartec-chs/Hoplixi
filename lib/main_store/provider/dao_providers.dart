@@ -221,6 +221,10 @@ final customFieldDaoProvider = FutureProvider<CustomFieldDao>(
   (ref) => _ensureDao(ref, (store) => store.customFieldDao),
 );
 
+final customFieldHistoryDaoProvider = FutureProvider<CustomFieldHistoryDao>(
+  (ref) => _ensureDao(ref, (store) => store.customFieldHistoryDao),
+);
+
 final vaultItemDaoProvider = FutureProvider<VaultItemDao>(
   (ref) => _ensureDao(ref, (store) => store.vaultItemDao),
 );

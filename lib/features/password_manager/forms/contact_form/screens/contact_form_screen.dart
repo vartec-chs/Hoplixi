@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_button.dart';
-import 'package:hoplixi/features/password_manager/forms/contact_form/widgets/os_contact_picker_modal.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
@@ -17,6 +16,7 @@ import '../models/contact_form_state.dart';
 import '../models/contact_os_payload.dart';
 import '../providers/contact_form_provider.dart';
 import '../services/contact_os_bridge.dart';
+import '../widgets/os_contact_picker_modal.dart';
 
 class ContactFormScreen extends ConsumerStatefulWidget {
   const ContactFormScreen({super.key, this.contactId});
