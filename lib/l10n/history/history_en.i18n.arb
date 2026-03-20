@@ -1,119 +1,134 @@
 {
-	"@@locale": "en",
-	"screenTitle": "History: {Entity}",
-	"@screenTitle": {
-		"placeholders": {
-			"Entity": {
-				"type": "String"
-			}
-		}
-	},
-	"summaryTitle": "Revision timeline",
-	"summaryCount": "{Count} revisions",
-	"@summaryCount": {
-		"placeholders": {
-			"Count": {
-				"type": "int"
-			}
-		}
-	},
-	"searchPlaceholder": "Search history",
-	"actionFilterLabel": "Action",
-	"dateFilterLabel": "Period",
-	"filterAllActions": "All actions",
-	"filterAllTime": "All time",
-	"filterLast7Days": "Last 7 days",
-	"filterLast30Days": "Last 30 days",
-	"refresh": "Refresh",
-	"retry": "Retry",
-	"loadingMore": "Loading more...",
-	"emptyState": "No history records found",
-	"selectRevisionHint": "Select a revision to inspect what changed.",
-	"revisionTitle": "Revision details",
-	"restoreTitle": "Restore revision",
-	"restoreDescription": "Restore \"{Name}\" and overwrite the current data.",
-	"@restoreDescription": {
-		"placeholders": {
-			"Name": {
-				"type": "String"
-			}
-		}
-	},
-	"restoreAction": "Restore",
-	"restoreSuccess": "Revision restored",
-	"restoreError": "Failed to restore revision",
-	"cancel": "Cancel",
-	"changedFields": "{Count} changed fields",
-	"@changedFields": {
-		"placeholders": {
-			"Count": {
-				"type": "int"
-			}
-		}
-	},
-	"metadataTitle": "Snapshot metadata",
-	"diffTitle": "What changed",
-	"noDiffs": "No tracked differences for this revision",
-	"before": "Before",
-	"after": "After",
-	"emptyValue": "empty",
-	"hiddenValue": "hidden",
-	"binaryValue": "binary data",
-	"actionCreated": "Created",
-	"actionModified": "Modified",
-	"actionDeleted": "Deleted",
-	"compareToNewerRevision": "Compared with the newer revision",
-	"compareToCurrent": "Compared with current data",
-	"compareToDeleted": "Compared with deleted state",
-	"changeAdded": "Added",
-	"changeRemoved": "Removed",
-	"changeChanged": "Changed",
-	"tagsNotInHistory": "Tags are not stored in history snapshots and will not be restored.",
-	"noteLinkNotInHistory": "Linked note references are not stored in history snapshots.",
-	"documentPartialRestore": "Document restore only affects metadata and aggregated text; pages are not reverted.",
-	"fileRestoreUnavailable": "The historical file content is not available anymore.",
-	"recoveryCodesRestoreUnavailable": "Recovery codes history does not contain the code list, so restore is unavailable.",
-	"favoriteFlag": "Favorite",
-	"archivedFlag": "Archived",
-	"pinnedFlag": "Pinned",
-	"deletedFlag": "Deleted",
-	"usedCount": "Used count",
-	"noteContent": "Content",
-	"cvv": "CVV",
-	"routingNumber": "Routing number",
-	"cardType": "Card type",
-	"cardNetwork": "Card network",
-	"fileVersion": "File version",
-	"fileName": "File name",
-	"fileExtension": "Extension",
-	"mimeType": "MIME type",
-	"fileSize": "File size",
-	"filePath": "File path",
-	"otpType": "OTP type",
-	"secretEncoding": "Secret encoding",
-	"counter": "Counter",
-	"linkedPassword": "Linked password",
-	"documentType": "Document type",
-	"documentText": "Document text",
-	"pageCount": "Page count",
-	"rotationPeriodDays": "Rotation period",
-	"lastRotatedAt": "Last rotated",
-	"metadata": "Metadata",
-	"keySize": "Key size",
-	"passphraseHint": "Passphrase hint",
-	"comment": "Comment",
-	"createdBy": "Created by",
-	"publicKeyFileId": "Public key file",
-	"privateKeyFileId": "Private key file",
-	"validFrom": "Valid from",
-	"validTo": "Valid to",
-	"keyUsage": "Key usage",
-	"extensions": "Extensions",
-	"pfx": "PFX bundle",
-	"lastCheckedAt": "Last checked",
-	"lastBalanceCheckedAt": "Last balance check",
-	"idType": "ID type",
-	"idNumber": "ID number",
-	"customField": "Custom field",
-	"tier": "Tier"
+  "@@locale": "en",
+  "screenTitle": "History: {Entity}",
+  "@screenTitle": {
+    "placeholders": {
+      "Entity": {
+        "type": "String"
+      }
+    }
+  },
+  "summaryTitle": "Revision timeline",
+  "summaryCount": "{Count} revisions",
+  "@summaryCount": {
+    "placeholders": {
+      "Count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchPlaceholder": "Search history",
+  "actionFilterLabel": "Action",
+  "dateFilterLabel": "Period",
+  "filterAllActions": "All actions",
+  "filterAllTime": "All time",
+  "filterLast7Days": "Last 7 days",
+  "filterLast30Days": "Last 30 days",
+  "refresh": "Refresh",
+  "retry": "Retry",
+  "loadingMore": "Loading more...",
+  "emptyState": "No history records found",
+  "selectRevisionHint": "Select a revision to inspect what changed.",
+  "revisionTitle": "Revision details",
+  "restoreTitle": "Restore revision",
+  "restoreDescription": "Restore \"{Name}\" and overwrite the current data.",
+  "@restoreDescription": {
+    "placeholders": {
+      "Name": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreAction": "Restore",
+  "restoreSuccess": "Revision restored",
+  "restoreError": "Failed to restore revision",
+  "cancel": "Cancel",
+  "changedFields": "{Count} changed fields",
+  "@changedFields": {
+    "placeholders": {
+      "Count": {
+        "type": "int"
+      }
+    }
+  },
+  "metadataTitle": "Snapshot metadata",
+  "diffTitle": "What changed",
+  "noDiffs": "No tracked differences for this revision",
+  "before": "Before",
+  "after": "After",
+  "emptyValue": "empty",
+  "hiddenValue": "hidden",
+  "binaryValue": "binary data",
+  "actionCreated": "Created",
+  "actionModified": "Modified",
+  "actionDeleted": "Deleted",
+  "compareToNewerRevision": "Compared with the newer revision",
+  "compareToCurrent": "Compared with current data",
+  "compareToDeleted": "Compared with deleted state",
+  "changeAdded": "Added",
+  "changeRemoved": "Removed",
+  "changeChanged": "Changed",
+  "tagsNotInHistory": "Tags are not stored in history snapshots and will not be restored.",
+  "noteLinkNotInHistory": "Linked note references are not stored in history snapshots.",
+  "documentPartialRestore": "Document restore only affects metadata and aggregated text; pages are not reverted.",
+  "fileRestoreUnavailable": "The historical file content is not available anymore.",
+  "recoveryCodesRestoreUnavailable": "Recovery codes history does not contain the code list, so restore is unavailable.",
+  "favoriteFlag": "Favorite",
+  "archivedFlag": "Archived",
+  "pinnedFlag": "Pinned",
+  "deletedFlag": "Deleted",
+  "usedCount": "Used count",
+  "noteContent": "Content",
+  "cvv": "CVV",
+  "routingNumber": "Routing number",
+  "cardType": "Card type",
+  "cardNetwork": "Card network",
+  "fileVersion": "File version",
+  "fileName": "File name",
+  "fileExtension": "Extension",
+  "mimeType": "MIME type",
+  "fileSize": "File size",
+  "filePath": "File path",
+  "otpType": "OTP type",
+  "secretEncoding": "Secret encoding",
+  "counter": "Counter",
+  "linkedPassword": "Linked password",
+  "documentType": "Document type",
+  "documentText": "Document text",
+  "pageCount": "Page count",
+  "rotationPeriodDays": "Rotation period",
+  "lastRotatedAt": "Last rotated",
+  "metadata": "Metadata",
+  "keySize": "Key size",
+  "passphraseHint": "Passphrase hint",
+  "comment": "Comment",
+  "createdBy": "Created by",
+  "publicKeyFileId": "Public key file",
+  "privateKeyFileId": "Private key file",
+  "validFrom": "Valid from",
+  "validTo": "Valid to",
+  "keyUsage": "Key usage",
+  "extensions": "Extensions",
+  "pfx": "PFX bundle",
+  "lastCheckedAt": "Last checked",
+  "lastBalanceCheckedAt": "Last balance check",
+  "idType": "ID type",
+  "idNumber": "ID number",
+  "customField": "Custom field",
+  "tier": "Tier",
+  "clearHistory": "Clear history",
+  "clearHistoryDescription": "Delete the entire history for this item?",
+  "deleteRevision": "Delete revision",
+  "deleteRevisionDescription": "Delete this history revision for \"{Name}\"?",
+  "@deleteRevisionDescription": {
+    "placeholders": {
+      "Name": {
+        "type": "String"
+      }
+    }
+  },
+  "revisionDeleted": "Revision deleted",
+  "revisionDeleteError": "Failed to delete revision",
+  "historyCleared": "History cleared",
+  "historyClearError": "Failed to clear history"
 }

@@ -117,6 +117,50 @@ class HistoryController extends AsyncNotifier<HistoryScreenState> {
     }
   }
 
+  Future<bool> deleteRevision(String revisionId) async {
+    final currentState = state.value;
+    if (currentState == null) return false;
+    state = AsyncValue.data(
+      currentState.copyWith(isRefreshing: true, error: null),
+    );
+    try {
+      final repository = await _repository();
+      final deleted = await repository.deleteRevision(
+        entityType: scope.entityType,
+        revisionId: revisionId,
+      );
+      final reloaded = await _load(currentState.query);
+      state = AsyncValue.data(reloaded);
+      return deleted;
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      return false;
+    }
+  }
+
+  Future<bool> clearAllHistory() async {
+    final currentState = state.value;
+    if (currentState == null) return false;
+    state = AsyncValue.data(
+      currentState.copyWith(isRefreshing: true, error: null),
+    );
+    try {
+      final repository = await _repository();
+      final cleared = await repository.clearAllHistory(
+        entityType: scope.entityType,
+        entityId: scope.entityId,
+      );
+      final reloaded = await _load(
+        currentState.query.copyWith(resetPage: true),
+      );
+      state = AsyncValue.data(reloaded);
+      return cleared;
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      return false;
+    }
+  }
+
   Future<HistoryScreenState> _load(HistoryQueryState query) async {
     final repository = await _repository();
     final result = await repository.loadHistory(query);

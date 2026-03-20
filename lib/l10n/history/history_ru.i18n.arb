@@ -1,119 +1,134 @@
 {
-	"@@locale": "ru",
-	"screenTitle": "История: {Entity}",
-	"@screenTitle": {
-		"placeholders": {
-			"Entity": {
-				"type": "String"
-			}
-		}
-	},
-	"summaryTitle": "Таймлайн версий",
-	"summaryCount": "{Count} версий",
-	"@summaryCount": {
-		"placeholders": {
-			"Count": {
-				"type": "int"
-			}
-		}
-	},
-	"searchPlaceholder": "Поиск по истории",
-	"actionFilterLabel": "Действие",
-	"dateFilterLabel": "Период",
-	"filterAllActions": "Все действия",
-	"filterAllTime": "За всё время",
-	"filterLast7Days": "Последние 7 дней",
-	"filterLast30Days": "Последние 30 дней",
-	"refresh": "Обновить",
-	"retry": "Повторить",
-	"loadingMore": "Загрузка еще...",
-	"emptyState": "Записи истории не найдены",
-	"selectRevisionHint": "Выберите версию, чтобы посмотреть изменения.",
-	"revisionTitle": "Детали версии",
-	"restoreTitle": "Восстановить версию",
-	"restoreDescription": "Восстановить \"{Name}\" и перезаписать текущие данные.",
-	"@restoreDescription": {
-		"placeholders": {
-			"Name": {
-				"type": "String"
-			}
-		}
-	},
-	"restoreAction": "Восстановить",
-	"restoreSuccess": "Версия восстановлена",
-	"restoreError": "Не удалось восстановить версию",
-	"cancel": "Отмена",
-	"changedFields": "Измененных полей: {Count}",
-	"@changedFields": {
-		"placeholders": {
-			"Count": {
-				"type": "int"
-			}
-		}
-	},
-	"metadataTitle": "Метаданные снимка",
-	"diffTitle": "Что изменилось",
-	"noDiffs": "Для этой версии нет отслеживаемых различий",
-	"before": "До",
-	"after": "После",
-	"emptyValue": "пусто",
-	"hiddenValue": "скрыто",
-	"binaryValue": "двоичные данные",
-	"actionCreated": "Создано",
-	"actionModified": "Изменено",
-	"actionDeleted": "Удалено",
-	"compareToNewerRevision": "Сравнение с более новой версией",
-	"compareToCurrent": "Сравнение с текущими данными",
-	"compareToDeleted": "Сравнение с удаленным состоянием",
-	"changeAdded": "Добавлено",
-	"changeRemoved": "Удалено",
-	"changeChanged": "Изменено",
-	"tagsNotInHistory": "Теги не хранятся в снимках истории и не будут восстановлены.",
-	"noteLinkNotInHistory": "Связанные ссылки на заметки не хранятся в снимках истории.",
-	"documentPartialRestore": "Восстановление документа затрагивает только метаданные и агрегированный текст; страницы не откатываются.",
-	"fileRestoreUnavailable": "Историческое содержимое файла больше недоступно.",
-	"recoveryCodesRestoreUnavailable": "История кодов восстановления не содержит список кодов, поэтому восстановление недоступно.",
-	"favoriteFlag": "Избранное",
-	"archivedFlag": "Архив",
-	"pinnedFlag": "Закреплено",
-	"deletedFlag": "Удалено",
-	"usedCount": "Количество использований",
-	"noteContent": "Содержимое",
-	"cvv": "CVV",
-	"routingNumber": "Номер маршрута",
-	"cardType": "Тип карты",
-	"cardNetwork": "Платежная сеть",
-	"fileVersion": "Версия файла",
-	"fileName": "Имя файла",
-	"fileExtension": "Расширение",
-	"mimeType": "MIME-тип",
-	"fileSize": "Размер файла",
-	"filePath": "Путь к файлу",
-	"otpType": "Тип OTP",
-	"secretEncoding": "Кодировка секрета",
-	"counter": "Счетчик",
-	"linkedPassword": "Связанный пароль",
-	"documentType": "Тип документа",
-	"documentText": "Текст документа",
-	"pageCount": "Количество страниц",
-	"rotationPeriodDays": "Период ротации",
-	"lastRotatedAt": "Последняя ротация",
-	"metadata": "Метаданные",
-	"keySize": "Размер ключа",
-	"passphraseHint": "Подсказка к passphrase",
-	"comment": "Комментарий",
-	"createdBy": "Создано пользователем",
-	"publicKeyFileId": "Файл открытого ключа",
-	"privateKeyFileId": "Файл закрытого ключа",
-	"validFrom": "Действителен с",
-	"validTo": "Действителен до",
-	"keyUsage": "Использование ключа",
-	"extensions": "Расширения",
-	"pfx": "PFX-бандл",
-	"lastCheckedAt": "Последняя проверка",
-	"lastBalanceCheckedAt": "Последняя проверка баланса",
-	"idType": "Тип ID",
-	"idNumber": "Номер ID",
-	"customField": "Пользовательское поле",
-	"tier": "Уровень"
+  "@@locale": "ru",
+  "screenTitle": "История: {Entity}",
+  "@screenTitle": {
+    "placeholders": {
+      "Entity": {
+        "type": "String"
+      }
+    }
+  },
+  "summaryTitle": "Таймлайн версий",
+  "summaryCount": "{Count} версий",
+  "@summaryCount": {
+    "placeholders": {
+      "Count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchPlaceholder": "Поиск по истории",
+  "actionFilterLabel": "Действие",
+  "dateFilterLabel": "Период",
+  "filterAllActions": "Все действия",
+  "filterAllTime": "За всё время",
+  "filterLast7Days": "Последние 7 дней",
+  "filterLast30Days": "Последние 30 дней",
+  "refresh": "Обновить",
+  "retry": "Повторить",
+  "loadingMore": "Загрузка еще...",
+  "emptyState": "Записи истории не найдены",
+  "selectRevisionHint": "Выберите версию, чтобы посмотреть изменения.",
+  "revisionTitle": "Детали версии",
+  "restoreTitle": "Восстановить версию",
+  "restoreDescription": "Восстановить \"{Name}\" и перезаписать текущие данные.",
+  "@restoreDescription": {
+    "placeholders": {
+      "Name": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreAction": "Восстановить",
+  "restoreSuccess": "Версия восстановлена",
+  "restoreError": "Не удалось восстановить версию",
+  "cancel": "Отмена",
+  "changedFields": "Измененных полей: {Count}",
+  "@changedFields": {
+    "placeholders": {
+      "Count": {
+        "type": "int"
+      }
+    }
+  },
+  "metadataTitle": "Метаданные снимка",
+  "diffTitle": "Что изменилось",
+  "noDiffs": "Для этой версии нет отслеживаемых различий",
+  "before": "До",
+  "after": "После",
+  "emptyValue": "пусто",
+  "hiddenValue": "скрыто",
+  "binaryValue": "двоичные данные",
+  "actionCreated": "Создано",
+  "actionModified": "Изменено",
+  "actionDeleted": "Удалено",
+  "compareToNewerRevision": "Сравнение с более новой версией",
+  "compareToCurrent": "Сравнение с текущими данными",
+  "compareToDeleted": "Сравнение с удаленным состоянием",
+  "changeAdded": "Добавлено",
+  "changeRemoved": "Удалено",
+  "changeChanged": "Изменено",
+  "tagsNotInHistory": "Теги не хранятся в снимках истории и не будут восстановлены.",
+  "noteLinkNotInHistory": "Связанные ссылки на заметки не хранятся в снимках истории.",
+  "documentPartialRestore": "Восстановление документа затрагивает только метаданные и агрегированный текст; страницы не откатываются.",
+  "fileRestoreUnavailable": "Историческое содержимое файла больше недоступно.",
+  "recoveryCodesRestoreUnavailable": "История кодов восстановления не содержит список кодов, поэтому восстановление недоступно.",
+  "favoriteFlag": "Избранное",
+  "archivedFlag": "Архив",
+  "pinnedFlag": "Закреплено",
+  "deletedFlag": "Удалено",
+  "usedCount": "Количество использований",
+  "noteContent": "Содержимое",
+  "cvv": "CVV",
+  "routingNumber": "Номер маршрута",
+  "cardType": "Тип карты",
+  "cardNetwork": "Платежная сеть",
+  "fileVersion": "Версия файла",
+  "fileName": "Имя файла",
+  "fileExtension": "Расширение",
+  "mimeType": "MIME-тип",
+  "fileSize": "Размер файла",
+  "filePath": "Путь к файлу",
+  "otpType": "Тип OTP",
+  "secretEncoding": "Кодировка секрета",
+  "counter": "Счетчик",
+  "linkedPassword": "Связанный пароль",
+  "documentType": "Тип документа",
+  "documentText": "Текст документа",
+  "pageCount": "Количество страниц",
+  "rotationPeriodDays": "Период ротации",
+  "lastRotatedAt": "Последняя ротация",
+  "metadata": "Метаданные",
+  "keySize": "Размер ключа",
+  "passphraseHint": "Подсказка к passphrase",
+  "comment": "Комментарий",
+  "createdBy": "Создано пользователем",
+  "publicKeyFileId": "Файл открытого ключа",
+  "privateKeyFileId": "Файл закрытого ключа",
+  "validFrom": "Действителен с",
+  "validTo": "Действителен до",
+  "keyUsage": "Использование ключа",
+  "extensions": "Расширения",
+  "pfx": "PFX-бандл",
+  "lastCheckedAt": "Последняя проверка",
+  "lastBalanceCheckedAt": "Последняя проверка баланса",
+  "idType": "Тип ID",
+  "idNumber": "Номер ID",
+  "customField": "Пользовательское поле",
+  "tier": "Уровень",
+  "clearHistory": "???????? ???????",
+  "clearHistoryDescription": "??????? ??? ??????? ??? ????? ?????????",
+  "deleteRevision": "??????? ???????",
+  "deleteRevisionDescription": "??????? ??? ??????? ??????? ??? \"{Name}\"?",
+  "@deleteRevisionDescription": {
+    "placeholders": {
+      "Name": {
+        "type": "String"
+      }
+    }
+  },
+  "revisionDeleted": "??????? ???????",
+  "revisionDeleteError": "?? ??????? ??????? ???????",
+  "historyCleared": "??????? ???????",
+  "historyClearError": "?? ??????? ???????? ???????"
 }

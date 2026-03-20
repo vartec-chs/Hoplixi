@@ -123,6 +123,123 @@ class HistoryRepository {
     });
   }
 
+  Future<bool> deleteRevision({
+    required EntityType entityType,
+    required String revisionId,
+  }) async {
+    final affected = switch (entityType) {
+      EntityType.password =>
+        await store.passwordHistoryDao.deletePasswordHistoryById(revisionId),
+      EntityType.note => await store.noteHistoryDao.deleteNoteHistoryById(
+        revisionId,
+      ),
+      EntityType.bankCard =>
+        await store.bankCardHistoryDao.deleteBankCardHistoryById(revisionId),
+      EntityType.file => await store.fileHistoryDao.deleteFileHistoryById(
+        revisionId,
+      ),
+      EntityType.otp => await store.otpHistoryDao.deleteOtpHistoryById(
+        revisionId,
+      ),
+      EntityType.document =>
+        await store.documentHistoryDao.deleteDocumentHistoryById(revisionId),
+      EntityType.contact =>
+        await store.contactHistoryDao.deleteContactHistoryById(revisionId),
+      EntityType.apiKey => await store.apiKeyHistoryDao.deleteApiKeyHistoryById(
+        revisionId,
+      ),
+      EntityType.sshKey => await store.sshKeyHistoryDao.deleteSshKeyHistoryById(
+        revisionId,
+      ),
+      EntityType.certificate =>
+        await store.certificateHistoryDao.deleteCertificateHistoryById(
+          revisionId,
+        ),
+      EntityType.cryptoWallet =>
+        await store.cryptoWalletHistoryDao.deleteCryptoWalletHistoryById(
+          revisionId,
+        ),
+      EntityType.wifi => await store.wifiHistoryDao.deleteWifiHistoryById(
+        revisionId,
+      ),
+      EntityType.identity =>
+        await store.identityHistoryDao.deleteIdentityHistoryById(revisionId),
+      EntityType.licenseKey =>
+        await store.licenseKeyHistoryDao.deleteLicenseKeyHistoryById(
+          revisionId,
+        ),
+      EntityType.recoveryCodes =>
+        await store.recoveryCodesHistoryDao.deleteRecoveryCodesHistoryById(
+          revisionId,
+        ),
+      EntityType.loyaltyCard =>
+        await store.loyaltyCardHistoryDao.deleteLoyaltyCardHistoryById(
+          revisionId,
+        ),
+    };
+    return affected > 0;
+  }
+
+  Future<bool> clearAllHistory({
+    required EntityType entityType,
+    required String entityId,
+  }) async {
+    final affected = switch (entityType) {
+      EntityType.password =>
+        await store.passwordHistoryDao.deletePasswordHistoryByPasswordId(
+          entityId,
+        ),
+      EntityType.note => await store.noteHistoryDao.deleteNoteHistoryByNoteId(
+        entityId,
+      ),
+      EntityType.bankCard =>
+        await store.bankCardHistoryDao.deleteBankCardHistoryByOriginalId(
+          entityId,
+        ),
+      EntityType.file => await store.fileHistoryDao.deleteFileHistoryByFileId(
+        entityId,
+      ),
+      EntityType.otp => await store.otpHistoryDao.deleteOtpHistoryByOtpId(
+        entityId,
+      ),
+      EntityType.document =>
+        await store.documentHistoryDao.deleteDocumentHistoryByDocumentId(
+          entityId,
+        ),
+      EntityType.contact =>
+        await store.contactHistoryDao.deleteContactHistoryByContactId(entityId),
+      EntityType.apiKey =>
+        await store.apiKeyHistoryDao.deleteApiKeyHistoryByApiKeyId(entityId),
+      EntityType.sshKey =>
+        await store.sshKeyHistoryDao.deleteSshKeyHistoryBySshKeyId(entityId),
+      EntityType.certificate =>
+        await store.certificateHistoryDao
+            .deleteCertificateHistoryByCertificateId(entityId),
+      EntityType.cryptoWallet =>
+        await store.cryptoWalletHistoryDao
+            .deleteCryptoWalletHistoryByCryptoWalletId(entityId),
+      EntityType.wifi => await store.wifiHistoryDao.deleteWifiHistoryByWifiId(
+        entityId,
+      ),
+      EntityType.identity =>
+        await store.identityHistoryDao.deleteIdentityHistoryByIdentityId(
+          entityId,
+        ),
+      EntityType.licenseKey =>
+        await store.licenseKeyHistoryDao.deleteLicenseKeyHistoryByLicenseKeyId(
+          entityId,
+        ),
+      EntityType.recoveryCodes =>
+        await store.recoveryCodesHistoryDao
+            .deleteRecoveryCodesHistoryByRecoveryCodesId(entityId),
+      EntityType.loyaltyCard =>
+        await store.loyaltyCardHistoryDao.deleteLoyaltyCardHistoryByOriginalId(
+          entityId,
+        ),
+    };
+    return affected >= 0;
+  }
+
   List<_HistorySnapshot> _applyFilters(
     List<_HistorySnapshot> history,
     HistoryQueryState query,

@@ -10,6 +10,10 @@ import 'package:hoplixi/shared/ui/modal_sheet_close_button.dart';
 import 'package:hoplixi/shared/ui/slider_button.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
+enum _HistoryAppBarAction { clearAllHistory }
+
+enum _TimelineItemMenuAction { deleteRevision }
+
 class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({
     super.key,
@@ -161,6 +165,163 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     );
   }
 
+  Future<void> _showFiltersSheet(HistoryScreenState screenState) async {
+    final l10n = context.t.history;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.action_filter_label,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: HistoryActionFilter.values
+                    .map(
+                      (filter) => ChoiceChip(
+                        label: Text(_actionFilterLabel(context, filter)),
+                        selected: screenState.query.actionFilter == filter,
+                        onSelected: (_) async {
+                          await ref
+                              .read(historyControllerProvider(_scope).notifier)
+                              .setActionFilter(filter);
+                          if (context.mounted) Navigator.of(context).pop();
+                        },
+                      ),
+                    )
+                    .toList(),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                l10n.date_filter_label,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: HistoryDatePreset.values
+                    .map(
+                      (preset) => ChoiceChip(
+                        label: Text(_datePresetLabel(context, preset)),
+                        selected: screenState.query.datePreset == preset,
+                        onSelected: (_) async {
+                          await ref
+                              .read(historyControllerProvider(_scope).notifier)
+                              .setDatePreset(preset);
+                          if (context.mounted) Navigator.of(context).pop();
+                        },
+                      ),
+                    )
+                    .toList(),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  TextButton.icon(
+                    onPressed: () async {
+                      final controller = ref.read(
+                        historyControllerProvider(_scope).notifier,
+                      );
+                      _searchController.clear();
+                      await controller.setSearch('');
+                      await controller.setActionFilter(HistoryActionFilter.all);
+                      await controller.setDatePreset(HistoryDatePreset.all);
+                      if (context.mounted) Navigator.of(context).pop();
+                    },
+                    icon: const Icon(Icons.filter_alt_off_outlined),
+                    label: Text(context.t.common.clear),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(l10n.cancel),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmDeleteRevision(HistoryTimelineItem item) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.t.history.delete_revision),
+        content: Text(
+          context.t.history.delete_revision_description(Name: item.title),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(context.t.history.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(context.t.common.delete),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final success = await ref
+        .read(historyControllerProvider(_scope).notifier)
+        .deleteRevision(item.revisionId);
+    if (!mounted) return;
+    if (success) {
+      Toaster.success(title: context.t.history.revision_deleted);
+    } else {
+      Toaster.error(title: context.t.history.revision_delete_error);
+    }
+  }
+
+  Future<void> _confirmClearAllHistory() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.t.history.clear_history),
+        content: Text(context.t.history.clear_history_description),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(context.t.history.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(context.t.common.clear),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final success = await ref
+        .read(historyControllerProvider(_scope).notifier)
+        .clearAllHistory();
+    if (!mounted) return;
+    if (success) {
+      Toaster.success(title: context.t.history.history_cleared);
+    } else {
+      Toaster.error(title: context.t.history.history_clear_error);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final asyncState = ref.watch(historyControllerProvider(_scope));
@@ -176,6 +337,20 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             tooltip: l10n.refresh,
             onPressed: () =>
                 ref.read(historyControllerProvider(_scope).notifier).refresh(),
+          ),
+          PopupMenuButton<_HistoryAppBarAction>(
+            onSelected: (action) {
+              switch (action) {
+                case _HistoryAppBarAction.clearAllHistory:
+                  _confirmClearAllHistory();
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem<_HistoryAppBarAction>(
+                value: _HistoryAppBarAction.clearAllHistory,
+                child: Text(l10n.clear_history),
+              ),
+            ],
           ),
         ],
       ),
@@ -210,22 +385,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               onSearchChanged: (value) => ref
                   .read(historyControllerProvider(_scope).notifier)
                   .setSearch(value),
-              onActionFilterChanged: (filter) => ref
-                  .read(historyControllerProvider(_scope).notifier)
-                  .setActionFilter(filter),
-              onDatePresetChanged: (preset) => ref
-                  .read(historyControllerProvider(_scope).notifier)
-                  .setDatePreset(preset),
-              onClearFilters: () async {
-                final controller = ref.read(
-                  historyControllerProvider(_scope).notifier,
-                );
-                _searchController.clear();
-                await controller.setSearch('');
-                await controller.setActionFilter(HistoryActionFilter.all);
-                await controller.setDatePreset(HistoryDatePreset.all);
-              },
+              onOpenFilters: () => _showFiltersSheet(screenState),
               onSelect: _showDetailSheet,
+              onDeleteRevision: _confirmDeleteRevision,
             ),
           );
         },
@@ -259,10 +421,9 @@ class _HistoryNarrowLayout extends StatelessWidget {
     required this.onRefresh,
     required this.onLoadMore,
     required this.onSearchChanged,
-    required this.onActionFilterChanged,
-    required this.onDatePresetChanged,
-    required this.onClearFilters,
+    required this.onOpenFilters,
     required this.onSelect,
+    required this.onDeleteRevision,
   });
 
   final HistoryScreenState state;
@@ -271,10 +432,9 @@ class _HistoryNarrowLayout extends StatelessWidget {
   final Future<void> Function() onRefresh;
   final VoidCallback onLoadMore;
   final ValueChanged<String> onSearchChanged;
-  final ValueChanged<HistoryActionFilter> onActionFilterChanged;
-  final ValueChanged<HistoryDatePreset> onDatePresetChanged;
-  final Future<void> Function() onClearFilters;
+  final VoidCallback onOpenFilters;
   final Future<void> Function(HistoryTimelineItem item) onSelect;
+  final Future<void> Function(HistoryTimelineItem item) onDeleteRevision;
 
   @override
   Widget build(BuildContext context) {
@@ -304,77 +464,61 @@ class _HistoryNarrowLayout extends StatelessWidget {
                           style: theme.textTheme.titleSmall,
                         ),
                         const SizedBox(height: 10),
-                        TextField(
-                          controller: searchController,
-                          onChanged: onSearchChanged,
-                          textInputAction: TextInputAction.search,
-                          decoration: InputDecoration(
-                            prefixIcon: const Icon(Icons.search),
-                            hintText: l10n.search_placeholder,
-                            suffixIcon: state.query.search.isEmpty
-                                ? null
-                                : IconButton(
-                                    icon: const Icon(Icons.clear),
-                                    onPressed: () {
-                                      searchController.clear();
-                                      onSearchChanged('');
-                                    },
-                                  ),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Text(
-                          l10n.action_filter_label,
-                          style: theme.textTheme.titleSmall,
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: HistoryActionFilter.values
-                              .map(
-                                (filter) => ChoiceChip(
-                                  label: Text(
-                                    _actionFilterLabel(context, filter),
-                                  ),
-                                  selected: state.query.actionFilter == filter,
-                                  onSelected: (_) =>
-                                      onActionFilterChanged(filter),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: searchController,
+                                onChanged: onSearchChanged,
+                                textInputAction: TextInputAction.search,
+                                decoration: InputDecoration(
+                                  prefixIcon: const Icon(Icons.search),
+                                  hintText: l10n.search_placeholder,
+                                  suffixIcon: state.query.search.isEmpty
+                                      ? null
+                                      : IconButton(
+                                          icon: const Icon(Icons.clear),
+                                          onPressed: () {
+                                            searchController.clear();
+                                            onSearchChanged('');
+                                          },
+                                        ),
                                 ),
-                              )
-                              .toList(),
-                        ),
-                        const SizedBox(height: 14),
-                        Text(
-                          l10n.date_filter_label,
-                          style: theme.textTheme.titleSmall,
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: HistoryDatePreset.values
-                              .map(
-                                (preset) => ChoiceChip(
-                                  label: Text(
-                                    _datePresetLabel(context, preset),
-                                  ),
-                                  selected: state.query.datePreset == preset,
-                                  onSelected: (_) =>
-                                      onDatePresetChanged(preset),
-                                ),
-                              )
-                              .toList(),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            IconButton.filledTonal(
+                              onPressed: onOpenFilters,
+                              icon: const Icon(Icons.tune),
+                              tooltip: context.t.common.filters,
+                            ),
+                          ],
                         ),
                         if (state.query.hasActiveFilters) ...[
-                          const SizedBox(height: 14),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: TextButton.icon(
-                              onPressed: onClearFilters,
-                              icon: const Icon(Icons.filter_alt_off_outlined),
-                              label: Text(l10n.filter_all_actions),
-                            ),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              if (state.query.actionFilter !=
+                                  HistoryActionFilter.all)
+                                _SummaryPill(
+                                  icon: Icons.tune,
+                                  label: _actionFilterLabel(
+                                    context,
+                                    state.query.actionFilter,
+                                  ),
+                                ),
+                              if (state.query.datePreset !=
+                                  HistoryDatePreset.all)
+                                _SummaryPill(
+                                  icon: Icons.schedule,
+                                  label: _datePresetLabel(
+                                    context,
+                                    state.query.datePreset,
+                                  ),
+                                ),
+                            ],
                           ),
                         ],
                       ],
@@ -435,6 +579,7 @@ class _HistoryNarrowLayout extends StatelessWidget {
                     item: item,
                     isSelected: item.revisionId == state.selectedRevisionId,
                     onTap: () => onSelect(item),
+                    onDelete: () => onDeleteRevision(item),
                   );
                 },
               ),
@@ -547,11 +692,13 @@ class _TimelineRevisionCard extends StatelessWidget {
     required this.item,
     required this.isSelected,
     required this.onTap,
+    required this.onDelete,
   });
 
   final HistoryTimelineItem item;
   final bool isSelected;
   final VoidCallback onTap;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -602,7 +749,26 @@ class _TimelineRevisionCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  _ActionBadge(action: item.action),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      _ActionBadge(action: item.action),
+                      PopupMenuButton<_TimelineItemMenuAction>(
+                        onSelected: (action) {
+                          switch (action) {
+                            case _TimelineItemMenuAction.deleteRevision:
+                              onDelete();
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          PopupMenuItem<_TimelineItemMenuAction>(
+                            value: _TimelineItemMenuAction.deleteRevision,
+                            child: Text(context.t.history.delete_revision),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ],
               ),
               const SizedBox(height: 14),
