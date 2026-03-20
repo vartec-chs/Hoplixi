@@ -1478,6 +1478,22 @@ packages:
       relative: true
     source: path
     version: "0.0.2"
+  op_result:
+    dependency: transitive
+    description:
+      name: op_result
+      sha256: fbd86b49976732e747d2a0d3c586ff5c2ada38e59a370c9866f19c500d4ec00f
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.0"
+  op_wifi_utils:
+    dependency: "direct main"
+    description:
+      name: op_wifi_utils
+      sha256: "4be10615680d2c2bdf6073b2fb16aaba01e90472801410cc52a339e7f5df5e48"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.4.3"
   open_dir:
     dependency: "direct main"
     description:

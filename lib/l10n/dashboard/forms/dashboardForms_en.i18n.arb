@@ -178,6 +178,7 @@
 	"apiKeyGetKeyError": "Error getting key",
 	"networkLabel": "Network",
 	"wifiPasswordLabel": "Password",
+	"wifiSsidAutoGet": "Auto-get from connected network",
 	"wifiLastConnectedBssidLabel": "Last connected BSSID",
 	"certificateCreated": "Certificate created",
 	"commonLoadError": "Load error",

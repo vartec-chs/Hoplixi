@@ -9,6 +9,8 @@ import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_view_section.dart';
 
+import '../services/wifi_os_bridge.dart';
+
 class WifiViewScreen extends ConsumerStatefulWidget {
   const WifiViewScreen({super.key, required this.wifiId});
 
@@ -114,6 +116,45 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
     Toaster.success(title: context.t.dashboard_forms.common_field_copied(Field: title));
   }
 
+  Future<String?> _loadPasswordForConnection() async {
+    if (_password != null) {
+      return _password;
+    }
+
+    final dao = await ref.read(wifiDaoProvider.future);
+    final value = await dao.getPasswordFieldById(widget.wifiId);
+    return value?.trim().isEmpty == true ? null : value;
+  }
+
+  Future<void> _exportToWifi() async {
+    final l10n = context.t.dashboard_forms;
+    final ssid = _ssid.trim();
+
+    if (ssid.isEmpty) {
+      Toaster.warning(title: l10n.validation_required_ssid);
+      return;
+    }
+
+    final password = await _loadPasswordForConnection();
+    if (!mounted) return;
+
+    final result = await WifiOsBridge.connect(ssid: ssid, password: password);
+    if (!mounted) return;
+
+    if (!result.isSuccess) {
+      Toaster.error(
+        title: l10n.network_label,
+        description: WifiOsBridge.describeError(result.error!),
+      );
+      return;
+    }
+
+    Toaster.success(
+      title: l10n.network_label,
+      description: ssid,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.t.dashboard_forms;
@@ -122,6 +163,11 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
       appBar: AppBar(
         title: Text(l10n.view_wifi),
         actions: [
+          IconButton(
+            tooltip: l10n.network_label,
+            onPressed: _loading ? null : _exportToWifi,
+            icon: const Icon(Icons.upload_rounded),
+          ),
           IconButton(
             tooltip: l10n.edit,
             onPressed: () => context.push(

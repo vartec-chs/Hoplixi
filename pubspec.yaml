@@ -116,6 +116,7 @@ dependencies:
     git: https://github.com/vartec-chs/typed_prefs_flutter
   no_screenshot: ^1.0.0
   flutter_contacts: ^2.0.1
+  op_wifi_utils: ^1.4.3
 
 hooks:
   user_defines:

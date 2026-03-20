@@ -203,6 +203,7 @@
 	"viewSshKey": "Просмотр SSH-ключа",
 	"contactNotFound": "Контакт не найден",
 	"wifiNotFound": "Wi-Fi сеть не найдена",
+	"wifiSsidAutoGet": "Автополучение ssid из подключенной сети",
 	"certificateNotFound": "Сертификат не найден",
 	"cryptoWalletNotFound": "Криптокошелек не найден",
 	"sshKeyNotFound": "SSH-ключ не найден",

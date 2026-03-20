@@ -8,5 +8,7 @@
 	</array>
 	<key>com.apple.developer.device-information.user-assigned-device-name</key>
 	<true/>
+	<key>com.apple.developer.networking.HotspotConfiguration</key>
+	<true/>
 </dict>
 </plist>

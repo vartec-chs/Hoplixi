@@ -96,5 +96,11 @@
     </array>
     <key>NSContactsUsageDescription</key>
     <string>We need access to your contacts to...</string>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>The app needs local network access to connect to your device.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>The app requires access to your location to manage Wi-Fi connections.</string>
+    <key>com.apple.developer.networking.HotspotConfiguration</key>
+    <true/>
   </dict>
 </plist>

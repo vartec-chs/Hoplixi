@@ -8,11 +8,14 @@ import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picke
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
-import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_editor.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:op_wifi_utils/op_wifi_utils.dart';
 
+import '../models/wifi_form_state.dart';
 import '../providers/wifi_form_provider.dart';
+import '../services/wifi_os_bridge.dart';
 
 class WifiFormScreen extends ConsumerStatefulWidget {
   const WifiFormScreen({super.key, this.wifiId});
@@ -84,6 +87,63 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
         description: context.t.dashboard_forms.check_form_fields_and_try_again,
       );
     }
+  }
+
+  Future<void> _fillCurrentSsid() async {
+    final l10n = context.t.dashboard_forms;
+
+    if (!WifiOsBridge.supportsWifiConnection) {
+      Toaster.info(
+        title: l10n.network_label,
+        description: WifiOsBridge.describeError(
+          OpWifiUtilsError.unsupportedPlatform,
+        ),
+      );
+      return;
+    }
+
+    final result = await WifiOsBridge.getCurrentSsid();
+    if (!mounted) return;
+
+    if (!result.isSuccess || result.value == null) {
+      Toaster.error(
+        title: l10n.common_load_error,
+        description: WifiOsBridge.describeError(result.error!),
+      );
+      return;
+    }
+
+    ref
+        .read(wifiFormProvider(widget.wifiId).notifier)
+        .applyImportedSsid(result.value!);
+
+    Toaster.success(title: l10n.wifi_ssid_label, description: result.value!);
+  }
+
+  Future<void> _exportToWifi(WifiFormState state) async {
+    final l10n = context.t.dashboard_forms;
+    final ssid = state.ssid.trim();
+
+    if (ssid.isEmpty) {
+      Toaster.warning(title: l10n.validation_required_ssid);
+      return;
+    }
+
+    final result = await WifiOsBridge.connect(
+      ssid: ssid,
+      password: state.password,
+    );
+    if (!mounted) return;
+
+    if (!result.isSuccess) {
+      Toaster.error(
+        title: l10n.network_label,
+        description: WifiOsBridge.describeError(result.error!),
+      );
+      return;
+    }
+
+    Toaster.success(title: l10n.network_label, description: ssid);
   }
 
   @override
@@ -163,6 +223,11 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                   : context.t.dashboard_forms.new_wifi_network,
             ),
             actions: [
+              IconButton(
+                tooltip: context.t.dashboard_forms.network_label,
+                onPressed: state.isSaving ? null : () => _exportToWifi(state),
+                icon: const Icon(Icons.upload_rounded),
+              ),
               if (state.isSaving)
                 const Padding(
                   padding: EdgeInsets.all(16.0),
@@ -190,6 +255,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                   ),
                   onChanged: notifier.setName,
                 ),
+
                 const SizedBox(height: 12),
                 TextField(
                   controller: _ssidController,
@@ -198,6 +264,11 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                     labelText: context.t.dashboard_forms.wifi_ssid_label,
                     errorText: state.ssidError,
                     prefixIcon: const Icon(LucideIcons.wifi),
+                    suffixIcon: IconButton(
+                      tooltip: context.t.dashboard_forms.wifi_ssid_auto_get,
+                      icon: const Icon(Icons.download_rounded),
+                      onPressed: _fillCurrentSsid,
+                    ),
                   ),
                   onChanged: notifier.setSsid,
                 ),
@@ -244,7 +315,8 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                       controller: _eapMethodController,
                       decoration: primaryInputDecoration(
                         context,
-                        labelText: context.t.dashboard_forms.wifi_eap_method_label,
+                        labelText:
+                            context.t.dashboard_forms.wifi_eap_method_label,
                         prefixIcon: const Icon(LucideIcons.settings),
                       ),
                       onChanged: notifier.setEapMethod,
@@ -254,7 +326,8 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                       controller: _usernameController,
                       decoration: primaryInputDecoration(
                         context,
-                        labelText: context.t.dashboard_forms.wifi_username_label,
+                        labelText:
+                            context.t.dashboard_forms.wifi_username_label,
                         prefixIcon: const Icon(LucideIcons.user),
                       ),
                       onChanged: notifier.setUsername,
@@ -264,7 +337,8 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                       controller: _identityController,
                       decoration: primaryInputDecoration(
                         context,
-                        labelText: context.t.dashboard_forms.wifi_identity_label,
+                        labelText:
+                            context.t.dashboard_forms.wifi_identity_label,
                         prefixIcon: const Icon(LucideIcons.idCard),
                       ),
                       onChanged: notifier.setIdentity,
@@ -284,7 +358,10 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                       controller: _bssidController,
                       decoration: primaryInputDecoration(
                         context,
-                        labelText: context.t.dashboard_forms.wifi_last_connected_bssid_label,
+                        labelText: context
+                            .t
+                            .dashboard_forms
+                            .wifi_last_connected_bssid_label,
                         prefixIcon: const Icon(LucideIcons.monitor),
                       ),
                       onChanged: notifier.setLastConnectedBssid,
@@ -295,7 +372,8 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                       keyboardType: TextInputType.number,
                       decoration: primaryInputDecoration(
                         context,
-                        labelText: context.t.dashboard_forms.wifi_priority_label,
+                        labelText:
+                            context.t.dashboard_forms.wifi_priority_label,
                         errorText: state.priorityError,
                         prefixIcon: const Icon(LucideIcons.arrowUpDown),
                       ),
@@ -307,7 +385,8 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                       maxLines: 2,
                       decoration: primaryInputDecoration(
                         context,
-                        labelText: context.t.dashboard_forms.wifi_qr_payload_label,
+                        labelText:
+                            context.t.dashboard_forms.wifi_qr_payload_label,
                         prefixIcon: const Icon(LucideIcons.qrCode),
                       ),
                       onChanged: notifier.setQrCodePayload,
@@ -322,7 +401,9 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                     SwitchListTile(
                       value: state.hidden,
                       onChanged: notifier.setHidden,
-                      title: Text(context.t.dashboard_forms.wifi_hidden_network_label),
+                      title: Text(
+                        context.t.dashboard_forms.wifi_hidden_network_label,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     CustomFieldsEditor(

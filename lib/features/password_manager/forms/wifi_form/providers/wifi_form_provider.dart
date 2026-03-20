@@ -80,6 +80,25 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
     ),
   );
 
+  void applyImportedSsid(String value) {
+    final normalized = value.trim();
+    final shouldFillName = _current.name.trim().isEmpty;
+    _update(
+      (s) => s.copyWith(
+        name: shouldFillName ? normalized : s.name,
+        ssid: normalized,
+        nameError: shouldFillName
+            ? (normalized.isEmpty
+                ? t.dashboard_forms.validation_required_name
+                : null)
+            : s.nameError,
+        ssidError: normalized.isEmpty
+            ? t.dashboard_forms.validation_required_ssid
+            : null,
+      ),
+    );
+  }
+
   void setPassword(String value) => _update((s) => s.copyWith(password: value));
   void setSecurity(String value) => _update((s) => s.copyWith(security: value));
   void setHidden(bool value) => _update((s) => s.copyWith(hidden: value));
