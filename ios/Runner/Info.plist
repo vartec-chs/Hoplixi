@@ -94,5 +94,7 @@
       <string>fetch</string>
       <string>remote-notification</string>
     </array>
+    <key>NSContactsUsageDescription</key>
+    <string>We need access to your contacts to...</string>
   </dict>
 </plist>

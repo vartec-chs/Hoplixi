@@ -127,6 +127,32 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
     _update((s) => s.copyWith(customFields: fields));
   }
 
+  void applyImportedContact({
+    required String name,
+    String? phone,
+    String? email,
+    String? company,
+    String? jobTitle,
+    String? address,
+    String? website,
+    DateTime? birthday,
+  }) {
+    _update(
+      (s) => s.copyWith(
+        name: name,
+        phone: phone ?? '',
+        email: email ?? '',
+        company: company ?? '',
+        jobTitle: jobTitle ?? '',
+        address: address ?? '',
+        website: website ?? '',
+        birthday: birthday,
+        nameError: _validateName(name),
+        emailError: _validateEmail(email ?? ''),
+      ),
+    );
+  }
+
   String? _validateName(String value) {
     if (value.trim().isEmpty) return t.dashboard_forms.validation_required_contact_name;
     return null;

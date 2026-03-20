@@ -8,11 +8,15 @@ import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picke
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
-import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_editor.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../models/contact_form_state.dart';
+import '../models/contact_os_payload.dart';
 import '../providers/contact_form_provider.dart';
+import '../services/contact_os_bridge.dart';
+import '../widgets/os_contact_picker_modal.dart';
 
 class ContactFormScreen extends ConsumerStatefulWidget {
   const ContactFormScreen({super.key, this.contactId});
@@ -89,6 +93,118 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
     }
   }
 
+  Future<void> _importFromOsContact() async {
+    final l10n = context.t.dashboard_forms;
+
+    if (!ContactOsBridge.supportsNativeOsContacts) {
+      Toaster.info(
+        title: l10n.os_contacts_unavailable,
+        description: l10n.os_contacts_unavailable_description,
+      );
+      return;
+    }
+
+    try {
+      final permissionStatus = await ContactOsBridge.requestReadPermission();
+      final hasPermission =
+          permissionStatus.name == 'granted' ||
+          permissionStatus.name == 'limited';
+
+      if (!mounted) return;
+
+      if (!hasPermission) {
+        Toaster.warning(
+          title: l10n.os_contacts_permission_denied,
+          description: l10n.os_contacts_permission_denied_description,
+        );
+        return;
+      }
+
+      final contacts = await ContactOsBridge.loadImportCandidates();
+      if (!mounted) return;
+
+      if (contacts.isEmpty) {
+        Toaster.warning(title: l10n.contact_not_found);
+        return;
+      }
+
+      final contact = await showOsContactPickerModal(
+        context,
+        contacts: contacts,
+      );
+
+      if (!mounted) return;
+
+      if (contact == null) {
+        Toaster.error(title: l10n.os_contact_import_failed);
+        return;
+      }
+
+      final payload = ContactOsBridge.toPayload(contact);
+      ref
+          .read(contactFormProvider(widget.contactId).notifier)
+          .applyImportedContact(
+            name: payload.name ?? '',
+            phone: payload.phone,
+            email: payload.email,
+            company: payload.company,
+            jobTitle: payload.jobTitle,
+            address: payload.address,
+            website: payload.website,
+            birthday: payload.birthday,
+          );
+
+      Toaster.success(title: l10n.os_contact_imported);
+    } catch (error) {
+      if (!mounted) return;
+      Toaster.error(
+        title: l10n.os_contact_import_failed,
+        description: '$error',
+      );
+    }
+  }
+
+  Future<void> _exportToOsContact(ContactFormState state) async {
+    final l10n = context.t.dashboard_forms;
+
+    if (!ContactOsBridge.supportsNativeOsContacts) {
+      Toaster.info(
+        title: l10n.os_contacts_unavailable,
+        description: l10n.os_contacts_unavailable_description,
+      );
+      return;
+    }
+
+    final payload = ContactOsPayload(
+      name: state.name,
+      phone: state.phone,
+      email: state.email,
+      company: state.company,
+      jobTitle: state.jobTitle,
+      address: state.address,
+      website: state.website,
+      birthday: state.birthday,
+    );
+
+    if (ContactOsBridge.buildContact(payload) == null) {
+      Toaster.warning(title: l10n.os_contact_export_requires_data);
+      return;
+    }
+
+    try {
+      final createdId = await ContactOsBridge.export(payload);
+      if (!mounted || createdId == null) return;
+
+      Toaster.success(title: l10n.os_contact_exported);
+    } catch (error) {
+      if (!mounted) return;
+      Toaster.error(
+        title: l10n.os_contact_export_failed,
+        description: '$error',
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final stateAsync = ref.watch(contactFormProvider(widget.contactId));
@@ -152,6 +268,19 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                   : context.t.dashboard_forms.new_contact,
             ),
             actions: [
+              IconButton(
+                tooltip:
+                    context.t.dashboard_forms.import_contact_from_os_tooltip,
+                icon: const Icon(Icons.download_rounded),
+                onPressed: state.isSaving ? null : _importFromOsContact,
+              ),
+              IconButton(
+                tooltip: context.t.dashboard_forms.export_contact_to_os_tooltip,
+                icon: const Icon(Icons.upload_rounded),
+                onPressed: state.isSaving
+                    ? null
+                    : () => _exportToOsContact(state),
+              ),
               if (state.isSaving)
                 const Padding(
                   padding: EdgeInsets.all(16.0),

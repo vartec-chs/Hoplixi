@@ -9,6 +9,9 @@ import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_view_section.dart';
 
+import '../models/contact_os_payload.dart';
+import '../services/contact_os_bridge.dart';
+
 class ContactViewScreen extends ConsumerStatefulWidget {
   const ContactViewScreen({super.key, required this.contactId});
 
@@ -82,6 +85,47 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
     return '${value.day.toString().padLeft(2, '0')}.${value.month.toString().padLeft(2, '0')}.${value.year}';
   }
 
+  Future<void> _exportToOsContact() async {
+    final l10n = context.t.dashboard_forms;
+
+    if (!ContactOsBridge.supportsNativeOsContacts) {
+      Toaster.info(
+        title: l10n.os_contacts_unavailable,
+        description: l10n.os_contacts_unavailable_description,
+      );
+      return;
+    }
+
+    final payload = ContactOsPayload(
+      name: _name,
+      phone: _phone,
+      email: _email,
+      company: _company,
+      jobTitle: _jobTitle,
+      address: _address,
+      website: _website,
+      birthday: _birthday,
+    );
+
+    if (ContactOsBridge.buildContact(payload) == null) {
+      Toaster.warning(title: l10n.os_contact_export_requires_data);
+      return;
+    }
+
+    try {
+      final createdId = await ContactOsBridge.export(payload);
+      if (!mounted || createdId == null) return;
+
+      Toaster.success(title: l10n.os_contact_exported);
+    } catch (error) {
+      if (!mounted) return;
+      Toaster.error(
+        title: l10n.os_contact_export_failed,
+        description: '$error',
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.t.dashboard_forms;
@@ -90,6 +134,11 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
       appBar: AppBar(
         title: Text(l10n.view_contact),
         actions: [
+          IconButton(
+            tooltip: l10n.export_contact_to_os_tooltip,
+            onPressed: _loading ? null : _exportToOsContact,
+            icon: const Icon(Icons.upload_rounded),
+          ),
           IconButton(
             tooltip: l10n.edit,
             onPressed: () => context.push(
