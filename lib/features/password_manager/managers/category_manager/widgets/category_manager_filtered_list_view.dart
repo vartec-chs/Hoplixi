@@ -73,7 +73,7 @@ class CategoryManagerFilteredListView extends ConsumerWidget {
         hasScrollBody: false,
         child: Center(child: CircularProgressIndicator()),
       ),
-      error: (_, __) => SliverFillRemaining(
+      error: (_, _) => SliverFillRemaining(
         hasScrollBody: false,
         child: CategoryTreePlaceholder(
           icon: Icons.error_outline,

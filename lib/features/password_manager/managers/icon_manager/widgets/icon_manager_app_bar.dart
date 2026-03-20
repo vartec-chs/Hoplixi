@@ -251,7 +251,7 @@ class _IconManagerAppBarState extends ConsumerState<IconManagerAppBar> {
                   children: [
                     // Фильтр по типу
                     DropdownButtonFormField<String?>(
-                      value: typeFilter?.trim().isEmpty == true
+                      initialValue: typeFilter?.trim().isEmpty == true
                           ? null
                           : typeFilter,
                       isExpanded: true,
