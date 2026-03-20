@@ -80,7 +80,8 @@ class ContactOsBridge {
     }
 
     return Contact(
-      name: name == null ? null : Name(first: name),
+      displayName: name,
+      name: _buildStructuredName(name),
       phones: phone == null ? const [] : [Phone(number: phone)],
       emails: email == null ? const [] : [Email(address: email)],
       addresses: address == null ? const [] : [Address(formatted: address)],
@@ -98,6 +99,24 @@ class ContactOsBridge {
                 label: const Label(EventLabel.birthday),
               ),
             ],
+    );
+  }
+
+  static Name? _buildStructuredName(String? fullName) {
+    final normalized = normalize(fullName);
+    if (normalized == null) {
+      return null;
+    }
+
+    final parts = normalized.split(RegExp(r'\s+'));
+    if (parts.length == 1) {
+      return Name(first: parts.first);
+    }
+
+    return Name(
+      first: parts.first,
+      middle: parts.length > 2 ? parts.sublist(1, parts.length - 1).join(' ') : null,
+      last: parts.last,
     );
   }
 
@@ -185,3 +204,5 @@ class ContactOsBridge {
     return values.isEmpty ? null : values.first;
   }
 }
+
+
