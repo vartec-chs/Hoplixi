@@ -264,6 +264,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                     labelText: context.t.dashboard_forms.wifi_ssid_label,
                     errorText: state.ssidError,
                     prefixIcon: const Icon(LucideIcons.wifi),
+                    helperText: context.t.dashboard_forms.wifi_ssid_description,
                     suffixIcon: IconButton(
                       tooltip: context.t.dashboard_forms.wifi_ssid_auto_get,
                       icon: const Icon(Icons.download_rounded),

@@ -126,6 +126,7 @@
 	"licenseFileIdLabel": "ID файла лицензии",
 	"apiKeyStatusLabel": "Статус",
 	"wifiSecurityLabel": "Безопасность",
+	"wifiSsidDescription": "SSID - это название сети. Вы можете ввести SSID вручную или получить его из текущей подключенной сети Wi-Fi. Приложению необходимы разрешения на определение местоположения для получения SSID.",
 	"contactUpdated": "Контакт обновлен",
 	"addressesJsonLabel": "Адреса (JSON)",
 	"editWifi": "Редактировать Wi-Fi",

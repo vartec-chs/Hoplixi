@@ -16,7 +16,7 @@ import '../models/contact_form_state.dart';
 import '../models/contact_os_payload.dart';
 import '../providers/contact_form_provider.dart';
 import '../services/contact_os_bridge.dart';
-import '../widgets/os_contact_picker_modal.dart';
+import '../widgets/contact_picker_modal.dart';
 
 class ContactFormScreen extends ConsumerStatefulWidget {
   const ContactFormScreen({super.key, this.contactId});

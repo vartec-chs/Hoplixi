@@ -179,6 +179,7 @@
 	"networkLabel": "Network",
 	"wifiPasswordLabel": "Password",
 	"wifiSsidAutoGet": "Auto-get from connected network",
+	"wifiSsidDescription": "SSID is this network name. You can enter the SSID manually or get it from the currently connected Wi-Fi network. The app needs location permission to get the SSID.",
 	"wifiLastConnectedBssidLabel": "Last connected BSSID",
 	"certificateCreated": "Certificate created",
 	"commonLoadError": "Load error",
