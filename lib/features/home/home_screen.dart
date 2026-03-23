@@ -658,6 +658,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           description: 'Экран для разработки функционала app-credentials',
           onTap: () => context.push(AppRoutesPaths.cloudSyncAppCredentials),
         ),
+        ActionItem(
+          icon: LucideIcons.lock,
+          label: 'Тест auth-tokens',
+          description: 'Экран для разработки функционала auth-tokens',
+          onTap: () => context.push(AppRoutesPaths.cloudSyncAuthTokens),
+        ),
       ],
     ];
   }

@@ -8,7 +8,7 @@ class AppRoutesPaths {
   static const String logs = '/logs';
   static const String componentShowcase = '/component-showcase';
 
-  /// LocalSend â€” ÑÐºÑ€Ð°Ð½ Ð¾Ñ‚Ð¿Ñ€Ð°Ð²ÐºÐ¸ Ñ„Ð°Ð¹Ð»Ð¾Ð² Ð¿Ð¾ Ð»Ð¾ÐºÐ°Ð»ÑŒÐ½Ð¾Ð¹ ÑÐµÑ‚Ð¸.
+  /// LocalSend Ã¢â‚¬â€ Ã‘ÂÃÂºÃ‘â‚¬ÃÂ°ÃÂ½ ÃÂ¾Ã‘â€šÃÂ¿Ã‘â‚¬ÃÂ°ÃÂ²ÃÂºÃÂ¸ Ã‘â€žÃÂ°ÃÂ¹ÃÂ»ÃÂ¾ÃÂ² ÃÂ¿ÃÂ¾ ÃÂ»ÃÂ¾ÃÂºÃÂ°ÃÂ»Ã‘Å’ÃÂ½ÃÂ¾ÃÂ¹ Ã‘ÂÃÂµÃ‘â€šÃÂ¸.
   static const String localSendSend = '/localsend/send';
   static const String localSendTransfer = '/localsend/transfer';
   static const String localSendHistory = '/localsend/history';
@@ -22,8 +22,9 @@ class AppRoutesPaths {
   static const String oauthTokens = '/oauth-tokens';
   static const String oauthLogin = '/oauth-login';
   static const String cloudSyncAppCredentials = '/cloud-sync/app-credentials';
+  static const String cloudSyncAuthTokens = '/cloud-sync/auth-tokens';
 
-  /// Path Ð´Ð»Ñ Dashboard
+  /// Path ÃÂ´ÃÂ»Ã‘Â Dashboard
   static const String dashboard = '/dashboard';
   static const String dashboardEntities = '/dashboard/:entity';
   static const String dashboardEntitiesHistory =
