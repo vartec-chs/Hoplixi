@@ -2,6 +2,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hoplixi/features/cloud_sync/app_credentials/models/app_credential_entry.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 
+const String builtinGoogleDesktopCredentialId =
+    'builtin_google_hoplixi_desktop';
+const String builtinGoogleMobileCredentialId =
+    'builtin_google_hoplixi_mobile';
 
 final List<AppCredentialEntry> builtinAppCredentials = [
   _buildBuiltinCredential(
@@ -10,9 +14,14 @@ final List<AppCredentialEntry> builtinAppCredentials = [
     envPrefix: 'DROPBOX',
   ),
   _buildBuiltinCredential(
-    id: 'builtin_google_hoplixi',
+    id: builtinGoogleDesktopCredentialId,
     provider: CloudSyncProvider.google,
     envPrefix: 'GOOGLE',
+  ),
+  _buildBuiltinCredential(
+    id: builtinGoogleMobileCredentialId,
+    provider: CloudSyncProvider.google,
+    envPrefix: 'GOOGLE_MOBILE',
   ),
   _buildBuiltinCredential(
     id: 'builtin_yandex_hoplixi',
@@ -26,6 +35,12 @@ final List<AppCredentialEntry> builtinAppCredentials = [
   ),
 ].whereType<AppCredentialEntry>().toList(growable: false);
 
+bool isGoogleDesktopBuiltinCredential(AppCredentialEntry entry) =>
+    entry.id == builtinGoogleDesktopCredentialId;
+
+bool isGoogleMobileBuiltinCredential(AppCredentialEntry entry) =>
+    entry.id == builtinGoogleMobileCredentialId;
+
 AppCredentialEntry? _buildBuiltinCredential({
   required String id,
   required CloudSyncProvider provider,
@@ -35,7 +50,12 @@ AppCredentialEntry? _buildBuiltinCredential({
     return null;
   }
 
-  if (dotenv.env['${envPrefix}_BUILTIN_ENABLED']?.toLowerCase() != 'true') {
+  final usesSharedBuiltinToggle =
+      envPrefix == 'GOOGLE' || envPrefix == 'GOOGLE_MOBILE';
+  final isEnabled = usesSharedBuiltinToggle
+      ? dotenv.env['GOOGLE_BUILTIN_ENABLED']?.toLowerCase() == 'true'
+      : dotenv.env['${envPrefix}_BUILTIN_ENABLED']?.toLowerCase() == 'true';
+  if (!isEnabled) {
     return null;
   }
 
