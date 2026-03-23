@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 /// Поддерживаемые провайдеры облачной синхронизации.
@@ -170,6 +171,7 @@ extension CloudSyncProviderX on CloudSyncProvider {
         ],
         userInfoEndpoint: 'https://login.yandex.ru/info',
         userInfoAuthScheme: 'OAuth',
+        additionalAuthParameters: {'device_name': MainConstants.appName},
       ),
       CloudSyncProvider.other => const CloudSyncProviderMetadata(
         displayName: 'Other',
@@ -187,3 +189,5 @@ extension CloudSyncProviderX on CloudSyncProvider {
     };
   }
 }
+
+

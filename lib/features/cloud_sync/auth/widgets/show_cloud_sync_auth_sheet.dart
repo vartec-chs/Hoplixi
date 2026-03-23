@@ -244,7 +244,6 @@ class _CredentialSelectionStep extends ConsumerWidget {
                           .read(authFlowProvider.notifier)
                           .beginAuthorization();
                       Navigator.of(modalContext).pop();
-                      rootContext.go(AppRoutesPaths.cloudSyncAuthProgress);
                     }
                   : null,
             ),
@@ -270,3 +269,4 @@ class _CredentialSelectionStep extends ConsumerWidget {
     };
   }
 }
+

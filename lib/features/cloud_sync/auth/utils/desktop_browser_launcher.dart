@@ -1,20 +1,8 @@
-import 'dart:io';
+import 'package:url_launcher/url_launcher.dart';
 
 Future<void> launchDesktopBrowser(Uri uri) async {
-  if (Platform.isWindows) {
-    await Process.start('cmd', <String>['/c', 'start', '', uri.toString()]);
-    return;
+  final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+  if (!launched) {
+    throw UnsupportedError('Could not launch desktop browser for $uri');
   }
-
-  if (Platform.isMacOS) {
-    await Process.start('open', <String>[uri.toString()]);
-    return;
-  }
-
-  if (Platform.isLinux) {
-    await Process.start('xdg-open', <String>[uri.toString()]);
-    return;
-  }
-
-  throw UnsupportedError('Desktop browser launch is not supported here.');
 }

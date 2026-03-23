@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:hoplixi/core/logger/app_logger.dart';
@@ -69,7 +68,7 @@ class CloudSyncDesktopLoopbackService {
       await launchDesktopBrowser(authorizationUri);
       final callback = await Future.any<_DesktopAuthCallback>([
         session.callbackCompleter.future,
-        session.cancelCompleter.future.then(
+        session.cancelCompleter.future.then<_DesktopAuthCallback>(
           (_) => throw const CloudSyncAuthException(
             CloudSyncAuthError.cancelled(
               message: 'Authorization was cancelled by the user.',
@@ -185,12 +184,28 @@ class CloudSyncDesktopLoopbackService {
       'client_id': credential.clientId,
       'response_type': 'code',
       'redirect_uri': redirectUri,
-      'scope': metadata.scopes.join(' '),
       'state': state,
       'code_challenge': codeChallenge,
       'code_challenge_method': 'S256',
       ...metadata.additionalAuthParameters,
     };
+
+    if (metadata.scopes.isNotEmpty) {
+      query['scope'] = metadata.scopes.join(' ');
+    }
+
+    switch (credential.provider) {
+      case CloudSyncProvider.dropbox:
+        query['response_type'] = 'code';
+        break;
+      case CloudSyncProvider.yandex:
+        query['response_type'] = 'code';
+        break;
+      case CloudSyncProvider.google:
+      case CloudSyncProvider.onedrive:
+      case CloudSyncProvider.other:
+        break;
+    }
 
     return authorizationEndpoint.replace(
       queryParameters: <String, String>{
@@ -256,18 +271,50 @@ class CloudSyncDesktopLoopbackService {
         ? 'You can return to Hoplixi and close this browser tab.'
         : 'Return to Hoplixi to see the error details.';
 
-    return jsonEncode(<String, String>{
-          'title': title,
-          'description': description,
-        })
-        .replaceAll(
-          '{',
-          '<html><body style="font-family:sans-serif;padding:24px;">',
-        )
-        .replaceAll('}', '</body></html>')
-        .replaceAll('"title":"', '<h2>')
-        .replaceAll('","description":"', '</h2><p>')
-        .replaceAll('"', '');
+    return '''
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>$title</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        background: #f6f7fb;
+        color: #1f2430;
+      }
+      .card {
+        max-width: 520px;
+        padding: 32px;
+        border-radius: 18px;
+        background: #ffffff;
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.08);
+        text-align: center;
+      }
+      h2 {
+        margin-top: 0;
+        margin-bottom: 16px;
+      }
+      p {
+        margin: 0;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>$title</h2>
+      <p>$description</p>
+    </div>
+  </body>
+</html>
+''';
   }
 
   Future<void> _disposeSession(_DesktopAuthSession session) async {
@@ -295,3 +342,4 @@ class _DesktopAuthCallback {
   final String? error;
   final String? errorDescription;
 }
+
