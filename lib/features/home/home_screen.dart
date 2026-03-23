@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 
 import 'package:animated_text_kit/animated_text_kit.dart';
@@ -6,9 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
+import 'package:hoplixi/features/cloud_sync/auth/widgets/show_cloud_sync_auth_sheet.dart';
 import 'package:hoplixi/core/multi_window/index.dart';
 import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_store/provider/db_history_provider.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
@@ -580,6 +582,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   /// Список кнопок действий — легко расширять
   List<ActionItem> _buildActionItems(BuildContext context) {
+    final authL10n = context.t.cloud_sync_auth;
+
     return [
       ActionItem(
         icon: LucideIcons.folderOpen,
@@ -639,6 +643,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       //   description: 'Тест шифрования',
       //   onTap: () => context.push(AppRoutesPaths.cryptTest),
       // ),
+      ActionItem(
+        icon: LucideIcons.cloud,
+        label: authL10n.launch_action_label,
+        description: authL10n.launch_action_description,
+        onTap: () async {
+          await showCloudSyncAuthSheet(
+            context: context,
+            ref: ref,
+            previousRoute: AppRoutesPaths.home,
+          );
+        },
+      ),
       ActionItem(
         icon: LucideIcons.fileText,
         label: 'Логи',
@@ -778,3 +794,5 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 }
+
+

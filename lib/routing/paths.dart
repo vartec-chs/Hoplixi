@@ -1,4 +1,4 @@
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+﻿import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 
 class AppRoutesPaths {
   static const String splash = '/splash';
@@ -23,6 +23,7 @@ class AppRoutesPaths {
   static const String oauthLogin = '/oauth-login';
   static const String cloudSyncAppCredentials = '/cloud-sync/app-credentials';
   static const String cloudSyncAuthTokens = '/cloud-sync/auth-tokens';
+  static const String cloudSyncAuthProgress = '/cloud-sync/auth/progress';
 
   /// Path ÃÂ´ÃÂ»Ã‘Â Dashboard
   static const String dashboard = '/dashboard';
@@ -109,3 +110,4 @@ class AppRoutesPaths {
   /// Crypt API Test
   static const String cryptTest = '/crypt-test';
 }
+

@@ -1,4 +1,4 @@
-import 'package:hive_ce/hive.dart';
+﻿import 'package:hive_ce/hive.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/services/hive_box_manager.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
@@ -57,9 +57,11 @@ class AuthTokensService {
   Future<AuthTokenEntry> upsertToken(AuthTokenEntry token) async {
     _ensureInitialized();
 
-    final existing = await getTokenById(token.id);
+    final equivalent = _findEquivalentToken(token);
+    final existing = await getTokenById(token.id) ?? equivalent;
     final now = DateTime.now();
     final normalized = token.copyWith(
+      id: existing?.id ?? token.id,
       accessToken: token.accessToken.trim(),
       refreshToken: _normalizeValue(token.refreshToken),
       tokenType: _normalizeValue(token.tokenType),
@@ -125,6 +127,39 @@ class AuthTokensService {
     return tokens;
   }
 
+  AuthTokenEntry? _findEquivalentToken(AuthTokenEntry token) {
+    final normalizedCredentialId = _normalizeValue(token.appCredentialId);
+    final normalizedAccountId = _normalizeValue(token.accountId);
+    final normalizedEmail = _normalizeEmail(token.accountEmail);
+
+    if (normalizedAccountId == null && normalizedEmail == null) {
+      return null;
+    }
+
+    for (final existing in _readTokens()) {
+      if (existing.provider != token.provider) {
+        continue;
+      }
+
+      final existingCredentialId = _normalizeValue(existing.appCredentialId);
+      if (existingCredentialId != normalizedCredentialId) {
+        continue;
+      }
+
+      final existingAccountId = _normalizeValue(existing.accountId);
+      if (normalizedAccountId != null && existingAccountId == normalizedAccountId) {
+        return existing;
+      }
+
+      final existingEmail = _normalizeEmail(existing.accountEmail);
+      if (normalizedEmail != null && existingEmail == normalizedEmail) {
+        return existing;
+      }
+    }
+
+    return null;
+  }
+
   List<AuthTokenEntry> _sortTokens(List<AuthTokenEntry> tokens) {
     final sorted = List<AuthTokenEntry>.from(tokens);
     sorted.sort((left, right) {
@@ -151,5 +186,10 @@ class AuthTokensService {
 
     final normalized = value.trim();
     return normalized.isEmpty ? null : normalized;
+  }
+
+  String? _normalizeEmail(String? value) {
+    final normalized = _normalizeValue(value);
+    return normalized?.toLowerCase();
   }
 }

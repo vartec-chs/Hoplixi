@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +9,7 @@ import 'package:hoplixi/features/old/cloud_sync/auth/ui/auth_login_screen.dart';
 import 'package:hoplixi/features/old/cloud_sync/auth/ui/tokens_screen.dart';
 import 'package:hoplixi/features/old/cloud_sync/oauth_apps/ui/oauth_apps_screen.dart';
 import 'package:hoplixi/features/cloud_sync/app_credentials/screens/app_credentials_screen.dart';
+import 'package:hoplixi/features/cloud_sync/auth/screens/auth_progress_screen.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/screens/auth_tokens_screen.dart';
 import 'package:hoplixi/features/component_showcase/component_showcase_screen.dart';
 import 'package:hoplixi/features/home/crypt_test_screen.dart';
@@ -144,6 +145,10 @@ final List<RouteBase> appRoutes = [
   GoRoute(
     path: AppRoutesPaths.cloudSyncAuthTokens,
     builder: (context, state) => const AuthTokensScreen(),
+  ),
+  GoRoute(
+    path: AppRoutesPaths.cloudSyncAuthProgress,
+    builder: (context, state) => const AuthProgressScreen(),
   ),
   GoRoute(
     path: '/dashboard',
@@ -430,3 +435,4 @@ class BaseScreen extends StatelessWidget {
     return Scaffold(body: Center(child: Text(title ?? 'Base Screen')));
   }
 }
+
