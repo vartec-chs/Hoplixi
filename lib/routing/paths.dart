@@ -8,7 +8,7 @@ class AppRoutesPaths {
   static const String logs = '/logs';
   static const String componentShowcase = '/component-showcase';
 
-  /// LocalSend — экран отправки файлов по локальной сети.
+  /// LocalSend â€” ÑÐºÑ€Ð°Ð½ Ð¾Ñ‚Ð¿Ñ€Ð°Ð²ÐºÐ¸ Ñ„Ð°Ð¹Ð»Ð¾Ð² Ð¿Ð¾ Ð»Ð¾ÐºÐ°Ð»ÑŒÐ½Ð¾Ð¹ ÑÐµÑ‚Ð¸.
   static const String localSendSend = '/localsend/send';
   static const String localSendTransfer = '/localsend/transfer';
   static const String localSendHistory = '/localsend/history';
@@ -21,8 +21,9 @@ class AppRoutesPaths {
   static const String oauthApps = '/oauth-apps';
   static const String oauthTokens = '/oauth-tokens';
   static const String oauthLogin = '/oauth-login';
+  static const String cloudSyncAppCredentials = '/cloud-sync/app-credentials';
 
-  /// Path для Dashboard
+  /// Path Ð´Ð»Ñ Dashboard
   static const String dashboard = '/dashboard';
   static const String dashboardEntities = '/dashboard/:entity';
   static const String dashboardEntitiesHistory =

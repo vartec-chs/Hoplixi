@@ -652,6 +652,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           description: 'Тестовый экран для UI-компонентов',
           onTap: () => context.push(AppRoutesPaths.componentShowcase),
         ),
+        ActionItem(
+          icon: LucideIcons.bug,
+          label: 'Тест app-credentials',
+          description: 'Экран для разработки функционала app-credentials',
+          onTap: () => context.push(AppRoutesPaths.cloudSyncAppCredentials),
+        ),
       ],
     ];
   }
