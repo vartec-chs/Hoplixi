@@ -4,8 +4,7 @@ import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.da
 
 const String builtinGoogleDesktopCredentialId =
     'builtin_google_hoplixi_desktop';
-const String builtinGoogleMobileCredentialId =
-    'builtin_google_hoplixi_mobile';
+const String builtinGoogleMobileCredentialId = 'builtin_google_hoplixi_mobile';
 
 final List<AppCredentialEntry> builtinAppCredentials = [
   _buildBuiltinCredential(
@@ -17,11 +16,13 @@ final List<AppCredentialEntry> builtinAppCredentials = [
     id: builtinGoogleDesktopCredentialId,
     provider: CloudSyncProvider.google,
     envPrefix: 'GOOGLE',
+    platformTarget: AppCredentialPlatformTarget.desktop,
   ),
   _buildBuiltinCredential(
     id: builtinGoogleMobileCredentialId,
     provider: CloudSyncProvider.google,
     envPrefix: 'GOOGLE_MOBILE',
+    platformTarget: AppCredentialPlatformTarget.mobile,
   ),
   _buildBuiltinCredential(
     id: 'builtin_yandex_hoplixi',
@@ -35,16 +36,11 @@ final List<AppCredentialEntry> builtinAppCredentials = [
   ),
 ].whereType<AppCredentialEntry>().toList(growable: false);
 
-bool isGoogleDesktopBuiltinCredential(AppCredentialEntry entry) =>
-    entry.id == builtinGoogleDesktopCredentialId;
-
-bool isGoogleMobileBuiltinCredential(AppCredentialEntry entry) =>
-    entry.id == builtinGoogleMobileCredentialId;
-
 AppCredentialEntry? _buildBuiltinCredential({
   required String id,
   required CloudSyncProvider provider,
   required String envPrefix,
+  AppCredentialPlatformTarget platformTarget = AppCredentialPlatformTarget.all,
 }) {
   if (dotenv.env['USED_BUILTIN_AUTH_APPS']?.toLowerCase() != 'true') {
     return null;
@@ -76,5 +72,6 @@ AppCredentialEntry? _buildBuiltinCredential({
         ? null
         : clientSecret,
     isBuiltin: true,
+    platformTarget: platformTarget,
   );
 }

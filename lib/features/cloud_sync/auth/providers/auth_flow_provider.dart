@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/services/hive_box_manager.dart';
 import 'package:hoplixi/di_init.dart';
 import 'package:hoplixi/features/cloud_sync/app_credentials/models/app_credential_entry.dart';
-import 'package:hoplixi/features/cloud_sync/app_credentials/models/builtin_app_credentials.dart';
 import 'package:hoplixi/features/cloud_sync/app_credentials/providers/app_credentials_provider.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/auth_credential_option.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/auth_flow_state.dart';
@@ -43,21 +42,6 @@ final authCredentialOptionsProvider = Provider<List<AuthCredentialOption>>((
       ref.watch(appCredentialsProvider).value ?? const <AppCredentialEntry>[];
   final filtered = entries
       .where((entry) => entry.provider == selectedProvider)
-      .where((entry) {
-        if (selectedProvider != CloudSyncProvider.google) {
-          return true;
-        }
-
-        if (isCloudSyncMobilePlatform && isGoogleDesktopBuiltinCredential(entry)) {
-          return false;
-        }
-
-        if (isCloudSyncDesktopPlatform && isGoogleMobileBuiltinCredential(entry)) {
-          return false;
-        }
-
-        return true;
-      })
       .map(buildAuthCredentialOption)
       .toList(growable: false);
   filtered.sort((left, right) {

@@ -26,27 +26,36 @@ AuthCredentialOption buildAuthCredentialOption(AppCredentialEntry entry) {
     );
   }
 
-  if (isCloudSyncDesktopPlatform && metadata.supportsDesktopAuth) {
+  if (isCloudSyncDesktopPlatform) {
+    if (!metadata.supportsDesktopAuth || !entry.supportsDesktop) {
+      return AuthCredentialOption(
+        entry: entry,
+        isSupported: false,
+        supportIssue: AuthCredentialSupportIssue.mobilePlatformUnsupported,
+      );
+    }
+
     return AuthCredentialOption(entry: entry);
   }
 
-  if (isCloudSyncMobilePlatform && !metadata.supportsMobileAuth) {
-    return AuthCredentialOption(
-      entry: entry,
-      isSupported: false,
-      supportIssue: AuthCredentialSupportIssue.mobilePlatformUnsupported,
-    );
-  }
+  if (isCloudSyncMobilePlatform) {
+    if (!metadata.supportsMobileAuth || !entry.supportsMobile) {
+      return AuthCredentialOption(
+        entry: entry,
+        isSupported: false,
+        supportIssue: AuthCredentialSupportIssue.mobilePlatformUnsupported,
+      );
+    }
 
-  if (isCloudSyncMobilePlatform &&
-      metadata.mobileRedirectPolicy ==
-          CloudSyncMobileRedirectPolicy.dropboxClientScheme &&
-      !entry.isBuiltin) {
-    return AuthCredentialOption(
-      entry: entry,
-      isSupported: false,
-      supportIssue: AuthCredentialSupportIssue.mobileDropboxRequiresBuiltin,
-    );
+    if (metadata.mobileRedirectPolicy ==
+            CloudSyncMobileRedirectPolicy.dropboxClientScheme &&
+        !entry.isBuiltin) {
+      return AuthCredentialOption(
+        entry: entry,
+        isSupported: false,
+        supportIssue: AuthCredentialSupportIssue.mobileDropboxRequiresBuiltin,
+      );
+    }
   }
 
   return AuthCredentialOption(entry: entry);
@@ -56,10 +65,12 @@ String? resolveCredentialRedirectUri(AppCredentialEntry entry) {
   final metadata = entry.provider.metadata;
 
   if (isCloudSyncDesktopPlatform) {
-    return metadata.desktopRedirectUri;
+    return entry.supportsDesktop ? metadata.desktopRedirectUri : null;
   }
 
-  if (!isCloudSyncMobilePlatform || !metadata.supportsMobileAuth) {
+  if (!isCloudSyncMobilePlatform ||
+      !metadata.supportsMobileAuth ||
+      !entry.supportsMobile) {
     return null;
   }
 

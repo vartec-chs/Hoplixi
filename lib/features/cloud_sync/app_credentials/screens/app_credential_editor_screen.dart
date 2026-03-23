@@ -29,6 +29,7 @@ class _AppCredentialEditorScreenState
   final _formKey = GlobalKey<FormState>();
 
   late AppCredentialFormData _formData;
+  late AppCredentialPlatformTarget _platformTarget;
   bool _isSaving = false;
   bool _obscureClientSecret = true;
 
@@ -44,6 +45,7 @@ class _AppCredentialEditorScreenState
       clientId: entry?.clientId ?? '',
       clientSecret: entry?.clientSecret ?? '',
     );
+    _platformTarget = entry?.platformTarget ?? AppCredentialPlatformTarget.all;
   }
 
   @override
@@ -76,6 +78,43 @@ class _AppCredentialEditorScreenState
                       _formData = _formData.copyWith(provider: provider);
                     });
                   },
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Platform Target',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                SegmentedButton<AppCredentialPlatformTarget>(
+                  showSelectedIcon: false,
+                  segments: const [
+                    ButtonSegment<AppCredentialPlatformTarget>(
+                      value: AppCredentialPlatformTarget.all,
+                      label: Text('All'),
+                      icon: Icon(Icons.devices_outlined),
+                    ),
+                    ButtonSegment<AppCredentialPlatformTarget>(
+                      value: AppCredentialPlatformTarget.desktop,
+                      label: Text('Desktop'),
+                      icon: Icon(Icons.desktop_windows_outlined),
+                    ),
+                    ButtonSegment<AppCredentialPlatformTarget>(
+                      value: AppCredentialPlatformTarget.mobile,
+                      label: Text('Mobile'),
+                      icon: Icon(Icons.smartphone_outlined),
+                    ),
+                  ],
+                  selected: <AppCredentialPlatformTarget>{_platformTarget},
+                  onSelectionChanged: (selection) {
+                    setState(() {
+                      _platformTarget = selection.first;
+                    });
+                  },
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Use this to restrict the credential to desktop, mobile, or both.',
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 20),
                 AppCredentialSetupInfoCard(provider: _formData.provider),
@@ -117,26 +156,25 @@ class _AppCredentialEditorScreenState
                   onChanged: (value) {
                     _formData = _formData.copyWith(clientSecret: value);
                   },
-                  decoration:
-                      primaryInputDecoration(
-                        context,
-                        labelText: l10n.client_secret_field_label,
-                        hintText: l10n.client_secret_field_hint,
-                        helperText: l10n.client_secret_helper,
-                      ).copyWith(
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            setState(() {
-                              _obscureClientSecret = !_obscureClientSecret;
-                            });
-                          },
-                          icon: Icon(
-                            _obscureClientSecret
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                          ),
-                        ),
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: l10n.client_secret_field_label,
+                    hintText: l10n.client_secret_field_hint,
+                    helperText: l10n.client_secret_helper,
+                  ).copyWith(
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _obscureClientSecret = !_obscureClientSecret;
+                        });
+                      },
+                      icon: Icon(
+                        _obscureClientSecret
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
                       ),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -187,6 +225,7 @@ class _AppCredentialEditorScreenState
       clientId: _formData.trimmedClientId,
       clientSecret: _formData.normalizedClientSecret,
       isBuiltin: false,
+      platformTarget: _platformTarget,
       createdAt: initial?.createdAt,
       updatedAt: initial?.updatedAt,
     );
