@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/cloud_sync/auth/providers/auth_flow_provider.dart';
 import 'package:hoplixi/main_store/models/db_state.dart';

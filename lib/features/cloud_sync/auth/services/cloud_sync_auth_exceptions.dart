@@ -1,4 +1,4 @@
-﻿import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_auth_error.dart';
+import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_auth_error.dart';
 
 class CloudSyncAuthException implements Exception {
   const CloudSyncAuthException(this.error);

@@ -1,4 +1,4 @@
-﻿import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/auth_flow_status.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_auth_error.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';

@@ -1,4 +1,4 @@
-﻿import 'package:hoplixi/features/cloud_sync/app_credentials/models/app_credential_entry.dart';
+import 'package:hoplixi/features/cloud_sync/app_credentials/models/app_credential_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/auth_credential_option.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 import 'package:universal_platform/universal_platform.dart';
@@ -66,11 +66,12 @@ String? resolveCredentialRedirectUri(AppCredentialEntry entry) {
   return switch (metadata.mobileRedirectPolicy) {
     CloudSyncMobileRedirectPolicy.genericAppScheme =>
       metadata.appCredentialsMobileRedirectUri,
-    CloudSyncMobileRedirectPolicy.dropboxClientScheme => entry.isBuiltin
-        ? metadata.appCredentialsMobileRedirectUri.replaceAll(
-            '<client_id>',
-            entry.clientId,
-          )
-        : null,
+    CloudSyncMobileRedirectPolicy.dropboxClientScheme =>
+      entry.isBuiltin
+          ? metadata.appCredentialsMobileRedirectUri.replaceAll(
+              '<client_id>',
+              entry.clientId,
+            )
+          : null,
   };
 }

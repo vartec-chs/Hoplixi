@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -69,11 +69,13 @@ class CloudSyncDesktopLoopbackService {
       await launchDesktopBrowser(authorizationUri);
       final callback = await Future.any<_DesktopAuthCallback>([
         session.callbackCompleter.future,
-        session.cancelCompleter.future.then((_) => throw const CloudSyncAuthException(
-              CloudSyncAuthError.cancelled(
-                message: 'Authorization was cancelled by the user.',
-              ),
-            )),
+        session.cancelCompleter.future.then(
+          (_) => throw const CloudSyncAuthException(
+            CloudSyncAuthError.cancelled(
+              message: 'Authorization was cancelled by the user.',
+            ),
+          ),
+        ),
         Future<_DesktopAuthCallback>.delayed(
           _authorizationTimeout,
           () => throw const CloudSyncAuthException(
@@ -247,19 +249,25 @@ class CloudSyncDesktopLoopbackService {
   }
 
   String _buildSuccessHtml({String? error}) {
-    final title = error == null ? 'Authorization completed' : 'Authorization failed';
+    final title = error == null
+        ? 'Authorization completed'
+        : 'Authorization failed';
     final description = error == null
         ? 'You can return to Hoplixi and close this browser tab.'
         : 'Return to Hoplixi to see the error details.';
 
     return jsonEncode(<String, String>{
-      'title': title,
-      'description': description,
-    }).replaceAll('{', '<html><body style="font-family:sans-serif;padding:24px;">')
-      .replaceAll('}', '</body></html>')
-      .replaceAll('"title":"', '<h2>')
-      .replaceAll('","description":"', '</h2><p>')
-      .replaceAll('"', '');
+          'title': title,
+          'description': description,
+        })
+        .replaceAll(
+          '{',
+          '<html><body style="font-family:sans-serif;padding:24px;">',
+        )
+        .replaceAll('}', '</body></html>')
+        .replaceAll('"title":"', '<h2>')
+        .replaceAll('","description":"', '</h2><p>')
+        .replaceAll('"', '');
   }
 
   Future<void> _disposeSession(_DesktopAuthSession session) async {
@@ -281,11 +289,7 @@ class _DesktopAuthSession {
 }
 
 class _DesktopAuthCallback {
-  const _DesktopAuthCallback({
-    this.code,
-    this.error,
-    this.errorDescription,
-  });
+  const _DesktopAuthCallback({this.code, this.error, this.errorDescription});
 
   final String? code;
   final String? error;

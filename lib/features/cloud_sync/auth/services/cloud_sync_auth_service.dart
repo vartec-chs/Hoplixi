@@ -1,4 +1,4 @@
-﻿import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/services/hive_box_manager.dart';
 import 'package:hoplixi/features/cloud_sync/app_credentials/models/app_credential_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/auth_flow_success_result.dart';
@@ -17,10 +17,12 @@ import 'package:uuid/uuid.dart';
 
 class CloudSyncAuthService {
   CloudSyncAuthService(this._hiveBoxManager)
-      : _oauthHttpService = const CloudSyncOAuthHttpService(),
-        _uuid = const Uuid() {
+    : _oauthHttpService = const CloudSyncOAuthHttpService(),
+      _uuid = const Uuid() {
     _appAuthMobileService = CloudSyncAppAuthMobileService(_oauthHttpService);
-    _desktopLoopbackService = CloudSyncDesktopLoopbackService(_oauthHttpService);
+    _desktopLoopbackService = CloudSyncDesktopLoopbackService(
+      _oauthHttpService,
+    );
     _googleSignInService = CloudSyncGoogleSignInService();
     _authTokensService = AuthTokensService(_hiveBoxManager);
   }

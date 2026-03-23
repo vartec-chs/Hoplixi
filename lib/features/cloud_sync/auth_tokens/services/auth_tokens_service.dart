@@ -1,4 +1,4 @@
-﻿import 'package:hive_ce/hive.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/services/hive_box_manager.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
@@ -147,7 +147,8 @@ class AuthTokensService {
       }
 
       final existingAccountId = _normalizeValue(existing.accountId);
-      if (normalizedAccountId != null && existingAccountId == normalizedAccountId) {
+      if (normalizedAccountId != null &&
+          existingAccountId == normalizedAccountId) {
         return existing;
       }
 

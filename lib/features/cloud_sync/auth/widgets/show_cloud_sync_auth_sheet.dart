@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/cloud_sync/app_credentials/providers/app_credentials_provider.dart';
@@ -270,4 +270,3 @@ class _CredentialSelectionStep extends ConsumerWidget {
     };
   }
 }
-

@@ -1,4 +1,4 @@
-﻿import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hoplixi/features/cloud_sync/app_credentials/models/app_credential_entry.dart';
 
 part 'auth_credential_option.freezed.dart';

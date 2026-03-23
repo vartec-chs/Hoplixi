@@ -1,4 +1,4 @@
-﻿String? extractAccountId(Map<String, dynamic>? userInfo) {
+String? extractAccountId(Map<String, dynamic>? userInfo) {
   if (userInfo == null) {
     return null;
   }

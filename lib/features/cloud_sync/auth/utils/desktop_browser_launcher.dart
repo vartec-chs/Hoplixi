@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 
 Future<void> launchDesktopBrowser(Uri uri) async {
   if (Platform.isWindows) {

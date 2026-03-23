@@ -1,4 +1,4 @@
-﻿import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'cloud_sync_oauth_result.freezed.dart';
 part 'cloud_sync_oauth_result.g.dart';

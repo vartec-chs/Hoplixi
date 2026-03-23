@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -435,4 +435,3 @@ class BaseScreen extends StatelessWidget {
     return Scaffold(body: Center(child: Text(title ?? 'Base Screen')));
   }
 }
-

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
@@ -26,19 +26,18 @@ class _AuthProgressScreenState extends ConsumerState<AuthProgressScreen> {
   @override
   void initState() {
     super.initState();
-    _subscription = ref.listenManual<AuthFlowState>(
-      authFlowProvider,
-      (previous, next) {
-        if (!_isTerminal(next.status) || _handledTerminalStatus == next.status) {
-          return;
-        }
-        _handledTerminalStatus = next.status;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _handleTerminalState(next);
-        });
-      },
-      fireImmediately: true,
-    );
+    _subscription = ref.listenManual<AuthFlowState>(authFlowProvider, (
+      previous,
+      next,
+    ) {
+      if (!_isTerminal(next.status) || _handledTerminalStatus == next.status) {
+        return;
+      }
+      _handledTerminalStatus = next.status;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _handleTerminalState(next);
+      });
+    }, fireImmediately: true);
   }
 
   bool _isTerminal(AuthFlowStatus status) {
@@ -53,7 +52,8 @@ class _AuthProgressScreenState extends ConsumerState<AuthProgressScreen> {
     }
 
     final l10n = context.t.cloud_sync_auth;
-    final description = state.error?.map(
+    final description =
+        state.error?.map(
           cancelled: (value) => value.message,
           unsupportedCredential: (value) => value.message,
           misconfiguredRedirect: (value) => value.message,
@@ -142,7 +142,9 @@ class _AuthProgressScreenState extends ConsumerState<AuthProgressScreen> {
                     type: SmoothButtonType.outlined,
                     onPressed: state.isCancellable
                         ? () {
-                            ref.read(authFlowProvider.notifier).cancelActiveFlow();
+                            ref
+                                .read(authFlowProvider.notifier)
+                                .cancelActiveFlow();
                           }
                         : null,
                   ),
@@ -155,4 +157,3 @@ class _AuthProgressScreenState extends ConsumerState<AuthProgressScreen> {
     );
   }
 }
-

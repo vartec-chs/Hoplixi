@@ -1,4 +1,4 @@
-﻿import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 
 class AppRoutesPaths {
   static const String splash = '/splash';
@@ -110,4 +110,3 @@ class AppRoutesPaths {
   /// Crypt API Test
   static const String cryptTest = '/crypt-test';
 }
-

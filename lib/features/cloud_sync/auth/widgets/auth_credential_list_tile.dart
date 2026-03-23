@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/auth_credential_option.dart';
 
 class AuthCredentialListTile extends StatelessWidget {
@@ -35,14 +35,15 @@ class AuthCredentialListTile extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(entry.clientId),
-              if (unavailableReason != null && unavailableReason!.trim().isNotEmpty)
+              if (unavailableReason != null &&
+                  unavailableReason!.trim().isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     unavailableReason!,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                 ),
             ],

@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:hoplixi/features/cloud_sync/app_credentials/models/app_credential_entry.dart';
@@ -55,7 +55,8 @@ class CloudSyncOAuthHttpService {
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw CloudSyncAuthException(
           CloudSyncAuthError.oauthProvider(
-            message: _extractProviderMessage(json) ??
+            message:
+                _extractProviderMessage(json) ??
                 'Token endpoint returned ${response.statusCode}.',
           ),
         );
@@ -179,9 +180,7 @@ class CloudSyncOAuthHttpService {
       return decoded;
     }
     if (decoded is Map) {
-      return decoded.map(
-        (key, value) => MapEntry(key.toString(), value),
-      );
+      return decoded.map((key, value) => MapEntry(key.toString(), value));
     }
 
     throw const CloudSyncAuthException(

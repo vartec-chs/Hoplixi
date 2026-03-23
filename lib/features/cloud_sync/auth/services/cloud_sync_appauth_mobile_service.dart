@@ -1,4 +1,4 @@
-﻿import 'package:flutter_appauth/flutter_appauth.dart';
+import 'package:flutter_appauth/flutter_appauth.dart';
 import 'package:hoplixi/features/cloud_sync/app_credentials/models/app_credential_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_auth_error.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_oauth_result.dart';
@@ -10,7 +10,7 @@ import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.da
 
 class CloudSyncAppAuthMobileService {
   CloudSyncAppAuthMobileService(this._oauthHttpService)
-      : _appAuth = const FlutterAppAuth();
+    : _appAuth = const FlutterAppAuth();
 
   final FlutterAppAuth _appAuth;
   final CloudSyncOAuthHttpService _oauthHttpService;

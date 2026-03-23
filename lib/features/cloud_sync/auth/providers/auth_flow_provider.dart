@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/services/hive_box_manager.dart';
@@ -21,14 +21,16 @@ final cloudSyncAuthServiceProvider = Provider<CloudSyncAuthService>((ref) {
   return service;
 });
 
-final authFlowProvider =
-    NotifierProvider<AuthFlowNotifier, AuthFlowState>(AuthFlowNotifier.new);
-
-final cloudSyncSupportedAuthProvidersProvider = Provider<List<CloudSyncProvider>>(
-  (ref) => getSupportedAuthProviders(),
+final authFlowProvider = NotifierProvider<AuthFlowNotifier, AuthFlowState>(
+  AuthFlowNotifier.new,
 );
 
-final authCredentialOptionsProvider = Provider<List<AuthCredentialOption>>((ref) {
+final cloudSyncSupportedAuthProvidersProvider =
+    Provider<List<CloudSyncProvider>>((ref) => getSupportedAuthProviders());
+
+final authCredentialOptionsProvider = Provider<List<AuthCredentialOption>>((
+  ref,
+) {
   final selectedProvider = ref.watch(
     authFlowProvider.select((state) => state.selectedProvider),
   );
@@ -36,7 +38,8 @@ final authCredentialOptionsProvider = Provider<List<AuthCredentialOption>>((ref)
     return const <AuthCredentialOption>[];
   }
 
-  final entries = ref.watch(appCredentialsProvider).value ?? const <AppCredentialEntry>[];
+  final entries =
+      ref.watch(appCredentialsProvider).value ?? const <AppCredentialEntry>[];
   final filtered = entries
       .where((entry) => entry.provider == selectedProvider)
       .map(buildAuthCredentialOption)
@@ -48,7 +51,9 @@ final authCredentialOptionsProvider = Provider<List<AuthCredentialOption>>((ref)
     if (builtinCompare != 0) {
       return builtinCompare;
     }
-    return left.entry.name.toLowerCase().compareTo(right.entry.name.toLowerCase());
+    return left.entry.name.toLowerCase().compareTo(
+      right.entry.name.toLowerCase(),
+    );
   });
   return filtered;
 });
@@ -167,7 +172,9 @@ class AuthFlowNotifier extends Notifier<AuthFlowState> {
         isCancellable: false,
       );
     } catch (error) {
-      final mappedError = ref.read(cloudSyncAuthServiceProvider).mapError(error);
+      final mappedError = ref
+          .read(cloudSyncAuthServiceProvider)
+          .mapError(error);
       _setError(mappedError);
     }
   }
