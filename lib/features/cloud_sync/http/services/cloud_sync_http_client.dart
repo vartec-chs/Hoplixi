@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -22,19 +22,15 @@ class CloudSyncHttpClient implements CloudSyncHttpTransport {
     required CloudSyncTokenRefreshService tokenRefreshService,
     Dio? dio,
   }) : _tokenResolver = tokenResolver,
-       _tokenRefreshService = tokenRefreshService,
-       _dio =
-           dio ??
-           Dio(
-             BaseOptions(
-               connectTimeout: const Duration(seconds: 20),
-               sendTimeout: const Duration(seconds: 60),
-               receiveTimeout: const Duration(minutes: 2),
-             ),
-           ) {
+       _tokenRefreshService = tokenRefreshService {
+    _dio = dio ?? Dio(_createBaseOptions());
+    _retryDio = Dio(_copyBaseOptions(_dio.options))
+      ..httpClientAdapter = _dio.httpClientAdapter
+      ..transformer = _dio.transformer;
+
     _dio.interceptors.add(
       _CloudSyncAuthInterceptor(
-        dio: _dio,
+        retryDio: _retryDio,
         tokenId: tokenId,
         provider: provider,
         tokenResolver: _tokenResolver,
@@ -53,7 +49,40 @@ class CloudSyncHttpClient implements CloudSyncHttpTransport {
   final CloudSyncProvider provider;
   final CloudSyncTokenResolver _tokenResolver;
   final CloudSyncTokenRefreshService _tokenRefreshService;
-  final Dio _dio;
+  late final Dio _dio;
+  late final Dio _retryDio;
+
+  static BaseOptions _createBaseOptions() {
+    return BaseOptions(
+      connectTimeout: const Duration(seconds: 20),
+      sendTimeout: const Duration(seconds: 60),
+      receiveTimeout: const Duration(minutes: 2),
+    );
+  }
+
+  static BaseOptions _copyBaseOptions(BaseOptions source) {
+    return BaseOptions(
+      method: source.method,
+      baseUrl: source.baseUrl,
+      queryParameters: Map<String, dynamic>.from(source.queryParameters),
+      connectTimeout: source.connectTimeout,
+      sendTimeout: source.sendTimeout,
+      receiveTimeout: source.receiveTimeout,
+      receiveDataWhenStatusError: source.receiveDataWhenStatusError,
+      extra: Map<String, dynamic>.from(source.extra),
+      headers: Map<String, dynamic>.from(source.headers),
+      preserveHeaderCase: source.preserveHeaderCase,
+      responseType: source.responseType,
+      contentType: source.contentType,
+      validateStatus: source.validateStatus,
+      followRedirects: source.followRedirects,
+      maxRedirects: source.maxRedirects,
+      persistentConnection: source.persistentConnection,
+      requestEncoder: source.requestEncoder,
+      responseDecoder: source.responseDecoder,
+      listFormat: source.listFormat,
+    );
+  }
 
   @override
   Future<Response<T>> request<T>(CloudSyncHttpRequest request) async {
@@ -302,12 +331,12 @@ class CloudSyncHttpClient implements CloudSyncHttpTransport {
 
 class _CloudSyncAuthInterceptor extends QueuedInterceptor {
   _CloudSyncAuthInterceptor({
-    required Dio dio,
+    required Dio retryDio,
     required String tokenId,
     required CloudSyncProvider provider,
     required CloudSyncTokenResolver tokenResolver,
     required CloudSyncTokenRefreshService tokenRefreshService,
-  }) : _dio = dio,
+  }) : _retryDio = retryDio,
        _tokenId = tokenId,
        _provider = provider,
        _tokenResolver = tokenResolver,
@@ -315,7 +344,7 @@ class _CloudSyncAuthInterceptor extends QueuedInterceptor {
 
   static const String _logTag = 'CloudSyncAuthInterceptor';
 
-  final Dio _dio;
+  final Dio _retryDio;
   final String _tokenId;
   final CloudSyncProvider _provider;
   final CloudSyncTokenResolver _tokenResolver;
@@ -414,11 +443,25 @@ class _CloudSyncAuthInterceptor extends QueuedInterceptor {
         },
       );
 
-      final response = await _dio.fetch<dynamic>(retried);
+      final response = await _retryDio.fetch<dynamic>(retried);
       handler.resolve(response);
     } catch (error, stackTrace) {
       final cloudError = error is CloudSyncHttpException
           ? error
+          : error is DioException && error.response?.statusCode == 401
+          ? CloudSyncHttpException(
+              type: CloudSyncHttpExceptionType.unauthorized,
+              message: 'Cloud API request remained unauthorized after retry.',
+              provider: _provider,
+              tokenId: _tokenId,
+              statusCode: error.response?.statusCode,
+              requestUri: error.requestOptions.uri,
+              responseBodySnippet:
+                  CloudSyncHttpException.buildResponseBodySnippet(
+                    error.response?.data,
+                  ),
+              cause: error,
+            )
           : CloudSyncHttpException(
               type: CloudSyncHttpExceptionType.unknown,
               message: 'Failed to refresh OAuth token for cloud request.',
@@ -481,8 +524,11 @@ class _CloudSyncAuthInterceptor extends QueuedInterceptor {
   }
 
   String _buildAuthorizationHeader(AuthTokenEntry token) {
+    final overrideScheme = _provider.metadata.apiAuthSchemeOverride?.trim();
     final tokenType = token.tokenType?.trim();
-    final scheme = tokenType == null || tokenType.isEmpty
+    final scheme = overrideScheme != null && overrideScheme.isNotEmpty
+        ? overrideScheme
+        : tokenType == null || tokenType.isEmpty
         ? 'Bearer'
         : tokenType;
     return '$scheme ${token.accessToken.trim()}';

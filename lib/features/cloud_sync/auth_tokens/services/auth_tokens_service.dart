@@ -39,7 +39,7 @@ class AuthTokensService {
       return null;
     }
 
-    return AuthTokenEntry.fromJson(Map<String, dynamic>.from(data));
+    return AuthTokenEntry.fromJson(_normalizeJsonMap(data));
   }
 
   /// Возвращает все токены выбранного провайдера.
@@ -114,7 +114,7 @@ class AuthTokensService {
 
     for (final raw in _box!.values) {
       try {
-        tokens.add(AuthTokenEntry.fromJson(Map<String, dynamic>.from(raw)));
+        tokens.add(AuthTokenEntry.fromJson(_normalizeJsonMap(raw)));
       } catch (error, stackTrace) {
         logError(
           'Failed to parse auth token: $error',
@@ -192,5 +192,23 @@ class AuthTokensService {
   String? _normalizeEmail(String? value) {
     final normalized = _normalizeValue(value);
     return normalized?.toLowerCase();
+  }
+
+  Map<String, dynamic> _normalizeJsonMap(Map raw) {
+    return raw.map(
+      (key, value) => MapEntry(key.toString(), _normalizeJsonValue(value)),
+    );
+  }
+
+  dynamic _normalizeJsonValue(Object? value) {
+    if (value is Map) {
+      return _normalizeJsonMap(value);
+    }
+
+    if (value is List) {
+      return value.map(_normalizeJsonValue).toList(growable: false);
+    }
+
+    return value;
   }
 }

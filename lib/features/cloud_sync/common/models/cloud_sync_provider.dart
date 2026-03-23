@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -29,6 +29,7 @@ class CloudSyncProviderMetadata {
     this.userInfoEndpoint,
     this.userInfoMethod = CloudSyncUserInfoMethod.get,
     this.userInfoAuthScheme = 'Bearer',
+    this.apiAuthSchemeOverride,
     this.additionalAuthParameters = const <String, String>{},
   });
 
@@ -46,6 +47,7 @@ class CloudSyncProviderMetadata {
   final String? userInfoEndpoint;
   final CloudSyncUserInfoMethod userInfoMethod;
   final String userInfoAuthScheme;
+  final String? apiAuthSchemeOverride;
   final Map<String, String> additionalAuthParameters;
 
   bool get supportsAuth =>
@@ -84,6 +86,7 @@ extension CloudSyncProviderX on CloudSyncProvider {
         userInfoEndpoint:
             'https://api.dropboxapi.com/2/users/get_current_account',
         userInfoMethod: CloudSyncUserInfoMethod.post,
+        apiAuthSchemeOverride: 'Bearer',
         additionalAuthParameters: {'token_access_type': 'offline'},
       ),
       CloudSyncProvider.google => const CloudSyncProviderMetadata(
@@ -115,6 +118,7 @@ extension CloudSyncProviderX on CloudSyncProvider {
           'https://www.googleapis.com/auth/userinfo.profile',
         ],
         userInfoEndpoint: 'https://www.googleapis.com/oauth2/v2/userinfo',
+        apiAuthSchemeOverride: 'Bearer',
         additionalAuthParameters: {
           'access_type': 'offline',
           'prompt': 'consent',
@@ -149,6 +153,7 @@ extension CloudSyncProviderX on CloudSyncProvider {
           'offline_access',
         ],
         userInfoEndpoint: 'https://graph.microsoft.com/v1.0/me',
+        apiAuthSchemeOverride: 'Bearer',
       ),
       CloudSyncProvider.yandex => const CloudSyncProviderMetadata(
         displayName: 'Yandex',
@@ -171,6 +176,7 @@ extension CloudSyncProviderX on CloudSyncProvider {
         ],
         userInfoEndpoint: 'https://login.yandex.ru/info',
         userInfoAuthScheme: 'OAuth',
+        apiAuthSchemeOverride: 'OAuth',
         additionalAuthParameters: {'device_name': MainConstants.appName},
       ),
       CloudSyncProvider.other => const CloudSyncProviderMetadata(
@@ -189,5 +195,3 @@ extension CloudSyncProviderX on CloudSyncProvider {
     };
   }
 }
-
-

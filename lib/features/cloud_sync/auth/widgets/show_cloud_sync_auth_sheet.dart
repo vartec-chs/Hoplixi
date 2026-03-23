@@ -18,46 +18,70 @@ Future<void> showCloudSyncAuthSheet({
   required BuildContext context,
   required WidgetRef ref,
   required String previousRoute,
+  CloudSyncProvider? initialProvider,
 }) async {
   final rootContext = context;
-  ref.read(authFlowProvider.notifier).startFlow(previousRoute: previousRoute);
+  final notifier = ref.read(authFlowProvider.notifier);
+  notifier.startFlow(previousRoute: previousRoute);
+  if (initialProvider != null) {
+    notifier.selectProvider(initialProvider);
+  }
 
   await WoltModalSheet.show<void>(
     context: context,
     useRootNavigator: true,
     useSafeArea: true,
-    pageListBuilder: (modalContext) => [
-      WoltModalSheetPage(
-        topBarTitle: Text(rootContext.t.cloud_sync_auth.modal_title),
-        hasTopBarLayer: true,
-        isTopBarLayerAlwaysVisible: true,
-        trailingNavBarWidget: IconButton(
-          onPressed: () => Navigator.of(modalContext).pop(),
-          icon: const Icon(Icons.close),
-          tooltip: rootContext.t.cloud_sync_auth.cancel_button,
-        ),
-        child: _ProviderSelectionStep(rootContext: rootContext),
-      ),
-      WoltModalSheetPage(
-        topBarTitle: Text(rootContext.t.cloud_sync_auth.modal_title),
-        hasTopBarLayer: true,
-        isTopBarLayerAlwaysVisible: true,
-        leadingNavBarWidget: IconButton(
-          onPressed: WoltModalSheet.of(modalContext).showPrevious,
-          icon: const Icon(Icons.arrow_back),
-          tooltip: MaterialLocalizations.of(rootContext).backButtonTooltip,
-        ),
-        trailingNavBarWidget: IconButton(
-          onPressed: () => Navigator.of(modalContext).pop(),
-          icon: const Icon(Icons.close),
-          tooltip: rootContext.t.cloud_sync_auth.cancel_button,
-        ),
-        child: _CredentialSelectionStep(
-          rootContext: rootContext,
-          modalContext: modalContext,
-        ),
-      ),
-    ],
+    pageListBuilder: (modalContext) => initialProvider == null
+        ? [
+            WoltModalSheetPage(
+              topBarTitle: Text(rootContext.t.cloud_sync_auth.modal_title),
+              hasTopBarLayer: true,
+              isTopBarLayerAlwaysVisible: true,
+              trailingNavBarWidget: IconButton(
+                onPressed: () => Navigator.of(modalContext).pop(),
+                icon: const Icon(Icons.close),
+                tooltip: rootContext.t.cloud_sync_auth.cancel_button,
+              ),
+              child: _ProviderSelectionStep(rootContext: rootContext),
+            ),
+            WoltModalSheetPage(
+              topBarTitle: Text(rootContext.t.cloud_sync_auth.modal_title),
+              hasTopBarLayer: true,
+              isTopBarLayerAlwaysVisible: true,
+              leadingNavBarWidget: IconButton(
+                onPressed: WoltModalSheet.of(modalContext).showPrevious,
+                icon: const Icon(Icons.arrow_back),
+                tooltip: MaterialLocalizations.of(
+                  rootContext,
+                ).backButtonTooltip,
+              ),
+              trailingNavBarWidget: IconButton(
+                onPressed: () => Navigator.of(modalContext).pop(),
+                icon: const Icon(Icons.close),
+                tooltip: rootContext.t.cloud_sync_auth.cancel_button,
+              ),
+              child: _CredentialSelectionStep(
+                rootContext: rootContext,
+                modalContext: modalContext,
+              ),
+            ),
+          ]
+        : [
+            WoltModalSheetPage(
+              topBarTitle: Text(rootContext.t.cloud_sync_auth.modal_title),
+              hasTopBarLayer: true,
+              isTopBarLayerAlwaysVisible: true,
+              trailingNavBarWidget: IconButton(
+                onPressed: () => Navigator.of(modalContext).pop(),
+                icon: const Icon(Icons.close),
+                tooltip: rootContext.t.cloud_sync_auth.cancel_button,
+              ),
+              child: _CredentialSelectionStep(
+                rootContext: rootContext,
+                modalContext: modalContext,
+              ),
+            ),
+          ],
   );
 
   final status = ref.read(authFlowProvider).status;
@@ -269,4 +293,3 @@ class _CredentialSelectionStep extends ConsumerWidget {
     };
   }
 }
-

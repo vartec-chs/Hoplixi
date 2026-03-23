@@ -11,7 +11,9 @@ import 'package:hoplixi/features/old/cloud_sync/oauth_apps/ui/oauth_apps_screen.
 import 'package:hoplixi/features/cloud_sync/app_credentials/screens/app_credentials_screen.dart';
 import 'package:hoplixi/features/cloud_sync/auth/screens/auth_progress_screen.dart';
 import 'package:hoplixi/features/cloud_sync/screens/cloud_sync_playground_screen.dart';
+import 'package:hoplixi/features/cloud_sync/screens/cloud_sync_storage_screen.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/screens/auth_tokens_screen.dart';
+import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 import 'package:hoplixi/features/component_showcase/component_showcase_screen.dart';
 import 'package:hoplixi/features/home/crypt_test_screen.dart';
 import 'package:hoplixi/features/home/home_screen.dart';
@@ -142,6 +144,14 @@ final List<RouteBase> appRoutes = [
   GoRoute(
     path: AppRoutesPaths.cloudSync,
     builder: (context, state) => const CloudSyncPlaygroundScreen(),
+  ),
+  GoRoute(
+    path: AppRoutesPaths.cloudSyncStorage,
+    builder: (context, state) => CloudSyncStorageScreen(
+      initialProvider: _parseCloudSyncProvider(
+        state.uri.queryParameters['provider'],
+      ),
+    ),
   ),
   GoRoute(
     path: AppRoutesPaths.cloudSyncAppCredentials,
@@ -439,4 +449,19 @@ class BaseScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(body: Center(child: Text(title ?? 'Base Screen')));
   }
+}
+
+CloudSyncProvider? _parseCloudSyncProvider(String? rawValue) {
+  if (rawValue == null || rawValue.trim().isEmpty) {
+    return null;
+  }
+
+  final normalized = rawValue.trim().toLowerCase();
+  for (final provider in CloudSyncProvider.values) {
+    if (provider.id == normalized) {
+      return provider;
+    }
+  }
+
+  return null;
 }

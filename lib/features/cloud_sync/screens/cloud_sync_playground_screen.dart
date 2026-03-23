@@ -51,7 +51,8 @@ class CloudSyncPlaygroundScreen extends ConsumerWidget {
             icon: LucideIcons.folderCog,
             title: 'Storage Layer',
             description:
-                'Низкоуровневый storage-слой уже подключён в кодовую базу. UI для него пока не добавлен.',
+                'Экран для переключения провайдеров и работы с облачным storage API.',
+            onTap: () => context.push(AppRoutesPaths.cloudSyncStorage),
           ),
         ],
       ),
