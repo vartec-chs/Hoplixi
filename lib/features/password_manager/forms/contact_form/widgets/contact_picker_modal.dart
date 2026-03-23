@@ -37,7 +37,8 @@ class _OsContactsPickerContent extends StatefulWidget {
   final List<Contact> contacts;
 
   @override
-  State<_OsContactsPickerContent> createState() => _OsContactsPickerContentState();
+  State<_OsContactsPickerContent> createState() =>
+      _OsContactsPickerContentState();
 }
 
 class _OsContactsPickerContentState extends State<_OsContactsPickerContent> {
@@ -73,7 +74,8 @@ class _OsContactsPickerContentState extends State<_OsContactsPickerContent> {
               hintText: context.t.dashboard_forms.enter_name_hint,
               prefixIcon: const Icon(Icons.search),
             ),
-            onChanged: (value) => setState(() => _query = value.trim().toLowerCase()),
+            onChanged: (value) =>
+                setState(() => _query = value.trim().toLowerCase()),
           ),
         ),
         const Divider(height: 1),
@@ -98,14 +100,14 @@ class _OsContactsPickerContentState extends State<_OsContactsPickerContent> {
                       final contact = filteredContacts[index];
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: Theme.of(context)
-                              .colorScheme
-                              .primaryContainer,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer,
                           child: Icon(
                             Icons.person_outline,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onPrimaryContainer,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onPrimaryContainer,
                           ),
                         ),
                         title: Text(
@@ -169,7 +171,6 @@ class _OsContactsPickerContentState extends State<_OsContactsPickerContent> {
       return context.t.dashboard_forms.not_specified;
     }
 
-    return parts.join(' • ');
+    return parts.join(' | ');
   }
 }
-

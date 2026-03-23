@@ -25,7 +25,8 @@ generic parameters they accept.
 - `ResultDart<S, E>` — a result that carries a successful value of type `S` or a
   failure of type `E`.
 - `AsyncResultDart<S, E>` — alias for `Future<ResultDart<S, E>>` used for async
-  functions.
+  functions. Не нужно писать `Future<ResultDart<...>>` вручную, просто
+  используйте `AsyncResultDart`.
 
 These types should be used when you want explicit, typed error values (for
 example `AuthError`, `ValidationError`, `NetworkError`).

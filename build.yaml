@@ -1,13 +1,8 @@
 targets:
   $default:
     builders:
-      # typed_prefs:
-      #   import: 'package:typed_prefs/builder.dart'
-      #   builder_factories: ['prefsBuilder']
-      #   build_extensions: { '.dart': ['.g.dart'] }
-      #   auto_apply: dependents
-      #   build_to: cache
-      #   applies_builders: ['source_gen|combining_builder']
+      typed_prefs|typed_prefs:
+        enabled: true
       slang_build_runner:
         options:
           base_locale: ru
