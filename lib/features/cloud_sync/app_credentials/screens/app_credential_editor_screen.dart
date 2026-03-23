@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/cloud_sync/app_credentials/models/app_credential_entry.dart';
@@ -13,7 +13,6 @@ import 'package:uuid/uuid.dart';
 
 const _uuid = Uuid();
 
-/// Экран создания и редактирования пользовательских app credentials.
 class AppCredentialEditorScreen extends ConsumerStatefulWidget {
   const AppCredentialEditorScreen({super.key, this.initialEntry});
 
@@ -51,6 +50,7 @@ class _AppCredentialEditorScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = context.t.cloud_sync_app_credentials;
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -68,7 +68,7 @@ class _AppCredentialEditorScreenState
               children: [
                 Text(
                   l10n.provider_label,
-                  style: Theme.of(context).textTheme.titleSmall,
+                  style: theme.textTheme.titleSmall,
                 ),
                 const SizedBox(height: 8),
                 CloudSyncProviderSelector(
@@ -81,27 +81,27 @@ class _AppCredentialEditorScreenState
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Platform Target',
-                  style: Theme.of(context).textTheme.titleSmall,
+                  l10n.platform_target_label,
+                  style: theme.textTheme.titleSmall,
                 ),
                 const SizedBox(height: 8),
                 SegmentedButton<AppCredentialPlatformTarget>(
                   showSelectedIcon: false,
-                  segments: const [
+                  segments: [
                     ButtonSegment<AppCredentialPlatformTarget>(
                       value: AppCredentialPlatformTarget.all,
-                      label: Text('All'),
-                      icon: Icon(Icons.devices_outlined),
+                      label: Text(l10n.platform_target_all_label),
+                      icon: const Icon(Icons.devices_outlined),
                     ),
                     ButtonSegment<AppCredentialPlatformTarget>(
                       value: AppCredentialPlatformTarget.desktop,
-                      label: Text('Desktop'),
-                      icon: Icon(Icons.desktop_windows_outlined),
+                      label: Text(l10n.platform_target_desktop_label),
+                      icon: const Icon(Icons.desktop_windows_outlined),
                     ),
                     ButtonSegment<AppCredentialPlatformTarget>(
                       value: AppCredentialPlatformTarget.mobile,
-                      label: Text('Mobile'),
-                      icon: Icon(Icons.smartphone_outlined),
+                      label: Text(l10n.platform_target_mobile_label),
+                      icon: const Icon(Icons.smartphone_outlined),
                     ),
                   ],
                   selected: <AppCredentialPlatformTarget>{_platformTarget},
@@ -113,11 +113,14 @@ class _AppCredentialEditorScreenState
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Use this to restrict the credential to desktop, mobile, or both.',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  l10n.platform_target_helper,
+                  style: theme.textTheme.bodySmall,
                 ),
                 const SizedBox(height: 20),
-                AppCredentialSetupInfoCard(provider: _formData.provider),
+                AppCredentialSetupInfoCard(
+                  provider: _formData.provider,
+                  platformTarget: _platformTarget,
+                ),
                 const SizedBox(height: 20),
                 PrimaryTextFormField(
                   label: l10n.name_field_label,

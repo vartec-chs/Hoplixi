@@ -1,15 +1,20 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/cloud_sync/app_credentials/models/app_credential_entry.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/shared/ui/notification_card.dart';
 
-/// Подсказки по настройке OAuth-приложения для выбранного провайдера.
 class AppCredentialSetupInfoCard extends StatelessWidget {
-  const AppCredentialSetupInfoCard({super.key, required this.provider});
+  const AppCredentialSetupInfoCard({
+    super.key,
+    required this.provider,
+    required this.platformTarget,
+  });
 
   final CloudSyncProvider provider;
+  final AppCredentialPlatformTarget platformTarget;
 
   @override
   Widget build(BuildContext context) {
@@ -28,16 +33,37 @@ class AppCredentialSetupInfoCard extends StatelessWidget {
           const SizedBox(height: 12),
           WarningNotificationCard(text: l10n.onedrive_redirect_hint),
         ],
+        if (provider == CloudSyncProvider.google &&
+            platformTarget == AppCredentialPlatformTarget.mobile) ...[
+          const SizedBox(height: 12),
+          WarningNotificationCard(text: l10n.google_mobile_recommendation),
+        ],
         const SizedBox(height: 12),
-        _CopyableValueTile(
-          label: l10n.desktop_redirect_label,
-          value: metadata.desktopRedirectUri,
-        ),
-        const SizedBox(height: 12),
-        _CopyableValueTile(
-          label: l10n.mobile_redirect_label,
-          value: metadata.appCredentialsMobileRedirectUri,
-        ),
+        ...switch (platformTarget) {
+          AppCredentialPlatformTarget.desktop => [
+            _CopyableValueTile(
+              label: l10n.desktop_redirect_label,
+              value: metadata.desktopRedirectUri,
+            ),
+          ],
+          AppCredentialPlatformTarget.mobile => [
+            _CopyableValueTile(
+              label: l10n.mobile_redirect_label,
+              value: metadata.appCredentialsMobileRedirectUri,
+            ),
+          ],
+          AppCredentialPlatformTarget.all => [
+            _CopyableValueTile(
+              label: l10n.desktop_redirect_label,
+              value: metadata.desktopRedirectUri,
+            ),
+            const SizedBox(height: 12),
+            _CopyableValueTile(
+              label: l10n.mobile_redirect_label,
+              value: metadata.appCredentialsMobileRedirectUri,
+            ),
+          ],
+        },
         if (metadata.scopes.isNotEmpty) ...[
           const SizedBox(height: 12),
           _CopyableValueTile(

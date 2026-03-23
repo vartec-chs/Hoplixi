@@ -72,6 +72,31 @@ class _Content extends ConsumerWidget {
 
   final List<AppCredentialEntry> entries;
 
+  List<Widget> _buildEntryTiles(
+    List<AppCredentialEntry> entries, {
+    VoidCallback Function(AppCredentialEntry entry)? onEdit,
+    VoidCallback Function(AppCredentialEntry entry)? onDelete,
+  }) {
+    final tiles = <Widget>[];
+
+    for (var index = 0; index < entries.length; index++) {
+      if (index > 0) {
+        tiles.add(const SizedBox(height: 12));
+      }
+
+      final entry = entries[index];
+      tiles.add(
+        AppCredentialListTile(
+          entry: entry,
+          onEdit: onEdit?.call(entry),
+          onDelete: onDelete?.call(entry),
+        ),
+      );
+    }
+
+    return tiles;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.t.cloud_sync_app_credentials;
@@ -93,9 +118,7 @@ class _Content extends ConsumerWidget {
           if (builtinEntries.isEmpty)
             Text(l10n.builtin_empty_description)
           else
-            ...builtinEntries.map(
-              (entry) => AppCredentialListTile(entry: entry),
-            ),
+            ..._buildEntryTiles(builtinEntries),
           const SizedBox(height: 20),
           _SectionHeader(
             title: l10n.custom_section_title,
@@ -113,21 +136,19 @@ class _Content extends ConsumerWidget {
               },
             )
           else
-            ...userEntries.map(
-              (entry) => AppCredentialListTile(
-                entry: entry,
-                onEdit: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) =>
-                          AppCredentialEditorScreen(initialEntry: entry),
-                    ),
-                  );
-                },
-                onDelete: () async {
-                  await _confirmDelete(context, ref, entry);
-                },
-              ),
+            ..._buildEntryTiles(
+              userEntries,
+              onEdit: (entry) => () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) =>
+                        AppCredentialEditorScreen(initialEntry: entry),
+                  ),
+                );
+              },
+              onDelete: (entry) => () async {
+                await _confirmDelete(context, ref, entry);
+              },
             ),
         ],
       ),
