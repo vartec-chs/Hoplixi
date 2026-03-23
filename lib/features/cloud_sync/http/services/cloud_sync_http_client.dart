@@ -10,10 +10,11 @@ import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_download_requ
 import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_exception.dart';
 import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_request.dart';
 import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_upload_request.dart';
+import 'package:hoplixi/features/cloud_sync/http/services/cloud_sync_http_transport.dart';
 import 'package:hoplixi/features/cloud_sync/http/services/cloud_sync_token_refresh_service.dart';
 import 'package:hoplixi/features/cloud_sync/http/services/cloud_sync_token_resolver.dart';
 
-class CloudSyncHttpClient {
+class CloudSyncHttpClient implements CloudSyncHttpTransport {
   CloudSyncHttpClient({
     required this.tokenId,
     required this.provider,
@@ -54,6 +55,7 @@ class CloudSyncHttpClient {
   final CloudSyncTokenRefreshService _tokenRefreshService;
   final Dio _dio;
 
+  @override
   Future<Response<T>> request<T>(CloudSyncHttpRequest request) async {
     try {
       return await _dio.requestUri<T>(
@@ -69,6 +71,7 @@ class CloudSyncHttpClient {
     }
   }
 
+  @override
   Future<ResponseBody> download(CloudSyncDownloadRequest request) async {
     if (request.savePath != null && request.responseSink != null) {
       throw ArgumentError(
@@ -109,6 +112,7 @@ class CloudSyncHttpClient {
     }
   }
 
+  @override
   Future<Response<T>> upload<T>(CloudSyncUploadRequest request) async {
     try {
       return await _dio.requestUri<T>(
@@ -124,6 +128,7 @@ class CloudSyncHttpClient {
     }
   }
 
+  @override
   void close({bool force = true}) {
     _dio.close(force: force);
   }

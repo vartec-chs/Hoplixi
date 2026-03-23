@@ -21,6 +21,7 @@ class AppRoutesPaths {
   static const String oauthApps = '/oauth-apps';
   static const String oauthTokens = '/oauth-tokens';
   static const String oauthLogin = '/oauth-login';
+  static const String cloudSync = '/cloud-sync';
   static const String cloudSyncAppCredentials = '/cloud-sync/app-credentials';
   static const String cloudSyncAuthTokens = '/cloud-sync/auth-tokens';
   static const String cloudSyncAuthProgress = '/cloud-sync/auth/progress';

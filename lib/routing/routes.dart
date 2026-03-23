@@ -10,6 +10,7 @@ import 'package:hoplixi/features/old/cloud_sync/auth/ui/tokens_screen.dart';
 import 'package:hoplixi/features/old/cloud_sync/oauth_apps/ui/oauth_apps_screen.dart';
 import 'package:hoplixi/features/cloud_sync/app_credentials/screens/app_credentials_screen.dart';
 import 'package:hoplixi/features/cloud_sync/auth/screens/auth_progress_screen.dart';
+import 'package:hoplixi/features/cloud_sync/screens/cloud_sync_playground_screen.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/screens/auth_tokens_screen.dart';
 import 'package:hoplixi/features/component_showcase/component_showcase_screen.dart';
 import 'package:hoplixi/features/home/crypt_test_screen.dart';
@@ -137,6 +138,10 @@ final List<RouteBase> appRoutes = [
   GoRoute(
     path: AppRoutesPaths.oauthLogin,
     builder: (context, state) => const OAuthLoginScreen(),
+  ),
+  GoRoute(
+    path: AppRoutesPaths.cloudSync,
+    builder: (context, state) => const CloudSyncPlaygroundScreen(),
   ),
   GoRoute(
     path: AppRoutesPaths.cloudSyncAppCredentials,

@@ -6,11 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
-import 'package:hoplixi/features/cloud_sync/auth/widgets/show_cloud_sync_auth_sheet.dart';
 import 'package:hoplixi/core/multi_window/index.dart';
 import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_store/provider/db_history_provider.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
@@ -582,8 +580,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   /// Список кнопок действий — легко расширять
   List<ActionItem> _buildActionItems(BuildContext context) {
-    final authL10n = context.t.cloud_sync_auth;
-
     return [
       ActionItem(
         icon: LucideIcons.folderOpen,
@@ -645,15 +641,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       // ),
       ActionItem(
         icon: LucideIcons.cloud,
-        label: authL10n.launch_action_label,
-        description: authL10n.launch_action_description,
-        onTap: () async {
-          await showCloudSyncAuthSheet(
-            context: context,
-            ref: ref,
-            previousRoute: AppRoutesPaths.home,
-          );
-        },
+        label: 'Cloud Sync',
+        description: 'Полигон для авторизации, OAuth credentials и токенов.',
+        onTap: () => context.push(AppRoutesPaths.cloudSync),
       ),
       ActionItem(
         icon: LucideIcons.fileText,
@@ -667,18 +657,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           label: 'Component Showcase',
           description: 'Тестовый экран для UI-компонентов',
           onTap: () => context.push(AppRoutesPaths.componentShowcase),
-        ),
-        ActionItem(
-          icon: LucideIcons.bug,
-          label: 'Тест app-credentials',
-          description: 'Экран для разработки функционала app-credentials',
-          onTap: () => context.push(AppRoutesPaths.cloudSyncAppCredentials),
-        ),
-        ActionItem(
-          icon: LucideIcons.lock,
-          label: 'Тест auth-tokens',
-          description: 'Экран для разработки функционала auth-tokens',
-          onTap: () => context.push(AppRoutesPaths.cloudSyncAuthTokens),
         ),
       ],
     ];
