@@ -1,0 +1,485 @@
+import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
+import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
+import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
+import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_download_request.dart';
+import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_exception.dart';
+import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_request.dart';
+import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_upload_request.dart';
+import 'package:hoplixi/features/cloud_sync/http/services/cloud_sync_token_refresh_service.dart';
+import 'package:hoplixi/features/cloud_sync/http/services/cloud_sync_token_resolver.dart';
+
+class CloudSyncHttpClient {
+  CloudSyncHttpClient({
+    required this.tokenId,
+    required this.provider,
+    required CloudSyncTokenResolver tokenResolver,
+    required CloudSyncTokenRefreshService tokenRefreshService,
+    Dio? dio,
+  }) : _tokenResolver = tokenResolver,
+       _tokenRefreshService = tokenRefreshService,
+       _dio =
+           dio ??
+           Dio(
+             BaseOptions(
+               connectTimeout: const Duration(seconds: 20),
+               sendTimeout: const Duration(seconds: 60),
+               receiveTimeout: const Duration(minutes: 2),
+             ),
+           ) {
+    _dio.interceptors.add(
+      _CloudSyncAuthInterceptor(
+        dio: _dio,
+        tokenId: tokenId,
+        provider: provider,
+        tokenResolver: _tokenResolver,
+        tokenRefreshService: _tokenRefreshService,
+      ),
+    );
+  }
+
+  static const String _logTag = 'CloudSyncHttpClient';
+
+  static const String extraTokenIdKey = 'cloudSync.tokenId';
+  static const String extraProviderKey = 'cloudSync.provider';
+  static const String extraRetriedKey = 'cloudSync.retriedAfterRefresh';
+
+  final String tokenId;
+  final CloudSyncProvider provider;
+  final CloudSyncTokenResolver _tokenResolver;
+  final CloudSyncTokenRefreshService _tokenRefreshService;
+  final Dio _dio;
+
+  Future<Response<T>> request<T>(CloudSyncHttpRequest request) async {
+    try {
+      return await _dio.requestUri<T>(
+        request.uri,
+        data: request.data,
+        cancelToken: request.cancelToken,
+        options: request.toOptions(extra: _requestExtra()),
+        onSendProgress: request.onSendProgress,
+        onReceiveProgress: request.onReceiveProgress,
+      );
+    } on DioException catch (error, stackTrace) {
+      throw _mapDioException(error, stackTrace: stackTrace);
+    }
+  }
+
+  Future<ResponseBody> download(CloudSyncDownloadRequest request) async {
+    if (request.savePath != null && request.responseSink != null) {
+      throw ArgumentError(
+        'Provide either savePath or responseSink for CloudSyncDownloadRequest.',
+      );
+    }
+
+    try {
+      final response = await _dio.requestUri<ResponseBody>(
+        request.uri,
+        data: request.data,
+        cancelToken: request.cancelToken,
+        options: request.toOptions(extra: _requestExtra()),
+      );
+      final body = response.data;
+      if (body == null) {
+        throw CloudSyncHttpException(
+          type: CloudSyncHttpExceptionType.badResponse,
+          message: 'Download response body is empty.',
+          provider: provider,
+          tokenId: tokenId,
+          statusCode: response.statusCode,
+          requestUri: request.uri,
+        );
+      }
+
+      if (request.savePath != null) {
+        return _persistDownloadToFile(body, request: request);
+      }
+
+      if (request.responseSink != null) {
+        return _pipeDownloadToSink(body, request: request);
+      }
+
+      return body;
+    } on DioException catch (error, stackTrace) {
+      throw _mapDioException(error, stackTrace: stackTrace);
+    }
+  }
+
+  Future<Response<T>> upload<T>(CloudSyncUploadRequest request) async {
+    try {
+      return await _dio.requestUri<T>(
+        request.uri,
+        data: request.data,
+        cancelToken: request.cancelToken,
+        options: request.toOptions(extra: _requestExtra()),
+        onSendProgress: request.onSendProgress,
+        onReceiveProgress: request.onReceiveProgress,
+      );
+    } on DioException catch (error, stackTrace) {
+      throw _mapDioException(error, stackTrace: stackTrace);
+    }
+  }
+
+  void close({bool force = true}) {
+    _dio.close(force: force);
+  }
+
+  Future<ResponseBody> _persistDownloadToFile(
+    ResponseBody body, {
+    required CloudSyncDownloadRequest request,
+  }) async {
+    final file = File(request.savePath!);
+    await file.parent.create(recursive: true);
+    final sink = file.openWrite();
+
+    try {
+      await _consumeResponseBody(
+        body,
+        onChunk: (chunk) async {
+          sink.add(chunk);
+        },
+        onReceiveProgress: request.onReceiveProgress,
+      );
+    } catch (_) {
+      await sink.close();
+      rethrow;
+    }
+
+    await sink.flush();
+    await sink.close();
+
+    return ResponseBody.fromBytes(
+      const <int>[],
+      body.statusCode,
+      statusMessage: body.statusMessage,
+      headers: body.headers,
+    );
+  }
+
+  Future<ResponseBody> _pipeDownloadToSink(
+    ResponseBody body, {
+    required CloudSyncDownloadRequest request,
+  }) async {
+    final chunks = <List<int>>[];
+
+    try {
+      await _consumeResponseBody(
+        body,
+        onChunk: (chunk) async {
+          chunks.add(chunk);
+        },
+        onReceiveProgress: request.onReceiveProgress,
+      );
+      await request.responseSink!.addStream(
+        Stream<List<int>>.fromIterable(chunks),
+      );
+    } finally {
+      chunks.clear();
+    }
+
+    return ResponseBody.fromBytes(
+      const <int>[],
+      body.statusCode,
+      statusMessage: body.statusMessage,
+      headers: body.headers,
+    );
+  }
+
+  Future<void> _consumeResponseBody(
+    ResponseBody body, {
+    required Future<void> Function(Uint8List chunk) onChunk,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    var received = 0;
+    final total = body.contentLength;
+
+    await for (final chunk in body.stream) {
+      received += chunk.length;
+      await onChunk(chunk);
+      onReceiveProgress?.call(received, total);
+    }
+  }
+
+  Map<String, dynamic> _requestExtra() => <String, dynamic>{
+    extraTokenIdKey: tokenId,
+    extraProviderKey: provider.id,
+    extraRetriedKey: false,
+  };
+
+  CloudSyncHttpException _mapDioException(
+    DioException error, {
+    required StackTrace stackTrace,
+  }) {
+    final nested = error.error;
+    if (nested is CloudSyncHttpException) {
+      return nested;
+    }
+
+    final snippet = CloudSyncHttpException.buildResponseBodySnippet(
+      error.response?.data,
+    );
+
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return CloudSyncHttpException(
+          type: CloudSyncHttpExceptionType.timeout,
+          message: 'Cloud API request timed out.',
+          provider: provider,
+          tokenId: tokenId,
+          statusCode: error.response?.statusCode,
+          requestUri: error.requestOptions.uri,
+          responseBodySnippet: snippet,
+          cause: error,
+        );
+      case DioExceptionType.cancel:
+        return CloudSyncHttpException(
+          type: CloudSyncHttpExceptionType.cancelled,
+          message: 'Cloud API request was cancelled.',
+          provider: provider,
+          tokenId: tokenId,
+          requestUri: error.requestOptions.uri,
+          cause: error,
+        );
+      case DioExceptionType.badResponse:
+        final type = error.response?.statusCode == 401
+            ? CloudSyncHttpExceptionType.unauthorized
+            : CloudSyncHttpExceptionType.badResponse;
+        return CloudSyncHttpException(
+          type: type,
+          message: error.response?.statusCode == 401
+              ? 'Cloud API request is unauthorized.'
+              : 'Cloud API returned an error response.',
+          provider: provider,
+          tokenId: tokenId,
+          statusCode: error.response?.statusCode,
+          requestUri: error.requestOptions.uri,
+          responseBodySnippet: snippet,
+          cause: error,
+        );
+      case DioExceptionType.connectionError:
+      case DioExceptionType.badCertificate:
+        return CloudSyncHttpException(
+          type: CloudSyncHttpExceptionType.network,
+          message: 'Cloud API request failed due to a network error.',
+          provider: provider,
+          tokenId: tokenId,
+          statusCode: error.response?.statusCode,
+          requestUri: error.requestOptions.uri,
+          responseBodySnippet: snippet,
+          cause: error,
+        );
+      case DioExceptionType.unknown:
+        logError(
+          'Unexpected cloud sync HTTP error: $error',
+          error: error,
+          stackTrace: stackTrace,
+          tag: _logTag,
+        );
+        return CloudSyncHttpException(
+          type: CloudSyncHttpExceptionType.unknown,
+          message: 'Unexpected cloud API error.',
+          provider: provider,
+          tokenId: tokenId,
+          statusCode: error.response?.statusCode,
+          requestUri: error.requestOptions.uri,
+          responseBodySnippet: snippet,
+          cause: error,
+        );
+    }
+  }
+}
+
+class _CloudSyncAuthInterceptor extends QueuedInterceptor {
+  _CloudSyncAuthInterceptor({
+    required Dio dio,
+    required String tokenId,
+    required CloudSyncProvider provider,
+    required CloudSyncTokenResolver tokenResolver,
+    required CloudSyncTokenRefreshService tokenRefreshService,
+  }) : _dio = dio,
+       _tokenId = tokenId,
+       _provider = provider,
+       _tokenResolver = tokenResolver,
+       _tokenRefreshService = tokenRefreshService;
+
+  static const String _logTag = 'CloudSyncAuthInterceptor';
+
+  final Dio _dio;
+  final String _tokenId;
+  final CloudSyncProvider _provider;
+  final CloudSyncTokenResolver _tokenResolver;
+  final CloudSyncTokenRefreshService _tokenRefreshService;
+
+  Future<AuthTokenEntry>? _refreshInFlight;
+
+  @override
+  Future<void> onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    try {
+      final token = await _tokenResolver.requireToken(_tokenId);
+      final headers = <String, dynamic>{
+        ...options.headers,
+        HttpHeaders.authorizationHeader: _buildAuthorizationHeader(token),
+      };
+      final extra = <String, dynamic>{
+        ...options.extra,
+        CloudSyncHttpClient.extraTokenIdKey: _tokenId,
+        CloudSyncHttpClient.extraProviderKey: _provider.id,
+        CloudSyncHttpClient.extraRetriedKey:
+            options.extra[CloudSyncHttpClient.extraRetriedKey] == true,
+      };
+
+      handler.next(options.copyWith(headers: headers, extra: extra));
+    } catch (error, stackTrace) {
+      handler.reject(
+        DioException(
+          requestOptions: options,
+          error: error,
+          stackTrace: stackTrace,
+          type: DioExceptionType.unknown,
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<void> onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
+    if (err.response?.statusCode != 401) {
+      handler.next(err);
+      return;
+    }
+
+    final alreadyRetried =
+        err.requestOptions.extra[CloudSyncHttpClient.extraRetriedKey] == true;
+    if (alreadyRetried) {
+      handler.reject(
+        _wrapAsDioException(
+          err,
+          CloudSyncHttpException(
+            type: CloudSyncHttpExceptionType.unauthorized,
+            message: 'Cloud API request remained unauthorized after retry.',
+            provider: _provider,
+            tokenId: _tokenId,
+            statusCode: err.response?.statusCode,
+            requestUri: err.requestOptions.uri,
+            responseBodySnippet:
+                CloudSyncHttpException.buildResponseBodySnippet(
+                  err.response?.data,
+                ),
+            cause: err,
+          ),
+        ),
+      );
+      return;
+    }
+
+    try {
+      final currentToken = await _tokenResolver.requireToken(_tokenId);
+      final failedAuthHeader = err
+          .requestOptions
+          .headers[HttpHeaders.authorizationHeader]
+          ?.toString();
+      final currentAuthHeader = _buildAuthorizationHeader(currentToken);
+
+      final tokenForRetry = failedAuthHeader == currentAuthHeader
+          ? await _refreshTokenOnce()
+          : currentToken;
+
+      final retried = err.requestOptions.copyWith(
+        headers: <String, dynamic>{
+          ...err.requestOptions.headers,
+          HttpHeaders.authorizationHeader: _buildAuthorizationHeader(
+            tokenForRetry,
+          ),
+        },
+        extra: <String, dynamic>{
+          ...err.requestOptions.extra,
+          CloudSyncHttpClient.extraRetriedKey: true,
+        },
+      );
+
+      final response = await _dio.fetch<dynamic>(retried);
+      handler.resolve(response);
+    } catch (error, stackTrace) {
+      final cloudError = error is CloudSyncHttpException
+          ? error
+          : CloudSyncHttpException(
+              type: CloudSyncHttpExceptionType.unknown,
+              message: 'Failed to refresh OAuth token for cloud request.',
+              provider: _provider,
+              tokenId: _tokenId,
+              statusCode: err.response?.statusCode,
+              requestUri: err.requestOptions.uri,
+              responseBodySnippet:
+                  CloudSyncHttpException.buildResponseBodySnippet(
+                    err.response?.data,
+                  ),
+              cause: error,
+            );
+
+      logWarning(
+        'Cloud request refresh failed: $cloudError',
+        tag: _logTag,
+        data: {'provider': _provider.id, 'tokenId': _tokenId},
+      );
+
+      handler.reject(
+        DioException(
+          requestOptions: err.requestOptions,
+          response: err.response,
+          type: DioExceptionType.badResponse,
+          error: cloudError,
+          stackTrace: stackTrace,
+        ),
+      );
+    }
+  }
+
+  Future<AuthTokenEntry> _refreshTokenOnce() {
+    final inFlight = _refreshInFlight;
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final refreshFuture = _tokenRefreshService.refreshToken(_tokenId);
+    _refreshInFlight = refreshFuture;
+    return refreshFuture.whenComplete(() {
+      if (identical(_refreshInFlight, refreshFuture)) {
+        _refreshInFlight = null;
+      }
+    });
+  }
+
+  DioException _wrapAsDioException(
+    DioException source,
+    CloudSyncHttpException cloudError,
+  ) {
+    return DioException(
+      requestOptions: source.requestOptions,
+      response: source.response,
+      type: source.type,
+      error: cloudError,
+      stackTrace: source.stackTrace,
+      message: source.message,
+    );
+  }
+
+  String _buildAuthorizationHeader(AuthTokenEntry token) {
+    final tokenType = token.tokenType?.trim();
+    final scheme = tokenType == null || tokenType.isEmpty
+        ? 'Bearer'
+        : tokenType;
+    return '$scheme ${token.accessToken.trim()}';
+  }
+}
