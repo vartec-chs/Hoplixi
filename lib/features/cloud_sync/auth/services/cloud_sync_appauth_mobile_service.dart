@@ -67,9 +67,17 @@ class CloudSyncAppAuthMobileService {
 
       final authorizationCode = authorization.authorizationCode?.trim();
       if (authorizationCode == null || authorizationCode.isEmpty) {
-        throw const CloudSyncAuthException(
-          CloudSyncAuthError.cancelled(
-            message: 'Authorization was cancelled by the user.',
+        final authError =
+            authorization.authorizationAdditionalParameters?['error'];
+        final authErrorDescription = authorization
+            .authorizationAdditionalParameters?['error_description'];
+
+        throw CloudSyncAuthException(
+          CloudSyncAuthError.oauthProvider(
+            message:
+                authErrorDescription ??
+                authError ??
+                'Authorization did not return a code. This usually means the redirect URI was not handled by the app.',
           ),
         );
       }
@@ -124,7 +132,33 @@ class CloudSyncAppAuthMobileService {
         accountName: extractAccountName(userInfo),
         extraData: extraData,
       );
-    } on FlutterAppAuthUserCancelledException {
+    } on FlutterAppAuthUserCancelledException catch (error) {
+      final details = error.platformErrorDetails;
+      final diagnosticParts = <String>[
+        if (details.error != null && details.error!.trim().isNotEmpty)
+          'error=${details.error!.trim()}',
+        if (details.errorDescription != null &&
+            details.errorDescription!.trim().isNotEmpty)
+          'description=${details.errorDescription!.trim()}',
+        if (details.code != null && details.code!.trim().isNotEmpty)
+          'code=${details.code!.trim()}',
+        if (details.type != null && details.type!.trim().isNotEmpty)
+          'type=${details.type!.trim()}',
+        if (details.rootCauseDebugDescription != null &&
+            details.rootCauseDebugDescription!.trim().isNotEmpty)
+          'rootCause=${details.rootCauseDebugDescription!.trim()}',
+        if (details.errorDebugDescription != null &&
+            details.errorDebugDescription!.trim().isNotEmpty)
+          'debug=${details.errorDebugDescription!.trim()}',
+      ];
+      final diagnosticMessage = diagnosticParts.join(' | ');
+
+      if (diagnosticMessage.trim().isNotEmpty) {
+        throw CloudSyncAuthException(
+          CloudSyncAuthError.oauthProvider(message: diagnosticMessage.trim()),
+        );
+      }
+
       throw const CloudSyncAuthException(
         CloudSyncAuthError.cancelled(
           message: 'Authorization was cancelled by the user.',
