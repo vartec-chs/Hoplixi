@@ -14,6 +14,7 @@ import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
 import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/core/theme/theme_window_sync_service.dart';
 import 'package:hoplixi/di_init.dart';
+import 'package:hoplixi/features/cloud_sync/auth/widgets/cloud_sync_auth_flow_listener.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_store/provider/decrypted_files_guard_provider.dart';
 import 'package:hoplixi/routing/router.dart';
@@ -47,7 +48,6 @@ class _AppState extends ConsumerState<App> {
       final savedMode = await storage.getThemeMode();
       return savedMode;
     }();
-
 
     Future<void>(() {
       ref.read(localeProvider.future);
@@ -124,10 +124,12 @@ class _AppState extends ConsumerState<App> {
                   supportedLocales: AppLocaleUtils.supportedLocales,
                   debugShowCheckedModeBanner: false,
                   builder: (context, child) {
-                    return animated_theme.ThemeSwitchingArea(
-                      child: UniversalPlatform.isDesktop
-                          ? RootBarsOverlay(child: child!)
-                          : child!,
+                    return CloudSyncAuthFlowListener(
+                      child: animated_theme.ThemeSwitchingArea(
+                        child: UniversalPlatform.isDesktop
+                            ? RootBarsOverlay(child: child!)
+                            : child!,
+                      ),
                     );
                   },
                 ),

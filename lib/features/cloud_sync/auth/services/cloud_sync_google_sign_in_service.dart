@@ -1,4 +1,4 @@
-﻿import 'package:google_sign_in/google_sign_in.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hoplixi/features/cloud_sync/app_credentials/models/app_credential_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_auth_error.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_oauth_result.dart';
@@ -10,6 +10,7 @@ class CloudSyncGoogleSignInService {
 
   final GoogleSignIn _googleSignIn;
   String? _initializedClientId;
+  String? _initializedServerClientId;
   bool _isInitialized = false;
 
   Future<CloudSyncOAuthResult> authorize({
@@ -17,6 +18,7 @@ class CloudSyncGoogleSignInService {
   }) async {
     final metadata = credential.provider.metadata;
     final clientId = credential.clientId.trim();
+    final serverClientId = credential.clientSecret?.trim();
     if (clientId.isEmpty) {
       throw const CloudSyncAuthException(
         CloudSyncAuthError.unsupportedCredential(
@@ -25,7 +27,10 @@ class CloudSyncGoogleSignInService {
       );
     }
 
-    await _ensureInitialized(clientId);
+    await _ensureInitialized(
+      clientId: clientId,
+      serverClientId: serverClientId,
+    );
 
     try {
       final account = await _googleSignIn.authenticate(
@@ -77,21 +82,34 @@ class CloudSyncGoogleSignInService {
     }
   }
 
-  Future<void> _ensureInitialized(String clientId) async {
+  Future<void> _ensureInitialized({
+    required String clientId,
+    String? serverClientId,
+  }) async {
+    final normalizedServerClientId =
+        serverClientId == null || serverClientId.isEmpty
+        ? null
+        : serverClientId;
+
     if (_isInitialized) {
-      if (_initializedClientId != clientId) {
+      if (_initializedClientId != clientId ||
+          _initializedServerClientId != normalizedServerClientId) {
         throw const CloudSyncAuthException(
           CloudSyncAuthError.unsupportedCredential(
             message:
-                'Google Sign-In is already initialized with another client ID in this app session.',
+                'Google Sign-In is already initialized with another client configuration in this app session.',
           ),
         );
       }
       return;
     }
 
-    await _googleSignIn.initialize(clientId: clientId);
+    await _googleSignIn.initialize(
+      clientId: clientId,
+      serverClientId: normalizedServerClientId,
+    );
     _isInitialized = true;
     _initializedClientId = clientId;
+    _initializedServerClientId = normalizedServerClientId;
   }
 }

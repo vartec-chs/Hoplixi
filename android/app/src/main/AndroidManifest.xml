@@ -29,7 +29,6 @@
         <action android:name="android.intent.action.VIEW"/>
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="https" android:host="www.example.com" android:pathPrefix="/foo"/>
       </intent-filter>
     </activity>
 
@@ -37,12 +36,22 @@
       android:name="net.openid.appauth.RedirectUriReceiverActivity"
       android:theme="@style/Theme.AppCompat.Translucent.NoTitleBar"
       android:exported="true"
+      android:taskAffinity=""
       tools:node="replace">
       <intent-filter>
         <action android:name="android.intent.action.VIEW"/>
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="hoplixiauth" android:host="oauth2redirect"/>
+         <data
+              android:scheme="db-ulc6d2kyzhp8di2"
+              android:host="oauth2redirect" />
+          <data
+              android:scheme="hoplixiauth"
+              android:host="oauth2redirect" />
+          <data
+              android:scheme="msauth"
+              android:host="com.example.hoplixi_test_auth"
+              android:path="/dXthLzqPWWG4DvCSzuBcRbPb7WA%3D" />
       </intent-filter>
     </activity>
 

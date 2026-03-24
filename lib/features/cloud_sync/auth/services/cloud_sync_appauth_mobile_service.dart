@@ -40,21 +40,23 @@ class CloudSyncAppAuthMobileService {
     }
 
     try {
-      final response = await _appAuth.authorizeAndExchangeCode(
-        AuthorizationTokenRequest(
+      final serviceConfiguration = AuthorizationServiceConfiguration(
+        authorizationEndpoint: authorizationEndpoint,
+        tokenEndpoint: tokenEndpoint,
+      );
+
+      final authorization = await _appAuth.authorize(
+        AuthorizationRequest(
           credential.clientId,
           redirectUri,
-          clientSecret: credential.clientSecret,
           scopes: metadata.scopes,
-          serviceConfiguration: AuthorizationServiceConfiguration(
-            authorizationEndpoint: authorizationEndpoint,
-            tokenEndpoint: tokenEndpoint,
-          ),
+          serviceConfiguration: serviceConfiguration,
           additionalParameters: metadata.additionalAuthParameters,
         ),
       );
 
-      if (response == null || (response.accessToken?.trim().isEmpty ?? true)) {
+      final authorizationCode = authorization.authorizationCode?.trim();
+      if (authorizationCode == null || authorizationCode.isEmpty) {
         throw const CloudSyncAuthException(
           CloudSyncAuthError.cancelled(
             message: 'Authorization was cancelled by the user.',
@@ -62,22 +64,51 @@ class CloudSyncAppAuthMobileService {
         );
       }
 
+      final tokenResponse = await _appAuth.token(
+        TokenRequest(
+          credential.clientId,
+          redirectUri,
+          clientSecret: credential.clientSecret,
+          authorizationCode: authorizationCode,
+          codeVerifier: authorization.codeVerifier,
+          nonce: authorization.nonce,
+          scopes: metadata.scopes,
+          serviceConfiguration: serviceConfiguration,
+        ),
+      );
+
+      final accessToken = tokenResponse.accessToken?.trim();
+      if (accessToken == null || accessToken.isEmpty) {
+        throw const CloudSyncAuthException(
+          CloudSyncAuthError.oauthProvider(
+            message: 'OAuth token exchange did not return access_token.',
+          ),
+        );
+      }
+
       final userInfo = await _oauthHttpService.fetchUserInfo(
         credential: credential,
-        accessToken: response.accessToken!,
+        accessToken: accessToken,
       );
       final extraData = <String, dynamic>{
-        if (response.idToken != null && response.idToken!.trim().isNotEmpty)
-          'id_token': response.idToken,
+        if (tokenResponse.idToken != null &&
+            tokenResponse.idToken!.trim().isNotEmpty)
+          'id_token': tokenResponse.idToken,
+        if (authorization.authorizationAdditionalParameters != null)
+          'authorization_additional_parameters':
+              authorization.authorizationAdditionalParameters,
+        if (tokenResponse.tokenAdditionalParameters != null)
+          'token_additional_parameters':
+              tokenResponse.tokenAdditionalParameters,
         if (userInfo != null) 'raw_user_info': userInfo,
       };
 
       return CloudSyncOAuthResult(
-        accessToken: response.accessToken!,
-        refreshToken: response.refreshToken,
-        tokenType: response.tokenType,
-        expiresAt: response.accessTokenExpirationDateTime,
-        scopes: response.scopes ?? metadata.scopes,
+        accessToken: accessToken,
+        refreshToken: tokenResponse.refreshToken,
+        tokenType: tokenResponse.tokenType,
+        expiresAt: tokenResponse.accessTokenExpirationDateTime,
+        scopes: tokenResponse.scopes ?? metadata.scopes,
         accountId: extractAccountId(userInfo),
         accountEmail: extractAccountEmail(userInfo),
         accountName: extractAccountName(userInfo),

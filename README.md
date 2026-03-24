@@ -365,6 +365,26 @@ android\create_keystore.bat
 **Обязательно сделайте резервную копию этого файла и храните его в безопасном
 месте!**
 
+#### Certificate fingerprints и package name для Android
+
+Для настройки Android-приложения и OAuth-провайдеров нужны certificate
+fingerprints и package name. Используйте следующие значения:
+
+- Debug package name: `com.hiplixi.app.dev`
+- Release package name: `com.hiplixi.app`
+
+Чтобы получить fingerprints сертификата, перейдите в папку `android` и выполните
+команду:
+
+```bash
+keytool -list -v -keystore my-release-key.jks -alias my-key-alias
+```
+
+Команда покажет поля:
+
+- `SHA1`
+- `SHA256`
+
 После генерации keystore, убедитесь, что файл `android/key.properties` содержит
 правильные пути и пароли:
 

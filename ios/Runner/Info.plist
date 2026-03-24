@@ -29,7 +29,9 @@
         <string>Editor</string>
         <key>CFBundleURLSchemes</key>
         <array>
+          <string>db-ulc6d2kyzhp8di2</string>
           <string>hoplixiauth</string>
+          <string>msauth</string>
         </array>
       </dict>
     </array>
