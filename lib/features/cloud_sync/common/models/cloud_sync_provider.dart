@@ -27,6 +27,7 @@ class CloudSyncProviderMetadata {
     required this.authMobileRedirectHint,
     required this.scopes,
     this.supportsManualCodeAuth = false,
+    this.requiresManualCodeAuthOnMobile = false,
     this.userInfoEndpoint,
     this.userInfoMethod = CloudSyncUserInfoMethod.get,
     this.userInfoAuthScheme = 'Bearer',
@@ -46,6 +47,7 @@ class CloudSyncProviderMetadata {
   final String authMobileRedirectHint;
   final List<String> scopes;
   final bool supportsManualCodeAuth;
+  final bool requiresManualCodeAuthOnMobile;
   final String? userInfoEndpoint;
   final CloudSyncUserInfoMethod userInfoMethod;
   final String userInfoAuthScheme;
@@ -76,6 +78,7 @@ extension CloudSyncProviderX on CloudSyncProvider {
         appCredentialsMobileRedirectUri: 'db-<client_id>://oauth2redirect',
         authMobileRedirectHint: 'db-<client_id>://oauth2redirect',
         supportsManualCodeAuth: true,
+        requiresManualCodeAuthOnMobile: true,
         scopes: [
           'account_info.read',
           'files.content.read',

@@ -158,14 +158,6 @@ class CloudSyncAuthService {
   }
 
   void _ensureManualCodeAuthSupported(AppCredentialEntry credential) {
-    if (!UniversalPlatform.isDesktop) {
-      throw const CloudSyncAuthException(
-        CloudSyncAuthError.unsupportedCredential(
-          message: 'Manual code authorization is supported only on desktop.',
-        ),
-      );
-    }
-
     if (!credential.provider.metadata.supportsManualCodeAuth) {
       throw const CloudSyncAuthException(
         CloudSyncAuthError.unsupportedCredential(

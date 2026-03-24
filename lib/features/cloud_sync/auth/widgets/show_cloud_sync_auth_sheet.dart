@@ -9,6 +9,7 @@ import 'package:hoplixi/features/cloud_sync/auth/models/auth_flow_status.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_auth_method.dart';
 import 'package:hoplixi/features/cloud_sync/auth/providers/auth_flow_provider.dart';
 import 'package:hoplixi/features/cloud_sync/auth/services/cloud_sync_auth_service.dart';
+import 'package:hoplixi/features/cloud_sync/auth/utils/cloud_sync_auth_credential_support.dart';
 import 'package:hoplixi/features/cloud_sync/auth/widgets/auth_credential_list_tile.dart';
 import 'package:hoplixi/features/cloud_sync/auth/widgets/auth_provider_list_tile.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
@@ -280,17 +281,36 @@ class _CredentialSelectionStep extends ConsumerWidget {
     final entry = option.entry;
     final l10n = rootContext.t.cloud_sync_auth;
 
-    if (!UniversalPlatform.isDesktop ||
-        !entry.provider.metadata.supportsManualCodeAuth) {
+    final metadata = entry.provider.metadata;
+    final supportsManualCodeAuth = metadata.supportsManualCodeAuth;
+    final requiresManualCodeAuthOnMobile =
+        isCloudSyncMobilePlatform && metadata.requiresManualCodeAuthOnMobile;
+
+    if (!supportsManualCodeAuth && !UniversalPlatform.isDesktop) {
       await ref.read(authFlowProvider.notifier).selectCredential(entry.id);
       await ref.read(authFlowProvider.notifier).beginAuthorization();
       Navigator.of(modalContext).pop();
       return;
     }
 
-    final method = await _selectAuthMethod(rootContext);
-    if (method == null) {
+    if (UniversalPlatform.isDesktop && !supportsManualCodeAuth) {
+      await ref.read(authFlowProvider.notifier).selectCredential(entry.id);
+      await ref.read(authFlowProvider.notifier).beginAuthorization();
+      Navigator.of(modalContext).pop();
       return;
+    }
+
+    CloudSyncAuthMethod method;
+    if (requiresManualCodeAuthOnMobile) {
+      method = CloudSyncAuthMethod.manualCode;
+    } else if (UniversalPlatform.isDesktop && supportsManualCodeAuth) {
+      final selectedMethod = await _selectAuthMethod(rootContext);
+      if (selectedMethod == null) {
+        return;
+      }
+      method = selectedMethod;
+    } else {
+      method = CloudSyncAuthMethod.automatic;
     }
 
     if (method == CloudSyncAuthMethod.automatic) {
