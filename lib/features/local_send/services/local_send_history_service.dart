@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/features/local_send/models/history_item.dart';
-import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:path/path.dart' as p;
 
 final localSendHistoryServiceProvider = Provider<LocalSendHistoryService>((
@@ -16,8 +16,8 @@ class LocalSendHistoryService {
   static const _fileName = 'local_send_history.json';
 
   Future<File> _getFile() async {
-    final dir = await path_provider.getApplicationDocumentsDirectory();
-    return File(p.join(dir.path, _fileName));
+    final dirPath = await AppPaths.localSendPath;
+    return File(p.join(dirPath, _fileName));
   }
 
   Future<List<HistoryItem>> loadHistory() async {

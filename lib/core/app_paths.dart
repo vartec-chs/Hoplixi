@@ -20,6 +20,7 @@ class AppPaths {
       await _getExportStoragesPath();
   static Future<String> get cloudSyncFilePath async =>
       await _getCloudSyncFilePath();
+  static Future<String> get localSendPath async => await _getLocalSendPath();
 
   static Future<String> get backupsPath async => await _getBackupsPath();
 
@@ -113,6 +114,20 @@ Future<String> _getBackupsPath() async {
 Future<String> _getCloudSyncFilePath() async {
   final appDir = Directory(await _getApplicationStoragePath());
   final basePath = p.join(appDir.path, 'cloud_sync.json');
+
+  return basePath;
+}
+
+/// LocalSend data directory
+Future<String> _getLocalSendPath() async {
+  final appDir = await _getAppPath();
+  final basePath = p.join(appDir.path, 'local_send');
+
+  // Создаем директорию если её нет
+  final directory = Directory(basePath);
+  if (!await directory.exists()) {
+    await directory.create(recursive: true);
+  }
 
   return basePath;
 }
