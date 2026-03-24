@@ -6,14 +6,45 @@ import 'package:crypto/crypto.dart';
 import 'package:ffi/ffi.dart';
 import 'package:win32/win32.dart';
 
-Never _win32Error(String operation) {
-  final code = GetLastError();
-  throw Exception('$operation failed (GetLastError=$code)');
+Never _throwWindowsError(String operation, WIN32_ERROR error) {
+  throw WindowsException(
+    error.toHRESULT(),
+    message: '$operation failed',
+  );
 }
 
-int _handleFromPointer(Pointer p) => p.address;
+void _throwIfError(String operation, WIN32_ERROR error) {
+  if (error.isError) {
+    _throwWindowsError(operation, error);
+  }
+}
 
-Pointer _pointerFromHandle(int handle) => Pointer.fromAddress(handle);
+void _checkBoolResult(String operation, Win32Result<bool> result) {
+  if (!result.value) {
+    _throwWindowsError(operation, result.error);
+  }
+}
+
+HGLOBAL _checkGlobalHandle(String operation, Win32Result<HGLOBAL> result) {
+  if (!result.value.isValid) {
+    _throwWindowsError(operation, result.error);
+  }
+  return result.value;
+}
+
+HANDLE _checkHandle(String operation, Win32Result<HANDLE> result) {
+  if (!result.value.isValid) {
+    _throwWindowsError(operation, result.error);
+  }
+  return result.value;
+}
+
+Pointer _checkPointer(String operation, Win32Result<Pointer> result) {
+  if (result.value.isNull) {
+    _throwWindowsError(operation, result.error);
+  }
+  return result.value;
+}
 
 Uint8List _sha256Utf16leFromUnits(Uint16List units) {
   final bytes = Uint8List(units.length * 2);
@@ -41,96 +72,99 @@ Uint8List _sha256Utf16leFromNullTerminatedPtr(Pointer<Uint16> ptr) {
   return Uint8List.fromList(sha256.convert(bytes).bytes);
 }
 
+void _unlockGlobalMemory(HGLOBAL memory) {
+  final result = GlobalUnlock(memory);
+  _throwIfError('GlobalUnlock', result.error);
+}
+
+void _freeGlobalMemory(HGLOBAL memory) {
+  final result = GlobalFree(memory);
+  _throwIfError('GlobalFree', result.error);
+}
+
 Timer? _pendingClearTimer;
 Uint8List? _pendingClearDigest;
 
 void _withOpenClipboard(void Function() action) {
-  final opened = OpenClipboard(0);
-  if (opened == 0) {
-    _win32Error('OpenClipboard');
-  }
+  _checkBoolResult('OpenClipboard', OpenClipboard(null));
   try {
     action();
   } finally {
-    CloseClipboard();
+    _checkBoolResult('CloseClipboard', CloseClipboard());
   }
 }
 
-int _setClipboardDataUtf16Units(Uint16List units) {
-  final byteSize = (units.length + 1) * sizeOf<Uint16>();
-
-  final hMem = GlobalAlloc(GMEM_MOVEABLE, byteSize);
-  if (hMem == nullptr) {
-    _win32Error('GlobalAlloc');
+void _writeUtf16UnitsToGlobalMemory(HGLOBAL memory, Uint16List units) {
+  final locked =
+      _checkPointer('GlobalLock', GlobalLock(memory)).cast<Uint16>();
+  try {
+    for (var i = 0; i < units.length; i++) {
+      locked[i] = units[i];
+    }
+    locked[units.length] = 0;
+  } finally {
+    _unlockGlobalMemory(memory);
   }
+}
+
+void _writeDwordZeroToGlobalMemory(HGLOBAL memory) {
+  final locked =
+      _checkPointer('GlobalLock', GlobalLock(memory)).cast<Uint32>();
+  try {
+    locked.value = 0;
+  } finally {
+    _unlockGlobalMemory(memory);
+  }
+}
+
+void _setClipboardDataUtf16Units(Uint16List units) {
+  final byteSize = (units.length + 1) * sizeOf<Uint16>();
+  final memory = _checkGlobalHandle(
+    'GlobalAlloc',
+    GlobalAlloc(GMEM_MOVEABLE, byteSize),
+  );
 
   var transferred = false;
   try {
-    final locked = GlobalLock(hMem);
-    if (locked == nullptr) {
-      _win32Error('GlobalLock');
-    }
-    try {
-      final buf = locked.cast<Uint16>();
-      for (var i = 0; i < units.length; i++) {
-        buf[i] = units[i];
-      }
-      buf[units.length] = 0;
-    } finally {
-      GlobalUnlock(hMem);
-    }
-
-    final result = SetClipboardData(CF_UNICODETEXT, _handleFromPointer(hMem));
-    if (result == 0) {
-      _win32Error('SetClipboardData(CF_UNICODETEXT)');
-    }
-
+    _writeUtf16UnitsToGlobalMemory(memory, units);
+    _checkHandle(
+      'SetClipboardData(CF_UNICODETEXT)',
+      SetClipboardData(CF_UNICODETEXT, HANDLE(memory)),
+    );
     transferred = true;
-    return result;
   } finally {
     if (!transferred) {
-      GlobalFree(hMem);
+      _freeGlobalMemory(memory);
     }
   }
 }
 
 void _setMarkerFormatDwordZeroOpened(String formatName) {
-  final fmt = using<int>((arena) {
+  final registerResult = using((arena) {
     final namePtr = formatName.toNativeUtf16(allocator: arena);
-    return RegisterClipboardFormat(namePtr);
+    return RegisterClipboardFormat(PCWSTR(namePtr));
   });
 
-  if (fmt == 0) {
-    // Non-fatal: format couldn't be registered.
+  if (registerResult.error.isError || registerResult.value == 0) {
     return;
   }
 
-  final hMem = GlobalAlloc(GMEM_MOVEABLE, sizeOf<Uint32>());
-  if (hMem == nullptr) {
-    _win32Error('GlobalAlloc');
-  }
+  final memory = _checkGlobalHandle(
+    'GlobalAlloc',
+    GlobalAlloc(GMEM_MOVEABLE, sizeOf<Uint32>()),
+  );
 
   var transferred = false;
   try {
-    final locked = GlobalLock(hMem);
-    if (locked == nullptr) {
-      _win32Error('GlobalLock');
-    }
-    try {
-      locked.cast<Uint32>().value = 0;
-    } finally {
-      GlobalUnlock(hMem);
-    }
-
-    final result = SetClipboardData(fmt, _handleFromPointer(hMem));
-    if (result == 0) {
-      _win32Error('SetClipboardData($formatName)');
-    }
-
+    _writeDwordZeroToGlobalMemory(memory);
+    _checkHandle(
+      'SetClipboardData($formatName)',
+      SetClipboardData(registerResult.value, HANDLE(memory)),
+    );
     transferred = true;
   } finally {
     if (!transferred) {
-      GlobalFree(hMem);
+      _freeGlobalMemory(memory);
     }
   }
 }
@@ -139,8 +173,11 @@ void _setMarkerFormatDwordZeroOpened(String formatName) {
 ///
 /// Useful for app shutdown hooks / lifecycle events.
 void clearClipboardNow() {
-  final opened = OpenClipboard(0);
-  if (opened == 0) return;
+  final openResult = OpenClipboard(null);
+  if (!openResult.value) {
+    return;
+  }
+
   try {
     EmptyClipboard();
   } finally {
@@ -179,28 +216,33 @@ bool clearScheduledSecretNow() {
 }
 
 Uint8List? _getClipboardUtf16leSha256Digest() {
-  Uint8List? digest;
-
-  final opened = OpenClipboard(0);
-  if (opened == 0) return null;
+  final openResult = OpenClipboard(null);
+  if (!openResult.value) {
+    return null;
+  }
 
   try {
-    final hData = GetClipboardData(CF_UNICODETEXT);
-    if (hData == 0) return null;
+    final clipboardData = GetClipboardData(CF_UNICODETEXT);
+    if (!clipboardData.value.isValid) {
+      return null;
+    }
 
-    final locked = GlobalLock(_pointerFromHandle(hData));
-    if (locked == nullptr) return null;
+    final memory = HGLOBAL(clipboardData.value);
+    final lockedResult = GlobalLock(memory);
+    if (lockedResult.value.isNull) {
+      return null;
+    }
 
     try {
-      digest = _sha256Utf16leFromNullTerminatedPtr(locked.cast<Uint16>());
+      return _sha256Utf16leFromNullTerminatedPtr(
+        lockedResult.value.cast<Uint16>(),
+      );
     } finally {
-      GlobalUnlock(_pointerFromHandle(hData));
+      _unlockGlobalMemory(memory);
     }
   } finally {
     CloseClipboard();
   }
-
-  return digest;
 }
 
 /// High-security API: accepts UTF-16 code units directly.
@@ -211,12 +253,8 @@ void copySecretWithTtlFromUtf16(Uint16List secretUtf16, Duration ttl) {
   final originalDigest = _sha256Utf16leFromUnits(secretUtf16);
 
   _withOpenClipboard(() {
-    if (EmptyClipboard() == 0) {
-      _win32Error('EmptyClipboard');
-    }
-
+    _checkBoolResult('EmptyClipboard', EmptyClipboard());
     _setClipboardDataUtf16Units(secretUtf16);
-
     _setMarkerFormatDwordZeroOpened('CanIncludeInClipboardHistory');
     _setMarkerFormatDwordZeroOpened('CanUploadToCloudClipboard');
     _setMarkerFormatDwordZeroOpened(
