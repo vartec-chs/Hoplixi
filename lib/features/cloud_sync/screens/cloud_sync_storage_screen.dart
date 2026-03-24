@@ -15,6 +15,7 @@ import 'package:hoplixi/features/cloud_sync/storage/models/cloud_resource.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_resource_ref.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/features/cloud_sync/storage/providers/cloud_storage_provider.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -60,22 +61,24 @@ class _CloudSyncStorageScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.t.cloud_sync_storage;
     final isImplemented = _isStorageImplemented(_selectedProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cloud Storage'),
+        title: Text(l10n.screen_title),
         leading: BackButton(
-          onPressed: () => {
-            if (context.canPop())
-              {context.pop()}
-            else
-              {context.go(AppRoutesPaths.cloudSync)},
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(AppRoutesPaths.cloudSync);
+            }
           },
         ),
         actions: [
           IconButton(
-            tooltip: 'ÐžÐ±Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ',
+            tooltip: l10n.refresh_tooltip,
             onPressed: _isLoading
                 ? null
                 : () => unawaited(_loadCurrentFolder()),
@@ -98,6 +101,10 @@ class _CloudSyncStorageScreenState
             child: _TokenInfoCard(
               provider: _selectedProvider,
               token: _activeToken,
+              missingTokenLabel: l10n.token_not_found,
+              accountLabelBuilder: (account) =>
+                  l10n.account_label(Account: account),
+              signInLabel: l10n.sign_in_button,
               onAuthorize: _selectedProvider.metadata.supportsAuth
                   ? () => unawaited(_openAuthForSelectedProvider())
                   : null,
@@ -108,7 +115,12 @@ class _CloudSyncStorageScreenState
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: _StorageToolbar(
-                currentFolder: _currentFolder,
+                currentFolderPath: _displayCurrentFolderPath(_currentFolder),
+                currentFolderLabelBuilder: (path) =>
+                    l10n.current_folder_label(Path: path),
+                goUpLabel: l10n.go_up_button,
+                createFolderLabel: l10n.create_folder_button,
+                uploadLabel: l10n.upload_button,
                 onGoUp: _canGoUp(_currentFolder)
                     ? () => unawaited(_goUp())
                     : null,
@@ -129,6 +141,8 @@ class _CloudSyncStorageScreenState
     required BuildContext context,
     required bool isImplemented,
   }) {
+    final l10n = context.t.cloud_sync_storage;
+
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -136,11 +150,12 @@ class _CloudSyncStorageScreenState
     if (_activeToken == null) {
       return _CenteredMessage(
         icon: LucideIcons.shieldAlert,
-        title: 'ÐÑƒÐ¶Ð½Ð° Ð°Ð²Ñ‚Ð¾Ñ€Ð¸Ð·Ð°Ñ†Ð¸Ñ',
-        description:
-            'Ð”Ð»Ñ Ð¿Ñ€Ð¾Ð²Ð°Ð¹Ð´ÐµÑ€Ð° ${_selectedProvider.metadata.displayName} Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½ Ð°ÐºÑ‚Ð¸Ð²Ð½Ñ‹Ð¹ Ñ‚Ð¾ÐºÐµÐ½. Ð’Ñ‹Ð¿Ð¾Ð»Ð½Ð¸Ñ‚Ðµ Ð°Ð²Ñ‚Ð¾Ñ€Ð¸Ð·Ð°Ñ†Ð¸ÑŽ Ð¸ ÑÐºÑ€Ð°Ð½ Ð¾Ñ‚ÐºÑ€Ð¾ÐµÑ‚ÑÑ.',
+        title: l10n.auth_required_title,
+        description: l10n.auth_required_description(
+          Provider: _selectedProvider.metadata.displayName,
+        ),
         actionLabel: _selectedProvider.metadata.supportsAuth
-            ? 'ÐÐ²Ñ‚Ð¾Ñ€Ð¸Ð·Ð¾Ð²Ð°Ñ‚ÑŒÑÑ'
+            ? l10n.authorize_button
             : null,
         onAction: _selectedProvider.metadata.supportsAuth
             ? () => unawaited(_openAuthForSelectedProvider(forcePrompt: true))
@@ -149,30 +164,30 @@ class _CloudSyncStorageScreenState
     }
 
     if (!isImplemented) {
-      return const _CenteredMessage(
+      return _CenteredMessage(
         icon: LucideIcons.construction,
-        title: 'ÐŸÑ€Ð¾Ð²Ð°Ð¹Ð´ÐµÑ€ Ð¿Ð¾ÐºÐ° Ð½Ðµ Ñ€ÐµÐ°Ð»Ð¸Ð·Ð¾Ð²Ð°Ð½',
-        description:
-            'ÐÐ²Ñ‚Ð¾Ñ€Ð¸Ð·Ð°Ñ†Ð¸Ñ Ð¸ Ð¿ÐµÑ€ÐµÐºÐ»ÑŽÑ‡ÐµÐ½Ð¸Ðµ ÑƒÐ¶Ðµ Ð´Ð¾ÑÑ‚ÑƒÐ¿Ð½Ñ‹, Ð½Ð¾ storage UI Ð¿Ð¾ÐºÐ° Ñ€ÐµÐ°Ð»Ð¸Ð·Ð¾Ð²Ð°Ð½ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ð´Ð»Ñ Yandex.',
+        title: l10n.provider_not_implemented_title,
+        description: l10n.provider_not_implemented_description(
+          Provider: _selectedProvider.metadata.displayName,
+        ),
       );
     }
 
     if (_error != null) {
       return _CenteredMessage(
         icon: LucideIcons.circleAlert,
-        title: 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð¾Ð±Ð»Ð°ÐºÐ°',
+        title: l10n.cloud_error_title,
         description: _error!,
-        actionLabel: 'ÐŸÐ¾Ð²Ñ‚Ð¾Ñ€Ð¸Ñ‚ÑŒ',
+        actionLabel: l10n.retry_button,
         onAction: () => unawaited(_loadCurrentFolder()),
       );
     }
 
     if (_items.isEmpty) {
-      return const _CenteredMessage(
+      return _CenteredMessage(
         icon: LucideIcons.folderOpen,
-        title: 'ÐŸÐ°Ð¿ÐºÐ° Ð¿ÑƒÑÑ‚Ð°',
-        description:
-            'Ð’ Ñ‚ÐµÐºÑƒÑ‰ÐµÐ¹ Ð´Ð¸Ñ€ÐµÐºÑ‚Ð¾Ñ€Ð¸Ð¸ Ð¿Ð¾ÐºÐ° Ð½ÐµÑ‚ Ñ€ÐµÑÑƒÑ€ÑÐ¾Ð².',
+        title: l10n.empty_folder_title,
+        description: l10n.empty_folder_description,
       );
     }
 
@@ -209,29 +224,31 @@ class _CloudSyncStorageScreenState
   List<PopupMenuEntry<_StorageAction>> _buildResourceMenu(
     CloudResource resource,
   ) {
+    final l10n = context.t.cloud_sync_storage;
+
     return <PopupMenuEntry<_StorageAction>>[
       if (resource.isFolder)
-        const PopupMenuItem<_StorageAction>(
+        PopupMenuItem<_StorageAction>(
           value: _StorageAction.open,
-          child: Text('ÐžÑ‚ÐºÑ€Ñ‹Ñ‚ÑŒ'),
+          child: Text(l10n.action_open),
         ),
       if (resource.isFile)
-        const PopupMenuItem<_StorageAction>(
+        PopupMenuItem<_StorageAction>(
           value: _StorageAction.download,
-          child: Text('Ð¡ÐºÐ°Ñ‡Ð°Ñ‚ÑŒ'),
+          child: Text(l10n.action_download),
         ),
-      const PopupMenuItem<_StorageAction>(
+      PopupMenuItem<_StorageAction>(
         value: _StorageAction.copy,
-        child: Text('ÐšÐ¾Ð¿Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ ÐºÐ°Ðº...'),
+        child: Text(l10n.action_copy_as),
       ),
-      const PopupMenuItem<_StorageAction>(
+      PopupMenuItem<_StorageAction>(
         value: _StorageAction.move,
-        child: Text('ÐŸÐµÑ€ÐµÐ¼ÐµÑÑ‚Ð¸Ñ‚ÑŒ/Ð¿ÐµÑ€ÐµÐ¸Ð¼ÐµÐ½Ð¾Ð²Ð°Ñ‚ÑŒ'),
+        child: Text(l10n.action_move_rename),
       ),
       const PopupMenuDivider(),
-      const PopupMenuItem<_StorageAction>(
+      PopupMenuItem<_StorageAction>(
         value: _StorageAction.delete,
-        child: Text('Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ'),
+        child: Text(l10n.action_delete),
       ),
     ];
   }
@@ -418,10 +435,11 @@ class _CloudSyncStorageScreenState
       return;
     }
 
+    final l10n = context.t.cloud_sync_storage;
     final name = await _showTextInputDialog(
-      title: 'ÐÐ¾Ð²Ð°Ñ Ð¿Ð°Ð¿ÐºÐ°',
-      label: 'Ð˜Ð¼Ñ Ð¿Ð°Ð¿ÐºÐ¸',
-      submitLabel: 'Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ',
+      title: l10n.new_folder_title,
+      label: l10n.folder_name_label,
+      submitLabel: l10n.create_button,
     );
     if (name == null || name.trim().isEmpty) {
       return;
@@ -432,7 +450,7 @@ class _CloudSyncStorageScreenState
           .read(cloudStorageRepositoryProvider)
           .createFolder(token.id, parentRef: _currentFolder, name: name.trim());
       await _loadCurrentFolder();
-      _showSnackBar('ÐŸÐ°Ð¿ÐºÐ° ÑÐ¾Ð·Ð´Ð°Ð½Ð°');
+      _showSnackBar(l10n.folder_created);
     } catch (error) {
       _showSnackBar(_formatStorageError(error));
     }
@@ -457,9 +475,7 @@ class _CloudSyncStorageScreenState
         picked.readStream ??
         (picked.path != null ? File(picked.path!).openRead() : null);
     if (stream == null || picked.size <= 0) {
-      _showSnackBar(
-        'ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð¿Ñ€Ð¾Ñ‡Ð¸Ñ‚Ð°Ñ‚ÑŒ Ð²Ñ‹Ð±Ñ€Ð°Ð½Ð½Ñ‹Ð¹ Ñ„Ð°Ð¹Ð»',
-      );
+      _showSnackBar(context.t.cloud_sync_storage.read_file_failed);
       return;
     }
 
@@ -474,7 +490,7 @@ class _CloudSyncStorageScreenState
             contentLength: picked.size,
           );
       await _loadCurrentFolder();
-      _showSnackBar('Ð¤Ð°Ð¹Ð» Ð·Ð°Ð³Ñ€ÑƒÐ¶ÐµÐ½');
+      _showSnackBar(context.t.cloud_sync_storage.file_uploaded);
     } catch (error) {
       _showSnackBar(_formatStorageError(error));
     }
@@ -486,8 +502,9 @@ class _CloudSyncStorageScreenState
       return;
     }
 
+    final l10n = context.t.cloud_sync_storage;
     final path = await FilePicker.platform.saveFile(
-      dialogTitle: 'Ð¡Ð¾Ñ…Ñ€Ð°Ð½Ð¸Ñ‚ÑŒ Ñ„Ð°Ð¹Ð»',
+      dialogTitle: l10n.save_file_dialog_title,
       fileName: resource.name,
     );
     if (path == null || path.trim().isEmpty) {
@@ -498,7 +515,7 @@ class _CloudSyncStorageScreenState
       await ref
           .read(cloudStorageRepositoryProvider)
           .downloadFile(token.id, fileRef: resource.ref, savePath: path);
-      _showSnackBar('Ð¤Ð°Ð¹Ð» ÑÐ¾Ñ…Ñ€Ð°Ð½Ñ‘Ð½');
+      _showSnackBar(l10n.file_saved);
     } catch (error) {
       _showSnackBar(_formatStorageError(error));
     }
@@ -536,12 +553,11 @@ class _CloudSyncStorageScreenState
       return;
     }
 
-    final actionLabel = isMove
-        ? 'ÐŸÐµÑ€ÐµÐ¼ÐµÑÑ‚Ð¸Ñ‚ÑŒ'
-        : 'ÐšÐ¾Ð¿Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ';
+    final l10n = context.t.cloud_sync_storage;
+    final actionLabel = isMove ? l10n.move_button : l10n.copy_button;
     final targetName = await _showTextInputDialog(
-      title: '$actionLabel Ñ€ÐµÑÑƒÑ€Ñ',
-      label: 'ÐÐ¾Ð²Ð¾Ðµ Ð¸Ð¼Ñ',
+      title: l10n.rename_dialog_title(Action: actionLabel),
+      label: l10n.new_name_label,
       initialValue: resource.name,
       submitLabel: actionLabel,
     );
@@ -565,11 +581,7 @@ class _CloudSyncStorageScreenState
             .copyResource(token.id, sourceRef: resource.ref, target: target);
       }
       await _loadCurrentFolder();
-      _showSnackBar(
-        isMove
-            ? 'Ð ÐµÑÑƒÑ€Ñ Ð¿ÐµÑ€ÐµÐ¼ÐµÑ‰Ñ‘Ð½'
-            : 'Ð ÐµÑÑƒÑ€Ñ ÑÐºÐ¾Ð¿Ð¸Ñ€Ð¾Ð²Ð°Ð½',
-      );
+      _showSnackBar(isMove ? l10n.resource_moved : l10n.resource_copied);
     } catch (error) {
       _showSnackBar(_formatStorageError(error));
     }
@@ -581,21 +593,22 @@ class _CloudSyncStorageScreenState
       return;
     }
 
+    final l10n = context.t.cloud_sync_storage;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Ð£Ð´Ð°Ð»ÐµÐ½Ð¸Ðµ Ñ€ÐµÑÑƒÑ€ÑÐ°'),
+        title: Text(l10n.delete_dialog_title),
         content: Text(
-          'Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ "${resource.name}" Ð±ÐµÐ· Ð²Ð¾Ð·Ð¼Ð¾Ð¶Ð½Ð¾ÑÑ‚Ð¸ Ð²Ð¾ÑÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ?',
+          l10n.delete_dialog_description(ResourceName: resource.name),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('ÐžÑ‚Ð¼ÐµÐ½Ð°'),
+            child: Text(l10n.cancel_button),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ'),
+            child: Text(l10n.action_delete),
           ),
         ],
       ),
@@ -610,7 +623,7 @@ class _CloudSyncStorageScreenState
           .read(cloudStorageRepositoryProvider)
           .deleteResource(token.id, resource.ref);
       await _loadCurrentFolder();
-      _showSnackBar('Ð ÐµÑÑƒÑ€Ñ ÑƒÐ´Ð°Ð»Ñ‘Ð½');
+      _showSnackBar(l10n.resource_deleted);
     } catch (error) {
       _showSnackBar(_formatStorageError(error));
     }
@@ -622,6 +635,7 @@ class _CloudSyncStorageScreenState
     required String submitLabel,
     String? initialValue,
   }) async {
+    final l10n = context.t.cloud_sync_storage;
     final controller = TextEditingController(text: initialValue);
 
     final result = await showDialog<String>(
@@ -636,7 +650,7 @@ class _CloudSyncStorageScreenState
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('ÐžÑ‚Ð¼ÐµÐ½Ð°'),
+            child: Text(l10n.cancel_button),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(controller.text),
@@ -740,6 +754,19 @@ class _CloudSyncStorageScreenState
     return '${AppRoutesPaths.cloudSyncStorage}?provider=${provider.id}';
   }
 
+  String _displayCurrentFolderPath(CloudResourceRef ref) {
+    if (ref.isRoot) {
+      return '/';
+    }
+
+    final path = ref.path;
+    if (path == null || path.isEmpty) {
+      return '/';
+    }
+
+    return path;
+  }
+
   String _resourceSubtitle(CloudResource resource) {
     final details = <String>[
       resource.ref.path ?? resource.ref.resourceId ?? '',
@@ -752,12 +779,12 @@ class _CloudSyncStorageScreenState
     if (modified != null) {
       details.add(modified.toString());
     }
-    return details.where((value) => value.trim().isNotEmpty).join(' â€¢ ');
+    return details.where((value) => value.trim().isNotEmpty).join(' | ');
   }
 
   String _formatStorageError(Object error) {
     if (error is TimeoutException) {
-      return 'Ð—Ð°Ð³Ñ€ÑƒÐ·ÐºÐ° Ð¾Ð±Ð»Ð°Ñ‡Ð½Ð¾Ð¹ Ð¿Ð°Ð¿ÐºÐ¸ Ð¿Ñ€ÐµÐ²Ñ‹ÑÐ¸Ð»Ð° Ñ‚Ð°Ð¹Ð¼Ð°ÑƒÑ‚. ÐŸÑ€Ð¾Ð²ÐµÑ€ÑŒÑ‚Ðµ Ñ‚Ð¾ÐºÐµÐ½, ÑÐµÑ‚ÑŒ Ð¸Ð»Ð¸ Ð¾Ñ‚Ð²ÐµÑ‚ API Ð¿Ñ€Ð¾Ð²Ð°Ð¹Ð´ÐµÑ€Ð°.';
+      return context.t.cloud_sync_storage.timeout_error;
     }
     if (error is CloudStorageException) {
       return error.message;
@@ -812,11 +839,17 @@ class _TokenInfoCard extends StatelessWidget {
   const _TokenInfoCard({
     required this.provider,
     required this.token,
+    required this.missingTokenLabel,
+    required this.accountLabelBuilder,
+    required this.signInLabel,
     this.onAuthorize,
   });
 
   final CloudSyncProvider provider;
   final AuthTokenEntry? token;
+  final String missingTokenLabel;
+  final String Function(String account) accountLabelBuilder;
+  final String signInLabel;
   final VoidCallback? onAuthorize;
 
   @override
@@ -841,17 +874,14 @@ class _TokenInfoCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     token == null
-                        ? 'Ð¢Ð¾ÐºÐµÐ½ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½'
-                        : 'ÐÐºÐºÐ°ÑƒÐ½Ñ‚: ${token!.displayLabel}',
+                        ? missingTokenLabel
+                        : accountLabelBuilder(token!.displayLabel),
                   ),
                 ],
               ),
             ),
             if (token == null && onAuthorize != null)
-              FilledButton(
-                onPressed: onAuthorize,
-                child: const Text('Ð’Ð¾Ð¹Ñ‚Ð¸'),
-              ),
+              FilledButton(onPressed: onAuthorize, child: Text(signInLabel)),
           ],
         ),
       ),
@@ -861,13 +891,21 @@ class _TokenInfoCard extends StatelessWidget {
 
 class _StorageToolbar extends StatelessWidget {
   const _StorageToolbar({
-    required this.currentFolder,
+    required this.currentFolderPath,
+    required this.currentFolderLabelBuilder,
+    required this.goUpLabel,
+    required this.createFolderLabel,
+    required this.uploadLabel,
     this.onGoUp,
     this.onCreateFolder,
     this.onUpload,
   });
 
-  final CloudResourceRef currentFolder;
+  final String currentFolderPath;
+  final String Function(String path) currentFolderLabelBuilder;
+  final String goUpLabel;
+  final String createFolderLabel;
+  final String uploadLabel;
   final VoidCallback? onGoUp;
   final VoidCallback? onCreateFolder;
   final VoidCallback? onUpload;
@@ -881,7 +919,7 @@ class _StorageToolbar extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Ð¢ÐµÐºÑƒÑ‰Ð°Ñ Ð¿Ð°Ð¿ÐºÐ°: ${currentFolder.isRoot ? '/' : ((currentFolder.path?.isNotEmpty ?? false) ? currentFolder.path! : '/')}',
+              currentFolderLabelBuilder(currentFolderPath),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 12),
@@ -893,17 +931,17 @@ class _StorageToolbar extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: onGoUp,
                     icon: const Icon(LucideIcons.arrowUp),
-                    label: const Text('Ð’Ð²ÐµÑ€Ñ…'),
+                    label: Text(goUpLabel),
                   ),
                 FilledButton.icon(
                   onPressed: onCreateFolder,
                   icon: const Icon(LucideIcons.folderPlus),
-                  label: const Text('ÐŸÐ°Ð¿ÐºÐ°'),
+                  label: Text(createFolderLabel),
                 ),
                 FilledButton.icon(
                   onPressed: onUpload,
                   icon: const Icon(LucideIcons.upload),
-                  label: const Text('Ð—Ð°Ð³Ñ€ÑƒÐ·Ð¸Ñ‚ÑŒ'),
+                  label: Text(uploadLabel),
                 ),
               ],
             ),
