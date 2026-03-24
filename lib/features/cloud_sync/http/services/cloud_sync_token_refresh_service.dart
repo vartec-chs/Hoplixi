@@ -22,7 +22,19 @@ class CloudSyncTokenRefreshService {
                sendTimeout: const Duration(seconds: 20),
                receiveTimeout: const Duration(seconds: 30),
              ),
-           );
+           ) {
+    _refreshDio.interceptors.add(
+      LogInterceptor(
+        request: true,
+        requestHeader: true,
+        requestBody: true,
+        responseHeader: true,
+        responseBody: true,
+        error: true,
+        logPrint: AppLogger.instance.dioLogPrint(tag: _logTag),
+      ),
+    );
+  }
 
   static const String _logTag = 'CloudSyncTokenRefreshService';
 

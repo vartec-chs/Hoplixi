@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/cloud_sync/auth/widgets/show_cloud_sync_auth_sheet.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
@@ -28,6 +30,8 @@ class CloudSyncStorageScreen extends ConsumerStatefulWidget {
 
 class _CloudSyncStorageScreenState
     extends ConsumerState<CloudSyncStorageScreen> {
+  static const String _logTag = 'CloudSyncStorageScreen';
+  static const Duration _initialLoadTimeout = Duration(seconds: 20);
   static const List<CloudSyncProvider> _providers = <CloudSyncProvider>[
     CloudSyncProvider.yandex,
     CloudSyncProvider.dropbox,
@@ -61,6 +65,14 @@ class _CloudSyncStorageScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Cloud Storage'),
+        leading: BackButton(
+          onPressed: () => {
+            if (context.canPop())
+              {context.pop()}
+            else
+              {context.go(AppRoutesPaths.cloudSync)},
+          },
+        ),
         actions: [
           IconButton(
             tooltip: 'Обновить',
@@ -241,6 +253,11 @@ class _CloudSyncStorageScreenState
   }
 
   Future<void> _ensureProviderAccessAndLoad({bool forcePrompt = false}) async {
+    logInfo(
+      'Ensuring storage access for provider ${_selectedProvider.id}',
+      tag: _logTag,
+      data: {'provider': _selectedProvider.id, 'forcePrompt': forcePrompt},
+    );
     final tokens = await _loadTokensForProvider(_selectedProvider);
     if (!mounted) {
       return;
@@ -254,6 +271,16 @@ class _CloudSyncStorageScreenState
         _error = null;
       }
     });
+
+    logInfo(
+      'Resolved storage token for provider ${_selectedProvider.id}',
+      tag: _logTag,
+      data: {
+        'provider': _selectedProvider.id,
+        'tokenFound': activeToken != null,
+        'tokenId': activeToken?.id,
+      },
+    );
 
     if (activeToken == null &&
         _selectedProvider.metadata.supportsAuth &&
@@ -303,18 +330,54 @@ class _CloudSyncStorageScreenState
     });
 
     try {
+      logInfo(
+        'Loading cloud folder',
+        tag: _logTag,
+        data: {
+          'provider': _selectedProvider.id,
+          'tokenId': token.id,
+          'path': _currentFolder.path,
+          'resourceId': _currentFolder.resourceId,
+          'isRoot': _currentFolder.isRoot,
+        },
+      );
+
       final page = await ref
           .read(cloudStorageRepositoryProvider)
-          .listFolder(token.id, _currentFolder, pageSize: 100);
+          .listFolder(token.id, _currentFolder, pageSize: 100)
+          .timeout(_initialLoadTimeout);
 
       if (!mounted) {
         return;
       }
 
+      logInfo(
+        'Cloud folder loaded',
+        tag: _logTag,
+        data: {
+          'provider': _selectedProvider.id,
+          'tokenId': token.id,
+          'path': _currentFolder.path,
+          'itemsCount': page.items.length,
+        },
+      );
+
       setState(() {
         _items = page.items;
       });
     } catch (error) {
+      logWarning(
+        'Cloud folder load failed: $error',
+        tag: _logTag,
+        data: {
+          'provider': _selectedProvider.id,
+          'tokenId': token.id,
+          'path': _currentFolder.path,
+          'resourceId': _currentFolder.resourceId,
+          'isRoot': _currentFolder.isRoot,
+          'errorType': error.runtimeType.toString(),
+        },
+      );
       if (!mounted) {
         return;
       }
@@ -649,6 +712,9 @@ class _CloudSyncStorageScreenState
   }
 
   String _formatStorageError(Object error) {
+    if (error is TimeoutException) {
+      return 'Загрузка облачной папки превысила таймаут. Проверьте токен, сеть или ответ API провайдера.';
+    }
     if (error is CloudStorageException) {
       return error.message;
     }

@@ -23,7 +23,21 @@ class CloudSyncUploadRequest {
   final ProgressCallback? onSendProgress;
   final ProgressCallback? onReceiveProgress;
 
-  Uri get uri => Uri.parse(url);
+  Uri get uri {
+    final baseUri = Uri.parse(url);
+    if (queryParameters == null || queryParameters!.isEmpty) {
+      return baseUri;
+    }
+
+    final mergedQuery = <String, String>{
+      ...baseUri.queryParameters,
+      ...queryParameters!.map(
+        (key, value) => MapEntry(key, value?.toString() ?? ''),
+      ),
+    };
+
+    return baseUri.replace(queryParameters: mergedQuery);
+  }
 
   Options toOptions({Map<String, dynamic>? extra}) {
     final mergedHeaders = <String, dynamic>{...?options?.headers, ...?headers};

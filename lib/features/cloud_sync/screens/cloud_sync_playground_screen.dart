@@ -14,7 +14,17 @@ class CloudSyncPlaygroundScreen extends ConsumerWidget {
     final authL10n = context.t.cloud_sync_auth;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Cloud Sync')),
+      appBar: AppBar(
+        title: const Text('Cloud Sync'),
+        leading: BackButton(
+          onPressed: () => {
+            if (context.canPop())
+              {context.pop()}
+            else
+              {context.go(AppRoutesPaths.home)},
+          },
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

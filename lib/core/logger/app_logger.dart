@@ -27,6 +27,12 @@ class AppLogger {
 
   TaggedLogger withTag(String tag) => TaggedLogger._(this, tag);
 
+  void Function(Object object) dioLogPrint({String? tag}) {
+    return (object) {
+      debug(object.toString(), tag: tag);
+    };
+  }
+
   Future<void> initialize({
     LoggerConfig? config,
     bool isSubWindow = false,

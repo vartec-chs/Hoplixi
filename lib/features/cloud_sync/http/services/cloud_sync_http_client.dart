@@ -29,6 +29,29 @@ class CloudSyncHttpClient implements CloudSyncHttpTransport {
       ..transformer = _dio.transformer;
 
     _dio.interceptors.add(
+      LogInterceptor(
+        request: true,
+        requestHeader: true,
+        requestBody: true,
+        responseHeader: true,
+        responseBody: true,
+        error: true,
+        logPrint: AppLogger.instance.dioLogPrint(tag: _logTag),
+      ),
+    );
+    _retryDio.interceptors.add(
+      LogInterceptor(
+        request: true,
+        requestHeader: true,
+        requestBody: true,
+        responseHeader: true,
+        responseBody: true,
+        error: true,
+        logPrint: AppLogger.instance.dioLogPrint(tag: _logTag),
+      ),
+    );
+
+    _dio.interceptors.add(
       _CloudSyncAuthInterceptor(
         retryDio: _retryDio,
         tokenId: tokenId,
