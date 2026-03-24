@@ -8,6 +8,7 @@ import 'package:hoplixi/features/cloud_sync/app_credentials/providers/app_creden
 import 'package:hoplixi/features/cloud_sync/auth/models/auth_credential_option.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/auth_flow_state.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/auth_flow_status.dart';
+import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_auth_method.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_auth_error.dart';
 import 'package:hoplixi/features/cloud_sync/auth/services/cloud_sync_auth_service.dart';
 import 'package:hoplixi/features/cloud_sync/auth/utils/cloud_sync_auth_credential_support.dart';
@@ -105,7 +106,10 @@ class AuthFlowNotifier extends Notifier<AuthFlowState> {
     );
   }
 
-  Future<void> beginAuthorization() async {
+  Future<void> beginAuthorization({
+    CloudSyncAuthMethod method = CloudSyncAuthMethod.automatic,
+    String? manualAuthorizationCode,
+  }) async {
     final credentialId = state.selectedCredentialId;
     if (credentialId == null) {
       _setError(
@@ -124,7 +128,13 @@ class AuthFlowNotifier extends Notifier<AuthFlowState> {
       savedToken: null,
     );
 
-    unawaited(_executeAuthorization(credentialId));
+    unawaited(
+      _executeAuthorization(
+        credentialId,
+        method: method,
+        manualAuthorizationCode: manualAuthorizationCode,
+      ),
+    );
   }
 
   Future<void> cancelActiveFlow() async {
@@ -146,7 +156,11 @@ class AuthFlowNotifier extends Notifier<AuthFlowState> {
     state = const AuthFlowState();
   }
 
-  Future<void> _executeAuthorization(String credentialId) async {
+  Future<void> _executeAuthorization(
+    String credentialId, {
+    CloudSyncAuthMethod method = CloudSyncAuthMethod.automatic,
+    String? manualAuthorizationCode,
+  }) async {
     final credential = await _loadCredential(credentialId);
     if (credential == null) {
       _setError(
@@ -160,7 +174,11 @@ class AuthFlowNotifier extends Notifier<AuthFlowState> {
     try {
       final result = await ref
           .read(cloudSyncAuthServiceProvider)
-          .authorize(credential: credential);
+          .authorize(
+            credential: credential,
+            method: method,
+            manualAuthorizationCode: manualAuthorizationCode,
+          );
       state = state.copyWith(
         status: AuthFlowStatus.success,
         selectedProvider: credential.provider,

@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/cloud_sync/app_credentials/providers/app_credentials_provider.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/auth_credential_option.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/auth_flow_status.dart';
+import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_auth_method.dart';
 import 'package:hoplixi/features/cloud_sync/auth/providers/auth_flow_provider.dart';
+import 'package:hoplixi/features/cloud_sync/auth/services/cloud_sync_auth_service.dart';
 import 'package:hoplixi/features/cloud_sync/auth/widgets/auth_credential_list_tile.dart';
 import 'package:hoplixi/features/cloud_sync/auth/widgets/auth_provider_list_tile.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
@@ -12,6 +16,7 @@ import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/notification_card.dart';
+import 'package:universal_platform/universal_platform.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 Future<void> showCloudSyncAuthSheet({
@@ -260,20 +265,223 @@ class _CredentialSelectionStep extends ConsumerWidget {
                 l10n,
               ),
               onTap: option.isSupported
-                  ? () async {
-                      await ref
-                          .read(authFlowProvider.notifier)
-                          .selectCredential(option.entry.id);
-                      await ref
-                          .read(authFlowProvider.notifier)
-                          .beginAuthorization();
-                      Navigator.of(modalContext).pop();
-                    }
+                  ? () => _handleCredentialTap(option: option, ref: ref)
                   : null,
             ),
           ),
         )
         .toList(growable: false);
+  }
+
+  Future<void> _handleCredentialTap({
+    required AuthCredentialOption option,
+    required WidgetRef ref,
+  }) async {
+    final entry = option.entry;
+    final l10n = rootContext.t.cloud_sync_auth;
+
+    if (!UniversalPlatform.isDesktop ||
+        !entry.provider.metadata.supportsManualCodeAuth) {
+      await ref.read(authFlowProvider.notifier).selectCredential(entry.id);
+      await ref.read(authFlowProvider.notifier).beginAuthorization();
+      Navigator.of(modalContext).pop();
+      return;
+    }
+
+    final method = await _selectAuthMethod(rootContext);
+    if (method == null) {
+      return;
+    }
+
+    if (method == CloudSyncAuthMethod.automatic) {
+      await ref.read(authFlowProvider.notifier).selectCredential(entry.id);
+      await ref.read(authFlowProvider.notifier).beginAuthorization();
+      Navigator.of(modalContext).pop();
+      return;
+    }
+
+    final authorizationUri = ref
+        .read(cloudSyncAuthServiceProvider)
+        .buildManualCodeAuthorizationUri(credential: entry);
+    final shouldOpenBrowser = await _showManualAuthLinkDialog(
+      context: rootContext,
+      authorizationUri: authorizationUri,
+      credentialName: entry.name,
+      providerName: entry.provider.metadata.displayName,
+    );
+    if (shouldOpenBrowser != true) {
+      return;
+    }
+
+    try {
+      await ref
+          .read(cloudSyncAuthServiceProvider)
+          .launchManualCodeAuthorization(credential: entry);
+    } catch (error) {
+      Toaster.error(
+        title: l10n.manual_auth_launch_error_title,
+        description: _formatImmediateAuthError(error),
+      );
+      return;
+    }
+
+    final manualCode = await _promptForManualCode(rootContext);
+    if (manualCode == null || manualCode.trim().isEmpty) {
+      return;
+    }
+
+    await ref.read(authFlowProvider.notifier).selectCredential(entry.id);
+    await ref
+        .read(authFlowProvider.notifier)
+        .beginAuthorization(
+          method: CloudSyncAuthMethod.manualCode,
+          manualAuthorizationCode: manualCode.trim(),
+        );
+    Navigator.of(modalContext).pop();
+  }
+
+  Future<CloudSyncAuthMethod?> _selectAuthMethod(BuildContext context) {
+    final l10n = context.t.cloud_sync_auth;
+    return showDialog<CloudSyncAuthMethod>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.auth_method_dialog_title),
+        content: Text(l10n.auth_method_dialog_description),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l10n.auth_method_cancel_button),
+          ),
+          OutlinedButton(
+            onPressed: () =>
+                Navigator.of(context).pop(CloudSyncAuthMethod.manualCode),
+            child: Text(l10n.auth_method_manual_button),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.of(context).pop(CloudSyncAuthMethod.automatic),
+            child: Text(l10n.auth_method_automatic_button),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<bool?> _showManualAuthLinkDialog({
+    required BuildContext context,
+    required Uri authorizationUri,
+    required String credentialName,
+    required String providerName,
+  }) {
+    final l10n = context.t.cloud_sync_auth;
+    final uriText = authorizationUri.toString();
+
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.manual_link_dialog_title),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.manual_link_dialog_description(
+                  Provider: providerName,
+                  Credential: credentialName,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l10n.manual_link_dialog_hint,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: SelectableText(
+                  uriText,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.auth_method_cancel_button),
+          ),
+          OutlinedButton(
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: uriText));
+              if (context.mounted) {
+                Toaster.success(
+                  title: l10n.manual_link_copied_toast_title,
+                  description: l10n.manual_link_copied_toast_description,
+                );
+              }
+            },
+            child: Text(l10n.manual_link_copy_button),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.manual_link_open_button),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<String?> _promptForManualCode(BuildContext context) async {
+    final l10n = context.t.cloud_sync_auth;
+    var manualCode = '';
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.manual_code_dialog_title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.manual_code_dialog_description),
+            const SizedBox(height: 12),
+            TextField(
+              autofocus: true,
+              maxLines: 3,
+              onChanged: (value) => manualCode = value,
+              decoration: InputDecoration(
+                labelText: l10n.manual_code_field_label,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l10n.auth_method_cancel_button),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(manualCode),
+            child: Text(l10n.manual_code_continue_button),
+          ),
+        ],
+      ),
+    );
+    return result;
+  }
+
+  String _formatImmediateAuthError(Object error) {
+    if (error is Exception) {
+      return error.toString();
+    }
+    return '$error';
   }
 
   String? _resolveSupportIssueMessage(

@@ -1,0 +1,1 @@
+enum CloudSyncAuthMethod { automatic, manualCode }

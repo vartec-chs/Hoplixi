@@ -26,6 +26,7 @@ class CloudSyncProviderMetadata {
     required this.appCredentialsMobileRedirectUri,
     required this.authMobileRedirectHint,
     required this.scopes,
+    this.supportsManualCodeAuth = false,
     this.userInfoEndpoint,
     this.userInfoMethod = CloudSyncUserInfoMethod.get,
     this.userInfoAuthScheme = 'Bearer',
@@ -44,6 +45,7 @@ class CloudSyncProviderMetadata {
   final String appCredentialsMobileRedirectUri;
   final String authMobileRedirectHint;
   final List<String> scopes;
+  final bool supportsManualCodeAuth;
   final String? userInfoEndpoint;
   final CloudSyncUserInfoMethod userInfoMethod;
   final String userInfoAuthScheme;
@@ -73,6 +75,7 @@ extension CloudSyncProviderX on CloudSyncProvider {
         mobileRedirectPolicy: CloudSyncMobileRedirectPolicy.dropboxClientScheme,
         appCredentialsMobileRedirectUri: 'db-<client_id>://oauth2redirect',
         authMobileRedirectHint: 'db-<client_id>://oauth2redirect',
+        supportsManualCodeAuth: true,
         scopes: [
           'account_info.read',
           'files.content.read',

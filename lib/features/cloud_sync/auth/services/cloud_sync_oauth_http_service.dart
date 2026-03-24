@@ -12,9 +12,9 @@ class CloudSyncOAuthHttpService {
 
   Future<CloudSyncOAuthResult> exchangeAuthorizationCode({
     required AppCredentialEntry credential,
-    required String redirectUri,
+    String? redirectUri,
     required String code,
-    required String codeVerifier,
+    String? codeVerifier,
   }) async {
     final metadata = credential.provider.metadata;
     final tokenEndpoint = metadata.tokenEndpoint;
@@ -39,9 +39,15 @@ class CloudSyncOAuthHttpService {
         'grant_type': 'authorization_code',
         'client_id': credential.clientId,
         'code': code,
-        'redirect_uri': redirectUri,
-        'code_verifier': codeVerifier,
       };
+      final normalizedRedirectUri = redirectUri?.trim();
+      if (normalizedRedirectUri != null && normalizedRedirectUri.isNotEmpty) {
+        body['redirect_uri'] = normalizedRedirectUri;
+      }
+      final normalizedCodeVerifier = codeVerifier?.trim();
+      if (normalizedCodeVerifier != null && normalizedCodeVerifier.isNotEmpty) {
+        body['code_verifier'] = normalizedCodeVerifier;
+      }
       if (credential.clientSecret != null &&
           credential.clientSecret!.trim().isNotEmpty) {
         body['client_secret'] = credential.clientSecret!.trim();

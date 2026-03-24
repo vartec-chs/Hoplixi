@@ -3,6 +3,7 @@ import 'package:hoplixi/core/services/hive_box_manager.dart';
 import 'package:hoplixi/features/cloud_sync/app_credentials/models/app_credential_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/auth_flow_success_result.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_auth_error.dart';
+import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_auth_method.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_oauth_result.dart';
 import 'package:hoplixi/features/cloud_sync/auth/services/cloud_sync_appauth_mobile_service.dart';
 import 'package:hoplixi/features/cloud_sync/auth/services/cloud_sync_auth_exceptions.dart';
@@ -42,6 +43,8 @@ class CloudSyncAuthService {
 
   Future<AuthFlowSuccessResult> authorize({
     required AppCredentialEntry credential,
+    CloudSyncAuthMethod method = CloudSyncAuthMethod.automatic,
+    String? manualAuthorizationCode,
   }) async {
     await _authTokensService.initialize();
 
@@ -50,7 +53,11 @@ class CloudSyncAuthService {
     _cancelRequested = false;
 
     try {
-      final oauthResult = await _runStrategy(credential);
+      final oauthResult = await _runStrategy(
+        credential,
+        method: method,
+        manualAuthorizationCode: manualAuthorizationCode,
+      );
       _throwIfCancelled(operationId);
 
       final savedToken = await _saveToken(
@@ -106,9 +113,41 @@ class CloudSyncAuthService {
     await _authTokensService.dispose();
   }
 
-  Future<CloudSyncOAuthResult> _runStrategy(AppCredentialEntry credential) {
+  Future<void> launchManualCodeAuthorization({
+    required AppCredentialEntry credential,
+  }) async {
+    _ensureManualCodeAuthSupported(credential);
+
+    await _desktopLoopbackService.launchManualAuthorization(
+      credential: credential,
+    );
+  }
+
+  Uri buildManualCodeAuthorizationUri({
+    required AppCredentialEntry credential,
+  }) {
+    _ensureManualCodeAuthSupported(credential);
+
+    return _desktopLoopbackService.buildManualAuthorizationUri(
+      credential: credential,
+    );
+  }
+
+  Future<CloudSyncOAuthResult> _runStrategy(
+    AppCredentialEntry credential, {
+    CloudSyncAuthMethod method = CloudSyncAuthMethod.automatic,
+    String? manualAuthorizationCode,
+  }) {
+    if (method == CloudSyncAuthMethod.manualCode) {
+      _ensureManualCodeAuthSupported(credential);
+    }
+
     if (UniversalPlatform.isDesktop) {
-      return _desktopLoopbackService.authorize(credential: credential);
+      return _desktopLoopbackService.authorize(
+        credential: credential,
+        method: method,
+        manualAuthorizationCode: manualAuthorizationCode,
+      );
     }
 
     if (credential.provider == CloudSyncProvider.google) {
@@ -116,6 +155,25 @@ class CloudSyncAuthService {
     }
 
     return _appAuthMobileService.authorize(credential: credential);
+  }
+
+  void _ensureManualCodeAuthSupported(AppCredentialEntry credential) {
+    if (!UniversalPlatform.isDesktop) {
+      throw const CloudSyncAuthException(
+        CloudSyncAuthError.unsupportedCredential(
+          message: 'Manual code authorization is supported only on desktop.',
+        ),
+      );
+    }
+
+    if (!credential.provider.metadata.supportsManualCodeAuth) {
+      throw const CloudSyncAuthException(
+        CloudSyncAuthError.unsupportedCredential(
+          message:
+              'Manual code authorization is not supported for this provider.',
+        ),
+      );
+    }
   }
 
   Future<AuthTokenEntry> _saveToken({

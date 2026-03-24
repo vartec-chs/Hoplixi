@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/cloud_sync/app_credentials/models/app_credential_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_auth_error.dart';
+import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_auth_method.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_oauth_result.dart';
 import 'package:hoplixi/features/cloud_sync/auth/services/cloud_sync_auth_exceptions.dart';
 import 'package:hoplixi/features/cloud_sync/auth/services/cloud_sync_oauth_http_service.dart';
@@ -23,7 +24,16 @@ class CloudSyncDesktopLoopbackService {
 
   Future<CloudSyncOAuthResult> authorize({
     required AppCredentialEntry credential,
+    CloudSyncAuthMethod method = CloudSyncAuthMethod.automatic,
+    String? manualAuthorizationCode,
   }) async {
+    if (method == CloudSyncAuthMethod.manualCode) {
+      return _authorizeWithManualCode(
+        credential: credential,
+        manualAuthorizationCode: manualAuthorizationCode,
+      );
+    }
+
     await cancelActiveFlow();
 
     final metadata = credential.provider.metadata;
@@ -59,6 +69,7 @@ class CloudSyncDesktopLoopbackService {
     final authorizationUri = _buildAuthorizationUri(
       authorizationEndpoint: Uri.parse(authorizationEndpoint),
       credential: credential,
+      includeRedirectUri: true,
       redirectUri: metadata.desktopRedirectUri,
       codeChallenge: pkce.codeChallenge,
       state: pkce.state,
@@ -137,6 +148,38 @@ class CloudSyncDesktopLoopbackService {
     }
   }
 
+  Future<void> launchManualAuthorization({
+    required AppCredentialEntry credential,
+  }) async {
+    final authorizationUri = buildManualAuthorizationUri(
+      credential: credential,
+    );
+    await launchDesktopBrowser(authorizationUri);
+  }
+
+  Uri buildManualAuthorizationUri({required AppCredentialEntry credential}) {
+    final metadata = credential.provider.metadata;
+    final authorizationEndpoint = metadata.authorizationEndpoint;
+    if (authorizationEndpoint == null || metadata.tokenEndpoint == null) {
+      throw const CloudSyncAuthException(
+        CloudSyncAuthError.unsupportedCredential(
+          message: 'OAuth endpoints are missing for this provider.',
+        ),
+      );
+    }
+
+    final authorizationUri = _buildAuthorizationUri(
+      authorizationEndpoint: Uri.parse(authorizationEndpoint),
+      credential: credential,
+      includeRedirectUri: false,
+      redirectUri: null,
+      codeChallenge: null,
+      state: null,
+    );
+
+    return authorizationUri;
+  }
+
   Future<void> cancelActiveFlow() async {
     final session = _activeSession;
     if (session == null) {
@@ -172,23 +215,76 @@ class CloudSyncDesktopLoopbackService {
     }
   }
 
+  Future<CloudSyncOAuthResult> _authorizeWithManualCode({
+    required AppCredentialEntry credential,
+    String? manualAuthorizationCode,
+  }) async {
+    final code = manualAuthorizationCode?.trim();
+    if (code == null || code.isEmpty) {
+      throw const CloudSyncAuthException(
+        CloudSyncAuthError.unsupportedCredential(
+          message: 'Authorization code is required for manual OAuth flow.',
+        ),
+      );
+    }
+
+    final metadata = credential.provider.metadata;
+    if (metadata.authorizationEndpoint == null ||
+        metadata.tokenEndpoint == null) {
+      throw const CloudSyncAuthException(
+        CloudSyncAuthError.unsupportedCredential(
+          message: 'OAuth endpoints are missing for this provider.',
+        ),
+      );
+    }
+
+    final tokenResult = await _oauthHttpService.exchangeAuthorizationCode(
+      credential: credential,
+      code: code,
+    );
+    final userInfo = await _oauthHttpService.fetchUserInfo(
+      credential: credential,
+      accessToken: tokenResult.accessToken,
+    );
+
+    return tokenResult.copyWith(
+      accountId: tokenResult.accountId ?? extractAccountId(userInfo),
+      accountEmail: tokenResult.accountEmail ?? extractAccountEmail(userInfo),
+      accountName: tokenResult.accountName ?? extractAccountName(userInfo),
+      extraData: <String, dynamic>{
+        ...tokenResult.extraData,
+        'manual_code_entry': true,
+        if (userInfo != null) 'raw_user_info': userInfo,
+      },
+    );
+  }
+
   Uri _buildAuthorizationUri({
     required Uri authorizationEndpoint,
     required AppCredentialEntry credential,
-    required String redirectUri,
-    required String codeChallenge,
-    required String state,
+    required bool includeRedirectUri,
+    required String? redirectUri,
+    required String? codeChallenge,
+    required String? state,
   }) {
     final metadata = credential.provider.metadata;
     final query = <String, String>{
       'client_id': credential.clientId,
       'response_type': 'code',
-      'redirect_uri': redirectUri,
-      'state': state,
-      'code_challenge': codeChallenge,
-      'code_challenge_method': 'S256',
       ...metadata.additionalAuthParameters,
     };
+    if (includeRedirectUri &&
+        redirectUri != null &&
+        redirectUri.trim().isNotEmpty) {
+      query['redirect_uri'] = redirectUri;
+    }
+    if (state != null && state.trim().isNotEmpty) {
+      query['state'] = state;
+    }
+    if (codeChallenge != null && codeChallenge.trim().isNotEmpty) {
+      query['code_challenge'] = codeChallenge;
+      query['code_challenge_method'] = 'S256';
+    }
 
     if (metadata.scopes.isNotEmpty) {
       query['scope'] = metadata.scopes.join(' ');
@@ -342,4 +438,3 @@ class _DesktopAuthCallback {
   final String? error;
   final String? errorDescription;
 }
-
