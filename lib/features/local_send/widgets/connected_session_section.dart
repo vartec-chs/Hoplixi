@@ -6,12 +6,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/local_send/models/encrypted_transfer_envelope.dart';
 import 'package:hoplixi/features/local_send/models/device_info.dart';
 import 'package:hoplixi/features/local_send/models/history_item.dart';
 import 'package:hoplixi/features/local_send/providers/session_history_provider.dart';
 import 'package:hoplixi/features/local_send/providers/transfer_provider.dart';
 import 'package:hoplixi/features/local_send/utils/platform_icons.dart';
+import 'package:hoplixi/features/local_send/widgets/import_cloud_sync_tokens_dialog.dart';
 import 'package:hoplixi/features/local_send/widgets/import_store_archive_dialog.dart';
+import 'package:hoplixi/features/local_send/widgets/send_cloud_sync_tokens_dialog.dart';
 import 'package:hoplixi/features/local_send/widgets/send_store_dialog.dart';
 import 'package:hoplixi/main_store/services/archive_service.dart';
 import 'package:hoplixi/shared/ui/button.dart';
@@ -93,15 +96,28 @@ class _ConnectedSessionSectionState
                       ],
                     ),
                     const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: _buildCompactAction(
-                        icon: Icons.inventory_2_outlined,
-                        label: 'Хранилище',
-                        colorScheme: colorScheme,
-                        textTheme: textTheme,
-                        onTap: _showSendStoreDialog,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildCompactAction(
+                            icon: Icons.inventory_2_outlined,
+                            label: 'Хранилище',
+                            colorScheme: colorScheme,
+                            textTheme: textTheme,
+                            onTap: _showSendStoreDialog,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildCompactAction(
+                            icon: Icons.key_outlined,
+                            label: 'OAuth токены',
+                            colorScheme: colorScheme,
+                            textTheme: textTheme,
+                            onTap: _showSendCloudSyncTokensDialog,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -327,6 +343,8 @@ class _ConnectedSessionSectionState
   ) {
     final icon = item.isFile
         ? (item.isSent ? Icons.upload_file : Icons.download)
+        : item.isAuthTokenPayload
+        ? (item.isSent ? Icons.key_outlined : Icons.key)
         : (item.isSent ? Icons.send : Icons.message);
 
     final directionLabel = item.isSent ? 'Отправлено' : 'Получено';
@@ -388,9 +406,9 @@ class _ConnectedSessionSectionState
                   ],
                 ),
               ),
-              if (!item.isFile || item.filePath != null)
+              if (_shouldShowTrailingAction(item))
                 Icon(
-                  item.isFile ? Icons.folder_open : Icons.copy,
+                  _trailingIconForItem(item),
                   size: 16,
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -446,13 +464,43 @@ class _ConnectedSessionSectionState
       return;
     }
 
-    await ref.read(transferProvider.notifier).sendStoreArchive(
-      result.store,
-      password: result.archivePassword,
+    await ref
+        .read(transferProvider.notifier)
+        .sendStoreArchive(result.store, password: result.archivePassword);
+  }
+
+  Future<void> _showSendCloudSyncTokensDialog() async {
+    if (!mounted) return;
+
+    final result = await showDialog<SendCloudSyncTokensDialogResult>(
+      context: context,
+      builder: (context) => const SendCloudSyncTokensDialog(),
     );
+
+    if (result == null || !mounted) {
+      return;
+    }
+
+    await ref
+        .read(transferProvider.notifier)
+        .sendCloudSyncTokens(
+          result.tokens,
+          password: result.password,
+          exportMode: result.exportMode,
+        );
   }
 
   Future<void> _handleHistoryItemTap(HistoryItem item) async {
+    if (item.isAuthTokenPayload &&
+        !item.isSent &&
+        item.encryptedEnvelope != null) {
+      await _showImportCloudSyncTokensDialog(
+        item.encryptedEnvelope!,
+        item.deviceName,
+      );
+      return;
+    }
+
     if (item.isFile && item.filePath != null) {
       if (!item.isSent && ArchiveService.isStoreArchiveFile(item.filePath!)) {
         await _showImportStoreArchiveDialog(item.filePath!);
@@ -463,18 +511,46 @@ class _ConnectedSessionSectionState
       return;
     }
 
-    if (!item.isFile) {
+    if (item.isText) {
       await Clipboard.setData(ClipboardData(text: item.content));
       Toaster.info(title: 'Текст скопирован в буфер обмена');
     }
   }
 
   Future<void> _showImportStoreArchiveDialog(String archivePath) async {
-    await showStoreArchiveImportDialog(
+    await showStoreArchiveImportDialog(context, ref, archivePath: archivePath);
+  }
+
+  Future<void> _showImportCloudSyncTokensDialog(
+    EncryptedTransferEnvelope envelope,
+    String? deviceName,
+  ) async {
+    await showCloudSyncTokensImportDialog(
       context,
       ref,
-      archivePath: archivePath,
+      envelope: envelope,
+      deviceName: deviceName,
     );
+  }
+
+  bool _shouldShowTrailingAction(HistoryItem item) {
+    if (item.isFile) {
+      return item.filePath != null;
+    }
+
+    return item.isText || (item.isAuthTokenPayload && !item.isSent);
+  }
+
+  IconData _trailingIconForItem(HistoryItem item) {
+    if (item.isFile) {
+      return Icons.folder_open;
+    }
+
+    if (item.isAuthTokenPayload) {
+      return Icons.download_for_offline_outlined;
+    }
+
+    return Icons.copy;
   }
 }
 

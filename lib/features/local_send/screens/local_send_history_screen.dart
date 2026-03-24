@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/local_send/models/history_item.dart';
 import 'package:hoplixi/features/local_send/providers/persisted_history_provider.dart';
+import 'package:hoplixi/features/local_send/widgets/import_cloud_sync_tokens_dialog.dart';
 import 'package:hoplixi/features/local_send/widgets/import_store_archive_dialog.dart';
 import 'package:hoplixi/main_store/services/archive_service.dart';
 import 'package:hoplixi/shared/ui/button.dart';
@@ -134,6 +135,8 @@ class LocalSendHistoryScreen extends ConsumerWidget {
   ) {
     final icon = item.isFile
         ? (item.isSent ? Icons.upload_file : Icons.download)
+        : item.isAuthTokenPayload
+        ? (item.isSent ? Icons.key_outlined : Icons.key)
         : (item.isSent ? Icons.send : Icons.message);
 
     final iconColor = item.isSent ? colorScheme.primary : colorScheme.tertiary;
@@ -223,10 +226,10 @@ class LocalSendHistoryScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                if (!item.isFile || item.filePath != null) ...[
+                if (_shouldShowTrailingAction(item)) ...[
                   const SizedBox(width: 8),
                   Icon(
-                    item.isFile ? Icons.folder_open_outlined : Icons.copy,
+                    _trailingIconForItem(item),
                     size: 16,
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -244,6 +247,18 @@ class LocalSendHistoryScreen extends ConsumerWidget {
     WidgetRef ref,
     HistoryItem item,
   ) async {
+    if (item.isAuthTokenPayload &&
+        !item.isSent &&
+        item.encryptedEnvelope != null) {
+      await showCloudSyncTokensImportDialog(
+        context,
+        ref,
+        envelope: item.encryptedEnvelope!,
+        deviceName: item.deviceName,
+      );
+      return;
+    }
+
     if (item.isFile && item.filePath != null) {
       if (!item.isSent && ArchiveService.isStoreArchiveFile(item.filePath!)) {
         await showStoreArchiveImportDialog(
@@ -255,7 +270,7 @@ class LocalSendHistoryScreen extends ConsumerWidget {
       }
 
       await open_file.OpenFile.open(item.filePath!);
-    } else if (!item.isFile) {
+    } else if (item.isText) {
       await Clipboard.setData(ClipboardData(text: item.content));
       Toaster.info(title: 'Текст скопирован в буфер обмена');
     }
@@ -273,7 +288,7 @@ class LocalSendHistoryScreen extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (!item.isFile)
+            if (item.isText)
               ListTile(
                 leading: const Icon(Icons.copy),
                 title: const Text('Копировать текст'),
@@ -281,6 +296,22 @@ class LocalSendHistoryScreen extends ConsumerWidget {
                   Navigator.of(ctx).pop();
                   Clipboard.setData(ClipboardData(text: item.content));
                   Toaster.info(title: 'Текст скопирован в буфер обмена');
+                },
+              ),
+            if (item.isAuthTokenPayload &&
+                !item.isSent &&
+                item.encryptedEnvelope != null)
+              ListTile(
+                leading: const Icon(Icons.download_for_offline_outlined),
+                title: const Text('Импортировать OAuth-токены'),
+                onTap: () async {
+                  Navigator.of(ctx).pop();
+                  await showCloudSyncTokensImportDialog(
+                    context,
+                    ref,
+                    envelope: item.encryptedEnvelope!,
+                    deviceName: item.deviceName,
+                  );
                 },
               ),
             if (item.isFile && item.filePath != null) ...[
@@ -354,5 +385,25 @@ class LocalSendHistoryScreen extends ConsumerWidget {
       await ref.read(persistedHistoryProvider.notifier).clearAll();
       Toaster.success(title: 'История очищена');
     }
+  }
+
+  bool _shouldShowTrailingAction(HistoryItem item) {
+    if (item.isFile) {
+      return item.filePath != null;
+    }
+
+    return item.isText || (item.isAuthTokenPayload && !item.isSent);
+  }
+
+  IconData _trailingIconForItem(HistoryItem item) {
+    if (item.isFile) {
+      return Icons.folder_open_outlined;
+    }
+
+    if (item.isAuthTokenPayload) {
+      return Icons.download_for_offline_outlined;
+    }
+
+    return Icons.copy;
   }
 }

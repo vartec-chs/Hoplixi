@@ -3,6 +3,7 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/services/hive_box_manager.dart';
 import 'package:hoplixi/di_init.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
+import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_tokens_import_result.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/services/auth_tokens_service.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 
@@ -50,6 +51,7 @@ class AuthTokensNotifier extends AsyncNotifier<List<AuthTokenEntry>> {
   /// Перезагружает список токенов.
   Future<void> reload() async {
     final service = ref.read(authTokensServiceProvider);
+    await service.initialize();
     state = const AsyncLoading();
     state = await AsyncValue.guard(service.getAllTokens);
   }
@@ -57,6 +59,7 @@ class AuthTokensNotifier extends AsyncNotifier<List<AuthTokenEntry>> {
   /// Ищет токен по идентификатору.
   Future<AuthTokenEntry?> getTokenById(String id) async {
     final service = ref.read(authTokensServiceProvider);
+    await service.initialize();
     return service.getTokenById(id);
   }
 
@@ -65,6 +68,7 @@ class AuthTokensNotifier extends AsyncNotifier<List<AuthTokenEntry>> {
     CloudSyncProvider provider,
   ) async {
     final service = ref.read(authTokensServiceProvider);
+    await service.initialize();
     return service.getTokensByProvider(provider);
   }
 
@@ -72,6 +76,7 @@ class AuthTokensNotifier extends AsyncNotifier<List<AuthTokenEntry>> {
   Future<AuthTokenEntry> saveToken(AuthTokenEntry token) async {
     final service = ref.read(authTokensServiceProvider);
     try {
+      await service.initialize();
       final saved = await service.upsertToken(token);
       state = AsyncData(await service.getAllTokens());
       return saved;
@@ -89,11 +94,32 @@ class AuthTokensNotifier extends AsyncNotifier<List<AuthTokenEntry>> {
   Future<void> deleteToken(String id) async {
     final service = ref.read(authTokensServiceProvider);
     try {
+      await service.initialize();
       await service.deleteToken(id);
       state = AsyncData(await service.getAllTokens());
     } catch (error, stackTrace) {
       logError(
         'Failed to delete auth token: $error',
+        stackTrace: stackTrace,
+        tag: _logTag,
+      );
+      rethrow;
+    }
+  }
+
+  /// Импортирует несколько токенов и обновляет состояние один раз.
+  Future<AuthTokensImportResult> importTokens(
+    List<AuthTokenEntry> tokens,
+  ) async {
+    final service = ref.read(authTokensServiceProvider);
+    try {
+      await service.initialize();
+      final result = await service.importTokens(tokens);
+      state = AsyncData(await service.getAllTokens());
+      return result;
+    } catch (error, stackTrace) {
+      logError(
+        'Failed to import auth tokens: $error',
         stackTrace: stackTrace,
         tag: _logTag,
       );

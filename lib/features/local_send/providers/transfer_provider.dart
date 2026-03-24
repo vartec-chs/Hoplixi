@@ -3,16 +3,20 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/logger/index.dart' hide DeviceInfo;
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/local_send/models/cloud_sync_tokens_transfer_payload.dart';
 import 'package:hoplixi/features/local_send/models/device_info.dart';
+import 'package:hoplixi/features/local_send/models/encrypted_transfer_envelope.dart';
 import 'package:hoplixi/features/local_send/models/history_item.dart';
 import 'package:hoplixi/features/local_send/models/session_state.dart';
 import 'package:hoplixi/features/local_send/providers/discovery_provider.dart';
 import 'package:hoplixi/features/local_send/providers/incoming_request_provider.dart';
 import 'package:hoplixi/features/local_send/providers/local_send_route_state_provider.dart';
 import 'package:hoplixi/features/local_send/providers/session_history_provider.dart';
+import 'package:hoplixi/features/local_send/services/local_send_secure_payload_crypto_service.dart';
 import 'package:hoplixi/features/local_send/services/signaling_server.dart';
 import 'package:hoplixi/features/local_send/services/webrtc_transfer_service.dart';
 import 'package:hoplixi/main_store/models/store_folder_info.dart';
@@ -35,9 +39,13 @@ final transferProvider = NotifierProvider<SessionNotifier, SessionState>(
 /// обмениваться данными пока один из них не отключится.
 class SessionNotifier extends Notifier<SessionState> {
   static const Duration _incomingFileTimeout = Duration(seconds: 20);
+  static const String _authTokensPayloadLabel =
+      'Зашифрованный пакет OAuth-токенов';
 
   SignalingServer? _signalingServer;
   WebRtcTransferService? _webrtc;
+  final LocalSendSecurePayloadCryptoService _securePayloadCrypto =
+      const LocalSendSecurePayloadCryptoService();
 
   /// WebSocket-канал для связи с signaling-сервером
   /// удалённого устройства (только sender/initiator flow).
@@ -460,6 +468,58 @@ class SessionNotifier extends Notifier<SessionState> {
         .add(HistoryItemType.textSent, text, deviceName: _connectedPeer?.name);
   }
 
+  /// Отправляет защищённый пакет OAuth-токенов cloud sync.
+  Future<void> sendCloudSyncTokens(
+    List<AuthTokenEntry> tokens, {
+    required String password,
+    CloudSyncTokenExportMode exportMode =
+        CloudSyncTokenExportMode.withoutRefresh,
+  }) async {
+    final peer = _connectedPeer;
+    if (peer == null || _webrtc == null || tokens.isEmpty) {
+      return;
+    }
+
+    try {
+      final payload = CloudSyncTokensTransferPayload.forExport(
+        tokens: tokens,
+        exportMode: exportMode,
+      );
+      final envelope = await _securePayloadCrypto.encryptCloudSyncTokens(
+        payload: payload,
+        password: password,
+      );
+
+      await _webrtc!.sendSecurePayload(envelope.toJson());
+
+      ref
+          .read(sessionHistoryProvider.notifier)
+          .add(
+            HistoryItemType.authTokensSent,
+            tokens.length == 1
+                ? 'OAuth токен (${tokens.first.displayLabel})'
+                : 'OAuth токены (${tokens.length})',
+            deviceName: peer.name,
+            encryptedEnvelope: envelope,
+          );
+
+      Toaster.success(
+        title: 'OAuth-токены отправлены',
+        description: exportMode == CloudSyncTokenExportMode.withoutRefresh
+            ? 'Отправлен защищённый пакет без refresh token.'
+            : 'Отправлен полный защищённый пакет OAuth-токенов.',
+      );
+    } on LocalSendSecurePayloadException catch (error) {
+      Toaster.error(title: 'Ошибка шифрования', description: error.message);
+    } catch (error, stackTrace) {
+      logError('sendCloudSyncTokens', error: error, stackTrace: stackTrace);
+      Toaster.error(
+        title: 'Ошибка отправки',
+        description: 'Не удалось отправить OAuth-токены: $error',
+      );
+    }
+  }
+
   // ══════════════════════════════════════════════
   //  Общие колбэки WebRTC
   // ══════════════════════════════════════════════
@@ -537,6 +597,10 @@ class SessionNotifier extends Notifier<SessionState> {
             text,
             deviceName: _connectedPeer?.name,
           );
+    };
+
+    _webrtc!.onSecurePayloadReceived = (payloadJson) {
+      _handleIncomingSecurePayload(payloadJson);
     };
 
     _webrtc!.onTransferComplete = () {
@@ -915,5 +979,60 @@ class SessionNotifier extends Notifier<SessionState> {
       archiveDir.path,
       '${safeStoreName.isEmpty ? 'store' : safeStoreName}${ArchiveService.storeArchiveFileSuffix}',
     );
+  }
+
+  void _handleIncomingSecurePayload(Map<String, dynamic> payloadJson) {
+    try {
+      final envelope = EncryptedTransferEnvelope.fromJson(
+        _normalizeJsonMap(payloadJson),
+      );
+
+      if (envelope.kind != SecurePayloadKind.cloudSyncAuthTokens) {
+        logInfo('SessionNotifier: unsupported secure payload kind');
+        return;
+      }
+
+      ref
+          .read(sessionHistoryProvider.notifier)
+          .add(
+            HistoryItemType.authTokensReceived,
+            _authTokensPayloadLabel,
+            deviceName: _connectedPeer?.name,
+            encryptedEnvelope: envelope,
+          );
+
+      Toaster.info(
+        title: 'Получен защищённый пакет OAuth-токенов',
+        description: 'Нажмите на запись в истории, чтобы импортировать его.',
+      );
+    } catch (error, stackTrace) {
+      logError(
+        'SessionNotifier: failed to parse secure payload',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      Toaster.error(
+        title: 'Ошибка приёма',
+        description: 'Не удалось обработать защищённый пакет.',
+      );
+    }
+  }
+
+  Map<String, dynamic> _normalizeJsonMap(Map raw) {
+    return raw.map(
+      (key, value) => MapEntry(key.toString(), _normalizeJsonValue(value)),
+    );
+  }
+
+  dynamic _normalizeJsonValue(Object? value) {
+    if (value is Map) {
+      return _normalizeJsonMap(value);
+    }
+
+    if (value is List) {
+      return value.map(_normalizeJsonValue).toList(growable: false);
+    }
+
+    return value;
   }
 }

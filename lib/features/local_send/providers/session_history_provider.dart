@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/local_send/models/history_item.dart';
+import 'package:hoplixi/features/local_send/models/encrypted_transfer_envelope.dart';
 import 'package:hoplixi/features/local_send/services/local_send_history_service.dart';
 
 /// Провайдер истории обмена для текущей сессии.
@@ -25,6 +26,7 @@ class SessionHistoryNotifier extends Notifier<List<HistoryItem>> {
     String content, {
     String? deviceName,
     String? filePath,
+    EncryptedTransferEnvelope? encryptedEnvelope,
   }) {
     state = [
       ...state,
@@ -34,6 +36,7 @@ class SessionHistoryNotifier extends Notifier<List<HistoryItem>> {
         timestamp: DateTime.now(),
         deviceName: deviceName,
         filePath: filePath,
+        encryptedEnvelope: encryptedEnvelope,
       ),
     ];
     _saveHistory();

@@ -16,6 +16,7 @@ class DataChannelMessage {
   static const String fileEnd = 'file_end';
   static const String fileReceived = 'file_received';
   static const String textMessage = 'text_message';
+  static const String securePayload = 'secure_payload';
   static const String transferComplete = 'transfer_complete';
   static const String cancel = 'cancel';
   static const String disconnect = 'disconnect';
@@ -46,6 +47,9 @@ class WebRtcTransferService {
 
   /// Вызывается при получении текстового сообщения.
   void Function(String text)? onTextReceived;
+
+  /// Вызывается при получении зашифрованного payload.
+  void Function(Map<String, dynamic> payload)? onSecurePayloadReceived;
 
   /// Начало приёма файла.
   void Function(String fileName, int fileSize)? onFileStart;
@@ -176,6 +180,17 @@ class WebRtcTransferService {
     final message = jsonEncode({
       'type': DataChannelMessage.textMessage,
       'text': text,
+    });
+    await _sendControlMessage(message);
+  }
+
+  /// Отправляет секретный payload через control-канал.
+  Future<void> sendSecurePayload(Map<String, dynamic> payload) async {
+    _ensureControlChannel();
+
+    final message = jsonEncode({
+      'type': DataChannelMessage.securePayload,
+      'payload': payload,
     });
     await _sendControlMessage(message);
   }
@@ -343,6 +358,7 @@ class WebRtcTransferService {
 
   void _clearCallbacks() {
     onTextReceived = null;
+    onSecurePayloadReceived = null;
     onFileStart = null;
     onFileChunkReceived = null;
     onFileEnd = null;
@@ -396,6 +412,15 @@ class WebRtcTransferService {
         switch (type) {
           case DataChannelMessage.textMessage:
             onTextReceived?.call(json['text'] as String);
+          case DataChannelMessage.securePayload:
+            final payload = json['payload'];
+            if (payload is Map<String, dynamic>) {
+              onSecurePayloadReceived?.call(payload);
+            } else if (payload is Map) {
+              onSecurePayloadReceived?.call(
+                payload.map((key, value) => MapEntry(key.toString(), value)),
+              );
+            }
           case DataChannelMessage.fileStart:
             onFileStart?.call(json['name'] as String, json['size'] as int);
           case DataChannelMessage.fileEnd:

@@ -2,6 +2,7 @@ import 'package:hive_ce/hive.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/services/hive_box_manager.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
+import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_tokens_import_result.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 
 /// Сервис хранения OAuth токенов в зашифрованном Hive box.
@@ -57,8 +58,7 @@ class AuthTokensService {
   Future<AuthTokenEntry> upsertToken(AuthTokenEntry token) async {
     _ensureInitialized();
 
-    final equivalent = _findEquivalentToken(token);
-    final existing = await getTokenById(token.id) ?? equivalent;
+    final existing = await _resolveExistingToken(token);
     final now = DateTime.now();
     final normalized = token.copyWith(
       id: existing?.id ?? token.id,
@@ -81,6 +81,34 @@ class AuthTokensService {
     );
 
     return normalized;
+  }
+
+  /// Импортирует несколько токенов и возвращает сводку.
+  Future<AuthTokensImportResult> importTokens(
+    List<AuthTokenEntry> tokens,
+  ) async {
+    _ensureInitialized();
+
+    var created = 0;
+    var updated = 0;
+    final savedTokens = <AuthTokenEntry>[];
+
+    for (final token in tokens) {
+      final existing = await _resolveExistingToken(token);
+      if (existing == null) {
+        created += 1;
+      } else {
+        updated += 1;
+      }
+
+      savedTokens.add(await upsertToken(token));
+    }
+
+    return AuthTokensImportResult(
+      created: created,
+      updated: updated,
+      tokens: savedTokens,
+    );
   }
 
   /// Удаляет токен.
@@ -159,6 +187,10 @@ class AuthTokensService {
     }
 
     return null;
+  }
+
+  Future<AuthTokenEntry?> _resolveExistingToken(AuthTokenEntry token) async {
+    return await getTokenById(token.id) ?? _findEquivalentToken(token);
   }
 
   List<AuthTokenEntry> _sortTokens(List<AuthTokenEntry> tokens) {
