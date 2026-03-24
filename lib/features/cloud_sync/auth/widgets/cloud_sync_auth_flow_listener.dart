@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/auth_flow_state.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/auth_flow_status.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_auth_error.dart';
 import 'package:hoplixi/features/cloud_sync/auth/providers/auth_flow_provider.dart';
+import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/routing/router.dart';
@@ -22,6 +23,8 @@ class CloudSyncAuthFlowListener extends ConsumerStatefulWidget {
 
 class _CloudSyncAuthFlowListenerState
     extends ConsumerState<CloudSyncAuthFlowListener> {
+  static const String _logTag = 'CloudSyncAuthFlowListener';
+
   ProviderSubscription<AuthFlowState>? _subscription;
   AuthFlowStatus? _handledTerminalStatus;
   String? _handledPreviousRoute;
@@ -61,7 +64,7 @@ class _CloudSyncAuthFlowListenerState
         status == AuthFlowStatus.failure;
   }
 
-  void _handleTerminalState(AuthFlowState state) {
+  Future<void> _handleTerminalState(AuthFlowState state) async {
     if (!mounted) {
       return;
     }
@@ -96,7 +99,21 @@ class _CloudSyncAuthFlowListenerState
               l10n.cancel_toast_description,
         );
       case AuthFlowStatus.failure:
+        logWarning(
+          'Cloud sync auth terminal failure.',
+          tag: _logTag,
+          data: <String, dynamic>{
+            'previousRoute': state.previousRoute,
+            'provider': state.selectedProvider?.id,
+            'credentialId': state.selectedCredentialId,
+            'description': description,
+          },
+        );
         Toaster.error(
+          title: l10n.failure_toast_title,
+          description: description,
+        );
+        await _showErrorDialog(
           title: l10n.failure_toast_title,
           description: description,
         );
@@ -115,6 +132,35 @@ class _CloudSyncAuthFlowListenerState
     }
 
     ref.read(authFlowProvider.notifier).clearTerminalState();
+  }
+
+  Future<void> _showErrorDialog({
+    required String title,
+    required String description,
+  }) async {
+    if (!mounted) {
+      return;
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        final material = MaterialLocalizations.of(dialogContext);
+        return AlertDialog(
+          title: Text(title),
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: SingleChildScrollView(child: SelectableText(description)),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(material.okButtonLabel),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
