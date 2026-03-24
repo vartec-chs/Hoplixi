@@ -8,6 +8,7 @@ import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_auth_error.da
 import 'package:hoplixi/features/cloud_sync/auth/providers/auth_flow_provider.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
+import 'package:hoplixi/global_key.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/routing/router.dart';
 
@@ -138,14 +139,23 @@ class _CloudSyncAuthFlowListenerState
     required String title,
     required String description,
   }) async {
-    if (!mounted) {
+    final dialogContext =
+        navigatorKey.currentState?.overlay?.context ??
+        navigatorKey.currentContext;
+    if (dialogContext == null) {
+      logWarning(
+        'Skipping auth error dialog because no Navigator context is available.',
+        tag: _logTag,
+        data: <String, dynamic>{'title': title},
+      );
       return;
     }
 
     await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        final material = MaterialLocalizations.of(dialogContext);
+      context: dialogContext,
+      useRootNavigator: true,
+      builder: (context) {
+        final material = MaterialLocalizations.of(context);
         return AlertDialog(
           title: Text(title),
           content: ConstrainedBox(
@@ -154,7 +164,7 @@ class _CloudSyncAuthFlowListenerState
           ),
           actions: <Widget>[
             TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
+              onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
               child: Text(material.okButtonLabel),
             ),
           ],

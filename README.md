@@ -373,8 +373,14 @@ fingerprints и package name. Используйте следующие знач
 - Debug package name: `com.hiplixi.app.dev`
 - Release package name: `com.hiplixi.app`
 
-Чтобы получить fingerprints сертификата, перейдите в папку `android` и выполните
-команду:
+Чтобы получить fingerprints для debug-сборки, выполните команду:
+
+```bash
+keytool -list -v -alias androiddebugkey -keystore $env:USERPROFILE\.android\debug.keystore -storepass android -keypass android
+```
+
+Чтобы получить fingerprints для release-сборки, выполните команду в папке
+`android` с вашим release keystore:
 
 ```bash
 keytool -list -v -keystore my-release-key.jks -alias my-key-alias

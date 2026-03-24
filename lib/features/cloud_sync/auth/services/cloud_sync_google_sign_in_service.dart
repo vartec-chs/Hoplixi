@@ -7,6 +7,7 @@ import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_auth_error.da
 import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_oauth_result.dart';
 import 'package:hoplixi/features/cloud_sync/auth/services/cloud_sync_auth_exceptions.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
+import 'package:universal_platform/universal_platform.dart';
 
 class CloudSyncGoogleSignInService {
   CloudSyncGoogleSignInService() : _googleSignIn = GoogleSignIn.instance;
@@ -23,12 +24,26 @@ class CloudSyncGoogleSignInService {
     required AppCredentialEntry credential,
   }) async {
     final metadata = credential.provider.metadata;
-    final clientId = credential.clientId.trim();
-    final serverClientId = credential.clientSecret?.trim();
-    if (clientId.isEmpty) {
+    final rawClientId = credential.clientId.trim();
+    final rawServerClientId = credential.clientSecret?.trim();
+    final useAndroidConfiguration = UniversalPlatform.isAndroid;
+    final clientId = useAndroidConfiguration ? null : rawClientId;
+    final serverClientId =
+        rawServerClientId == null || rawServerClientId.isEmpty
+        ? null
+        : rawServerClientId;
+    if (!useAndroidConfiguration && rawClientId.isEmpty) {
       throw const CloudSyncAuthException(
         CloudSyncAuthError.unsupportedCredential(
           message: 'Google credential client ID is missing.',
+        ),
+      );
+    }
+    if (useAndroidConfiguration && serverClientId == null) {
+      throw const CloudSyncAuthException(
+        CloudSyncAuthError.unsupportedCredential(
+          message:
+              'Google Sign-In on Android requires a web OAuth client ID as serverClientId.',
         ),
       );
     }
@@ -39,9 +54,10 @@ class CloudSyncGoogleSignInService {
       data: <String, dynamic>{
         'provider': credential.provider.id,
         'credentialId': credential.id,
-        'clientIdHint': _buildClientIdHint(clientId),
-        'hasServerClientId':
-            serverClientId != null && serverClientId.isNotEmpty,
+        'platform': _platformLabel(),
+        'clientIdHint': clientId == null ? null : _buildClientIdHint(clientId),
+        'usesAndroidServerClientIdOnly': useAndroidConfiguration,
+        'hasServerClientId': serverClientId != null,
         'scopeCount': metadata.scopes.length,
         'supportsAuthenticate': _googleSignIn.supportsAuthenticate(),
         'authorizationRequiresUserInteraction': _googleSignIn
@@ -167,6 +183,11 @@ class CloudSyncGoogleSignInService {
       );
       switch (error.code) {
         case GoogleSignInExceptionCode.canceled:
+          if (_looksLikeConfigurationOrReauthFailure(error.description)) {
+            throw CloudSyncAuthException(
+              CloudSyncAuthError.oauthProvider(message: diagnostic),
+            );
+          }
           throw CloudSyncAuthException(
             CloudSyncAuthError.cancelled(message: diagnostic),
           );
@@ -187,7 +208,7 @@ class CloudSyncGoogleSignInService {
   }
 
   Future<void> _ensureInitialized({
-    required String clientId,
+    required String? clientId,
     String? serverClientId,
   }) async {
     final normalizedServerClientId =
@@ -212,7 +233,8 @@ class CloudSyncGoogleSignInService {
       'Initializing Google Sign-In client.',
       tag: _logTag,
       data: <String, dynamic>{
-        'clientIdHint': _buildClientIdHint(clientId),
+        'platform': _platformLabel(),
+        'clientIdHint': clientId == null ? null : _buildClientIdHint(clientId),
         'hasServerClientId': normalizedServerClientId != null,
       },
     );
@@ -256,7 +278,8 @@ class CloudSyncGoogleSignInService {
       'Google Sign-In client initialized.',
       tag: _logTag,
       data: <String, dynamic>{
-        'clientIdHint': _buildClientIdHint(clientId),
+        'platform': _platformLabel(),
+        'clientIdHint': clientId == null ? null : _buildClientIdHint(clientId),
         'hasServerClientId': normalizedServerClientId != null,
       },
     );
@@ -277,5 +300,26 @@ class CloudSyncGoogleSignInService {
       return clientId;
     }
     return '${clientId.substring(0, 6)}...${clientId.substring(clientId.length - 6)}';
+  }
+
+  bool _looksLikeConfigurationOrReauthFailure(String? description) {
+    final value = description?.toLowerCase();
+    if (value == null || value.isEmpty) {
+      return false;
+    }
+    return value.contains('reauth failed') ||
+        value.contains('developer error') ||
+        value.contains('configuration') ||
+        value.contains('serverclientid');
+  }
+
+  String _platformLabel() {
+    if (UniversalPlatform.isAndroid) {
+      return 'android';
+    }
+    if (UniversalPlatform.isIOS) {
+      return 'ios';
+    }
+    return 'other';
   }
 }
