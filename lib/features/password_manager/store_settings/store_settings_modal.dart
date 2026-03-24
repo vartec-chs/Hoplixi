@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/cloud_sync_settings_page.dart';
 import 'package:hoplixi/features/password_manager/store_settings/widgets/change_password_section.dart';
 import 'package:hoplixi/features/password_manager/store_settings/widgets/pinned_entity_types_selector.dart';
 import 'package:hoplixi/features/password_manager/store_settings/widgets/store_settings_form.dart';
@@ -48,6 +49,13 @@ Future<bool?> showStoreSettingsModal(
           trailingNavBarWidget: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              IconButton(
+                icon: const Icon(Icons.cloud_sync_outlined),
+                onPressed: () {
+                  pageIndexNotifier.value = 3;
+                },
+                tooltip: 'Cloud Sync',
+              ),
               IconButton(
                 icon: const Icon(Icons.push_pin_outlined),
                 onPressed: () {
@@ -129,6 +137,34 @@ Future<bool?> showStoreSettingsModal(
             padding: EdgeInsets.all(16.0),
             child: PinnedEntityTypesSelector(),
           ),
+        ),
+
+        // Страница 4: Cloud Sync
+        WoltModalSheetPage(
+          surfaceTintColor: Colors.transparent,
+          hasTopBarLayer: true,
+          topBarTitle: Builder(
+            builder: (context) {
+              return Text(
+                'Cloud Sync',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+              );
+            },
+          ),
+          isTopBarLayerAlwaysVisible: true,
+          leadingNavBarWidget: Padding(
+            padding: const EdgeInsets.only(left: 8.0),
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                pageIndexNotifier.value = 0;
+              },
+              tooltip: 'Назад',
+            ),
+          ),
+          child: const CloudSyncSettingsPage(),
         ),
       ];
     },

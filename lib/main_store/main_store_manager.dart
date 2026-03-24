@@ -1,5 +1,6 @@
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/core/logger/models.dart' as logger_models;
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/db_errors.dart';
 import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
@@ -12,6 +13,7 @@ import 'package:hoplixi/main_store/services/main_store_metadata_service.dart';
 import 'package:hoplixi/main_store/services/main_store_storage_service.dart';
 import 'package:hoplixi/main_store/services/store_key_config_service.dart';
 import 'package:hoplixi/main_store/services/store_manifest_service.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:result_dart/result_dart.dart';
 
 /// Менеджер для управления хранилищами MainStore
@@ -493,10 +495,30 @@ class MainStoreManager {
     }
 
     final storeInfo = storeInfoResult.getOrThrow();
-    final manifest = StoreManifest(
-      storeId: storeInfo.id,
-      lastModified: storeInfo.modifiedAt.millisecondsSinceEpoch,
+    final existingManifest = await StoreManifestService.readFrom(storagePath);
+    final deviceInfo = await logger_models.DeviceInfo.collect();
+    final packageInfo = await PackageInfo.fromPlatform();
+    final lastModifiedBy = StoreManifestLastModifiedBy(
+      deviceId: deviceInfo.deviceId,
+      clientInstanceId: '${deviceInfo.deviceId}:${packageInfo.packageName}',
+      appVersion: packageInfo.version,
     );
+    final manifest =
+        existingManifest?.copyWith(
+          manifestVersion: 2,
+          storeUuid: storeInfo.id,
+          storeName: storeInfo.name,
+          updatedAt: storeInfo.modifiedAt.toUtc(),
+          lastModifiedBy: existingManifest.lastModifiedBy.deviceId.isNotEmpty
+              ? existingManifest.lastModifiedBy
+              : lastModifiedBy,
+        ) ??
+        StoreManifest.initial(
+          storeUuid: storeInfo.id,
+          storeName: storeInfo.name,
+          updatedAt: storeInfo.modifiedAt.toUtc(),
+          lastModifiedBy: lastModifiedBy,
+        );
 
     try {
       await StoreManifestService.writeTo(storagePath, manifest);

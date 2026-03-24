@@ -1,0 +1,200 @@
+import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
+import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
+import 'package:hoplixi/main_store/models/store_manifest.dart';
+
+enum StoreVersionCompareResult {
+  differentStore,
+  same,
+  localNewer,
+  remoteNewer,
+  conflict,
+  remoteMissing,
+}
+
+enum SnapshotSyncResultType {
+  idle,
+  noChanges,
+  uploaded,
+  downloaded,
+  conflict,
+}
+
+class StoreSyncBinding {
+  const StoreSyncBinding({
+    required this.storeUuid,
+    required this.tokenId,
+    required this.provider,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  final String storeUuid;
+  final String tokenId;
+  final CloudSyncProvider provider;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  factory StoreSyncBinding.fromJson(Map<String, dynamic> json) {
+    return StoreSyncBinding(
+      storeUuid: (json['storeUuid'] as String?)?.trim() ?? '',
+      tokenId: (json['tokenId'] as String?)?.trim() ?? '',
+      provider: _parseProvider(json['provider']) ?? CloudSyncProvider.other,
+      createdAt:
+          _tryParseDateTime(json['createdAt']) ?? DateTime.now().toUtc(),
+      updatedAt:
+          _tryParseDateTime(json['updatedAt']) ?? DateTime.now().toUtc(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'storeUuid': storeUuid,
+      'tokenId': tokenId,
+      'provider': provider.name,
+      'createdAt': createdAt.toUtc().toIso8601String(),
+      'updatedAt': updatedAt.toUtc().toIso8601String(),
+    };
+  }
+}
+
+class SnapshotSyncConflict {
+  const SnapshotSyncConflict({
+    required this.localManifest,
+    required this.remoteManifest,
+  });
+
+  final StoreManifest localManifest;
+  final StoreManifest remoteManifest;
+}
+
+class SnapshotSyncResult {
+  const SnapshotSyncResult({
+    required this.type,
+    this.localManifest,
+    this.remoteManifest,
+    this.conflict,
+    this.requiresUnlockToApply = false,
+  });
+
+  final SnapshotSyncResultType type;
+  final StoreManifest? localManifest;
+  final StoreManifest? remoteManifest;
+  final SnapshotSyncConflict? conflict;
+  final bool requiresUnlockToApply;
+}
+
+class StoreSyncStatus {
+  const StoreSyncStatus({
+    required this.isStoreOpen,
+    this.storePath,
+    this.storeUuid,
+    this.storeName,
+    this.binding,
+    this.token,
+    this.localManifest,
+    this.remoteManifest,
+    this.compareResult = StoreVersionCompareResult.remoteMissing,
+    this.pendingConflict,
+    this.lastResultType = SnapshotSyncResultType.idle,
+    this.requiresUnlockToApply = false,
+  });
+
+  final bool isStoreOpen;
+  final String? storePath;
+  final String? storeUuid;
+  final String? storeName;
+  final StoreSyncBinding? binding;
+  final AuthTokenEntry? token;
+  final StoreManifest? localManifest;
+  final StoreManifest? remoteManifest;
+  final StoreVersionCompareResult compareResult;
+  final SnapshotSyncConflict? pendingConflict;
+  final SnapshotSyncResultType lastResultType;
+  final bool requiresUnlockToApply;
+
+  StoreSyncStatus copyWith({
+    bool? isStoreOpen,
+    String? storePath,
+    String? storeUuid,
+    String? storeName,
+    StoreSyncBinding? binding,
+    bool clearBinding = false,
+    AuthTokenEntry? token,
+    bool clearToken = false,
+    StoreManifest? localManifest,
+    bool clearLocalManifest = false,
+    StoreManifest? remoteManifest,
+    bool clearRemoteManifest = false,
+    StoreVersionCompareResult? compareResult,
+    SnapshotSyncConflict? pendingConflict,
+    bool clearPendingConflict = false,
+    SnapshotSyncResultType? lastResultType,
+    bool? requiresUnlockToApply,
+  }) {
+    return StoreSyncStatus(
+      isStoreOpen: isStoreOpen ?? this.isStoreOpen,
+      storePath: storePath ?? this.storePath,
+      storeUuid: storeUuid ?? this.storeUuid,
+      storeName: storeName ?? this.storeName,
+      binding: clearBinding ? null : (binding ?? this.binding),
+      token: clearToken ? null : (token ?? this.token),
+      localManifest: clearLocalManifest
+          ? null
+          : (localManifest ?? this.localManifest),
+      remoteManifest: clearRemoteManifest
+          ? null
+          : (remoteManifest ?? this.remoteManifest),
+      compareResult: compareResult ?? this.compareResult,
+      pendingConflict: clearPendingConflict
+          ? null
+          : (pendingConflict ?? this.pendingConflict),
+      lastResultType: lastResultType ?? this.lastResultType,
+      requiresUnlockToApply:
+          requiresUnlockToApply ?? this.requiresUnlockToApply,
+    );
+  }
+}
+
+StoreVersionCompareResult compareStoreManifests({
+  required StoreManifest local,
+  required StoreManifest? remote,
+}) {
+  if (remote == null) {
+    return StoreVersionCompareResult.remoteMissing;
+  }
+  if (local.storeUuid != remote.storeUuid) {
+    return StoreVersionCompareResult.differentStore;
+  }
+  if (local.revision > remote.revision) {
+    return StoreVersionCompareResult.localNewer;
+  }
+  if (remote.revision > local.revision) {
+    return StoreVersionCompareResult.remoteNewer;
+  }
+  if (local.isSameContent(remote)) {
+    return StoreVersionCompareResult.same;
+  }
+  return StoreVersionCompareResult.conflict;
+}
+
+CloudSyncProvider? _parseProvider(Object? raw) {
+  if (raw is! String) {
+    return null;
+  }
+  for (final provider in CloudSyncProvider.values) {
+    if (provider.name == raw) {
+      return provider;
+    }
+  }
+  return null;
+}
+
+DateTime? _tryParseDateTime(Object? raw) {
+  if (raw is String && raw.trim().isNotEmpty) {
+    return DateTime.tryParse(raw)?.toUtc();
+  }
+  if (raw is int) {
+    return DateTime.fromMillisecondsSinceEpoch(raw, isUtc: true);
+  }
+  return null;
+}

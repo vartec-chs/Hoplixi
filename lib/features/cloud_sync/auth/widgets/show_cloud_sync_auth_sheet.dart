@@ -8,7 +8,6 @@ import 'package:hoplixi/features/cloud_sync/auth/models/auth_credential_option.d
 import 'package:hoplixi/features/cloud_sync/auth/models/auth_flow_status.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_auth_method.dart';
 import 'package:hoplixi/features/cloud_sync/auth/providers/auth_flow_provider.dart';
-import 'package:hoplixi/features/cloud_sync/auth/services/cloud_sync_auth_service.dart';
 import 'package:hoplixi/features/cloud_sync/auth/utils/cloud_sync_auth_credential_support.dart';
 import 'package:hoplixi/features/cloud_sync/auth/widgets/auth_credential_list_tile.dart';
 import 'package:hoplixi/features/cloud_sync/auth/widgets/auth_provider_list_tile.dart';
