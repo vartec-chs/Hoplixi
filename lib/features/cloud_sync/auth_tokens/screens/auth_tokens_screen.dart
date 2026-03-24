@@ -82,7 +82,7 @@ class AuthTokensScreen extends ConsumerWidget {
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) {
+          error: (_, _) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(16),

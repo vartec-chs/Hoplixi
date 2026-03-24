@@ -191,7 +191,7 @@ class CloudSyncAuthService {
       extraData: <String, dynamic>{
         ...tokenResult.extraData,
         'manual_code_entry': true,
-        if (userInfo != null) 'raw_user_info': userInfo,
+        'raw_user_info': ?userInfo,
       },
     );
   }

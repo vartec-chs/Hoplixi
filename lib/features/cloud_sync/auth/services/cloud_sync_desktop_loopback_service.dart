@@ -137,7 +137,7 @@ class CloudSyncDesktopLoopbackService {
         accountName: tokenResult.accountName ?? extractAccountName(userInfo),
         extraData: <String, dynamic>{
           ...tokenResult.extraData,
-          if (userInfo != null) 'raw_user_info': userInfo,
+          'raw_user_info': ?userInfo,
         },
       );
     } finally {
@@ -254,7 +254,7 @@ class CloudSyncDesktopLoopbackService {
       extraData: <String, dynamic>{
         ...tokenResult.extraData,
         'manual_code_entry': true,
-        if (userInfo != null) 'raw_user_info': userInfo,
+        'raw_user_info': ?userInfo,
       },
     );
   }

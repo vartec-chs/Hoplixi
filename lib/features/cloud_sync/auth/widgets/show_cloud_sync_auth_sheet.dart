@@ -229,7 +229,7 @@ class _CredentialSelectionStep extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => Column(
+            error: (_, _) => Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ErrorNotificationCard(text: l10n.load_credentials_error),

@@ -507,6 +507,20 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
   }
 
   Map<String, dynamic> _requireJsonMap(Object? data) {
+    if (data is String && data.trim().isNotEmpty) {
+      try {
+        final decoded = jsonDecode(data);
+        if (decoded is Map<String, dynamic>) {
+          return decoded;
+        }
+        if (decoded is Map) {
+          return decoded.map((key, value) => MapEntry(key.toString(), value));
+        }
+      } catch (_) {
+        // Fall through to the generic error below.
+      }
+    }
+
     if (data is Map<String, dynamic>) {
       return data;
     }

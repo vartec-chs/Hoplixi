@@ -374,7 +374,7 @@ class OneDriveCloudStorageProvider implements CloudStorageProvider {
   Future<CloudResource> _getRootResource() async {
     try {
       final response = await _httpClient.request<dynamic>(
-        CloudSyncHttpRequest(
+        const CloudSyncHttpRequest(
           method: 'GET',
           url: '$_baseUrl/root',
           queryParameters: <String, dynamic>{r'$select': _selectFields},
@@ -411,10 +411,10 @@ class OneDriveCloudStorageProvider implements CloudStorageProvider {
     }
 
     final response = await _httpClient.request<dynamic>(
-      CloudSyncHttpRequest(
+      const CloudSyncHttpRequest(
         method: 'GET',
         url: _baseUrl,
-        queryParameters: const <String, dynamic>{r'$select': 'id'},
+        queryParameters: <String, dynamic>{r'$select': 'id'},
       ),
     );
     final json = _requireJsonMap(response.data);

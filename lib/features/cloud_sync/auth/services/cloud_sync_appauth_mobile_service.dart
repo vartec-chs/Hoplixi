@@ -118,7 +118,7 @@ class CloudSyncAppAuthMobileService {
         if (tokenResponse.tokenAdditionalParameters != null)
           'token_additional_parameters':
               tokenResponse.tokenAdditionalParameters,
-        if (userInfo != null) 'raw_user_info': userInfo,
+        'raw_user_info': ?userInfo,
       };
 
       return CloudSyncOAuthResult(

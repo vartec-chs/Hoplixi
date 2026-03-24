@@ -39,7 +39,7 @@ class _AppCredentialEditorScreenState
     super.initState();
     final entry = widget.initialEntry;
     _formData = AppCredentialFormData(
-      provider: entry?.provider ?? AppCredentialFormData().provider,
+      provider: entry?.provider ?? const AppCredentialFormData().provider,
       name: entry?.name ?? '',
       clientId: entry?.clientId ?? '',
       clientSecret: entry?.clientSecret ?? '',
