@@ -10,6 +10,7 @@ import 'package:hoplixi/features/cloud_sync/auth/services/cloud_sync_auth_except
 import 'package:hoplixi/features/cloud_sync/auth/services/cloud_sync_desktop_loopback_service.dart';
 import 'package:hoplixi/features/cloud_sync/auth/services/cloud_sync_google_sign_in_service.dart';
 import 'package:hoplixi/features/cloud_sync/auth/services/cloud_sync_oauth_http_service.dart';
+import 'package:hoplixi/features/cloud_sync/auth/utils/cloud_sync_auth_user_info.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/services/auth_tokens_service.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
@@ -140,6 +141,10 @@ class CloudSyncAuthService {
   }) {
     if (method == CloudSyncAuthMethod.manualCode) {
       _ensureManualCodeAuthSupported(credential);
+      return _authorizeWithManualCode(
+        credential: credential,
+        manualAuthorizationCode: manualAuthorizationCode,
+      );
     }
 
     if (UniversalPlatform.isDesktop) {
@@ -155,6 +160,40 @@ class CloudSyncAuthService {
     }
 
     return _appAuthMobileService.authorize(credential: credential);
+  }
+
+  Future<CloudSyncOAuthResult> _authorizeWithManualCode({
+    required AppCredentialEntry credential,
+    String? manualAuthorizationCode,
+  }) async {
+    final code = manualAuthorizationCode?.trim();
+    if (code == null || code.isEmpty) {
+      throw const CloudSyncAuthException(
+        CloudSyncAuthError.unsupportedCredential(
+          message: 'Authorization code is required for manual OAuth flow.',
+        ),
+      );
+    }
+
+    final tokenResult = await _oauthHttpService.exchangeAuthorizationCode(
+      credential: credential,
+      code: code,
+    );
+    final userInfo = await _oauthHttpService.fetchUserInfo(
+      credential: credential,
+      accessToken: tokenResult.accessToken,
+    );
+
+    return tokenResult.copyWith(
+      accountId: tokenResult.accountId ?? extractAccountId(userInfo),
+      accountEmail: tokenResult.accountEmail ?? extractAccountEmail(userInfo),
+      accountName: tokenResult.accountName ?? extractAccountName(userInfo),
+      extraData: <String, dynamic>{
+        ...tokenResult.extraData,
+        'manual_code_entry': true,
+        if (userInfo != null) 'raw_user_info': userInfo,
+      },
+    );
   }
 
   void _ensureManualCodeAuthSupported(AppCredentialEntry credential) {

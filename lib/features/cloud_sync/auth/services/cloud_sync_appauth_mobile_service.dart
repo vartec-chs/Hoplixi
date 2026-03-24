@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_appauth/flutter_appauth.dart';
 import 'package:hoplixi/features/cloud_sync/app_credentials/models/app_credential_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_auth_error.dart';
@@ -19,6 +20,15 @@ class CloudSyncAppAuthMobileService {
     required AppCredentialEntry credential,
   }) async {
     final metadata = credential.provider.metadata;
+    if (metadata.requiresManualCodeAuthOnMobile) {
+      throw const CloudSyncAuthException(
+        CloudSyncAuthError.unsupportedCredential(
+          message:
+              'Automatic mobile authorization is disabled for this provider. Use manual code authorization instead.',
+        ),
+      );
+    }
+
     final redirectUri = resolveCredentialRedirectUri(credential);
     if (redirectUri == null) {
       throw const CloudSyncAuthException(
@@ -125,6 +135,15 @@ class CloudSyncAppAuthMobileService {
         CloudSyncAuthError.oauthProvider(
           message:
               error.details.errorDescription ?? error.message ?? error.code,
+        ),
+      );
+    } on PlatformException catch (error) {
+      throw CloudSyncAuthException(
+        CloudSyncAuthError.oauthProvider(
+          message:
+              error.message ??
+              error.details?.toString() ??
+              'Flutter AppAuth platform error: ${error.code}',
         ),
       );
     }
