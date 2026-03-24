@@ -2,6 +2,9 @@ import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.da
 import 'package:hoplixi/features/cloud_sync/http/services/cloud_sync_http_client_factory.dart';
 import 'package:hoplixi/features/cloud_sync/http/services/cloud_sync_token_resolver.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
+import 'package:hoplixi/features/cloud_sync/storage/providers_impl/dropbox/dropbox_cloud_storage_provider.dart';
+import 'package:hoplixi/features/cloud_sync/storage/providers_impl/google_drive/google_drive_cloud_storage_provider.dart';
+import 'package:hoplixi/features/cloud_sync/storage/providers_impl/onedrive/onedrive_cloud_storage_provider.dart';
 import 'package:hoplixi/features/cloud_sync/storage/providers_impl/yandex_drive/yandex_drive_cloud_storage_provider.dart';
 import 'package:hoplixi/features/cloud_sync/storage/services/cloud_storage_provider.dart';
 
@@ -26,8 +29,20 @@ class CloudStorageProviderFactory {
           httpClient: httpClient,
         );
       case CloudSyncProvider.dropbox:
+        return DropboxCloudStorageProvider(
+          tokenId: tokenId,
+          httpClient: httpClient,
+        );
       case CloudSyncProvider.google:
+        return GoogleDriveCloudStorageProvider(
+          tokenId: tokenId,
+          httpClient: httpClient,
+        );
       case CloudSyncProvider.onedrive:
+        return OneDriveCloudStorageProvider(
+          tokenId: tokenId,
+          httpClient: httpClient,
+        );
       case CloudSyncProvider.other:
         throw CloudStorageException(
           type: CloudStorageExceptionType.unsupportedOperation,

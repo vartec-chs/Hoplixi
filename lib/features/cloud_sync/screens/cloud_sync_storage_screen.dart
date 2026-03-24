@@ -75,7 +75,7 @@ class _CloudSyncStorageScreenState
         ),
         actions: [
           IconButton(
-            tooltip: 'Обновить',
+            tooltip: 'ÐžÐ±Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ',
             onPressed: _isLoading
                 ? null
                 : () => unawaited(_loadCurrentFolder()),
@@ -136,11 +136,11 @@ class _CloudSyncStorageScreenState
     if (_activeToken == null) {
       return _CenteredMessage(
         icon: LucideIcons.shieldAlert,
-        title: 'Нужна авторизация',
+        title: 'ÐÑƒÐ¶Ð½Ð° Ð°Ð²Ñ‚Ð¾Ñ€Ð¸Ð·Ð°Ñ†Ð¸Ñ',
         description:
-            'Для провайдера ${_selectedProvider.metadata.displayName} не найден активный токен. Выполните авторизацию и экран откроется.',
+            'Ð”Ð»Ñ Ð¿Ñ€Ð¾Ð²Ð°Ð¹Ð´ÐµÑ€Ð° ${_selectedProvider.metadata.displayName} Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½ Ð°ÐºÑ‚Ð¸Ð²Ð½Ñ‹Ð¹ Ñ‚Ð¾ÐºÐµÐ½. Ð’Ñ‹Ð¿Ð¾Ð»Ð½Ð¸Ñ‚Ðµ Ð°Ð²Ñ‚Ð¾Ñ€Ð¸Ð·Ð°Ñ†Ð¸ÑŽ Ð¸ ÑÐºÑ€Ð°Ð½ Ð¾Ñ‚ÐºÑ€Ð¾ÐµÑ‚ÑÑ.',
         actionLabel: _selectedProvider.metadata.supportsAuth
-            ? 'Авторизоваться'
+            ? 'ÐÐ²Ñ‚Ð¾Ñ€Ð¸Ð·Ð¾Ð²Ð°Ñ‚ÑŒÑÑ'
             : null,
         onAction: _selectedProvider.metadata.supportsAuth
             ? () => unawaited(_openAuthForSelectedProvider(forcePrompt: true))
@@ -151,18 +151,18 @@ class _CloudSyncStorageScreenState
     if (!isImplemented) {
       return const _CenteredMessage(
         icon: LucideIcons.construction,
-        title: 'Провайдер пока не реализован',
+        title: 'ÐŸÑ€Ð¾Ð²Ð°Ð¹Ð´ÐµÑ€ Ð¿Ð¾ÐºÐ° Ð½Ðµ Ñ€ÐµÐ°Ð»Ð¸Ð·Ð¾Ð²Ð°Ð½',
         description:
-            'Авторизация и переключение уже доступны, но storage UI пока реализован только для Yandex.',
+            'ÐÐ²Ñ‚Ð¾Ñ€Ð¸Ð·Ð°Ñ†Ð¸Ñ Ð¸ Ð¿ÐµÑ€ÐµÐºÐ»ÑŽÑ‡ÐµÐ½Ð¸Ðµ ÑƒÐ¶Ðµ Ð´Ð¾ÑÑ‚ÑƒÐ¿Ð½Ñ‹, Ð½Ð¾ storage UI Ð¿Ð¾ÐºÐ° Ñ€ÐµÐ°Ð»Ð¸Ð·Ð¾Ð²Ð°Ð½ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ð´Ð»Ñ Yandex.',
       );
     }
 
     if (_error != null) {
       return _CenteredMessage(
         icon: LucideIcons.circleAlert,
-        title: 'Ошибка облака',
+        title: 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð¾Ð±Ð»Ð°ÐºÐ°',
         description: _error!,
-        actionLabel: 'Повторить',
+        actionLabel: 'ÐŸÐ¾Ð²Ñ‚Ð¾Ñ€Ð¸Ñ‚ÑŒ',
         onAction: () => unawaited(_loadCurrentFolder()),
       );
     }
@@ -170,8 +170,9 @@ class _CloudSyncStorageScreenState
     if (_items.isEmpty) {
       return const _CenteredMessage(
         icon: LucideIcons.folderOpen,
-        title: 'Папка пуста',
-        description: 'В текущей директории пока нет ресурсов.',
+        title: 'ÐŸÐ°Ð¿ÐºÐ° Ð¿ÑƒÑÑ‚Ð°',
+        description:
+            'Ð’ Ñ‚ÐµÐºÑƒÑ‰ÐµÐ¹ Ð´Ð¸Ñ€ÐµÐºÑ‚Ð¾Ñ€Ð¸Ð¸ Ð¿Ð¾ÐºÐ° Ð½ÐµÑ‚ Ñ€ÐµÑÑƒÑ€ÑÐ¾Ð².',
       );
     }
 
@@ -212,25 +213,25 @@ class _CloudSyncStorageScreenState
       if (resource.isFolder)
         const PopupMenuItem<_StorageAction>(
           value: _StorageAction.open,
-          child: Text('Открыть'),
+          child: Text('ÐžÑ‚ÐºÑ€Ñ‹Ñ‚ÑŒ'),
         ),
       if (resource.isFile)
         const PopupMenuItem<_StorageAction>(
           value: _StorageAction.download,
-          child: Text('Скачать'),
+          child: Text('Ð¡ÐºÐ°Ñ‡Ð°Ñ‚ÑŒ'),
         ),
       const PopupMenuItem<_StorageAction>(
         value: _StorageAction.copy,
-        child: Text('Копировать как...'),
+        child: Text('ÐšÐ¾Ð¿Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ ÐºÐ°Ðº...'),
       ),
       const PopupMenuItem<_StorageAction>(
         value: _StorageAction.move,
-        child: Text('Переместить/переименовать'),
+        child: Text('ÐŸÐµÑ€ÐµÐ¼ÐµÑÑ‚Ð¸Ñ‚ÑŒ/Ð¿ÐµÑ€ÐµÐ¸Ð¼ÐµÐ½Ð¾Ð²Ð°Ñ‚ÑŒ'),
       ),
       const PopupMenuDivider(),
       const PopupMenuItem<_StorageAction>(
         value: _StorageAction.delete,
-        child: Text('Удалить'),
+        child: Text('Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ'),
       ),
     ];
   }
@@ -418,9 +419,9 @@ class _CloudSyncStorageScreenState
     }
 
     final name = await _showTextInputDialog(
-      title: 'Новая папка',
-      label: 'Имя папки',
-      submitLabel: 'Создать',
+      title: 'ÐÐ¾Ð²Ð°Ñ Ð¿Ð°Ð¿ÐºÐ°',
+      label: 'Ð˜Ð¼Ñ Ð¿Ð°Ð¿ÐºÐ¸',
+      submitLabel: 'Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ',
     );
     if (name == null || name.trim().isEmpty) {
       return;
@@ -431,7 +432,7 @@ class _CloudSyncStorageScreenState
           .read(cloudStorageRepositoryProvider)
           .createFolder(token.id, parentRef: _currentFolder, name: name.trim());
       await _loadCurrentFolder();
-      _showSnackBar('Папка создана');
+      _showSnackBar('ÐŸÐ°Ð¿ÐºÐ° ÑÐ¾Ð·Ð´Ð°Ð½Ð°');
     } catch (error) {
       _showSnackBar(_formatStorageError(error));
     }
@@ -456,7 +457,9 @@ class _CloudSyncStorageScreenState
         picked.readStream ??
         (picked.path != null ? File(picked.path!).openRead() : null);
     if (stream == null || picked.size <= 0) {
-      _showSnackBar('Не удалось прочитать выбранный файл');
+      _showSnackBar(
+        'ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð¿Ñ€Ð¾Ñ‡Ð¸Ñ‚Ð°Ñ‚ÑŒ Ð²Ñ‹Ð±Ñ€Ð°Ð½Ð½Ñ‹Ð¹ Ñ„Ð°Ð¹Ð»',
+      );
       return;
     }
 
@@ -471,7 +474,7 @@ class _CloudSyncStorageScreenState
             contentLength: picked.size,
           );
       await _loadCurrentFolder();
-      _showSnackBar('Файл загружен');
+      _showSnackBar('Ð¤Ð°Ð¹Ð» Ð·Ð°Ð³Ñ€ÑƒÐ¶ÐµÐ½');
     } catch (error) {
       _showSnackBar(_formatStorageError(error));
     }
@@ -484,7 +487,7 @@ class _CloudSyncStorageScreenState
     }
 
     final path = await FilePicker.platform.saveFile(
-      dialogTitle: 'Сохранить файл',
+      dialogTitle: 'Ð¡Ð¾Ñ…Ñ€Ð°Ð½Ð¸Ñ‚ÑŒ Ñ„Ð°Ð¹Ð»',
       fileName: resource.name,
     );
     if (path == null || path.trim().isEmpty) {
@@ -495,7 +498,7 @@ class _CloudSyncStorageScreenState
       await ref
           .read(cloudStorageRepositoryProvider)
           .downloadFile(token.id, fileRef: resource.ref, savePath: path);
-      _showSnackBar('Файл сохранён');
+      _showSnackBar('Ð¤Ð°Ð¹Ð» ÑÐ¾Ñ…Ñ€Ð°Ð½Ñ‘Ð½');
     } catch (error) {
       _showSnackBar(_formatStorageError(error));
     }
@@ -533,10 +536,12 @@ class _CloudSyncStorageScreenState
       return;
     }
 
-    final actionLabel = isMove ? 'Переместить' : 'Копировать';
+    final actionLabel = isMove
+        ? 'ÐŸÐµÑ€ÐµÐ¼ÐµÑÑ‚Ð¸Ñ‚ÑŒ'
+        : 'ÐšÐ¾Ð¿Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ';
     final targetName = await _showTextInputDialog(
-      title: '$actionLabel ресурс',
-      label: 'Новое имя',
+      title: '$actionLabel Ñ€ÐµÑÑƒÑ€Ñ',
+      label: 'ÐÐ¾Ð²Ð¾Ðµ Ð¸Ð¼Ñ',
       initialValue: resource.name,
       submitLabel: actionLabel,
     );
@@ -560,7 +565,11 @@ class _CloudSyncStorageScreenState
             .copyResource(token.id, sourceRef: resource.ref, target: target);
       }
       await _loadCurrentFolder();
-      _showSnackBar(isMove ? 'Ресурс перемещён' : 'Ресурс скопирован');
+      _showSnackBar(
+        isMove
+            ? 'Ð ÐµÑÑƒÑ€Ñ Ð¿ÐµÑ€ÐµÐ¼ÐµÑ‰Ñ‘Ð½'
+            : 'Ð ÐµÑÑƒÑ€Ñ ÑÐºÐ¾Ð¿Ð¸Ñ€Ð¾Ð²Ð°Ð½',
+      );
     } catch (error) {
       _showSnackBar(_formatStorageError(error));
     }
@@ -575,18 +584,18 @@ class _CloudSyncStorageScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Удаление ресурса'),
+        title: const Text('Ð£Ð´Ð°Ð»ÐµÐ½Ð¸Ðµ Ñ€ÐµÑÑƒÑ€ÑÐ°'),
         content: Text(
-          'Удалить "${resource.name}" без возможности восстановления?',
+          'Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ "${resource.name}" Ð±ÐµÐ· Ð²Ð¾Ð·Ð¼Ð¾Ð¶Ð½Ð¾ÑÑ‚Ð¸ Ð²Ð¾ÑÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Отмена'),
+            child: const Text('ÐžÑ‚Ð¼ÐµÐ½Ð°'),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Удалить'),
+            child: const Text('Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ'),
           ),
         ],
       ),
@@ -601,7 +610,7 @@ class _CloudSyncStorageScreenState
           .read(cloudStorageRepositoryProvider)
           .deleteResource(token.id, resource.ref);
       await _loadCurrentFolder();
-      _showSnackBar('Ресурс удалён');
+      _showSnackBar('Ð ÐµÑÑƒÑ€Ñ ÑƒÐ´Ð°Ð»Ñ‘Ð½');
     } catch (error) {
       _showSnackBar(_formatStorageError(error));
     }
@@ -627,7 +636,7 @@ class _CloudSyncStorageScreenState
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Отмена'),
+            child: const Text('ÐžÑ‚Ð¼ÐµÐ½Ð°'),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(controller.text),
@@ -650,16 +659,34 @@ class _CloudSyncStorageScreenState
   }
 
   CloudResourceRef _rootRefForProvider(CloudSyncProvider provider) {
-    return provider == CloudSyncProvider.yandex
-        ? const CloudResourceRef.root(
-            provider: CloudSyncProvider.yandex,
-            path: 'disk:/',
-          )
-        : CloudResourceRef.root(provider: provider);
+    return switch (provider) {
+      CloudSyncProvider.yandex => const CloudResourceRef.root(
+        provider: CloudSyncProvider.yandex,
+        path: 'disk:/',
+      ),
+      CloudSyncProvider.dropbox => const CloudResourceRef.root(
+        provider: CloudSyncProvider.dropbox,
+        path: '',
+      ),
+      CloudSyncProvider.google => const CloudResourceRef.root(
+        provider: CloudSyncProvider.google,
+        resourceId: 'root',
+        path: '',
+      ),
+      CloudSyncProvider.onedrive => const CloudResourceRef.root(
+        provider: CloudSyncProvider.onedrive,
+        resourceId: 'root',
+        path: '',
+      ),
+      _ => CloudResourceRef.root(provider: provider),
+    };
   }
 
   bool _isStorageImplemented(CloudSyncProvider provider) {
-    return provider == CloudSyncProvider.yandex;
+    return provider == CloudSyncProvider.yandex ||
+        provider == CloudSyncProvider.dropbox ||
+        provider == CloudSyncProvider.google ||
+        provider == CloudSyncProvider.onedrive;
   }
 
   bool _canGoUp(CloudResourceRef ref) {
@@ -671,18 +698,35 @@ class _CloudSyncStorageScreenState
       return null;
     }
 
-    if (ref.provider != CloudSyncProvider.yandex) {
+    final path = ref.path?.trim();
+    if (path == null) {
       return null;
     }
 
-    final path = ref.path?.trim();
-    if (path == null || path.isEmpty || path == 'disk:/') {
+    if (ref.provider == CloudSyncProvider.yandex) {
+      if (path.isEmpty || path == 'disk:/') {
+        return null;
+      }
+
+      final normalized = path.replaceFirst(RegExp(r'/+$'), '');
+      final lastSlash = normalized.lastIndexOf('/');
+      if (lastSlash <= 'disk:'.length) {
+        return _rootRefForProvider(ref.provider);
+      }
+
+      return CloudResourceRef(
+        provider: ref.provider,
+        path: normalized.substring(0, lastSlash),
+      );
+    }
+
+    if (path.isEmpty || path == '/') {
       return null;
     }
 
     final normalized = path.replaceFirst(RegExp(r'/+$'), '');
     final lastSlash = normalized.lastIndexOf('/');
-    if (lastSlash <= 'disk:'.length) {
+    if (lastSlash <= 0) {
       return _rootRefForProvider(ref.provider);
     }
 
@@ -708,12 +752,12 @@ class _CloudSyncStorageScreenState
     if (modified != null) {
       details.add(modified.toString());
     }
-    return details.where((value) => value.trim().isNotEmpty).join(' • ');
+    return details.where((value) => value.trim().isNotEmpty).join(' â€¢ ');
   }
 
   String _formatStorageError(Object error) {
     if (error is TimeoutException) {
-      return 'Загрузка облачной папки превысила таймаут. Проверьте токен, сеть или ответ API провайдера.';
+      return 'Ð—Ð°Ð³Ñ€ÑƒÐ·ÐºÐ° Ð¾Ð±Ð»Ð°Ñ‡Ð½Ð¾Ð¹ Ð¿Ð°Ð¿ÐºÐ¸ Ð¿Ñ€ÐµÐ²Ñ‹ÑÐ¸Ð»Ð° Ñ‚Ð°Ð¹Ð¼Ð°ÑƒÑ‚. ÐŸÑ€Ð¾Ð²ÐµÑ€ÑŒÑ‚Ðµ Ñ‚Ð¾ÐºÐµÐ½, ÑÐµÑ‚ÑŒ Ð¸Ð»Ð¸ Ð¾Ñ‚Ð²ÐµÑ‚ API Ð¿Ñ€Ð¾Ð²Ð°Ð¹Ð´ÐµÑ€Ð°.';
     }
     if (error is CloudStorageException) {
       return error.message;
@@ -797,14 +841,17 @@ class _TokenInfoCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     token == null
-                        ? 'Токен не найден'
-                        : 'Аккаунт: ${token!.displayLabel}',
+                        ? 'Ð¢Ð¾ÐºÐµÐ½ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½'
+                        : 'ÐÐºÐºÐ°ÑƒÐ½Ñ‚: ${token!.displayLabel}',
                   ),
                 ],
               ),
             ),
             if (token == null && onAuthorize != null)
-              FilledButton(onPressed: onAuthorize, child: const Text('Войти')),
+              FilledButton(
+                onPressed: onAuthorize,
+                child: const Text('Ð’Ð¾Ð¹Ñ‚Ð¸'),
+              ),
           ],
         ),
       ),
@@ -834,7 +881,7 @@ class _StorageToolbar extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Текущая папка: ${currentFolder.path ?? '/'}',
+              'Ð¢ÐµÐºÑƒÑ‰Ð°Ñ Ð¿Ð°Ð¿ÐºÐ°: ${currentFolder.isRoot ? '/' : ((currentFolder.path?.isNotEmpty ?? false) ? currentFolder.path! : '/')}',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 12),
@@ -846,17 +893,17 @@ class _StorageToolbar extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: onGoUp,
                     icon: const Icon(LucideIcons.arrowUp),
-                    label: const Text('Вверх'),
+                    label: const Text('Ð’Ð²ÐµÑ€Ñ…'),
                   ),
                 FilledButton.icon(
                   onPressed: onCreateFolder,
                   icon: const Icon(LucideIcons.folderPlus),
-                  label: const Text('Папка'),
+                  label: const Text('ÐŸÐ°Ð¿ÐºÐ°'),
                 ),
                 FilledButton.icon(
                   onPressed: onUpload,
                   icon: const Icon(LucideIcons.upload),
-                  label: const Text('Загрузить'),
+                  label: const Text('Ð—Ð°Ð³Ñ€ÑƒÐ·Ð¸Ñ‚ÑŒ'),
                 ),
               ],
             ),
