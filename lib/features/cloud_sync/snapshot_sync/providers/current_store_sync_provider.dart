@@ -1,33 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/services/hive_box_manager.dart';
-import 'package:hoplixi/di_init.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
-import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_repository.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_service.dart';
-import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/store_sync_binding_service.dart';
-import 'package:hoplixi/features/cloud_sync/storage/providers/cloud_storage_provider.dart';
 import 'package:hoplixi/main_store/models/db_state.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
-
-final storeSyncBindingServiceProvider = Provider<StoreSyncBindingService>((ref) {
-  final service = StoreSyncBindingService(getIt<HiveBoxManager>());
-  ref.onDispose(() {
-    service.dispose();
-  });
-  return service;
-});
-
-final snapshotSyncRepositoryProvider = Provider<SnapshotSyncRepository>((ref) {
-  final storageRepository = ref.watch(cloudStorageRepositoryProvider);
-  return SnapshotSyncRepository(storageRepository);
-});
-
-final snapshotSyncServiceProvider = Provider<SnapshotSyncService>((ref) {
-  final repository = ref.watch(snapshotSyncRepositoryProvider);
-  return SnapshotSyncService(repository: repository);
-});
 
 final currentStoreSyncProvider =
     AsyncNotifierProvider<CurrentStoreSyncNotifier, StoreSyncStatus>(
@@ -104,7 +82,10 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       throw StateError('Store manager is unavailable.');
     }
     final storeInfoResult = await manager.getStoreInfo();
-    final storeInfo = storeInfoResult.fold((info) => info, (error) => throw error);
+    final storeInfo = storeInfoResult.fold(
+      (info) => info,
+      (error) => throw error,
+    );
     final syncService = ref.read(snapshotSyncServiceProvider);
 
     state = const AsyncLoading();
@@ -112,7 +93,8 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     if (current.compareResult == StoreVersionCompareResult.conflict) {
       state = AsyncData(
         current.copyWith(
-          pendingConflict: current.pendingConflict ??
+          pendingConflict:
+              current.pendingConflict ??
               (current.remoteManifest == null || current.localManifest == null
                   ? null
                   : SnapshotSyncConflict(
@@ -126,7 +108,9 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     }
 
     if (current.compareResult == StoreVersionCompareResult.remoteNewer) {
-      await ref.read(mainStoreProvider.notifier).lockStore();
+      await ref
+          .read(mainStoreProvider.notifier)
+          .lockStore(skipSnapshotSync: true);
       final result = await syncService.resolveConflict(
         storePath: storePath,
         storeInfo: storeInfo,
@@ -200,14 +184,19 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       throw StateError('Store manager is unavailable.');
     }
     final storeInfoResult = await manager.getStoreInfo();
-    final storeInfo = storeInfoResult.fold((info) => info, (error) => throw error);
+    final storeInfo = storeInfoResult.fold(
+      (info) => info,
+      (error) => throw error,
+    );
     final syncService = ref.read(snapshotSyncServiceProvider);
 
     state = const AsyncLoading();
 
     var requiresUnlock = false;
     if (resolution == SnapshotConflictResolution.downloadRemote) {
-      await ref.read(mainStoreProvider.notifier).lockStore();
+      await ref
+          .read(mainStoreProvider.notifier)
+          .lockStore(skipSnapshotSync: true);
       requiresUnlock = true;
     }
 
@@ -273,7 +262,10 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     }
 
     final storeInfoResult = await manager.getStoreInfo();
-    final storeInfo = storeInfoResult.fold((info) => info, (error) => throw error);
+    final storeInfo = storeInfoResult.fold(
+      (info) => info,
+      (error) => throw error,
+    );
 
     final bindingService = ref.read(storeSyncBindingServiceProvider);
     var binding = await bindingService.getByStoreUuid(storeInfo.id);

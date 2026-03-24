@@ -30,6 +30,8 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
   static const String _contentBaseUrl =
       'https://content.dropboxapi.com/2/files';
   static const int _defaultPageSize = 100;
+  static const int _simpleUploadLimitBytes = 150 * 1024 * 1024;
+  static const int _uploadSessionChunkSizeBytes = 8 * 1024 * 1024;
 
   final String tokenId;
   final CloudSyncHttpTransport _httpClient;
@@ -99,7 +101,10 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
                   'limit': pageSize ?? _defaultPageSize,
                 }
               : <String, dynamic>{'cursor': cursor},
-          options: _jsonOptions(),
+          options: _jsonOptions().copyWith(
+            sendTimeout: const Duration(seconds: 30),
+            receiveTimeout: const Duration(minutes: 5),
+          ),
         ),
       );
 
@@ -142,8 +147,28 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
           options: _jsonOptions(),
         ),
       );
-      final json = _requireJsonMap(response.data);
-      return CloudFolder(_mapResource(_requireJsonMap(json['metadata'])));
+      final payload = response.data;
+      if (payload != null) {
+        try {
+          final json = _requireJsonMap(payload);
+          final metadata = json['metadata'];
+          if (metadata != null) {
+            return CloudFolder(_mapResource(_requireJsonMap(metadata)));
+          }
+          if (json['path_display'] != null || json['path_lower'] != null) {
+            return CloudFolder(_mapResource(json));
+          }
+        } catch (_) {
+          // Ignore response body parsing issues here and fallback to reading the
+          // created folder by path, since Dropbox may still have completed the
+          // operation successfully.
+        }
+      }
+
+      final createdResource = await getResource(
+        CloudResourceRef(provider: provider, path: targetPath),
+      );
+      return CloudFolder(createdResource);
     } catch (error) {
       throw _mapError(
         error,
@@ -166,6 +191,18 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
     final targetPath = await _buildTargetPath(parentRef, name);
 
     try {
+      if (contentLength > _simpleUploadLimitBytes) {
+        return await _uploadViaSession(
+          targetPath: targetPath,
+          dataStream: dataStream,
+          contentLength: contentLength,
+          contentType: contentType,
+          overwrite: overwrite,
+          onProgress: onProgress,
+          cancelToken: cancelToken,
+        );
+      }
+
       final response = await _httpClient.upload<dynamic>(
         CloudSyncUploadRequest(
           url: '$_contentBaseUrl/upload',
@@ -173,19 +210,16 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
           data: dataStream,
           cancelToken: cancelToken,
           onSendProgress: onProgress,
-          options: Options(
-            responseType: ResponseType.json,
-            headers: <String, dynamic>{
-              'Dropbox-API-Arg': jsonEncode(<String, dynamic>{
-                'path': targetPath,
-                'mode': overwrite ? 'overwrite' : 'add',
-                'autorename': !overwrite,
-                'mute': false,
-              }),
-              HttpHeaders.contentTypeHeader:
-                  contentType ?? 'application/octet-stream',
-              HttpHeaders.contentLengthHeader: contentLength.toString(),
+          options: _contentUploadOptions(
+            apiArg: <String, dynamic>{
+              'path': targetPath,
+              'mode': overwrite ? 'overwrite' : 'add',
+              'autorename': !overwrite,
+              'mute': false,
+              'strict_conflict': false,
             },
+            contentType: contentType,
+            contentLength: contentLength,
           ),
         ),
       );
@@ -196,6 +230,145 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
         error,
         fallbackMessage: 'Failed to upload file to Dropbox.',
       );
+    }
+  }
+
+  Future<CloudFile> _uploadViaSession({
+    required String targetPath,
+    required Stream<List<int>> dataStream,
+    required int contentLength,
+    required String? contentType,
+    required bool overwrite,
+    required ProgressCallback? onProgress,
+    required CancelToken? cancelToken,
+  }) async {
+    final reader = _DropboxChunkedStreamReader(dataStream);
+
+    try {
+      final firstChunk = await reader.readChunk(
+        _uploadSessionChunkSizeBytes,
+        cancelToken,
+      );
+      if (firstChunk == null) {
+        throw CloudStorageException(
+          type: CloudStorageExceptionType.unknown,
+          message: 'Dropbox upload stream ended before any data was read.',
+          provider: provider,
+        );
+      }
+
+      final startResponse = await _httpClient.upload<dynamic>(
+        CloudSyncUploadRequest(
+          url: '$_contentBaseUrl/upload_session/start',
+          method: 'POST',
+          data: firstChunk,
+          cancelToken: cancelToken,
+          options: _contentUploadOptions(
+            apiArg: const <String, dynamic>{'close': false},
+            contentType: contentType,
+            contentLength: firstChunk.length,
+          ),
+        ),
+      );
+      final startJson = _requireJsonMap(startResponse.data);
+      final sessionId = (startJson['session_id'] as String?)?.trim();
+      if (sessionId == null || sessionId.isEmpty) {
+        throw CloudStorageException(
+          type: CloudStorageExceptionType.unknown,
+          message: 'Dropbox upload session did not return a session_id.',
+          provider: provider,
+          responseBodySnippet: startResponse.data?.toString(),
+        );
+      }
+
+      var uploaded = firstChunk.length;
+      onProgress?.call(uploaded, contentLength);
+
+      while (uploaded < contentLength) {
+        final remaining = contentLength - uploaded;
+        final chunk = await reader.readChunk(
+          remaining < _uploadSessionChunkSizeBytes
+              ? remaining
+              : _uploadSessionChunkSizeBytes,
+          cancelToken,
+        );
+        if (chunk == null || chunk.isEmpty) {
+          throw CloudStorageException(
+            type: CloudStorageExceptionType.unknown,
+            message:
+                'Dropbox upload stream ended before the declared contentLength was sent.',
+            provider: provider,
+          );
+        }
+
+        final isLastChunk = uploaded + chunk.length >= contentLength;
+        if (isLastChunk) {
+          final finishResponse = await _httpClient.upload<dynamic>(
+            CloudSyncUploadRequest(
+              url: '$_contentBaseUrl/upload_session/finish',
+              method: 'POST',
+              data: chunk,
+              cancelToken: cancelToken,
+              options: _contentUploadOptions(
+                apiArg: <String, dynamic>{
+                  'cursor': <String, dynamic>{
+                    'session_id': sessionId,
+                    'offset': uploaded,
+                  },
+                  'commit': <String, dynamic>{
+                    'path': targetPath,
+                    'mode': overwrite ? 'overwrite' : 'add',
+                    'autorename': !overwrite,
+                    'mute': false,
+                    'strict_conflict': false,
+                  },
+                },
+                contentType: contentType,
+                contentLength: chunk.length,
+              ),
+            ),
+          );
+          uploaded += chunk.length;
+          onProgress?.call(uploaded, contentLength);
+          return CloudFile(_mapResource(_requireJsonMap(finishResponse.data)));
+        }
+
+        await _httpClient.upload<dynamic>(
+          CloudSyncUploadRequest(
+            url: '$_contentBaseUrl/upload_session/append_v2',
+            method: 'POST',
+            data: chunk,
+            cancelToken: cancelToken,
+            options: _contentUploadOptions(
+              apiArg: <String, dynamic>{
+                'cursor': <String, dynamic>{
+                  'session_id': sessionId,
+                  'offset': uploaded,
+                },
+                'close': false,
+              },
+              contentType: contentType,
+              contentLength: chunk.length,
+            ),
+          ),
+        );
+
+        uploaded += chunk.length;
+        onProgress?.call(uploaded, contentLength);
+      }
+
+      throw CloudStorageException(
+        type: CloudStorageExceptionType.unknown,
+        message: 'Dropbox upload session finished without a final commit.',
+        provider: provider,
+      );
+    } catch (error) {
+      throw _mapError(
+        error,
+        fallbackMessage: 'Failed to upload file to Dropbox.',
+      );
+    } finally {
+      await reader.cancel();
     }
   }
 
@@ -506,6 +679,25 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
     return null;
   }
 
+  Options _contentUploadOptions({
+    required Map<String, dynamic> apiArg,
+    required String? contentType,
+    required int contentLength,
+  }) {
+    return Options(
+      responseType: ResponseType.json,
+      contentType: contentType ?? 'application/octet-stream',
+      sendTimeout: const Duration(minutes: 15),
+      receiveTimeout: const Duration(minutes: 15),
+      headers: <String, dynamic>{
+        'Dropbox-API-Arg': jsonEncode(apiArg),
+        HttpHeaders.contentTypeHeader:
+            contentType ?? 'application/octet-stream',
+        HttpHeaders.contentLengthHeader: contentLength.toString(),
+      },
+    );
+  }
+
   Map<String, dynamic> _requireJsonMap(Object? data) {
     if (data is String && data.trim().isNotEmpty) {
       try {
@@ -543,6 +735,15 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
   }) {
     if (error is CloudStorageException) {
       return error;
+    }
+
+    if (error is _DropboxUploadCancelled) {
+      return CloudStorageException(
+        type: CloudStorageExceptionType.cancelled,
+        message: 'Dropbox upload was cancelled.',
+        provider: provider,
+        cause: error,
+      );
     }
 
     if (error is CloudSyncHttpException) {
@@ -685,4 +886,46 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
 
     return responseBodySnippet;
   }
+}
+
+class _DropboxChunkedStreamReader {
+  _DropboxChunkedStreamReader(Stream<List<int>> source)
+    : _iterator = StreamIterator<List<int>>(source);
+
+  final StreamIterator<List<int>> _iterator;
+  final List<int> _buffer = <int>[];
+
+  Future<List<int>?> readChunk(int maxBytes, CancelToken? cancelToken) async {
+    if (maxBytes <= 0) {
+      return null;
+    }
+
+    final bytes = <int>[];
+    while (bytes.length < maxBytes) {
+      if (cancelToken?.isCancelled == true) {
+        throw const _DropboxUploadCancelled();
+      }
+
+      if (_buffer.isEmpty) {
+        final hasNext = await _iterator.moveNext();
+        if (!hasNext) {
+          break;
+        }
+        _buffer.addAll(_iterator.current);
+      }
+
+      final remaining = maxBytes - bytes.length;
+      final takeCount = remaining < _buffer.length ? remaining : _buffer.length;
+      bytes.addAll(_buffer.take(takeCount));
+      _buffer.removeRange(0, takeCount);
+    }
+
+    return bytes.isEmpty ? null : bytes;
+  }
+
+  Future<void> cancel() => _iterator.cancel();
+}
+
+class _DropboxUploadCancelled implements Exception {
+  const _DropboxUploadCancelled();
 }

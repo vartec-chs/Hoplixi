@@ -8,10 +8,7 @@ import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_pr
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
-import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_service.dart';
-import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/cloud_sync_conflict_dialog.dart';
 import 'package:hoplixi/shared/ui/button.dart';
-
 
 class CloudSyncSettingsPage extends ConsumerStatefulWidget {
   const CloudSyncSettingsPage({super.key});
@@ -24,51 +21,6 @@ class CloudSyncSettingsPage extends ConsumerStatefulWidget {
 class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
   CloudSyncProvider? _selectedProvider;
   String? _selectedTokenId;
-  SnapshotSyncConflict? _lastShownConflict;
-  ProviderSubscription<AsyncValue<StoreSyncStatus>>? _syncSubscription;
-
-  @override
-  void initState() {
-    super.initState();
-    _syncSubscription = ref.listenManual<AsyncValue<StoreSyncStatus>>(
-      currentStoreSyncProvider,
-      (previous, next) {
-        next.whenData((status) async {
-          final conflict = status.pendingConflict;
-          if (conflict == null || identical(conflict, _lastShownConflict)) {
-            return;
-          }
-          _lastShownConflict = conflict;
-          final resolution = await showCloudSyncConflictDialog(
-            context,
-            conflict: conflict,
-          );
-          if (!mounted || resolution == null) {
-            return;
-          }
-          if (resolution == SnapshotConflictResolution.uploadLocal) {
-            await _runAction(
-              () => ref
-                  .read(currentStoreSyncProvider.notifier)
-                  .resolveConflictWithUpload(),
-            );
-          } else {
-            await _runAction(
-              () => ref
-                  .read(currentStoreSyncProvider.notifier)
-                  .resolveConflictWithDownload(),
-            );
-          }
-        });
-      },
-    );
-  }
-
-  @override
-  void dispose() {
-    _syncSubscription?.close();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,10 +46,12 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
                   .toList(growable: false);
         final effectiveTokenId =
             providerTokens.any(
-                  (token) =>
-                      token.id ==
-                      (_selectedTokenId ?? status.binding?.tokenId ?? status.token?.id),
-                )
+              (token) =>
+                  token.id ==
+                  (_selectedTokenId ??
+                      status.binding?.tokenId ??
+                      status.token?.id),
+            )
             ? (_selectedTokenId ?? status.binding?.tokenId ?? status.token?.id)
             : (providerTokens.isNotEmpty ? providerTokens.first.id : null);
 
@@ -109,9 +63,9 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
             children: [
               Text(
                 'Cloud Sync',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 12),
               Text(
@@ -160,10 +114,7 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
                       },
               ),
               const SizedBox(height: 16),
-              _StatusCard(
-                status: status,
-                token: status.token,
-              ),
+              _StatusCard(status: status, token: status.token),
               const SizedBox(height: 16),
               Wrap(
                 spacing: 12,
@@ -176,7 +127,9 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
                         await showCloudSyncAuthSheet(
                           context: context,
                           ref: ref,
-                          previousRoute: GoRouterState.of(context).uri.toString(),
+                          previousRoute: GoRouterState.of(
+                            context,
+                          ).uri.toString(),
                           initialProvider: effectiveProvider,
                         );
                         ref.invalidate(authTokensProvider);
@@ -208,40 +161,40 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
                     onPressed: status.binding == null
                         ? null
                         : () => _runAction(
-                              () => ref
-                                  .read(currentStoreSyncProvider.notifier)
-                                  .syncNow(),
-                            ),
+                            () => ref
+                                .read(currentStoreSyncProvider.notifier)
+                                .syncNow(),
+                          ),
                   ),
                   SmoothButton(
                     label: 'Upload local',
                     onPressed: status.binding == null
                         ? null
                         : () => _runAction(
-                              () => ref
-                                  .read(currentStoreSyncProvider.notifier)
-                                  .resolveConflictWithUpload(),
-                            ),
+                            () => ref
+                                .read(currentStoreSyncProvider.notifier)
+                                .resolveConflictWithUpload(),
+                          ),
                   ),
                   SmoothButton(
                     label: 'Download remote',
                     onPressed: status.binding == null
                         ? null
                         : () => _runAction(
-                              () => ref
-                                  .read(currentStoreSyncProvider.notifier)
-                                  .resolveConflictWithDownload(),
-                            ),
+                            () => ref
+                                .read(currentStoreSyncProvider.notifier)
+                                .resolveConflictWithDownload(),
+                          ),
                   ),
                   SmoothButton(
                     label: 'Disconnect',
                     onPressed: status.binding == null
                         ? null
                         : () => _runAction(
-                              () => ref
-                                  .read(currentStoreSyncProvider.notifier)
-                                  .disconnect(),
-                            ),
+                            () => ref
+                                .read(currentStoreSyncProvider.notifier)
+                                .disconnect(),
+                          ),
                   ),
                 ],
               ),
@@ -268,12 +221,14 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
       }
       final status = ref.read(currentStoreSyncProvider).value;
       final description = switch (status?.lastResultType) {
-        SnapshotSyncResultType.uploaded => 'Локальная snapshot-версия загружена.',
+        SnapshotSyncResultType.uploaded =>
+          'Локальная snapshot-версия загружена.',
         SnapshotSyncResultType.downloaded =>
           status?.requiresUnlockToApply == true
               ? 'Remote snapshot загружен. Разблокируйте хранилище, чтобы продолжить работу.'
               : 'Remote snapshot загружен.',
-        SnapshotSyncResultType.noChanges => 'Локальная и удалённая версии уже совпадают.',
+        SnapshotSyncResultType.noChanges =>
+          'Локальная и удалённая версии уже совпадают.',
         SnapshotSyncResultType.conflict => 'Обнаружен конфликт версий.',
         _ => 'Операция выполнена.',
       };
@@ -306,7 +261,9 @@ class _StatusCard extends StatelessWidget {
           children: [
             Text('Store: ${status.storeName ?? '-'}'),
             const SizedBox(height: 8),
-            Text('Provider: ${status.binding?.provider.metadata.displayName ?? '-'}'),
+            Text(
+              'Provider: ${status.binding?.provider.metadata.displayName ?? '-'}',
+            ),
             Text('Account: ${token?.displayLabel ?? '-'}'),
             const SizedBox(height: 8),
             Text('Local revision: ${localManifest?.revision ?? '-'}'),

@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/di_init.dart';
+import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/main_store_manager.dart';
 import 'package:hoplixi/main_store/models/db_errors.dart';
@@ -465,6 +468,8 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         _currentState.copyWith(status: DatabaseStatus.loading, error: null),
       );
 
+      await _tryUploadSnapshotBeforeClose();
+
       // Вызываем закрытие хранилища
       final result = await _manager.closeStore();
 
@@ -521,7 +526,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   ///
   /// Блокирует хранилище и закрывает соединение.
   /// Пользователь должен будет ввести пароль для разблокировки.
-  Future<void> lockStore() async {
+  Future<void> lockStore({bool skipSnapshotSync = false}) async {
     if (!_currentState.isOpen) {
       logWarning('Store is not open, cannot lock', tag: _logTag);
       return;
@@ -532,6 +537,10 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     final currentPath = _currentState.path;
     final currentName = _currentState.name;
     final decryptedPathBeforeLock = await getDecryptedAttachmentsPath();
+
+    if (!skipSnapshotSync) {
+      await _tryUploadSnapshotBeforeClose();
+    }
 
     // Закрываем соединение
     final closeResult = await _manager.closeStore();
@@ -581,6 +590,95 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       );
     } catch (e, s) {
       logError('Startup cleanup failed: $e', stackTrace: s, tag: _logTag);
+    }
+  }
+
+  Future<void> _tryUploadSnapshotBeforeClose() async {
+    try {
+      final storePath = _manager.currentStorePath;
+      if (storePath == null || storePath.isEmpty || !_manager.isStoreOpen) {
+        return;
+      }
+
+      final storeInfoResult = await _manager.getStoreInfo();
+      final storeInfo = storeInfoResult.fold((info) => info, (error) {
+        throw error;
+      });
+
+      final binding = await ref
+          .read(storeSyncBindingServiceProvider)
+          .getByStoreUuid(storeInfo.id);
+      if (binding == null) {
+        return;
+      }
+
+      final token = await ref
+          .read(authTokensProvider.notifier)
+          .getTokenById(binding.tokenId);
+      if (token == null) {
+        logWarning(
+          'Skipping snapshot sync before close because token binding is stale.',
+          tag: _logTag,
+          data: <String, dynamic>{
+            'storeUuid': storeInfo.id,
+            'tokenId': binding.tokenId,
+          },
+        );
+        return;
+      }
+
+      final syncService = ref.read(snapshotSyncServiceProvider);
+      final status = await syncService.loadStatus(
+        storePath: storePath,
+        storeInfo: storeInfo,
+        binding: binding,
+        token: token,
+      );
+
+      switch (status.compareResult) {
+        case StoreVersionCompareResult.remoteMissing:
+        case StoreVersionCompareResult.localNewer:
+          final result = await syncService.sync(
+            storePath: storePath,
+            storeInfo: storeInfo,
+            binding: binding,
+            token: token,
+          );
+          logInfo(
+            'Snapshot sync before close completed.',
+            tag: _logTag,
+            data: <String, dynamic>{
+              'storeUuid': storeInfo.id,
+              'resultType': result.type.name,
+            },
+          );
+          break;
+        case StoreVersionCompareResult.same:
+          logDebug(
+            'Skipping snapshot upload before close because local and remote versions match.',
+            tag: _logTag,
+            data: <String, dynamic>{'storeUuid': storeInfo.id},
+          );
+          break;
+        case StoreVersionCompareResult.remoteNewer:
+        case StoreVersionCompareResult.conflict:
+        case StoreVersionCompareResult.differentStore:
+          logWarning(
+            'Skipping snapshot upload before close because manual resolution is required.',
+            tag: _logTag,
+            data: <String, dynamic>{
+              'storeUuid': storeInfo.id,
+              'compareResult': status.compareResult.name,
+            },
+          );
+          break;
+      }
+    } catch (e, stackTrace) {
+      logError(
+        'Snapshot sync before close failed: $e',
+        stackTrace: stackTrace,
+        tag: _logTag,
+      );
     }
   }
 
