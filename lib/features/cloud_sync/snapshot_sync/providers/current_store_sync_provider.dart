@@ -66,7 +66,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       );
       await loadStatus(rethrowOnError: true);
     } catch (error, stackTrace) {
-      if (_canKeepBindingAfterInitialProbeError(current, error) &&
+      if (_canKeepBindingAfterConnectProbeError(error) &&
           savedBinding != null) {
         state = AsyncData(
           current.copyWith(
@@ -94,13 +94,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     }
   }
 
-  bool _canKeepBindingAfterInitialProbeError(
-    StoreSyncStatus current,
-    Object error,
-  ) {
-    if (current.binding != null) {
-      return false;
-    }
+  bool _canKeepBindingAfterConnectProbeError(Object error) {
     return switch (error) {
       _ when error is CloudStorageException =>
         error.type == CloudStorageExceptionType.network ||

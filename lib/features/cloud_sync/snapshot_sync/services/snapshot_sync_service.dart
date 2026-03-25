@@ -8,12 +8,31 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_repository.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/store_snapshot_manifest_builder.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
+import 'package:hoplixi/main_store/models/db_errors.dart';
 import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_store/models/store_manifest.dart';
 import 'package:hoplixi/main_store/services/main_store_storage_service.dart';
 import 'package:hoplixi/main_store/services/store_manifest_service.dart';
 
 enum SnapshotConflictResolution { uploadLocal, downloadRemote }
+
+class ImportedRemoteStoreResult {
+  const ImportedRemoteStoreResult({
+    required this.storagePath,
+    required this.normalizedName,
+    required this.dbFilePath,
+    required this.remoteManifest,
+    required this.tokenId,
+    required this.storeUuid,
+  });
+
+  final String storagePath;
+  final String normalizedName;
+  final String dbFilePath;
+  final StoreManifest remoteManifest;
+  final String tokenId;
+  final String storeUuid;
+}
 
 class SnapshotSyncService {
   SnapshotSyncService({
@@ -252,6 +271,84 @@ class SnapshotSyncService {
     return remoteManifest;
   }
 
+  Future<ImportedRemoteStoreResult> importRemoteStoreToLocal({
+    required String tokenId,
+    required String storeUuid,
+    required String baseStoragePath,
+  }) async {
+    final remoteManifest = await _repository.readRemoteStoreManifest(
+      tokenId,
+      storeUuid: storeUuid,
+    );
+    if (remoteManifest == null) {
+      throw StateError('Remote store manifest was not found for $storeUuid.');
+    }
+
+    final preferredName = remoteManifest.storeName.trim().isEmpty
+        ? storeUuid
+        : remoteManifest.storeName.trim();
+    final prepared = await _prepareUniqueImportDirectory(
+      baseStoragePath: baseStoragePath,
+      preferredStoreName: preferredName,
+    );
+    final storagePath = prepared.storageDir.path;
+
+    try {
+      await _repository.downloadRemoteStoreFiles(
+        tokenId,
+        storeUuid: storeUuid,
+        localStorePath: storagePath,
+      );
+
+      final remoteAttachments = await _repository.readRemoteAttachmentsManifest(
+        tokenId,
+        storeUuid: storeUuid,
+      );
+      if (remoteAttachments != null) {
+        await _repository.reconcileAttachmentsDownload(
+          tokenId,
+          storeUuid: storeUuid,
+          localAttachmentsDir: Directory(
+            _storageService.getAttachmentsPath(storagePath),
+          ),
+          remoteManifest: remoteAttachments,
+        );
+        await AttachmentsManifestFileService.writeTo(
+          storagePath,
+          remoteAttachments,
+        );
+      }
+
+      await StoreManifestService.writeTo(storagePath, remoteManifest);
+
+      final dbFilePath =
+          await _storageService.findDatabaseFile(storagePath) ??
+          _storageService.getDatabaseFilePath(
+            storagePath,
+            prepared.normalizedName,
+          );
+      if (!await File(dbFilePath).exists()) {
+        throw StateError(
+          'Downloaded snapshot does not contain a local database file.',
+        );
+      }
+
+      return ImportedRemoteStoreResult(
+        storagePath: storagePath,
+        normalizedName: prepared.normalizedName,
+        dbFilePath: dbFilePath,
+        remoteManifest: remoteManifest,
+        tokenId: tokenId,
+        storeUuid: storeUuid,
+      );
+    } catch (_) {
+      if (await Directory(storagePath).exists()) {
+        await Directory(storagePath).delete(recursive: true);
+      }
+      rethrow;
+    }
+  }
+
   StoreVersionCompareResult compareStoreVersions({
     required StoreManifest local,
     required StoreManifest? remote,
@@ -390,5 +487,40 @@ class SnapshotSyncService {
   bool _isRecoverableStatusLoadError(CloudStorageException error) {
     return error.type == CloudStorageExceptionType.network ||
         error.type == CloudStorageExceptionType.timeout;
+  }
+
+  Future<({String normalizedName, Directory storageDir})>
+  _prepareUniqueImportDirectory({
+    required String baseStoragePath,
+    required String preferredStoreName,
+  }) async {
+    final baseName = preferredStoreName.trim().isEmpty
+        ? 'imported_store'
+        : preferredStoreName.trim();
+
+    for (var attempt = 0; attempt < 1000; attempt++) {
+      final candidateName = switch (attempt) {
+        0 => baseName,
+        1 => '${baseName}_imported',
+        _ => '${baseName}_imported_$attempt',
+      };
+
+      try {
+        return await _storageService.prepareNewStorageDirectory(
+          baseStoragePath: baseStoragePath,
+          storeName: candidateName,
+        );
+      } on ValidationError {
+        continue;
+      } on DatabaseError catch (error) {
+        throw StateError(
+          'Failed to prepare local storage directory for import: ${error.message}',
+        );
+      }
+    }
+
+    throw StateError(
+      'Could not find a unique local store name for "$preferredStoreName".',
+    );
   }
 }

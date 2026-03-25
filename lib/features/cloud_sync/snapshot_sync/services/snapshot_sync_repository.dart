@@ -350,6 +350,22 @@ class SnapshotSyncRepository {
       return cached;
     }
 
+    if (_shouldCreateFolderWithoutLookup(parentRef)) {
+      try {
+        final created = await _storageRepository.createFolder(
+          tokenId,
+          parentRef: parentRef,
+          name: name,
+        );
+        _cacheFolder(tokenId, parentRef, name, created.resource);
+        return created.resource;
+      } on CloudStorageException catch (error) {
+        if (error.type != CloudStorageExceptionType.alreadyExists) {
+          rethrow;
+        }
+      }
+    }
+
     final existing = await _findChildFolderByName(
       tokenId,
       parentRef: parentRef,
@@ -367,6 +383,19 @@ class SnapshotSyncRepository {
     );
     _cacheFolder(tokenId, parentRef, name, folder.resource);
     return folder.resource;
+  }
+
+  bool _shouldCreateFolderWithoutLookup(CloudResourceRef parentRef) {
+    if (!_usesDirectPathOnly(parentRef.provider)) {
+      return false;
+    }
+
+    if (parentRef.isRoot) {
+      return true;
+    }
+
+    final parentPath = parentRef.path?.trim();
+    return parentPath != null && parentPath.isNotEmpty;
   }
 
   Future<List<CloudResource>> _listAll(

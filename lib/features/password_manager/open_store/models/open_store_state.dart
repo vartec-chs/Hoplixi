@@ -1,4 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
+import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/cloud_manifest.dart';
 
 part 'open_store_state.freezed.dart';
 
@@ -26,7 +29,57 @@ sealed class OpenStoreState with _$OpenStoreState {
 
     /// Общая ошибка
     String? error,
+
+    /// OAuth токены, сгруппированные по провайдеру
+    @Default(<CloudSyncProvider, List<AuthTokenEntry>>{})
+    Map<CloudSyncProvider, List<AuthTokenEntry>> cloudTokensByProvider,
+
+    /// Выбранный провайдер для импорта снапшота
+    CloudSyncProvider? selectedCloudProvider,
+
+    /// Выбранный OAuth токен
+    String? selectedCloudTokenId,
+
+    /// Доступные remote stores для выбранного токена
+    @Default(<CloudManifestStoreEntry>[])
+    List<CloudManifestStoreEntry> remoteSnapshots,
+
+    /// Идёт загрузка cloud manifest
+    @Default(false) bool isLoadingRemoteSnapshots,
+
+    /// Ошибка загрузки remote snapshots
+    String? remoteSnapshotsError,
+
+    /// Store UUID, который сейчас импортируется
+    String? downloadingRemoteStoreUuid,
+
+    /// Запрос на привязку только что импортированного локального store
+    PendingImportedStoreBinding? pendingImportedStoreBinding,
   }) = _OpenStoreState;
+}
+
+class PendingImportedStoreBinding {
+  const PendingImportedStoreBinding({
+    required this.localStoreUuid,
+    required this.localStoreName,
+    required this.localStoragePath,
+    required this.remoteStoreUuid,
+    required this.tokenId,
+    required this.provider,
+    required this.accountLabel,
+  });
+
+  final String localStoreUuid;
+  final String localStoreName;
+  final String localStoragePath;
+  final String remoteStoreUuid;
+  final String tokenId;
+  final CloudSyncProvider provider;
+  final String accountLabel;
+
+  String get promptDescription =>
+      'Привязать "$localStoreName" к ${provider.metadata.displayName} ($accountLabel), '
+      'чтобы дальше использовать cloud sync для этого store?';
 }
 
 /// Информация о хранилище

@@ -4,42 +4,47 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
+import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
+import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/cloud_manifest.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_service.dart';
 import 'package:hoplixi/features/password_manager/open_store/models/open_store_state.dart';
 import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_store/provider/db_history_provider.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 import 'package:path/path.dart' as p;
 
-/// Провайдер для формы открытия хранилища
 final openStoreFormProvider =
     AsyncNotifierProvider.autoDispose<OpenStoreFormNotifier, OpenStoreState>(
       OpenStoreFormNotifier.new,
     );
 
-/// Notifier для управления состоянием формы открытия хранилища
 class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
   bool get _isMounted => ref.mounted;
 
   @override
   Future<OpenStoreState> build() async {
-    // Загружаем хранилища при инициализации
     final initialState = const OpenStoreState();
-    // Запускаем загрузку асинхронно
-    Future.microtask(() => loadStorages());
+    Future.microtask(_loadInitialData);
     return initialState;
   }
 
-  /// Получить текущее состояние или значение по умолчанию
-  OpenStoreState get _currentState {
-    return state.value ?? const OpenStoreState();
-  }
+  OpenStoreState get _currentState => state.value ?? const OpenStoreState();
 
-  /// Установить новое состояние
   void _setState(OpenStoreState newState) {
     state = AsyncData(newState);
   }
 
-  /// Загрузить список хранилищ из истории и папки
+  Future<void> _loadInitialData() async {
+    await loadStorages();
+    if (!_isMounted) {
+      return;
+    }
+    await reloadCloudOptions();
+  }
+
   Future<void> loadStorages() async {
     if (!_isMounted) {
       return;
@@ -51,308 +56,331 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
     try {
       final storages = <StorageInfo>[];
 
-      // 1. Загрузить из истории
       final historyStorages = await _loadFromHistory();
       if (!_isMounted) {
         return;
       }
-      logTrace(
-        'Loaded ${historyStorages.length} storages from history',
-        tag: 'OpenStoreForm',
-      );
       storages.addAll(historyStorages);
 
-      // 2. Сканировать папку хранилищ
       final folderStorages = await _loadFromFolder();
       if (!_isMounted) {
         return;
       }
-      logTrace(
-        'Loaded ${folderStorages.length} storages from folder',
-        tag: 'OpenStoreForm',
-      );
-
-      // Добавить только те, которых нет в истории
       for (final storage in folderStorages) {
-        if (!storages.any((s) => s.path == storage.path)) {
+        if (!storages.any((item) => item.path == storage.path)) {
           storages.add(storage);
         }
       }
 
-      // 3. Сканировать папку бэкапов
       final backupStorages = await _loadFromBackups();
       if (!_isMounted) {
         return;
       }
-      logTrace(
-        'Loaded ${backupStorages.length} storages from backups',
-        tag: 'OpenStoreForm',
-      );
-
       for (final storage in backupStorages) {
-        if (!storages.any((s) => s.path == storage.path)) {
+        if (!storages.any((item) => item.path == storage.path)) {
           storages.add(storage);
         }
       }
 
-      // Сортировать: сначала из истории по времени, потом из папки по дате изменения
-      storages.sort((a, b) {
-        if (a.fromHistory && !b.fromHistory) return -1;
-        if (!a.fromHistory && b.fromHistory) return 1;
+      storages.sort((left, right) {
+        if (left.fromHistory && !right.fromHistory) return -1;
+        if (!left.fromHistory && right.fromHistory) return 1;
 
-        if (a.fromHistory && b.fromHistory) {
-          return (b.lastOpenedAt ?? DateTime(0)).compareTo(
-            a.lastOpenedAt ?? DateTime(0),
+        if (left.fromHistory && right.fromHistory) {
+          return (right.lastOpenedAt ?? DateTime(0)).compareTo(
+            left.lastOpenedAt ?? DateTime(0),
           );
         }
 
-        return b.modifiedAt.compareTo(a.modifiedAt);
+        return right.modifiedAt.compareTo(left.modifiedAt);
       });
 
-      final updatedState = _currentState;
       if (!_isMounted) {
         return;
       }
+
       _setState(
-        updatedState.copyWith(
+        _currentState.copyWith(
           storages: storages,
           isLoading: false,
           error: null,
         ),
       );
-
       logInfo('Loaded ${storages.length} storages', tag: 'OpenStoreForm');
-    } catch (e, stackTrace) {
+    } catch (error, stackTrace) {
       logError(
-        'Error loading storages: $e',
+        'Error loading storages: $error',
         stackTrace: stackTrace,
         tag: 'OpenStoreForm',
       );
-
       if (!_isMounted) {
         return;
       }
 
-      final updatedState = _currentState;
       _setState(
-        updatedState.copyWith(
+        _currentState.copyWith(
           isLoading: false,
-          error: 'Ошибка загрузки списка хранилищ: $e',
+          error: 'Ошибка загрузки списка хранилищ: $error',
         ),
       );
     }
   }
 
-  /// Загрузить хранилища из истории
-  Future<List<StorageInfo>> _loadFromHistory() async {
+  Future<void> reloadCloudOptions() async {
     try {
+      final tokens = await ref.read(authTokensProvider.future);
       if (!_isMounted) {
-        return [];
+        return;
       }
 
-      final historyService = await ref.read(dbHistoryProvider.future);
-      if (!_isMounted) {
-        return [];
-      }
+      final grouped = _groupTokensByProvider(tokens);
+      final currentState = _currentState;
+      final selectedProvider =
+          currentState.selectedCloudProvider ??
+          _firstProviderWithTokens(grouped);
+      final providerTokens = selectedProvider == null
+          ? const <AuthTokenEntry>[]
+          : (grouped[selectedProvider] ?? const <AuthTokenEntry>[]);
+      final selectedTokenId =
+          providerTokens.any(
+            (token) => token.id == currentState.selectedCloudTokenId,
+          )
+          ? currentState.selectedCloudTokenId
+          : (providerTokens.isNotEmpty ? providerTokens.first.id : null);
 
-      final history = await historyService.getRecent(limit: 10);
-      if (!_isMounted) {
-        return [];
-      }
-
-      logTrace(
-        'Fetched ${history.length} history entries',
-        tag: 'OpenStoreForm',
+      _setState(
+        currentState.copyWith(
+          cloudTokensByProvider: grouped,
+          selectedCloudProvider: selectedProvider,
+          selectedCloudTokenId: selectedTokenId,
+          remoteSnapshots: selectedTokenId == null
+              ? const <CloudManifestStoreEntry>[]
+              : currentState.remoteSnapshots,
+          remoteSnapshotsError: selectedTokenId == null
+              ? null
+              : currentState.remoteSnapshotsError,
+        ),
       );
 
-      final storages = <StorageInfo>[];
+      if (selectedTokenId == null) {
+        return;
+      }
 
-      for (final entry in history) {
-        final dir = Directory(entry.path);
+      await _loadRemoteSnapshots(selectedTokenId);
+    } catch (error, stackTrace) {
+      logError(
+        'Error loading cloud tokens: $error',
+        stackTrace: stackTrace,
+        tag: 'OpenStoreForm',
+      );
+      if (!_isMounted) {
+        return;
+      }
 
-        // Проверяем, существует ли директория
-        if (!await dir.exists()) continue;
+      _setState(
+        _currentState.copyWith(
+          remoteSnapshots: const <CloudManifestStoreEntry>[],
+          remoteSnapshotsError: 'Ошибка загрузки OAuth токенов: $error',
+          isLoadingRemoteSnapshots: false,
+        ),
+      );
+    }
+  }
 
-        // Ищем файл с нужным расширением в директории
-        final files = await dir
-            .list()
-            .where(
-              (entity) =>
-                  entity is File &&
-                  entity.path.endsWith(MainConstants.dbExtension),
-            )
-            .toList();
+  Future<void> selectCloudProvider(CloudSyncProvider? provider) async {
+    if (!_isMounted) {
+      return;
+    }
 
-        if (files.isEmpty) continue;
+    final providerTokens = provider == null
+        ? const <AuthTokenEntry>[]
+        : (_currentState.cloudTokensByProvider[provider] ??
+              const <AuthTokenEntry>[]);
+    final tokenId = providerTokens.isNotEmpty ? providerTokens.first.id : null;
 
-        final dbFile = File(files.first.path);
+    _setState(
+      _currentState.copyWith(
+        selectedCloudProvider: provider,
+        selectedCloudTokenId: tokenId,
+        remoteSnapshots: tokenId == null
+            ? const <CloudManifestStoreEntry>[]
+            : _currentState.remoteSnapshots,
+        remoteSnapshotsError: null,
+      ),
+    );
 
-        final stat = await dbFile.stat();
+    if (tokenId == null) {
+      return;
+    }
 
-        storages.add(
-          StorageInfo(
-            name: entry.name,
-            path: dbFile.path,
-            modifiedAt: stat.modified,
-            description: entry.description,
-            size: stat.size,
-            fromHistory: true,
-            lastOpenedAt: entry.lastAccessed,
+    await _loadRemoteSnapshots(tokenId);
+  }
+
+  Future<void> selectCloudToken(String? tokenId) async {
+    if (!_isMounted) {
+      return;
+    }
+
+    _setState(
+      _currentState.copyWith(
+        selectedCloudTokenId: tokenId,
+        remoteSnapshots: tokenId == null
+            ? const <CloudManifestStoreEntry>[]
+            : _currentState.remoteSnapshots,
+        remoteSnapshotsError: null,
+      ),
+    );
+
+    if (tokenId == null) {
+      return;
+    }
+
+    await _loadRemoteSnapshots(tokenId);
+  }
+
+  Future<ImportedRemoteStoreResult?> importRemoteSnapshot(
+    CloudManifestStoreEntry entry,
+  ) async {
+    final currentState = _currentState;
+    final tokenId = currentState.selectedCloudTokenId;
+    final provider = currentState.selectedCloudProvider;
+    final token = _selectedToken;
+    if (tokenId == null || provider == null || token == null) {
+      _setState(
+        currentState.copyWith(
+          remoteSnapshotsError:
+              'Выберите провайдера и OAuth токен перед импортом.',
+        ),
+      );
+      return null;
+    }
+
+    _setState(
+      currentState.copyWith(
+        downloadingRemoteStoreUuid: entry.storeUuid,
+        remoteSnapshotsError: null,
+      ),
+    );
+
+    try {
+      final baseStoragePath = await AppPaths.appStoragesPath;
+      if (!_isMounted) {
+        return null;
+      }
+
+      final result = await ref
+          .read(snapshotSyncServiceProvider)
+          .importRemoteStoreToLocal(
+            tokenId: tokenId,
+            storeUuid: entry.storeUuid,
+            baseStoragePath: baseStoragePath,
+          );
+
+      if (!_isMounted) {
+        return null;
+      }
+
+      await loadStorages();
+      if (!_isMounted) {
+        return null;
+      }
+
+      _setState(
+        _currentState.copyWith(
+          downloadingRemoteStoreUuid: null,
+          pendingImportedStoreBinding: PendingImportedStoreBinding(
+            localStoreUuid: result.remoteManifest.storeUuid,
+            localStoreName: result.remoteManifest.storeName,
+            localStoragePath: result.storagePath,
+            remoteStoreUuid: entry.storeUuid,
+            tokenId: tokenId,
+            provider: provider,
+            accountLabel: token.displayLabel,
           ),
-        );
-      }
-
-      logTrace(
-        'Loaded ${storages.length} storages from history',
-        tag: 'OpenStoreForm',
+        ),
       );
 
-      return storages;
-    } catch (e, stackTrace) {
+      return result;
+    } catch (error, stackTrace) {
       logError(
-        'Error loading from history: $e',
+        'Error importing remote snapshot: $error',
         stackTrace: stackTrace,
         tag: 'OpenStoreForm',
       );
-      return [];
+      if (!_isMounted) {
+        return null;
+      }
+
+      _setState(
+        _currentState.copyWith(
+          downloadingRemoteStoreUuid: null,
+          remoteSnapshotsError: 'Ошибка скачивания снапшота: $error',
+        ),
+      );
+      return null;
     }
   }
 
-  /// Сканировать папку хранилищ
-  Future<List<StorageInfo>> _loadFromFolder() async {
+  Future<bool> resolvePendingImportedStoreBinding({required bool bind}) async {
+    final pending = _currentState.pendingImportedStoreBinding;
+    if (pending == null) {
+      return false;
+    }
+
+    if (!bind) {
+      _setState(_currentState.copyWith(pendingImportedStoreBinding: null));
+      return false;
+    }
+
     try {
+      await ref
+          .read(storeSyncBindingServiceProvider)
+          .saveBinding(
+            storeUuid: pending.localStoreUuid,
+            tokenId: pending.tokenId,
+            provider: pending.provider,
+          );
       if (!_isMounted) {
-        return [];
+        return false;
       }
 
-      final storagePath = await AppPaths.appStoragesPath;
-      if (!_isMounted) {
-        return [];
-      }
-
-      final storageDir = Directory(storagePath);
-
-      if (!await storageDir.exists()) {
-        logWarning('Storage directory does not exist', tag: 'OpenStoreForm');
-        return [];
-      }
-
-      final storages = <StorageInfo>[];
-
-      // Ищем поддиректории (каждое хранилище в своей папке)
-      await for (final entity in storageDir.list()) {
-        if (entity is Directory) {
-          // Проверяем, существует ли директория
-          if (!await entity.exists()) continue;
-
-          // Ищем файлы с нужным расширением
-          final files = await entity
-              .list()
-              .where(
-                (item) =>
-                    item is File &&
-                    item.path.endsWith(MainConstants.dbExtension),
-              )
-              .toList();
-
-          if (files.isNotEmpty) {
-            final dbFile = File(files.first.path);
-            final stat = await dbFile.stat();
-            final dirName = p.basename(entity.path);
-
-            storages.add(
-              StorageInfo(
-                name: dirName,
-                path: dbFile.path,
-                modifiedAt: stat.modified,
-                size: stat.size,
-                fromHistory: false,
-              ),
-            );
-          }
-        }
-      }
-
-      return storages;
-    } catch (e, stackTrace) {
+      _setState(_currentState.copyWith(pendingImportedStoreBinding: null));
+      return true;
+    } catch (error, stackTrace) {
       logError(
-        'Error scanning storage folder: $e',
+        'Error saving imported store binding: $error',
         stackTrace: stackTrace,
         tag: 'OpenStoreForm',
       );
-      return [];
-    }
-  }
-
-  /// Сканировать папку бэкапов
-  Future<List<StorageInfo>> _loadFromBackups() async {
-    try {
       if (!_isMounted) {
-        return [];
+        return false;
       }
 
-      final backupsPath = await AppPaths.backupsPath;
-      if (!_isMounted) {
-        return [];
-      }
-
-      final backupsDir = Directory(backupsPath);
-
-      if (!await backupsDir.exists()) {
-        return [];
-      }
-
-      final storages = <StorageInfo>[];
-
-      await for (final entity in backupsDir.list(recursive: false)) {
-        if (entity is! Directory) continue;
-
-        final files = await entity
-            .list(recursive: false)
-            .where(
-              (item) =>
-                  item is File && item.path.endsWith(MainConstants.dbExtension),
-            )
-            .toList();
-
-        if (files.isEmpty) continue;
-
-        final dbFile = File(files.first.path);
-        final stat = await dbFile.stat();
-        final dirName = p.basename(entity.path);
-
-        storages.add(
-          StorageInfo(
-            name: dirName,
-            path: dbFile.path,
-            modifiedAt: stat.modified,
-            size: stat.size,
-            fromHistory: false,
-            description: 'Бэкап',
-          ),
-        );
-      }
-
-      return storages;
-    } catch (e, stackTrace) {
-      logError(
-        'Error scanning backups folder: $e',
-        stackTrace: stackTrace,
-        tag: 'OpenStoreForm',
+      _setState(
+        _currentState.copyWith(
+          pendingImportedStoreBinding: null,
+          remoteSnapshotsError: 'Не удалось сохранить привязку: $error',
+        ),
       );
-      return [];
+      return false;
     }
   }
 
-  /// Выбрать хранилище
+  void clearRemoteSnapshotsError() {
+    if (!_isMounted) {
+      return;
+    }
+
+    _setState(_currentState.copyWith(remoteSnapshotsError: null));
+  }
+
   void selectStorage(StorageInfo storage) {
     if (!_isMounted) {
       return;
     }
 
-    final currentState = _currentState;
     _setState(
-      currentState.copyWith(
+      _currentState.copyWith(
         selectedStorage: storage,
         password: '',
         passwordError: null,
@@ -361,17 +389,14 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
     );
   }
 
-  /// Обновить пароль
   void updatePassword(String password) {
     if (!_isMounted) {
       return;
     }
 
-    final currentState = _currentState;
-    _setState(currentState.copyWith(password: password, passwordError: null));
+    _setState(_currentState.copyWith(password: password, passwordError: null));
   }
 
-  /// Открыть выбранное хранилище
   Future<bool> openStorage() async {
     final currentState = _currentState;
 
@@ -407,78 +432,61 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
           tag: 'OpenStoreForm',
         );
         return true;
-      } else {
-        final storeState = await ref.read(mainStoreProvider.future);
-        if (!_isMounted) {
-          return false;
-        }
-
-        final errorMessage =
-            storeState.error?.message ?? 'Не удалось открыть хранилище';
-
-        final updatedState = _currentState;
-        _setState(
-          updatedState.copyWith(isOpening: false, passwordError: errorMessage),
-        );
-
-        logWarning('Failed to open store: $errorMessage', tag: 'OpenStoreForm');
-        return false;
       }
-    } catch (e, stackTrace) {
-      logError(
-        'Error opening store: $e',
-        stackTrace: stackTrace,
-        tag: 'OpenStoreForm',
-      );
 
+      final storeState = await ref.read(mainStoreProvider.future);
       if (!_isMounted) {
         return false;
       }
 
-      final updatedState = _currentState;
+      final errorMessage =
+          storeState.error?.message ?? 'Не удалось открыть хранилище';
       _setState(
-        updatedState.copyWith(
+        _currentState.copyWith(isOpening: false, passwordError: errorMessage),
+      );
+      return false;
+    } catch (error, stackTrace) {
+      logError(
+        'Error opening store: $error',
+        stackTrace: stackTrace,
+        tag: 'OpenStoreForm',
+      );
+      if (!_isMounted) {
+        return false;
+      }
+
+      _setState(
+        _currentState.copyWith(
           isOpening: false,
-          error: 'Ошибка при открытии: $e',
+          error: 'Ошибка при открытии: $error',
         ),
       );
-
       return false;
     }
   }
 
-  /// Удалить хранилище с диска
   Future<bool> deleteStorage(String path) async {
     try {
       if (!_isMounted) {
         return false;
       }
 
-      logInfo('Deleting storage at: $path', tag: 'OpenStoreForm');
-
       final storeNotifier = ref.read(mainStoreProvider.notifier);
-
-      // Получаем путь к директории из пути к файлу
       final dir = Directory(path).parent;
       final success = await storeNotifier.deleteStoreFromDisk(dir.path);
       if (!_isMounted) {
         return false;
       }
 
-      if (success) {
-        logInfo('Storage deleted successfully', tag: 'OpenStoreForm');
-
-        // Перезагрузить список хранилищ
-        await loadStorages();
-
-        return true;
-      } else {
-        logWarning('Failed to delete storage', tag: 'OpenStoreForm');
+      if (!success) {
         return false;
       }
-    } catch (e, stackTrace) {
+
+      await loadStorages();
+      return true;
+    } catch (error, stackTrace) {
       logError(
-        'Error deleting storage: $e',
+        'Error deleting storage: $error',
         stackTrace: stackTrace,
         tag: 'OpenStoreForm',
       );
@@ -486,28 +494,289 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
     }
   }
 
-  /// Сбросить состояние
   void reset() {
     if (!_isMounted) {
       return;
     }
-
     _setState(const OpenStoreState());
   }
 
-  /// Отменить выбор хранилища
   void cancelSelection() {
     if (!_isMounted) {
       return;
     }
 
-    final currentState = _currentState;
     _setState(
-      currentState.copyWith(
+      _currentState.copyWith(
         selectedStorage: null,
         password: '',
         passwordError: null,
       ),
     );
+  }
+
+  Future<List<StorageInfo>> _loadFromHistory() async {
+    try {
+      final historyService = await ref.read(dbHistoryProvider.future);
+      if (!_isMounted) {
+        return [];
+      }
+
+      final history = await historyService.getRecent(limit: 10);
+      if (!_isMounted) {
+        return [];
+      }
+
+      final storages = <StorageInfo>[];
+      for (final entry in history) {
+        final dir = Directory(entry.path);
+        if (!await dir.exists()) {
+          continue;
+        }
+
+        final files = await dir
+            .list()
+            .where(
+              (entity) =>
+                  entity is File &&
+                  entity.path.endsWith(MainConstants.dbExtension),
+            )
+            .toList();
+        if (files.isEmpty) {
+          continue;
+        }
+
+        final dbFile = File(files.first.path);
+        final stat = await dbFile.stat();
+        storages.add(
+          StorageInfo(
+            name: entry.name,
+            path: dbFile.path,
+            modifiedAt: stat.modified,
+            description: entry.description,
+            size: stat.size,
+            fromHistory: true,
+            lastOpenedAt: entry.lastAccessed,
+          ),
+        );
+      }
+
+      return storages;
+    } catch (error, stackTrace) {
+      logError(
+        'Error loading from history: $error',
+        stackTrace: stackTrace,
+        tag: 'OpenStoreForm',
+      );
+      return [];
+    }
+  }
+
+  Future<List<StorageInfo>> _loadFromFolder() async {
+    try {
+      final storagePath = await AppPaths.appStoragesPath;
+      if (!_isMounted) {
+        return [];
+      }
+
+      final storageDir = Directory(storagePath);
+      if (!await storageDir.exists()) {
+        return [];
+      }
+
+      final storages = <StorageInfo>[];
+      await for (final entity in storageDir.list()) {
+        if (entity is! Directory) {
+          continue;
+        }
+
+        if (!await entity.exists()) {
+          continue;
+        }
+
+        final files = await entity
+            .list()
+            .where(
+              (item) =>
+                  item is File && item.path.endsWith(MainConstants.dbExtension),
+            )
+            .toList();
+        if (files.isEmpty) {
+          continue;
+        }
+
+        final dbFile = File(files.first.path);
+        final stat = await dbFile.stat();
+        storages.add(
+          StorageInfo(
+            name: p.basename(entity.path),
+            path: dbFile.path,
+            modifiedAt: stat.modified,
+            size: stat.size,
+            fromHistory: false,
+          ),
+        );
+      }
+
+      return storages;
+    } catch (error, stackTrace) {
+      logError(
+        'Error scanning storage folder: $error',
+        stackTrace: stackTrace,
+        tag: 'OpenStoreForm',
+      );
+      return [];
+    }
+  }
+
+  Future<List<StorageInfo>> _loadFromBackups() async {
+    try {
+      final backupsPath = await AppPaths.backupsPath;
+      if (!_isMounted) {
+        return [];
+      }
+
+      final backupsDir = Directory(backupsPath);
+      if (!await backupsDir.exists()) {
+        return [];
+      }
+
+      final storages = <StorageInfo>[];
+      await for (final entity in backupsDir.list(recursive: false)) {
+        if (entity is! Directory) {
+          continue;
+        }
+
+        final files = await entity
+            .list(recursive: false)
+            .where(
+              (item) =>
+                  item is File && item.path.endsWith(MainConstants.dbExtension),
+            )
+            .toList();
+        if (files.isEmpty) {
+          continue;
+        }
+
+        final dbFile = File(files.first.path);
+        final stat = await dbFile.stat();
+        storages.add(
+          StorageInfo(
+            name: p.basename(entity.path),
+            path: dbFile.path,
+            modifiedAt: stat.modified,
+            size: stat.size,
+            fromHistory: false,
+            description: 'Бэкап',
+          ),
+        );
+      }
+
+      return storages;
+    } catch (error, stackTrace) {
+      logError(
+        'Error scanning backups folder: $error',
+        stackTrace: stackTrace,
+        tag: 'OpenStoreForm',
+      );
+      return [];
+    }
+  }
+
+  Future<void> _loadRemoteSnapshots(String tokenId) async {
+    if (!_isMounted) {
+      return;
+    }
+
+    _setState(
+      _currentState.copyWith(
+        isLoadingRemoteSnapshots: true,
+        remoteSnapshotsError: null,
+      ),
+    );
+
+    try {
+      final cloudManifest = await ref
+          .read(snapshotSyncRepositoryProvider)
+          .readCloudManifest(tokenId);
+      if (!_isMounted) {
+        return;
+      }
+
+      final snapshots =
+          (cloudManifest?.stores ?? const <CloudManifestStoreEntry>[])
+              .where((entry) => !entry.deleted)
+              .toList(growable: false)
+            ..sort((left, right) => right.updatedAt.compareTo(left.updatedAt));
+
+      if (_currentState.selectedCloudTokenId != tokenId) {
+        return;
+      }
+
+      _setState(
+        _currentState.copyWith(
+          remoteSnapshots: snapshots,
+          isLoadingRemoteSnapshots: false,
+          remoteSnapshotsError: null,
+        ),
+      );
+    } catch (error, stackTrace) {
+      logError(
+        'Error loading remote snapshots: $error',
+        stackTrace: stackTrace,
+        tag: 'OpenStoreForm',
+      );
+      if (!_isMounted || _currentState.selectedCloudTokenId != tokenId) {
+        return;
+      }
+
+      _setState(
+        _currentState.copyWith(
+          remoteSnapshots: const <CloudManifestStoreEntry>[],
+          isLoadingRemoteSnapshots: false,
+          remoteSnapshotsError: 'Ошибка загрузки cloud manifest: $error',
+        ),
+      );
+    }
+  }
+
+  Map<CloudSyncProvider, List<AuthTokenEntry>> _groupTokensByProvider(
+    List<AuthTokenEntry> tokens,
+  ) {
+    final grouped = <CloudSyncProvider, List<AuthTokenEntry>>{};
+    for (final provider in CloudSyncProvider.values) {
+      grouped[provider] = tokens
+          .where((token) => token.provider == provider)
+          .toList(growable: false);
+    }
+    return grouped;
+  }
+
+  CloudSyncProvider? _firstProviderWithTokens(
+    Map<CloudSyncProvider, List<AuthTokenEntry>> grouped,
+  ) {
+    for (final provider in CloudSyncProvider.values) {
+      final tokens = grouped[provider] ?? const <AuthTokenEntry>[];
+      if (tokens.isNotEmpty) {
+        return provider;
+      }
+    }
+    return null;
+  }
+
+  AuthTokenEntry? get _selectedToken {
+    final tokenId = _currentState.selectedCloudTokenId;
+    if (tokenId == null) {
+      return null;
+    }
+
+    for (final tokens in _currentState.cloudTokensByProvider.values) {
+      for (final token in tokens) {
+        if (token.id == tokenId) {
+          return token;
+        }
+      }
+    }
+    return null;
   }
 }
