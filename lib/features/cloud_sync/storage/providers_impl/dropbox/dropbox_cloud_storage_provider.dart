@@ -57,7 +57,7 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
           method: 'POST',
           url: '$_apiBaseUrl/get_metadata',
           data: <String, dynamic>{'path': path, 'include_deleted': false},
-          options: _jsonOptions(),
+          options: _metadataOptions(),
         ),
       );
       return _mapResource(_requireJsonMap(response.data));
@@ -189,6 +189,11 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
     CancelToken? cancelToken,
   }) async {
     final targetPath = await _buildTargetPath(parentRef, name);
+    _assertUploadTargetPath(
+      parentRef: parentRef,
+      name: name,
+      targetPath: targetPath,
+    );
 
     try {
       if (contentLength > _simpleUploadLimitBytes) {
@@ -228,7 +233,7 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
     } catch (error) {
       throw _mapError(
         error,
-        fallbackMessage: 'Failed to upload file to Dropbox.',
+        fallbackMessage: 'Failed to upload file to Dropbox at $targetPath.',
       );
     }
   }
@@ -365,7 +370,7 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
     } catch (error) {
       throw _mapError(
         error,
-        fallbackMessage: 'Failed to upload file to Dropbox.',
+        fallbackMessage: 'Failed to upload file to Dropbox at $targetPath.',
       );
     } finally {
       await reader.cancel();
@@ -523,8 +528,27 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
       );
     }
 
-    final parentPath = _requirePathRef(parentRef);
-    if (!parentRef.isRoot) {
+    String parentPath;
+    if (parentRef.isRoot) {
+      parentPath = '';
+    } else {
+      final rawParentPath = parentRef.path?.trim();
+      if (rawParentPath != null && rawParentPath.isNotEmpty) {
+        parentPath = _normalizePath(rawParentPath);
+      } else {
+        final parent = await getResource(parentRef);
+        if (!parent.isFolder) {
+          throw CloudStorageException(
+            type: CloudStorageExceptionType.invalidReference,
+            message: 'Target parent must point to a folder.',
+            provider: provider,
+          );
+        }
+        parentPath = _requirePathRef(parent.ref);
+      }
+    }
+
+    if (!parentRef.isRoot && parentPath.startsWith('id:')) {
       final parent = await getResource(parentRef);
       if (!parent.isFolder) {
         throw CloudStorageException(
@@ -533,6 +557,7 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
           provider: provider,
         );
       }
+      parentPath = _requirePathRef(parent.ref);
     }
 
     final base = parentPath.isEmpty
@@ -662,6 +687,33 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
     return normalized.substring(slashIndex + 1);
   }
 
+  void _assertUploadTargetPath({
+    required CloudResourceRef parentRef,
+    required String name,
+    required String targetPath,
+  }) {
+    final normalizedName = name.trim();
+    final normalizedParentPath = _normalizePath(parentRef.path);
+    if (normalizedName.isEmpty) {
+      throw CloudStorageException(
+        type: CloudStorageExceptionType.invalidReference,
+        message: 'Dropbox upload requires a non-empty file name.',
+        provider: provider,
+      );
+    }
+
+    if (targetPath.isEmpty || targetPath == normalizedParentPath) {
+      throw CloudStorageException(
+        type: CloudStorageExceptionType.invalidReference,
+        message:
+            'Dropbox upload target resolved to a folder path instead of a file path: '
+            'parent=${normalizedParentPath.isEmpty ? "/" : normalizedParentPath}, '
+            'name=$normalizedName, target=$targetPath',
+        provider: provider,
+      );
+    }
+  }
+
   DateTime? _tryParseDate(Object? value) {
     if (value is! String || value.trim().isEmpty) {
       return null;
@@ -684,19 +736,24 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
     required String? contentType,
     required int contentLength,
   }) {
+    const uploadContentType = 'application/octet-stream';
     return Options(
       responseType: ResponseType.json,
-      contentType: contentType ?? 'application/octet-stream',
+      contentType: uploadContentType,
       sendTimeout: const Duration(minutes: 15),
       receiveTimeout: const Duration(minutes: 15),
       headers: <String, dynamic>{
         'Dropbox-API-Arg': jsonEncode(apiArg),
-        HttpHeaders.contentTypeHeader:
-            contentType ?? 'application/octet-stream',
         HttpHeaders.contentLengthHeader: contentLength.toString(),
       },
     );
   }
+
+  Options _metadataOptions() => _jsonOptions().copyWith(
+    connectTimeout: const Duration(minutes: 1),
+    sendTimeout: const Duration(minutes: 1),
+    receiveTimeout: const Duration(minutes: 5),
+  );
 
   Map<String, dynamic> _requireJsonMap(Object? data) {
     if (data is String && data.trim().isNotEmpty) {
@@ -819,7 +876,7 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
         case CloudSyncHttpExceptionType.unknown:
           return CloudStorageException(
             type: CloudStorageExceptionType.unknown,
-            message: fallbackMessage,
+            message: _buildUnknownMessage(fallbackMessage, error),
             provider: provider,
             statusCode: error.statusCode,
             requestUri: error.requestUri,
@@ -831,10 +888,23 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
 
     return CloudStorageException(
       type: CloudStorageExceptionType.unknown,
-      message: fallbackMessage,
+      message: _buildUnknownMessage(fallbackMessage, error),
       provider: provider,
       cause: error,
     );
+  }
+
+  String _buildUnknownMessage(String fallbackMessage, Object? error) {
+    final details = switch (error) {
+      CloudSyncHttpException(responseBodySnippet: final snippet?)
+          when snippet.trim().isNotEmpty =>
+        snippet.trim(),
+      _ => error?.toString(),
+    };
+    if (details == null || details.trim().isEmpty) {
+      return fallbackMessage;
+    }
+    return '$fallbackMessage Cause: ${details.trim()}';
   }
 
   CloudStorageExceptionType _mapDropboxBadResponseType({

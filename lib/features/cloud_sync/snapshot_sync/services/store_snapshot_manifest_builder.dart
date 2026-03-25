@@ -1,8 +1,5 @@
 import 'dart:io';
 
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:path/path.dart' as p;
-import 'package:uuid/uuid.dart';
 import 'package:hoplixi/core/logger/models.dart' as logger_models;
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/attachments_manifest.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/attachments_manifest_file_service.dart';
@@ -12,6 +9,9 @@ import 'package:hoplixi/main_store/models/store_manifest.dart';
 import 'package:hoplixi/main_store/services/main_store_storage_service.dart';
 import 'package:hoplixi/main_store/services/store_key_config_service.dart';
 import 'package:hoplixi/main_store/services/store_manifest_service.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path/path.dart' as p;
+import 'package:uuid/uuid.dart';
 
 class LocalStoreSnapshot {
   const LocalStoreSnapshot({
@@ -51,8 +51,8 @@ class StoreSnapshotManifestBuilder {
     final deviceInfo = await _deviceInfoLoader();
     final packageInfo = await _packageInfoLoader();
     final existingManifest = await StoreManifestService.readFrom(storePath);
-    final existingAttachmentsManifest = await AttachmentsManifestFileService
-        .readFrom(storePath);
+    final existingAttachmentsManifest =
+        await AttachmentsManifestFileService.readFrom(storePath);
     final dbFilePath = await _storageService.findDatabaseFile(storePath);
     if (dbFilePath == null) {
       throw StateError('Database file was not found for store at $storePath.');
@@ -78,18 +78,23 @@ class StoreSnapshotManifestBuilder {
       appVersion: packageInfo.version,
     );
 
-    final updatedAt = storeInfo.modifiedAt.toUtc();
+    final storeModifiedAt = storeInfo.modifiedAt.toUtc();
+    final existingDbFile = existingManifest?.content.dbFile;
+    final dbChangedLogically =
+        existingManifest == null ||
+        existingDbFile?.modifiedAt == null ||
+        existingDbFile!.modifiedAt!.toUtc() != storeModifiedAt;
     final needsSnapshotBump =
         existingManifest == null ||
         existingManifest.storeName != storeInfo.name ||
-        existingManifest.content.dbFile.sha256 != dbHash ||
+        dbChangedLogically ||
         existingManifest.content.keyFile.sha256 != keyHash ||
         existingManifest.content.attachments.filesHash !=
             draftAttachmentsManifest.filesHash;
 
     final nextRevision = needsSnapshotBump
         ? ((existingManifest?.revision ?? 0) + 1)
-        : (existingManifest.revision ?? 0);
+        : (existingManifest?.revision ?? 0);
     final attachmentsManifest = AttachmentsManifest(
       version: draftAttachmentsManifest.version,
       storeUuid: draftAttachmentsManifest.storeUuid,
@@ -105,50 +110,62 @@ class StoreSnapshotManifestBuilder {
       files: draftAttachmentsManifest.files,
     );
 
+    final candidateDbFile = !dbChangedLogically && existingDbFile != null
+        ? existingDbFile.copyWith(fileName: p.basename(dbFile.path))
+        : StoreManifestDbFileContent(
+            fileName: p.basename(dbFile.path),
+            size: await dbFile.length(),
+            sha256: dbHash,
+            modifiedAt: storeModifiedAt,
+          );
+
     final candidateContent = StoreManifestContent(
-      dbFile: StoreManifestDbFileContent(
-        fileName: p.basename(dbFile.path),
-        size: await dbFile.length(),
-        sha256: dbHash,
-      ),
+      dbFile: candidateDbFile,
       keyFile: StoreManifestKeyFileContent(sha256: keyHash, size: keySize),
       attachments: StoreManifestAttachmentsContent(
         count: attachmentsManifest.files.where((file) => !file.deleted).length,
         totalSize: attachmentsManifest.files
             .where((file) => !file.deleted)
             .fold<int>(0, (sum, file) => sum + file.size),
-        manifestSha256: _hashService.sha256ForJson(attachmentsManifest.toJson()),
+        manifestSha256: _hashService.sha256ForJson(
+          attachmentsManifest.toJson(),
+        ),
         filesHash: attachmentsManifest.filesHash,
       ),
     );
 
-    final storeManifest = (existingManifest ??
-            StoreManifest.initial(
+    final storeManifest =
+        (existingManifest ??
+                StoreManifest.initial(
+                  storeUuid: storeInfo.id,
+                  storeName: storeInfo.name,
+                  updatedAt: storeModifiedAt,
+                  lastModifiedBy: candidateLastModifiedBy,
+                ))
+            .copyWith(
+              manifestVersion: 2,
               storeUuid: storeInfo.id,
               storeName: storeInfo.name,
-              updatedAt: updatedAt,
-              lastModifiedBy: candidateLastModifiedBy,
-            ))
-        .copyWith(
-          manifestVersion: 2,
-          storeUuid: storeInfo.id,
-          storeName: storeInfo.name,
-          revision: nextRevision,
-          updatedAt: needsSnapshotBump
-              ? DateTime.now().toUtc()
-              : (existingManifest.updatedAt ?? updatedAt.toUtc()),
-          snapshotId: needsSnapshotBump
-              ? _uuid.v4()
-              : (existingManifest.snapshotId ?? ''),
-          lastModifiedBy: needsSnapshotBump
-              ? candidateLastModifiedBy
-              : (existingManifest.lastModifiedBy ?? candidateLastModifiedBy),
-          sync: existingManifest?.sync,
-          content: candidateContent,
-        );
+              revision: nextRevision,
+              updatedAt: needsSnapshotBump
+                  ? DateTime.now().toUtc()
+                  : (existingManifest?.updatedAt ?? storeModifiedAt),
+              snapshotId: needsSnapshotBump
+                  ? _uuid.v4()
+                  : (existingManifest?.snapshotId ?? ''),
+              lastModifiedBy: needsSnapshotBump
+                  ? candidateLastModifiedBy
+                  : (existingManifest?.lastModifiedBy ??
+                        candidateLastModifiedBy),
+              sync: existingManifest?.sync,
+              content: candidateContent,
+            );
 
     await StoreManifestService.writeTo(storePath, storeManifest);
-    await AttachmentsManifestFileService.writeTo(storePath, attachmentsManifest);
+    await AttachmentsManifestFileService.writeTo(
+      storePath,
+      attachmentsManifest,
+    );
 
     return LocalStoreSnapshot(
       storeManifest: storeManifest,
@@ -163,7 +180,9 @@ class StoreSnapshotManifestBuilder {
     required String storeUuid,
     required int revision,
   }) async {
-    final attachmentsDir = Directory(_storageService.getAttachmentsPath(storePath));
+    final attachmentsDir = Directory(
+      _storageService.getAttachmentsPath(storePath),
+    );
     if (!await attachmentsDir.exists()) {
       await attachmentsDir.create(recursive: true);
     }

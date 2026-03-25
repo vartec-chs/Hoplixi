@@ -39,6 +39,9 @@ class SnapshotSyncRepository {
   static const String attachmentsFolderName = 'attachments';
 
   final CloudStorageRepository _storageRepository;
+  final Map<String, RemoteStoreLayout> _layoutCache =
+      <String, RemoteStoreLayout>{};
+  final Map<String, CloudResource> _folderCache = <String, CloudResource>{};
 
   Future<CloudManifest?> readCloudManifest(String tokenId) async {
     try {
@@ -64,7 +67,10 @@ class SnapshotSyncRepository {
     }
   }
 
-  Future<void> writeCloudManifest(String tokenId, CloudManifest manifest) async {
+  Future<void> writeCloudManifest(
+    String tokenId,
+    CloudManifest manifest,
+  ) async {
     final root = await _ensureRootFolder(tokenId);
     await _uploadBytes(
       tokenId,
@@ -81,6 +87,11 @@ class SnapshotSyncRepository {
     String tokenId,
     String storeUuid,
   ) async {
+    final cachedLayout = _layoutCache[_layoutCacheKey(tokenId, storeUuid)];
+    if (cachedLayout != null) {
+      return cachedLayout;
+    }
+
     final rootFolder = await _ensureRootFolder(tokenId);
     final storesFolder = await _ensureChildFolder(
       tokenId,
@@ -98,12 +109,14 @@ class SnapshotSyncRepository {
       name: attachmentsFolderName,
     );
 
-    return RemoteStoreLayout(
+    final layout = RemoteStoreLayout(
       rootFolder: rootFolder,
       storesFolder: storesFolder,
       storeFolder: storeFolder,
       attachmentsFolder: attachmentsFolder,
     );
+    _layoutCache[_layoutCacheKey(tokenId, storeUuid)] = layout;
+    return layout;
   }
 
   Future<StoreManifest?> readRemoteStoreManifest(
@@ -213,7 +226,8 @@ class SnapshotSyncRepository {
   }) async {
     final layout = await ensureRemoteStoreLayout(tokenId, storeUuid);
     final remoteFiles = <String, AttachmentManifestEntry>{
-      for (final entry in remoteManifest?.files ?? const <AttachmentManifestEntry>[])
+      for (final entry
+          in remoteManifest?.files ?? const <AttachmentManifestEntry>[])
         entry.fileName: entry,
     };
 
@@ -331,12 +345,18 @@ class SnapshotSyncRepository {
     required CloudResourceRef parentRef,
     required String name,
   }) async {
+    final cached = _folderCache[_folderCacheKey(tokenId, parentRef, name)];
+    if (cached != null) {
+      return cached;
+    }
+
     final existing = await _findChildFolderByName(
       tokenId,
       parentRef: parentRef,
       name: name,
     );
     if (existing != null) {
+      _cacheFolder(tokenId, parentRef, name, existing);
       return existing;
     }
 
@@ -345,6 +365,7 @@ class SnapshotSyncRepository {
       parentRef: parentRef,
       name: name,
     );
+    _cacheFolder(tokenId, parentRef, name, folder.resource);
     return folder.resource;
   }
 
@@ -371,6 +392,18 @@ class SnapshotSyncRepository {
     required CloudResourceRef parentRef,
     required String name,
   }) async {
+    final direct = await _findChildByDirectPath(
+      tokenId,
+      parentRef: parentRef,
+      name: name,
+    );
+    if (direct != null) {
+      return direct.isFolder ? direct : null;
+    }
+    if (_usesDirectPathOnly(parentRef.provider)) {
+      return null;
+    }
+
     final items = await _listAll(tokenId, parentRef);
     for (final item in items) {
       if (item.isFolder && item.name == name) {
@@ -385,6 +418,18 @@ class SnapshotSyncRepository {
     required CloudResourceRef parentRef,
     required String name,
   }) async {
+    final direct = await _findChildByDirectPath(
+      tokenId,
+      parentRef: parentRef,
+      name: name,
+    );
+    if (direct != null) {
+      return direct.isFile ? direct : null;
+    }
+    if (_usesDirectPathOnly(parentRef.provider)) {
+      return null;
+    }
+
     final items = await _listAll(tokenId, parentRef);
     for (final item in items) {
       if (item.isFile && item.name == name) {
@@ -392,6 +437,30 @@ class SnapshotSyncRepository {
       }
     }
     return null;
+  }
+
+  Future<CloudResource?> _findChildByDirectPath(
+    String tokenId, {
+    required CloudResourceRef parentRef,
+    required String name,
+  }) async {
+    final childRef = _buildDirectChildRef(parentRef, name);
+    if (childRef == null) {
+      return null;
+    }
+
+    try {
+      final resource = await _storageRepository.getResource(tokenId, childRef);
+      if (resource.isFolder) {
+        _cacheFolder(tokenId, parentRef, name, resource);
+      }
+      return resource;
+    } on CloudStorageException catch (error) {
+      if (error.type == CloudStorageExceptionType.notFound) {
+        return null;
+      }
+      rethrow;
+    }
   }
 
   Future<List<int>> _downloadBytes(
@@ -444,28 +513,106 @@ class SnapshotSyncRepository {
   CloudResourceRef _rootRefForProvider(CloudSyncProvider provider) {
     return switch (provider) {
       CloudSyncProvider.google => const CloudResourceRef.root(
-          provider: CloudSyncProvider.google,
-          resourceId: 'root',
-          path: '',
-        ),
+        provider: CloudSyncProvider.google,
+        resourceId: 'root',
+        path: '',
+      ),
       CloudSyncProvider.onedrive => const CloudResourceRef.root(
-          provider: CloudSyncProvider.onedrive,
-          resourceId: 'root',
-          path: '',
-        ),
+        provider: CloudSyncProvider.onedrive,
+        resourceId: 'root',
+        path: '',
+      ),
       CloudSyncProvider.yandex => const CloudResourceRef.root(
-          provider: CloudSyncProvider.yandex,
-          path: 'disk:/',
-        ),
+        provider: CloudSyncProvider.yandex,
+        path: 'disk:/',
+      ),
       CloudSyncProvider.dropbox => const CloudResourceRef.root(
-          provider: CloudSyncProvider.dropbox,
-          path: '',
-        ),
+        provider: CloudSyncProvider.dropbox,
+        path: '',
+      ),
       CloudSyncProvider.other => const CloudResourceRef.root(
-          provider: CloudSyncProvider.other,
-          path: '',
-        ),
+        provider: CloudSyncProvider.other,
+        path: '',
+      ),
     };
+  }
+
+  CloudResourceRef? _buildDirectChildRef(
+    CloudResourceRef parentRef,
+    String name,
+  ) {
+    final trimmedName = name.trim();
+    if (trimmedName.isEmpty) {
+      return null;
+    }
+
+    return switch (parentRef.provider) {
+      CloudSyncProvider.dropbox => CloudResourceRef(
+        provider: CloudSyncProvider.dropbox,
+        path: _joinDropboxPath(parentRef.path, trimmedName),
+      ),
+      CloudSyncProvider.yandex => CloudResourceRef(
+        provider: CloudSyncProvider.yandex,
+        path: _joinYandexPath(parentRef.path, trimmedName),
+      ),
+      _ => null,
+    };
+  }
+
+  String _joinDropboxPath(String? parentPath, String childName) {
+    final base = (parentPath ?? '').trim();
+    final normalizedBase = base.isEmpty
+        ? ''
+        : base.replaceFirst(RegExp(r'/+$'), '');
+    final normalizedChild = childName.replaceFirst(RegExp(r'^/+'), '');
+    return normalizedBase.isEmpty
+        ? '/$normalizedChild'
+        : '$normalizedBase/$normalizedChild';
+  }
+
+  String _joinYandexPath(String? parentPath, String childName) {
+    final base = (parentPath ?? 'disk:/').trim();
+    final normalizedBase = base == 'disk:/'
+        ? 'disk:/'
+        : base.replaceFirst(RegExp(r'/+$'), '');
+    final normalizedChild = childName.replaceFirst(RegExp(r'^/+'), '');
+    return normalizedBase == 'disk:/'
+        ? 'disk:/$normalizedChild'
+        : '$normalizedBase/$normalizedChild';
+  }
+
+  bool _usesDirectPathOnly(CloudSyncProvider provider) {
+    return switch (provider) {
+      CloudSyncProvider.dropbox => true,
+      CloudSyncProvider.yandex => true,
+      _ => false,
+    };
+  }
+
+  String _layoutCacheKey(String tokenId, String storeUuid) {
+    return '$tokenId::$storeUuid';
+  }
+
+  String _folderCacheKey(
+    String tokenId,
+    CloudResourceRef parentRef,
+    String name,
+  ) {
+    final parentKey =
+        '${parentRef.provider.id}|${parentRef.resourceId ?? ''}|${parentRef.path ?? ''}';
+    return '$tokenId::$parentKey::$name';
+  }
+
+  void _cacheFolder(
+    String tokenId,
+    CloudResourceRef parentRef,
+    String name,
+    CloudResource folder,
+  ) {
+    if (!folder.isFolder) {
+      return;
+    }
+    _folderCache[_folderCacheKey(tokenId, parentRef, name)] = folder;
   }
 }
 

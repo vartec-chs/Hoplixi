@@ -105,17 +105,20 @@ class StoreManifestDbFileContent {
     required this.fileName,
     required this.size,
     required this.sha256,
+    this.modifiedAt,
   });
 
   final String fileName;
   final int size;
   final String sha256;
+  final DateTime? modifiedAt;
 
   factory StoreManifestDbFileContent.fromJson(Map<String, dynamic> json) {
     return StoreManifestDbFileContent(
       fileName: (json['fileName'] as String?)?.trim() ?? '',
       size: _toInt(json['size']),
       sha256: (json['sha256'] as String?)?.trim() ?? '',
+      modifiedAt: _tryParseDateTime(json['modifiedAt']),
     );
   }
 
@@ -124,6 +127,7 @@ class StoreManifestDbFileContent {
       'fileName': fileName,
       'size': size,
       'sha256': sha256,
+      'modifiedAt': modifiedAt?.toUtc().toIso8601String(),
     };
   }
 
@@ -131,11 +135,14 @@ class StoreManifestDbFileContent {
     String? fileName,
     int? size,
     String? sha256,
+    DateTime? modifiedAt,
+    bool clearModifiedAt = false,
   }) {
     return StoreManifestDbFileContent(
       fileName: fileName ?? this.fileName,
       size: size ?? this.size,
       sha256: sha256 ?? this.sha256,
+      modifiedAt: clearModifiedAt ? null : (modifiedAt ?? this.modifiedAt),
     );
   }
 }
@@ -381,7 +388,9 @@ class StoreManifest {
             )
           : null,
       content: json['content'] is Map<String, dynamic>
-          ? StoreManifestContent.fromJson(json['content'] as Map<String, dynamic>)
+          ? StoreManifestContent.fromJson(
+              json['content'] as Map<String, dynamic>,
+            )
           : StoreManifestContent.empty(),
     );
   }

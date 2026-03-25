@@ -46,7 +46,16 @@ class CloudSyncHttpRequest {
     return (options ?? Options()).copyWith(
       method: method,
       headers: mergedHeaders.isEmpty ? null : mergedHeaders,
+      contentType: options?.contentType,
       responseType: responseType ?? options?.responseType,
+      sendTimeout: options?.sendTimeout,
+      receiveTimeout: options?.receiveTimeout,
+      connectTimeout: options?.connectTimeout,
+      followRedirects: options?.followRedirects,
+      receiveDataWhenStatusError: options?.receiveDataWhenStatusError,
+      validateStatus: options?.validateStatus,
+      persistentConnection: options?.persistentConnection,
+      listFormat: options?.listFormat,
       extra: mergedExtra.isEmpty ? null : mergedExtra,
     );
   }

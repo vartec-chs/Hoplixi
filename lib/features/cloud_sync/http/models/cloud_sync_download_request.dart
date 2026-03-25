@@ -51,6 +51,15 @@ class CloudSyncDownloadRequest {
       method: method,
       responseType: ResponseType.stream,
       headers: mergedHeaders.isEmpty ? null : mergedHeaders,
+      contentType: options?.contentType,
+      sendTimeout: options?.sendTimeout,
+      receiveTimeout: options?.receiveTimeout,
+      connectTimeout: options?.connectTimeout,
+      followRedirects: options?.followRedirects,
+      receiveDataWhenStatusError: options?.receiveDataWhenStatusError,
+      validateStatus: options?.validateStatus,
+      persistentConnection: options?.persistentConnection,
+      listFormat: options?.listFormat,
       extra: mergedExtra.isEmpty ? null : mergedExtra,
     );
   }
