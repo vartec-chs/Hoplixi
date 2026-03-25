@@ -7,6 +7,7 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/attachments_m
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_hash_service.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_repository.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/store_snapshot_manifest_builder.dart';
+import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_store/models/store_manifest.dart';
 import 'package:hoplixi/main_store/services/main_store_storage_service.dart';
@@ -28,6 +29,13 @@ class SnapshotSyncService {
   final SnapshotSyncHashService _hashService;
   final MainStoreStorageService _storageService = MainStoreStorageService();
 
+  Future<void> initializeRemoteLayout({
+    required String tokenId,
+    required String storeUuid,
+  }) async {
+    await _repository.ensureRemoteStoreLayout(tokenId, storeUuid);
+  }
+
   Future<StoreSyncStatus> loadStatus({
     required String storePath,
     required StoreInfoDto storeInfo,
@@ -41,10 +49,16 @@ class SnapshotSyncService {
 
     StoreManifest? remoteManifest;
     if (binding != null) {
-      remoteManifest = await _repository.readRemoteStoreManifest(
-        binding.tokenId,
-        storeUuid: localSnapshot.storeManifest.storeUuid,
-      );
+      try {
+        remoteManifest = await _repository.readRemoteStoreManifest(
+          binding.tokenId,
+          storeUuid: localSnapshot.storeManifest.storeUuid,
+        );
+      } on CloudStorageException catch (error) {
+        if (!_isRecoverableStatusLoadError(error)) {
+          rethrow;
+        }
+      }
     }
 
     final compareResult = _compareManifests(
@@ -62,7 +76,8 @@ class SnapshotSyncService {
       localManifest: localSnapshot.storeManifest,
       remoteManifest: remoteManifest,
       compareResult: compareResult,
-      pendingConflict: compareResult == StoreVersionCompareResult.conflict &&
+      pendingConflict:
+          compareResult == StoreVersionCompareResult.conflict &&
               remoteManifest != null
           ? SnapshotSyncConflict(
               localManifest: localSnapshot.storeManifest,
@@ -91,7 +106,8 @@ class SnapshotSyncService {
       local: localSnapshot.storeManifest,
       remote: remoteManifest,
     );
-    if (compare == StoreVersionCompareResult.conflict && remoteManifest != null) {
+    if (compare == StoreVersionCompareResult.conflict &&
+        remoteManifest != null) {
       return SnapshotSyncResult(
         type: SnapshotSyncResultType.conflict,
         localManifest: localSnapshot.storeManifest,
@@ -192,7 +208,9 @@ class SnapshotSyncService {
       storeUuid: binding.storeUuid,
     );
     if (remoteManifest == null) {
-      throw StateError('Remote manifest was not found for ${binding.storeUuid}.');
+      throw StateError(
+        'Remote manifest was not found for ${binding.storeUuid}.',
+      );
     }
 
     await _repository.downloadRemoteStoreFiles(
@@ -209,19 +227,25 @@ class SnapshotSyncService {
       await _repository.reconcileAttachmentsDownload(
         binding.tokenId,
         storeUuid: binding.storeUuid,
-        localAttachmentsDir: Directory(_storageService.getAttachmentsPath(storePath)),
+        localAttachmentsDir: Directory(
+          _storageService.getAttachmentsPath(storePath),
+        ),
         remoteManifest: remoteAttachments,
       );
-      await AttachmentsManifestFileService.writeTo(storePath, remoteAttachments);
+      await AttachmentsManifestFileService.writeTo(
+        storePath,
+        remoteAttachments,
+      );
     }
 
     await StoreManifestService.writeTo(
       storePath,
       remoteManifest.copyWith(
-        sync: (remoteManifest.sync ?? const StoreManifestSyncMetadata()).copyWith(
-          provider: binding.provider,
-          syncedAt: DateTime.now().toUtc(),
-        ),
+        sync: (remoteManifest.sync ?? const StoreManifestSyncMetadata())
+            .copyWith(
+              provider: binding.provider,
+              syncedAt: DateTime.now().toUtc(),
+            ),
       ),
     );
 
@@ -242,12 +266,12 @@ class SnapshotSyncService {
     required StoreSyncBinding binding,
     required StoreManifest? remoteManifest,
   }) async {
-    final updatedSyncMetadata = (localSnapshot.storeManifest.sync ??
-            const StoreManifestSyncMetadata())
-        .copyWith(
-          provider: binding.provider,
-          syncedAt: DateTime.now().toUtc(),
-        );
+    final updatedSyncMetadata =
+        (localSnapshot.storeManifest.sync ?? const StoreManifestSyncMetadata())
+            .copyWith(
+              provider: binding.provider,
+              syncedAt: DateTime.now().toUtc(),
+            );
     final manifestToUpload = localSnapshot.storeManifest.copyWith(
       baseRevision: remoteManifest?.revision,
       baseSnapshotId: remoteManifest?.snapshotId,
@@ -263,7 +287,9 @@ class SnapshotSyncService {
     await _repository.reconcileAttachmentsUpload(
       binding.tokenId,
       storeUuid: manifestToUpload.storeUuid,
-      localAttachmentsDir: Directory(_storageService.getAttachmentsPath(storePath)),
+      localAttachmentsDir: Directory(
+        _storageService.getAttachmentsPath(storePath),
+      ),
       localManifest: localSnapshot.attachmentsManifest,
       remoteManifest: await _repository.readRemoteAttachmentsManifest(
         binding.tokenId,
@@ -286,7 +312,8 @@ class SnapshotSyncService {
       manifestToUpload.storeUuid,
     );
     final manifestHash = _hashService.sha256ForJson(manifestToUpload.toJson());
-    final cloudManifest = (await _repository.readCloudManifest(binding.tokenId)) ??
+    final cloudManifest =
+        (await _repository.readCloudManifest(binding.tokenId)) ??
         CloudManifest.empty();
     final updatedCloudManifest = CloudManifest(
       version: cloudManifest.version,
@@ -358,5 +385,10 @@ class SnapshotSyncService {
       return StoreVersionCompareResult.same;
     }
     return StoreVersionCompareResult.conflict;
+  }
+
+  bool _isRecoverableStatusLoadError(CloudStorageException error) {
+    return error.type == CloudStorageExceptionType.network ||
+        error.type == CloudStorageExceptionType.timeout;
   }
 }

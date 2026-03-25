@@ -34,6 +34,7 @@ class UpdateMarker extends StatefulWidget {
 class _UpdateMarkerState extends State<UpdateMarker> {
   bool _isSignaling = false;
   Timer? _signalTimer;
+  StreamSubscription<void>? _subscription;
 
   @override
   void initState() {
@@ -50,7 +51,8 @@ class _UpdateMarkerState extends State<UpdateMarker> {
   }
 
   void _listenToUpdates() {
-    widget.updateStream.listen((_) {
+    _subscription?.cancel();
+    _subscription = widget.updateStream.listen((_) {
       if (mounted) {
         setState(() {
           _isSignaling = true;
@@ -72,6 +74,7 @@ class _UpdateMarkerState extends State<UpdateMarker> {
 
   @override
   void dispose() {
+    _subscription?.cancel();
     _signalTimer?.cancel();
     super.dispose();
   }

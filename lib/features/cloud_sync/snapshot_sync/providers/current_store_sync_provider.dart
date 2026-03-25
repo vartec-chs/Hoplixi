@@ -4,6 +4,7 @@ import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_pr
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_service.dart';
+import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/main_store/models/db_state.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 
@@ -51,14 +52,34 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     }
 
     final bindingService = ref.read(storeSyncBindingServiceProvider);
+    final syncService = ref.read(snapshotSyncServiceProvider);
     await bindingService.saveBinding(
       storeUuid: storeUuid,
       tokenId: token.id,
       provider: token.provider,
     );
+    final savedBinding = await bindingService.getByStoreUuid(storeUuid);
     try {
+      await syncService.initializeRemoteLayout(
+        tokenId: token.id,
+        storeUuid: storeUuid,
+      );
       await loadStatus(rethrowOnError: true);
     } catch (error, stackTrace) {
+      if (_canKeepBindingAfterInitialProbeError(current, error) &&
+          savedBinding != null) {
+        state = AsyncData(
+          current.copyWith(
+            binding: savedBinding,
+            token: token,
+            clearRemoteManifest: true,
+            clearPendingConflict: true,
+            compareResult: StoreVersionCompareResult.remoteMissing,
+            lastResultType: SnapshotSyncResultType.idle,
+          ),
+        );
+        return;
+      }
       if (current.binding != null) {
         await bindingService.saveBinding(
           storeUuid: current.binding!.storeUuid,
@@ -71,6 +92,21 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       state = AsyncData(current);
       Error.throwWithStackTrace(error, stackTrace);
     }
+  }
+
+  bool _canKeepBindingAfterInitialProbeError(
+    StoreSyncStatus current,
+    Object error,
+  ) {
+    if (current.binding != null) {
+      return false;
+    }
+    return switch (error) {
+      _ when error is CloudStorageException =>
+        error.type == CloudStorageExceptionType.network ||
+            error.type == CloudStorageExceptionType.timeout,
+      _ => false,
+    };
   }
 
   Future<void> disconnect() async {

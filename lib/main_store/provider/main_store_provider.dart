@@ -83,7 +83,9 @@ final dataUpdateStreamProvider = Provider<Stream<void>>((ref) {
   return managerAsync.maybeWhen(
     data: (manager) {
       if (manager != null && manager.currentStore != null) {
-        return manager.currentStore!.watchDataChanged();
+        // Drift watch() emits the current snapshot immediately on subscribe.
+        // For "data changed" consumers we only need subsequent changes.
+        return manager.currentStore!.watchDataChanged().skip(1);
       }
       return const Stream.empty();
     },

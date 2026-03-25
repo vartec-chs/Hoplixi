@@ -28,6 +28,15 @@ const List<String> storeMetaModifiedAtTriggers = [
     AFTER UPDATE ON store_meta
     FOR EACH ROW
     WHEN NEW.modified_at = OLD.modified_at
+      AND (
+        NEW.name != OLD.name
+        OR COALESCE(NEW.description, '') != COALESCE(OLD.description, '')
+        OR NEW.password_hash != OLD.password_hash
+        OR NEW.salt != OLD.salt
+        OR NEW.attachment_key != OLD.attachment_key
+        OR NEW.version != OLD.version
+        OR NEW.created_at != OLD.created_at
+      )
     BEGIN
       UPDATE store_meta 
       SET modified_at = strftime('%s', 'now')  
