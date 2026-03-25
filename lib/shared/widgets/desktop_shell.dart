@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/global_key.dart';
-import 'package:hoplixi/shared/widgets/status_bar.dart';
+import 'package:hoplixi/shared/widgets/status_bar/status_bar.dart';
 
 import 'titlebar.dart';
 

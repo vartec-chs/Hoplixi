@@ -1,94 +1,4 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:hoplixi/shared/widgets/watchers/lifecycle/auto_lock_provider.dart';
-import 'package:hoplixi/main_store/provider/main_store_provider.dart';
-import 'package:hoplixi/shared/widgets/update_marker.dart';
-
-/// Простой статус-бар для отображения информации внизу экрана
-class StatusBar extends ConsumerWidget {
-  const StatusBar({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final statusState = ref.watch(statusBarStateProvider);
-
-    if (statusState.hidden) {
-      return const SizedBox.shrink();
-    }
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      height: 28,
-      decoration: BoxDecoration(
-        color:
-            statusState.backgroundColor ??
-            Theme.of(context).colorScheme.surface,
-        border: Border(
-          top: BorderSide(color: Theme.of(context).dividerColor, width: 1),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Левая часть - основной текст/статус
-            Expanded(
-              child: Row(
-                children: [
-                  if (statusState.loading)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                  if (statusState.icon != null)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 6.0),
-                      child: statusState.icon!,
-                    ),
-                  Flexible(
-                    child: Text(
-                      statusState.message,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color:
-                            statusState.textColor ??
-                            Theme.of(context).colorScheme.onSurface,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ),
-                  const _CurrentRouteWidget(),
-                ],
-              ),
-            ),
-            // Правая часть - информация о БД и дополнительный контент
-            const Row(
-              mainAxisSize: MainAxisSize.min,
-              spacing: 8,
-              children: [
-                _AutoLockTimerWidget(),
-                _UpdateMarkerWidget(),
-                _DatabaseStatusWidget(),
-                _BuildModeWidget(),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+part of 'status_bar.dart';
 
 class _AutoLockTimerWidget extends ConsumerStatefulWidget {
   const _AutoLockTimerWidget();
@@ -292,6 +202,152 @@ class _UpdateMarkerWidget extends ConsumerWidget {
   }
 }
 
+/// Виджет для отображения состояния cloud sync
+class _CloudSyncStatusWidget extends ConsumerWidget {
+  const _CloudSyncStatusWidget();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final syncState = ref.watch(currentStoreSyncProvider);
+
+    return syncState.when(
+      loading: () => _buildSyncChip(
+        icon: Icons.sync,
+        label: 'Синх: ...',
+        color: Colors.blue,
+        tooltip: 'Обновление статуса cloud sync',
+        spinning: true,
+      ),
+      error: (error, _) => _buildSyncChip(
+        icon: Icons.cloud_off,
+        label: 'Синх: ошибка',
+        color: Colors.red,
+        tooltip: error.toString(),
+      ),
+      data: (status) {
+        if (!status.isStoreOpen && status.binding == null) {
+          return const SizedBox.shrink();
+        }
+
+        if (status.binding == null) {
+          return _buildSyncChip(
+            icon: Icons.cloud_off,
+            label: 'Синх: нет',
+            color: Colors.grey,
+            tooltip: 'Cloud sync для текущего хранилища не подключен',
+          );
+        }
+
+        if (status.requiresUnlockToApply) {
+          return _buildSyncChip(
+            icon: Icons.lock,
+            label: 'Синх: разблок.',
+            color: Colors.orange,
+            tooltip:
+                'Удалённая snapshot-версия уже загружена. Разблокируйте хранилище, чтобы применить изменения.',
+          );
+        }
+
+        if (status.pendingConflict != null ||
+            status.compareResult == StoreVersionCompareResult.conflict) {
+          return _buildSyncChip(
+            icon: Icons.warning,
+            label: 'Синх: конфликт',
+            color: Colors.red,
+            tooltip: 'Обнаружен конфликт snapshot-версий',
+          );
+        }
+
+        return switch (status.compareResult) {
+          StoreVersionCompareResult.remoteNewer => _buildSyncChip(
+            icon: Icons.cloud_download,
+            label: 'Синх: remote',
+            color: Colors.orange,
+            tooltip: 'Удалённая snapshot-версия новее локальной',
+          ),
+          StoreVersionCompareResult.localNewer => _buildSyncChip(
+            icon: Icons.cloud_upload,
+            label: 'Синх: local',
+            color: Colors.blue,
+            tooltip: 'Локальная snapshot-версия новее удалённой',
+          ),
+          StoreVersionCompareResult.same => _buildSyncChip(
+            icon: Icons.cloud_done,
+            label: 'Синх: OK',
+            color: Colors.green,
+            tooltip: 'Локальная и удалённая snapshot-версии совпадают',
+          ),
+          StoreVersionCompareResult.remoteMissing => _buildSyncChip(
+            icon: Icons.cloud_queue,
+            label: 'Синх: нет облака',
+            color: Colors.grey,
+            tooltip: 'Удалённая snapshot-версия ещё не создана',
+          ),
+          StoreVersionCompareResult.differentStore => _buildSyncChip(
+            icon: Icons.cloud_off,
+            label: 'Синх: store',
+            color: Colors.red,
+            tooltip: 'Удалённая snapshot-версия относится к другому хранилищу',
+          ),
+          StoreVersionCompareResult.conflict => _buildSyncChip(
+            icon: Icons.warning,
+            label: 'Синх: конфликт',
+            color: Colors.red,
+            tooltip: 'Обнаружен конфликт snapshot-версий',
+          ),
+        };
+      },
+    );
+  }
+
+  Widget _buildSyncChip({
+    required IconData icon,
+    required String label,
+    required Color color,
+    String? tooltip,
+    bool spinning = false,
+  }) {
+    final content = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          spinning
+              ? SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1.8,
+                    color: color,
+                  ),
+                )
+              : Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (tooltip != null && tooltip.isNotEmpty) {
+      return Tooltip(message: tooltip, child: content);
+    }
+
+    return content;
+  }
+}
+
 /// Виджет для отображения режима сборки (только в debug)
 class _BuildModeWidget extends StatelessWidget {
   const _BuildModeWidget();
@@ -373,133 +429,3 @@ class _CurrentRouteWidget extends StatelessWidget {
     );
   }
 }
-
-/// Состояние статус-бара
-@immutable
-class StatusBarState {
-  final String message;
-  final Widget? icon;
-  final Widget? rightContent;
-  final bool loading;
-  final bool hidden;
-  final Color? backgroundColor;
-  final Color? textColor;
-
-  const StatusBarState({
-    this.message = '',
-    this.icon,
-    this.rightContent,
-    this.loading = false,
-    this.hidden = false,
-    this.backgroundColor,
-    this.textColor,
-  });
-
-  StatusBarState copyWith({
-    String? message,
-    Widget? icon,
-    Widget? rightContent,
-    bool? loading,
-    bool? hidden,
-    Color? backgroundColor,
-    Color? textColor,
-  }) {
-    return StatusBarState(
-      message: message ?? this.message,
-      icon: icon ?? this.icon,
-      rightContent: rightContent ?? this.rightContent,
-      loading: loading ?? this.loading,
-      hidden: hidden ?? this.hidden,
-      backgroundColor: backgroundColor ?? this.backgroundColor,
-      textColor: textColor ?? this.textColor,
-    );
-  }
-}
-
-/// Notifier для управления состоянием статус-бара
-class StatusBarStateNotifier extends Notifier<StatusBarState> {
-  @override
-  StatusBarState build() {
-    return const StatusBarState();
-  }
-
-  /// Обновить сообщение
-  void updateMessage(String message, {Widget? icon}) {
-    state = state.copyWith(message: message, icon: icon);
-  }
-
-  /// Показать загрузку
-  void showLoading(String message) {
-    state = state.copyWith(message: message, loading: true);
-  }
-
-  /// Скрыть загрузку
-  void hideLoading() {
-    state = state.copyWith(loading: false);
-  }
-
-  /// Показать успех
-  void showSuccess(String message) {
-    state = state.copyWith(
-      message: message,
-      loading: false,
-      icon: const Icon(Icons.check_circle, size: 14, color: Colors.green),
-    );
-  }
-
-  /// Показать ошибку
-  void showError(String message) {
-    state = state.copyWith(
-      message: message,
-      loading: false,
-      icon: const Icon(Icons.error, size: 14, color: Colors.red),
-    );
-  }
-
-  /// Показать предупреждение
-  void showWarning(String message) {
-    state = state.copyWith(
-      message: message,
-      loading: false,
-      icon: const Icon(Icons.warning, size: 14, color: Colors.orange),
-    );
-  }
-
-  /// Показать информацию
-  void showInfo(String message) {
-    state = state.copyWith(
-      message: message,
-      loading: false,
-      icon: const Icon(Icons.info, size: 14, color: Colors.blue),
-    );
-  }
-
-  /// Очистить статус
-  void clear() {
-    state = const StatusBarState(message: 'Готово');
-  }
-
-  /// Скрыть/показать статус-бар
-  void setHidden(bool hidden) {
-    state = state.copyWith(hidden: hidden);
-  }
-
-  /// Установить правый контент
-  void setRightContent(Widget? content) {
-    state = state.copyWith(rightContent: content);
-  }
-
-  /// Установить цвета
-  void setColors({Color? backgroundColor, Color? textColor}) {
-    state = state.copyWith(
-      backgroundColor: backgroundColor,
-      textColor: textColor,
-    );
-  }
-}
-
-/// Provider для статус-бара
-final statusBarStateProvider =
-    NotifierProvider<StatusBarStateNotifier, StatusBarState>(
-      StatusBarStateNotifier.new,
-    );
