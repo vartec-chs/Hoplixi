@@ -111,6 +111,8 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   BackupScope _periodicBackupScope = BackupScope.full;
   String? _periodicBackupOutputDirPath;
   int _periodicBackupMaxPerStore = 10;
+  DateTime? _openedStoreModifiedAt;
+  bool _forceSnapshotUploadOnClose = false;
 
   /// Completer для блокировки параллельных операций (защита от race condition)
   Completer<void>? _operationLock;
@@ -181,6 +183,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     ref.onDispose(() {
       _periodicBackupTimer?.cancel();
       _periodicBackupTimer = null;
+      _resetSnapshotCloseTracking();
     });
 
     return const DatabaseState(status: DatabaseStatus.idle);
@@ -333,6 +336,10 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
               modifiedAt: storeInfo.modifiedAt,
             ),
           );
+          _startSnapshotCloseTracking(
+            initialModifiedAt: storeInfo.modifiedAt,
+            forceUpload: true,
+          );
 
           logInfo(
             'Store created successfully: ${storeInfo.name}',
@@ -406,6 +413,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
               modifiedAt: storeInfo.modifiedAt,
             ),
           );
+          _startSnapshotCloseTracking(initialModifiedAt: storeInfo.modifiedAt);
 
           logInfo('Store opened successfully: ${storeInfo.name}', tag: _logTag);
           unawaited(_runStartupCleanup());
@@ -490,6 +498,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       await _maintenanceService.cleanupDecryptedAttachmentsDir(
         decryptedPathBeforeClose,
       );
+      _resetSnapshotCloseTracking();
 
       // Успех - переводим в idle состояние
       _setState(const DatabaseState(status: DatabaseStatus.closed));
@@ -556,6 +565,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     await _maintenanceService.cleanupDecryptedAttachmentsDir(
       decryptedPathBeforeLock,
     );
+    _resetSnapshotCloseTracking();
 
     _setState(
       _currentState.copyWith(
@@ -599,11 +609,28 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       if (storePath == null || storePath.isEmpty || !_manager.isStoreOpen) {
         return;
       }
-
       final storeInfoResult = await _manager.getStoreInfo();
       final storeInfo = storeInfoResult.fold((info) => info, (error) {
         throw error;
       });
+      final currentModifiedAt = storeInfo.modifiedAt.toUtc();
+      final hasLogicalChanges =
+          _forceSnapshotUploadOnClose ||
+          _openedStoreModifiedAt == null ||
+          !_openedStoreModifiedAt!.isAtSameMomentAs(currentModifiedAt);
+
+      if (!hasLogicalChanges) {
+        logDebug(
+          'Skipping snapshot sync before close because StoreMeta.modifiedAt did not change during the current session.',
+          tag: _logTag,
+          data: <String, dynamic>{
+            'storePath': storePath,
+            'openedStoreModifiedAt': _openedStoreModifiedAt?.toIso8601String(),
+            'currentStoreModifiedAt': currentModifiedAt.toIso8601String(),
+          },
+        );
+        return;
+      }
 
       final binding = await ref
           .read(storeSyncBindingServiceProvider)
@@ -1064,6 +1091,19 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   /// Get Current MainStoreManager
   MainStoreManager? get currentMainStoreManager {
     return _manager;
+  }
+
+  void _startSnapshotCloseTracking({
+    required DateTime initialModifiedAt,
+    bool forceUpload = false,
+  }) {
+    _openedStoreModifiedAt = initialModifiedAt.toUtc();
+    _forceSnapshotUploadOnClose = forceUpload;
+  }
+
+  void _resetSnapshotCloseTracking() {
+    _openedStoreModifiedAt = null;
+    _forceSnapshotUploadOnClose = false;
   }
 
   /// Получить MainStoreManager по готовности

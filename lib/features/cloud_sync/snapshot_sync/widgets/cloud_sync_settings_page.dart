@@ -8,6 +8,7 @@ import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_pr
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
+import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 
 class CloudSyncSettingsPage extends ConsumerStatefulWidget {
@@ -127,9 +128,7 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
                         await showCloudSyncAuthSheet(
                           context: context,
                           ref: ref,
-                          previousRoute: GoRouterState.of(
-                            context,
-                          ).uri.toString(),
+                          previousRoute: _resolvePreviousRoute(context),
                           initialProvider: effectiveProvider,
                         );
                         ref.invalidate(authTokensProvider);
@@ -238,6 +237,14 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
         return;
       }
       Toaster.error(title: 'Cloud Sync', description: error.toString());
+    }
+  }
+
+  String _resolvePreviousRoute(BuildContext context) {
+    try {
+      return GoRouter.of(context).state.uri.toString();
+    } catch (_) {
+      return AppRoutesPaths.cloudSync;
     }
   }
 }

@@ -19,12 +19,23 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     return _loadCurrentStatus(storeState, useWatch: true);
   }
 
-  Future<void> loadStatus() async {
+  Future<void> loadStatus({bool rethrowOnError = false}) async {
+    final previous = state.value;
     state = const AsyncLoading();
-    final storeState = await ref.read(mainStoreProvider.future);
-    state = await AsyncValue.guard(
-      () => _loadCurrentStatus(storeState, useWatch: false),
-    );
+    try {
+      final storeState = await ref.read(mainStoreProvider.future);
+      final next = await _loadCurrentStatus(storeState, useWatch: false);
+      state = AsyncData(next);
+    } catch (error, stackTrace) {
+      if (previous != null) {
+        state = AsyncData(previous);
+      } else {
+        state = AsyncError(error, stackTrace);
+      }
+      if (rethrowOnError) {
+        Error.throwWithStackTrace(error, stackTrace);
+      }
+    }
   }
 
   Future<void> connect(String tokenId) async {
@@ -45,7 +56,21 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       tokenId: token.id,
       provider: token.provider,
     );
-    await loadStatus();
+    try {
+      await loadStatus(rethrowOnError: true);
+    } catch (error, stackTrace) {
+      if (current.binding != null) {
+        await bindingService.saveBinding(
+          storeUuid: current.binding!.storeUuid,
+          tokenId: current.binding!.tokenId,
+          provider: current.binding!.provider,
+        );
+      } else {
+        await bindingService.deleteBinding(storeUuid);
+      }
+      state = AsyncData(current);
+      Error.throwWithStackTrace(error, stackTrace);
+    }
   }
 
   Future<void> disconnect() async {
