@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/shared/ui/copy_to_clipboard_button.dart';
 
 /// Экран для демонстрации кнопок
 class ButtonShowcaseScreen extends StatelessWidget {
@@ -99,6 +100,30 @@ class ButtonShowcaseScreen extends StatelessWidget {
             const SmoothButton(label: 'Disabled', onPressed: null),
             const SizedBox(height: 12),
             SmoothButton(label: 'Bold Text', bold: true, onPressed: () {}),
+          ],
+        ),
+        const SizedBox(height: 32),
+        _buildSection(
+          context,
+          title: 'Copy To Clipboard',
+          children: [
+            Row(
+              children: [
+                const Text('Icon copy button'),
+                const SizedBox(width: 8),
+                CopyToClipboardIconButton(
+                  text: 'Hoplixi clipboard demo text',
+                  tooltip: 'Копировать демо-текст',
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const CopySmoothButton(
+              text: 'Hoplixi clipboard demo text',
+              label: 'Копировать через SmoothButton',
+              copiedLabel: 'Скопировано',
+              type: SmoothButtonType.tonal,
+            ),
           ],
         ),
         const SizedBox(height: 32),

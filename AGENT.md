@@ -556,26 +556,11 @@ try {
 
 ## Shared UI Components
 
-Use standardized UI components from `lib/shared/ui/`:
+Use standardized UI components from `lib/shared/ui/`.
 
-- **SmoothButton** - Use instead of regular buttons (`ElevatedButton`,
-  `TextButton`, etc.). Provides consistent styling, sizes (small/medium/large),
-  types (text/filled/tonal/outlined/dashed), and variants
-  (normal/error/warning/info/success).
-- **ModalSheetCloseButton** - Use for close buttons in `WoltModalSheet` dialogs.
-- **NotificationCard** - Use for in-tree notifications
-  (error/success/info/warning). Replaces ad-hoc container+icon patterns.
-  Variants: `ErrorNotificationCard`, `SuccessNotificationCard`,
-  `InfoNotificationCard`, `WarningNotificationCard`.
-- **SliderButton** - Use for confirmation-style actions
-  (confirm/delete/unlock/send). Supports async callbacks, loading state, and
-  completion animations.
-- **primaryInputDecoration** - Use for all `TextField` and `TextFormField`
-  instances. Centralizes input styling, colors, paddings, and accessibility.
-  Wrappers: `PrimaryTextField`, `PrimaryTextFormField`, `PasswordField`.
-- **TypeChip** - Use for tag/category chips with consistent styling.
-- **universal_modal.dart** - DO NOT USE. Prefer `WoltModalSheet` or native
-  Flutter dialogs.
+See [docs-ai/shared-ui-components.md](docs-ai/shared-ui-components.md) for the
+full and up-to-date list of all components in the folder, usage rules, and
+legacy notes.
 
 ### WoltModalSheet
 
