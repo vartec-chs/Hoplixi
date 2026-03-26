@@ -11,13 +11,7 @@ enum StoreVersionCompareResult {
   remoteMissing,
 }
 
-enum SnapshotSyncResultType {
-  idle,
-  noChanges,
-  uploaded,
-  downloaded,
-  conflict,
-}
+enum SnapshotSyncResultType { idle, noChanges, uploaded, downloaded, conflict }
 
 class StoreSyncBinding {
   const StoreSyncBinding({
@@ -39,10 +33,8 @@ class StoreSyncBinding {
       storeUuid: (json['storeUuid'] as String?)?.trim() ?? '',
       tokenId: (json['tokenId'] as String?)?.trim() ?? '',
       provider: _parseProvider(json['provider']) ?? CloudSyncProvider.other,
-      createdAt:
-          _tryParseDateTime(json['createdAt']) ?? DateTime.now().toUtc(),
-      updatedAt:
-          _tryParseDateTime(json['updatedAt']) ?? DateTime.now().toUtc(),
+      createdAt: _tryParseDateTime(json['createdAt']) ?? DateTime.now().toUtc(),
+      updatedAt: _tryParseDateTime(json['updatedAt']) ?? DateTime.now().toUtc(),
     );
   }
 
@@ -170,6 +162,9 @@ StoreVersionCompareResult compareStoreManifests({
   }
   if (remote.revision > local.revision) {
     return StoreVersionCompareResult.remoteNewer;
+  }
+  if (local.snapshotId.isNotEmpty && local.snapshotId == remote.snapshotId) {
+    return StoreVersionCompareResult.same;
   }
   if (local.isSameContent(remote)) {
     return StoreVersionCompareResult.same;

@@ -336,12 +336,12 @@ class _OpenStoreScreenState extends ConsumerState<OpenStoreScreen> {
   Widget _buildCloudImportEntry(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               CircleAvatar(
                 backgroundColor: Theme.of(context).colorScheme.primaryContainer,
@@ -361,20 +361,21 @@ class _OpenStoreScreenState extends ConsumerState<OpenStoreScreen> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Text(
-                      'Откройте отдельный экран, чтобы выбрать провайдера, OAuth токен и скачать удалённое хранилище в локальную папку.',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    SmoothButton(
-                      onPressed: () =>
-                          context.push(AppRoutesPaths.openStoreCloudImport),
-                      icon: const Icon(Icons.arrow_forward_outlined),
-                      label: 'Открыть импорт из облака',
+                      'Выберите удалённый store и скачайте его как локальную копию.',
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(width: 12),
+              SmoothButton(
+                onPressed: () =>
+                    context.push(AppRoutesPaths.openStoreCloudImport),
+                icon: const Icon(Icons.arrow_forward_outlined),
+                label: 'Открыть',
+                size: SmoothButtonSize.small,
               ),
             ],
           ),

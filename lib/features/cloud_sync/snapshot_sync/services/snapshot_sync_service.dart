@@ -478,6 +478,9 @@ class SnapshotSyncService {
     if (remote.revision > local.revision) {
       return StoreVersionCompareResult.remoteNewer;
     }
+    if (local.snapshotId.isNotEmpty && local.snapshotId == remote.snapshotId) {
+      return StoreVersionCompareResult.same;
+    }
     if (local.isSameContent(remote)) {
       return StoreVersionCompareResult.same;
     }

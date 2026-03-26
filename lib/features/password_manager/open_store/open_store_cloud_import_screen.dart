@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
@@ -10,62 +11,90 @@ import 'package:hoplixi/features/password_manager/open_store/models/open_store_s
 import 'package:hoplixi/features/password_manager/open_store/providers/open_store_form_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
 
-class OpenStoreCloudImportScreen extends ConsumerWidget {
+class OpenStoreCloudImportScreen extends ConsumerStatefulWidget {
   const OpenStoreCloudImportScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OpenStoreCloudImportScreen> createState() =>
+      _OpenStoreCloudImportScreenState();
+}
+
+class _OpenStoreCloudImportScreenState
+    extends ConsumerState<OpenStoreCloudImportScreen> {
+  late final ProviderSubscription<AsyncValue<OpenStoreState>>
+  _bindingSubscription;
+  bool _isBindingDialogOpen = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _bindingSubscription = ref.listenManual<AsyncValue<OpenStoreState>>(
+      openStoreFormProvider,
+      (previous, next) {
+        next.whenData((state) async {
+          final pendingBinding = state.pendingImportedStoreBinding;
+          final previousBinding = previous?.value?.pendingImportedStoreBinding;
+          if (_isBindingDialogOpen ||
+              pendingBinding == null ||
+              identical(pendingBinding, previousBinding)) {
+            return;
+          }
+
+          _isBindingDialogOpen = true;
+          try {
+            final shouldBind = await showDialog<bool>(
+              context: context,
+              builder: (dialogContext) => AlertDialog(
+                title: const Text('Привязать к cloud sync'),
+                content: Text(pendingBinding.promptDescription),
+                actions: [
+                  SmoothButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(false),
+                    label: 'Нет',
+                    type: SmoothButtonType.text,
+                  ),
+                  SmoothButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(true),
+                    label: 'Привязать',
+                  ),
+                ],
+              ),
+            );
+
+            final didBind = await ref
+                .read(openStoreFormProvider.notifier)
+                .resolvePendingImportedStoreBinding(bind: shouldBind == true);
+            if (!mounted) {
+              return;
+            }
+
+            if (didBind) {
+              Toaster.success(
+                context: context,
+                title: 'Cloud Sync',
+                description: 'Локальная копия привязана к облачному store.',
+              );
+            }
+          } finally {
+            _isBindingDialogOpen = false;
+          }
+        });
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _bindingSubscription.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final asyncState = ref.watch(openStoreFormProvider);
     final notifier = ref.read(openStoreFormProvider.notifier);
-
-    ref.listen<AsyncValue<OpenStoreState>>(openStoreFormProvider, (
-      previous,
-      next,
-    ) {
-      next.whenData((state) async {
-        final pendingBinding = state.pendingImportedStoreBinding;
-        final previousBinding = previous?.value?.pendingImportedStoreBinding;
-        if (pendingBinding == null ||
-            identical(pendingBinding, previousBinding)) {
-          return;
-        }
-
-        final shouldBind = await showDialog<bool>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: const Text('Привязать к cloud sync'),
-            content: Text(pendingBinding.promptDescription),
-            actions: [
-              SmoothButton(
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                label: 'Нет',
-                type: SmoothButtonType.text,
-              ),
-              SmoothButton(
-                onPressed: () => Navigator.of(dialogContext).pop(true),
-                label: 'Привязать',
-              ),
-            ],
-          ),
-        );
-
-        final didBind = await notifier.resolvePendingImportedStoreBinding(
-          bind: shouldBind == true,
-        );
-        if (!context.mounted) {
-          return;
-        }
-
-        if (didBind) {
-          Toaster.success(
-            context: context,
-            title: 'Cloud Sync',
-            description: 'Локальная копия привязана к облачному store.',
-          );
-        }
-      });
-    });
 
     return Scaffold(
       appBar: AppBar(
@@ -124,11 +153,11 @@ class _CloudImportBody extends ConsumerWidget {
         .firstOrNull;
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       children: [
         Card(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -143,10 +172,13 @@ class _CloudImportBody extends ConsumerWidget {
                   'Сначала выберите провайдера. Затем авторизуйте аккаунт или выберите уже сохранённый OAuth токен.',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 DropdownButtonFormField<CloudSyncProvider>(
                   initialValue: selectedProvider,
-                  decoration: const InputDecoration(labelText: 'Провайдер'),
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'Провайдер',
+                  ),
                   items: CloudSyncProvider.values
                       .where((provider) => provider != CloudSyncProvider.other)
                       .map(
@@ -158,7 +190,7 @@ class _CloudImportBody extends ConsumerWidget {
                       .toList(growable: false),
                   onChanged: notifier.selectCloudProvider,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 Text(
                   'Шаг 2. Авторизуйте аккаунт или выберите OAuth токен',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -168,7 +200,10 @@ class _CloudImportBody extends ConsumerWidget {
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   initialValue: state.selectedCloudTokenId,
-                  decoration: const InputDecoration(labelText: 'OAuth token'),
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'OAuth токен',
+                  ),
                   items: providerTokens
                       .map(
                         (token) => DropdownMenuItem<String>(
@@ -181,7 +216,7 @@ class _CloudImportBody extends ConsumerWidget {
                       ? null
                       : notifier.selectCloudToken,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 Wrap(
                   spacing: 12,
                   runSpacing: 12,
@@ -348,7 +383,7 @@ class _RemoteSnapshotCard extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         border: Border.all(color: Theme.of(context).dividerColor),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -434,8 +469,15 @@ class _ErrorBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.errorContainer,
+        border: Border.all(
+          color: Theme.of(context).colorScheme.error,
+          width: 1.5,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
       width: double.infinity,
-      color: Theme.of(context).colorScheme.errorContainer,
       padding: const EdgeInsets.all(12),
       child: Row(
         children: [
@@ -450,6 +492,15 @@ class _ErrorBanner extends StatelessWidget {
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onErrorContainer,
               ),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Скопировать текст ошибки',
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            onPressed: () => Clipboard.setData(ClipboardData(text: message)),
+            icon: Icon(
+              Icons.copy_outlined,
+              color: Theme.of(context).colorScheme.onErrorContainer,
             ),
           ),
         ],
