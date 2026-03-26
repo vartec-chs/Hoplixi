@@ -94,7 +94,7 @@ class StoreSnapshotManifestBuilder {
 
     final nextRevision = needsSnapshotBump
         ? ((existingManifest?.revision ?? 0) + 1)
-        : (existingManifest?.revision ?? 0);
+        : (existingManifest.revision ?? 0);
     final attachmentsManifest = AttachmentsManifest(
       version: draftAttachmentsManifest.version,
       storeUuid: draftAttachmentsManifest.storeUuid,
@@ -110,7 +110,7 @@ class StoreSnapshotManifestBuilder {
       files: draftAttachmentsManifest.files,
     );
 
-    final candidateDbFile = !dbChangedLogically && existingDbFile != null
+    final candidateDbFile = !dbChangedLogically
         ? existingDbFile.copyWith(fileName: p.basename(dbFile.path))
         : StoreManifestDbFileContent(
             fileName: p.basename(dbFile.path),
@@ -149,13 +149,13 @@ class StoreSnapshotManifestBuilder {
               revision: nextRevision,
               updatedAt: needsSnapshotBump
                   ? DateTime.now().toUtc()
-                  : (existingManifest?.updatedAt ?? storeModifiedAt),
+                  : (existingManifest.updatedAt ?? storeModifiedAt),
               snapshotId: needsSnapshotBump
                   ? _uuid.v4()
-                  : (existingManifest?.snapshotId ?? ''),
+                  : (existingManifest.snapshotId ?? ''),
               lastModifiedBy: needsSnapshotBump
                   ? candidateLastModifiedBy
-                  : (existingManifest?.lastModifiedBy ??
+                  : (existingManifest.lastModifiedBy ??
                         candidateLastModifiedBy),
               sync: existingManifest?.sync,
               content: candidateContent,

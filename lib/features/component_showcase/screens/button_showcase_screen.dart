@@ -107,10 +107,10 @@ class ButtonShowcaseScreen extends StatelessWidget {
           context,
           title: 'Copy To Clipboard',
           children: [
-            Row(
+            const Row(
               children: [
-                const Text('Icon copy button'),
-                const SizedBox(width: 8),
+                Text('Icon copy button'),
+                SizedBox(width: 8),
                 CopyToClipboardIconButton(
                   text: 'Hoplixi clipboard demo text',
                   tooltip: 'Копировать демо-текст',

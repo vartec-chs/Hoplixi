@@ -272,7 +272,7 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (primaryAction != null) primaryAction,
+              ?primaryAction,
               if (primaryAction != null) const SizedBox(height: 12),
               Wrap(
                 spacing: 12,
