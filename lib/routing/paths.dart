@@ -8,7 +8,7 @@ class AppRoutesPaths {
   static const String logs = '/logs';
   static const String componentShowcase = '/component-showcase';
 
-  /// LocalSend Ã¢â‚¬â€ Ã‘ÂÃÂºÃ‘â‚¬ÃÂ°ÃÂ½ ÃÂ¾Ã‘â€šÃÂ¿Ã‘â‚¬ÃÂ°ÃÂ²ÃÂºÃÂ¸ Ã‘â€žÃÂ°ÃÂ¹ÃÂ»ÃÂ¾ÃÂ² ÃÂ¿ÃÂ¾ ÃÂ»ÃÂ¾ÃÂºÃÂ°ÃÂ»Ã‘Å’ÃÂ½ÃÂ¾ÃÂ¹ Ã‘ÂÃÂµÃ‘â€šÃÂ¸.
+  // LocalSend 
   static const String localSendSend = '/localsend/send';
   static const String localSendTransfer = '/localsend/transfer';
   static const String localSendHistory = '/localsend/history';
@@ -16,6 +16,7 @@ class AppRoutesPaths {
   // Add other route paths as needed
   static const String createStore = '/create-store';
   static const String openStore = '/open-store';
+  static const String openStoreCloudImport = '/open-store/cloud-import';
   static const String lockStore = '/lock-store';
   static const String archiveStore = '/archive-store';
   static const String oauthApps = '/oauth-apps';

@@ -31,173 +31,58 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
     return syncState.when(
       data: (status) {
         final tokens = tokensAsync.value ?? const <AuthTokenEntry>[];
-        final availableProviders = tokens
-            .map((token) => token.provider)
-            .toSet()
-            .toList(growable: false);
-        final effectiveProvider =
-            _selectedProvider ??
-            status.binding?.provider ??
-            status.token?.provider ??
-            (availableProviders.isNotEmpty ? availableProviders.first : null);
-        final providerTokens = effectiveProvider == null
-            ? const <AuthTokenEntry>[]
-            : tokens
-                  .where((token) => token.provider == effectiveProvider)
-                  .toList(growable: false);
-        final effectiveTokenId =
-            providerTokens.any(
-              (token) =>
-                  token.id ==
-                  (_selectedTokenId ??
-                      status.binding?.tokenId ??
-                      status.token?.id),
-            )
-            ? (_selectedTokenId ?? status.binding?.tokenId ?? status.token?.id)
-            : (providerTokens.isNotEmpty ? providerTokens.first.id : null);
+        final effectiveProvider = _resolveEffectiveProvider(status, tokens);
+        final providerTokens = _tokensForProvider(tokens, effectiveProvider);
+        final effectiveTokenId = _resolveEffectiveTokenId(
+          status,
+          providerTokens,
+        );
+        final selectedToken = providerTokens
+            .where((token) => token.id == effectiveTokenId)
+            .firstOrNull;
+        final isConnected = status.binding != null;
 
         return Padding(
           padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Cloud Sync',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                status.binding == null
-                    ? 'Подключите OAuth-токен для ручной snapshot-синхронизации текущего хранилища.'
-                    : 'Текущий store привязан к ${status.binding!.provider.metadata.displayName}.',
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<CloudSyncProvider>(
-                initialValue: effectiveProvider,
-                decoration: const InputDecoration(labelText: 'Провайдер'),
-                items: CloudSyncProvider.values
-                    .where((provider) => provider != CloudSyncProvider.other)
-                    .map(
-                      (provider) => DropdownMenuItem<CloudSyncProvider>(
-                        value: provider,
-                        child: Text(provider.metadata.displayName),
-                      ),
-                    )
-                    .toList(growable: false),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedProvider = value;
-                    _selectedTokenId = null;
-                  });
-                },
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: effectiveTokenId,
-                decoration: const InputDecoration(labelText: 'OAuth token'),
-                items: providerTokens
-                    .map(
-                      (token) => DropdownMenuItem<String>(
-                        value: token.id,
-                        child: Text(token.displayLabel),
-                      ),
-                    )
-                    .toList(growable: false),
-                onChanged: providerTokens.isEmpty
-                    ? null
-                    : (value) {
-                        setState(() {
-                          _selectedTokenId = value;
-                        });
-                      },
-              ),
-              const SizedBox(height: 16),
-              _StatusCard(status: status, token: status.token),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  SmoothButton(
-                    label: providerTokens.isEmpty ? 'Authorize' : 'Connect',
-                    onPressed: () async {
-                      if (providerTokens.isEmpty) {
-                        await showCloudSyncAuthSheet(
-                          context: context,
-                          ref: ref,
-                          previousRoute: _resolvePreviousRoute(context),
-                          initialProvider: effectiveProvider,
-                        );
-                        ref.invalidate(authTokensProvider);
-                        await ref.read(authTokensProvider.notifier).reload();
-                        if (mounted) {
-                          await ref
-                              .read(currentStoreSyncProvider.notifier)
-                              .loadStatus();
-                        }
-                        return;
-                      }
-                      final selectedTokenId = effectiveTokenId;
-                      if (selectedTokenId == null) {
-                        Toaster.error(
-                          title: 'Cloud Sync',
-                          description: 'Выберите OAuth-токен для подключения.',
-                        );
-                        return;
-                      }
-                      await _runAction(
-                        () => ref
-                            .read(currentStoreSyncProvider.notifier)
-                            .connect(selectedTokenId),
-                      );
-                    },
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Синхронизация с облаком',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
-                  SmoothButton(
-                    label: 'Sync now',
-                    onPressed: status.binding == null
-                        ? null
-                        : () => _runAction(
-                            () => ref
-                                .read(currentStoreSyncProvider.notifier)
-                                .syncNow(),
-                          ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  isConnected
+                      ? 'Хранилище уже подключено. Здесь можно посмотреть статус и выполнить следующую синхронизацию.'
+                      : 'Сначала авторизуйте облачный аккаунт, затем привяжите текущее хранилище. После подключения появятся действия для первой синхронизации.',
+                ),
+                const SizedBox(height: 16),
+                _ConnectionSummaryCard(
+                  status: status,
+                  token: status.token ?? selectedToken,
+                ),
+                const SizedBox(height: 16),
+                if (!isConnected) ...[
+                  _buildSetupFlow(
+                    context,
+                    effectiveProvider: effectiveProvider,
+                    providerTokens: providerTokens,
+                    effectiveTokenId: effectiveTokenId,
                   ),
-                  SmoothButton(
-                    label: 'Upload local',
-                    onPressed: status.binding == null
-                        ? null
-                        : () => _runAction(
-                            () => ref
-                                .read(currentStoreSyncProvider.notifier)
-                                .resolveConflictWithUpload(),
-                          ),
-                  ),
-                  SmoothButton(
-                    label: 'Download remote',
-                    onPressed: status.binding == null
-                        ? null
-                        : () => _runAction(
-                            () => ref
-                                .read(currentStoreSyncProvider.notifier)
-                                .resolveConflictWithDownload(),
-                          ),
-                  ),
-                  SmoothButton(
-                    label: 'Disconnect',
-                    onPressed: status.binding == null
-                        ? null
-                        : () => _runAction(
-                            () => ref
-                                .read(currentStoreSyncProvider.notifier)
-                                .disconnect(),
-                          ),
+                ] else ...[
+                  _buildConnectedFlow(
+                    context,
+                    status: status,
+                    selectedToken: status.token ?? selectedToken,
+                    effectiveProvider: effectiveProvider,
                   ),
                 ],
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -207,9 +92,331 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
       ),
       error: (error, _) => Padding(
         padding: const EdgeInsets.all(16),
-        child: Text('Cloud sync error: $error'),
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text('Ошибка синхронизации: $error'),
+          ),
+        ),
       ),
     );
+  }
+
+  Widget _buildSetupFlow(
+    BuildContext context, {
+    required CloudSyncProvider? effectiveProvider,
+    required List<AuthTokenEntry> providerTokens,
+    required String? effectiveTokenId,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _StepCard(
+          step: 'Шаг 1',
+          title: 'Выберите облачный сервис',
+          description:
+              'Выберите сервис, в котором будет храниться snapshot текущего хранилища.',
+          child: DropdownButtonFormField<CloudSyncProvider>(
+            initialValue: effectiveProvider,
+            decoration: const InputDecoration(labelText: 'Облачный сервис'),
+            items: CloudSyncProvider.values
+                .where((provider) => provider != CloudSyncProvider.other)
+                .map(
+                  (provider) => DropdownMenuItem<CloudSyncProvider>(
+                    value: provider,
+                    child: Text(provider.metadata.displayName),
+                  ),
+                )
+                .toList(growable: false),
+            onChanged: (value) {
+              setState(() {
+                _selectedProvider = value;
+                _selectedTokenId = null;
+              });
+            },
+          ),
+        ),
+        const SizedBox(height: 12),
+        _StepCard(
+          step: 'Шаг 2',
+          title: 'Авторизуйте аккаунт',
+          description: providerTokens.isEmpty
+              ? 'Для выбранного сервиса ещё нет OAuth-токена. Нажмите кнопку ниже и завершите авторизацию.'
+              : 'Аккаунт уже авторизован. Можно выбрать токен и перейти к подключению.',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (providerTokens.isEmpty)
+                SmoothButton(
+                  label: 'Авторизовать аккаунт',
+                  onPressed: effectiveProvider == null
+                      ? null
+                      : () async {
+                          await showCloudSyncAuthSheet(
+                            context: context,
+                            ref: ref,
+                            previousRoute: _resolvePreviousRoute(context),
+                            initialProvider: effectiveProvider,
+                          );
+                          ref.invalidate(authTokensProvider);
+                          await ref.read(authTokensProvider.notifier).reload();
+                          if (mounted) {
+                            await ref
+                                .read(currentStoreSyncProvider.notifier)
+                                .loadStatus();
+                          }
+                        },
+                )
+              else ...[
+                DropdownButtonFormField<String>(
+                  initialValue: effectiveTokenId,
+                  decoration: const InputDecoration(
+                    labelText: 'Подключаемый аккаунт',
+                  ),
+                  items: providerTokens
+                      .map(
+                        (token) => DropdownMenuItem<String>(
+                          value: token.id,
+                          child: Text(token.displayLabel),
+                        ),
+                      )
+                      .toList(growable: false),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedTokenId = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                SmoothButton(
+                  label: 'Авторизовать ещё один аккаунт',
+                  type: SmoothButtonType.outlined,
+                  onPressed: effectiveProvider == null
+                      ? null
+                      : () async {
+                          await showCloudSyncAuthSheet(
+                            context: context,
+                            ref: ref,
+                            previousRoute: _resolvePreviousRoute(context),
+                            initialProvider: effectiveProvider,
+                          );
+                          ref.invalidate(authTokensProvider);
+                          await ref.read(authTokensProvider.notifier).reload();
+                          if (mounted) {
+                            await ref
+                                .read(currentStoreSyncProvider.notifier)
+                                .loadStatus();
+                          }
+                        },
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        _StepCard(
+          step: 'Шаг 3',
+          title: 'Подключите хранилище',
+          description: providerTokens.isEmpty
+              ? 'Сначала завершите авторизацию. После этого здесь появится кнопка подключения.'
+              : 'Подключение создаст облачную структуру папок для текущего хранилища и подготовит первую синхронизацию.',
+          child: SmoothButton(
+            label: 'Подключить синхронизацию',
+            onPressed: providerTokens.isEmpty
+                ? null
+                : () async {
+                    final selectedTokenId = effectiveTokenId;
+                    if (selectedTokenId == null) {
+                      Toaster.error(
+                        title: 'Синхронизация с облаком',
+                        description:
+                            'Выберите OAuth-токен для подключения хранилища.',
+                      );
+                      return;
+                    }
+                    await _runAction(
+                      () => ref
+                          .read(currentStoreSyncProvider.notifier)
+                          .connect(selectedTokenId),
+                    );
+                  },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildConnectedFlow(
+    BuildContext context, {
+    required StoreSyncStatus status,
+    required AuthTokenEntry? selectedToken,
+    required CloudSyncProvider? effectiveProvider,
+  }) {
+    final primaryAction = _buildPrimaryAction(status);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _StepCard(
+          step: 'Подключено',
+          title: 'Хранилище привязано к облаку',
+          description: _statusDescription(status),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (primaryAction != null) primaryAction,
+              if (primaryAction != null) const SizedBox(height: 12),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  SmoothButton(
+                    label: 'Обновить статус',
+                    type: SmoothButtonType.outlined,
+                    onPressed: () => _runAction(
+                      () => ref
+                          .read(currentStoreSyncProvider.notifier)
+                          .loadStatus(),
+                    ),
+                  ),
+                  SmoothButton(
+                    label: 'Переподключить аккаунт',
+                    type: SmoothButtonType.outlined,
+                    onPressed: effectiveProvider == null
+                        ? null
+                        : () async {
+                            await showCloudSyncAuthSheet(
+                              context: context,
+                              ref: ref,
+                              previousRoute: _resolvePreviousRoute(context),
+                              initialProvider: effectiveProvider,
+                            );
+                            ref.invalidate(authTokensProvider);
+                            await ref
+                                .read(authTokensProvider.notifier)
+                                .reload();
+                            if (mounted) {
+                              await ref
+                                  .read(currentStoreSyncProvider.notifier)
+                                  .loadStatus();
+                            }
+                          },
+                  ),
+                  SmoothButton(
+                    label: 'Отключить',
+                    type: SmoothButtonType.outlined,
+                    variant: SmoothButtonVariant.warning,
+                    onPressed: () => _runAction(
+                      () => ref
+                          .read(currentStoreSyncProvider.notifier)
+                          .disconnect(),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        _StepCard(
+          step: 'Состояние',
+          title: 'Текущий статус синхронизации',
+          description:
+              'Проверьте ревизии и решите, какое действие нужно дальше.',
+          child: _StatusCard(status: status, token: selectedToken),
+        ),
+      ],
+    );
+  }
+
+  Widget? _buildPrimaryAction(StoreSyncStatus status) {
+    final notifier = ref.read(currentStoreSyncProvider.notifier);
+    return switch (status.compareResult) {
+      StoreVersionCompareResult.remoteMissing ||
+      StoreVersionCompareResult.localNewer => SmoothButton(
+        label: 'Загрузить локальную версию в облако',
+        onPressed: () => _runAction(() => notifier.syncNow()),
+      ),
+      StoreVersionCompareResult.same => SmoothButton(
+        label: 'Проверить синхронизацию сейчас',
+        onPressed: () => _runAction(() => notifier.syncNow()),
+      ),
+      StoreVersionCompareResult.remoteNewer => SmoothButton(
+        label: 'Скачать удалённую версию',
+        onPressed: () =>
+            _runAction(() => notifier.resolveConflictWithDownload()),
+      ),
+      StoreVersionCompareResult.conflict => Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        children: [
+          SmoothButton(
+            label: 'Оставить локальную версию',
+            onPressed: () =>
+                _runAction(() => notifier.resolveConflictWithUpload()),
+          ),
+          SmoothButton(
+            label: 'Принять удалённую версию',
+            type: SmoothButtonType.outlined,
+            onPressed: () =>
+                _runAction(() => notifier.resolveConflictWithDownload()),
+          ),
+        ],
+      ),
+      StoreVersionCompareResult.differentStore => null,
+    };
+  }
+
+  CloudSyncProvider? _resolveEffectiveProvider(
+    StoreSyncStatus status,
+    List<AuthTokenEntry> tokens,
+  ) {
+    return _selectedProvider ??
+        status.binding?.provider ??
+        status.token?.provider ??
+        (tokens.isNotEmpty ? tokens.first.provider : null);
+  }
+
+  List<AuthTokenEntry> _tokensForProvider(
+    List<AuthTokenEntry> tokens,
+    CloudSyncProvider? provider,
+  ) {
+    if (provider == null) {
+      return const <AuthTokenEntry>[];
+    }
+    return tokens
+        .where((token) => token.provider == provider)
+        .toList(growable: false);
+  }
+
+  String? _resolveEffectiveTokenId(
+    StoreSyncStatus status,
+    List<AuthTokenEntry> providerTokens,
+  ) {
+    final candidate =
+        _selectedTokenId ?? status.binding?.tokenId ?? status.token?.id;
+    if (candidate != null &&
+        providerTokens.any((token) => token.id == candidate)) {
+      return candidate;
+    }
+    return providerTokens.isNotEmpty ? providerTokens.first.id : null;
+  }
+
+  String _statusDescription(StoreSyncStatus status) {
+    return switch (status.compareResult) {
+      StoreVersionCompareResult.remoteMissing =>
+        'В облаке ещё нет snapshot этого хранилища. Следующий шаг: отправить локальную версию.',
+      StoreVersionCompareResult.localNewer =>
+        'Локальная версия новее облачной. Следующий шаг: загрузить актуальный snapshot в облако.',
+      StoreVersionCompareResult.same =>
+        'Локальная и облачная версии совпадают. Можно просто запускать ручную синхронизацию по необходимости.',
+      StoreVersionCompareResult.remoteNewer =>
+        'В облаке есть более новая версия. Следующий шаг: скачать её в локальное хранилище.',
+      StoreVersionCompareResult.conflict =>
+        'Обнаружен конфликт: и локальная, и облачная версии были изменены. Выберите, какую версию оставить.',
+      StoreVersionCompareResult.differentStore =>
+        'Обнаружено несоответствие идентификаторов хранилища. Переподключите синхронизацию.',
+    };
   }
 
   Future<void> _runAction(Future<void> Function() action) async {
@@ -221,22 +428,28 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
       final status = ref.read(currentStoreSyncProvider).value;
       final description = switch (status?.lastResultType) {
         SnapshotSyncResultType.uploaded =>
-          'Локальная snapshot-версия загружена.',
+          'Локальная snapshot-версия загружена в облако.',
         SnapshotSyncResultType.downloaded =>
           status?.requiresUnlockToApply == true
-              ? 'Remote snapshot загружен. Разблокируйте хранилище, чтобы продолжить работу.'
-              : 'Remote snapshot загружен.',
+              ? 'Удалённый snapshot загружен. Разблокируйте хранилище, чтобы продолжить работу.'
+              : 'Удалённый snapshot загружен.',
         SnapshotSyncResultType.noChanges =>
           'Локальная и удалённая версии уже совпадают.',
         SnapshotSyncResultType.conflict => 'Обнаружен конфликт версий.',
         _ => 'Операция выполнена.',
       };
-      Toaster.success(title: 'Cloud Sync', description: description);
+      Toaster.success(
+        title: 'Синхронизация с облаком',
+        description: description,
+      );
     } catch (error) {
       if (!mounted) {
         return;
       }
-      Toaster.error(title: 'Cloud Sync', description: error.toString());
+      Toaster.error(
+        title: 'Синхронизация с облаком',
+        description: error.toString(),
+      );
     }
   }
 
@@ -246,6 +459,100 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
     } catch (_) {
       return AppRoutesPaths.cloudSync;
     }
+  }
+}
+
+class _ConnectionSummaryCard extends StatelessWidget {
+  const _ConnectionSummaryCard({required this.status, required this.token});
+
+  final StoreSyncStatus status;
+  final AuthTokenEntry? token;
+
+  @override
+  Widget build(BuildContext context) {
+    final isConnected = status.binding != null;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  isConnected
+                      ? Icons.cloud_done_rounded
+                      : Icons.cloud_off_rounded,
+                  color: isConnected
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.outline,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  isConnected ? 'Подключено' : 'Не подключено',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text('Хранилище: ${status.storeName ?? 'Не выбрано'}'),
+            Text(
+              'Провайдер: ${status.binding?.provider.metadata.displayName ?? token?.provider.metadata.displayName ?? 'Не выбран'}',
+            ),
+            Text('Аккаунт: ${token?.displayLabel ?? 'Не авторизован'}'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StepCard extends StatelessWidget {
+  const _StepCard({
+    required this.step,
+    required this.title,
+    required this.description,
+    required this.child,
+  });
+
+  final String step;
+  final String title;
+  final String description;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              step,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            Text(description),
+            const SizedBox(height: 16),
+            child,
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -260,34 +567,51 @@ class _StatusCard extends StatelessWidget {
     final localManifest = status.localManifest;
     final remoteManifest = status.remoteManifest;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Store: ${status.storeName ?? '-'}'),
-            const SizedBox(height: 8),
-            Text(
-              'Provider: ${status.binding?.provider.metadata.displayName ?? '-'}',
-            ),
-            Text('Account: ${token?.displayLabel ?? '-'}'),
-            const SizedBox(height: 8),
-            Text('Local revision: ${localManifest?.revision ?? '-'}'),
-            Text('Remote revision: ${remoteManifest?.revision ?? '-'}'),
-            Text('Compare: ${status.compareResult.name}'),
-            Text(
-              'Last synced: ${localManifest?.sync?.syncedAt?.toUtc().toIso8601String() ?? '-'}',
-            ),
-            if (status.requiresUnlockToApply) ...[
-              const SizedBox(height: 8),
-              const Text(
-                'Remote snapshot already written to disk. Unlock the store to continue.',
-              ),
-            ],
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Хранилище: ${status.storeName ?? '—'}'),
+        const SizedBox(height: 8),
+        Text(
+          'Провайдер: ${status.binding?.provider.metadata.displayName ?? '—'}',
         ),
-      ),
+        Text('Аккаунт: ${token?.displayLabel ?? '—'}'),
+        const SizedBox(height: 12),
+        Text('Локальная ревизия: ${localManifest?.revision ?? '—'}'),
+        Text('Удалённая ревизия: ${remoteManifest?.revision ?? '—'}'),
+        Text('Состояние: ${_compareResultLabel(status.compareResult)}'),
+        Text(
+          'Последняя успешная синхронизация: ${_formatSyncTime(localManifest?.sync?.syncedAt)}',
+        ),
+        if (status.requiresUnlockToApply) ...[
+          const SizedBox(height: 8),
+          const Text(
+            'Удалённый snapshot уже записан локально. Разблокируйте хранилище, чтобы продолжить работу.',
+          ),
+        ],
+      ],
     );
   }
+
+  String _compareResultLabel(StoreVersionCompareResult result) {
+    return switch (result) {
+      StoreVersionCompareResult.differentStore => 'Несоответствие хранилища',
+      StoreVersionCompareResult.same => 'Версии совпадают',
+      StoreVersionCompareResult.localNewer => 'Локальная версия новее',
+      StoreVersionCompareResult.remoteNewer => 'Удалённая версия новее',
+      StoreVersionCompareResult.conflict => 'Конфликт версий',
+      StoreVersionCompareResult.remoteMissing => 'Удалённой версии ещё нет',
+    };
+  }
+
+  String _formatSyncTime(DateTime? value) {
+    if (value == null) {
+      return '—';
+    }
+    return value.toLocal().toIso8601String();
+  }
+}
+
+extension<T> on Iterable<T> {
+  T? get firstOrNull => isEmpty ? null : first;
 }

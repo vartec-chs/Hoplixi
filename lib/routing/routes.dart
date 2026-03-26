@@ -38,6 +38,7 @@ import 'package:hoplixi/features/password_manager/managers/tags_manager/tag_form
 import 'package:hoplixi/features/password_manager/managers/tags_manager/tags_manager_screen.dart';
 import 'package:hoplixi/features/password_manager/migration/otp/screens/import_otp_screen.dart';
 import 'package:hoplixi/features/password_manager/migration/passwords/screens/password_migration_screen.dart';
+import 'package:hoplixi/features/password_manager/open_store/open_store_cloud_import_screen.dart';
 import 'package:hoplixi/features/password_manager/open_store/open_store_screen.dart';
 import 'package:hoplixi/features/settings/screens/settings_screen.dart';
 import 'package:hoplixi/features/setup/screens/setup_screen.dart';
@@ -116,6 +117,10 @@ final List<RouteBase> appRoutes = [
   GoRoute(
     path: AppRoutesPaths.openStore,
     builder: (context, state) => const OpenStoreScreen(),
+  ),
+  GoRoute(
+    path: AppRoutesPaths.openStoreCloudImport,
+    builder: (context, state) => const OpenStoreCloudImportScreen(),
   ),
   GoRoute(
     path: AppRoutesPaths.lockStore,
