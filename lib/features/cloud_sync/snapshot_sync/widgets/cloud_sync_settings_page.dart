@@ -10,6 +10,7 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_m
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
 
 class CloudSyncSettingsPage extends ConsumerStatefulWidget {
   const CloudSyncSettingsPage({super.key});
@@ -22,6 +23,7 @@ class CloudSyncSettingsPage extends ConsumerStatefulWidget {
 class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
   CloudSyncProvider? _selectedProvider;
   String? _selectedTokenId;
+  String? _pendingActionKey;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +45,7 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
         final isConnected = status.binding != null;
 
         return Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -60,12 +62,12 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
                       ? 'Хранилище уже подключено. Здесь можно посмотреть статус и выполнить следующую синхронизацию.'
                       : 'Сначала авторизуйте облачный аккаунт, затем привяжите текущее хранилище. После подключения появятся действия для первой синхронизации.',
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 _ConnectionSummaryCard(
                   status: status,
                   token: status.token ?? selectedToken,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 if (!isConnected) ...[
                   _buildSetupFlow(
                     context,
@@ -118,7 +120,10 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
               'Выберите сервис, в котором будет храниться snapshot текущего хранилища.',
           child: DropdownButtonFormField<CloudSyncProvider>(
             initialValue: effectiveProvider,
-            decoration: const InputDecoration(labelText: 'Облачный сервис'),
+            decoration: primaryInputDecoration(
+              context,
+              labelText: 'Облачный сервис',
+            ),
             items: CloudSyncProvider.values
                 .where((provider) => provider != CloudSyncProvider.other)
                 .map(
@@ -170,7 +175,8 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
               else ...[
                 DropdownButtonFormField<String>(
                   initialValue: effectiveTokenId,
-                  decoration: const InputDecoration(
+                  decoration: primaryInputDecoration(
+                    context,
                     labelText: 'Подключаемый аккаунт',
                   ),
                   items: providerTokens
@@ -222,7 +228,8 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
               : 'Подключение создаст облачную структуру папок для текущего хранилища и подготовит первую синхронизацию.',
           child: SmoothButton(
             label: 'Подключить синхронизацию',
-            onPressed: providerTokens.isEmpty
+            loading: _pendingActionKey == 'connect',
+            onPressed: providerTokens.isEmpty || _pendingActionKey != null
                 ? null
                 : () async {
                     final selectedTokenId = effectiveTokenId;
@@ -235,6 +242,7 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
                       return;
                     }
                     await _runAction(
+                      'connect',
                       () => ref
                           .read(currentStoreSyncProvider.notifier)
                           .connect(selectedTokenId),
@@ -273,11 +281,15 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
                   SmoothButton(
                     label: 'Обновить статус',
                     type: SmoothButtonType.outlined,
-                    onPressed: () => _runAction(
-                      () => ref
-                          .read(currentStoreSyncProvider.notifier)
-                          .loadStatus(),
-                    ),
+                    loading: _pendingActionKey == 'refreshStatus',
+                    onPressed: _pendingActionKey != null
+                        ? null
+                        : () => _runAction(
+                            'refreshStatus',
+                            () => ref
+                                .read(currentStoreSyncProvider.notifier)
+                                .loadStatus(),
+                          ),
                   ),
                   SmoothButton(
                     label: 'Переподключить аккаунт',
@@ -306,11 +318,15 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
                     label: 'Отключить',
                     type: SmoothButtonType.outlined,
                     variant: SmoothButtonVariant.warning,
-                    onPressed: () => _runAction(
-                      () => ref
-                          .read(currentStoreSyncProvider.notifier)
-                          .disconnect(),
-                    ),
+                    loading: _pendingActionKey == 'disconnect',
+                    onPressed: _pendingActionKey != null
+                        ? null
+                        : () => _runAction(
+                            'disconnect',
+                            () => ref
+                                .read(currentStoreSyncProvider.notifier)
+                                .disconnect(),
+                          ),
                   ),
                 ],
               ),
@@ -335,16 +351,27 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
       StoreVersionCompareResult.remoteMissing ||
       StoreVersionCompareResult.localNewer => SmoothButton(
         label: 'Загрузить локальную версию в облако',
-        onPressed: () => _runAction(() => notifier.syncNow()),
+        loading: _pendingActionKey == 'sync',
+        onPressed: _pendingActionKey != null
+            ? null
+            : () => _runAction('sync', () => notifier.syncNow()),
       ),
       StoreVersionCompareResult.same => SmoothButton(
         label: 'Проверить синхронизацию сейчас',
-        onPressed: () => _runAction(() => notifier.syncNow()),
+        loading: _pendingActionKey == 'sync',
+        onPressed: _pendingActionKey != null
+            ? null
+            : () => _runAction('sync', () => notifier.syncNow()),
       ),
       StoreVersionCompareResult.remoteNewer => SmoothButton(
         label: 'Скачать удалённую версию',
-        onPressed: () =>
-            _runAction(() => notifier.resolveConflictWithDownload()),
+        loading: _pendingActionKey == 'downloadRemote',
+        onPressed: _pendingActionKey != null
+            ? null
+            : () => _runAction(
+                'downloadRemote',
+                () => notifier.resolveConflictWithDownload(),
+              ),
       ),
       StoreVersionCompareResult.conflict => Wrap(
         spacing: 12,
@@ -352,14 +379,24 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
         children: [
           SmoothButton(
             label: 'Оставить локальную версию',
-            onPressed: () =>
-                _runAction(() => notifier.resolveConflictWithUpload()),
+            loading: _pendingActionKey == 'uploadConflict',
+            onPressed: _pendingActionKey != null
+                ? null
+                : () => _runAction(
+                    'uploadConflict',
+                    () => notifier.resolveConflictWithUpload(),
+                  ),
           ),
           SmoothButton(
             label: 'Принять удалённую версию',
             type: SmoothButtonType.outlined,
-            onPressed: () =>
-                _runAction(() => notifier.resolveConflictWithDownload()),
+            loading: _pendingActionKey == 'downloadConflict',
+            onPressed: _pendingActionKey != null
+                ? null
+                : () => _runAction(
+                    'downloadConflict',
+                    () => notifier.resolveConflictWithDownload(),
+                  ),
           ),
         ],
       ),
@@ -419,7 +456,16 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
     };
   }
 
-  Future<void> _runAction(Future<void> Function() action) async {
+  Future<void> _runAction(
+    String actionKey,
+    Future<void> Function() action,
+  ) async {
+    if (_pendingActionKey != null) {
+      return;
+    }
+    setState(() {
+      _pendingActionKey = actionKey;
+    });
     try {
       await action();
       if (!mounted) {
@@ -450,6 +496,12 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
         title: 'Синхронизация с облаком',
         description: error.toString(),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _pendingActionKey = null;
+        });
+      }
     }
   }
 
@@ -527,7 +579,7 @@ class _StepCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -547,7 +599,7 @@ class _StepCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(description),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             child,
           ],
         ),
