@@ -51,7 +51,7 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Синхронизация с облаком',
+                  'Синхронизация с облаком (beta)',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
