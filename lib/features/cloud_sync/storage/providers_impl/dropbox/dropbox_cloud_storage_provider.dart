@@ -411,7 +411,9 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
           cancelToken: cancelToken,
           onReceiveProgress: onProgress,
           headers: <String, dynamic>{
-            'Dropbox-API-Arg': jsonEncode(<String, dynamic>{'path': path}),
+            'Dropbox-API-Arg': _encodeDropboxApiArg(<String, dynamic>{
+              'path': path,
+            }),
           },
         ),
       );
@@ -743,7 +745,7 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
       sendTimeout: const Duration(minutes: 15),
       receiveTimeout: const Duration(minutes: 15),
       headers: <String, dynamic>{
-        'Dropbox-API-Arg': jsonEncode(apiArg),
+        'Dropbox-API-Arg': _encodeDropboxApiArg(apiArg),
         HttpHeaders.contentLengthHeader: contentLength.toString(),
       },
     );
@@ -754,6 +756,31 @@ class DropboxCloudStorageProvider implements CloudStorageProvider {
     sendTimeout: const Duration(minutes: 1),
     receiveTimeout: const Duration(minutes: 5),
   );
+
+  String _encodeDropboxApiArg(Map<String, dynamic> apiArg) {
+    final json = jsonEncode(apiArg);
+    final buffer = StringBuffer();
+
+    for (final rune in json.runes) {
+      if (rune <= 0x7F) {
+        buffer.writeCharCode(rune);
+        continue;
+      }
+
+      if (rune <= 0xFFFF) {
+        buffer.write('\\u${rune.toRadixString(16).padLeft(4, '0')}');
+        continue;
+      }
+
+      final codePoint = rune - 0x10000;
+      final highSurrogate = 0xD800 + (codePoint >> 10);
+      final lowSurrogate = 0xDC00 + (codePoint & 0x3FF);
+      buffer.write('\\u${highSurrogate.toRadixString(16).padLeft(4, '0')}');
+      buffer.write('\\u${lowSurrogate.toRadixString(16).padLeft(4, '0')}');
+    }
+
+    return buffer.toString();
+  }
 
   Map<String, dynamic> _requireJsonMap(Object? data) {
     if (data is String && data.trim().isNotEmpty) {
