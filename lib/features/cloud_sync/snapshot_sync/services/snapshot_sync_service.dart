@@ -60,6 +60,8 @@ class SnapshotSyncService {
     required StoreInfoDto storeInfo,
     StoreSyncBinding? binding,
     AuthTokenEntry? token,
+    bool skipRemoteManifestCheck = false,
+    bool remoteCheckSkippedOffline = false,
   }) async {
     final localSnapshot = await _manifestBuilder.buildAndPersist(
       storePath: storePath,
@@ -67,7 +69,7 @@ class SnapshotSyncService {
     );
 
     StoreManifest? remoteManifest;
-    if (binding != null) {
+    if (binding != null && !skipRemoteManifestCheck) {
       try {
         remoteManifest = await _repository.readRemoteStoreManifest(
           binding.tokenId,
@@ -95,6 +97,7 @@ class SnapshotSyncService {
       localManifest: localSnapshot.storeManifest,
       remoteManifest: remoteManifest,
       compareResult: compareResult,
+      remoteCheckSkippedOffline: remoteCheckSkippedOffline,
       pendingConflict:
           compareResult == StoreVersionCompareResult.conflict &&
               remoteManifest != null

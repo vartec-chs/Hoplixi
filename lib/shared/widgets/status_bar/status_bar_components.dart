@@ -248,6 +248,16 @@ class _CloudSyncStatusWidget extends ConsumerWidget {
           );
         }
 
+        if (status.remoteCheckSkippedOffline) {
+          return _buildSyncChip(
+            icon: Icons.cloud_off,
+            label: 'Синх: offline',
+            color: Colors.orange,
+            tooltip:
+                'Нет доступа к интернету. Автоматическая проверка новой удалённой snapshot-версии была пропущена.',
+          );
+        }
+
         if (status.pendingConflict != null ||
             status.compareResult == StoreVersionCompareResult.conflict) {
           return _buildSyncChip(

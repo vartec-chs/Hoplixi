@@ -347,6 +347,15 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
 
   Widget? _buildPrimaryAction(StoreSyncStatus status) {
     final notifier = ref.read(currentStoreSyncProvider.notifier);
+    if (status.remoteCheckSkippedOffline) {
+      return SmoothButton(
+        label: 'Проверить snapshot сейчас',
+        loading: _pendingActionKey == 'refreshStatus',
+        onPressed: _pendingActionKey != null
+            ? null
+            : () => _runAction('refreshStatus', () => notifier.loadStatus()),
+      );
+    }
     return switch (status.compareResult) {
       StoreVersionCompareResult.remoteMissing ||
       StoreVersionCompareResult.localNewer => SmoothButton(
@@ -440,6 +449,9 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
   }
 
   String _statusDescription(StoreSyncStatus status) {
+    if (status.remoteCheckSkippedOffline) {
+      return 'Автоматически проверить удалённый snapshot не удалось: нет доступа к интернету. Пока соединение не восстановлено, локальная и облачная версии могут разойтись.';
+    }
     return switch (status.compareResult) {
       StoreVersionCompareResult.remoteMissing =>
         'В облаке ещё нет snapshot этого хранилища. Следующий шаг: отправить локальную версию.',
@@ -631,10 +643,16 @@ class _StatusCard extends StatelessWidget {
         const SizedBox(height: 12),
         Text('Локальная ревизия: ${localManifest?.revision ?? '—'}'),
         Text('Удалённая ревизия: ${remoteManifest?.revision ?? '—'}'),
-        Text('Состояние: ${_compareResultLabel(status.compareResult)}'),
+        Text('Состояние: ${_compareResultLabel(status)}'),
         Text(
           'Последняя успешная синхронизация: ${_formatSyncTime(localManifest?.sync?.syncedAt)}',
         ),
+        if (status.remoteCheckSkippedOffline) ...[
+          const SizedBox(height: 8),
+          const Text(
+            'Нет доступа к интернету. Автоматическая проверка новой удалённой версии была пропущена.',
+          ),
+        ],
         if (status.requiresUnlockToApply) ...[
           const SizedBox(height: 8),
           const Text(
@@ -645,8 +663,11 @@ class _StatusCard extends StatelessWidget {
     );
   }
 
-  String _compareResultLabel(StoreVersionCompareResult result) {
-    return switch (result) {
+  String _compareResultLabel(StoreSyncStatus status) {
+    if (status.remoteCheckSkippedOffline) {
+      return 'Проверка недоступна: нет интернета';
+    }
+    return switch (status.compareResult) {
       StoreVersionCompareResult.differentStore => 'Несоответствие хранилища',
       StoreVersionCompareResult.same => 'Версии совпадают',
       StoreVersionCompareResult.localNewer => 'Локальная версия новее',

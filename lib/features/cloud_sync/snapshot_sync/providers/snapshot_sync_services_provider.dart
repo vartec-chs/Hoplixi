@@ -5,6 +5,7 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_service.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/store_sync_binding_service.dart';
 import 'package:hoplixi/features/cloud_sync/storage/providers/cloud_storage_provider.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 
 final storeSyncBindingServiceProvider = Provider<StoreSyncBindingService>((
   ref,
@@ -19,6 +20,10 @@ final storeSyncBindingServiceProvider = Provider<StoreSyncBindingService>((
 final snapshotSyncRepositoryProvider = Provider<SnapshotSyncRepository>((ref) {
   final storageRepository = ref.watch(cloudStorageRepositoryProvider);
   return SnapshotSyncRepository(storageRepository);
+});
+
+final internetConnectionProvider = Provider<InternetConnection>((ref) {
+  return InternetConnection();
 });
 
 final snapshotSyncServiceProvider = Provider<SnapshotSyncService>((ref) {

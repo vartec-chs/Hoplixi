@@ -331,11 +331,26 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     }
 
     final syncService = ref.read(snapshotSyncServiceProvider);
+    final skipRemoteCheck =
+        useWatch &&
+        binding != null &&
+        token != null &&
+        !await _hasInternetAccess();
     return syncService.loadStatus(
       storePath: manager.currentStorePath!,
       storeInfo: storeInfo,
       binding: binding,
       token: token,
+      skipRemoteManifestCheck: skipRemoteCheck,
+      remoteCheckSkippedOffline: skipRemoteCheck,
     );
+  }
+
+  Future<bool> _hasInternetAccess() async {
+    try {
+      return await ref.read(internetConnectionProvider).hasInternetAccess;
+    } catch (_) {
+      return false;
+    }
   }
 }

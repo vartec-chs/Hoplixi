@@ -24,7 +24,9 @@ class _CloudSyncSnapshotSyncListenerState
 
   ProviderSubscription<AsyncValue<StoreSyncStatus>>? _subscription;
   String? _handledPromptKey;
+  String? _handledOfflineWarningKey;
   bool _isHandlingPrompt = false;
+  bool _isHandlingOfflineWarning = false;
 
   @override
   void initState() {
@@ -33,6 +35,23 @@ class _CloudSyncSnapshotSyncListenerState
       currentStoreSyncProvider,
       (previous, next) {
         next.whenData((status) {
+          final offlineWarningKey = _buildOfflineWarningKey(status);
+          if (offlineWarningKey == null) {
+            _handledOfflineWarningKey = null;
+          } else if (!_isHandlingOfflineWarning &&
+              _handledOfflineWarningKey != offlineWarningKey) {
+            _handledOfflineWarningKey = offlineWarningKey;
+            _isHandlingOfflineWarning = true;
+
+            WidgetsBinding.instance.addPostFrameCallback((_) async {
+              try {
+                await _showOfflineWarning(status);
+              } finally {
+                _isHandlingOfflineWarning = false;
+              }
+            });
+          }
+
           final promptKey = _buildPromptKey(status);
           if (promptKey == null) {
             _handledPromptKey = null;
@@ -59,6 +78,16 @@ class _CloudSyncSnapshotSyncListenerState
     );
   }
 
+  String? _buildOfflineWarningKey(StoreSyncStatus status) {
+    if (!status.isStoreOpen ||
+        status.binding == null ||
+        !status.remoteCheckSkippedOffline) {
+      return null;
+    }
+
+    return [status.storeUuid ?? '', status.binding?.tokenId ?? ''].join('|');
+  }
+
   String? _buildPromptKey(StoreSyncStatus status) {
     if (!status.isStoreOpen || status.binding == null) {
       return null;
@@ -80,6 +109,38 @@ class _CloudSyncSnapshotSyncListenerState
       status.remoteManifest?.revision.toString() ?? '',
       status.remoteManifest?.snapshotId ?? '',
     ].join('|');
+  }
+
+  Future<void> _showOfflineWarning(StoreSyncStatus status) async {
+    final dialogContext =
+        navigatorKey.currentState?.overlay?.context ??
+        navigatorKey.currentContext;
+    if (dialogContext == null || !mounted) {
+      logWarning(
+        'Skipping offline snapshot warning because no Navigator context is available.',
+        tag: _logTag,
+        data: <String, dynamic>{'storeUuid': status.storeUuid},
+      );
+      return;
+    }
+
+    await showDialog<void>(
+      context: dialogContext,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Проверка snapshot недоступна'),
+          content: const Text(
+            'Сейчас нет доступа к интернету, поэтому автоматически проверить наличие новой удалённой snapshot-версии невозможно.\n\nЕсли в это время менять локальное хранилище, локальная и облачная версии могут разойтись. Подключитесь к интернету и позже вручную обновите статус синхронизации.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Понятно'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _handlePrompt(StoreSyncStatus status) async {
