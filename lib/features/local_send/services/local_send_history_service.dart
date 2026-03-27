@@ -1,10 +1,9 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/app_paths.dart';
+import 'package:hive_ce/hive.dart';
+import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/core/services/hive_box_manager.dart';
+import 'package:hoplixi/di_init.dart';
 import 'package:hoplixi/features/local_send/models/history_item.dart';
-import 'package:path/path.dart' as p;
 
 final localSendHistoryServiceProvider = Provider<LocalSendHistoryService>((
   ref,
@@ -13,46 +12,94 @@ final localSendHistoryServiceProvider = Provider<LocalSendHistoryService>((
 });
 
 class LocalSendHistoryService {
-  static const _fileName = 'local_send_history.json';
+  static const String _boxName = 'local_send_history';
+  static const String _historyKey = 'items';
+  static const String _logTag = 'LocalSendHistoryService';
 
-  Future<File> _getFile() async {
-    final dirPath = await AppPaths.localSendPath;
-    return File(p.join(dirPath, _fileName));
+  LocalSendHistoryService() : _hiveBoxManager = getIt<HiveBoxManager>();
+
+  final HiveBoxManager _hiveBoxManager;
+  Box<List<dynamic>>? _box;
+
+  Future<Box<List<dynamic>>> _getBox() async {
+    if (_box?.isOpen ?? false) {
+      return _box!;
+    }
+
+    _box = await _hiveBoxManager.openBox<List<dynamic>>(_boxName);
+    return _box!;
   }
 
   Future<List<HistoryItem>> loadHistory() async {
     try {
-      final file = await _getFile();
-      if (!await file.exists()) {
+      final box = await _getBox();
+      final rawItems = box.get(_historyKey);
+      if (rawItems is! List) {
         return [];
       }
-      final jsonString = await file.readAsString();
-      final List<dynamic> jsonList = jsonDecode(jsonString);
-      return jsonList.map((e) => HistoryItem.fromJson(e)).toList();
-    } catch (e) {
-      // Игнорируем ошибки чтения/парсинга и возвращаем пустой список
+
+      return rawItems
+          .whereType<Map>()
+          .map(
+            (item) => HistoryItem.fromJson(
+              item.map(
+                (key, value) =>
+                    MapEntry(key.toString(), _normalizeJsonValue(value)),
+              ),
+            ),
+          )
+          .toList(growable: false);
+    } catch (error, stackTrace) {
+      logError(
+        'Failed to load local send history: $error',
+        stackTrace: stackTrace,
+        tag: _logTag,
+      );
       return [];
     }
   }
 
   Future<void> saveHistory(List<HistoryItem> items) async {
     try {
-      final file = await _getFile();
-      final jsonList = items.map((e) => e.toJson()).toList();
-      await file.writeAsString(jsonEncode(jsonList));
-    } catch (e) {
-      // Ошибка сохранения (можно залогировать)
+      final box = await _getBox();
+      final jsonList = items
+          .map((item) => item.toJson())
+          .toList(growable: false);
+      await box.put(_historyKey, jsonList);
+    } catch (error, stackTrace) {
+      logError(
+        'Failed to save local send history: $error',
+        stackTrace: stackTrace,
+        tag: _logTag,
+      );
     }
   }
 
   Future<void> clearHistory() async {
     try {
-      final file = await _getFile();
-      if (await file.exists()) {
-        await file.delete();
-      }
-    } catch (e) {
-      // Ошибка удаления
+      final box = await _getBox();
+      await box.delete(_historyKey);
+    } catch (error, stackTrace) {
+      logError(
+        'Failed to clear local send history: $error',
+        stackTrace: stackTrace,
+        tag: _logTag,
+      );
     }
+  }
+
+  dynamic _normalizeJsonValue(Object? value) {
+    if (value is Map) {
+      return value.map(
+        (key, nestedValue) =>
+            MapEntry(key.toString(), _normalizeJsonValue(nestedValue)),
+      );
+    }
+
+    if (value is List) {
+      return value.map(_normalizeJsonValue).toList(growable: false);
+    }
+
+    return value;
   }
 }
