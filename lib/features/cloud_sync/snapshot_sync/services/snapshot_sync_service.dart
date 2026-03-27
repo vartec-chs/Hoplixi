@@ -62,10 +62,14 @@ class SnapshotSyncService {
     AuthTokenEntry? token,
     bool skipRemoteManifestCheck = false,
     bool remoteCheckSkippedOffline = false,
+    bool persistLocalSnapshot = false,
+    bool allowLocalRevisionBump = false,
   }) async {
     final localSnapshot = await _manifestBuilder.buildAndPersist(
       storePath: storePath,
       storeInfo: storeInfo,
+      persist: persistLocalSnapshot,
+      allowRevisionBump: allowLocalRevisionBump,
     );
 
     StoreManifest? remoteManifest;

@@ -662,6 +662,8 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         storeInfo: storeInfo,
         binding: binding,
         token: token,
+        persistLocalSnapshot: true,
+        allowLocalRevisionBump: true,
       );
 
       switch (status.compareResult) {

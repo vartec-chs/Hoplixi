@@ -47,6 +47,8 @@ class StoreSnapshotManifestBuilder {
   Future<LocalStoreSnapshot> buildAndPersist({
     required String storePath,
     required StoreInfoDto storeInfo,
+    bool persist = true,
+    bool allowRevisionBump = true,
   }) async {
     final deviceInfo = await _deviceInfoLoader();
     final packageInfo = await _packageInfoLoader();
@@ -85,16 +87,17 @@ class StoreSnapshotManifestBuilder {
         existingDbFile?.modifiedAt == null ||
         existingDbFile!.modifiedAt!.toUtc() != storeModifiedAt;
     final needsSnapshotBump =
-        existingManifest == null ||
-        existingManifest.storeName != storeInfo.name ||
-        dbChangedLogically ||
-        existingManifest.content.keyFile.sha256 != keyHash ||
-        existingManifest.content.attachments.filesHash !=
-            draftAttachmentsManifest.filesHash;
+        allowRevisionBump &&
+        (existingManifest == null ||
+            existingManifest.storeName != storeInfo.name ||
+            dbChangedLogically ||
+            existingManifest.content.keyFile.sha256 != keyHash ||
+            existingManifest.content.attachments.filesHash !=
+                draftAttachmentsManifest.filesHash);
 
     final nextRevision = needsSnapshotBump
         ? ((existingManifest?.revision ?? 0) + 1)
-        : (existingManifest.revision ?? 0);
+        : (existingManifest?.revision ?? 0);
     final attachmentsManifest = AttachmentsManifest(
       version: draftAttachmentsManifest.version,
       storeUuid: draftAttachmentsManifest.storeUuid,
@@ -149,23 +152,25 @@ class StoreSnapshotManifestBuilder {
               revision: nextRevision,
               updatedAt: needsSnapshotBump
                   ? DateTime.now().toUtc()
-                  : (existingManifest.updatedAt ?? storeModifiedAt),
+                  : (existingManifest?.updatedAt ?? storeModifiedAt),
               snapshotId: needsSnapshotBump
                   ? _uuid.v4()
-                  : (existingManifest.snapshotId ?? ''),
+                  : (existingManifest?.snapshotId ?? ''),
               lastModifiedBy: needsSnapshotBump
                   ? candidateLastModifiedBy
-                  : (existingManifest.lastModifiedBy ??
+                  : (existingManifest?.lastModifiedBy ??
                         candidateLastModifiedBy),
               sync: existingManifest?.sync,
               content: candidateContent,
             );
 
-    await StoreManifestService.writeTo(storePath, storeManifest);
-    await AttachmentsManifestFileService.writeTo(
-      storePath,
-      attachmentsManifest,
-    );
+    if (persist) {
+      await StoreManifestService.writeTo(storePath, storeManifest);
+      await AttachmentsManifestFileService.writeTo(
+        storePath,
+        attachmentsManifest,
+      );
+    }
 
     return LocalStoreSnapshot(
       storeManifest: storeManifest,

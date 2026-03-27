@@ -128,6 +128,7 @@ class _CloudSyncSnapshotSyncListenerState
       context: dialogContext,
       builder: (context) {
         return AlertDialog(
+          constraints: const BoxConstraints(maxWidth: 400),
           title: const Text('Проверка snapshot недоступна'),
           content: const Text(
             'Сейчас нет доступа к интернету, поэтому автоматически проверить наличие новой удалённой snapshot-версии невозможно.\n\nЕсли в это время менять локальное хранилище, локальная и облачная версии могут разойтись. Подключитесь к интернету и позже вручную обновите статус синхронизации.',
