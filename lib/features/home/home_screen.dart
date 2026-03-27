@@ -349,32 +349,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           : 100 + MediaQuery.of(context).padding.top,
                       left: 0,
                       right: 0,
-                      child: Center(
-                        child: AnimatedTextKit(
-                          animatedTexts: [
-                            TypewriterAnimatedText(
-                              'Hoplixi',
-                              textStyle: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.onPrimary,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Center(
+                          child: AnimatedTextKit(
+                            animatedTexts: [
+                              TypewriterAnimatedText(
+                                'Hoplixi',
+                                textStyle: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onPrimary,
+                                ),
+                                speed: const Duration(milliseconds: 150),
                               ),
-                              speed: const Duration(milliseconds: 150),
-                            ),
-                            ScrambleAnimatedText(
-                              'Добро пожаловать',
-                              textStyle: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.onPrimary,
-                              ),
-                              speed: const Duration(milliseconds: 200),
-                            ),
-                          ],
-                          repeatForever: true,
-                          pause: const Duration(milliseconds: 1000),
-                          displayFullTextOnTap: true,
-                          stopPauseOnTap: false,
+                            ],
+                            repeatForever: true,
+                            pause: const Duration(milliseconds: 1000),
+                            displayFullTextOnTap: true,
+                            stopPauseOnTap: false,
+                          ),
                         ),
                       ),
                     ),
@@ -594,12 +588,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         description: 'Новое хранилище',
         onTap: () => context.push(AppRoutesPaths.createStore),
       ),
-      // ActionItem(
-      //   icon: LucideIcons.settings,
-      //   label: 'Настройки',
-      //   description: 'Конфигурация',
-      //   onTap: () => context.push(AppRoutesPaths.settings),
-      // ),
       ActionItem(
         icon: LucideIcons.key,
         label: 'Генератор',
@@ -632,25 +620,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         onTap: () => context.push(AppRoutesPaths.archiveStore),
       ),
 
-      // --- TEST ITEMS ---
-      // ActionItem(
-      //   icon: LucideIcons.shield,
-      //   label: 'Crypt API',
-      //   description: 'Тест шифрования',
-      //   onTap: () => context.push(AppRoutesPaths.cryptTest),
-      // ),
       ActionItem(
         icon: LucideIcons.cloud,
         label: 'Cloud Sync',
         description: 'Полигон для авторизации, OAuth credentials и токенов.',
         onTap: () => context.push(AppRoutesPaths.cloudSync),
       ),
-      // ActionItem(
-      //   icon: LucideIcons.fileText,
-      //   label: 'Логи',
-      //   description: 'Просмотр логов',
-      //   onTap: () => context.push(AppRoutesPaths.logs),
-      // ),
       if (!MainConstants.isProduction) ...[
         ActionItem(
           icon: LucideIcons.box,
@@ -704,28 +679,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               isPrimary: item.isPrimary,
               disabled: item.disabled,
               onTap: item.onTap,
-            ),
-          )
-          .toList(),
-    );
-  }
-
-  /// Вертикальный список кнопок (одна колонка) для экрана без недавней БД
-  Widget _buildVerticalList(List<ActionItem> items) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: items
-          .map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: ActionButton(
-                icon: item.icon,
-                label: item.label,
-                description: item.description,
-                isPrimary: item.isPrimary,
-                disabled: item.disabled,
-                onTap: item.onTap,
-              ),
             ),
           )
           .toList(),

@@ -5,9 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/archive_storage/ui/archive_screen.dart';
-import 'package:hoplixi/features/old/cloud_sync/auth/ui/auth_login_screen.dart';
-import 'package:hoplixi/features/old/cloud_sync/auth/ui/tokens_screen.dart';
-import 'package:hoplixi/features/old/cloud_sync/oauth_apps/ui/oauth_apps_screen.dart';
+
 import 'package:hoplixi/features/cloud_sync/app_credentials/screens/app_credentials_screen.dart';
 import 'package:hoplixi/features/cloud_sync/auth/screens/auth_progress_screen.dart';
 import 'package:hoplixi/features/cloud_sync/screens/cloud_sync_playground_screen.dart';
@@ -138,18 +136,6 @@ final List<RouteBase> appRoutes = [
   GoRoute(
     path: AppRoutesPaths.settings,
     builder: (context, state) => const SettingsScreen(),
-  ),
-  GoRoute(
-    path: AppRoutesPaths.oauthApps,
-    builder: (context, state) => const OAuthAppsScreen(),
-  ),
-  GoRoute(
-    path: AppRoutesPaths.oauthTokens,
-    builder: (context, state) => const TokensScreen(),
-  ),
-  GoRoute(
-    path: AppRoutesPaths.oauthLogin,
-    builder: (context, state) => const OAuthLoginScreen(),
   ),
   GoRoute(
     path: AppRoutesPaths.cloudSync,

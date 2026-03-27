@@ -1,8 +1,0 @@
-name: cloud_storage_sdk
-
-packages:
-  - packages/**
-
-command:
-  bootstrap:
-    runPubGetInParallel: true
