@@ -3,7 +3,7 @@ import 'db_errors.dart';
 
 part 'db_state.freezed.dart';
 
-enum DatabaseStatus { idle, open, locked, loading, closed, error }
+enum DatabaseStatus { idle, open, locked, loading, closingSync, closed, error }
 
 @freezed
 @immutable
@@ -23,5 +23,6 @@ sealed class DatabaseState with _$DatabaseState {
   bool get isClosed => status == DatabaseStatus.closed;
   bool get isLocked => status == DatabaseStatus.locked;
   bool get isLoading => status == DatabaseStatus.loading;
+  bool get isClosingSync => status == DatabaseStatus.closingSync;
   bool get hasError => status == DatabaseStatus.error;
 }

@@ -72,6 +72,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (dbStateAsync.hasValue) {
         final dbState = dbStateAsync.value!;
 
+        if (dbState.isClosingSync) {
+          if (currentPath != AppRoutesPaths.closeStoreSync) {
+            if (UniversalPlatform.isDesktop) {
+              WindowManager.instance.setSize(MainConstants.defaultWindowSize);
+              WindowManager.instance.center();
+            }
+            return AppRoutesPaths.closeStoreSync;
+          }
+          return null;
+        }
+
         // Если БД заблокирована, редиректим на экран блокировки
         if (dbState.isLocked) {
           if (currentPath != AppRoutesPaths.lockStore) {
@@ -86,7 +97,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             (currentPath == AppRoutesPaths.createStore ||
                 currentPath == AppRoutesPaths.openStore ||
                 currentPath == AppRoutesPaths.home ||
-                currentPath == AppRoutesPaths.lockStore)) {
+                currentPath == AppRoutesPaths.lockStore ||
+                currentPath == AppRoutesPaths.closeStoreSync)) {
           if (UniversalPlatform.isDesktop) {
             WindowManager.instance.setSize(MainConstants.defaultDashboardSize);
             WindowManager.instance.center();
@@ -94,7 +106,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           return AppRoutesPaths.dashboard;
         } else if ((dbState.isClosed || dbState.isIdle) &&
             (currentPath.startsWith(AppRoutesPaths.dashboard) ||
-                currentPath == AppRoutesPaths.lockStore)) {
+                currentPath == AppRoutesPaths.lockStore ||
+                currentPath == AppRoutesPaths.closeStoreSync)) {
           if (UniversalPlatform.isDesktop) {
             WindowManager.instance.setSize(MainConstants.defaultWindowSize);
             WindowManager.instance.center();

@@ -462,6 +462,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   Future<bool> closeStore() async {
     // Защита от race condition
     await _acquireLock();
+    DatabaseState? openStateBeforeClose;
 
     try {
       logInfo('Closing store', tag: _logTag);
@@ -471,11 +472,15 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         return false;
       }
 
+      openStateBeforeClose = _currentState;
       final decryptedPathBeforeClose = await getDecryptedAttachmentsPath();
 
-      // Устанавливаем состояние загрузки
+      // Переходим на отдельный экран завершения синхронизации и закрытия.
       _setState(
-        _currentState.copyWith(status: DatabaseStatus.loading, error: null),
+        openStateBeforeClose.copyWith(
+          status: DatabaseStatus.closingSync,
+          error: null,
+        ),
       );
 
       await _tryUploadSnapshotBeforeClose();
@@ -484,9 +489,12 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       final result = await _manager.closeStore();
 
       final isClosed = result.fold((_) => true, (error) {
-        // Ошибка - возвращаем предыдущее состояние с ошибкой и автосбросом
-        _setErrorState(
-          _currentState.copyWith(status: DatabaseStatus.error, error: error),
+        // Ошибка - возвращаем пользователя в открытое состояние хранилища.
+        _setState(
+          openStateBeforeClose!.copyWith(
+            status: DatabaseStatus.open,
+            error: error,
+          ),
         );
 
         logError('Failed to close store: ${error.message}', tag: _logTag);
@@ -515,9 +523,11 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         tag: _logTag,
       );
 
-      _setErrorState(
-        _currentState.copyWith(
-          status: DatabaseStatus.error,
+      _setState(
+        (openStateBeforeClose ?? _currentState).copyWith(
+          status: openStateBeforeClose != null
+              ? DatabaseStatus.open
+              : DatabaseStatus.error,
           error: DatabaseError.unknown(
             message: 'Неожиданная ошибка при закрытии хранилища: $e',
             timestamp: DateTime.now(),

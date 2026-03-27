@@ -22,6 +22,7 @@ import 'package:hoplixi/features/local_send/screens/local_send_screen.dart';
 import 'package:hoplixi/features/local_send/screens/local_send_transfer_screen.dart';
 import 'package:hoplixi/features/logs_viewer/screens/logs_tabs_screen.dart';
 import 'package:hoplixi/features/password_manager/create_store/create_store_screen.dart';
+import 'package:hoplixi/features/password_manager/close_store/close_store_sync_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/screens/notes_graph_screen.dart';
@@ -125,6 +126,10 @@ final List<RouteBase> appRoutes = [
   GoRoute(
     path: AppRoutesPaths.lockStore,
     builder: (context, state) => const LockStoreScreen(),
+  ),
+  GoRoute(
+    path: AppRoutesPaths.closeStoreSync,
+    builder: (context, state) => const CloseStoreSyncScreen(),
   ),
   GoRoute(
     path: AppRoutesPaths.archiveStore,
