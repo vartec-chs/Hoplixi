@@ -645,12 +645,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         description: 'Полигон для авторизации, OAuth credentials и токенов.',
         onTap: () => context.push(AppRoutesPaths.cloudSync),
       ),
-      ActionItem(
-        icon: LucideIcons.fileText,
-        label: 'Логи',
-        description: 'Просмотр логов',
-        onTap: () => context.push(AppRoutesPaths.logs),
-      ),
+      // ActionItem(
+      //   icon: LucideIcons.fileText,
+      //   label: 'Логи',
+      //   description: 'Просмотр логов',
+      //   onTap: () => context.push(AppRoutesPaths.logs),
+      // ),
       if (!MainConstants.isProduction) ...[
         ActionItem(
           icon: LucideIcons.box,

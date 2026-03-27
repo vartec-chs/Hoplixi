@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/settings/ui/settings_sections.dart';
+import 'package:hoplixi/routing/paths.dart';
 
 /// Экран настроек приложения
 class SettingsScreen extends ConsumerWidget {
@@ -14,24 +16,24 @@ class SettingsScreen extends ConsumerWidget {
         elevation: 0,
         scrolledUnderElevation: 2,
       ),
-      body: const SafeArea(
+      body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             children: [
               // Секция внешнего вида
-              AppearanceSettingsSection(),
+              const AppearanceSettingsSection(),
 
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
 
               // Секция общих настроек
-              GeneralSettingsSection(),
+              const GeneralSettingsSection(),
 
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
 
               // Секция безопасности
-              SecuritySettingsSection(),
+              const SecuritySettingsSection(),
 
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
 
               // Секция синхронизации
               // SyncSettingsSection(),
@@ -39,9 +41,23 @@ class SettingsScreen extends ConsumerWidget {
               // SizedBox(height: 8),
 
               // Секция резервного копирования
-              BackupSettingsSection(),
+              const BackupSettingsSection(),
 
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () => context.push(AppRoutesPaths.logs),
+                    icon: const Icon(Icons.description_outlined),
+                    label: const Text('Открыть логи'),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
             ],
           ),
         ),
