@@ -61,3 +61,4 @@ log.txt
 .VSCodeCounter
 debug.keystore
 thresholds_new.pnm
+pubspec.lock
