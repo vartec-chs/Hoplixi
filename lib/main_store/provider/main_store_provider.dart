@@ -654,6 +654,8 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         return;
       }
 
+      await onSyncStart?.call();
+
       final token = await ref
           .read(authTokensProvider.notifier)
           .getTokenById(binding.tokenId);
@@ -682,7 +684,6 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       switch (status.compareResult) {
         case StoreVersionCompareResult.remoteMissing:
         case StoreVersionCompareResult.localNewer:
-          await onSyncStart?.call();
           final result = await syncService.sync(
             storePath: storePath,
             storeInfo: storeInfo,
