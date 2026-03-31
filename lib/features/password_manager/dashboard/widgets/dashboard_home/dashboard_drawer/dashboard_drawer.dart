@@ -100,22 +100,7 @@ class _DashboardDrawerContentState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isStoreOpen = ref
-        .watch(mainStoreProvider)
-        .maybeWhen(data: (state) => state.isOpen, orElse: () => false);
     final isMobile = MediaQuery.of(context).size.width < 600;
-
-    final hasCategorySelections = ref.watch(
-      drawerCategoryFilterProvider(widget.entityType).select(
-        (s) => s.whenOrNull(data: (s) => s.selectedIds.isNotEmpty) ?? false,
-      ),
-    );
-    final hasTagSelections = ref.watch(
-      drawerTagFilterProvider(widget.entityType).select(
-        (s) => s.whenOrNull(data: (s) => s.selectedIds.isNotEmpty) ?? false,
-      ),
-    );
-    final hasAnySelections = hasCategorySelections || hasTagSelections;
 
     return SafeArea(
       child: Column(
@@ -125,45 +110,7 @@ class _DashboardDrawerContentState
           // Заголовок
           SizedBox(
             height: 50,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        'Фильтры',
-                        style: theme.textTheme.titleMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                  if (hasAnySelections)
-                    SmoothButton(
-                      onPressed: () {
-                        ref
-                            .read(
-                              drawerCategoryFilterProvider(
-                                widget.entityType,
-                              ).notifier,
-                            )
-                            .clearSelection();
-                        ref
-                            .read(
-                              drawerTagFilterProvider(
-                                widget.entityType,
-                              ).notifier,
-                            )
-                            .clearSelection();
-                      },
-                      label: 'Очистить все',
-                      size: SmoothButtonSize.small,
-                      type: SmoothButtonType.text,
-                    ),
-                ],
-              ),
-            ),
+            child: _DrawerHeader(entityType: widget.entityType, theme: theme),
           ),
           const Divider(height: 1),
 
@@ -200,29 +147,96 @@ class _DashboardDrawerContentState
             const Divider(height: 1),
             Padding(
               padding: const EdgeInsets.all(12.0),
-              child: Row(
-                children: [
-                  const Expanded(
-                    child: CloseDatabaseButton(
-                      type: CloseDatabaseButtonType.smooth,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: SmoothButton(
-                      label: 'Бэкап',
-                      size: SmoothButtonSize.small,
-                      icon: const Icon(Icons.backup),
-                      onPressed: isStoreOpen ? _createBackupNow : null,
-                      type: SmoothButtonType.filled,
-                    ),
-                  ),
-                ],
-              ),
+              child: _DrawerMobileActions(onCreateBackupNow: _createBackupNow),
             ),
           ],
         ],
       ),
+    );
+  }
+}
+
+class _DrawerHeader extends ConsumerWidget {
+  const _DrawerHeader({required this.entityType, required this.theme});
+
+  final EntityType entityType;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hasCategorySelections = ref.watch(
+      drawerCategoryFilterProvider(entityType).select(
+        (s) => s.whenOrNull(data: (s) => s.selectedIds.isNotEmpty) ?? false,
+      ),
+    );
+    final hasTagSelections = ref.watch(
+      drawerTagFilterProvider(entityType).select(
+        (s) => s.whenOrNull(data: (s) => s.selectedIds.isNotEmpty) ?? false,
+      ),
+    );
+    final hasAnySelections = hasCategorySelections || hasTagSelections;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Center(
+              child: Text(
+                'Фильтры',
+                style: theme.textTheme.titleMedium,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+          if (hasAnySelections)
+            SmoothButton(
+              onPressed: () {
+                ref
+                    .read(drawerCategoryFilterProvider(entityType).notifier)
+                    .clearSelection();
+                ref
+                    .read(drawerTagFilterProvider(entityType).notifier)
+                    .clearSelection();
+              },
+              label: 'Очистить все',
+              size: SmoothButtonSize.small,
+              type: SmoothButtonType.text,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DrawerMobileActions extends ConsumerWidget {
+  const _DrawerMobileActions({required this.onCreateBackupNow});
+
+  final Future<void> Function() onCreateBackupNow;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isStoreOpen = ref
+        .watch(mainStoreProvider)
+        .maybeWhen(data: (state) => state.isOpen, orElse: () => false);
+
+    return Row(
+      children: [
+        const Expanded(
+          child: CloseDatabaseButton(type: CloseDatabaseButtonType.smooth),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: SmoothButton(
+            label: 'Бэкап',
+            size: SmoothButtonSize.small,
+            icon: const Icon(Icons.backup),
+            onPressed: isStoreOpen ? onCreateBackupNow : null,
+            type: SmoothButtonType.filled,
+          ),
+        ),
+      ],
     );
   }
 }

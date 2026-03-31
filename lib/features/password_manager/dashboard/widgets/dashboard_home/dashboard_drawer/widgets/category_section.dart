@@ -74,10 +74,8 @@ class _CategorySectionState extends ConsumerState<CategorySection> {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 200),
       child: categoryStateAsync.when(
-        data: (state) => Container(
-          key: ValueKey(
-            'data-${state.searchResults.length}-${state.roots.length}-${state.searchQuery}',
-          ),
+        data: (state) => KeyedSubtree(
+          key: const ValueKey('data'),
           child: _buildData(state, theme, notifier),
         ),
         loading: () => const Center(
@@ -128,7 +126,10 @@ class _CategorySectionState extends ConsumerState<CategorySection> {
                       type: SmoothButtonType.text,
                     ),
                   IconButton(
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                     iconSize: 20,
                     icon: const Icon(Icons.refresh, size: 20),
                     onPressed: notifier.reload,

@@ -3,28 +3,6 @@ import 'dart:io';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:universal_platform/universal_platform.dart';
 
-Future<void> setupTray() async {
-  if (!UniversalPlatform.isDesktop) return;
-
-  await trayManager.setIcon(
-    Platform.isWindows ? 'assets/logo/logo.ico' : 'assets/logo/logo.png',
-  );
-  Menu menu = Menu(
-    items: [
-      MenuItem(key: 'show_window', label: 'Показать окно'),
-      MenuItem(key: 'password_generator', label: 'Генератор паролей'),
-      MenuItem.separator(),
-      MenuItem(key: 'path_launcher', label: 'Открыть папку приложения'),
-      MenuItem(key: 'exit_app', label: 'Выход из приложения'),
-    ],
-  );
-
-  await trayManager.setContextMenu(menu);
-  await trayManager.setToolTip('Hoplixi');
-
-  // await trayManager.setTitle('Hoplixi');
-}
-
 enum AppTrayMenuItemKey {
   showWindow('show_window'),
   passwordGenerator('password_generator'),
@@ -44,4 +22,33 @@ extension AppTrayMenuItemKeyExtension on AppTrayMenuItemKey {
     }
     return null;
   }
+}
+
+Future<void> setupTray() async {
+  if (!UniversalPlatform.isDesktop) return;
+
+  await trayManager.setIcon(
+    Platform.isWindows ? 'assets/logo/logo.ico' : 'assets/logo/logo.png',
+  );
+  Menu menu = Menu(
+    items: [
+      MenuItem(key: AppTrayMenuItemKey.showWindow.key, label: 'Показать окно'),
+      MenuItem(
+        key: AppTrayMenuItemKey.passwordGenerator.key,
+        label: 'Генератор паролей',
+      ),
+      MenuItem.separator(),
+      MenuItem(
+        key: AppTrayMenuItemKey.pathLauncher.key,
+        label: 'Открыть папку приложения',
+      ),
+      MenuItem(
+        key: AppTrayMenuItemKey.exitApp.key,
+        label: 'Выход из приложения',
+      ),
+    ],
+  );
+
+  await trayManager.setContextMenu(menu);
+  await trayManager.setToolTip('Hoplixi');
 }
