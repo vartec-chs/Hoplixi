@@ -12,8 +12,8 @@ dependencies:
     sdk: flutter
 
   flex_color_scheme: ^8.4.0
-  package_info_plus: ^9.0.0
-  device_info_plus: ^12.3.0
+  package_info_plus: ^9.0.1
+  device_info_plus: ^12.4.0
   archive: ^4.0.9
   uuid: ^4.5.3
   crypto: ^3.0.7
@@ -89,15 +89,17 @@ dependencies:
 
   file_crypto:
     path: ./packages/file_crypto
-
   card_scanner:
     path: ./packages/card_scanner
-
+  typed_prefs:
+    version: ^1.1.1
+    git: https://github.com/vartec-chs/typed_prefs_flutter
   rust_lib_hoplixi:
     path: rust_builder
   flutter_rust_bridge: 2.12.0
   flutter_localizations:
     sdk: flutter
+
   flutter_lucide: ^1.8.2
   sqlite3: ^3.2.0
   go_transitions: ^0.8.3
@@ -108,10 +110,7 @@ dependencies:
   flutter_zxing: ^2.2.1
   slang_flutter: ^4.14.0
   slang: ^4.14.0
-  connectivity_plus: ^7.0.0
-  typed_prefs:
-    version: ^1.1.1
-    git: https://github.com/vartec-chs/typed_prefs_flutter
+  connectivity_plus: ^7.1.0
   no_screenshot: ^1.1.0
   flutter_contacts: ^2.0.1
   op_wifi_utils: ^1.4.3
