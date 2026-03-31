@@ -89,6 +89,7 @@ class StoreSyncStatus {
     this.pendingConflict,
     this.lastResultType = SnapshotSyncResultType.idle,
     this.requiresUnlockToApply = false,
+    this.isApplyingRemoteUpdate = false,
     this.remoteCheckSkippedOffline = false,
   });
 
@@ -104,6 +105,7 @@ class StoreSyncStatus {
   final SnapshotSyncConflict? pendingConflict;
   final SnapshotSyncResultType lastResultType;
   final bool requiresUnlockToApply;
+  final bool isApplyingRemoteUpdate;
   final bool remoteCheckSkippedOffline;
 
   StoreSyncStatus copyWith({
@@ -124,6 +126,7 @@ class StoreSyncStatus {
     bool clearPendingConflict = false,
     SnapshotSyncResultType? lastResultType,
     bool? requiresUnlockToApply,
+    bool? isApplyingRemoteUpdate,
     bool? remoteCheckSkippedOffline,
   }) {
     return StoreSyncStatus(
@@ -146,6 +149,8 @@ class StoreSyncStatus {
       lastResultType: lastResultType ?? this.lastResultType,
       requiresUnlockToApply:
           requiresUnlockToApply ?? this.requiresUnlockToApply,
+      isApplyingRemoteUpdate:
+          isApplyingRemoteUpdate ?? this.isApplyingRemoteUpdate,
       remoteCheckSkippedOffline:
           remoteCheckSkippedOffline ?? this.remoteCheckSkippedOffline,
     );

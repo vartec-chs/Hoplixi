@@ -475,15 +475,16 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       openStateBeforeClose = _currentState;
       final decryptedPathBeforeClose = await getDecryptedAttachmentsPath();
 
-      // Переходим на отдельный экран завершения синхронизации и закрытия.
-      _setState(
-        openStateBeforeClose.copyWith(
-          status: DatabaseStatus.closingSync,
-          error: null,
-        ),
+      await _tryUploadSnapshotBeforeClose(
+        onSyncStart: () {
+          _setState(
+            openStateBeforeClose!.copyWith(
+              status: DatabaseStatus.closingSync,
+              error: null,
+            ),
+          );
+        },
       );
-
-      await _tryUploadSnapshotBeforeClose();
 
       // Вызываем закрытие хранилища
       final result = await _manager.closeStore();
@@ -615,7 +616,9 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     }
   }
 
-  Future<void> _tryUploadSnapshotBeforeClose() async {
+  Future<void> _tryUploadSnapshotBeforeClose({
+    FutureOr<void> Function()? onSyncStart,
+  }) async {
     try {
       final storePath = _manager.currentStorePath;
       if (storePath == null || storePath.isEmpty || !_manager.isStoreOpen) {
@@ -679,6 +682,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       switch (status.compareResult) {
         case StoreVersionCompareResult.remoteMissing:
         case StoreVersionCompareResult.localNewer:
+          await onSyncStart?.call();
           final result = await syncService.sync(
             storePath: storePath,
             storeInfo: storeInfo,

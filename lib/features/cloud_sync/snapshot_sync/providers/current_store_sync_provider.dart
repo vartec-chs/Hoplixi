@@ -143,8 +143,6 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     );
     final syncService = ref.read(snapshotSyncServiceProvider);
 
-    state = const AsyncLoading();
-
     if (current.compareResult == StoreVersionCompareResult.conflict) {
       state = AsyncData(
         current.copyWith(
@@ -163,34 +161,55 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     }
 
     if (current.compareResult == StoreVersionCompareResult.remoteNewer) {
-      await ref
-          .read(mainStoreProvider.notifier)
-          .lockStore(skipSnapshotSync: true);
-      final result = await syncService.resolveConflict(
+      final downloadInProgressState = current.copyWith(
+        isStoreOpen: false,
         storePath: storePath,
-        storeInfo: storeInfo,
+        storeUuid: binding.storeUuid,
         binding: binding,
         token: token,
-        resolution: SnapshotConflictResolution.downloadRemote,
-        lockBeforeDownload: true,
+        clearPendingConflict: true,
+        requiresUnlockToApply: false,
+        isApplyingRemoteUpdate: true,
       );
-      state = AsyncData(
-        StoreSyncStatus(
-          isStoreOpen: false,
+      state = AsyncData(downloadInProgressState);
+      try {
+        await ref
+            .read(mainStoreProvider.notifier)
+            .lockStore(skipSnapshotSync: true);
+        final result = await syncService.resolveConflict(
           storePath: storePath,
-          storeUuid: binding.storeUuid,
-          storeName: current.storeName,
+          storeInfo: storeInfo,
           binding: binding,
           token: token,
-          localManifest: result.localManifest,
-          remoteManifest: result.remoteManifest,
-          compareResult: StoreVersionCompareResult.same,
-          lastResultType: result.type,
-          requiresUnlockToApply: true,
-        ),
-      );
-      return;
+          resolution: SnapshotConflictResolution.downloadRemote,
+          lockBeforeDownload: true,
+        );
+        state = AsyncData(
+          StoreSyncStatus(
+            isStoreOpen: false,
+            storePath: storePath,
+            storeUuid: binding.storeUuid,
+            storeName: current.storeName,
+            binding: binding,
+            token: token,
+            localManifest: result.localManifest,
+            remoteManifest: result.remoteManifest,
+            compareResult: StoreVersionCompareResult.same,
+            lastResultType: result.type,
+            requiresUnlockToApply: true,
+            isApplyingRemoteUpdate: false,
+          ),
+        );
+        return;
+      } catch (error, stackTrace) {
+        state = AsyncData(
+          downloadInProgressState.copyWith(isApplyingRemoteUpdate: false),
+        );
+        Error.throwWithStackTrace(error, stackTrace);
+      }
     }
+
+    state = const AsyncLoading();
 
     final result = await syncService.sync(
       storePath: storePath,
@@ -245,24 +264,69 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     );
     final syncService = ref.read(snapshotSyncServiceProvider);
 
-    state = const AsyncLoading();
-
     var requiresUnlock = false;
     if (resolution == SnapshotConflictResolution.downloadRemote) {
-      await ref
-          .read(mainStoreProvider.notifier)
-          .lockStore(skipSnapshotSync: true);
+      final downloadInProgressState = current.copyWith(
+        isStoreOpen: false,
+        storePath: storePath,
+        storeUuid: binding.storeUuid,
+        binding: binding,
+        token: token,
+        clearPendingConflict: true,
+        requiresUnlockToApply: false,
+        isApplyingRemoteUpdate: true,
+      );
+      state = AsyncData(downloadInProgressState);
+      try {
+        await ref
+            .read(mainStoreProvider.notifier)
+            .lockStore(skipSnapshotSync: true);
+      } catch (error, stackTrace) {
+        state = AsyncData(
+          downloadInProgressState.copyWith(isApplyingRemoteUpdate: false),
+        );
+        Error.throwWithStackTrace(error, stackTrace);
+      }
       requiresUnlock = true;
+    } else {
+      state = const AsyncLoading();
     }
 
-    final result = await syncService.resolveConflict(
-      storePath: storePath,
-      storeInfo: storeInfo,
-      binding: binding,
-      token: token,
-      resolution: resolution,
-      lockBeforeDownload: requiresUnlock,
-    );
+    final result = requiresUnlock
+        ? await (() async {
+            try {
+              return await syncService.resolveConflict(
+                storePath: storePath,
+                storeInfo: storeInfo,
+                binding: binding,
+                token: token,
+                resolution: resolution,
+                lockBeforeDownload: true,
+              );
+            } catch (error, stackTrace) {
+              state = AsyncData(
+                current.copyWith(
+                  isStoreOpen: false,
+                  storePath: storePath,
+                  storeUuid: binding.storeUuid,
+                  binding: binding,
+                  token: token,
+                  clearPendingConflict: true,
+                  requiresUnlockToApply: false,
+                  isApplyingRemoteUpdate: false,
+                ),
+              );
+              Error.throwWithStackTrace(error, stackTrace);
+            }
+          })()
+        : await syncService.resolveConflict(
+            storePath: storePath,
+            storeInfo: storeInfo,
+            binding: binding,
+            token: token,
+            resolution: resolution,
+            lockBeforeDownload: false,
+          );
 
     if (requiresUnlock) {
       state = AsyncData(
@@ -278,6 +342,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
           compareResult: StoreVersionCompareResult.same,
           lastResultType: result.type,
           requiresUnlockToApply: true,
+          isApplyingRemoteUpdate: false,
         ),
       );
       return;
