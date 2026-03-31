@@ -11,6 +11,8 @@ import 'package:hoplixi/shared/widgets/watchers/lifecycle/auto_lock_provider.dar
 part 'status_bar_components.dart';
 part 'status_bar_state.dart';
 
+const statusBarHeight = 28.0;
+
 /// Простой статус-бар для отображения информации внизу экрана
 class StatusBar extends ConsumerWidget {
   const StatusBar({super.key});
@@ -25,7 +27,7 @@ class StatusBar extends ConsumerWidget {
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      height: 28,
+      height: statusBarHeight,
       decoration: BoxDecoration(
         color:
             statusState.backgroundColor ??

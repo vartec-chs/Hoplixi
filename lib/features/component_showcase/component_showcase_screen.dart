@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/features/component_showcase/screens/button_showcase_screen.dart';
+import 'package:hoplixi/features/component_showcase/screens/confirmation_bottom_modal_showcase_screen.dart';
 import 'package:hoplixi/features/component_showcase/screens/document_scanner_showcase_screen.dart';
 import 'package:hoplixi/features/component_showcase/screens/expandable_fab_screen.dart';
 import 'package:hoplixi/features/component_showcase/screens/modal_sheet_showcase_screen.dart';
@@ -51,6 +52,11 @@ class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
       title: 'Universal Modal',
       icon: Icons.dashboard,
       screen: const UniversalModalShowcaseScreen(),
+    ),
+    ShowcaseItem(
+      title: 'Confirm Modal',
+      icon: Icons.check_box_outlined,
+      screen: const ConfirmationBottomModalShowcaseScreen(),
     ),
     ShowcaseItem(
       title: 'Expandable FAB',

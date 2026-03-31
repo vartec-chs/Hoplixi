@@ -29,6 +29,14 @@ This document is the source of truth for reusable UI components located in
 - `ModalSheetCloseButton`
 - Use as default close action in modal/sheet headers.
 
+### `confirmation_bottom_modal.dart`
+
+- `ConfirmationBottomModal`
+- Use for action confirmations in a bottom-positioned rectangular modal with
+  fixed external spacing (12px left/right/bottom).
+- Supports optional `title`, `description`, custom `body` (including `Slider`),
+  and optional confirm/decline actions.
+
 ### `notification_card.dart`
 
 - `NotificationCard`
