@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/snapshot_sync_progress_card.dart';
 import 'package:hoplixi/main_store/provider/db_history_provider.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -114,6 +115,8 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
     final dbState = ref.watch(mainStoreProvider).value;
     final syncStatus = ref.watch(currentStoreSyncProvider).value;
     final isApplyingRemoteUpdate = syncStatus?.isApplyingRemoteUpdate ?? false;
+    final requiresUnlockToApply = syncStatus?.requiresUnlockToApply ?? false;
+    final syncProgress = syncStatus?.syncProgress;
     final isUiBlocked = _isLoading || isApplyingRemoteUpdate;
     final theme = Theme.of(context);
 
@@ -121,9 +124,9 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
       canPop: !isApplyingRemoteUpdate,
       child: Scaffold(
         body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Container(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(12),
+            child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 440),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -132,6 +135,8 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
                   Icon(
                     isApplyingRemoteUpdate
                         ? Icons.cloud_download_outlined
+                        : requiresUnlockToApply
+                        ? Icons.cloud_done_outlined
                         : Icons.lock_outline,
                     size: 64,
                     color: theme.colorScheme.primary,
@@ -140,6 +145,8 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
                   Text(
                     isApplyingRemoteUpdate
                         ? 'Загружаем новую версию хранилища'
+                        : requiresUnlockToApply
+                        ? 'Новая версия уже применена'
                         : 'В целях безопасности база данных заблокирована',
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
@@ -150,6 +157,8 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
                   Text(
                     isApplyingRemoteUpdate
                         ? 'Найдена новая версия в облаке. Дождитесь завершения загрузки и применения изменений. Пока процесс не завершится, разблокировка и выход недоступны.'
+                        : requiresUnlockToApply
+                        ? 'Удалённый snapshot уже записан локально. Разблокируйте хранилище, чтобы открыть обновлённые данные.'
                         : 'Разблокируйте хранилище, чтобы продолжить работу.',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
@@ -178,7 +187,13 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                  if (isApplyingRemoteUpdate) ...[
+                  if (syncProgress != null) ...[
+                    const SizedBox(height: 24),
+                    SnapshotSyncProgressCard(progress: syncProgress),
+                  ] else if (requiresUnlockToApply) ...[
+                    const SizedBox(height: 24),
+                    const SnapshotSyncPendingApplyCard(),
+                  ] else if (isApplyingRemoteUpdate) ...[
                     const SizedBox(height: 24),
                     const Center(child: CircularProgressIndicator()),
                   ],

@@ -24,9 +24,62 @@ void main() {
   });
 
   group('compareStoreManifests', () {
-    test('returns same when revision and content match', () {
-      final local = _manifest(revision: 5, dbHash: 'a', keyHash: 'b', filesHash: 'c');
-      final remote = _manifest(revision: 5, dbHash: 'a', keyHash: 'b', filesHash: 'c');
+    test('returns remoteMissing when remote manifest is absent', () {
+      final local = _manifest(revision: 5);
+
+      expect(
+        compareStoreManifests(local: local, remote: null),
+        StoreVersionCompareResult.remoteMissing,
+      );
+    });
+
+    test('returns differentStore when store identifiers differ', () {
+      final local = _manifest(revision: 5, storeUuid: 'store-1');
+      final remote = _manifest(revision: 5, storeUuid: 'store-2');
+
+      expect(
+        compareStoreManifests(local: local, remote: remote),
+        StoreVersionCompareResult.differentStore,
+      );
+    });
+
+    test('returns localNewer when local revision is greater', () {
+      final local = _manifest(revision: 6);
+      final remote = _manifest(revision: 5, snapshotId: 'snapshot-5');
+
+      expect(
+        compareStoreManifests(local: local, remote: remote),
+        StoreVersionCompareResult.localNewer,
+      );
+    });
+
+    test('returns remoteNewer when remote revision is greater', () {
+      final local = _manifest(revision: 5);
+      final remote = _manifest(revision: 6, snapshotId: 'snapshot-6');
+
+      expect(
+        compareStoreManifests(local: local, remote: remote),
+        StoreVersionCompareResult.remoteNewer,
+      );
+    });
+
+    test('returns same when snapshot identifiers match', () {
+      final local = _manifest(revision: 5, snapshotId: 'shared-snapshot');
+      final remote = _manifest(
+        revision: 5,
+        snapshotId: 'shared-snapshot',
+        dbHash: 'different-db',
+      );
+
+      expect(
+        compareStoreManifests(local: local, remote: remote),
+        StoreVersionCompareResult.same,
+      );
+    });
+
+    test('returns same when content signatures match', () {
+      final local = _manifest(revision: 5, snapshotId: 'local-snapshot');
+      final remote = _manifest(revision: 5, snapshotId: 'remote-snapshot');
 
       expect(
         compareStoreManifests(local: local, remote: remote),
@@ -35,8 +88,12 @@ void main() {
     });
 
     test('returns conflict when revision matches but content differs', () {
-      final local = _manifest(revision: 5, dbHash: 'a', keyHash: 'b', filesHash: 'c');
-      final remote = _manifest(revision: 5, dbHash: 'x', keyHash: 'b', filesHash: 'c');
+      final local = _manifest(revision: 5, snapshotId: 'local-snapshot');
+      final remote = _manifest(
+        revision: 5,
+        snapshotId: 'remote-snapshot',
+        dbHash: 'different-db',
+      );
 
       expect(
         compareStoreManifests(local: local, remote: remote),
@@ -47,7 +104,9 @@ void main() {
 
   group('StoreSnapshotManifestBuilder', () {
     test('ignores attachments_decrypted and persists manifests', () async {
-      final tempDir = await Directory.systemTemp.createTemp('hoplixi_sync_test_');
+      final tempDir = await Directory.systemTemp.createTemp(
+        'hoplixi_sync_test_',
+      );
       final storeDir = Directory('${tempDir.path}/demo_store')..createSync();
       final attachmentsDir = Directory('${storeDir.path}/attachments')
         ..createSync(recursive: true);
@@ -104,10 +163,7 @@ void main() {
       expect(snapshot.attachmentsManifest.files.first.fileName, 'file-1.enc');
       expect(snapshot.storeManifest.content.attachments.count, 1);
       expect(snapshot.storeManifest.revision, 1);
-      expect(
-        File('${storeDir.path}/store_manifest.json').existsSync(),
-        isTrue,
-      );
+      expect(File('${storeDir.path}/store_manifest.json').existsSync(), isTrue);
       expect(
         File('${storeDir.path}/attachments_manifest.json').existsSync(),
         isTrue,
@@ -120,16 +176,19 @@ void main() {
 
 StoreManifest _manifest({
   required int revision,
-  required String dbHash,
-  required String keyHash,
-  required String filesHash,
+  String storeUuid = 'store-1',
+  String snapshotId = '',
+  String dbHash = 'db-hash',
+  String keyHash = 'key-hash',
+  String filesHash = 'files-hash',
+  String? manifestSha256,
 }) {
   return StoreManifest(
-    storeUuid: 'store-1',
+    storeUuid: storeUuid,
     storeName: 'Store',
     revision: revision,
     updatedAt: DateTime.utc(2025, 1, 1),
-    snapshotId: 'snapshot-$revision',
+    snapshotId: snapshotId,
     lastModifiedBy: const StoreManifestLastModifiedBy(
       deviceId: 'device',
       clientInstanceId: 'client',
@@ -145,7 +204,7 @@ StoreManifest _manifest({
       attachments: StoreManifestAttachmentsContent(
         count: 1,
         totalSize: 2,
-        manifestSha256: filesHash,
+        manifestSha256: manifestSha256 ?? filesHash,
         filesHash: filesHash,
       ),
     ),

@@ -3,10 +3,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
 import 'package:path/path.dart' as p;
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/attachments_manifest.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/cloud_manifest.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_resource.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_resource_ref.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
@@ -122,11 +124,16 @@ class SnapshotSyncRepository {
   Future<StoreManifest?> readRemoteStoreManifest(
     String tokenId, {
     required String storeUuid,
+    RemoteStoreLayout? layout,
   }) async {
-    final layout = await ensureRemoteStoreLayout(tokenId, storeUuid);
+    final resolvedLayout = await _resolveLayout(
+      tokenId,
+      storeUuid: storeUuid,
+      layout: layout,
+    );
     final file = await _findChildFileByName(
       tokenId,
-      parentRef: layout.storeFolder.ref,
+      parentRef: resolvedLayout.storeFolder.ref,
       name: storeManifestFileName,
     );
     if (file == null) {
@@ -142,11 +149,16 @@ class SnapshotSyncRepository {
   Future<AttachmentsManifest?> readRemoteAttachmentsManifest(
     String tokenId, {
     required String storeUuid,
+    RemoteStoreLayout? layout,
   }) async {
-    final layout = await ensureRemoteStoreLayout(tokenId, storeUuid);
+    final resolvedLayout = await _resolveLayout(
+      tokenId,
+      storeUuid: storeUuid,
+      layout: layout,
+    );
     final file = await _findChildFileByName(
       tokenId,
-      parentRef: layout.storeFolder.ref,
+      parentRef: resolvedLayout.storeFolder.ref,
       name: attachmentsManifestFileName,
     );
     if (file == null) {
@@ -163,11 +175,16 @@ class SnapshotSyncRepository {
     String tokenId, {
     required String storeUuid,
     required StoreManifest manifest,
+    RemoteStoreLayout? layout,
   }) async {
-    final layout = await ensureRemoteStoreLayout(tokenId, storeUuid);
+    final resolvedLayout = await _resolveLayout(
+      tokenId,
+      storeUuid: storeUuid,
+      layout: layout,
+    );
     await _uploadBytes(
       tokenId,
-      parentRef: layout.storeFolder.ref,
+      parentRef: resolvedLayout.storeFolder.ref,
       name: storeManifestFileName,
       bytes: utf8.encode(
         const JsonEncoder.withIndent('  ').convert(manifest.toJson()),
@@ -180,11 +197,16 @@ class SnapshotSyncRepository {
     String tokenId, {
     required String storeUuid,
     required AttachmentsManifest manifest,
+    RemoteStoreLayout? layout,
   }) async {
-    final layout = await ensureRemoteStoreLayout(tokenId, storeUuid);
+    final resolvedLayout = await _resolveLayout(
+      tokenId,
+      storeUuid: storeUuid,
+      layout: layout,
+    );
     await _uploadBytes(
       tokenId,
-      parentRef: layout.storeFolder.ref,
+      parentRef: resolvedLayout.storeFolder.ref,
       name: attachmentsManifestFileName,
       bytes: utf8.encode(
         const JsonEncoder.withIndent('  ').convert(manifest.toJson()),
@@ -198,21 +220,76 @@ class SnapshotSyncRepository {
     required String storeUuid,
     required File dbFile,
     File? keyFile,
+    RemoteStoreLayout? layout,
+    SnapshotSyncTransferProgressCallback? onProgress,
   }) async {
-    final layout = await ensureRemoteStoreLayout(tokenId, storeUuid);
-    await _uploadFile(
+    final resolvedLayout = await _resolveLayout(
       tokenId,
-      parentRef: layout.storeFolder.ref,
-      file: dbFile,
-      name: p.basename(dbFile.path),
+      storeUuid: storeUuid,
+      layout: layout,
     );
 
+    final uploads = <({File file, String name, int size})>[
+      (
+        file: dbFile,
+        name: p.basename(dbFile.path),
+        size: await dbFile.length(),
+      ),
+    ];
     if (keyFile != null && await keyFile.exists()) {
-      await _uploadFile(
-        tokenId,
-        parentRef: layout.storeFolder.ref,
+      uploads.add((
         file: keyFile,
         name: keyFileName,
+        size: await keyFile.length(),
+      ));
+    }
+
+    final totalBytes = uploads.fold<int>(0, (sum, entry) => sum + entry.size);
+    var completedFiles = 0;
+    var completedBytes = 0;
+
+    for (final upload in uploads) {
+      _emitTransferProgress(
+        onProgress,
+        direction: SnapshotSyncTransferDirection.upload,
+        completedFiles: completedFiles,
+        totalFiles: uploads.length,
+        transferredBytes: completedBytes,
+        totalBytes: totalBytes,
+        currentFileName: upload.name,
+      );
+      await _uploadFile(
+        tokenId,
+        parentRef: resolvedLayout.storeFolder.ref,
+        file: upload.file,
+        name: upload.name,
+        onProgress: (current, total) {
+          _emitTransferProgress(
+            onProgress,
+            direction: SnapshotSyncTransferDirection.upload,
+            completedFiles: completedFiles,
+            totalFiles: uploads.length,
+            transferredBytes:
+                completedBytes +
+                _resolveTransferredBytes(
+                  current,
+                  reportedTotal: total,
+                  fallbackTotal: upload.size,
+                ),
+            totalBytes: totalBytes,
+            currentFileName: upload.name,
+          );
+        },
+      );
+      completedFiles += 1;
+      completedBytes += upload.size;
+      _emitTransferProgress(
+        onProgress,
+        direction: SnapshotSyncTransferDirection.upload,
+        completedFiles: completedFiles,
+        totalFiles: uploads.length,
+        transferredBytes: completedBytes,
+        totalBytes: totalBytes,
       );
     }
   }
@@ -223,13 +300,24 @@ class SnapshotSyncRepository {
     required Directory localAttachmentsDir,
     required AttachmentsManifest localManifest,
     required AttachmentsManifest? remoteManifest,
+    RemoteStoreLayout? layout,
+    SnapshotSyncTransferProgressCallback? onProgress,
   }) async {
-    final layout = await ensureRemoteStoreLayout(tokenId, storeUuid);
+    final resolvedLayout = await _resolveLayout(
+      tokenId,
+      storeUuid: storeUuid,
+      layout: layout,
+    );
     final remoteFiles = <String, AttachmentManifestEntry>{
       for (final entry
           in remoteManifest?.files ?? const <AttachmentManifestEntry>[])
         entry.fileName: entry,
     };
+    final remoteResources = await _listRemoteFilesByName(
+      tokenId,
+      resolvedLayout.attachmentsFolder.ref,
+    );
+    final uploads = <({AttachmentManifestEntry entry, File file, int size})>[];
 
     for (final entry in localManifest.files.where((file) => !file.deleted)) {
       final remote = remoteFiles.remove(entry.fileName);
@@ -243,21 +331,63 @@ class SnapshotSyncRepository {
       if (!await localFile.exists()) {
         continue;
       }
+      uploads.add((
+        entry: entry,
+        file: localFile,
+        size: await localFile.length(),
+      ));
+    }
 
+    final totalBytes = uploads.fold<int>(0, (sum, item) => sum + item.size);
+    var completedFiles = 0;
+    var completedBytes = 0;
+    for (final upload in uploads) {
+      _emitTransferProgress(
+        onProgress,
+        direction: SnapshotSyncTransferDirection.upload,
+        completedFiles: completedFiles,
+        totalFiles: uploads.length,
+        transferredBytes: completedBytes,
+        totalBytes: totalBytes,
+        currentFileName: upload.entry.fileName,
+      );
       await _uploadFile(
         tokenId,
-        parentRef: layout.attachmentsFolder.ref,
-        file: localFile,
-        name: entry.fileName,
+        parentRef: resolvedLayout.attachmentsFolder.ref,
+        file: upload.file,
+        name: upload.entry.fileName,
+        onProgress: (current, total) {
+          _emitTransferProgress(
+            onProgress,
+            direction: SnapshotSyncTransferDirection.upload,
+            completedFiles: completedFiles,
+            totalFiles: uploads.length,
+            transferredBytes:
+                completedBytes +
+                _resolveTransferredBytes(
+                  current,
+                  reportedTotal: total,
+                  fallbackTotal: upload.size,
+                ),
+            totalBytes: totalBytes,
+            currentFileName: upload.entry.fileName,
+          );
+        },
+      );
+      completedFiles += 1;
+      completedBytes += upload.size;
+      _emitTransferProgress(
+        onProgress,
+        direction: SnapshotSyncTransferDirection.upload,
+        completedFiles: completedFiles,
+        totalFiles: uploads.length,
+        transferredBytes: completedBytes,
+        totalBytes: totalBytes,
       );
     }
 
     for (final stale in remoteFiles.values.where((file) => !file.deleted)) {
-      final remoteFile = await _findChildFileByName(
-        tokenId,
-        parentRef: layout.attachmentsFolder.ref,
-        name: stale.fileName,
-      );
+      final remoteFile = remoteResources[stale.fileName];
       if (remoteFile != null) {
         await _storageRepository.deleteResource(tokenId, remoteFile.ref);
       }
@@ -268,20 +398,72 @@ class SnapshotSyncRepository {
     String tokenId, {
     required String storeUuid,
     required String localStorePath,
+    RemoteStoreLayout? layout,
+    SnapshotSyncTransferProgressCallback? onProgress,
   }) async {
-    final layout = await ensureRemoteStoreLayout(tokenId, storeUuid);
-    final items = await _listAll(tokenId, layout.storeFolder.ref);
+    final resolvedLayout = await _resolveLayout(
+      tokenId,
+      storeUuid: storeUuid,
+      layout: layout,
+    );
+    final items = await _listAll(tokenId, resolvedLayout.storeFolder.ref);
+    final files = items
+        .where(
+          (item) =>
+              item.isFile &&
+              item.name != attachmentsManifestFileName &&
+              item.name != storeManifestFileName,
+        )
+        .toList(growable: false);
+    final totalBytes = files.any((file) => file.metadata.sizeBytes == null)
+        ? null
+        : files.fold<int>(0, (sum, file) => sum + file.metadata.sizeBytes!);
+    var completedFiles = 0;
+    var completedBytes = 0;
 
-    for (final resource in items.where((item) => item.isFile)) {
-      if (resource.name == attachmentsManifestFileName ||
-          resource.name == storeManifestFileName) {
-        continue;
-      }
+    for (final resource in files) {
       final destination = p.join(localStorePath, resource.name);
+      var transferredForCurrentFile = 0;
+      _emitTransferProgress(
+        onProgress,
+        direction: SnapshotSyncTransferDirection.download,
+        completedFiles: completedFiles,
+        totalFiles: files.length,
+        transferredBytes: completedBytes,
+        totalBytes: totalBytes,
+        currentFileName: resource.name,
+      );
       await _storageRepository.downloadFile(
         tokenId,
         fileRef: resource.ref,
         savePath: destination,
+        onProgress: (current, total) {
+          transferredForCurrentFile = _resolveTransferredBytes(
+            current,
+            reportedTotal: total,
+            fallbackTotal: resource.metadata.sizeBytes,
+          );
+          _emitTransferProgress(
+            onProgress,
+            direction: SnapshotSyncTransferDirection.download,
+            completedFiles: completedFiles,
+            totalFiles: files.length,
+            transferredBytes: completedBytes + transferredForCurrentFile,
+            totalBytes: totalBytes,
+            currentFileName: resource.name,
+          );
+        },
+      );
+      completedFiles += 1;
+      completedBytes +=
+          resource.metadata.sizeBytes ?? transferredForCurrentFile;
+      _emitTransferProgress(
+        onProgress,
+        direction: SnapshotSyncTransferDirection.download,
+        completedFiles: completedFiles,
+        totalFiles: files.length,
+        transferredBytes: completedBytes,
+        totalBytes: totalBytes,
       );
     }
   }
@@ -291,8 +473,14 @@ class SnapshotSyncRepository {
     required String storeUuid,
     required Directory localAttachmentsDir,
     required AttachmentsManifest remoteManifest,
+    RemoteStoreLayout? layout,
+    SnapshotSyncTransferProgressCallback? onProgress,
   }) async {
-    final layout = await ensureRemoteStoreLayout(tokenId, storeUuid);
+    final resolvedLayout = await _resolveLayout(
+      tokenId,
+      storeUuid: storeUuid,
+      layout: layout,
+    );
     final existingLocalNames = <String>{};
     if (await localAttachmentsDir.exists()) {
       await for (final entity in localAttachmentsDir.list(followLinks: false)) {
@@ -304,21 +492,74 @@ class SnapshotSyncRepository {
       await localAttachmentsDir.create(recursive: true);
     }
 
+    final remoteResources = await _listRemoteFilesByName(
+      tokenId,
+      resolvedLayout.attachmentsFolder.ref,
+    );
     final remoteFiles = <String>{};
+    final downloads =
+        <({AttachmentManifestEntry entry, CloudResource resource})>[];
     for (final entry in remoteManifest.files.where((file) => !file.deleted)) {
       remoteFiles.add(entry.fileName);
-      final remoteFile = await _findChildFileByName(
-        tokenId,
-        parentRef: layout.attachmentsFolder.ref,
-        name: entry.fileName,
-      );
+      final remoteFile = remoteResources[entry.fileName];
       if (remoteFile == null) {
         continue;
       }
+      downloads.add((entry: entry, resource: remoteFile));
+    }
+
+    final totalBytes =
+        downloads.any((item) => item.resource.metadata.sizeBytes == null)
+        ? null
+        : downloads.fold<int>(
+            0,
+            (sum, item) => sum + item.resource.metadata.sizeBytes!,
+          );
+    var completedFiles = 0;
+    var completedBytes = 0;
+
+    for (final download in downloads) {
+      var transferredForCurrentFile = 0;
+      _emitTransferProgress(
+        onProgress,
+        direction: SnapshotSyncTransferDirection.download,
+        completedFiles: completedFiles,
+        totalFiles: downloads.length,
+        transferredBytes: completedBytes,
+        totalBytes: totalBytes,
+        currentFileName: download.entry.fileName,
+      );
       await _storageRepository.downloadFile(
         tokenId,
-        fileRef: remoteFile.ref,
-        savePath: p.join(localAttachmentsDir.path, entry.fileName),
+        fileRef: download.resource.ref,
+        savePath: p.join(localAttachmentsDir.path, download.entry.fileName),
+        onProgress: (current, total) {
+          transferredForCurrentFile = _resolveTransferredBytes(
+            current,
+            reportedTotal: total,
+            fallbackTotal: download.resource.metadata.sizeBytes,
+          );
+          _emitTransferProgress(
+            onProgress,
+            direction: SnapshotSyncTransferDirection.download,
+            completedFiles: completedFiles,
+            totalFiles: downloads.length,
+            transferredBytes: completedBytes + transferredForCurrentFile,
+            totalBytes: totalBytes,
+            currentFileName: download.entry.fileName,
+          );
+        },
+      );
+      completedFiles += 1;
+      completedBytes +=
+          download.resource.metadata.sizeBytes ?? transferredForCurrentFile;
+      _emitTransferProgress(
+        onProgress,
+        direction: SnapshotSyncTransferDirection.download,
+        completedFiles: completedFiles,
+        totalFiles: downloads.length,
+        transferredBytes: completedBytes,
+        totalBytes: totalBytes,
       );
     }
 
@@ -328,6 +569,24 @@ class SnapshotSyncRepository {
         await localFile.delete();
       }
     }
+  }
+
+  Future<RemoteStoreLayout> _resolveLayout(
+    String tokenId, {
+    required String storeUuid,
+    RemoteStoreLayout? layout,
+  }) async {
+    return layout ?? await ensureRemoteStoreLayout(tokenId, storeUuid);
+  }
+
+  Future<Map<String, CloudResource>> _listRemoteFilesByName(
+    String tokenId,
+    CloudResourceRef parentRef,
+  ) async {
+    final items = await _listAll(tokenId, parentRef);
+    return <String, CloudResource>{
+      for (final item in items.where((entry) => entry.isFile)) item.name: item,
+    };
   }
 
   Future<CloudResource> _ensureRootFolder(String tokenId) async {
@@ -528,6 +787,7 @@ class SnapshotSyncRepository {
     required CloudResourceRef parentRef,
     required File file,
     required String name,
+    ProgressCallback? onProgress,
   }) async {
     await _storageRepository.uploadFile(
       tokenId,
@@ -536,7 +796,46 @@ class SnapshotSyncRepository {
       dataStream: file.openRead(),
       contentLength: await file.length(),
       overwrite: true,
+      onProgress: onProgress,
     );
+  }
+
+  void _emitTransferProgress(
+    SnapshotSyncTransferProgressCallback? callback, {
+    required SnapshotSyncTransferDirection direction,
+    required int completedFiles,
+    required int totalFiles,
+    required int transferredBytes,
+    required int? totalBytes,
+    String? currentFileName,
+  }) {
+    callback?.call(
+      SnapshotSyncTransferProgress(
+        direction: direction,
+        completedFiles: completedFiles,
+        totalFiles: totalFiles,
+        transferredBytes: transferredBytes,
+        totalBytes: totalBytes,
+        currentFileName: currentFileName,
+      ),
+    );
+  }
+
+  int _resolveTransferredBytes(
+    int current, {
+    required int? reportedTotal,
+    required int? fallbackTotal,
+  }) {
+    final safeCurrent = current < 0 ? 0 : current;
+    final candidates = <int>[
+      if (reportedTotal != null && reportedTotal > 0) reportedTotal,
+      if (fallbackTotal != null && fallbackTotal > 0) fallbackTotal,
+      safeCurrent,
+    ];
+    final upperBound = candidates.isEmpty
+        ? safeCurrent
+        : candidates.reduce((left, right) => left > right ? left : right);
+    return safeCurrent.clamp(0, upperBound);
   }
 
   CloudResourceRef _rootRefForProvider(CloudSyncProvider provider) {

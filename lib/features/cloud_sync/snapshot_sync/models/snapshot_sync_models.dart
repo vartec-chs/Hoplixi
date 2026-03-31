@@ -13,6 +13,85 @@ enum StoreVersionCompareResult {
 
 enum SnapshotSyncResultType { idle, noChanges, uploaded, downloaded, conflict }
 
+enum SnapshotSyncStage {
+  preparingLocalSnapshot,
+  checkingRemoteVersion,
+  transferringPrimaryFiles,
+  syncingAttachments,
+  updatingMetadata,
+  completed,
+}
+
+enum SnapshotSyncTransferDirection { upload, download }
+
+class SnapshotSyncTransferProgress {
+  const SnapshotSyncTransferProgress({
+    required this.direction,
+    required this.completedFiles,
+    required this.totalFiles,
+    required this.transferredBytes,
+    required this.totalBytes,
+    this.currentFileName,
+  });
+
+  final SnapshotSyncTransferDirection direction;
+  final int completedFiles;
+  final int totalFiles;
+  final int transferredBytes;
+  final int? totalBytes;
+  final String? currentFileName;
+
+  bool get hasFileProgress => totalFiles > 0;
+
+  double? get fraction {
+    final total = totalBytes;
+    if (total == null || total <= 0) {
+      return null;
+    }
+    if (transferredBytes <= 0) {
+      return 0;
+    }
+    return (transferredBytes / total).clamp(0, 1).toDouble();
+  }
+}
+
+typedef SnapshotSyncTransferProgressCallback =
+    void Function(SnapshotSyncTransferProgress progress);
+
+class SnapshotSyncProgress {
+  const SnapshotSyncProgress({
+    required this.stage,
+    required this.stepIndex,
+    required this.totalSteps,
+    required this.title,
+    required this.description,
+    this.transferProgress,
+  });
+
+  final SnapshotSyncStage stage;
+  final int stepIndex;
+  final int totalSteps;
+  final String title;
+  final String description;
+  final SnapshotSyncTransferProgress? transferProgress;
+}
+
+sealed class SnapshotSyncProgressEvent {
+  const SnapshotSyncProgressEvent();
+}
+
+class SnapshotSyncProgressUpdate extends SnapshotSyncProgressEvent {
+  const SnapshotSyncProgressUpdate(this.progress);
+
+  final SnapshotSyncProgress progress;
+}
+
+class SnapshotSyncProgressResult extends SnapshotSyncProgressEvent {
+  const SnapshotSyncProgressResult(this.result);
+
+  final SnapshotSyncResult result;
+}
+
 class StoreSyncBinding {
   const StoreSyncBinding({
     required this.storeUuid,
@@ -91,6 +170,8 @@ class StoreSyncStatus {
     this.requiresUnlockToApply = false,
     this.isApplyingRemoteUpdate = false,
     this.remoteCheckSkippedOffline = false,
+    this.syncProgress,
+    this.isSyncInProgress = false,
   });
 
   final bool isStoreOpen;
@@ -107,6 +188,8 @@ class StoreSyncStatus {
   final bool requiresUnlockToApply;
   final bool isApplyingRemoteUpdate;
   final bool remoteCheckSkippedOffline;
+  final SnapshotSyncProgress? syncProgress;
+  final bool isSyncInProgress;
 
   StoreSyncStatus copyWith({
     bool? isStoreOpen,
@@ -128,6 +211,9 @@ class StoreSyncStatus {
     bool? requiresUnlockToApply,
     bool? isApplyingRemoteUpdate,
     bool? remoteCheckSkippedOffline,
+    SnapshotSyncProgress? syncProgress,
+    bool clearSyncProgress = false,
+    bool? isSyncInProgress,
   }) {
     return StoreSyncStatus(
       isStoreOpen: isStoreOpen ?? this.isStoreOpen,
@@ -153,6 +239,10 @@ class StoreSyncStatus {
           isApplyingRemoteUpdate ?? this.isApplyingRemoteUpdate,
       remoteCheckSkippedOffline:
           remoteCheckSkippedOffline ?? this.remoteCheckSkippedOffline,
+      syncProgress: clearSyncProgress
+          ? null
+          : (syncProgress ?? this.syncProgress),
+      isSyncInProgress: isSyncInProgress ?? this.isSyncInProgress,
     );
   }
 }

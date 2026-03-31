@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
+import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/attachments_manifest.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/cloud_manifest.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/attachments_manifest_file_service.dart';
@@ -35,6 +38,8 @@ class ImportedRemoteStoreResult {
 }
 
 class SnapshotSyncService {
+  static const int _totalProgressSteps = 6;
+
   SnapshotSyncService({
     required SnapshotSyncRepository repository,
     StoreSnapshotManifestBuilder? manifestBuilder,
@@ -65,29 +70,76 @@ class SnapshotSyncService {
     bool persistLocalSnapshot = false,
     bool allowLocalRevisionBump = false,
   }) async {
-    final localSnapshot = await _manifestBuilder.buildAndPersist(
+    final localSnapshot = await _buildLocalSnapshot(
       storePath: storePath,
       storeInfo: storeInfo,
       persist: persistLocalSnapshot,
       allowRevisionBump: allowLocalRevisionBump,
     );
+    final remoteManifest = await _readRemoteManifestForStatus(
+      binding: binding,
+      storeUuid: localSnapshot.storeManifest.storeUuid,
+      skipRemoteManifestCheck: skipRemoteManifestCheck,
+    );
 
-    StoreManifest? remoteManifest;
-    if (binding != null && !skipRemoteManifestCheck) {
-      try {
-        remoteManifest = await _repository.readRemoteStoreManifest(
-          binding.tokenId,
-          storeUuid: localSnapshot.storeManifest.storeUuid,
-        );
-      } on CloudStorageException catch (error) {
-        if (!_isRecoverableStatusLoadError(error)) {
-          rethrow;
-        }
-      }
+    return _buildStoreSyncStatus(
+      storePath: storePath,
+      storeInfo: storeInfo,
+      binding: binding,
+      token: token,
+      localManifest: localSnapshot.storeManifest,
+      remoteManifest: remoteManifest,
+      remoteCheckSkippedOffline: remoteCheckSkippedOffline,
+    );
+  }
+
+  Future<LocalStoreSnapshot> _buildLocalSnapshot({
+    required String storePath,
+    required StoreInfoDto storeInfo,
+    bool persist = true,
+    bool allowRevisionBump = true,
+  }) {
+    return _manifestBuilder.buildAndPersist(
+      storePath: storePath,
+      storeInfo: storeInfo,
+      persist: persist,
+      allowRevisionBump: allowRevisionBump,
+    );
+  }
+
+  Future<StoreManifest?> _readRemoteManifestForStatus({
+    required StoreSyncBinding? binding,
+    required String storeUuid,
+    required bool skipRemoteManifestCheck,
+  }) async {
+    if (binding == null || skipRemoteManifestCheck) {
+      return null;
     }
 
-    final compareResult = _compareManifests(
-      local: localSnapshot.storeManifest,
+    try {
+      return await _repository.readRemoteStoreManifest(
+        binding.tokenId,
+        storeUuid: storeUuid,
+      );
+    } on CloudStorageException catch (error) {
+      if (!_isRecoverableStatusLoadError(error)) {
+        rethrow;
+      }
+      return null;
+    }
+  }
+
+  StoreSyncStatus _buildStoreSyncStatus({
+    required String storePath,
+    required StoreInfoDto storeInfo,
+    required StoreSyncBinding? binding,
+    required AuthTokenEntry? token,
+    required StoreManifest localManifest,
+    required StoreManifest? remoteManifest,
+    required bool remoteCheckSkippedOffline,
+  }) {
+    final compareResult = compareStoreManifests(
+      local: localManifest,
       remote: remoteManifest,
     );
 
@@ -98,7 +150,7 @@ class SnapshotSyncService {
       storeName: storeInfo.name,
       binding: binding,
       token: token,
-      localManifest: localSnapshot.storeManifest,
+      localManifest: localManifest,
       remoteManifest: remoteManifest,
       compareResult: compareResult,
       remoteCheckSkippedOffline: remoteCheckSkippedOffline,
@@ -106,7 +158,7 @@ class SnapshotSyncService {
           compareResult == StoreVersionCompareResult.conflict &&
               remoteManifest != null
           ? SnapshotSyncConflict(
-              localManifest: localSnapshot.storeManifest,
+              localManifest: localManifest,
               remoteManifest: remoteManifest,
             )
           : null,
@@ -117,104 +169,136 @@ class SnapshotSyncService {
     required String storePath,
     required StoreInfoDto storeInfo,
     required StoreSyncBinding binding,
-    required AuthTokenEntry token,
-  }) async {
-    final localSnapshot = await _manifestBuilder.buildAndPersist(
-      storePath: storePath,
-      storeInfo: storeInfo,
-    );
-    final remoteManifest = await _repository.readRemoteStoreManifest(
-      binding.tokenId,
-      storeUuid: localSnapshot.storeManifest.storeUuid,
-    );
-
-    final compare = _compareManifests(
-      local: localSnapshot.storeManifest,
-      remote: remoteManifest,
-    );
-    if (compare == StoreVersionCompareResult.conflict &&
-        remoteManifest != null) {
-      return SnapshotSyncResult(
-        type: SnapshotSyncResultType.conflict,
-        localManifest: localSnapshot.storeManifest,
-        remoteManifest: remoteManifest,
-        conflict: SnapshotSyncConflict(
-          localManifest: localSnapshot.storeManifest,
-          remoteManifest: remoteManifest,
-        ),
-      );
-    }
-
-    if (compare == StoreVersionCompareResult.same) {
-      return SnapshotSyncResult(
-        type: SnapshotSyncResultType.noChanges,
-        localManifest: localSnapshot.storeManifest,
-        remoteManifest: remoteManifest,
-      );
-    }
-
-    if (compare == StoreVersionCompareResult.remoteMissing ||
-        compare == StoreVersionCompareResult.localNewer) {
-      final uploadedManifest = await _uploadLocalSnapshot(
+  }) {
+    return _awaitProgressResult(
+      syncWithProgress(
         storePath: storePath,
         storeInfo: storeInfo,
-        localSnapshot: localSnapshot,
         binding: binding,
-        remoteManifest: remoteManifest,
-      );
-      return SnapshotSyncResult(
-        type: SnapshotSyncResultType.uploaded,
-        localManifest: uploadedManifest,
-        remoteManifest: uploadedManifest,
-      );
-    }
-
-    final downloadedManifest = await downloadRemoteSnapshot(
-      storePath: storePath,
-      binding: binding,
-      lockBeforeApply: false,
-    );
-    return SnapshotSyncResult(
-      type: SnapshotSyncResultType.downloaded,
-      localManifest: downloadedManifest,
-      remoteManifest: downloadedManifest,
+      ),
     );
   }
 
-  Future<SnapshotSyncResult> resolveConflict({
+  Stream<SnapshotSyncProgressEvent> syncWithProgress({
     required String storePath,
     required StoreInfoDto storeInfo,
     required StoreSyncBinding binding,
-    required AuthTokenEntry token,
-    required SnapshotConflictResolution resolution,
-    bool lockBeforeDownload = false,
-  }) async {
-    if (resolution == SnapshotConflictResolution.uploadLocal) {
-      final localSnapshot = await _manifestBuilder.buildAndPersist(
+  }) {
+    return _runProgressStream((emitProgress) async {
+      emitProgress(_preparingLocalSnapshotProgress());
+      final localSnapshot = await _buildLocalSnapshot(
         storePath: storePath,
         storeInfo: storeInfo,
       );
-      final uploadedManifest = await _uploadLocalSnapshot(
+
+      emitProgress(_checkingRemoteVersionProgress());
+      final remoteManifest = await _repository.readRemoteStoreManifest(
+        binding.tokenId,
+        storeUuid: localSnapshot.storeManifest.storeUuid,
+      );
+
+      return _syncByCompareResult(
+        compareResult: compareStoreManifests(
+          local: localSnapshot.storeManifest,
+          remote: remoteManifest,
+        ),
         storePath: storePath,
-        storeInfo: storeInfo,
         localSnapshot: localSnapshot,
         binding: binding,
-        remoteManifest: await _repository.readRemoteStoreManifest(
-          binding.tokenId,
-          storeUuid: storeInfo.id,
-        ),
+        remoteManifest: remoteManifest,
+        lockBeforeDownload: false,
+        emitProgress: emitProgress,
       );
-      return SnapshotSyncResult(
-        type: SnapshotSyncResultType.uploaded,
-        localManifest: uploadedManifest,
-        remoteManifest: uploadedManifest,
-      );
-    }
+    });
+  }
 
+  Future<SnapshotSyncResult> _syncByCompareResult({
+    required StoreVersionCompareResult compareResult,
+    required String storePath,
+    required LocalStoreSnapshot localSnapshot,
+    required StoreSyncBinding binding,
+    required StoreManifest? remoteManifest,
+    required bool lockBeforeDownload,
+    void Function(SnapshotSyncProgress progress)? emitProgress,
+  }) async {
+    switch (compareResult) {
+      case StoreVersionCompareResult.same:
+        return SnapshotSyncResult(
+          type: SnapshotSyncResultType.noChanges,
+          localManifest: localSnapshot.storeManifest,
+          remoteManifest: remoteManifest,
+        );
+      case StoreVersionCompareResult.remoteMissing:
+      case StoreVersionCompareResult.localNewer:
+        return _uploadLocalSyncResult(
+          storePath: storePath,
+          localSnapshot: localSnapshot,
+          binding: binding,
+          remoteManifest: remoteManifest,
+          emitProgress: emitProgress,
+        );
+      case StoreVersionCompareResult.remoteNewer:
+        return _downloadSyncResult(
+          storePath: storePath,
+          binding: binding,
+          lockBeforeDownload: lockBeforeDownload,
+          emitProgress: emitProgress,
+        );
+      case StoreVersionCompareResult.conflict:
+        if (remoteManifest == null) {
+          throw StateError(
+            'Remote manifest is required to build a conflict result.',
+          );
+        }
+        return SnapshotSyncResult(
+          type: SnapshotSyncResultType.conflict,
+          localManifest: localSnapshot.storeManifest,
+          remoteManifest: remoteManifest,
+          conflict: SnapshotSyncConflict(
+            localManifest: localSnapshot.storeManifest,
+            remoteManifest: remoteManifest,
+          ),
+        );
+      case StoreVersionCompareResult.differentStore:
+        throw StateError(
+          'Cannot sync different stores: local=${localSnapshot.storeManifest.storeUuid}, '
+          'remote=${remoteManifest?.storeUuid ?? 'unknown'}.',
+        );
+    }
+  }
+
+  Future<SnapshotSyncResult> _uploadLocalSyncResult({
+    required String storePath,
+    required LocalStoreSnapshot localSnapshot,
+    required StoreSyncBinding binding,
+    required StoreManifest? remoteManifest,
+    void Function(SnapshotSyncProgress progress)? emitProgress,
+  }) async {
+    final uploadedManifest = await _uploadLocalSnapshot(
+      storePath: storePath,
+      localSnapshot: localSnapshot,
+      binding: binding,
+      remoteManifest: remoteManifest,
+      emitProgress: emitProgress,
+    );
+    return SnapshotSyncResult(
+      type: SnapshotSyncResultType.uploaded,
+      localManifest: uploadedManifest,
+      remoteManifest: uploadedManifest,
+    );
+  }
+
+  Future<SnapshotSyncResult> _downloadSyncResult({
+    required String storePath,
+    required StoreSyncBinding binding,
+    required bool lockBeforeDownload,
+    void Function(SnapshotSyncProgress progress)? emitProgress,
+  }) async {
     final downloadedManifest = await downloadRemoteSnapshot(
       storePath: storePath,
       binding: binding,
       lockBeforeApply: lockBeforeDownload,
+      emitProgress: emitProgress,
     );
     return SnapshotSyncResult(
       type: SnapshotSyncResultType.downloaded,
@@ -224,39 +308,142 @@ class SnapshotSyncService {
     );
   }
 
+  Future<SnapshotSyncResult> resolveConflict({
+    required String storePath,
+    required StoreInfoDto storeInfo,
+    required StoreSyncBinding binding,
+    required SnapshotConflictResolution resolution,
+    bool lockBeforeDownload = false,
+  }) {
+    return _awaitProgressResult(
+      resolveConflictWithProgress(
+        storePath: storePath,
+        storeInfo: storeInfo,
+        binding: binding,
+        resolution: resolution,
+        lockBeforeDownload: lockBeforeDownload,
+      ),
+    );
+  }
+
+  Stream<SnapshotSyncProgressEvent> resolveConflictWithProgress({
+    required String storePath,
+    required StoreInfoDto storeInfo,
+    required StoreSyncBinding binding,
+    required SnapshotConflictResolution resolution,
+    bool lockBeforeDownload = false,
+  }) {
+    return _runProgressStream((emitProgress) async {
+      if (resolution == SnapshotConflictResolution.uploadLocal) {
+        emitProgress(_preparingLocalSnapshotProgress());
+        final localSnapshot = await _buildLocalSnapshot(
+          storePath: storePath,
+          storeInfo: storeInfo,
+        );
+
+        emitProgress(_checkingRemoteVersionProgress());
+        final remoteManifest = await _repository.readRemoteStoreManifest(
+          binding.tokenId,
+          storeUuid: localSnapshot.storeManifest.storeUuid,
+        );
+        return _uploadLocalSyncResult(
+          storePath: storePath,
+          localSnapshot: localSnapshot,
+          binding: binding,
+          remoteManifest: remoteManifest,
+          emitProgress: emitProgress,
+        );
+      }
+
+      emitProgress(_preparingLocalSnapshotProgress());
+      emitProgress(_checkingRemoteVersionProgress());
+      return _downloadSyncResult(
+        storePath: storePath,
+        binding: binding,
+        lockBeforeDownload: lockBeforeDownload,
+        emitProgress: emitProgress,
+      );
+    });
+  }
+
   Future<StoreManifest> downloadRemoteSnapshot({
     required String storePath,
     required StoreSyncBinding binding,
     required bool lockBeforeApply,
+    void Function(SnapshotSyncProgress progress)? emitProgress,
   }) async {
-    final remoteManifest = await _repository.readRemoteStoreManifest(
-      binding.tokenId,
+    return _downloadStoreToLocal(
+      tokenId: binding.tokenId,
       storeUuid: binding.storeUuid,
+      storePath: storePath,
+      syncProvider: binding.provider,
+      updateSyncMetadata: true,
+      emitProgress: emitProgress,
     );
-    if (remoteManifest == null) {
-      throw StateError(
-        'Remote manifest was not found for ${binding.storeUuid}.',
-      );
-    }
+  }
 
+  Future<StoreManifest> _downloadStoreToLocal({
+    required String tokenId,
+    required String storeUuid,
+    required String storePath,
+    required bool updateSyncMetadata,
+    CloudSyncProvider? syncProvider,
+    StoreManifest? remoteManifest,
+    void Function(SnapshotSyncProgress progress)? emitProgress,
+  }) async {
+    final requiredRemoteManifest =
+        remoteManifest ??
+        await _requireRemoteStoreManifest(tokenId, storeUuid: storeUuid);
+    final remoteLayout = await _repository.ensureRemoteStoreLayout(
+      tokenId,
+      storeUuid,
+    );
+
+    emitProgress?.call(
+      _primaryTransferProgress(
+        direction: SnapshotSyncTransferDirection.download,
+      ),
+    );
     await _repository.downloadRemoteStoreFiles(
-      binding.tokenId,
-      storeUuid: binding.storeUuid,
+      tokenId,
+      storeUuid: storeUuid,
       localStorePath: storePath,
+      layout: remoteLayout,
+      onProgress: (progress) {
+        emitProgress?.call(
+          _primaryTransferProgress(
+            direction: SnapshotSyncTransferDirection.download,
+            transferProgress: progress,
+          ),
+        );
+      },
     );
 
     final remoteAttachments = await _repository.readRemoteAttachmentsManifest(
-      binding.tokenId,
-      storeUuid: binding.storeUuid,
+      tokenId,
+      storeUuid: storeUuid,
+      layout: remoteLayout,
+    );
+    emitProgress?.call(
+      _attachmentsProgress(direction: SnapshotSyncTransferDirection.download),
     );
     if (remoteAttachments != null) {
       await _repository.reconcileAttachmentsDownload(
-        binding.tokenId,
-        storeUuid: binding.storeUuid,
+        tokenId,
+        storeUuid: storeUuid,
         localAttachmentsDir: Directory(
           _storageService.getAttachmentsPath(storePath),
         ),
         remoteManifest: remoteAttachments,
+        layout: remoteLayout,
+        onProgress: (progress) {
+          emitProgress?.call(
+            _attachmentsProgress(
+              direction: SnapshotSyncTransferDirection.download,
+              transferProgress: progress,
+            ),
+          );
+        },
       );
       await AttachmentsManifestFileService.writeTo(
         storePath,
@@ -264,24 +451,25 @@ class SnapshotSyncService {
       );
     }
 
-    await StoreManifestService.writeTo(
-      storePath,
-      remoteManifest.copyWith(
-        sync: (remoteManifest.sync ?? const StoreManifestSyncMetadata())
-            .copyWith(
-              provider: binding.provider,
-              syncedAt: DateTime.now().toUtc(),
-            ),
-      ),
-    );
-
-    return remoteManifest;
+    emitProgress?.call(_metadataProgress());
+    final appliedManifest = updateSyncMetadata
+        ? requiredRemoteManifest.copyWith(
+            sync:
+                (requiredRemoteManifest.sync ??
+                        const StoreManifestSyncMetadata())
+                    .copyWith(
+                      provider: syncProvider,
+                      syncedAt: DateTime.now().toUtc(),
+                    ),
+          )
+        : requiredRemoteManifest;
+    await StoreManifestService.writeTo(storePath, appliedManifest);
+    return appliedManifest;
   }
 
-  Future<ImportedRemoteStoreResult> importRemoteStoreToLocal({
-    required String tokenId,
+  Future<StoreManifest> _requireRemoteStoreManifest(
+    String tokenId, {
     required String storeUuid,
-    required String baseStoragePath,
   }) async {
     final remoteManifest = await _repository.readRemoteStoreManifest(
       tokenId,
@@ -290,7 +478,18 @@ class SnapshotSyncService {
     if (remoteManifest == null) {
       throw StateError('Remote store manifest was not found for $storeUuid.');
     }
+    return remoteManifest;
+  }
 
+  Future<ImportedRemoteStoreResult> importRemoteStoreToLocal({
+    required String tokenId,
+    required String storeUuid,
+    required String baseStoragePath,
+  }) async {
+    final remoteManifest = await _requireRemoteStoreManifest(
+      tokenId,
+      storeUuid: storeUuid,
+    );
     final preferredName = remoteManifest.storeName.trim().isEmpty
         ? storeUuid
         : remoteManifest.storeName.trim();
@@ -301,33 +500,13 @@ class SnapshotSyncService {
     final storagePath = prepared.storageDir.path;
 
     try {
-      await _repository.downloadRemoteStoreFiles(
-        tokenId,
+      final downloadedManifest = await _downloadStoreToLocal(
+        tokenId: tokenId,
         storeUuid: storeUuid,
-        localStorePath: storagePath,
+        storePath: storagePath,
+        updateSyncMetadata: false,
+        remoteManifest: remoteManifest,
       );
-
-      final remoteAttachments = await _repository.readRemoteAttachmentsManifest(
-        tokenId,
-        storeUuid: storeUuid,
-      );
-      if (remoteAttachments != null) {
-        await _repository.reconcileAttachmentsDownload(
-          tokenId,
-          storeUuid: storeUuid,
-          localAttachmentsDir: Directory(
-            _storageService.getAttachmentsPath(storagePath),
-          ),
-          remoteManifest: remoteAttachments,
-        );
-        await AttachmentsManifestFileService.writeTo(
-          storagePath,
-          remoteAttachments,
-        );
-      }
-
-      await StoreManifestService.writeTo(storagePath, remoteManifest);
-
       final dbFilePath =
           await _storageService.findDatabaseFile(storagePath) ??
           _storageService.getDatabaseFilePath(
@@ -344,7 +523,7 @@ class SnapshotSyncService {
         storagePath: storagePath,
         normalizedName: prepared.normalizedName,
         dbFilePath: dbFilePath,
-        remoteManifest: remoteManifest,
+        remoteManifest: downloadedManifest,
         tokenId: tokenId,
         storeUuid: storeUuid,
       );
@@ -360,16 +539,36 @@ class SnapshotSyncService {
     required StoreManifest local,
     required StoreManifest? remote,
   }) {
-    return _compareManifests(local: local, remote: remote);
+    return compareStoreManifests(local: local, remote: remote);
   }
 
   Future<StoreManifest> _uploadLocalSnapshot({
     required String storePath,
-    required StoreInfoDto storeInfo,
     required LocalStoreSnapshot localSnapshot,
     required StoreSyncBinding binding,
     required StoreManifest? remoteManifest,
+    void Function(SnapshotSyncProgress progress)? emitProgress,
   }) async {
+    emitProgress?.call(
+      _primaryTransferProgress(direction: SnapshotSyncTransferDirection.upload),
+    );
+    final remoteLayout = await _repository.ensureRemoteStoreLayout(
+      binding.tokenId,
+      localSnapshot.storeManifest.storeUuid,
+    );
+    final metadataReads = await Future.wait<Object?>(<Future<Object?>>[
+      _repository.readRemoteAttachmentsManifest(
+        binding.tokenId,
+        storeUuid: localSnapshot.storeManifest.storeUuid,
+        layout: remoteLayout,
+      ),
+      _repository.readCloudManifest(binding.tokenId),
+    ]);
+    final remoteAttachmentsManifest =
+        metadataReads.first as AttachmentsManifest?;
+    final cloudManifest =
+        metadataReads.last as CloudManifest? ?? CloudManifest.empty();
+
     final updatedSyncMetadata =
         (localSnapshot.storeManifest.sync ?? const StoreManifestSyncMetadata())
             .copyWith(
@@ -387,6 +586,18 @@ class SnapshotSyncService {
       storeUuid: manifestToUpload.storeUuid,
       dbFile: localSnapshot.dbFile,
       keyFile: localSnapshot.keyFile,
+      layout: remoteLayout,
+      onProgress: (progress) {
+        emitProgress?.call(
+          _primaryTransferProgress(
+            direction: SnapshotSyncTransferDirection.upload,
+            transferProgress: progress,
+          ),
+        );
+      },
+    );
+    emitProgress?.call(
+      _attachmentsProgress(direction: SnapshotSyncTransferDirection.upload),
     );
     await _repository.reconcileAttachmentsUpload(
       binding.tokenId,
@@ -395,30 +606,32 @@ class SnapshotSyncService {
         _storageService.getAttachmentsPath(storePath),
       ),
       localManifest: localSnapshot.attachmentsManifest,
-      remoteManifest: await _repository.readRemoteAttachmentsManifest(
-        binding.tokenId,
-        storeUuid: manifestToUpload.storeUuid,
-      ),
+      remoteManifest: remoteAttachmentsManifest,
+      layout: remoteLayout,
+      onProgress: (progress) {
+        emitProgress?.call(
+          _attachmentsProgress(
+            direction: SnapshotSyncTransferDirection.upload,
+            transferProgress: progress,
+          ),
+        );
+      },
     );
+    emitProgress?.call(_metadataProgress());
     await _repository.uploadAttachmentsManifest(
       binding.tokenId,
       storeUuid: manifestToUpload.storeUuid,
       manifest: localSnapshot.attachmentsManifest,
+      layout: remoteLayout,
     );
     await _repository.uploadStoreManifest(
       binding.tokenId,
       storeUuid: manifestToUpload.storeUuid,
       manifest: manifestToUpload,
+      layout: remoteLayout,
     );
 
-    final remoteLayout = await _repository.ensureRemoteStoreLayout(
-      binding.tokenId,
-      manifestToUpload.storeUuid,
-    );
     final manifestHash = _hashService.sha256ForJson(manifestToUpload.toJson());
-    final cloudManifest =
-        (await _repository.readCloudManifest(binding.tokenId)) ??
-        CloudManifest.empty();
     final updatedCloudManifest = CloudManifest(
       version: cloudManifest.version,
       updatedAt: DateTime.now().toUtc(),
@@ -448,6 +661,134 @@ class SnapshotSyncService {
     return persistedLocalManifest;
   }
 
+  Future<SnapshotSyncResult> _awaitProgressResult(
+    Stream<SnapshotSyncProgressEvent> stream,
+  ) async {
+    await for (final event in stream) {
+      if (event is SnapshotSyncProgressResult) {
+        return event.result;
+      }
+    }
+    throw StateError('Snapshot sync stream completed without a result.');
+  }
+
+  Stream<SnapshotSyncProgressEvent> _runProgressStream(
+    Future<SnapshotSyncResult> Function(
+      void Function(SnapshotSyncProgress progress) emitProgress,
+    )
+    runner,
+  ) {
+    final controller = StreamController<SnapshotSyncProgressEvent>();
+    unawaited(() async {
+      try {
+        final result = await runner((progress) {
+          if (!controller.isClosed) {
+            controller.add(SnapshotSyncProgressUpdate(progress));
+          }
+        });
+        if (!controller.isClosed) {
+          controller.add(
+            SnapshotSyncProgressUpdate(_completedProgress(result)),
+          );
+          controller.add(SnapshotSyncProgressResult(result));
+        }
+      } catch (error, stackTrace) {
+        if (!controller.isClosed) {
+          controller.addError(error, stackTrace);
+        }
+      } finally {
+        await controller.close();
+      }
+    }());
+    return controller.stream;
+  }
+
+  SnapshotSyncProgress _preparingLocalSnapshotProgress() {
+    return const SnapshotSyncProgress(
+      stage: SnapshotSyncStage.preparingLocalSnapshot,
+      stepIndex: 1,
+      totalSteps: _totalProgressSteps,
+      title: 'Подготовка локального снимка',
+      description: 'Собираем локальный snapshot и обновляем manifest-файлы.',
+    );
+  }
+
+  SnapshotSyncProgress _checkingRemoteVersionProgress() {
+    return const SnapshotSyncProgress(
+      stage: SnapshotSyncStage.checkingRemoteVersion,
+      stepIndex: 2,
+      totalSteps: _totalProgressSteps,
+      title: 'Проверка облачной версии',
+      description: 'Читаем удалённый manifest и сравниваем версии.',
+    );
+  }
+
+  SnapshotSyncProgress _primaryTransferProgress({
+    required SnapshotSyncTransferDirection direction,
+    SnapshotSyncTransferProgress? transferProgress,
+  }) {
+    return SnapshotSyncProgress(
+      stage: SnapshotSyncStage.transferringPrimaryFiles,
+      stepIndex: 3,
+      totalSteps: _totalProgressSteps,
+      title: direction == SnapshotSyncTransferDirection.upload
+          ? 'Загрузка в облако'
+          : 'Скачивание из облака',
+      description: direction == SnapshotSyncTransferDirection.upload
+          ? 'Передаём базу данных и ключ шифрования.'
+          : 'Скачиваем основные файлы хранилища.',
+      transferProgress: transferProgress,
+    );
+  }
+
+  SnapshotSyncProgress _attachmentsProgress({
+    required SnapshotSyncTransferDirection direction,
+    SnapshotSyncTransferProgress? transferProgress,
+  }) {
+    return SnapshotSyncProgress(
+      stage: SnapshotSyncStage.syncingAttachments,
+      stepIndex: 4,
+      totalSteps: _totalProgressSteps,
+      title: 'Синхронизация вложений',
+      description: direction == SnapshotSyncTransferDirection.upload
+          ? 'Загружаем изменённые вложения и удаляем устаревшие remote-файлы.'
+          : 'Скачиваем вложения и удаляем лишние локальные файлы.',
+      transferProgress: transferProgress,
+    );
+  }
+
+  SnapshotSyncProgress _metadataProgress() {
+    return const SnapshotSyncProgress(
+      stage: SnapshotSyncStage.updatingMetadata,
+      stepIndex: 5,
+      totalSteps: _totalProgressSteps,
+      title: 'Обновление метаданных',
+      description:
+          'Сохраняем manifest-файлы и обновляем сведения о snapshot в облаке.',
+    );
+  }
+
+  SnapshotSyncProgress _completedProgress(SnapshotSyncResult result) {
+    final description = switch (result.type) {
+      SnapshotSyncResultType.uploaded =>
+        'Локальная snapshot-версия загружена в облако.',
+      SnapshotSyncResultType.downloaded =>
+        'Удалённая snapshot-версия применена локально.',
+      SnapshotSyncResultType.noChanges =>
+        'Локальная и удалённая версии уже совпадают.',
+      SnapshotSyncResultType.conflict => 'Обнаружен конфликт версий.',
+      SnapshotSyncResultType.idle => 'Операция завершена.',
+    };
+
+    return SnapshotSyncProgress(
+      stage: SnapshotSyncStage.completed,
+      stepIndex: _totalProgressSteps,
+      totalSteps: _totalProgressSteps,
+      title: 'Завершено',
+      description: description,
+    );
+  }
+
   List<CloudManifestStoreEntry> _upsertCloudEntry(
     List<CloudManifestStoreEntry> entries,
     CloudManifestStoreEntry next,
@@ -467,31 +808,6 @@ class SnapshotSyncService {
     }
     updated.sort((left, right) => left.storeUuid.compareTo(right.storeUuid));
     return updated;
-  }
-
-  StoreVersionCompareResult _compareManifests({
-    required StoreManifest local,
-    required StoreManifest? remote,
-  }) {
-    if (remote == null) {
-      return StoreVersionCompareResult.remoteMissing;
-    }
-    if (local.storeUuid != remote.storeUuid) {
-      return StoreVersionCompareResult.differentStore;
-    }
-    if (local.revision > remote.revision) {
-      return StoreVersionCompareResult.localNewer;
-    }
-    if (remote.revision > local.revision) {
-      return StoreVersionCompareResult.remoteNewer;
-    }
-    if (local.snapshotId.isNotEmpty && local.snapshotId == remote.snapshotId) {
-      return StoreVersionCompareResult.same;
-    }
-    if (local.isSameContent(remote)) {
-      return StoreVersionCompareResult.same;
-    }
-    return StoreVersionCompareResult.conflict;
   }
 
   bool _isRecoverableStatusLoadError(CloudStorageException error) {

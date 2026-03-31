@@ -8,6 +8,7 @@ import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_pr
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/snapshot_sync_progress_card.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
@@ -265,6 +266,10 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (status.isSyncInProgress && status.syncProgress != null) ...[
+          SnapshotSyncProgressCard(progress: status.syncProgress!),
+          const SizedBox(height: 12),
+        ],
         _StepCard(
           step: 'Подключено',
           title: 'Хранилище привязано к облаку',
@@ -282,7 +287,8 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
                     label: 'Обновить статус',
                     type: SmoothButtonType.outlined,
                     loading: _pendingActionKey == 'refreshStatus',
-                    onPressed: _pendingActionKey != null
+                    onPressed:
+                        _pendingActionKey != null || status.isSyncInProgress
                         ? null
                         : () => _runAction(
                             'refreshStatus',
@@ -319,7 +325,8 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
                     type: SmoothButtonType.outlined,
                     variant: SmoothButtonVariant.warning,
                     loading: _pendingActionKey == 'disconnect',
-                    onPressed: _pendingActionKey != null
+                    onPressed:
+                        _pendingActionKey != null || status.isSyncInProgress
                         ? null
                         : () => _runAction(
                             'disconnect',
@@ -347,11 +354,12 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
 
   Widget? _buildPrimaryAction(StoreSyncStatus status) {
     final notifier = ref.read(currentStoreSyncProvider.notifier);
+    final isBusy = _pendingActionKey != null || status.isSyncInProgress;
     if (status.remoteCheckSkippedOffline) {
       return SmoothButton(
         label: 'Проверить snapshot сейчас',
         loading: _pendingActionKey == 'refreshStatus',
-        onPressed: _pendingActionKey != null
+        onPressed: isBusy
             ? null
             : () => _runAction('refreshStatus', () => notifier.loadStatus()),
       );
@@ -361,21 +369,21 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
       StoreVersionCompareResult.localNewer => SmoothButton(
         label: 'Загрузить локальную версию в облако',
         loading: _pendingActionKey == 'sync',
-        onPressed: _pendingActionKey != null
+        onPressed: isBusy
             ? null
             : () => _runAction('sync', () => notifier.syncNow()),
       ),
       StoreVersionCompareResult.same => SmoothButton(
         label: 'Проверить синхронизацию сейчас',
         loading: _pendingActionKey == 'sync',
-        onPressed: _pendingActionKey != null
+        onPressed: isBusy
             ? null
             : () => _runAction('sync', () => notifier.syncNow()),
       ),
       StoreVersionCompareResult.remoteNewer => SmoothButton(
         label: 'Скачать удалённую версию',
         loading: _pendingActionKey == 'downloadRemote',
-        onPressed: _pendingActionKey != null
+        onPressed: isBusy
             ? null
             : () => _runAction(
                 'downloadRemote',
@@ -389,7 +397,7 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
           SmoothButton(
             label: 'Оставить локальную версию',
             loading: _pendingActionKey == 'uploadConflict',
-            onPressed: _pendingActionKey != null
+            onPressed: isBusy
                 ? null
                 : () => _runAction(
                     'uploadConflict',
@@ -400,7 +408,7 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
             label: 'Принять удалённую версию',
             type: SmoothButtonType.outlined,
             loading: _pendingActionKey == 'downloadConflict',
-            onPressed: _pendingActionKey != null
+            onPressed: isBusy
                 ? null
                 : () => _runAction(
                     'downloadConflict',

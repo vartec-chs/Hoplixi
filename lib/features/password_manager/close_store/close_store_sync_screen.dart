@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/snapshot_sync_progress_card.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 
 class CloseStoreSyncScreen extends ConsumerWidget {
@@ -8,13 +10,16 @@ class CloseStoreSyncScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dbState = ref.watch(mainStoreProvider).value;
+    final syncStatus = ref.watch(currentStoreSyncProvider).value;
+    final syncProgress = syncStatus?.syncProgress;
+    final requiresUnlockToApply = syncStatus?.requiresUnlockToApply ?? false;
     final theme = Theme.of(context);
 
     return PopScope(
       canPop: false,
       child: Scaffold(
         body: Center(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
@@ -37,7 +42,9 @@ class CloseStoreSyncScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Идёт синхронизация изменений перед закрытием. Это окно закроется автоматически.',
+                    requiresUnlockToApply
+                        ? 'Удалённый snapshot уже применён локально. Экран закроется автоматически после завершения сценария закрытия.'
+                        : 'Идёт синхронизация изменений перед закрытием. Это окно закроется автоматически.',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -67,7 +74,12 @@ class CloseStoreSyncScreen extends ConsumerWidget {
                     ),
                   ],
                   const SizedBox(height: 28),
-                  const Center(child: CircularProgressIndicator()),
+                  if (syncProgress != null)
+                    SnapshotSyncProgressCard(progress: syncProgress)
+                  else if (requiresUnlockToApply)
+                    const SnapshotSyncPendingApplyCard()
+                  else
+                    const Center(child: CircularProgressIndicator()),
                 ],
               ),
             ),

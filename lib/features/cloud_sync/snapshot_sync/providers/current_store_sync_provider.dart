@@ -170,52 +170,57 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
         clearPendingConflict: true,
         requiresUnlockToApply: false,
         isApplyingRemoteUpdate: true,
+        syncProgress: _initialDownloadProgress(),
+        isSyncInProgress: true,
       );
       state = AsyncData(downloadInProgressState);
       try {
         await ref
             .read(mainStoreProvider.notifier)
             .lockStore(skipSnapshotSync: true);
-        final result = await syncService.resolveConflict(
-          storePath: storePath,
-          storeInfo: storeInfo,
-          binding: binding,
-          token: token,
-          resolution: SnapshotConflictResolution.downloadRemote,
-          lockBeforeDownload: true,
+        final result = await _consumeProgressStream(
+          baseState: downloadInProgressState,
+          stream: syncService.resolveConflictWithProgress(
+            storePath: storePath,
+            storeInfo: storeInfo,
+            binding: binding,
+            resolution: SnapshotConflictResolution.downloadRemote,
+            lockBeforeDownload: true,
+          ),
         );
         state = AsyncData(
-          StoreSyncStatus(
-            isStoreOpen: false,
-            storePath: storePath,
-            storeUuid: binding.storeUuid,
-            storeName: current.storeName,
+          _buildLockedDownloadedStatus(
+            current: current,
             binding: binding,
             token: token,
-            localManifest: result.localManifest,
-            remoteManifest: result.remoteManifest,
-            compareResult: StoreVersionCompareResult.same,
-            lastResultType: result.type,
-            requiresUnlockToApply: true,
-            isApplyingRemoteUpdate: false,
+            storePath: storePath,
+            result: result,
           ),
         );
         return;
       } catch (error, stackTrace) {
         state = AsyncData(
-          downloadInProgressState.copyWith(isApplyingRemoteUpdate: false),
+          downloadInProgressState.copyWith(
+            isApplyingRemoteUpdate: false,
+            clearSyncProgress: true,
+            isSyncInProgress: false,
+          ),
         );
         Error.throwWithStackTrace(error, stackTrace);
       }
     }
 
-    state = const AsyncLoading();
-
-    final result = await syncService.sync(
-      storePath: storePath,
-      storeInfo: storeInfo,
-      binding: binding,
-      token: token,
+    final result = await _consumeProgressStream(
+      baseState: current.copyWith(
+        clearPendingConflict: true,
+        clearSyncProgress: true,
+        isSyncInProgress: false,
+      ),
+      stream: syncService.syncWithProgress(
+        storePath: storePath,
+        storeInfo: storeInfo,
+        binding: binding,
+      ),
     );
 
     if (result.type == SnapshotSyncResultType.conflict) {
@@ -226,14 +231,19 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
           pendingConflict: result.conflict,
           compareResult: StoreVersionCompareResult.conflict,
           lastResultType: SnapshotSyncResultType.conflict,
+          clearSyncProgress: true,
+          isSyncInProgress: false,
         ),
       );
       return;
     }
 
-    await loadStatus();
-    final refreshed = await future;
-    state = AsyncData(refreshed.copyWith(lastResultType: result.type));
+    state = AsyncData(
+      await _reloadStatusWithoutLoading(
+        lastResultType: result.type,
+        clearPendingConflict: true,
+      ),
+    );
   }
 
   Future<void> resolveConflictWithUpload() async {
@@ -264,97 +274,148 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     );
     final syncService = ref.read(snapshotSyncServiceProvider);
 
-    var requiresUnlock = false;
-    if (resolution == SnapshotConflictResolution.downloadRemote) {
-      final downloadInProgressState = current.copyWith(
-        isStoreOpen: false,
-        storePath: storePath,
-        storeUuid: binding.storeUuid,
-        binding: binding,
-        token: token,
-        clearPendingConflict: true,
-        requiresUnlockToApply: false,
-        isApplyingRemoteUpdate: true,
-      );
-      state = AsyncData(downloadInProgressState);
+    final requiresUnlock =
+        resolution == SnapshotConflictResolution.downloadRemote;
+    final progressBaseState = requiresUnlock
+        ? current.copyWith(
+            isStoreOpen: false,
+            storePath: storePath,
+            storeUuid: binding.storeUuid,
+            binding: binding,
+            token: token,
+            clearPendingConflict: true,
+            requiresUnlockToApply: false,
+            isApplyingRemoteUpdate: true,
+            syncProgress: _initialDownloadProgress(),
+            isSyncInProgress: true,
+          )
+        : current.copyWith(
+            clearPendingConflict: true,
+            clearSyncProgress: true,
+            isSyncInProgress: false,
+          );
+    if (requiresUnlock) {
+      state = AsyncData(progressBaseState);
       try {
         await ref
             .read(mainStoreProvider.notifier)
             .lockStore(skipSnapshotSync: true);
       } catch (error, stackTrace) {
         state = AsyncData(
-          downloadInProgressState.copyWith(isApplyingRemoteUpdate: false),
+          progressBaseState.copyWith(
+            isApplyingRemoteUpdate: false,
+            clearSyncProgress: true,
+            isSyncInProgress: false,
+          ),
         );
         Error.throwWithStackTrace(error, stackTrace);
       }
-      requiresUnlock = true;
-    } else {
-      state = const AsyncLoading();
     }
 
-    final result = requiresUnlock
-        ? await (() async {
-            try {
-              return await syncService.resolveConflict(
-                storePath: storePath,
-                storeInfo: storeInfo,
-                binding: binding,
-                token: token,
-                resolution: resolution,
-                lockBeforeDownload: true,
-              );
-            } catch (error, stackTrace) {
-              state = AsyncData(
-                current.copyWith(
-                  isStoreOpen: false,
-                  storePath: storePath,
-                  storeUuid: binding.storeUuid,
-                  binding: binding,
-                  token: token,
-                  clearPendingConflict: true,
-                  requiresUnlockToApply: false,
-                  isApplyingRemoteUpdate: false,
-                ),
-              );
-              Error.throwWithStackTrace(error, stackTrace);
-            }
-          })()
-        : await syncService.resolveConflict(
-            storePath: storePath,
-            storeInfo: storeInfo,
-            binding: binding,
-            token: token,
-            resolution: resolution,
-            lockBeforeDownload: false,
-          );
+    final result = await _consumeProgressStream(
+      baseState: progressBaseState,
+      stream: syncService.resolveConflictWithProgress(
+        storePath: storePath,
+        storeInfo: storeInfo,
+        binding: binding,
+        resolution: resolution,
+        lockBeforeDownload: requiresUnlock,
+      ),
+    );
 
     if (requiresUnlock) {
       state = AsyncData(
-        StoreSyncStatus(
-          isStoreOpen: false,
-          storePath: storePath,
-          storeUuid: binding.storeUuid,
-          storeName: current.storeName,
+        _buildLockedDownloadedStatus(
+          current: current,
           binding: binding,
           token: token,
-          localManifest: result.localManifest,
-          remoteManifest: result.remoteManifest,
-          compareResult: StoreVersionCompareResult.same,
-          lastResultType: result.type,
-          requiresUnlockToApply: true,
-          isApplyingRemoteUpdate: false,
+          storePath: storePath,
+          result: result,
         ),
       );
       return;
     }
 
-    await loadStatus();
-    final refreshed = await future;
     state = AsyncData(
-      refreshed.copyWith(
+      await _reloadStatusWithoutLoading(
         lastResultType: result.type,
         clearPendingConflict: true,
       ),
+    );
+  }
+
+  Future<SnapshotSyncResult> _consumeProgressStream({
+    required StoreSyncStatus baseState,
+    required Stream<SnapshotSyncProgressEvent> stream,
+  }) async {
+    SnapshotSyncResult? result;
+    await for (final event in stream) {
+      if (event is SnapshotSyncProgressUpdate) {
+        state = AsyncData(
+          baseState.copyWith(
+            syncProgress: event.progress,
+            isSyncInProgress: true,
+          ),
+        );
+        continue;
+      }
+      if (event is SnapshotSyncProgressResult) {
+        result = event.result;
+      }
+    }
+
+    if (result == null) {
+      throw StateError('Snapshot sync stream completed without a result.');
+    }
+    return result;
+  }
+
+  Future<StoreSyncStatus> _reloadStatusWithoutLoading({
+    required SnapshotSyncResultType lastResultType,
+    bool clearPendingConflict = false,
+  }) async {
+    final storeState = await ref.read(mainStoreProvider.future);
+    final refreshed = await _loadCurrentStatus(storeState, useWatch: false);
+    return refreshed.copyWith(
+      lastResultType: lastResultType,
+      clearPendingConflict: clearPendingConflict,
+      clearSyncProgress: true,
+      isSyncInProgress: false,
+      isApplyingRemoteUpdate: false,
+    );
+  }
+
+  StoreSyncStatus _buildLockedDownloadedStatus({
+    required StoreSyncStatus current,
+    required StoreSyncBinding binding,
+    required AuthTokenEntry token,
+    required String storePath,
+    required SnapshotSyncResult result,
+  }) {
+    return StoreSyncStatus(
+      isStoreOpen: false,
+      storePath: storePath,
+      storeUuid: binding.storeUuid,
+      storeName: current.storeName,
+      binding: binding,
+      token: token,
+      localManifest: result.localManifest,
+      remoteManifest: result.remoteManifest,
+      compareResult: StoreVersionCompareResult.same,
+      lastResultType: result.type,
+      requiresUnlockToApply: true,
+      isApplyingRemoteUpdate: false,
+      isSyncInProgress: false,
+    );
+  }
+
+  SnapshotSyncProgress _initialDownloadProgress() {
+    return const SnapshotSyncProgress(
+      stage: SnapshotSyncStage.preparingLocalSnapshot,
+      stepIndex: 1,
+      totalSteps: 6,
+      title: 'Подготовка локального снимка',
+      description: 'Подготавливаем применение удалённого snapshot.',
     );
   }
 

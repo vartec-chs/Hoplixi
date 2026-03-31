@@ -688,7 +688,6 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
             storePath: storePath,
             storeInfo: storeInfo,
             binding: binding,
-            token: token,
           );
           logInfo(
             'Snapshot sync before close completed.',
