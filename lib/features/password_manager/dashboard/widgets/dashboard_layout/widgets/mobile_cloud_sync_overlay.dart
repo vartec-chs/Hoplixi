@@ -46,13 +46,13 @@ class _MobileCloudSyncOverlayState
     return IgnorePointer(
       ignoring: true,
       child: AnimatedSlide(
-        offset: visible ? Offset.zero : const Offset(0, -0.3),
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
+        offset: visible ? Offset.zero : const Offset(0, -0.2),
+        duration: const Duration(milliseconds: 340),
+        curve: Curves.easeInOutCubic,
         child: AnimatedOpacity(
           opacity: visible ? 1 : 0,
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeInOut,
           child: Padding(
             padding: EdgeInsets.fromLTRB(12, systemPadding.top + 12, 12, 0),
             child: Align(
@@ -66,6 +66,7 @@ class _MobileCloudSyncOverlayState
                   ).colorScheme.surface.withOpacity(0.96),
                   borderRadius: BorderRadius.circular(18),
                   child: Container(
+                    width: double.infinity,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 10,
@@ -79,7 +80,7 @@ class _MobileCloudSyncOverlayState
                       ),
                     ),
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                      mainAxisSize: MainAxisSize.max,
                       children: [
                         SizedBox(
                           width: 16,
@@ -130,7 +131,8 @@ class _MobileCloudSyncOverlayState
         currentStoreChanged &&
         status?.binding != null &&
         !(status!.isSyncInProgress && status.syncProgress != null);
-    if (finishedCheckWithBoundStore || swappedToBoundStoreWithoutVisibleLoading) {
+    if (finishedCheckWithBoundStore ||
+        swappedToBoundStoreWithoutVisibleLoading) {
       _showHintTemporarily();
       return;
     }
@@ -183,8 +185,7 @@ class _MobileCloudSyncOverlayState
       return;
     }
 
-    if (status?.binding != null &&
-        (allowEphemeralCheckHint || storeChanged)) {
+    if (status?.binding != null && (allowEphemeralCheckHint || storeChanged)) {
       _showHintTemporarily();
       return;
     }
@@ -218,18 +219,21 @@ class _MobileCloudSyncOverlayState
   }
 
   String? _messageForState(AsyncValue<StoreSyncStatus> syncState) {
-    if (syncState.hasValue) {
-      final status = syncState.requireValue;
-      if (status.isSyncInProgress && status.syncProgress != null) {
-        return '${status.syncProgress!.title} · шаг ${status.syncProgress!.stepIndex} из ${status.syncProgress!.totalSteps}';
-      }
-      if (_showInitialCheckHint && status.binding != null) {
-        return 'Проверяем облачную версию хранилища...';
-      }
-      return null;
+    final status = syncState.hasValue ? syncState.requireValue : null;
+
+    if (status?.isSyncInProgress == true && status?.syncProgress != null) {
+      return '${status!.syncProgress!.title} · шаг ${status.syncProgress!.stepIndex} из ${status.syncProgress!.totalSteps}';
     }
 
-    if (syncState.isLoading || _showInitialCheckHint) {
+    if (syncState.isLoading) {
+      return 'Проверяем облачную версию хранилища...';
+    }
+
+    if (_showInitialCheckHint && status?.binding != null) {
+      return 'Проверяем облачную версию хранилища...';
+    }
+
+    if (_showInitialCheckHint) {
       return 'Проверяем облачную версию хранилища...';
     }
 

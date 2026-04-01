@@ -88,10 +88,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         // Если БД заблокирована, редиректим на экран блокировки
         if (dbState.isLocked) {
           if (currentPath != AppRoutesPaths.lockStore) {
-            await WindowManager.instance.setSize(
-              MainConstants.defaultWindowSize,
-            );
-            await WindowManager.instance.center();
+            if (UniversalPlatform.isDesktop) {
+              await WindowManager.instance.setSize(
+                MainConstants.defaultWindowSize,
+              );
+              await WindowManager.instance.center();
+            }
             return AppRoutesPaths.lockStore;
           }
           return null;

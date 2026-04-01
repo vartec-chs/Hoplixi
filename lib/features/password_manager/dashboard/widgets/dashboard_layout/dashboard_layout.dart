@@ -257,7 +257,6 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
               ),
             ),
           ),
-          const Positioned.fill(child: MobileCloudSyncOverlay()),
         ],
       ),
     );
@@ -370,7 +369,12 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
         ref.watch(dashboardScreenProtectionProvider);
         return child!;
       },
-      child: shell,
+      child: Stack(
+        children: [
+          Positioned.fill(child: shell),
+          const Positioned.fill(child: MobileCloudSyncOverlay()),
+        ],
+      ),
     );
   }
 }
