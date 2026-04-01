@@ -75,8 +75,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         if (dbState.isClosingSync) {
           if (currentPath != AppRoutesPaths.closeStoreSync) {
             if (UniversalPlatform.isDesktop) {
-              WindowManager.instance.setSize(MainConstants.defaultWindowSize);
-              WindowManager.instance.center();
+              await WindowManager.instance.setSize(
+                MainConstants.defaultWindowSize,
+              );
+              await WindowManager.instance.center();
             }
             return AppRoutesPaths.closeStoreSync;
           }
@@ -86,8 +88,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         // Если БД заблокирована, редиректим на экран блокировки
         if (dbState.isLocked) {
           if (currentPath != AppRoutesPaths.lockStore) {
-            WindowManager.instance.setSize(MainConstants.defaultWindowSize);
-            WindowManager.instance.center();
+            await WindowManager.instance.setSize(
+              MainConstants.defaultWindowSize,
+            );
+            await WindowManager.instance.center();
             return AppRoutesPaths.lockStore;
           }
           return null;
@@ -100,8 +104,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 currentPath == AppRoutesPaths.lockStore ||
                 currentPath == AppRoutesPaths.closeStoreSync)) {
           if (UniversalPlatform.isDesktop) {
-            WindowManager.instance.setSize(MainConstants.defaultDashboardSize);
-            WindowManager.instance.center();
+            await WindowManager.instance.setSize(
+              MainConstants.defaultDashboardSize,
+            );
+            await WindowManager.instance.center();
           }
           return AppRoutesPaths.dashboard;
         } else if ((dbState.isClosed || dbState.isIdle) &&
@@ -109,27 +115,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                 currentPath == AppRoutesPaths.lockStore ||
                 currentPath == AppRoutesPaths.closeStoreSync)) {
           if (UniversalPlatform.isDesktop) {
-            WindowManager.instance.setSize(MainConstants.defaultWindowSize);
-            WindowManager.instance.center();
+            await WindowManager.instance.setSize(
+              MainConstants.defaultWindowSize,
+            );
+            await WindowManager.instance.center();
           }
           return AppRoutesPaths.home;
         }
       }
-
-      // final localSendRouteState = ref.read(localSendRouteStateProvider);
-      // final isLocalSendRoute = currentPath.startsWith('/localsend');
-
-      // if (isLocalSendRoute &&
-      //     localSendRouteState == LocalSendRouteState.transfer &&
-      //     currentPath != AppRoutesPaths.localSendTransfer) {
-      //   return AppRoutesPaths.localSendTransfer;
-      // }
-
-      // if (currentPath == AppRoutesPaths.localSendTransfer &&
-      //     localSendRouteState == LocalSendRouteState.discovery) {
-      //   return AppRoutesPaths.localSendSend;
-      // }
-
       return null;
     },
   );

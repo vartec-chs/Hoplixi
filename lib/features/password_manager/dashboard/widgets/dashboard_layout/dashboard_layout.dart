@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
@@ -13,6 +13,7 @@ import 'desktop_three_column_layout.dart';
 import 'keyboard_shortcuts.dart';
 import 'widgets/fab_builder.dart';
 import 'widgets/floating_nav_bar.dart';
+import 'widgets/mobile_cloud_sync_overlay.dart';
 
 const List<String> _fullCenterPaths = [AppRoutesPaths.notesGraph];
 
@@ -256,6 +257,7 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
               ),
             ),
           ),
+          const Positioned.fill(child: MobileCloudSyncOverlay()),
         ],
       ),
     );
