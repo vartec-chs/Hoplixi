@@ -142,3 +142,42 @@ extension EntityTypeX on EntityType {
     }
   }
 }
+
+extension VaultItemTypeUiX on VaultItemType {
+  EntityType toEntityType() {
+    switch (this) {
+      case VaultItemType.password:
+        return EntityType.password;
+      case VaultItemType.otp:
+        return EntityType.otp;
+      case VaultItemType.note:
+        return EntityType.note;
+      case VaultItemType.bankCard:
+        return EntityType.bankCard;
+      case VaultItemType.document:
+        return EntityType.document;
+      case VaultItemType.file:
+        return EntityType.file;
+      case VaultItemType.contact:
+        return EntityType.contact;
+      case VaultItemType.apiKey:
+        return EntityType.apiKey;
+      case VaultItemType.sshKey:
+        return EntityType.sshKey;
+      case VaultItemType.certificate:
+        return EntityType.certificate;
+      case VaultItemType.cryptoWallet:
+        return EntityType.cryptoWallet;
+      case VaultItemType.wifi:
+        return EntityType.wifi;
+      case VaultItemType.identity:
+        return EntityType.identity;
+      case VaultItemType.licenseKey:
+        return EntityType.licenseKey;
+      case VaultItemType.recoveryCodes:
+        return EntityType.recoveryCodes;
+      case VaultItemType.loyaltyCard:
+        return EntityType.loyaltyCard;
+    }
+  }
+}

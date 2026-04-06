@@ -157,7 +157,8 @@ const List<String> iconsMetaTouchTriggers = [
   ''',
 ];
 
-/// Триггеры для обновления store_meta при изменениях в таблице note_links.
+/// Триггеры для обновления store_meta при изменениях в таблице
+/// note_links (note -> vault item links).
 const List<String> noteLinksMetaTouchTriggers = [
   '''
     CREATE TRIGGER IF NOT EXISTS touch_meta_on_note_links_insert

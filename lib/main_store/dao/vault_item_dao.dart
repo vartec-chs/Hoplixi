@@ -1,6 +1,9 @@
 import 'dart:math' show exp;
 
 import 'package:drift/drift.dart';
+import 'package:hoplixi/main_store/models/dto/category_dto.dart';
+import 'package:hoplixi/main_store/models/dto/linked_vault_item_card_dto.dart';
+import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/tables/item_tags.dart';
 import 'package:hoplixi/main_store/tables/vault_items.dart';
@@ -135,5 +138,98 @@ class VaultItemDao extends DatabaseAccessor<MainStore>
         ).insert(ItemTagsCompanion.insert(itemId: itemId, tagId: tagId));
       }
     });
+  }
+
+  Future<List<LinkedVaultItemCardDto>> searchLinkableItems({
+    String query = '',
+    String? excludeItemId,
+    int limit = 50,
+  }) async {
+    final normalizedQuery = query.trim().toLowerCase();
+    final itemsQuery = db.select(db.vaultItems).join([
+      leftOuterJoin(
+        db.categories,
+        db.categories.id.equalsExp(db.vaultItems.categoryId),
+      ),
+    ]);
+
+    itemsQuery.where(
+      db.vaultItems.isDeleted.equals(false) &
+          db.vaultItems.isArchived.equals(false) &
+          (excludeItemId != null
+              ? db.vaultItems.id.isNotValue(excludeItemId)
+              : const Constant(true)),
+    );
+
+    if (normalizedQuery.isNotEmpty) {
+      itemsQuery.where(
+        db.vaultItems.name.lower().like('%$normalizedQuery%') |
+            db.vaultItems.description.lower().like('%$normalizedQuery%'),
+      );
+    }
+
+    itemsQuery.orderBy([
+      OrderingTerm.desc(db.vaultItems.isPinned),
+      OrderingTerm.desc(db.vaultItems.modifiedAt),
+    ]);
+    itemsQuery.limit(limit);
+
+    final results = await itemsQuery.get();
+    final itemIds = results
+        .map((row) => row.readTable(db.vaultItems).id)
+        .toList();
+    final tagsMap = await _loadTagsForItems(itemIds);
+
+    return results.map((row) {
+      final item = row.readTable(db.vaultItems);
+      final category = row.readTableOrNull(db.categories);
+
+      return LinkedVaultItemCardDto(
+        id: item.id,
+        title: item.name,
+        description: item.description,
+        vaultItemType: item.type,
+        isFavorite: item.isFavorite,
+        isPinned: item.isPinned,
+        isArchived: item.isArchived,
+        isDeleted: item.isDeleted,
+        usedCount: item.usedCount,
+        modifiedAt: item.modifiedAt,
+        category: category != null
+            ? CategoryInCardDto(
+                id: category.id,
+                name: category.name,
+                type: category.type.name,
+                color: category.color,
+                iconId: category.iconId,
+              )
+            : null,
+        tags: tagsMap[item.id] ?? const <TagInCardDto>[],
+      );
+    }).toList();
+  }
+
+  Future<Map<String, List<TagInCardDto>>> _loadTagsForItems(
+    List<String> itemIds,
+  ) async {
+    if (itemIds.isEmpty) return {};
+
+    final query = db.select(db.itemTags).join([
+      innerJoin(db.tags, db.tags.id.equalsExp(db.itemTags.tagId)),
+    ])..where(db.itemTags.itemId.isIn(itemIds));
+
+    final results = await query.get();
+    final tagsMap = <String, List<TagInCardDto>>{};
+
+    for (final row in results) {
+      final itemTag = row.readTable(db.itemTags);
+      final tag = row.readTable(db.tags);
+
+      tagsMap
+          .putIfAbsent(itemTag.itemId, () => [])
+          .add(TagInCardDto(id: tag.id, name: tag.name, color: tag.color));
+    }
+
+    return tagsMap;
   }
 }

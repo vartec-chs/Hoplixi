@@ -33,7 +33,7 @@ sealed class NoteFormState with _$NoteFormState {
     @Default([]) List<String> tagNames,
     @Default([]) List<CustomFieldEntry> customFields,
 
-    // Связи с другими заметками (отслеживание для синхронизации)
+    // Связи с другими vault items (отслеживание для синхронизации)
     @Default([]) List<String> linkedNoteIds,
 
     // Ошибки валидации

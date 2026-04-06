@@ -3,10 +3,10 @@ import 'package:uuid/uuid.dart';
 
 import 'vault_items.dart';
 
-/// Таблица связей между заметками (many-to-many).
+/// Таблица связей note -> vault item.
 ///
-/// Каждая заметка может ссылаться на множество
-/// других заметок. Теперь ссылается на vault_items.id.
+/// Источник связи всегда заметка, а целевая запись может быть
+/// любым `vault_items` элементом.
 @DataClassName('NoteLinkData')
 class NoteLinks extends Table {
   /// Уникальный идентификатор связи
@@ -17,9 +17,9 @@ class NoteLinks extends Table {
   TextColumn get sourceNoteId =>
       text().references(VaultItems, #id, onDelete: KeyAction.cascade)();
 
-  /// ID целевой заметки (куда ссылка)
-  @ReferenceName('targetNote')
-  TextColumn get targetNoteId =>
+  /// ID целевого vault item (куда ссылка)
+  @ReferenceName('targetVaultItem')
+  TextColumn get targetVaultItemId =>
       text().references(VaultItems, #id, onDelete: KeyAction.cascade)();
 
   /// Дата создания связи
@@ -34,6 +34,6 @@ class NoteLinks extends Table {
 
   @override
   List<Set<Column>> get uniqueKeys => [
-    {sourceNoteId, targetNoteId},
+    {sourceNoteId, targetVaultItemId},
   ];
 }

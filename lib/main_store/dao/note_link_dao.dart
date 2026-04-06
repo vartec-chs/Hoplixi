@@ -2,9 +2,10 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/core/logger/index.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/dto/index.dart';
-import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
+import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_store/models/graph_data.dart';
+import 'package:hoplixi/shared/utils/vault_link_utils.dart';
 import 'package:hoplixi/main_store/tables/categories.dart';
 import 'package:hoplixi/main_store/tables/item_tags.dart';
 import 'package:hoplixi/main_store/tables/note_items.dart';
@@ -50,13 +51,13 @@ class NoteLinkDao extends DatabaseAccessor<MainStore> with _$NoteLinkDaoMixin {
 
     for (final l in linksRows) {
       if (!noteIds.contains(l.sourceNoteId) ||
-          !noteIds.contains(l.targetNoteId)) {
+          !noteIds.contains(l.targetVaultItemId)) {
         continue;
       }
       edges.add(
         EdgeData(
           srcId: l.sourceNoteId,
-          dstId: l.targetNoteId,
+          dstId: l.targetVaultItemId,
           edgeName: 'link',
           ranking: l.createdAt.millisecondsSinceEpoch,
         ),
@@ -66,12 +67,11 @@ class NoteLinkDao extends DatabaseAccessor<MainStore> with _$NoteLinkDaoMixin {
     return GraphData(vertexes: vertexes.toList(), edges: edges.toList());
   }
 
-  /// Создать связь между заметками
-  Future<bool> createLink(String sourceNoteId, String targetNoteId) async {
-    if (sourceNoteId == targetNoteId) {
+  /// Создать связь note -> vault item.
+  Future<bool> createLink(String sourceNoteId, String targetItemId) async {
+    if (sourceNoteId == targetItemId) {
       logWarning(
-        'Попытка создать связь на саму себя: '
-        '$sourceNoteId',
+        'Попытка создать self-link note -> note: $sourceNoteId',
         tag: _logTag,
       );
       return false;
@@ -82,42 +82,36 @@ class NoteLinkDao extends DatabaseAccessor<MainStore> with _$NoteLinkDaoMixin {
         await into(noteLinks).insert(
           NoteLinksCompanion.insert(
             sourceNoteId: sourceNoteId,
-            targetNoteId: targetNoteId,
+            targetVaultItemId: targetItemId,
           ),
         );
-        await _incrementItemUsage(targetNoteId);
-        logInfo(
-          'Создана связь: '
-          '$sourceNoteId -> $targetNoteId',
-          tag: _logTag,
-        );
+        await _incrementItemUsage(targetItemId);
+        logInfo('Создана связь: $sourceNoteId -> $targetItemId', tag: _logTag);
       });
       return true;
     } catch (e) {
       logWarning(
-        'Связь уже существует: '
-        '$sourceNoteId -> $targetNoteId',
+        'Связь уже существует: $sourceNoteId -> $targetItemId',
         tag: _logTag,
       );
       return false;
     }
   }
 
-  /// Удалить связь между заметками
-  Future<bool> deleteLink(String sourceNoteId, String targetNoteId) async {
+  /// Удалить связь note -> vault item.
+  Future<bool> deleteLink(String sourceNoteId, String targetItemId) async {
     return await db.transaction(() async {
       final linkExists =
           await (select(noteLinks)..where(
                 (link) =>
                     link.sourceNoteId.equals(sourceNoteId) &
-                    link.targetNoteId.equals(targetNoteId),
+                    link.targetVaultItemId.equals(targetItemId),
               ))
               .getSingleOrNull();
 
       if (linkExists == null) {
         logWarning(
-          'Попытка удалить несуществующую связь: '
-          '$sourceNoteId -> $targetNoteId',
+          'Попытка удалить несуществующую связь: $sourceNoteId -> $targetItemId',
           tag: _logTag,
         );
         return false;
@@ -127,17 +121,13 @@ class NoteLinkDao extends DatabaseAccessor<MainStore> with _$NoteLinkDaoMixin {
           await (delete(noteLinks)..where(
                 (link) =>
                     link.sourceNoteId.equals(sourceNoteId) &
-                    link.targetNoteId.equals(targetNoteId),
+                    link.targetVaultItemId.equals(targetItemId),
               ))
               .go();
 
       if (rowsAffected > 0) {
-        await _decrementItemUsage(targetNoteId);
-        logInfo(
-          'Удалена связь: '
-          '$sourceNoteId -> $targetNoteId',
-          tag: _logTag,
-        );
+        await _decrementItemUsage(targetItemId);
+        logInfo('Удалена связь: $sourceNoteId -> $targetItemId', tag: _logTag);
         return true;
       }
       return false;
@@ -165,11 +155,9 @@ class NoteLinkDao extends DatabaseAccessor<MainStore> with _$NoteLinkDaoMixin {
       )..where((l) => l.id.equals(linkId))).go();
 
       if (rowsAffected > 0) {
-        await _decrementItemUsage(link.targetNoteId);
+        await _decrementItemUsage(link.targetVaultItemId);
         logInfo(
-          'Удалена связь по ID: '
-          '${link.sourceNoteId} -> '
-          '${link.targetNoteId}',
+          'Удалена связь по ID: ${link.sourceNoteId} -> ${link.targetVaultItemId}',
           tag: _logTag,
         );
         return true;
@@ -178,13 +166,15 @@ class NoteLinkDao extends DatabaseAccessor<MainStore> with _$NoteLinkDaoMixin {
     });
   }
 
-  /// Получить исходящие связи (NoteCardDto)
-  Future<List<NoteCardDto>> getOutgoingLinks(String sourceNoteId) async {
+  /// Получить исходящие связи note -> vault item.
+  Future<List<LinkedVaultItemCardDto>> getOutgoingLinks(
+    String sourceNoteId,
+  ) async {
     final query =
         select(noteLinks).join([
             innerJoin(
               vaultItems,
-              vaultItems.id.equalsExp(noteLinks.targetNoteId),
+              vaultItems.id.equalsExp(noteLinks.targetVaultItemId),
             ),
             leftOuterJoin(
               categories,
@@ -202,35 +192,14 @@ class NoteLinkDao extends DatabaseAccessor<MainStore> with _$NoteLinkDaoMixin {
     final tagsMap = await _loadTagsForItems(targetIds);
 
     return results.map((row) {
-      final item = row.readTable(vaultItems);
-      final category = row.readTableOrNull(categories);
-
-      return NoteCardDto(
-        id: item.id,
-        title: item.name,
-        description: item.description,
-        isFavorite: item.isFavorite,
-        isPinned: item.isPinned,
-        isArchived: item.isArchived,
-        isDeleted: item.isDeleted,
-        usedCount: item.usedCount,
-        modifiedAt: item.modifiedAt,
-        category: category != null
-            ? CategoryInCardDto(
-                id: category.id,
-                name: category.name,
-                type: category.type.name,
-                color: category.color,
-                iconId: category.iconId,
-              )
-            : null,
-        tags: tagsMap[item.id] ?? [],
-      );
+      return _mapLinkedItem(row, tagsMap);
     }).toList();
   }
 
-  /// Получить входящие связи
-  Future<List<NoteCardDto>> getIncomingLinks(String targetNoteId) async {
+  /// Получить входящие связи на vault item.
+  Future<List<LinkedVaultItemCardDto>> getIncomingLinks(
+    String targetItemId,
+  ) async {
     final query =
         select(noteLinks).join([
             innerJoin(
@@ -242,7 +211,7 @@ class NoteLinkDao extends DatabaseAccessor<MainStore> with _$NoteLinkDaoMixin {
               categories.id.equalsExp(vaultItems.categoryId),
             ),
           ])
-          ..where(noteLinks.targetNoteId.equals(targetNoteId))
+          ..where(noteLinks.targetVaultItemId.equals(targetItemId))
           ..orderBy([OrderingTerm.desc(noteLinks.createdAt)]);
 
     final results = await query.get();
@@ -253,30 +222,7 @@ class NoteLinkDao extends DatabaseAccessor<MainStore> with _$NoteLinkDaoMixin {
     final tagsMap = await _loadTagsForItems(sourceIds);
 
     return results.map((row) {
-      final item = row.readTable(vaultItems);
-      final category = row.readTableOrNull(categories);
-
-      return NoteCardDto(
-        id: item.id,
-        title: item.name,
-        description: item.description,
-        isFavorite: item.isFavorite,
-        isPinned: item.isPinned,
-        isArchived: item.isArchived,
-        isDeleted: item.isDeleted,
-        usedCount: item.usedCount,
-        modifiedAt: item.modifiedAt,
-        category: category != null
-            ? CategoryInCardDto(
-                id: category.id,
-                name: category.name,
-                type: category.type.name,
-                color: category.color,
-                iconId: category.iconId,
-              )
-            : null,
-        tags: tagsMap[item.id] ?? [],
-      );
+      return _mapLinkedItem(row, tagsMap);
     }).toList();
   }
 
@@ -290,21 +236,21 @@ class NoteLinkDao extends DatabaseAccessor<MainStore> with _$NoteLinkDaoMixin {
   }
 
   /// Количество входящих связей
-  Future<int> countIncomingLinks(String targetNoteId) async {
+  Future<int> countIncomingLinks(String targetItemId) async {
     final query = selectOnly(noteLinks)
       ..addColumns([noteLinks.id.count()])
-      ..where(noteLinks.targetNoteId.equals(targetNoteId));
+      ..where(noteLinks.targetVaultItemId.equals(targetItemId));
     final result = await query.getSingle();
     return result.read(noteLinks.id.count()) ?? 0;
   }
 
   /// Проверить существование связи
-  Future<bool> linkExists(String sourceNoteId, String targetNoteId) async {
+  Future<bool> linkExists(String sourceNoteId, String targetItemId) async {
     final link =
         await (select(noteLinks)..where(
               (link) =>
                   link.sourceNoteId.equals(sourceNoteId) &
-                  link.targetNoteId.equals(targetNoteId),
+                  link.targetVaultItemId.equals(targetItemId),
             ))
             .getSingleOrNull();
     return link != null;
@@ -331,14 +277,14 @@ class NoteLinkDao extends DatabaseAccessor<MainStore> with _$NoteLinkDaoMixin {
 
       final incomingLinks = await (select(
         noteLinks,
-      )..where((link) => link.targetNoteId.equals(noteId))).get();
+      )..where((link) => link.targetVaultItemId.equals(noteId))).get();
 
       await (delete(
         noteLinks,
       )..where((link) => link.sourceNoteId.equals(noteId))).go();
       await (delete(
         noteLinks,
-      )..where((link) => link.targetNoteId.equals(noteId))).go();
+      )..where((link) => link.targetVaultItemId.equals(noteId))).go();
 
       if (incomingLinks.isNotEmpty) {
         await _decrementItemUsage(noteId, count: incomingLinks.length);
@@ -358,19 +304,19 @@ class NoteLinkDao extends DatabaseAccessor<MainStore> with _$NoteLinkDaoMixin {
     String sourceNoteId,
     String deltaJson,
   ) async {
-    final noteIdPattern = RegExp(r'note://([a-f0-9-]+)');
-    final matches = noteIdPattern.allMatches(deltaJson);
-    final targetNoteIds = matches.map((m) => m.group(1)!).toSet().toList();
+    final targetItemIds = extractLinkedItemIds(
+      deltaJson,
+    ).where((itemId) => itemId != sourceNoteId).toSet().toList();
 
     await db.transaction(() async {
       final existingLinks = await (select(
         noteLinks,
       )..where((link) => link.sourceNoteId.equals(sourceNoteId))).get();
       final existingTargetIds = existingLinks
-          .map((link) => link.targetNoteId)
+          .map((link) => link.targetVaultItemId)
           .toSet();
 
-      final newTargetIds = targetNoteIds.toSet();
+      final newTargetIds = targetItemIds.toSet();
 
       final toDelete = existingTargetIds.difference(newTargetIds);
       if (toDelete.isNotEmpty) {
@@ -380,7 +326,7 @@ class NoteLinkDao extends DatabaseAccessor<MainStore> with _$NoteLinkDaoMixin {
         await (delete(noteLinks)..where(
               (link) =>
                   link.sourceNoteId.equals(sourceNoteId) &
-                  link.targetNoteId.isIn(toDelete),
+                  link.targetVaultItemId.isIn(toDelete),
             ))
             .go();
       }
@@ -456,5 +402,36 @@ class NoteLinkDao extends DatabaseAccessor<MainStore> with _$NoteLinkDaoMixin {
           .add(TagInCardDto(id: tag.id, name: tag.name, color: tag.color));
     }
     return tagsMap;
+  }
+
+  LinkedVaultItemCardDto _mapLinkedItem(
+    TypedResult row,
+    Map<String, List<TagInCardDto>> tagsMap,
+  ) {
+    final item = row.readTable(vaultItems);
+    final category = row.readTableOrNull(categories);
+
+    return LinkedVaultItemCardDto(
+      id: item.id,
+      title: item.name,
+      description: item.description,
+      vaultItemType: item.type,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
+      usedCount: item.usedCount,
+      modifiedAt: item.modifiedAt,
+      category: category != null
+          ? CategoryInCardDto(
+              id: category.id,
+              name: category.name,
+              type: category.type.name,
+              color: category.color,
+              iconId: category.iconId,
+            )
+          : null,
+      tags: tagsMap[item.id] ?? const <TagInCardDto>[],
+    );
   }
 }

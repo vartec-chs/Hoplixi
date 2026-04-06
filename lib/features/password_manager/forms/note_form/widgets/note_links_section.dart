@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/forms/note_form/providers/note_form_provider.dart';
-import 'package:hoplixi/main_store/models/dto/note_dto.dart';
+import 'package:hoplixi/main_store/models/dto/linked_vault_item_card_dto.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 
-/// Секция для отображения связей между заметками
+/// Секция для отображения связей заметки с vault items.
 class NoteLinksSection extends ConsumerWidget {
   const NoteLinksSection({required this.noteId, super.key});
 
@@ -34,8 +34,8 @@ class NoteLinksSection extends ConsumerWidget {
             }
 
             final data = snapshot.data!;
-            final outgoing = data['outgoing'] as List<NoteCardDto>;
-            final incoming = data['incoming'] as List<NoteCardDto>;
+            final outgoing = data['outgoing'] as List<LinkedVaultItemCardDto>;
+            final incoming = data['incoming'] as List<LinkedVaultItemCardDto>;
             final hasLinks =
                 outgoing.isNotEmpty ||
                 incoming.isNotEmpty ||
@@ -46,7 +46,7 @@ class NoteLinksSection extends ConsumerWidget {
                 padding: const EdgeInsets.all(8.0),
                 child: Center(
                   child: Text(
-                    'Нет связей с другими заметками',
+                    'Нет связанных объектов',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
@@ -95,13 +95,13 @@ class NoteLinksSection extends ConsumerWidget {
                     if (outgoing.isNotEmpty) ...[
                       const SizedBox(height: 16),
                       Text(
-                        'Исходящие (ссылки на другие заметки)',
+                        'Исходящие (ссылки на связанные объекты)',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                       const SizedBox(height: 8),
                       ...outgoing.map(
                         (note) => _NoteLinkTile(
-                          note: note,
+                          item: note,
                           icon: Icons.arrow_forward,
                         ),
                       ),
@@ -115,7 +115,7 @@ class NoteLinksSection extends ConsumerWidget {
                       const SizedBox(height: 8),
                       ...incoming.map(
                         (note) =>
-                            _NoteLinkTile(note: note, icon: Icons.arrow_back),
+                            _NoteLinkTile(item: note, icon: Icons.arrow_back),
                       ),
                     ],
                   ],
@@ -160,39 +160,48 @@ class NoteLinksSection extends ConsumerWidget {
 }
 
 class _NoteLinkTile extends StatelessWidget {
-  const _NoteLinkTile({required this.note, required this.icon});
+  const _NoteLinkTile({required this.item, required this.icon});
 
-  final NoteCardDto note;
+  final LinkedVaultItemCardDto item;
   final IconData icon;
 
   @override
   Widget build(BuildContext context) {
+    final entityType = item.vaultItemType.toEntityType();
+
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
-      leading: Icon(icon, size: 16),
-      title: Text(note.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: note.description != null
-          ? Text(
-              note.description!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall,
-            )
-          : null,
+      leading: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16),
+          const SizedBox(width: 8),
+          Icon(entityType.icon, size: 16),
+        ],
+      ),
+      title: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text(
+        item.description?.isNotEmpty == true
+            ? '${entityType.label} · ${item.description}'
+            : entityType.label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (note.isFavorite)
+          if (item.isFavorite)
             Icon(
               Icons.star,
               size: 16,
               color: Theme.of(context).colorScheme.primary,
             ),
-          if (note.usedCount > 0) ...[
+          if (item.usedCount > 0) ...[
             const SizedBox(width: 4),
             Text(
-              '${note.usedCount}',
+              '${item.usedCount}',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
@@ -203,9 +212,8 @@ class _NoteLinkTile extends StatelessWidget {
       onTap: () {
         context.pushNamed(
           'entity_edit',
-          pathParameters: {'entity': EntityType.note.id, 'id': note.id},
+          pathParameters: {'entity': entityType.id, 'id': item.id},
         );
-        //TODO: ПОД ВОПРОСОМ
       },
     );
   }

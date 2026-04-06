@@ -22,6 +22,7 @@ export 'identity_dto.dart';
 export 'identity_history_dto.dart';
 export 'license_key_dto.dart';
 export 'license_key_history_dto.dart';
+export 'linked_vault_item_card_dto.dart';
 export 'loyalty_card_dto.dart';
 export 'loyalty_card_history_dto.dart';
 export 'main_store_dto.dart';

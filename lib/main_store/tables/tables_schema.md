@@ -732,17 +732,17 @@ Pages of a document (one-to-many: document → pages). `documentId` references
 
 ## Table: note_links
 
-Many-to-many links between notes. Both `sourceNoteId` and `targetNoteId`
-reference `vault_items.id`.
+Note-to-item links. `sourceNoteId` всегда ссылается на заметку,
+а `targetVaultItemId` хранит ссылку на любой `vault_items.id`.
 
 | Column       | Type     | Constraints                    | Description           |
 | ------------ | -------- | ------------------------------ | --------------------- |
 | id           | Text     | Primary Key, UUID v4           | Unique identifier     |
 | sourceNoteId | Text     | FK to vault_items.id (cascade) | Source note reference |
-| targetNoteId | Text     | FK to vault_items.id (cascade) | Target note reference |
+| targetVaultItemId | Text | FK to vault_items.id (cascade) | Target vault item reference |
 | createdAt    | DateTime | default: now                   | Creation timestamp    |
 
-**Unique Keys:** {sourceNoteId, targetNoteId}
+**Unique Keys:** {sourceNoteId, targetVaultItemId}
 
 ---
 

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_modal.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/pickers/vault_item_picker/vault_item_picker_modal.dart';
+import 'package:hoplixi/shared/utils/vault_link_utils.dart';
 
-/// Кастомная кнопка для вставки ссылки на заметку в Quill редактор
+/// Кастомная кнопка для вставки ссылки на vault item в Quill редактор.
 class NoteLinkButton extends ConsumerWidget {
   const NoteLinkButton({
     required this.controller,
@@ -25,7 +27,7 @@ class NoteLinkButton extends ConsumerWidget {
     //     iconTheme?.iconButtonUnselectedData?.color ?? theme.canvasColor;
 
     return QuillToolbarIconButton(
-      tooltip: 'Ссылка на заметку',
+      tooltip: 'Ссылка на объект',
       icon: Icon(Icons.link, size: iconSize, color: iconColor),
       isSelected: false,
       iconTheme: iconTheme,
@@ -37,8 +39,7 @@ class NoteLinkButton extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) async {
-    // Открываем модалку выбора заметки
-    final result = await showNotePickerModal(context, ref);
+    final result = await showVaultItemPickerModal(context, ref);
 
     if (result == null) return;
 
@@ -50,8 +51,10 @@ class NoteLinkButton extends ConsumerWidget {
     // Создаем текст ссылки
     final linkText = result.name;
 
-    // Формируем URL ссылки (внутренний формат для заметок)
-    final linkUrl = 'note://${result.id}';
+    final linkUrl = buildVaultItemLinkUrl(
+      entityId: result.vaultItemType.toEntityType().id,
+      itemId: result.id,
+    );
 
     // Вставляем ссылку
     if (length > 0) {

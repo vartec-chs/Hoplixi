@@ -424,9 +424,9 @@ class MainStore extends _$MainStore {
             'ON vault_item_history (item_id, type, action_at DESC)',
 
         // --- note_links ---
-        // Входящие ссылки на заметку. Исходящие покрыты UNIQUE (source_note_id, target_note_id).
+        // Индекс на target_vault_item_id ускоряет входящие note -> item ссылки.
         'CREATE INDEX IF NOT EXISTS idx_note_links_target '
-            'ON note_links (target_note_id)',
+            'ON note_links (target_vault_item_id)',
 
         // --- document_pages ---
         // WHERE document_id = ? AND is_primary = 1 (получение обложки).

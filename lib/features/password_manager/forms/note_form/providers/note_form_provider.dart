@@ -7,6 +7,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_store/models/dto/note_dto.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/shared/utils/vault_link_utils.dart';
 import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
@@ -111,8 +112,8 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
     final plainText = controller.document.toPlainText();
     final deltaJson = jsonEncode(controller.document.toDelta().toJson());
 
-    // Извлекаем ID связанных заметок из deltaJson
-    final linkedNoteIds = _extractLinkedNoteIds(deltaJson);
+    // Извлекаем ID связанных элементов из deltaJson.
+    final linkedItemIds = _extractLinkedItemIds(deltaJson);
 
     // Проверяем, изменилось ли что-то относительно исходных данных
     final hasRealChanges = _checkIfDataChanged(
@@ -126,7 +127,7 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
     state = state.copyWith(
       content: plainText,
       deltaJson: deltaJson,
-      linkedNoteIds: linkedNoteIds,
+      linkedNoteIds: linkedItemIds,
       contentError: _validateContent(plainText),
       hasUnsavedChanges: true,
       // Устанавливаем флаг edited только если есть реальные изменения
@@ -165,12 +166,9 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
     }
   }
 
-  /// Извлечь ID связанных заметок из deltaJson
-  List<String> _extractLinkedNoteIds(String deltaJson) {
-    final noteIdPattern = RegExp(r'note://([a-f0-9-]+)');
-
-    final matches = noteIdPattern.allMatches(deltaJson);
-    return matches.map((m) => m.group(1)!).toSet().toList();
+  /// Извлечь ID связанных элементов из deltaJson.
+  List<String> _extractLinkedItemIds(String deltaJson) {
+    return extractLinkedItemIds(deltaJson);
   }
 
   /// Обновить описание

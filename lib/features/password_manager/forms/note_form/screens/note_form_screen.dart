@@ -9,7 +9,8 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/forms/note_form/models/note_form_state.dart';
-import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_modal.dart';
+import 'package:hoplixi/features/password_manager/pickers/vault_item_picker/vault_item_picker_modal.dart';
+import 'package:hoplixi/shared/utils/vault_link_utils.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/modal_sheet_close_button.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
@@ -119,13 +120,12 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
     ref.read(noteFormProvider.notifier).updateFromController(_quillController);
   }
 
-  /// Вставить ссылку на заметку
+  /// Вставить ссылку на объект хранилища
   Future<void> _insertNoteLink() async {
-    // Импортируем функцию из note_link_button
-    final result = await showNotePickerModal(
+    final result = await showVaultItemPickerModal(
       context,
       ref,
-      excludeNoteId: widget.noteId, // Исключаем текущую заметку
+      excludeItemId: widget.noteId,
     );
 
     if (result == null) return;
@@ -138,8 +138,10 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
     // Создаем текст ссылки
     final linkText = result.name;
 
-    // Формируем URL ссылки (внутренний формат для заметок)
-    final linkUrl = 'note://${result.id}';
+    final linkUrl = buildVaultItemLinkUrl(
+      entityId: result.vaultItemType.toEntityType().id,
+      itemId: result.id,
+    );
 
     // Вставляем ссылку
     if (length > 0) {
@@ -167,7 +169,7 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
     // Возвращаем фокус в редактор
     _editorFocusNode.requestFocus();
 
-    logInfo('Добавлена ссылка на заметку: ${result.id}');
+    logInfo('Добавлена ссылка на объект: ${result.id}');
   }
 
   /// Быстрое сохранение без открытия модального окна
@@ -273,18 +275,25 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
     }
   }
 
-  /// Обработка клика по ссылке на заметку
-  void _handleNoteLinkClick(String noteId) {
+  /// Обработка клика по внутренней ссылке note/vault.
+  void _handleVaultLinkClick(ParsedVaultLink link) {
     // Сначала сохраняем текущую заметку (если есть изменения)
     _updateStateFromController();
+
+    final entityType = link.isLegacyNoteLink
+        ? EntityType.note
+        : EntityType.fromId(link.entityId!);
+    if (entityType == null) {
+      return;
+    }
 
     // Показываем диалог с опциями
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Открыть заметку'),
+        title: Text('Открыть ${entityType.label.toLowerCase()}'),
         content: const Text(
-          'Хотите открыть связанную заметку? Текущие несохраненные изменения останутся.',
+          'Хотите открыть связанную запись? Текущие несохраненные изменения останутся.',
         ),
         actions: [
           SmoothButton(
@@ -296,10 +305,9 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
           SmoothButton(
             onPressed: () {
               Navigator.pop(context);
-              // Открываем заметку в новом окне (через навигацию)
               context.pushNamed(
                 'entity_edit',
-                pathParameters: {'entity': EntityType.note.id, 'id': noteId},
+                pathParameters: {'entity': entityType.id, 'id': link.itemId},
               );
             },
             label: 'Открыть',
@@ -498,7 +506,7 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
                             // Кастомная кнопка для ссылки на заметку
                             QuillToolbarCustomButtonOptions(
                               icon: const Icon(Icons.link),
-                              tooltip: 'Ссылка на заметку',
+                              tooltip: 'Ссылка на объект',
                               onPressed: () async {
                                 await _insertNoteLink();
                               },
@@ -536,11 +544,9 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
                           onLaunchUrl: (url) async {
                             logInfo('QuillEditor onLaunchUrl: $url');
                             // Перехватываем ссылки на заметки, чтобы не открывать в браузере
-                            // Quill может добавить https:// перед note://
-
-                            if (url.contains('note://')) {
-                              final noteId = url.split('//').last;
-                              _handleNoteLinkClick(noteId);
+                            final link = parseVaultLink(url);
+                            if (link != null) {
+                              _handleVaultLinkClick(link);
                             }
                             // Для обычных URL можно добавить url_launcher
                           },
