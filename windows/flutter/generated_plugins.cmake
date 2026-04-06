@@ -7,6 +7,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   desktop_drop
   desktop_multi_window
   file_selector_windows
+  flutter_doc_scanner
   flutter_secure_storage_windows
   flutter_webrtc
   local_auth_windows

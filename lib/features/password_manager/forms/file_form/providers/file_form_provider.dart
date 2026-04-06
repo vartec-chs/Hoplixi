@@ -103,7 +103,7 @@ class FileFormNotifier extends Notifier<FileFormState> {
   /// Выбрать файл через FilePicker
   Future<void> pickFile() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.any,
         allowMultiple: false,
       );

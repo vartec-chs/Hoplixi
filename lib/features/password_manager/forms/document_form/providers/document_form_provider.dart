@@ -12,11 +12,11 @@ import 'package:hoplixi/main_store/models/dto/document_dto.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
 import 'package:hoplixi/main_store/provider/service_providers.dart';
 import 'package:hoplixi/main_store/services/index.dart';
+import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
-import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
-import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
 import '../models/document_form_state.dart';
 
@@ -155,7 +155,7 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
   /// Выбрать файлы страниц через FilePicker
   Future<void> pickPages() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'tiff'],
         allowMultiple: true,
@@ -290,22 +290,56 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
       final List<String> paths = [];
 
       if (scannedDocs is Map) {
-        final images = scannedDocs.images;
-        for (final item in images) {
-          if (item.startsWith('file://')) {
+        final dynamic imagesPayload =
+            scannedDocs['images'] ?? scannedDocs['Uri'];
+
+        if (imagesPayload is List) {
+          for (final item in imagesPayload) {
+            if (item is String && item.isNotEmpty) {
+              if (item.startsWith('file://')) {
+                try {
+                  paths.add(Uri.parse(item).toFilePath());
+                } catch (_) {
+                  paths.add(item);
+                }
+              } else {
+                paths.add(item);
+              }
+            }
+          }
+        } else if (imagesPayload is String && imagesPayload.isNotEmpty) {
+          if (imagesPayload.startsWith('file://')) {
             try {
-              paths.add(Uri.parse(item).toFilePath());
-            } catch (e) {
-              paths.add(item);
+              paths.add(Uri.parse(imagesPayload).toFilePath());
+            } catch (_) {
+              paths.add(imagesPayload);
             }
           } else {
-            paths.add(item);
+            paths.add(imagesPayload);
           }
         }
       } else if (scannedDocs is List) {
-        for (final item in scannedDocs.images) {
-          if (item.isNotEmpty) paths.add(item);
+        for (final item in scannedDocs) {
+          if (item is String && item.isNotEmpty) {
+            if (item.startsWith('file://')) {
+              try {
+                paths.add(Uri.parse(item).toFilePath());
+              } catch (_) {
+                paths.add(item);
+              }
+            } else {
+              paths.add(item);
+            }
+          }
         }
+      }
+
+      if (paths.isEmpty) {
+        logWarning(
+          'Scanner returned no image paths in payload: $scannedDocs',
+          tag: _logTag,
+        );
+        return;
       }
 
       final newPages = <DocumentPageInfo>[];

@@ -420,7 +420,7 @@ class _ConnectedSessionSectionState
   }
 
   Future<void> _pickAndSendFiles() async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       allowMultiple: true,
       type: FileType.any,
     );

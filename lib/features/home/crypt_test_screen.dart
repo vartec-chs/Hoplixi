@@ -30,7 +30,7 @@ class _CryptTestScreenState extends ConsumerState<CryptTestScreen> {
   }
 
   Future<void> _pickFile() async {
-    final result = await FilePicker.platform.pickFiles();
+    final result = await FilePicker.pickFiles();
     if (result != null && result.files.single.path != null) {
       setState(() {
         _selectedFilePath = result.files.single.path;

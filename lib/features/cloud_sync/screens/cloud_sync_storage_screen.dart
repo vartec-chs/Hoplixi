@@ -462,7 +462,7 @@ class _CloudSyncStorageScreenState
       return;
     }
 
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       allowMultiple: false,
       withReadStream: true,
     );
@@ -503,7 +503,7 @@ class _CloudSyncStorageScreenState
     }
 
     final l10n = context.t.cloud_sync_storage;
-    final path = await FilePicker.platform.saveFile(
+    final path = await FilePicker.saveFile(
       dialogTitle: l10n.save_file_dialog_title,
       fileName: resource.name,
     );

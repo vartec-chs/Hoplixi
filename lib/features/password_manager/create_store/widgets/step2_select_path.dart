@@ -185,7 +185,7 @@ class Step2SelectPath extends ConsumerWidget {
     BuildContext context,
     CreateStoreFormNotifier notifier,
   ) async {
-    final result = await FilePicker.platform.getDirectoryPath(
+    final result = await FilePicker.getDirectoryPath(
       dialogTitle: 'Выберите папку для хранилища',
     );
 

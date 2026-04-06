@@ -49,7 +49,7 @@ class ArchiveNotifier extends Notifier<ArchiveScreenState> {
       final selectedStore = state.selectedStore;
       if (selectedStore == null) return;
 
-      final result = await FilePicker.platform.saveFile(
+      final result = await FilePicker.saveFile(
         dialogTitle: 'Выберите куда сохранить архив',
         fileName: '${selectedStore.storeName}.zip',
         type: FileType.custom,
@@ -117,7 +117,7 @@ class ArchiveNotifier extends Notifier<ArchiveScreenState> {
   /// Выбор файла архива для импорта
   Future<void> pickImportFile() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         dialogTitle: 'Выберите архив для импорта',
         type: FileType.custom,
         allowedExtensions: ['zip'],

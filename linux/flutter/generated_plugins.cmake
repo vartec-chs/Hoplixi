@@ -6,6 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   desktop_drop
   desktop_multi_window
   file_selector_linux
+  flutter_doc_scanner
   flutter_secure_storage_linux
   flutter_webrtc
   no_screenshot

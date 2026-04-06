@@ -150,7 +150,7 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
   /// Обработка выбора файла
   Future<void> _pickFile() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['png', 'svg'],
         withData: true,
