@@ -15,9 +15,14 @@ import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/core/theme/theme_window_sync_service.dart';
 import 'package:hoplixi/di_init.dart';
 import 'package:hoplixi/features/cloud_sync/auth/widgets/cloud_sync_auth_flow_listener.dart';
+import 'package:hoplixi/features/cloud_sync/auth/widgets/show_cloud_sync_auth_sheet.dart';
+import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/cloud_sync_snapshot_sync_listener.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
+import 'package:hoplixi/global_key.dart';
 import 'package:hoplixi/main_store/provider/decrypted_files_guard_provider.dart';
+import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/routing/router.dart';
 import 'package:hoplixi/shared/widgets/app_loading_screen.dart';
 import 'package:hoplixi/shared/widgets/desktop_shell.dart';
@@ -38,7 +43,11 @@ class App extends ConsumerStatefulWidget {
 
 class _AppState extends ConsumerState<App> {
   ProviderSubscription<AsyncValue<ThemeMode>>? _themeSyncSubscription;
+  ProviderSubscription<CurrentStoreSyncManualReauthIssue?>?
+  _manualReauthIssueSubscription;
   late final Future<ThemeMode> _initialThemeModeFuture;
+  bool _isShowingManualReauthDialog = false;
+  String? _handledManualReauthIssueKey;
 
   @override
   void initState() {
@@ -76,12 +85,114 @@ class _AppState extends ConsumerState<App> {
       },
       fireImmediately: false,
     );
+
+    _manualReauthIssueSubscription = ref
+        .listenManual<CurrentStoreSyncManualReauthIssue?>(
+          currentStoreSyncManualReauthIssueProvider,
+          (previous, next) {
+            final issueKey = next?.dedupeKey;
+            if (issueKey == null) {
+              _handledManualReauthIssueKey = null;
+              return;
+            }
+
+            if (_isShowingManualReauthDialog ||
+                _handledManualReauthIssueKey == issueKey) {
+              return;
+            }
+
+            _handledManualReauthIssueKey = issueKey;
+            _isShowingManualReauthDialog = true;
+
+            WidgetsBinding.instance.addPostFrameCallback((_) async {
+              try {
+                await _showManualReauthDialog(next!);
+              } finally {
+                _isShowingManualReauthDialog = false;
+              }
+            });
+          },
+          fireImmediately: true,
+        );
   }
 
   @override
   void dispose() {
     _themeSyncSubscription?.close();
+    _manualReauthIssueSubscription?.close();
     super.dispose();
+  }
+
+  Future<void> _showManualReauthDialog(
+    CurrentStoreSyncManualReauthIssue issue,
+  ) async {
+    final dialogContext =
+        navigatorKey.currentState?.overlay?.context ??
+        navigatorKey.currentContext;
+    if (dialogContext == null || !mounted) {
+      ref.read(currentStoreSyncManualReauthIssueProvider.notifier).clear();
+      return;
+    }
+
+    final providerName = issue.provider.metadata.displayName;
+    final tokenLabel = issue.tokenLabel ?? providerName;
+    final action = await showDialog<_ManualReauthDialogAction>(
+      context: dialogContext,
+      useRootNavigator: true,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Требуется повторная авторизация Cloud Sync'),
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: SingleChildScrollView(
+              child: SelectableText(
+                [
+                  'Токен cloud sync для провайдера $providerName больше не подходит для доступа к облаку.',
+                  issue.description ??
+                      'Приложение не смогло автоматически обновить авторизацию.',
+                  'Текущий токен: $tokenLabel.',
+                  'Чтобы продолжить синхронизацию, заново выполните авторизацию вручную. После этого при необходимости переподключите новый токен к текущему хранилищу.',
+                ].join('\n\n'),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(
+                context,
+                rootNavigator: true,
+              ).pop(_ManualReauthDialogAction.later),
+              child: const Text('Позже'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(
+                context,
+                rootNavigator: true,
+              ).pop(_ManualReauthDialogAction.openAuth),
+              child: const Text('Авторизовать вручную'),
+            ),
+          ],
+        );
+      },
+    );
+
+    ref.read(currentStoreSyncManualReauthIssueProvider.notifier).clear();
+
+    if (!mounted || action != _ManualReauthDialogAction.openAuth) {
+      return;
+    }
+
+    final previousRoute =
+        ref.read(routerProvider).state.matchedLocation.isNotEmpty
+        ? ref.read(routerProvider).state.matchedLocation
+        : AppRoutesPaths.home;
+
+    await showCloudSyncAuthSheet(
+      context: dialogContext,
+      ref: ref,
+      previousRoute: previousRoute,
+      initialProvider: issue.provider,
+    );
   }
 
   @override
@@ -144,3 +255,5 @@ class _AppState extends ConsumerState<App> {
     );
   }
 }
+
+enum _ManualReauthDialogAction { later, openAuth }
