@@ -22,12 +22,12 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 Future<void> showCloudSyncAuthSheet({
   required BuildContext context,
-  required WidgetRef ref,
+  required ProviderContainer container,
   required String previousRoute,
   CloudSyncProvider? initialProvider,
 }) async {
   final rootContext = context;
-  final notifier = ref.read(authFlowProvider.notifier);
+  final notifier = container.read(authFlowProvider.notifier);
   notifier.startFlow(previousRoute: previousRoute);
   if (initialProvider != null) {
     notifier.selectProvider(initialProvider);
@@ -90,10 +90,10 @@ Future<void> showCloudSyncAuthSheet({
           ],
   );
 
-  final status = ref.read(authFlowProvider).status;
+  final status = container.read(authFlowProvider).status;
   if (status == AuthFlowStatus.selectingProvider ||
       status == AuthFlowStatus.selectingCredential) {
-    ref.read(authFlowProvider.notifier).clearTerminalState();
+    container.read(authFlowProvider.notifier).clearTerminalState();
   }
 }
 

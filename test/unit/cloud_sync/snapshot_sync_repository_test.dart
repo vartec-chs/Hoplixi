@@ -15,6 +15,7 @@ import 'package:hoplixi/features/cloud_sync/storage/models/cloud_resource.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_resource_kind.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_resource_metadata.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_resource_ref.dart';
+import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/features/cloud_sync/storage/services/cloud_storage_provider.dart';
 import 'package:hoplixi/features/cloud_sync/storage/services/cloud_storage_repository.dart';
 import 'package:path/path.dart' as p;
@@ -204,6 +205,31 @@ void main() {
       expect(progressEvents.last.totalBytes, 8);
     },
   );
+
+  test(
+    'readCloudManifest falls back to folder listing when Dropbox direct lookup reports network error',
+    () async {
+      final storage = _FakeCloudStorageRepository();
+      storage.failGetResource(
+        '/Hoplixi/cloud_manifest.json',
+        CloudStorageException(
+          type: CloudStorageExceptionType.network,
+          message: 'Cloud request failed due to a network error.',
+          provider: CloudSyncProvider.dropbox,
+          requestUri: Uri.parse(
+            'https://api.dropboxapi.com/2/files/get_metadata',
+          ),
+        ),
+      );
+      final repository = SnapshotSyncRepository(storage);
+
+      final manifest = await repository.readCloudManifest('token-1');
+
+      expect(manifest, isNull);
+      expect(storage.getResourceCalls, 1);
+      expect(storage.listFolderCalls, 1);
+    },
+  );
 }
 
 class _FakeCloudStorageRepository implements CloudStorageRepository {
@@ -211,6 +237,8 @@ class _FakeCloudStorageRepository implements CloudStorageRepository {
   final Map<String, CloudResource> _resources = <String, CloudResource>{};
   final Map<String, List<CloudResource>> _children =
       <String, List<CloudResource>>{};
+  final Map<String, CloudStorageException> _getResourceFailures =
+      <String, CloudStorageException>{};
 
   int listFolderCalls = 0;
   int getResourceCalls = 0;
@@ -225,6 +253,10 @@ class _FakeCloudStorageRepository implements CloudStorageRepository {
     }
   }
 
+  void failGetResource(String path, CloudStorageException error) {
+    _getResourceFailures[path] = error;
+  }
+
   @override
   Future<CloudStorageProvider> providerForToken(String tokenId) async =>
       _provider;
@@ -235,6 +267,10 @@ class _FakeCloudStorageRepository implements CloudStorageRepository {
     CloudResourceRef ref,
   ) async {
     getResourceCalls += 1;
+    final failure = ref.path == null ? null : _getResourceFailures[ref.path!];
+    if (failure != null) {
+      throw failure;
+    }
     final resource = _resources[ref.path];
     if (resource == null) {
       throw StateError('Missing resource for ${ref.path}.');

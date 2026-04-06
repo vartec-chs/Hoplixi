@@ -35,7 +35,7 @@ class CloudSyncPlaygroundScreen extends ConsumerWidget {
             onTap: () async {
               await showCloudSyncAuthSheet(
                 context: context,
-                ref: ref,
+                container: ProviderScope.containerOf(context, listen: false),
                 previousRoute: AppRoutesPaths.cloudSync,
               );
             },

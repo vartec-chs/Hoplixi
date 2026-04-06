@@ -10,6 +10,7 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_m
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/snapshot_sync_progress_card.dart';
 import 'package:hoplixi/features/password_manager/store_settings/providers/store_settings_modal_provider.dart';
+import 'package:hoplixi/global_key.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
@@ -508,13 +509,23 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
     BuildContext context, {
     required CloudSyncProvider provider,
   }) async {
+    final previousRoute = _resolvePreviousRoute(context);
+    final authContext =
+        navigatorKey.currentState?.overlay?.context ??
+        navigatorKey.currentContext ??
+        context;
+    final container = ProviderScope.containerOf(authContext, listen: false);
+
     if (widget.reopenStoreSettingsAfterAuth) {
       ref.read(pendingStoreSettingsModalPageProvider.notifier).setPage(3);
+      Navigator.of(context, rootNavigator: true).pop();
+      await Future<void>.delayed(Duration.zero);
     }
+
     await showCloudSyncAuthSheet(
-      context: context,
-      ref: ref,
-      previousRoute: _resolvePreviousRoute(context),
+      context: authContext,
+      container: container,
+      previousRoute: previousRoute,
       initialProvider: provider,
     );
   }

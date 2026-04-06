@@ -238,7 +238,10 @@ class _CloudImportBody extends ConsumerWidget {
                         if (providerTokens.isEmpty) {
                           await showCloudSyncAuthSheet(
                             context: context,
-                            ref: ref,
+                            container: ProviderScope.containerOf(
+                              context,
+                              listen: false,
+                            ),
                             previousRoute: _resolvePreviousRoute(context),
                             initialProvider: selectedProvider,
                           );

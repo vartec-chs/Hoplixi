@@ -680,15 +680,24 @@ class SnapshotSyncRepository {
     required CloudResourceRef parentRef,
     required String name,
   }) async {
-    final direct = await _findChildByDirectPath(
-      tokenId,
-      parentRef: parentRef,
-      name: name,
-    );
+    CloudResource? direct;
+    CloudStorageException? directLookupError;
+    try {
+      direct = await _findChildByDirectPath(
+        tokenId,
+        parentRef: parentRef,
+        name: name,
+      );
+    } on CloudStorageException catch (error) {
+      if (!_shouldFallbackToListAfterDirectLookup(parentRef.provider, error)) {
+        rethrow;
+      }
+      directLookupError = error;
+    }
     if (direct != null) {
       return direct.isFolder ? direct : null;
     }
-    if (_usesDirectPathOnly(parentRef.provider)) {
+    if (_usesDirectPathOnly(parentRef.provider) && directLookupError == null) {
       return null;
     }
 
@@ -706,15 +715,24 @@ class SnapshotSyncRepository {
     required CloudResourceRef parentRef,
     required String name,
   }) async {
-    final direct = await _findChildByDirectPath(
-      tokenId,
-      parentRef: parentRef,
-      name: name,
-    );
+    CloudResource? direct;
+    CloudStorageException? directLookupError;
+    try {
+      direct = await _findChildByDirectPath(
+        tokenId,
+        parentRef: parentRef,
+        name: name,
+      );
+    } on CloudStorageException catch (error) {
+      if (!_shouldFallbackToListAfterDirectLookup(parentRef.provider, error)) {
+        rethrow;
+      }
+      directLookupError = error;
+    }
     if (direct != null) {
       return direct.isFile ? direct : null;
     }
-    if (_usesDirectPathOnly(parentRef.provider)) {
+    if (_usesDirectPathOnly(parentRef.provider) && directLookupError == null) {
       return null;
     }
 
@@ -913,6 +931,21 @@ class SnapshotSyncRepository {
     return switch (provider) {
       CloudSyncProvider.dropbox => true,
       CloudSyncProvider.yandex => true,
+      _ => false,
+    };
+  }
+
+  bool _shouldFallbackToListAfterDirectLookup(
+    CloudSyncProvider provider,
+    CloudStorageException error,
+  ) {
+    if (!_usesDirectPathOnly(provider)) {
+      return false;
+    }
+
+    return switch (error.type) {
+      CloudStorageExceptionType.network => true,
+      CloudStorageExceptionType.timeout => true,
       _ => false,
     };
   }

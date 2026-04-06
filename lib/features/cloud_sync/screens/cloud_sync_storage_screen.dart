@@ -325,7 +325,7 @@ class _CloudSyncStorageScreenState
     try {
       await showCloudSyncAuthSheet(
         context: context,
-        ref: ref,
+        container: ProviderScope.containerOf(context, listen: false),
         previousRoute: _storageRouteFor(_selectedProvider),
         initialProvider: _selectedProvider,
       );

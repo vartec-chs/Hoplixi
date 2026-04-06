@@ -216,7 +216,7 @@ class _AppState extends ConsumerState<App> {
 
     await showCloudSyncAuthSheet(
       context: dialogContext,
-      ref: ref,
+      container: ProviderScope.containerOf(dialogContext, listen: false),
       previousRoute: previousRoute,
       initialProvider: issue.provider,
     );
