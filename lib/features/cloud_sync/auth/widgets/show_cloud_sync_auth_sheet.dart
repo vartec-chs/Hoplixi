@@ -16,6 +16,7 @@ import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/notification_card.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:universal_platform/universal_platform.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
@@ -367,19 +368,25 @@ class _CredentialSelectionStep extends ConsumerWidget {
         title: Text(l10n.auth_method_dialog_title),
         content: Text(l10n.auth_method_dialog_description),
         actions: [
-          TextButton(
+          SmoothButton(
+            size: SmoothButtonSize.small,
+            type: SmoothButtonType.text,
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n.auth_method_cancel_button),
+            label: l10n.auth_method_cancel_button,
           ),
-          OutlinedButton(
+          SmoothButton(
+            size: SmoothButtonSize.small,
+            type: SmoothButtonType.outlined,
             onPressed: () =>
                 Navigator.of(context).pop(CloudSyncAuthMethod.manualCode),
-            child: Text(l10n.auth_method_manual_button),
+            label: l10n.auth_method_manual_button,
           ),
-          FilledButton(
+          SmoothButton(
+            size: SmoothButtonSize.small,
+            type: SmoothButtonType.filled,
             onPressed: () =>
                 Navigator.of(context).pop(CloudSyncAuthMethod.automatic),
-            child: Text(l10n.auth_method_automatic_button),
+            label: l10n.auth_method_automatic_button,
           ),
         ],
       ),
@@ -433,11 +440,15 @@ class _CredentialSelectionStep extends ConsumerWidget {
           ),
         ),
         actions: [
-          TextButton(
+          SmoothButton(
+            size: SmoothButtonSize.small,
+            type: SmoothButtonType.text,
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.auth_method_cancel_button),
+            label: l10n.auth_method_cancel_button,
           ),
-          OutlinedButton(
+          SmoothButton(
+            size: SmoothButtonSize.small,
+            type: SmoothButtonType.outlined,
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: uriText));
               if (context.mounted) {
@@ -447,11 +458,13 @@ class _CredentialSelectionStep extends ConsumerWidget {
                 );
               }
             },
-            child: Text(l10n.manual_link_copy_button),
+            label: l10n.manual_link_copy_button,
           ),
-          FilledButton(
+          SmoothButton(
+            size: SmoothButtonSize.small,
+            type: SmoothButtonType.filled,
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.manual_link_open_button),
+            label: l10n.manual_link_open_button,
           ),
         ],
       ),
@@ -475,20 +488,25 @@ class _CredentialSelectionStep extends ConsumerWidget {
               autofocus: true,
               maxLines: 3,
               onChanged: (value) => manualCode = value,
-              decoration: InputDecoration(
+              decoration: primaryInputDecoration(
+                context,
                 labelText: l10n.manual_code_field_label,
               ),
             ),
           ],
         ),
         actions: [
-          TextButton(
+          SmoothButton(
+            size: SmoothButtonSize.small,
+            type: SmoothButtonType.text,
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n.auth_method_cancel_button),
+            label: l10n.auth_method_cancel_button,
           ),
-          FilledButton(
+          SmoothButton(
+            size: SmoothButtonSize.small,
+            type: SmoothButtonType.filled,
             onPressed: () => Navigator.of(context).pop(manualCode),
-            child: Text(l10n.manual_code_continue_button),
+            label: l10n.manual_code_continue_button,
           ),
         ],
       ),

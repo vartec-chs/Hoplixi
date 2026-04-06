@@ -19,11 +19,13 @@ import 'package:hoplixi/features/cloud_sync/auth/widgets/show_cloud_sync_auth_sh
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/cloud_sync_snapshot_sync_listener.dart';
+import 'package:hoplixi/features/password_manager/store_settings/providers/store_settings_modal_provider.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/global_key.dart';
 import 'package:hoplixi/main_store/provider/decrypted_files_guard_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/routing/router.dart';
+import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/widgets/app_loading_screen.dart';
 import 'package:hoplixi/shared/widgets/desktop_shell.dart';
 import 'package:hoplixi/shared/widgets/watchers/lifecycle/app_lifecycle_observer.dart';
@@ -136,6 +138,7 @@ class _AppState extends ConsumerState<App> {
 
     final providerName = issue.provider.metadata.displayName;
     final tokenLabel = issue.tokenLabel ?? providerName;
+    final providerDetails = 'Тип провайдера: $providerName.';
     final title = switch (issue.kind) {
       CurrentStoreSyncIssueKind.manualReauthRequired =>
         'Требуется повторная авторизация Cloud Sync',
@@ -147,13 +150,16 @@ class _AppState extends ConsumerState<App> {
         'Токен cloud sync для провайдера $providerName больше не подходит для доступа к облаку.',
         issue.description ??
             'Приложение не смогло автоматически обновить авторизацию.',
+        providerDetails,
         'Текущий токен: $tokenLabel.',
+        'Идентификатор токена: ${issue.tokenId}.',
         'Чтобы продолжить синхронизацию, заново выполните авторизацию вручную. После этого при необходимости переподключите новый токен к текущему хранилищу.',
       ],
       CurrentStoreSyncIssueKind.missingToken => [
         'Для провайдера $providerName была найдена сохранённая привязка cloud sync, но связанный OAuth-токен на устройстве больше не найден.',
         issue.description ??
             'Вероятно, токен был удалён, не импортирован или потерян после миграции данных.',
+        providerDetails,
         'Идентификатор отсутствующего токена: ${issue.tokenId}.',
         'Чтобы продолжить работу с cloud sync, выполните авторизацию заново. После этого при необходимости снова подключите токен к текущему хранилищу.',
       ],
@@ -171,19 +177,20 @@ class _AppState extends ConsumerState<App> {
             ),
           ),
           actions: [
-            TextButton(
+            SmoothButton(
               onPressed: () => Navigator.of(
                 context,
                 rootNavigator: true,
               ).pop(_ManualReauthDialogAction.later),
-              child: const Text('Позже'),
+              label: 'Позже',
+              type: .text,
             ),
-            FilledButton(
+            SmoothButton(
               onPressed: () => Navigator.of(
                 context,
                 rootNavigator: true,
               ).pop(_ManualReauthDialogAction.openAuth),
-              child: const Text('Авторизовать вручную'),
+              label: 'Авторизовать вручную',
             ),
           ],
         );
@@ -200,6 +207,12 @@ class _AppState extends ConsumerState<App> {
         ref.read(routerProvider).state.matchedLocation.isNotEmpty
         ? ref.read(routerProvider).state.matchedLocation
         : AppRoutesPaths.home;
+
+    if (previousRoute.startsWith(AppRoutesPaths.dashboard)) {
+      ref.read(pendingStoreSettingsModalPageProvider.notifier).setPage(3);
+    } else {
+      ref.read(pendingStoreSettingsModalPageProvider.notifier).clear();
+    }
 
     await showCloudSyncAuthSheet(
       context: dialogContext,
