@@ -40,7 +40,7 @@ class RecentDatabaseCard extends ConsumerStatefulWidget {
 
 class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
   bool _isCheckingCloudVersion = false;
-  String? _cloudSyncActionLabel;
+  SnapshotSyncProgress? _cloudSyncProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -162,9 +162,9 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
             const SizedBox(height: 16),
             if (syncProvider != null) ...[
               SmoothButton(
-                label:
-                    _cloudSyncActionLabel ??
-                    'Проверить и установить новую версию',
+                label: _cloudSyncProgress == null
+                    ? 'Проверить и установить новую версию'
+                    : _buildProgressButtonLabel(_cloudSyncProgress!),
                 type: SmoothButtonType.outlined,
                 isFullWidth: true,
                 icon: Icon(syncProvider.metadata.icon),
@@ -175,16 +175,19 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
               ),
               const SizedBox(height: 12),
             ],
-            SmoothButton(
-              label: isLoading ? 'Открытие...' : 'Открыть',
-              type: SmoothButtonType.filled,
-              isFullWidth: true,
-              icon: const Icon(CupertinoIcons.arrow_right_circle),
-              loading: isLoading,
-              onPressed: isLoading
-                  ? null
-                  : () => _openDatabase(context, ref, entry),
-            ),
+            if (_isCheckingCloudVersion)
+              _buildCloudSyncProgressPanel(context)
+            else
+              SmoothButton(
+                label: isLoading ? 'Открытие...' : 'Открыть',
+                type: SmoothButtonType.filled,
+                isFullWidth: true,
+                icon: const Icon(CupertinoIcons.arrow_right_circle),
+                loading: isLoading,
+                onPressed: isLoading
+                    ? null
+                    : () => _openDatabase(context, ref, entry),
+              ),
           ],
         ),
       ),
@@ -201,7 +204,13 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
 
     setState(() {
       _isCheckingCloudVersion = true;
-      _cloudSyncActionLabel = 'Подготовка локального снимка...';
+      _cloudSyncProgress = const SnapshotSyncProgress(
+        stage: SnapshotSyncStage.preparingLocalSnapshot,
+        stepIndex: 1,
+        totalSteps: 6,
+        title: 'Подготовка локального снимка',
+        description: 'Читаем локальный manifest и готовим проверку облака.',
+      );
     });
 
     StoreManifest? manifest;
@@ -246,7 +255,15 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
       }
 
       final syncService = ref.read(snapshotSyncServiceProvider);
-      _updateCloudSyncActionLabel('Проверка облачной версии...');
+      _updateCloudSyncProgress(
+        const SnapshotSyncProgress(
+          stage: SnapshotSyncStage.checkingRemoteVersion,
+          stepIndex: 2,
+          totalSteps: 6,
+          title: 'Проверка облачной версии',
+          description: 'Читаем удалённый manifest и сравниваем версии.',
+        ),
+      );
       final status = await syncService.loadStatus(
         storePath: entry.path,
         storeInfo: _buildStoreInfo(entry, manifest),
@@ -256,13 +273,21 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
 
       switch (status.compareResult) {
         case StoreVersionCompareResult.remoteNewer:
-          _updateCloudSyncActionLabel('Скачивание из облака...');
+          _updateCloudSyncProgress(
+            const SnapshotSyncProgress(
+              stage: SnapshotSyncStage.transferringPrimaryFiles,
+              stepIndex: 3,
+              totalSteps: 6,
+              title: 'Скачивание из облака',
+              description: 'Загружаем более новую remote snapshot-версию.',
+            ),
+          );
           await syncService.downloadRemoteSnapshot(
             storePath: entry.path,
             binding: binding,
             lockBeforeApply: false,
             emitProgress: (progress) {
-              _updateCloudSyncActionLabel(_buildProgressButtonLabel(progress));
+              _updateCloudSyncProgress(progress);
             },
           );
           ref.invalidate(_recentDatabaseManifestProvider(entry.path));
@@ -325,23 +350,125 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
       if (mounted) {
         setState(() {
           _isCheckingCloudVersion = false;
-          _cloudSyncActionLabel = null;
+          _cloudSyncProgress = null;
         });
       }
     }
   }
 
-  void _updateCloudSyncActionLabel(String label) {
+  void _updateCloudSyncProgress(SnapshotSyncProgress progress) {
     if (!mounted) {
       return;
     }
     setState(() {
-      _cloudSyncActionLabel = label;
+      _cloudSyncProgress = progress;
     });
   }
 
   String _buildProgressButtonLabel(SnapshotSyncProgress progress) {
     return '${progress.title} · шаг ${progress.stepIndex}/${progress.totalSteps}';
+  }
+
+  Widget _buildCloudSyncProgressPanel(BuildContext context) {
+    final progress = _cloudSyncProgress;
+    if (progress == null) {
+      return const SizedBox.shrink();
+    }
+
+    final colorScheme = Theme.of(context).colorScheme;
+    final transfer = progress.transferProgress;
+    final fraction = transfer?.fraction;
+    final fileProgressText = transfer != null && transfer.hasFileProgress
+        ? '${transfer.completedFiles} из ${transfer.totalFiles} файлов'
+        : null;
+    final bytesProgressText = transfer != null && transfer.totalBytes != null
+        ? '${_formatBytes(transfer.transferredBytes)} из ${_formatBytes(transfer.totalBytes!)}'
+        : null;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  progress.title,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              Text(
+                'Шаг ${progress.stepIndex} из ${progress.totalSteps}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            progress.description,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 10),
+          LinearProgressIndicator(value: fraction),
+          if (fileProgressText != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              fileProgressText,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+          if (bytesProgressText != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              bytesProgressText,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+          if (transfer?.currentFileName != null &&
+              transfer!.currentFileName!.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Текущий файл: ${transfer.currentFileName}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _formatBytes(int bytes) {
+    const units = ['Б', 'КБ', 'МБ', 'ГБ'];
+    var value = bytes.toDouble();
+    var unitIndex = 0;
+
+    while (value >= 1024 && unitIndex < units.length - 1) {
+      value /= 1024;
+      unitIndex++;
+    }
+
+    final precision = value >= 100 || unitIndex == 0 ? 0 : 1;
+    return '${value.toStringAsFixed(precision)} ${units[unitIndex]}';
   }
 
   StoreInfoDto _buildStoreInfo(DatabaseEntry entry, StoreManifest manifest) {
