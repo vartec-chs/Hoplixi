@@ -7,20 +7,43 @@ import 'package:hoplixi/core/services/local_auth_service.dart';
 import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/di_init.dart';
+import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
+import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
+import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
+import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_exception.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
+import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/features/home/providers/recent_database_provider.dart';
 import 'package:hoplixi/main_store/models/db_history_model.dart';
 import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
+import 'package:hoplixi/main_store/models/store_manifest.dart';
 import 'package:hoplixi/main_store/provider/db_history_provider.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
+import 'package:hoplixi/main_store/services/store_manifest_service.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:typed_prefs/typed_prefs.dart';
 
-class RecentDatabaseCard extends ConsumerWidget {
+final _recentDatabaseManifestProvider = FutureProvider.family
+    .autoDispose<StoreManifest?, String>((ref, path) {
+      return StoreManifestService.readFrom(path);
+    });
+
+class RecentDatabaseCard extends ConsumerStatefulWidget {
   const RecentDatabaseCard({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RecentDatabaseCard> createState() => _RecentDatabaseCardState();
+}
+
+class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
+  bool _isCheckingCloudVersion = false;
+  String? _cloudSyncActionLabel;
+
+  @override
+  Widget build(BuildContext context) {
     final recentDbAsync = ref.watch(recentDatabaseProvider);
 
     return recentDbAsync.when(
@@ -36,7 +59,14 @@ class RecentDatabaseCard extends ConsumerWidget {
   Widget _buildCard(BuildContext context, WidgetRef ref, DatabaseEntry entry) {
     final colorScheme = Theme.of(context).colorScheme;
     final dbStateAsync = ref.watch(mainStoreProvider);
+    final manifestAsync = ref.watch(
+      _recentDatabaseManifestProvider(entry.path),
+    );
     final isLoading = dbStateAsync.value?.isLoading ?? false;
+    final syncProvider = manifestAsync.maybeWhen(
+      data: (manifest) => manifest?.sync?.provider,
+      orElse: () => null,
+    );
 
     return Card(
       color: colorScheme.surfaceContainerLow,
@@ -97,10 +127,57 @@ class RecentDatabaseCard extends ConsumerWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
+            if (syncProvider != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      syncProvider.metadata.icon,
+                      size: 18,
+                      color: colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Подключен Cloud Sync: ${syncProvider.metadata.displayName}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurface,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
+            if (syncProvider != null) ...[
+              SmoothButton(
+                label:
+                    _cloudSyncActionLabel ??
+                    'Проверить и установить новую версию',
+                type: SmoothButtonType.outlined,
+                isFullWidth: true,
+                icon: Icon(syncProvider.metadata.icon),
+                loading: _isCheckingCloudVersion,
+                onPressed: (isLoading || _isCheckingCloudVersion)
+                    ? null
+                    : () => _checkCloudVersion(context, entry),
+              ),
+              const SizedBox(height: 12),
+            ],
             SmoothButton(
               label: isLoading ? 'Открытие...' : 'Открыть',
-              type: SmoothButtonType.dashed,
+              type: SmoothButtonType.filled,
               isFullWidth: true,
               icon: const Icon(CupertinoIcons.arrow_right_circle),
               loading: isLoading,
@@ -112,6 +189,243 @@ class RecentDatabaseCard extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _checkCloudVersion(
+    BuildContext context,
+    DatabaseEntry entry,
+  ) async {
+    if (_isCheckingCloudVersion) {
+      return;
+    }
+
+    setState(() {
+      _isCheckingCloudVersion = true;
+      _cloudSyncActionLabel = 'Подготовка локального снимка...';
+    });
+
+    StoreManifest? manifest;
+    StoreSyncBinding? binding;
+    AuthTokenEntry? token;
+
+    try {
+      manifest = await StoreManifestService.readFrom(entry.path);
+      final syncProvider = manifest?.sync?.provider;
+      if (manifest == null || syncProvider == null) {
+        Toaster.info(
+          title: 'Cloud Sync',
+          description:
+              'У этого хранилища нет сохранённой cloud sync конфигурации.',
+        );
+        return;
+      }
+
+      binding = await ref
+          .read(storeSyncBindingServiceProvider)
+          .getByStoreUuid(manifest.storeUuid);
+      if (binding == null) {
+        Toaster.warning(
+          title: 'Cloud Sync',
+          description:
+              'В store_manifest есть sync-метаданные, но локальная привязка токена не найдена.',
+        );
+        return;
+      }
+
+      token = await ref
+          .read(authTokensProvider.notifier)
+          .getTokenById(binding.tokenId);
+      if (token == null) {
+        _reportMissingTokenIssue(manifest: manifest, binding: binding);
+        Toaster.warning(
+          title: 'Cloud Sync',
+          description:
+              'Связанный OAuth-токен отсутствует. Нужна повторная авторизация.',
+        );
+        return;
+      }
+
+      final syncService = ref.read(snapshotSyncServiceProvider);
+      _updateCloudSyncActionLabel('Проверка облачной версии...');
+      final status = await syncService.loadStatus(
+        storePath: entry.path,
+        storeInfo: _buildStoreInfo(entry, manifest),
+        binding: binding,
+        token: token,
+      );
+
+      switch (status.compareResult) {
+        case StoreVersionCompareResult.remoteNewer:
+          _updateCloudSyncActionLabel('Скачивание из облака...');
+          await syncService.downloadRemoteSnapshot(
+            storePath: entry.path,
+            binding: binding,
+            lockBeforeApply: false,
+            emitProgress: (progress) {
+              _updateCloudSyncActionLabel(_buildProgressButtonLabel(progress));
+            },
+          );
+          ref.invalidate(_recentDatabaseManifestProvider(entry.path));
+          Toaster.success(
+            title: 'Cloud Sync',
+            description:
+                'Новая версия из ${binding.provider.metadata.displayName} установлена локально.',
+          );
+          break;
+        case StoreVersionCompareResult.same:
+          Toaster.info(
+            title: 'Cloud Sync',
+            description: 'Локальная версия уже совпадает с облачной.',
+          );
+          break;
+        case StoreVersionCompareResult.remoteMissing:
+          Toaster.info(
+            title: 'Cloud Sync',
+            description: 'В облаке ещё нет snapshot для этого хранилища.',
+          );
+          break;
+        case StoreVersionCompareResult.localNewer:
+          Toaster.info(
+            title: 'Cloud Sync',
+            description:
+                'Локальная версия новее облачной. Для отправки изменений откройте хранилище и выполните sync.',
+          );
+          break;
+        case StoreVersionCompareResult.conflict:
+          Toaster.warning(
+            title: 'Cloud Sync',
+            description:
+                'Обнаружен конфликт локальной и удалённой версий. Откройте хранилище для ручного разрешения.',
+          );
+          break;
+        case StoreVersionCompareResult.differentStore:
+          Toaster.error(
+            title: 'Cloud Sync',
+            description:
+                'Удалённый manifest относится к другому хранилищу. Проверьте привязку sync.',
+          );
+          break;
+      }
+    } catch (error) {
+      if (manifest != null && binding != null && token != null) {
+        _reportManualReauthIfNeeded(
+          error,
+          manifest: manifest,
+          binding: binding,
+          token: token,
+          storePath: entry.path,
+        );
+      }
+
+      Toaster.error(
+        title: 'Cloud Sync',
+        description: _buildCloudSyncErrorMessage(error),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCheckingCloudVersion = false;
+          _cloudSyncActionLabel = null;
+        });
+      }
+    }
+  }
+
+  void _updateCloudSyncActionLabel(String label) {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _cloudSyncActionLabel = label;
+    });
+  }
+
+  String _buildProgressButtonLabel(SnapshotSyncProgress progress) {
+    return '${progress.title} · шаг ${progress.stepIndex}/${progress.totalSteps}';
+  }
+
+  StoreInfoDto _buildStoreInfo(DatabaseEntry entry, StoreManifest manifest) {
+    final fallbackDate = manifest.updatedAt.toUtc();
+    return StoreInfoDto(
+      id: manifest.storeUuid,
+      name: manifest.storeName.trim().isEmpty ? entry.name : manifest.storeName,
+      description: entry.description,
+      createdAt: entry.createdAt ?? fallbackDate,
+      modifiedAt: manifest.content.dbFile.modifiedAt?.toUtc() ?? fallbackDate,
+      lastOpenedAt: entry.lastAccessed ?? fallbackDate,
+      version: manifest.version.toString(),
+    );
+  }
+
+  void _reportMissingTokenIssue({
+    required StoreManifest manifest,
+    required StoreSyncBinding binding,
+  }) {
+    ref
+        .read(currentStoreSyncManualReauthIssueProvider.notifier)
+        .report(
+          CurrentStoreSyncManualReauthIssue(
+            kind: CurrentStoreSyncIssueKind.missingToken,
+            tokenId: binding.tokenId,
+            provider: binding.provider,
+            storeUuid: manifest.storeUuid,
+            storePath: null,
+            description:
+                'В store_manifest указана активная cloud sync конфигурация, но связанный OAuth-токен отсутствует на устройстве.',
+          ),
+        );
+  }
+
+  void _reportManualReauthIfNeeded(
+    Object error, {
+    required StoreManifest manifest,
+    required StoreSyncBinding binding,
+    required AuthTokenEntry token,
+    required String storePath,
+  }) {
+    if (error is! CloudStorageException ||
+        error.type != CloudStorageExceptionType.unauthorized) {
+      return;
+    }
+
+    final description = switch (error.cause) {
+      CloudSyncHttpException(type: CloudSyncHttpExceptionType.refreshFailed) =>
+        'Не удалось автоматически обновить OAuth-токен. Требуется повторная ручная авторизация.',
+      CloudSyncHttpException(type: CloudSyncHttpExceptionType.unauthorized) =>
+        'Облачный провайдер отклонил текущий токен. Требуется повторная ручная авторизация.',
+      _ =>
+        'Доступ к облачному провайдеру больше не подтверждается. Требуется повторная ручная авторизация.',
+    };
+
+    ref
+        .read(currentStoreSyncManualReauthIssueProvider.notifier)
+        .report(
+          CurrentStoreSyncManualReauthIssue(
+            kind: CurrentStoreSyncIssueKind.manualReauthRequired,
+            tokenId: token.id,
+            provider: binding.provider,
+            storeUuid: manifest.storeUuid,
+            storePath: storePath,
+            tokenLabel: token.displayLabel,
+            description: description,
+          ),
+        );
+  }
+
+  String _buildCloudSyncErrorMessage(Object error) {
+    if (error is CloudStorageException) {
+      return switch (error.type) {
+        CloudStorageExceptionType.unauthorized =>
+          'Авторизация cloud sync больше невалидна. Выполните вход заново.',
+        CloudStorageExceptionType.network =>
+          'Не удалось связаться с облаком. Проверьте интернет-соединение.',
+        CloudStorageExceptionType.timeout =>
+          'Облачный провайдер не ответил вовремя. Попробуйте ещё раз.',
+        CloudStorageExceptionType.notFound => 'Удалённый snapshot не найден.',
+        _ => error.message,
+      };
+    }
+    return error.toString();
   }
 
   Future<void> _openDatabase(
@@ -126,7 +440,8 @@ class RecentDatabaseCard extends ConsumerWidget {
     // Если пароль сохранен, проверяем биометрию
     if (entry.savePassword && password != null) {
       final storageService = getIt<PreferencesService>();
-      final isBiometricEnabled = await storageService.securityPrefs.biometricEnabled.get() ?? false;
+      final isBiometricEnabled =
+          await storageService.securityPrefs.biometricEnabled.get() ?? false;
 
       if (isBiometricEnabled) {
         final localAuthService = getIt<LocalAuthService>();
