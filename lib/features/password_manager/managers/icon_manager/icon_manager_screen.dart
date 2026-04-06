@@ -84,33 +84,4 @@ class _IconManagerScreenState extends ConsumerState<IconManagerScreen> {
   }
 }
 
-/// Виджет для отображения строки информации
-class _InfoRow extends ConsumerWidget {
-  final String label;
-  final String value;
 
-  const _InfoRow({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 80,
-          child: Text(
-            '$label:',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(value, style: Theme.of(context).textTheme.bodyMedium),
-        ),
-      ],
-    );
-  }
-}

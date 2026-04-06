@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/di_init.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
 import 'package:hoplixi/main_store/main_store.dart';
@@ -684,11 +685,15 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       switch (status.compareResult) {
         case StoreVersionCompareResult.remoteMissing:
         case StoreVersionCompareResult.localNewer:
-          final result = await syncService.sync(
-            storePath: storePath,
-            storeInfo: storeInfo,
-            binding: binding,
-          );
+          final result = await ref
+              .read(currentStoreSyncProvider.notifier)
+              .syncBeforeClose(
+                status: status,
+                storePath: storePath,
+                storeInfo: storeInfo,
+                binding: binding,
+                token: token,
+              );
           logInfo(
             'Snapshot sync before close completed.',
             tag: _logTag,

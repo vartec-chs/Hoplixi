@@ -74,7 +74,9 @@ class _TagsManagerAppBarState extends ConsumerState<TagsManagerAppBar> {
                           tooltip: 'Очистить поиск',
                           onPressed: () {
                             _searchController.clear();
-                            ref.read(tagFilterProvider.notifier).updateQuery('');
+                            ref
+                                .read(tagFilterProvider.notifier)
+                                .updateQuery('');
                             setState(() {});
                           },
                           icon: const Icon(Icons.close_rounded),
@@ -96,7 +98,8 @@ class _TagsManagerAppBarState extends ConsumerState<TagsManagerAppBar> {
                 },
               ),
             )
-          : const Text('Теги'),      actions: [
+          : const Text('Теги'),
+      actions: [
         IconButton(
           tooltip: _isSearchActive ? 'Закрыть поиск' : 'Поиск',
           onPressed: () {
@@ -194,6 +197,7 @@ class _TagsManagerAppBarState extends ConsumerState<TagsManagerAppBar> {
     try {
       await WoltModalSheet.show<void>(
         context: context,
+        useRootNavigator: true,
         barrierDismissible: true,
         pageListBuilder: (modalSheetContext) => [
           WoltModalSheetPage(

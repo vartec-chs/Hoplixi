@@ -4,6 +4,7 @@ import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_pr
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_service.dart';
+import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/main_store/models/db_state.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
@@ -244,6 +245,52 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
         clearPendingConflict: true,
       ),
     );
+  }
+
+  Future<SnapshotSyncResult> syncBeforeClose({
+    required StoreSyncStatus status,
+    required String storePath,
+    required StoreInfoDto storeInfo,
+    required StoreSyncBinding binding,
+    required AuthTokenEntry token,
+  }) async {
+    final syncService = ref.read(snapshotSyncServiceProvider);
+    final baseState = status.copyWith(
+      isStoreOpen: true,
+      storePath: storePath,
+      storeUuid: binding.storeUuid,
+      storeName: status.storeName ?? storeInfo.name,
+      binding: binding,
+      token: token,
+      clearPendingConflict: true,
+      clearSyncProgress: true,
+      isSyncInProgress: false,
+      isApplyingRemoteUpdate: false,
+      requiresUnlockToApply: false,
+    );
+
+    state = AsyncData(baseState);
+
+    final result = await _consumeProgressStream(
+      baseState: baseState,
+      stream: syncService.syncWithProgress(
+        storePath: storePath,
+        storeInfo: storeInfo,
+        binding: binding,
+      ),
+    );
+
+    state = AsyncData(
+      baseState.copyWith(
+        localManifest: result.localManifest,
+        remoteManifest: result.remoteManifest,
+        lastResultType: result.type,
+        clearSyncProgress: true,
+        isSyncInProgress: false,
+      ),
+    );
+
+    return result;
   }
 
   Future<void> resolveConflictWithUpload() async {

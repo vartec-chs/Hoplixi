@@ -227,6 +227,7 @@ class _IconManagerAppBarState extends ConsumerState<IconManagerAppBar> {
 
     WoltModalSheet.show(
       context: context,
+      useRootNavigator: true,
       barrierDismissible: true,
       pageListBuilder: (modalContext) {
         return [

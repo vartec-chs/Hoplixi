@@ -35,6 +35,7 @@ Future<void> showCategoryManagerFilterSheet(
 
   try {
     await WoltModalSheet.show<void>(
+      useRootNavigator: true,
       context: context,
       barrierDismissible: true,
       pageListBuilder: (modalSheetContext) => [

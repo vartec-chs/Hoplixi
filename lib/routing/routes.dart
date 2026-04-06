@@ -5,13 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/archive_storage/ui/archive_screen.dart';
-
 import 'package:hoplixi/features/cloud_sync/app_credentials/screens/app_credentials_screen.dart';
 import 'package:hoplixi/features/cloud_sync/auth/screens/auth_progress_screen.dart';
-import 'package:hoplixi/features/cloud_sync/screens/cloud_sync_playground_screen.dart';
-import 'package:hoplixi/features/cloud_sync/screens/cloud_sync_storage_screen.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/screens/auth_tokens_screen.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
+import 'package:hoplixi/features/cloud_sync/screens/cloud_sync_playground_screen.dart';
+import 'package:hoplixi/features/cloud_sync/screens/cloud_sync_storage_screen.dart';
 import 'package:hoplixi/features/component_showcase/component_showcase_screen.dart';
 import 'package:hoplixi/features/home/crypt_test_screen.dart';
 import 'package:hoplixi/features/home/home_screen.dart';
@@ -19,8 +18,8 @@ import 'package:hoplixi/features/local_send/screens/local_send_history_screen.da
 import 'package:hoplixi/features/local_send/screens/local_send_screen.dart';
 import 'package:hoplixi/features/local_send/screens/local_send_transfer_screen.dart';
 import 'package:hoplixi/features/logs_viewer/screens/logs_tabs_screen.dart';
-import 'package:hoplixi/features/password_manager/create_store/create_store_screen.dart';
 import 'package:hoplixi/features/password_manager/close_store/close_store_sync_screen.dart';
+import 'package:hoplixi/features/password_manager/create_store/create_store_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/screens/notes_graph_screen.dart';
@@ -54,10 +53,6 @@ Page<void> buildResponsivePage({
       MediaQuery.sizeOf(context).width < MainConstants.kMobileBreakpoint;
 
   if (isMobile) {
-    // if (isBaseRoute) {
-    //   return MaterialPage<void>(key: state.pageKey, child: child);
-    // }
-
     if (Platform.isIOS || Platform.isMacOS) {
       return CupertinoPage<void>(key: state.pageKey, child: child);
     }
@@ -369,8 +364,9 @@ final List<RouteBase> appRoutes = [
               return null;
             },
             pageBuilder: (context, state) {
-              return NoTransitionPage<void>(
-                key: state.pageKey,
+              return buildResponsivePage(
+                context: context,
+                state: state,
                 child: const NotesGraphScreen(),
               );
             },
