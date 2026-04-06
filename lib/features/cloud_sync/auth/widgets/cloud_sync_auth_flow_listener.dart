@@ -6,7 +6,11 @@ import 'package:hoplixi/features/cloud_sync/auth/models/auth_flow_state.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/auth_flow_status.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/cloud_sync_auth_error.dart';
 import 'package:hoplixi/features/cloud_sync/auth/providers/auth_flow_provider.dart';
+import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
+import 'package:hoplixi/features/password_manager/store_settings/providers/store_settings_modal_provider.dart';
+import 'package:hoplixi/features/password_manager/store_settings/store_settings_modal.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/global_key.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -85,6 +89,8 @@ class _CloudSyncAuthFlowListenerState
 
     switch (state.status) {
       case AuthFlowStatus.success:
+        await ref.read(authTokensProvider.notifier).reload();
+        await ref.read(currentStoreSyncProvider.notifier).loadStatus();
         Toaster.success(
           title: l10n.success_toast_title,
           description: l10n.success_toast_description,
@@ -132,7 +138,41 @@ class _CloudSyncAuthFlowListenerState
       router.go(targetRoute);
     }
 
+    if (state.status == AuthFlowStatus.success) {
+      _scheduleStoreSettingsReopenIfNeeded(targetRoute);
+    } else {
+      ref.read(pendingStoreSettingsModalPageProvider.notifier).clear();
+    }
+
     ref.read(authFlowProvider.notifier).clearTerminalState();
+  }
+
+  void _scheduleStoreSettingsReopenIfNeeded(String targetRoute) {
+    final initialPageIndex = ref.read(pendingStoreSettingsModalPageProvider);
+    if (initialPageIndex == null ||
+        !targetRoute.startsWith(AppRoutesPaths.dashboard)) {
+      ref.read(pendingStoreSettingsModalPageProvider.notifier).clear();
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) {
+        return;
+      }
+      final dialogContext =
+          navigatorKey.currentState?.overlay?.context ??
+          navigatorKey.currentContext;
+      if (dialogContext == null) {
+        ref.read(pendingStoreSettingsModalPageProvider.notifier).clear();
+        return;
+      }
+
+      await showStoreSettingsModal(
+        dialogContext,
+        ref,
+        initialPageIndex: initialPageIndex,
+      );
+    });
   }
 
   Future<void> _showErrorDialog({

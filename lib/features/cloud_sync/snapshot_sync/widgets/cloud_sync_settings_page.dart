@@ -9,12 +9,18 @@ import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.da
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/snapshot_sync_progress_card.dart';
+import 'package:hoplixi/features/password_manager/store_settings/providers/store_settings_modal_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 class CloudSyncSettingsPage extends ConsumerStatefulWidget {
-  const CloudSyncSettingsPage({super.key});
+  const CloudSyncSettingsPage({
+    super.key,
+    this.reopenStoreSettingsAfterAuth = false,
+  });
+
+  final bool reopenStoreSettingsAfterAuth;
 
   @override
   ConsumerState<CloudSyncSettingsPage> createState() =>
@@ -157,21 +163,10 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
                   label: 'Авторизовать аккаунт',
                   onPressed: effectiveProvider == null
                       ? null
-                      : () async {
-                          await showCloudSyncAuthSheet(
-                            context: context,
-                            ref: ref,
-                            previousRoute: _resolvePreviousRoute(context),
-                            initialProvider: effectiveProvider,
-                          );
-                          ref.invalidate(authTokensProvider);
-                          await ref.read(authTokensProvider.notifier).reload();
-                          if (mounted) {
-                            await ref
-                                .read(currentStoreSyncProvider.notifier)
-                                .loadStatus();
-                          }
-                        },
+                      : () => _authorizeAccount(
+                          context,
+                          provider: effectiveProvider,
+                        ),
                 )
               else ...[
                 DropdownButtonFormField<String>(
@@ -200,21 +195,10 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
                   type: SmoothButtonType.outlined,
                   onPressed: effectiveProvider == null
                       ? null
-                      : () async {
-                          await showCloudSyncAuthSheet(
-                            context: context,
-                            ref: ref,
-                            previousRoute: _resolvePreviousRoute(context),
-                            initialProvider: effectiveProvider,
-                          );
-                          ref.invalidate(authTokensProvider);
-                          await ref.read(authTokensProvider.notifier).reload();
-                          if (mounted) {
-                            await ref
-                                .read(currentStoreSyncProvider.notifier)
-                                .loadStatus();
-                          }
-                        },
+                      : () => _authorizeAccount(
+                          context,
+                          provider: effectiveProvider,
+                        ),
                 ),
               ],
             ],
@@ -302,23 +286,10 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
                     type: SmoothButtonType.outlined,
                     onPressed: effectiveProvider == null
                         ? null
-                        : () async {
-                            await showCloudSyncAuthSheet(
-                              context: context,
-                              ref: ref,
-                              previousRoute: _resolvePreviousRoute(context),
-                              initialProvider: effectiveProvider,
-                            );
-                            ref.invalidate(authTokensProvider);
-                            await ref
-                                .read(authTokensProvider.notifier)
-                                .reload();
-                            if (mounted) {
-                              await ref
-                                  .read(currentStoreSyncProvider.notifier)
-                                  .loadStatus();
-                            }
-                          },
+                        : () => _authorizeAccount(
+                            context,
+                            provider: effectiveProvider,
+                          ),
                   ),
                   SmoothButton(
                     label: 'Отключить',
@@ -531,6 +502,21 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
     } catch (_) {
       return AppRoutesPaths.cloudSync;
     }
+  }
+
+  Future<void> _authorizeAccount(
+    BuildContext context, {
+    required CloudSyncProvider provider,
+  }) async {
+    if (widget.reopenStoreSettingsAfterAuth) {
+      ref.read(pendingStoreSettingsModalPageProvider.notifier).setPage(3);
+    }
+    await showCloudSyncAuthSheet(
+      context: context,
+      ref: ref,
+      previousRoute: _resolvePreviousRoute(context),
+      initialProvider: provider,
+    );
   }
 }
 

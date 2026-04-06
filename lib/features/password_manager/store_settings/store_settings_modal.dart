@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/cloud_sync_settings_page.dart';
+import 'package:hoplixi/features/password_manager/store_settings/providers/store_settings_modal_provider.dart';
 import 'package:hoplixi/features/password_manager/store_settings/widgets/change_password_section.dart';
 import 'package:hoplixi/features/password_manager/store_settings/widgets/pinned_entity_types_selector.dart';
 import 'package:hoplixi/features/password_manager/store_settings/widgets/store_settings_form.dart';
@@ -11,9 +12,11 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 /// Возвращает `true` если настройки были сохранены, `false` если отменены
 Future<bool?> showStoreSettingsModal(
   BuildContext context,
-  WidgetRef ref,
-) async {
-  final pageIndexNotifier = ValueNotifier<int>(0);
+  WidgetRef ref, {
+  int initialPageIndex = 0,
+}) async {
+  ref.read(pendingStoreSettingsModalPageProvider.notifier).clear();
+  final pageIndexNotifier = ValueNotifier<int>(initialPageIndex);
 
   return await WoltModalSheet.show<bool>(
     context: context,
@@ -164,7 +167,9 @@ Future<bool?> showStoreSettingsModal(
               tooltip: 'Назад',
             ),
           ),
-          child: const CloudSyncSettingsPage(),
+          child: const CloudSyncSettingsPage(
+            reopenStoreSettingsAfterAuth: true,
+          ),
         ),
       ];
     },
