@@ -136,24 +136,38 @@ class _AppState extends ConsumerState<App> {
 
     final providerName = issue.provider.metadata.displayName;
     final tokenLabel = issue.tokenLabel ?? providerName;
+    final title = switch (issue.kind) {
+      CurrentStoreSyncIssueKind.manualReauthRequired =>
+        'Требуется повторная авторизация Cloud Sync',
+      CurrentStoreSyncIssueKind.missingToken =>
+        'Токен Cloud Sync больше не найден',
+    };
+    final body = switch (issue.kind) {
+      CurrentStoreSyncIssueKind.manualReauthRequired => [
+        'Токен cloud sync для провайдера $providerName больше не подходит для доступа к облаку.',
+        issue.description ??
+            'Приложение не смогло автоматически обновить авторизацию.',
+        'Текущий токен: $tokenLabel.',
+        'Чтобы продолжить синхронизацию, заново выполните авторизацию вручную. После этого при необходимости переподключите новый токен к текущему хранилищу.',
+      ],
+      CurrentStoreSyncIssueKind.missingToken => [
+        'Для провайдера $providerName была найдена сохранённая привязка cloud sync, но связанный OAuth-токен на устройстве больше не найден.',
+        issue.description ??
+            'Вероятно, токен был удалён, не импортирован или потерян после миграции данных.',
+        'Идентификатор отсутствующего токена: ${issue.tokenId}.',
+        'Чтобы продолжить работу с cloud sync, выполните авторизацию заново. После этого при необходимости снова подключите токен к текущему хранилищу.',
+      ],
+    };
     final action = await showDialog<_ManualReauthDialogAction>(
       context: dialogContext,
       useRootNavigator: true,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Требуется повторная авторизация Cloud Sync'),
+          title: Text(title),
           content: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 560),
             child: SingleChildScrollView(
-              child: SelectableText(
-                [
-                  'Токен cloud sync для провайдера $providerName больше не подходит для доступа к облаку.',
-                  issue.description ??
-                      'Приложение не смогло автоматически обновить авторизацию.',
-                  'Текущий токен: $tokenLabel.',
-                  'Чтобы продолжить синхронизацию, заново выполните авторизацию вручную. После этого при необходимости переподключите новый токен к текущему хранилищу.',
-                ].join('\n\n'),
-              ),
+              child: SelectableText(body.join('\n\n')),
             ),
           ),
           actions: [

@@ -22,8 +22,11 @@ final currentStoreSyncManualReauthIssueProvider =
       CurrentStoreSyncManualReauthIssue?
     >(CurrentStoreSyncManualReauthIssueNotifier.new);
 
+enum CurrentStoreSyncIssueKind { manualReauthRequired, missingToken }
+
 class CurrentStoreSyncManualReauthIssue {
   const CurrentStoreSyncManualReauthIssue({
+    required this.kind,
     required this.tokenId,
     required this.provider,
     this.storeUuid,
@@ -32,6 +35,7 @@ class CurrentStoreSyncManualReauthIssue {
     this.description,
   });
 
+  final CurrentStoreSyncIssueKind kind;
   final String tokenId;
   final CloudSyncProvider provider;
   final String? storeUuid;
@@ -40,7 +44,7 @@ class CurrentStoreSyncManualReauthIssue {
   final String? description;
 
   String get dedupeKey =>
-      '${storeUuid ?? ''}|${storePath ?? ''}|$tokenId|${provider.id}|${description ?? ''}';
+      '${kind.name}|${storeUuid ?? ''}|${storePath ?? ''}|$tokenId|${provider.id}|${description ?? ''}';
 }
 
 class CurrentStoreSyncManualReauthIssueNotifier
@@ -582,6 +586,11 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     var binding = await bindingService.getByStoreUuid(storeInfo.id);
     final token = binding == null ? null : await _loadToken(binding.tokenId);
     if (binding != null && token == null) {
+      _reportMissingTokenBindingIssue(
+        binding: binding,
+        storeUuid: storeInfo.id,
+        storePath: manager.currentStorePath,
+      );
       await bindingService.deleteBinding(storeInfo.id);
       binding = null;
     }
@@ -641,6 +650,26 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     ref.read(currentStoreSyncManualReauthIssueProvider.notifier).report(issue);
   }
 
+  void _reportMissingTokenBindingIssue({
+    required StoreSyncBinding binding,
+    String? storeUuid,
+    String? storePath,
+  }) {
+    ref
+        .read(currentStoreSyncManualReauthIssueProvider.notifier)
+        .report(
+          CurrentStoreSyncManualReauthIssue(
+            kind: CurrentStoreSyncIssueKind.missingToken,
+            tokenId: binding.tokenId,
+            provider: binding.provider,
+            storeUuid: storeUuid ?? binding.storeUuid,
+            storePath: storePath,
+            description:
+                'Привязка cloud sync найдена, но связанный OAuth-токен больше не доступен на этом устройстве.',
+          ),
+        );
+  }
+
   CurrentStoreSyncManualReauthIssue? _buildManualReauthIssue(
     Object error, {
     StoreSyncBinding? binding,
@@ -669,6 +698,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     };
 
     return CurrentStoreSyncManualReauthIssue(
+      kind: CurrentStoreSyncIssueKind.manualReauthRequired,
       tokenId: tokenId,
       provider: provider,
       storeUuid: storeUuid ?? binding?.storeUuid,
