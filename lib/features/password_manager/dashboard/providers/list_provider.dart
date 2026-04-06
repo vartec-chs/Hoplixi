@@ -17,8 +17,8 @@ import 'data_refresh_trigger_provider.dart';
 const int kDefaultPageSize = 20;
 
 /// Провайдер family: для каждого EntityType — свой экземпляр Notifier
-final paginatedListProvider =
-    AsyncNotifierProvider.family<
+final paginatedListProvider = AsyncNotifierProvider.family
+    .autoDispose<
       PaginatedListNotifier,
       DashboardListState<BaseCardDto>,
       EntityType
