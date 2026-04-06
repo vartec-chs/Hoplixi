@@ -87,8 +87,6 @@ dependencies:
   desktop_multi_window: ^0.3.0
   launch_at_startup: ^0.5.1
 
-  file_crypto:
-    path: ./packages/file_crypto
   card_scanner:
     path: ./packages/card_scanner
   typed_prefs:

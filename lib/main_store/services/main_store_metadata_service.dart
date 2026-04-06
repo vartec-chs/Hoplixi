@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
+import 'package:cryptography/cryptography.dart';
 import 'package:drift/drift.dart';
-import 'package:file_crypto/file_crypto.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/db_errors.dart';
 import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
@@ -168,7 +168,19 @@ class MainStoreMetadataService {
   }
 
   String _generateSecureKey() {
-    final bytes = KeyDerivationService.generateSecureRandomBytes(32);
+    final bytes = generateSecureRandomBytes(32);
     return base64Encode(bytes);
+  }
+
+  Uint8List generateSecureRandomBytes(int length) {
+    if (length <= 0) {
+      throw ArgumentError.value(length, 'length', 'Length must be positive');
+    }
+    final random = SecureRandom.fast;
+    final bytes = Uint8List(length);
+    for (var i = 0; i < length; i++) {
+      bytes[i] = random.nextInt(256);
+    }
+    return bytes;
   }
 }

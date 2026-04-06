@@ -16,6 +16,7 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_la
 import 'package:hoplixi/main_store/models/dto/index.dart';
 import 'package:hoplixi/main_store/provider/main_store_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/ui/button.dart';
 
 /// Длительность анимации для элементов списка.
 const kAnimationDuration = Duration(milliseconds: 180);
@@ -303,14 +304,17 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
           title: const Text('Закрыть базу данных?'),
           content: const Text('Вы уверены, что хотите закрыть базу данных?'),
           actions: <Widget>[
-            TextButton(
-              child: const Text('Нет'),
+            SmoothButton(
+              label: 'Нет',
               onPressed: () {
                 Navigator.of(context).pop();
               },
+              variant: .normal,
+              size: .small,
+              type: .text,
             ),
-            TextButton(
-              child: const Text('Да'),
+            SmoothButton(
+              label: 'Да',
               onPressed: () async {
                 Navigator.of(context).pop();
                 await _closeDatabase();
@@ -318,6 +322,8 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
                   context.go(AppRoutesPaths.home);
                 }
               },
+              variant: .error,
+              size: .small,
             ),
           ],
         );
