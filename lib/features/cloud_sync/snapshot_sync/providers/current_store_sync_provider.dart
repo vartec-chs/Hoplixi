@@ -16,6 +16,29 @@ final currentStoreSyncProvider =
       CurrentStoreSyncNotifier.new,
     );
 
+final closeStoreSyncStatusProvider =
+    NotifierProvider<CloseStoreSyncStatusNotifier, StoreSyncStatus?>(
+      CloseStoreSyncStatusNotifier.new,
+    );
+
+class CloseStoreSyncStatusNotifier extends Notifier<StoreSyncStatus?> {
+  @override
+  StoreSyncStatus? build() => null;
+
+  void setStatus(StoreSyncStatus? nextStatus) {
+    state = nextStatus;
+  }
+
+  void clear() {
+    state = null;
+  }
+}
+
+final closeStoreSnapshotSyncCoordinatorProvider =
+    Provider<CloseStoreSnapshotSyncCoordinator>(
+      (ref) => CloseStoreSnapshotSyncCoordinator(ref),
+    );
+
 final currentStoreSyncManualReauthIssueProvider =
     NotifierProvider<
       CurrentStoreSyncManualReauthIssueNotifier,
@@ -314,46 +337,18 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     required StoreSyncBinding binding,
     required AuthTokenEntry token,
   }) async {
-    final syncService = ref.read(snapshotSyncServiceProvider);
-    final baseState = status.copyWith(
-      isStoreOpen: true,
-      storePath: storePath,
-      storeUuid: binding.storeUuid,
-      storeName: status.storeName ?? storeInfo.name,
-      binding: binding,
-      token: token,
-      clearPendingConflict: true,
-      clearSyncProgress: true,
-      isSyncInProgress: false,
-      isApplyingRemoteUpdate: false,
-      requiresUnlockToApply: false,
-    );
-
-    state = AsyncData(baseState);
-
-    final result = await _runProgressStream(
-      baseState: baseState,
-      stream: syncService.syncWithProgress(
-        storePath: storePath,
-        storeInfo: storeInfo,
-        binding: binding,
-      ),
-      binding: binding,
-      token: token,
-      storePath: storePath,
-    );
-
-    state = AsyncData(
-      baseState.copyWith(
-        localManifest: result.localManifest,
-        remoteManifest: result.remoteManifest,
-        lastResultType: result.type,
-        clearSyncProgress: true,
-        isSyncInProgress: false,
-      ),
-    );
-
-    return result;
+    return ref
+        .read(closeStoreSnapshotSyncCoordinatorProvider)
+        .syncBeforeClose(
+          status: status,
+          storePath: storePath,
+          storeInfo: storeInfo,
+          binding: binding,
+          token: token,
+          onStatusChanged: (nextState) {
+            state = AsyncData(nextState);
+          },
+        );
   }
 
   Future<void> resolveConflictWithUpload() async {
@@ -707,4 +702,174 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       description: description,
     );
   }
+}
+
+class CloseStoreSnapshotSyncCoordinator {
+  const CloseStoreSnapshotSyncCoordinator(this.ref);
+
+  final Ref ref;
+
+  Future<SnapshotSyncResult> syncBeforeClose({
+    required StoreSyncStatus status,
+    required String storePath,
+    required StoreInfoDto storeInfo,
+    required StoreSyncBinding binding,
+    required AuthTokenEntry token,
+    void Function(StoreSyncStatus state)? onStatusChanged,
+  }) async {
+    final syncService = ref.read(snapshotSyncServiceProvider);
+    final baseState = status.copyWith(
+      isStoreOpen: true,
+      storePath: storePath,
+      storeUuid: binding.storeUuid,
+      storeName: status.storeName ?? storeInfo.name,
+      binding: binding,
+      token: token,
+      clearPendingConflict: true,
+      clearSyncProgress: true,
+      isSyncInProgress: false,
+      isApplyingRemoteUpdate: false,
+      requiresUnlockToApply: false,
+    );
+
+    onStatusChanged?.call(baseState);
+
+    final result = await _runProgressStream(
+      baseState: baseState,
+      stream: syncService.syncWithProgress(
+        storePath: storePath,
+        storeInfo: storeInfo,
+        binding: binding,
+      ),
+      binding: binding,
+      token: token,
+      storePath: storePath,
+      onStatusChanged: onStatusChanged,
+    );
+
+    onStatusChanged?.call(
+      baseState.copyWith(
+        localManifest: result.localManifest,
+        remoteManifest: result.remoteManifest,
+        lastResultType: result.type,
+        clearSyncProgress: true,
+        isSyncInProgress: false,
+      ),
+    );
+
+    return result;
+  }
+
+  Future<SnapshotSyncResult> _consumeProgressStream({
+    required StoreSyncStatus baseState,
+    required Stream<SnapshotSyncProgressEvent> stream,
+    void Function(StoreSyncStatus state)? onStatusChanged,
+  }) async {
+    SnapshotSyncResult? result;
+    await for (final event in stream) {
+      if (event is SnapshotSyncProgressUpdate) {
+        onStatusChanged?.call(
+          baseState.copyWith(
+            syncProgress: event.progress,
+            isSyncInProgress: true,
+          ),
+        );
+        continue;
+      }
+      if (event is SnapshotSyncProgressResult) {
+        result = event.result;
+      }
+    }
+
+    if (result == null) {
+      throw StateError('Snapshot sync stream completed without a result.');
+    }
+    return result;
+  }
+
+  Future<SnapshotSyncResult> _runProgressStream({
+    required StoreSyncStatus baseState,
+    required Stream<SnapshotSyncProgressEvent> stream,
+    required StoreSyncBinding binding,
+    required AuthTokenEntry token,
+    required String storePath,
+    void Function(StoreSyncStatus state)? onStatusChanged,
+  }) async {
+    try {
+      return await _consumeProgressStream(
+        baseState: baseState,
+        stream: stream,
+        onStatusChanged: onStatusChanged,
+      );
+    } catch (error, stackTrace) {
+      _reportManualReauthIfNeeded(
+        ref,
+        error,
+        binding: binding,
+        token: token,
+        storeUuid: binding.storeUuid,
+        storePath: storePath,
+      );
+      Error.throwWithStackTrace(error, stackTrace);
+    }
+  }
+}
+
+void _reportManualReauthIfNeeded(
+  Ref ref,
+  Object error, {
+  StoreSyncBinding? binding,
+  AuthTokenEntry? token,
+  String? storeUuid,
+  String? storePath,
+}) {
+  final issue = _buildManualReauthIssue(
+    error,
+    binding: binding,
+    token: token,
+    storeUuid: storeUuid,
+    storePath: storePath,
+  );
+  if (issue == null) {
+    return;
+  }
+  ref.read(currentStoreSyncManualReauthIssueProvider.notifier).report(issue);
+}
+
+CurrentStoreSyncManualReauthIssue? _buildManualReauthIssue(
+  Object error, {
+  StoreSyncBinding? binding,
+  AuthTokenEntry? token,
+  String? storeUuid,
+  String? storePath,
+}) {
+  if (error is! CloudStorageException ||
+      error.type != CloudStorageExceptionType.unauthorized) {
+    return null;
+  }
+
+  final tokenId = token?.id ?? binding?.tokenId;
+  final provider = token?.provider ?? binding?.provider ?? error.provider;
+  if (tokenId == null || provider == null) {
+    return null;
+  }
+
+  final description = switch (error.cause) {
+    CloudSyncHttpException(type: CloudSyncHttpExceptionType.refreshFailed) =>
+      'Не удалось автоматически обновить OAuth-токен. Требуется повторная ручная авторизация.',
+    CloudSyncHttpException(type: CloudSyncHttpExceptionType.unauthorized) =>
+      'Облачный провайдер отклонил текущий токен. Требуется повторная ручная авторизация.',
+    _ =>
+      'Доступ к облачному провайдеру больше не подтверждается. Требуется повторная ручная авторизация.',
+  };
+
+  return CurrentStoreSyncManualReauthIssue(
+    kind: CurrentStoreSyncIssueKind.manualReauthRequired,
+    tokenId: tokenId,
+    provider: provider,
+    storeUuid: storeUuid ?? binding?.storeUuid,
+    storePath: storePath,
+    tokenLabel: token?.displayLabel,
+    description: description,
+  );
 }

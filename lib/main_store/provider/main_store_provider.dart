@@ -466,6 +466,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     DatabaseState? openStateBeforeClose;
 
     try {
+      ref.read(closeStoreSyncStatusProvider.notifier).clear();
       logInfo('Closing store', tag: _logTag);
 
       if (!_currentState.isOpen) {
@@ -504,6 +505,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       });
 
       if (!isClosed) {
+        ref.read(closeStoreSyncStatusProvider.notifier).clear();
         return false;
       }
 
@@ -515,6 +517,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       // Успех - переводим в idle состояние
       _setState(const DatabaseState(status: DatabaseStatus.closed));
       _setState(const DatabaseState(status: DatabaseStatus.idle));
+      ref.read(closeStoreSyncStatusProvider.notifier).clear();
 
       logInfo('Store closed successfully', tag: _logTag);
       return true;
@@ -537,6 +540,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
           ),
         ),
       );
+      ref.read(closeStoreSyncStatusProvider.notifier).clear();
 
       return false;
     } finally {
@@ -555,6 +559,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       return;
     }
 
+    ref.read(closeStoreSyncStatusProvider.notifier).clear();
     logInfo('Locking store', tag: _logTag);
 
     final currentPath = _currentState.path;
@@ -589,6 +594,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         name: currentName,
       ),
     );
+    ref.read(closeStoreSyncStatusProvider.notifier).clear();
 
     logInfo('Store locked successfully', tag: _logTag);
   }
@@ -686,13 +692,18 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         case StoreVersionCompareResult.remoteMissing:
         case StoreVersionCompareResult.localNewer:
           final result = await ref
-              .read(currentStoreSyncProvider.notifier)
+              .read(closeStoreSnapshotSyncCoordinatorProvider)
               .syncBeforeClose(
                 status: status,
                 storePath: storePath,
                 storeInfo: storeInfo,
                 binding: binding,
                 token: token,
+                onStatusChanged: (nextState) {
+                  ref
+                      .read(closeStoreSyncStatusProvider.notifier)
+                      .setStatus(nextState);
+                },
               );
           logInfo(
             'Snapshot sync before close completed.',

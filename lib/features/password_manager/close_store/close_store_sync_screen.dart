@@ -10,7 +10,9 @@ class CloseStoreSyncScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dbState = ref.watch(mainStoreProvider).value;
-    final syncStatus = ref.watch(currentStoreSyncProvider).value;
+    final syncStatus =
+        ref.watch(closeStoreSyncStatusProvider) ??
+        ref.watch(currentStoreSyncProvider).value;
     final syncProgress = syncStatus?.syncProgress;
     final requiresUnlockToApply = syncStatus?.requiresUnlockToApply ?? false;
     final theme = Theme.of(context);
