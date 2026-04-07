@@ -16,6 +16,10 @@ class IconPickerButton extends ConsumerStatefulWidget {
   /// Callback при выборе иконки
   final ValueChanged<String?> onIconSelected;
 
+  /// Асинхронный callback перед открытием picker.
+  /// Верните `false`, чтобы отменить открытие.
+  final Future<bool> Function(BuildContext context)? onBeforeOpenPicker;
+
   /// Размер контейнера для превью
   final double size;
 
@@ -26,6 +30,7 @@ class IconPickerButton extends ConsumerStatefulWidget {
     super.key,
     this.selectedIconId,
     required this.onIconSelected,
+    this.onBeforeOpenPicker,
     this.size = 120,
     this.hintText,
   });
@@ -91,6 +96,11 @@ class _IconPickerButtonState extends ConsumerState<IconPickerButton> {
   }
 
   Future<void> _openIconPicker() async {
+    final canOpen = await widget.onBeforeOpenPicker?.call(context) ?? true;
+    if (!canOpen || !mounted) {
+      return;
+    }
+
     final selectedId = await showIconPickerModal(context, ref);
 
     if (selectedId != null && mounted) {

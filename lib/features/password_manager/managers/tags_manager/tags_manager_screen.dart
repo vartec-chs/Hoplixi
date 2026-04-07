@@ -74,8 +74,49 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
           tagState.when(
             data: (state) {
               if (state.items.isEmpty) {
-                return const SliverFillRemaining(
-                  child: Center(child: Text('Теги не найдены')),
+                return SliverFillRemaining(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 360),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 72,
+                            height: 72,
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withOpacity(0.10),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.label_off_outlined,
+                              size: 34,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Теги не найдены',
+                            style: Theme.of(context).textTheme.titleMedium,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Создайте первый тег для удобной организации.',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 );
               }
 

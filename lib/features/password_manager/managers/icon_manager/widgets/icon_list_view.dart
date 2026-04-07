@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/main_store/main_store.dart';
 import 'package:hoplixi/main_store/models/dto/icon_dto.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
+
 import '../provider/icon_list_provider.dart';
 import 'icon_card.dart';
 
@@ -11,12 +12,14 @@ class IconListView extends ConsumerStatefulWidget {
   final ScrollController scrollController;
   final VoidCallback onRefresh;
   final Function(IconsData) onIconTap;
+  final Function(IconsData)? onIconLongPress;
 
   const IconListView({
     super.key,
     required this.scrollController,
     required this.onRefresh,
     required this.onIconTap,
+    this.onIconLongPress,
   });
 
   @override
@@ -61,25 +64,43 @@ class _IconListViewState extends ConsumerState<IconListView> {
         if (items.isEmpty && !isLoading && error == null) {
           return SliverFillRemaining(
             child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.image_not_supported,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Иконки не найдены',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Попробуйте изменить фильтры',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 360),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.10),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.image_not_supported,
+                        size: 34,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+                    Text(
+                      'Иконки не найдены',
+                      style: Theme.of(context).textTheme.titleMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Создайте первую иконку для удобной идентификации категорий и записей.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -113,6 +134,9 @@ class _IconListViewState extends ConsumerState<IconListView> {
                       // iconData не передаем - IconCard загрузит асинхронно
                       onTap: () {
                         widget.onIconTap(item);
+                      },
+                      onLongPress: () {
+                        widget.onIconLongPress?.call(item);
                       },
                     );
                   },

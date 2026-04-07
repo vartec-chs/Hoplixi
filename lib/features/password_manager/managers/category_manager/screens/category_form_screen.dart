@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
@@ -10,6 +11,7 @@ import 'package:hoplixi/features/password_manager/pickers/icon_picker/icon_picke
 import 'package:hoplixi/main_store/models/dto/category_dto.dart';
 import 'package:hoplixi/main_store/models/enums/entity_types.dart';
 import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
@@ -144,6 +146,65 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
     );
   }
 
+  Future<bool> _handleBeforeIconPickerOpen(BuildContext context) async {
+    try {
+      final iconDao = await ref.read(iconDaoProvider.future);
+      final icons = await iconDao.getIconCardsPaginated(limit: 1, offset: 0);
+
+      if (icons.isNotEmpty) {
+        return true;
+      }
+
+      if (!context.mounted) {
+        return false;
+      }
+
+      final shouldCreate = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) {
+          return AlertDialog(
+            title: const Text('Иконки не найдены'),
+            content: const Text(
+              'Для категории пока нет доступных иконок. Создать новую иконку сейчас?',
+            ),
+            actions: [
+              SmoothButton(
+                type: SmoothButtonType.text,
+                variant: SmoothButtonVariant.error,
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                label: 'Нет',
+              ),
+              SmoothButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                label: 'Создать',
+                type: SmoothButtonType.filled,
+                variant: SmoothButtonVariant.normal,
+              ),
+            ],
+          );
+        },
+      );
+
+      if (shouldCreate != true || !context.mounted) {
+        return false;
+      }
+
+      final created = await context.push<bool>(
+        AppRoutesPaths.iconAddForEntity(widget.forEntity),
+      );
+
+      return created == true;
+    } catch (e) {
+      if (context.mounted) {
+        Toaster.error(
+          title: 'Ошибка загрузки иконок',
+          description: e.toString(),
+        );
+      }
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isDataLoading) {
@@ -190,6 +251,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                   Center(
                     child: IconPickerButton(
                       selectedIconId: _iconId,
+                      onBeforeOpenPicker: _handleBeforeIconPickerOpen,
                       onIconSelected: (id) {
                         setState(() {
                           _iconId = id;
@@ -431,8 +493,8 @@ String _getCategoryTypeLabel(CategoryType type) {
       return 'Лицензии';
     case CategoryType.recoveryCodes:
       return 'Коды восстановления';
-      case CategoryType.loyaltyCard:
-        return 'Карты лояльности';
+    case CategoryType.loyaltyCard:
+      return 'Карты лояльности';
     case CategoryType.mixed:
       return 'Смешанная';
   }
