@@ -143,7 +143,7 @@ class VaultItemDao extends DatabaseAccessor<MainStore>
   Future<List<LinkedVaultItemCardDto>> searchLinkableItems({
     String query = '',
     String? excludeItemId,
-    int limit = 50,
+    int limit = 30,
   }) async {
     final normalizedQuery = query.trim().toLowerCase();
     final itemsQuery = db.select(db.vaultItems).join([
