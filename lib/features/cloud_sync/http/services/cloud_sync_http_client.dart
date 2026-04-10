@@ -1,4 +1,5 @@
-﻿import 'dart:async';
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -10,7 +11,7 @@ import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_download_requ
 import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_exception.dart';
 import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_request.dart';
 import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_upload_request.dart';
-import 'package:hoplixi/features/cloud_sync/http/services/cloud_sync_http_transport.dart';
+import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_transport.dart';
 import 'package:hoplixi/features/cloud_sync/http/services/cloud_sync_token_refresh_service.dart';
 import 'package:hoplixi/features/cloud_sync/http/services/cloud_sync_token_resolver.dart';
 
@@ -304,12 +305,17 @@ class CloudSyncHttpClient implements CloudSyncHttpTransport {
           cause: error,
         );
       case DioExceptionType.badResponse:
-        final type = error.response?.statusCode == 401
+        final isUnauthorized = _isRefreshableUnauthorizedResponse(
+          provider: provider,
+          statusCode: error.response?.statusCode,
+          responseData: error.response?.data,
+        );
+        final type = isUnauthorized
             ? CloudSyncHttpExceptionType.unauthorized
             : CloudSyncHttpExceptionType.badResponse;
         return CloudSyncHttpException(
           type: type,
-          message: error.response?.statusCode == 401
+          message: isUnauthorized
               ? 'Cloud API request is unauthorized.'
               : 'Cloud API returned an error response.',
           provider: provider,
@@ -350,6 +356,76 @@ class CloudSyncHttpClient implements CloudSyncHttpTransport {
         );
     }
   }
+}
+
+bool _isRefreshableUnauthorizedResponse({
+  required CloudSyncProvider provider,
+  required int? statusCode,
+  required Object? responseData,
+}) {
+  if (statusCode == 401) {
+    return true;
+  }
+
+  if (provider == CloudSyncProvider.dropbox && statusCode == 400) {
+    final summary = _extractDropboxErrorSummary(responseData);
+    if (summary == null) {
+      return false;
+    }
+
+    return summary.contains('expired_access_token') ||
+        summary.contains('invalid_access_token');
+  }
+
+  return false;
+}
+
+String? _extractDropboxErrorSummary(Object? responseData) {
+  if (responseData == null) {
+    return null;
+  }
+
+  final payload = switch (responseData) {
+    Map<String, dynamic> map => map,
+    Map map => map.map((key, value) => MapEntry(key.toString(), value)),
+    String text when text.trim().isNotEmpty => _decodeJsonMap(text.trim()),
+    _ => null,
+  };
+
+  if (payload == null) {
+    return null;
+  }
+
+  final summary = payload['error_summary'];
+  if (summary is String && summary.trim().isNotEmpty) {
+    return summary.trim();
+  }
+
+  final error = payload['error'];
+  if (error is Map) {
+    final tag = error['.tag'];
+    if (tag is String && tag.trim().isNotEmpty) {
+      return tag.trim();
+    }
+  }
+
+  return null;
+}
+
+Map<String, dynamic>? _decodeJsonMap(String text) {
+  try {
+    final decoded = jsonDecode(text);
+    if (decoded is Map<String, dynamic>) {
+      return decoded;
+    }
+    if (decoded is Map) {
+      return decoded.map((key, value) => MapEntry(key.toString(), value));
+    }
+  } catch (_) {
+    return null;
+  }
+
+  return null;
 }
 
 class _CloudSyncAuthInterceptor extends QueuedInterceptor {
@@ -412,7 +488,11 @@ class _CloudSyncAuthInterceptor extends QueuedInterceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    if (err.response?.statusCode != 401) {
+    if (!_isRefreshableUnauthorizedResponse(
+      provider: _provider,
+      statusCode: err.response?.statusCode,
+      responseData: err.response?.data,
+    )) {
       handler.next(err);
       return;
     }
@@ -471,7 +551,12 @@ class _CloudSyncAuthInterceptor extends QueuedInterceptor {
     } catch (error, stackTrace) {
       final cloudError = error is CloudSyncHttpException
           ? error
-          : error is DioException && error.response?.statusCode == 401
+          : error is DioException &&
+                _isRefreshableUnauthorizedResponse(
+                  provider: _provider,
+                  statusCode: error.response?.statusCode,
+                  responseData: error.response?.data,
+                )
           ? CloudSyncHttpException(
               type: CloudSyncHttpExceptionType.unauthorized,
               message: 'Cloud API request remained unauthorized after retry.',

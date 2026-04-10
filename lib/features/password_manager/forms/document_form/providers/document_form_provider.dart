@@ -287,60 +287,7 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
 
       logTrace('Scanned docs: $scannedDocs', tag: _logTag);
 
-      final List<String> paths = [];
-
-      if (scannedDocs is Map) {
-        final dynamic imagesPayload =
-            scannedDocs['images'] ?? scannedDocs['Uri'];
-
-        if (imagesPayload is List) {
-          for (final item in imagesPayload) {
-            if (item is String && item.isNotEmpty) {
-              if (item.startsWith('file://')) {
-                try {
-                  paths.add(Uri.parse(item).toFilePath());
-                } catch (_) {
-                  paths.add(item);
-                }
-              } else {
-                paths.add(item);
-              }
-            }
-          }
-        } else if (imagesPayload is String && imagesPayload.isNotEmpty) {
-          if (imagesPayload.startsWith('file://')) {
-            try {
-              paths.add(Uri.parse(imagesPayload).toFilePath());
-            } catch (_) {
-              paths.add(imagesPayload);
-            }
-          } else {
-            paths.add(imagesPayload);
-          }
-        }
-      } else if (scannedDocs is List) {
-        for (final item in scannedDocs) {
-          if (item is String && item.isNotEmpty) {
-            if (item.startsWith('file://')) {
-              try {
-                paths.add(Uri.parse(item).toFilePath());
-              } catch (_) {
-                paths.add(item);
-              }
-            } else {
-              paths.add(item);
-            }
-          }
-        }
-      }
-
-      if (paths.isEmpty) {
-        logWarning(
-          'Scanner returned no image paths in payload: $scannedDocs',
-          tag: _logTag,
-        );
-        return;
-      }
+      final paths = scannedDocs.images;
 
       final newPages = <DocumentPageInfo>[];
       final startPageNumber = state.pages.length + 1;

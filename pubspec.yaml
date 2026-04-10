@@ -66,7 +66,7 @@ dependencies:
   flutter_quill: ^11.5.0
   otp: ^3.2.0
   zxing2: ^0.2.4
-  image_cropper: ^12.1.1
+  image_cropper: ^12.2.0
   mobile_scanner: ^7.2.0
   crop_image: ^1.0.17
   pasteboard: ^0.5.0
@@ -77,7 +77,7 @@ dependencies:
   protobuf: ^4.2.0
   lucide_icons_flutter: ^3.1.12
   flutter_graph_view: ^2.1.0
-  flutter_doc_scanner: ^0.0.19
+  flutter_doc_scanner: ^0.0.20
   build_config: ^1.2.0
   rename_app: ^1.6.5
   open_dir: ^0.0.2+1
@@ -108,9 +108,9 @@ dependencies:
   flutter_zxing: ^2.2.1
   slang_flutter: ^4.14.0
   slang: ^4.14.0
-  connectivity_plus: ^7.1.0
+  connectivity_plus: ^7.1.1
   no_screenshot: ^1.1.0
-  flutter_contacts: ^2.0.1
+  flutter_contacts: ^2.0.2
   op_wifi_utils: ^1.4.3
   flutter_appauth: ^12.0.0
   url_launcher: ^6.3.2

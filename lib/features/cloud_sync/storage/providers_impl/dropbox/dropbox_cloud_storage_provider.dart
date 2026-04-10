@@ -8,7 +8,7 @@ import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_download_requ
 import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_exception.dart';
 import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_request.dart';
 import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_upload_request.dart';
-import 'package:hoplixi/features/cloud_sync/http/services/cloud_sync_http_transport.dart';
+import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_transport.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_file.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_folder.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_list_page.dart';
