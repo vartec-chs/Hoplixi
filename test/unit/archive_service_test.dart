@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hoplixi/db_core/services/archive_service.dart';
+import 'package:hoplixi/db_core/services/other/archive_service.dart';
 import 'package:hoplixi/db_core/models/db_errors.dart';
 import 'package:path/path.dart' as p;
 

@@ -6,7 +6,7 @@ import 'package:hoplixi/features/local_send/models/history_item.dart';
 import 'package:hoplixi/features/local_send/providers/persisted_history_provider.dart';
 import 'package:hoplixi/features/local_send/widgets/import_cloud_sync_tokens_dialog.dart';
 import 'package:hoplixi/features/local_send/widgets/import_store_archive_dialog.dart';
-import 'package:hoplixi/db_core/services/archive_service.dart';
+import 'package:hoplixi/db_core/services/other/archive_service.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:open_file/open_file.dart' as open_file;
 

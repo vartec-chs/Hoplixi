@@ -21,7 +21,7 @@ import 'package:hoplixi/features/local_send/services/signaling_server.dart';
 import 'package:hoplixi/features/local_send/services/webrtc_transfer_service.dart';
 import 'package:hoplixi/db_core/models/store_folder_info.dart';
 import 'package:hoplixi/db_core/provider/archive_provider.dart';
-import 'package:hoplixi/db_core/services/archive_service.dart';
+import 'package:hoplixi/db_core/services/other/archive_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';

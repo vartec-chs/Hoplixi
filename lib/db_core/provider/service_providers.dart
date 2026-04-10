@@ -2,8 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/db_core/models/db_errors.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
 import 'package:hoplixi/db_core/provider/main_store_provider.dart';
-import 'package:hoplixi/db_core/services/document_storage_service.dart';
-import 'package:hoplixi/db_core/services/file_storage_service.dart';
+import 'package:hoplixi/db_core/services/other/document_storage_service.dart';
+import 'package:hoplixi/db_core/services/other/file_storage_service.dart';
 import 'package:hoplixi/db_core/services/main_store_storage_service.dart';
 import 'package:hoplixi/db_core/services/store_cleanup_service.dart';
 
