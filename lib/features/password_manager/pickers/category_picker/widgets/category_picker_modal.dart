@@ -4,8 +4,8 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/providers/category_picker_provider.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_filters.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_item.dart';
-import 'package:hoplixi/main_store/models/dto/category_dto.dart';
-import 'package:hoplixi/main_store/models/enums/index.dart';
+import 'package:hoplixi/db_core/models/dto/category_dto.dart';
+import 'package:hoplixi/db_core/models/enums/index.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 /// Модальное окно выбора категории

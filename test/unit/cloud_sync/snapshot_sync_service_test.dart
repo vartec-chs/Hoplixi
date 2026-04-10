@@ -19,9 +19,9 @@ import 'package:hoplixi/features/cloud_sync/storage/models/cloud_resource_kind.d
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_resource_ref.dart';
 import 'package:hoplixi/features/cloud_sync/storage/services/cloud_storage_provider.dart';
 import 'package:hoplixi/features/cloud_sync/storage/services/cloud_storage_repository.dart';
-import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
-import 'package:hoplixi/main_store/models/store_manifest.dart';
-import 'package:hoplixi/main_store/services/store_manifest_service.dart';
+import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/db_core/models/store_manifest.dart';
+import 'package:hoplixi/db_core/services/store_manifest_service.dart';
 import 'package:path/path.dart' as p;
 
 void main() {

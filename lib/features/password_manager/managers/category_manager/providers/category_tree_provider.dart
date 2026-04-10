@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_store/models/dto/category_tree_node.dart';
-import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/db_core/models/dto/category_tree_node.dart';
+import 'package:hoplixi/db_core/provider/dao_providers.dart';
 
 import '../../providers/manager_refresh_trigger_provider.dart';
 import '../models/category_tree_state.dart';

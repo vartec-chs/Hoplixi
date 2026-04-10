@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/main_store/models/dto/otp_dto.dart';
+import 'package:hoplixi/db_core/models/dto/otp_dto.dart';
 
 /// Элемент списка OTP
 class OtpListTile extends StatelessWidget {

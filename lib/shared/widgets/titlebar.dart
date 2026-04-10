@@ -5,7 +5,7 @@ import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/di_init.dart';
-import 'package:hoplixi/main_store/provider/main_store_provider.dart';
+import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 import 'package:hoplixi/shared/widgets/close_database_button.dart';
 import 'package:hoplixi/shared/widgets/language_switcher.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';

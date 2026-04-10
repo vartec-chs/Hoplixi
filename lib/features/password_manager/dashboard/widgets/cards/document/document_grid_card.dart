@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
-import 'package:hoplixi/main_store/models/dto/document_dto.dart';
-import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/db_core/models/dto/document_dto.dart';
+import 'package:hoplixi/db_core/provider/dao_providers.dart';
 
 class DocumentGridCard extends ConsumerStatefulWidget {
   final DocumentCardDto document;

@@ -6,9 +6,9 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/base_filter_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/models/drawer_tag_filter_state.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
-import 'package:hoplixi/main_store/models/enums/index.dart';
-import 'package:hoplixi/main_store/models/filter/index.dart';
-import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/db_core/models/enums/index.dart';
+import 'package:hoplixi/db_core/models/filter/index.dart';
+import 'package:hoplixi/db_core/provider/dao_providers.dart';
 
 const int _kTagPageSize = 20;
 const Duration _kTagSearchDebounce = Duration(milliseconds: 300);

@@ -35,7 +35,7 @@
 
 ## Этап 1. Добавить enum-типы
 
-Файл: `lib/main_store/models/enums/entity_types.dart`
+Файл: `lib/db_core/models/enums/entity_types.dart`
 
 1. Добавь новый `VaultItemType`.
 2. Добавь маппинг в `VaultItemTypeX.value` и `VaultItemTypeX.fromString`.
@@ -54,38 +54,38 @@
 
 Минимум 2 таблицы:
 
-1. `lib/main_store/tables/<entity>_items.dart`
+1. `lib/db_core/tables/<entity>_items.dart`
    - `itemId` как PK + FK -> `vault_items.id` (`ON DELETE CASCADE`)
    - только специфичные поля
    - `tableName`
    - `customConstraints` (если нужны)
 
-2. `lib/main_store/tables/<entity>_history.dart`
+2. `lib/db_core/tables/<entity>_history.dart`
    - `historyId` как PK + FK -> `vault_item_history.id`
    - snapshot специфичных полей
 
 И подключи их в экспорты:
 
-- `lib/main_store/tables/index.dart`
+- `lib/db_core/tables/index.dart`
 
 ---
 
 ## Этап 3. Подключить таблицы и DAO в MainStore
 
-Файл: `lib/main_store/main_store.dart`
+Файл: `lib/db_core/main_store.dart`
 
 1. Добавь новые таблицы в `@DriftDatabase(tables: [...])`.
 2. Добавь DAO в `@DriftDatabase(daos: [...])`.
 3. При необходимости добавь `watchDataChanged` readsFrom.
 4. Добавь/обнови индексы под типичные `WHERE`/`ORDER BY`, но SQL индексы храни в
-   отдельном файле (рекомендуемо: `lib/main_store/indexes/index.dart`), а в
+   отдельном файле (рекомендуемо: `lib/db_core/indexes/index.dart`), а в
    `_installIndexes()` только разворачивай общий список (например
    `for (final sql in allMainStoreIndexes)`).
 
 > Рекомендация по структуре:
 >
-> - `lib/main_store/indexes/index.dart` — exports
-> - `lib/main_store/indexes/main_store_indexes.dart` —
+> - `lib/db_core/indexes/index.dart` — exports
+> - `lib/db_core/indexes/main_store_indexes.dart` —
 >   `const List<String> allMainStoreIndexes`
 > - `main_store.dart` — только выполнение SQL из списка
 
@@ -98,12 +98,12 @@
 
 ## Этап 4. Реализовать CRUD DAO
 
-Пример-референс: `lib/main_store/dao/password_dao.dart`
+Пример-референс: `lib/db_core/dao/password_dao.dart`
 
-Создай `lib/main_store/dao/<entity>_dao.dart`:
+Создай `lib/db_core/dao/<entity>_dao.dart`:
 
 - DAO должен `implements BaseMainEntityDao`
-  (`lib/main_store/models/base_main_entity_dao.dart`)
+  (`lib/db_core/models/base_main_entity_dao.dart`)
 - обязательно реализуй: `softDelete`, `restoreFromDeleted`, `permanentDelete`,
   `toggleFavorite`, `togglePin`, `toggleArchive`, `incrementUsage`
 
@@ -121,8 +121,8 @@
 
 Подключи DAO в:
 
-- `lib/main_store/dao/index.dart`
-- `lib/main_store/provider/dao_providers.dart` (обязательно добавить
+- `lib/db_core/dao/index.dart`
+- `lib/db_core/provider/dao_providers.dart` (обязательно добавить
   `FutureProvider` для CRUD DAO, history DAO и filter DAO)
 
 ---
@@ -131,7 +131,7 @@
 
 ### DTO
 
-Файл: `lib/main_store/models/dto/<entity>_dto.dart`
+Файл: `lib/db_core/models/dto/<entity>_dto.dart`
 
 Обычно нужны:
 
@@ -142,11 +142,11 @@
 
 Обнови экспорт:
 
-- `lib/main_store/models/dto/index.dart`
+- `lib/db_core/models/dto/index.dart`
 
 ### Filter model
 
-Файл: `lib/main_store/models/filter/<entities>_filter.dart`
+Файл: `lib/db_core/models/filter/<entities>_filter.dart`
 
 - `@freezed` фильтр с полем `base: BaseFilter`
 - enum сортировки `<Entities>SortField`
@@ -155,15 +155,15 @@
 
 Обнови экспорт:
 
-- `lib/main_store/models/filter/index.dart`
+- `lib/db_core/models/filter/index.dart`
 
 ---
 
 ## Этап 6. Реализовать Filter DAO
 
-Референс: `lib/main_store/dao/filters_dao/password_filter_dao.dart`
+Референс: `lib/db_core/dao/filters_dao/password_filter_dao.dart`
 
-Создай `lib/main_store/dao/filters_dao/<entity>_filter_dao.dart`:
+Создай `lib/db_core/dao/filters_dao/<entity>_filter_dao.dart`:
 
 - `implements FilterDao<<Entities>Filter, <Entity>CardDto>`
 - `getFiltered(filter)`
@@ -176,7 +176,7 @@
 
 Подключи экспорт:
 
-- `lib/main_store/dao/filters_dao/filters_dao.dart`
+- `lib/db_core/dao/filters_dao/filters_dao.dart`
 
 ---
 
@@ -291,12 +291,12 @@
 
 1. Создай SQL-триггеры:
 
-- `lib/main_store/triggers/<entities>_triggers.dart`
+- `lib/db_core/triggers/<entities>_triggers.dart`
   - create/drop lists
 
 2. Экспортируй триггеры:
 
-- `lib/main_store/triggers/index.dart`
+- `lib/db_core/triggers/index.dart`
   - обязательно отдельно держи history-trigger файлы и timestamps-trigger файлы,
     и экспортируй оба набора
 
@@ -309,8 +309,8 @@
 
 4. Реализуй history DAO:
 
-- `lib/main_store/dao/history_dao/<entity>_history_dao.dart`
-- DTO: `lib/main_store/models/dto/<entity>_history_dto.dart`
+- `lib/db_core/dao/history_dao/<entity>_history_dao.dart`
+- DTO: `lib/db_core/models/dto/<entity>_history_dto.dart`
 - экспорт в `dao/index.dart` и `models/dto/index.dart`
 
 5. Подключи history UI/list provider при необходимости:

@@ -1,7 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:hoplixi/core/services/services.dart';
-import 'package:hoplixi/main_store/services/db_history_services.dart';
+import 'package:hoplixi/db_core/services/db_history_services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:typed_prefs/typed_prefs.dart';

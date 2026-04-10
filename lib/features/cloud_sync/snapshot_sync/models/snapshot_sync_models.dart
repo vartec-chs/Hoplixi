@@ -1,6 +1,6 @@
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
-import 'package:hoplixi/main_store/models/store_manifest.dart';
+import 'package:hoplixi/db_core/models/store_manifest.dart';
 
 enum StoreVersionCompareResult {
   differentStore,

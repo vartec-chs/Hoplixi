@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/snapshot_sync_progress_card.dart';
-import 'package:hoplixi/main_store/provider/main_store_provider.dart';
+import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 
 class CloseStoreSyncScreen extends ConsumerWidget {
   const CloseStoreSyncScreen({super.key});

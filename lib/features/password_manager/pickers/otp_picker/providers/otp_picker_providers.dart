@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/pickers/otp_picker/models/otp_picker_models.dart';
-import 'package:hoplixi/main_store/models/filter/base_filter.dart';
-import 'package:hoplixi/main_store/models/filter/otps_filter.dart';
-import 'package:hoplixi/main_store/provider/main_store_provider.dart';
+import 'package:hoplixi/db_core/models/filter/base_filter.dart';
+import 'package:hoplixi/db_core/models/filter/otps_filter.dart';
+import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 
 const int pageSize = 20;
 

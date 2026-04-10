@@ -5,7 +5,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/managers/category_manager/providers/category_filter_provider.dart';
 import 'package:hoplixi/features/password_manager/managers/category_manager/providers/category_pagination_provider.dart';
 import 'package:hoplixi/features/password_manager/managers/category_manager/providers/category_tree_provider.dart';
-import 'package:hoplixi/main_store/models/filter/index.dart';
+import 'package:hoplixi/db_core/models/filter/index.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 import '../widgets/category_manager_app_bar.dart';

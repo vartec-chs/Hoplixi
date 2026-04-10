@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
+import 'package:hoplixi/db_core/models/dto/tag_dto.dart';
 
 /// Элемент списка тегов в пикере
 class TagPickerItem extends StatelessWidget {

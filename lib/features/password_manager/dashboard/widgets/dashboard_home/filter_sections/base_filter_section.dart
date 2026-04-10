@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hoplixi/main_store/models/filter/base_filter.dart';
+import 'package:hoplixi/db_core/models/filter/base_filter.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:intl/intl.dart' show DateFormat;
 

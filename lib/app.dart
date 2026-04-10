@@ -22,7 +22,7 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/cloud_sync_sna
 import 'package:hoplixi/features/password_manager/store_settings/providers/store_settings_modal_provider.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/global_key.dart';
-import 'package:hoplixi/main_store/provider/decrypted_files_guard_provider.dart';
+import 'package:hoplixi/db_core/provider/decrypted_files_guard_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/routing/router.dart';
 import 'package:hoplixi/shared/ui/button.dart';

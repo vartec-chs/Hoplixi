@@ -5,10 +5,10 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/dashboard/models/list_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/index.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_tab_provider.dart';
-import 'package:hoplixi/main_store/dao/filters_dao/filter.dart';
-import 'package:hoplixi/main_store/models/dto/index.dart';
-import 'package:hoplixi/main_store/models/filter/index.dart';
-import 'package:hoplixi/main_store/provider/index.dart';
+import 'package:hoplixi/db_core/dao/filters_dao/filter.dart';
+import 'package:hoplixi/db_core/models/dto/index.dart';
+import 'package:hoplixi/db_core/models/filter/index.dart';
+import 'package:hoplixi/db_core/provider/index.dart';
 
 import '../models/filter_tab.dart';
 import 'data_refresh_trigger_provider.dart';

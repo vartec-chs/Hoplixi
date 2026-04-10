@@ -40,7 +40,7 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/wifi/w
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/wifi/wifi_list_card.dart';
 import 'package:hoplixi/features/password_manager/decrypt_modal/document_decrypt_modal.dart';
 import 'package:hoplixi/features/password_manager/decrypt_modal/file_decrypt_modal.dart';
-import 'package:hoplixi/main_store/models/dto/index.dart';
+import 'package:hoplixi/db_core/models/dto/index.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:sliver_tools/sliver_tools.dart';

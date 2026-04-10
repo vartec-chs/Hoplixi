@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
-import 'package:hoplixi/main_store/models/dto/index.dart';
-import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
+import 'package:hoplixi/db_core/models/dto/index.dart';
+import 'package:hoplixi/db_core/models/dto/tag_dto.dart';
 
 class BaseGridCard extends StatefulWidget {
   final String title;

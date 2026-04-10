@@ -11,9 +11,9 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/cloud_manifest.
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_service.dart';
 import 'package:hoplixi/features/password_manager/open_store/models/open_store_state.dart';
-import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
-import 'package:hoplixi/main_store/provider/db_history_provider.dart';
-import 'package:hoplixi/main_store/provider/main_store_provider.dart';
+import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/db_core/provider/db_history_provider.dart';
+import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 import 'package:path/path.dart' as p;
 
 final openStoreFormProvider =

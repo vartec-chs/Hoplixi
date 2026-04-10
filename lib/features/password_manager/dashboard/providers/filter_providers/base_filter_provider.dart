@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/main_store/models/filter/index.dart';
+import 'package:hoplixi/db_core/models/filter/index.dart';
 
 /// Провайдер для управления базовым фильтром
 final baseFilterProvider = NotifierProvider<BaseFilterNotifier, BaseFilter>(

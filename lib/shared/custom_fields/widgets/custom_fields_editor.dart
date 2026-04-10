@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/main_store/models/enums/entity_types.dart';
+import 'package:hoplixi/db_core/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:intl/intl.dart' show DateFormat;

@@ -599,7 +599,7 @@ Navigation:
 See [docs-ai/gorouter-navigation.md](docs-ai/gorouter-navigation.md) for
 detailed navigation recipes and examples.
 
-## Main Store (`lib/main_store/`)
+## Main Store (`lib/db_core/`)
 
 Manages SQLite3 Multiple Ciphers-encrypted Drift database for password manager
 data:

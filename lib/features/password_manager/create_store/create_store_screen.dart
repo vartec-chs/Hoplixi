@@ -11,8 +11,8 @@ import 'package:hoplixi/features/password_manager/create_store/widgets/step1_nam
 import 'package:hoplixi/features/password_manager/create_store/widgets/step2_select_path.dart';
 import 'package:hoplixi/features/password_manager/create_store/widgets/step3_master_password.dart';
 import 'package:hoplixi/features/password_manager/create_store/widgets/step4_confirmation.dart';
-import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
-import 'package:hoplixi/main_store/provider/main_store_provider.dart';
+import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/widgets/titlebar.dart';
 

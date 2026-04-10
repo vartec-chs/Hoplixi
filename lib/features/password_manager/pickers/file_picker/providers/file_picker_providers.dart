@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/pickers/file_picker/models/file_picker_models.dart';
-import 'package:hoplixi/main_store/dao/index.dart';
-import 'package:hoplixi/main_store/models/filter/base_filter.dart';
-import 'package:hoplixi/main_store/models/filter/files_filter.dart';
-import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/db_core/dao/index.dart';
+import 'package:hoplixi/db_core/models/filter/base_filter.dart';
+import 'package:hoplixi/db_core/models/filter/files_filter.dart';
+import 'package:hoplixi/db_core/provider/dao_providers.dart';
 
 const int _pageSize = 20;
 

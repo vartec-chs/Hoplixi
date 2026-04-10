@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
-import 'package:hoplixi/main_store/models/enums/entity_types.dart';
+import 'package:hoplixi/db_core/models/enums/entity_types.dart';
 
 part 'otp_form_state.freezed.dart';
 

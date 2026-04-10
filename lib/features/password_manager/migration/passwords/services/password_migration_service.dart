@@ -1,5 +1,5 @@
-import 'package:hoplixi/main_store/dao/password_dao.dart';
-import 'package:hoplixi/main_store/models/dto/password_dto.dart';
+import 'package:hoplixi/db_core/dao/password_dao.dart';
+import 'package:hoplixi/db_core/models/dto/password_dto.dart';
 import 'package:result_dart/result_dart.dart';
 
 class PasswordMigrationService {

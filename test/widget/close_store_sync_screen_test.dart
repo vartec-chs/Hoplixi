@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/password_manager/close_store/close_store_sync_screen.dart';
-import 'package:hoplixi/main_store/models/db_state.dart';
-import 'package:hoplixi/main_store/provider/main_store_provider.dart';
+import 'package:hoplixi/db_core/models/db_state.dart';
+import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 
 void main() {
   testWidgets(

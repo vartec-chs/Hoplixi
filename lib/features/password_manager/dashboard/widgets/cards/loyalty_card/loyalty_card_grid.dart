@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
-import 'package:hoplixi/main_store/models/dto/loyalty_card_dto.dart';
-import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/db_core/models/dto/loyalty_card_dto.dart';
+import 'package:hoplixi/db_core/provider/dao_providers.dart';
 
 class LoyaltyCardGridCard extends ConsumerStatefulWidget {
   const LoyaltyCardGridCard({

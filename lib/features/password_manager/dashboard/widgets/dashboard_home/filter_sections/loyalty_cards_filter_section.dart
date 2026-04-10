@@ -1,5 +1,5 @@
 ﻿import 'package:flutter/material.dart';
-import 'package:hoplixi/main_store/models/filter/loyalty_cards_filter.dart';
+import 'package:hoplixi/db_core/models/filter/loyalty_cards_filter.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 class LoyaltyCardsFilterSection extends StatefulWidget {

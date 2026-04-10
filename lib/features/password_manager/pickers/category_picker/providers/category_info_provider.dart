@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_store/models/dto/category_dto.dart';
-import 'package:hoplixi/main_store/models/enums/index.dart';
-import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/db_core/models/dto/category_dto.dart';
+import 'package:hoplixi/db_core/models/enums/index.dart';
+import 'package:hoplixi/db_core/provider/dao_providers.dart';
 
 /// Базовая информация о категории для отображения в полях
 class CategoryBasicInfo {

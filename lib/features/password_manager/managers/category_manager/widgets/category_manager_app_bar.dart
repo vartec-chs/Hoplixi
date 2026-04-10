@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/managers/category_manager/providers/category_filter_provider.dart';
-import 'package:hoplixi/main_store/models/filter/categories_filter.dart';
+import 'package:hoplixi/db_core/models/filter/categories_filter.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 import 'category_manager_filter_bar.dart';

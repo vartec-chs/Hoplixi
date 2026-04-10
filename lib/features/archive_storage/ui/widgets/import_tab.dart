@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/archive_storage/provider/archive_notifier.dart';
-import 'package:hoplixi/main_store/models/db_errors.dart';
+import 'package:hoplixi/db_core/models/db_errors.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 

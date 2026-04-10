@@ -6,7 +6,7 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_m
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/cloud_sync_remote_change_dialog.dart';
 import 'package:hoplixi/global_key.dart';
-import 'package:hoplixi/main_store/provider/main_store_provider.dart';
+import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 
 class CloudSyncSnapshotSyncListener extends ConsumerStatefulWidget {
   const CloudSyncSnapshotSyncListener({super.key, required this.child});

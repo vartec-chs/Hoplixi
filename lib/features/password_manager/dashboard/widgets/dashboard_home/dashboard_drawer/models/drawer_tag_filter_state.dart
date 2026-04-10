@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hoplixi/main_store/models/dto/tag_dto.dart';
+import 'package:hoplixi/db_core/models/dto/tag_dto.dart';
 
 part 'drawer_tag_filter_state.freezed.dart';
 

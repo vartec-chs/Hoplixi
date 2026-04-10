@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_store/models/dto/icon_dto.dart';
-import 'package:hoplixi/main_store/models/filter/icons_filter.dart';
-import 'package:hoplixi/main_store/provider/dao_providers.dart';
+import 'package:hoplixi/db_core/models/dto/icon_dto.dart';
+import 'package:hoplixi/db_core/models/filter/icons_filter.dart';
+import 'package:hoplixi/db_core/provider/dao_providers.dart';
 import '../models/icon_picker_state.dart';
 import 'icon_picker_filter_provider.dart';
 

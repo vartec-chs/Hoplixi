@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/current_view_mode_provider.dart';
-import 'package:hoplixi/main_store/models/dto/index.dart';
+import 'package:hoplixi/db_core/models/dto/index.dart';
 
 class EntitySliverList<T extends BaseCardDto> extends StatefulWidget {
   final List<T> items;

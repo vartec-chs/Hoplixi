@@ -1,5 +1,5 @@
 import 'package:hoplixi/core/utils/smart_converter_base.dart';
-import 'package:hoplixi/main_store/models/enums/entity_types.dart';
+import 'package:hoplixi/db_core/models/enums/entity_types.dart';
 
 /// Результат парсинга OTP URI
 class OtpUriParseResult {

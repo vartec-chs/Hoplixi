@@ -1,11 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hoplixi/main_store/main_store_manager.dart';
-import 'package:hoplixi/main_store/models/db_history_model.dart';
-import 'package:hoplixi/main_store/models/dto/main_store_dto.dart';
-import 'package:hoplixi/main_store/services/db_history_services.dart';
-import 'package:hoplixi/main_store/services/db_key_derivation_service.dart';
+import 'package:hoplixi/db_core/main_store_manager.dart';
+import 'package:hoplixi/db_core/models/db_history_model.dart';
+import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/db_core/services/db_history_services.dart';
+import 'package:hoplixi/db_core/services/db_key_derivation_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
