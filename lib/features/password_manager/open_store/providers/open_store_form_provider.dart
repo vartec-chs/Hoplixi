@@ -321,6 +321,51 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
     }
   }
 
+  Future<bool> deleteRemoteSnapshot(CloudManifestStoreEntry entry) async {
+    final currentState = _currentState;
+    final tokenId = currentState.selectedCloudTokenId;
+    final provider = currentState.selectedCloudProvider;
+    if (tokenId == null || provider == null) {
+      _setState(
+        currentState.copyWith(
+          remoteSnapshotsError:
+              'Выберите провайдера и OAuth токен перед удалением снапшота.',
+        ),
+      );
+      return false;
+    }
+
+    _setState(currentState.copyWith(remoteSnapshotsError: null));
+
+    try {
+      await ref
+          .read(snapshotSyncServiceProvider)
+          .deleteRemoteSnapshot(tokenId: tokenId, entry: entry);
+      if (!_isMounted) {
+        return false;
+      }
+
+      await _loadRemoteSnapshots(tokenId);
+      return true;
+    } catch (error, stackTrace) {
+      logError(
+        'Error deleting remote snapshot: $error',
+        stackTrace: stackTrace,
+        tag: 'OpenStoreForm',
+      );
+      if (!_isMounted) {
+        return false;
+      }
+
+      _setState(
+        _currentState.copyWith(
+          remoteSnapshotsError: 'Ошибка удаления снапшота: $error',
+        ),
+      );
+      return false;
+    }
+  }
+
   Future<bool> resolvePendingImportedStoreBinding({required bool bind}) async {
     final pending = _currentState.pendingImportedStoreBinding;
     if (pending == null) {

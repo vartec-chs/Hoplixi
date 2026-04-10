@@ -535,6 +535,40 @@ class SnapshotSyncService {
     }
   }
 
+  Future<void> deleteRemoteSnapshot({
+    required String tokenId,
+    required CloudManifestStoreEntry entry,
+    bool permanent = true,
+  }) async {
+    try {
+      await _repository.deleteRemoteStoreFolder(
+        tokenId,
+        storeUuid: entry.storeUuid,
+        remoteStoreId: entry.remoteStoreId,
+        remotePath: entry.remotePath,
+        permanent: permanent,
+      );
+    } on CloudStorageException catch (error) {
+      if (error.type != CloudStorageExceptionType.notFound) {
+        rethrow;
+      }
+    }
+
+    final cloudManifest =
+        await _repository.readCloudManifest(tokenId) ?? CloudManifest.empty();
+    final updatedAt = DateTime.now().toUtc();
+    final updatedCloudManifest = CloudManifest(
+      version: cloudManifest.version,
+      updatedAt: updatedAt,
+      stores: _markCloudEntryDeleted(
+        cloudManifest.stores,
+        entry,
+        updatedAt: updatedAt,
+      ),
+    );
+    await _repository.writeCloudManifest(tokenId, updatedCloudManifest);
+  }
+
   StoreVersionCompareResult compareStoreVersions({
     required StoreManifest local,
     required StoreManifest? remote,
@@ -806,6 +840,56 @@ class SnapshotSyncService {
     if (!replaced) {
       updated.add(next);
     }
+    updated.sort((left, right) => left.storeUuid.compareTo(right.storeUuid));
+    return updated;
+  }
+
+  List<CloudManifestStoreEntry> _markCloudEntryDeleted(
+    List<CloudManifestStoreEntry> entries,
+    CloudManifestStoreEntry target, {
+    required DateTime updatedAt,
+  }) {
+    final updated = <CloudManifestStoreEntry>[];
+    var replaced = false;
+
+    for (final entry in entries) {
+      if (entry.storeUuid != target.storeUuid) {
+        updated.add(entry);
+        continue;
+      }
+
+      updated.add(
+        CloudManifestStoreEntry(
+          storeUuid: entry.storeUuid,
+          storeName: entry.storeName,
+          revision: entry.revision,
+          updatedAt: updatedAt,
+          snapshotId: entry.snapshotId,
+          remoteStoreId: entry.remoteStoreId,
+          remotePath: entry.remotePath,
+          manifestSha256: entry.manifestSha256,
+          deleted: true,
+        ),
+      );
+      replaced = true;
+    }
+
+    if (!replaced) {
+      updated.add(
+        CloudManifestStoreEntry(
+          storeUuid: target.storeUuid,
+          storeName: target.storeName,
+          revision: target.revision,
+          updatedAt: updatedAt,
+          snapshotId: target.snapshotId,
+          remoteStoreId: target.remoteStoreId,
+          remotePath: target.remotePath,
+          manifestSha256: target.manifestSha256,
+          deleted: true,
+        ),
+      );
+    }
+
     updated.sort((left, right) => left.storeUuid.compareTo(right.storeUuid));
     return updated;
   }

@@ -135,13 +135,21 @@ class _OpenStoreCloudImportScreenState
   }
 }
 
-class _CloudImportBody extends ConsumerWidget {
+class _CloudImportBody extends ConsumerStatefulWidget {
   const _CloudImportBody({required this.state});
 
   final OpenStoreState state;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_CloudImportBody> createState() => _CloudImportBodyState();
+}
+
+class _CloudImportBodyState extends ConsumerState<_CloudImportBody> {
+  String? _deletingRemoteStoreUuid;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = widget.state;
     final notifier = ref.read(openStoreFormProvider.notifier);
     final selectedProvider = state.selectedCloudProvider;
     final providerTokens = selectedProvider == null
@@ -151,6 +159,7 @@ class _CloudImportBody extends ConsumerWidget {
     final selectedToken = providerTokens
         .where((token) => token.id == state.selectedCloudTokenId)
         .firstOrNull;
+    final hasDeleteInProgress = _deletingRemoteStoreUuid != null;
 
     return ListView(
       padding: const EdgeInsets.all(12),
@@ -225,39 +234,41 @@ class _CloudImportBody extends ConsumerWidget {
                       label: providerTokens.isEmpty
                           ? 'Авторизоваться'
                           : 'Обновить список',
-                      onPressed: () async {
-                        if (selectedProvider == null) {
-                          Toaster.error(
-                            context: context,
-                            title: 'Cloud Sync',
-                            description: 'Сначала выберите провайдера.',
-                          );
-                          return;
-                        }
+                      onPressed: hasDeleteInProgress
+                          ? null
+                          : () async {
+                              if (selectedProvider == null) {
+                                Toaster.error(
+                                  context: context,
+                                  title: 'Cloud Sync',
+                                  description: 'Сначала выберите провайдера.',
+                                );
+                                return;
+                              }
 
-                        if (providerTokens.isEmpty) {
-                          await showCloudSyncAuthSheet(
-                            context: context,
-                            container: ProviderScope.containerOf(
-                              context,
-                              listen: false,
-                            ),
-                            previousRoute: _resolvePreviousRoute(context),
-                            initialProvider: selectedProvider,
-                          );
-                          if (!context.mounted) {
-                            return;
-                          }
-                          await notifier.reloadCloudOptions();
-                          return;
-                        }
+                              if (providerTokens.isEmpty) {
+                                await showCloudSyncAuthSheet(
+                                  context: context,
+                                  container: ProviderScope.containerOf(
+                                    context,
+                                    listen: false,
+                                  ),
+                                  previousRoute: _resolvePreviousRoute(context),
+                                  initialProvider: selectedProvider,
+                                );
+                                if (!context.mounted) {
+                                  return;
+                                }
+                                await notifier.reloadCloudOptions();
+                                return;
+                              }
 
-                        if (state.selectedCloudTokenId != null) {
-                          await notifier.selectCloudToken(
-                            state.selectedCloudTokenId,
-                          );
-                        }
-                      },
+                              if (state.selectedCloudTokenId != null) {
+                                await notifier.selectCloudToken(
+                                  state.selectedCloudTokenId,
+                                );
+                              }
+                            },
                     ),
                     if (selectedToken != null)
                       Chip(
@@ -323,12 +334,15 @@ class _CloudImportBody extends ConsumerWidget {
                     separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final entry = state.remoteSnapshots[index];
+                      final isDeleting =
+                          _deletingRemoteStoreUuid == entry.storeUuid;
                       return _RemoteSnapshotCard(
                         entry: entry,
                         provider: selectedProvider!,
                         accountLabel: selectedToken?.displayLabel ?? '-',
                         isDownloading:
                             state.downloadingRemoteStoreUuid == entry.storeUuid,
+                        isDeleting: isDeleting,
                         onDownload: () async {
                           final result = await notifier.importRemoteSnapshot(
                             entry,
@@ -343,6 +357,59 @@ class _CloudImportBody extends ConsumerWidget {
                             description:
                                 'Snapshot "${entry.storeName}" скачан в локальное хранилище.',
                           );
+                        },
+                        onDelete: () async {
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (dialogContext) => AlertDialog(
+                              title: const Text('Удалить snapshot из облака'),
+                              content: Text(
+                                'Удалить remote snapshot "${entry.storeName}" из ${selectedProvider.metadata.displayName}? '
+                                'Операция удалит данные store из облака и скроет snapshot из cloud manifest.',
+                              ),
+                              actions: [
+                                SmoothButton(
+                                  onPressed: () =>
+                                      Navigator.of(dialogContext).pop(false),
+                                  label: 'Отмена',
+                                  type: SmoothButtonType.text,
+                                ),
+                                SmoothButton(
+                                  onPressed: () =>
+                                      Navigator.of(dialogContext).pop(true),
+                                  label: 'Удалить',
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirmed != true || !mounted) {
+                            return;
+                          }
+
+                          setState(() {
+                            _deletingRemoteStoreUuid = entry.storeUuid;
+                          });
+                          try {
+                            final deleted = await notifier.deleteRemoteSnapshot(
+                              entry,
+                            );
+                            if (!mounted || !deleted) {
+                              return;
+                            }
+
+                            Toaster.success(
+                              context: context,
+                              title: 'Cloud Sync',
+                              description:
+                                  'Snapshot "${entry.storeName}" удалён из облака.',
+                            );
+                          } finally {
+                            if (mounted) {
+                              setState(() {
+                                _deletingRemoteStoreUuid = null;
+                              });
+                            }
+                          }
                         },
                       );
                     },
@@ -370,14 +437,18 @@ class _RemoteSnapshotCard extends StatelessWidget {
     required this.provider,
     required this.accountLabel,
     required this.isDownloading,
+    required this.isDeleting,
     required this.onDownload,
+    required this.onDelete,
   });
 
   final CloudManifestStoreEntry entry;
   final CloudSyncProvider provider;
   final String accountLabel;
   final bool isDownloading;
+  final bool isDeleting;
   final VoidCallback onDownload;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -417,12 +488,36 @@ class _RemoteSnapshotCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            SmoothButton(
-              label: 'Скачать',
-              onPressed: isDownloading ? null : onDownload,
-              loading: isDownloading,
-              icon: const Icon(Icons.download_outlined),
-              size: SmoothButtonSize.small,
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SmoothButton(
+                  label: 'Скачать',
+                  onPressed: isDownloading || isDeleting ? null : onDownload,
+                  loading: isDownloading,
+                  icon: const Icon(Icons.download_outlined),
+                  size: SmoothButtonSize.small,
+                ),
+                const SizedBox(height: 8),
+                if (isDeleting)
+                  const SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: Padding(
+                      padding: EdgeInsets.all(6),
+                      child: CircularProgressIndicator(strokeWidth: 2.5),
+                    ),
+                  )
+                else
+                  IconButton(
+                    tooltip: 'Удалить snapshot из облака',
+                    onPressed: isDownloading ? null : onDelete,
+                    icon: Icon(
+                      Icons.delete_outline,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+              ],
             ),
           ],
         ),

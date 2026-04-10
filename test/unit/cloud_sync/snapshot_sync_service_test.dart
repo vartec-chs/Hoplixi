@@ -495,6 +495,41 @@ void main() {
       },
     );
   });
+
+  group('SnapshotSyncService.deleteRemoteSnapshot', () {
+    test(
+      'deletes remote store folder and marks cloud manifest entry deleted',
+      () async {
+        final repository = _FakeSnapshotSyncRepository()
+          ..cloudManifest = CloudManifest(
+            version: 1,
+            updatedAt: DateTime.utc(2025, 1, 1),
+            stores: <CloudManifestStoreEntry>[
+              CloudManifestStoreEntry(
+                storeUuid: 'store-1',
+                storeName: 'Store',
+                revision: 3,
+                updatedAt: DateTime.utc(2025, 1, 2),
+                snapshotId: 'remote',
+                remoteStoreId: 'remote-store-1',
+                remotePath: '/Hoplixi/stores/store-1',
+              ),
+            ],
+          );
+        final service = SnapshotSyncService(repository: repository);
+
+        await service.deleteRemoteSnapshot(
+          tokenId: binding.tokenId,
+          entry: repository.cloudManifest!.stores.single,
+        );
+
+        expect(repository.deletedRemoteStoreUuid, 'store-1');
+        expect(repository.deletedRemoteStorePath, '/Hoplixi/stores/store-1');
+        expect(repository.writtenCloudManifest, isNotNull);
+        expect(repository.writtenCloudManifest!.stores.single.deleted, isTrue);
+      },
+    );
+  });
 }
 
 class _FakeManifestBuilder implements StoreSnapshotManifestBuilder {
@@ -522,6 +557,8 @@ class _FakeSnapshotSyncRepository extends SnapshotSyncRepository {
   AttachmentsManifest? remoteAttachmentsManifest;
   CloudManifest? cloudManifest;
   CloudManifest? writtenCloudManifest;
+  String? deletedRemoteStoreUuid;
+  String? deletedRemoteStorePath;
   StoreManifest? uploadedStoreManifest;
   AttachmentsManifest? uploadedAttachmentsManifest;
   int downloadRemoteStoreFilesCalls = 0;
@@ -686,6 +723,18 @@ class _FakeSnapshotSyncRepository extends SnapshotSyncRepository {
     CloudManifest manifest,
   ) async {
     writtenCloudManifest = manifest;
+  }
+
+  @override
+  Future<void> deleteRemoteStoreFolder(
+    String tokenId, {
+    required String storeUuid,
+    String? remoteStoreId,
+    String? remotePath,
+    bool permanent = true,
+  }) async {
+    deletedRemoteStoreUuid = storeUuid;
+    deletedRemoteStorePath = remotePath;
   }
 }
 

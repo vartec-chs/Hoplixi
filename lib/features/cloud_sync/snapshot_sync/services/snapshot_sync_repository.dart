@@ -121,6 +121,71 @@ class SnapshotSyncRepository {
     return layout;
   }
 
+  Future<CloudResource?> findRemoteStoreFolder(
+    String tokenId, {
+    required String storeUuid,
+    String? remoteStoreId,
+    String? remotePath,
+  }) async {
+    final provider = await _storageRepository.providerForToken(tokenId);
+    final knownRef = _remoteStoreRefFromKnownLocation(
+      provider.provider,
+      remoteStoreId: remoteStoreId,
+      remotePath: remotePath,
+    );
+    if (knownRef != null) {
+      try {
+        final resource = await _storageRepository.getResource(
+          tokenId,
+          knownRef,
+        );
+        return resource.isFolder ? resource : null;
+      } on CloudStorageException catch (error) {
+        if (error.type != CloudStorageExceptionType.notFound) {
+          rethrow;
+        }
+      }
+    }
+
+    final rootFolder = await _ensureRootFolder(tokenId);
+    final storesFolder = await _ensureChildFolder(
+      tokenId,
+      parentRef: rootFolder.ref,
+      name: storesFolderName,
+    );
+    return _findChildFolderByName(
+      tokenId,
+      parentRef: storesFolder.ref,
+      name: storeUuid,
+    );
+  }
+
+  Future<void> deleteRemoteStoreFolder(
+    String tokenId, {
+    required String storeUuid,
+    String? remoteStoreId,
+    String? remotePath,
+    bool permanent = true,
+  }) async {
+    final storeFolder = await findRemoteStoreFolder(
+      tokenId,
+      storeUuid: storeUuid,
+      remoteStoreId: remoteStoreId,
+      remotePath: remotePath,
+    );
+    if (storeFolder == null) {
+      _invalidateStoreCaches(tokenId, storeUuid);
+      return;
+    }
+
+    await _storageRepository.deleteResource(
+      tokenId,
+      storeFolder.ref,
+      permanent: permanent,
+    );
+    _invalidateStoreCaches(tokenId, storeUuid);
+  }
+
   Future<StoreManifest?> readRemoteStoreManifest(
     String tokenId, {
     required String storeUuid,
@@ -954,6 +1019,25 @@ class SnapshotSyncRepository {
     return '$tokenId::$storeUuid';
   }
 
+  CloudResourceRef? _remoteStoreRefFromKnownLocation(
+    CloudSyncProvider provider, {
+    String? remoteStoreId,
+    String? remotePath,
+  }) {
+    final normalizedId = remoteStoreId?.trim();
+    final normalizedPath = remotePath?.trim();
+    if ((normalizedId == null || normalizedId.isEmpty) &&
+        (normalizedPath == null || normalizedPath.isEmpty)) {
+      return null;
+    }
+
+    return CloudResourceRef(
+      provider: provider,
+      resourceId: normalizedId?.isEmpty == true ? null : normalizedId,
+      path: normalizedPath?.isEmpty == true ? null : normalizedPath,
+    );
+  }
+
   String _folderCacheKey(
     String tokenId,
     CloudResourceRef parentRef,
@@ -974,6 +1058,11 @@ class SnapshotSyncRepository {
       return;
     }
     _folderCache[_folderCacheKey(tokenId, parentRef, name)] = folder;
+  }
+
+  void _invalidateStoreCaches(String tokenId, String storeUuid) {
+    _layoutCache.remove(_layoutCacheKey(tokenId, storeUuid));
+    _folderCache.clear();
   }
 }
 
