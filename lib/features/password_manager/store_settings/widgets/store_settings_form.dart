@@ -154,6 +154,51 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
           ),
 
           const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.enhanced_encryption,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Текущий алгоритм шифрования БД',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        state.isCipherLoading
+                            ? 'Определяется через PRAGMA cipher...'
+                            : state.currentDbCipher != null
+                            ? state.currentDbCipherDescription != null
+                                  ? '${state.currentDbCipher} (${state.currentDbCipherDescription})'
+                                  : state.currentDbCipher!
+                            : 'Не удалось определить через PRAGMA cipher',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
           const Divider(),
           const SizedBox(height: 16),
           Text(

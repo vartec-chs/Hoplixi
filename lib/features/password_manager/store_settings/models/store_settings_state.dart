@@ -75,6 +75,15 @@ sealed class StoreSettingsState with _$StoreSettingsState {
 
     /// Успешное сообщение
     String? successMessage,
+
+    /// Текущий алгоритм шифрования БД из PRAGMA cipher
+    String? currentDbCipher,
+
+    /// Техническое описание текущего алгоритма
+    String? currentDbCipherDescription,
+
+    /// Идет ли загрузка информации о cipher
+    @Default(true) bool isCipherLoading,
   }) = _StoreSettingsState;
 
   const StoreSettingsState._();

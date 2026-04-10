@@ -4,8 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/di_init.dart';
-import 'package:hoplixi/features/password_manager/store_settings/models/store_settings_state.dart';
+import 'package:hoplixi/db_core/models/db_ciphers.dart';
 import 'package:hoplixi/db_core/models/store_settings_keys.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
 import 'package:hoplixi/db_core/provider/db_history_provider.dart';
@@ -13,12 +12,14 @@ import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 import 'package:hoplixi/db_core/provider/service_providers.dart';
 import 'package:hoplixi/db_core/services/db_key_derivation_service.dart';
 import 'package:hoplixi/db_core/services/store_key_config_service.dart';
+import 'package:hoplixi/di_init.dart';
+import 'package:hoplixi/features/password_manager/store_settings/models/store_settings_state.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
 /// Провайдер для управления настройками хранилища
 final storeSettingsProvider =
-    NotifierProvider<StoreSettingsNotifier, StoreSettingsState>(
+    NotifierProvider.autoDispose<StoreSettingsNotifier, StoreSettingsState>(
       StoreSettingsNotifier.new,
     );
 
@@ -35,6 +36,47 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
   /// Загрузить текущие настройки из базы
   Future<void> _loadCurrentSettings() async {
     try {
+      String? currentDbCipher;
+      String? currentDbCipherDescription;
+
+      try {
+        final manager = await ref.read(mainStoreManagerProvider.future);
+        final db =
+            manager?.currentStore ??
+            ref
+                .read(mainStoreProvider.notifier)
+                .currentMainStoreManager
+                ?.currentStore;
+        if (db != null) {
+          final pragmaRows = await db.customSelect('PRAGMA cipher;').get();
+          if (pragmaRows.isNotEmpty) {
+            final rawValue = pragmaRows.first.data.values.isNotEmpty
+                ? pragmaRows.first.data.values.first
+                : null;
+            final cipherValue = rawValue
+                ?.toString()
+                .replaceAll('"', '')
+                .trim()
+                .toLowerCase();
+            if (cipherValue!.isNotEmpty) {
+              currentDbCipher = cipherValue;
+              currentDbCipherDescription = dbCipherDescriptions[cipherValue];
+            }
+          }
+        }
+      } catch (e) {
+        logWarning(
+          'Failed to read current cipher via PRAGMA: $e',
+          tag: _logTag,
+        );
+      }
+
+      state = state.copyWith(
+        currentDbCipher: currentDbCipher,
+        currentDbCipherDescription: currentDbCipherDescription,
+        isCipherLoading: false,
+      );
+
       final daoResult = await ref.read(storeMetaDaoProvider.future);
       final meta = await daoResult.getStoreMeta();
 
@@ -97,6 +139,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       );
       state = state.copyWith(
         saveError: 'Не удалось загрузить настройки хранилища',
+        isCipherLoading: false,
       );
     }
   }
