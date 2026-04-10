@@ -407,13 +407,28 @@ class GoogleDriveCloudStorageProvider implements CloudStorageProvider {
     final fileId = _requireFileId(ref);
 
     try {
-      await _httpClient.request<dynamic>(
-        CloudSyncHttpRequest(
-          method: 'DELETE',
-          url: '$_apiBaseUrl/files/$fileId',
-          queryParameters: <String, dynamic>{'supportsAllDrives': true},
-        ),
-      );
+      if (permanent) {
+        await _httpClient.request<dynamic>(
+          CloudSyncHttpRequest(
+            method: 'DELETE',
+            url: '$_apiBaseUrl/files/$fileId',
+            queryParameters: <String, dynamic>{'supportsAllDrives': true},
+          ),
+        );
+      } else {
+        await _httpClient.request<dynamic>(
+          CloudSyncHttpRequest(
+            method: 'PATCH',
+            url: '$_apiBaseUrl/files/$fileId',
+            queryParameters: <String, dynamic>{
+              'supportsAllDrives': true,
+              'fields': _singleFileFields,
+            },
+            data: const <String, dynamic>{'trashed': true},
+            options: Options(contentType: Headers.jsonContentType),
+          ),
+        );
+      }
     } catch (error) {
       throw _mapError(
         error,

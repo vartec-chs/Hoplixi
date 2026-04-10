@@ -360,9 +360,21 @@ class OneDriveCloudStorageProvider implements CloudStorageProvider {
     final itemId = _requireItemId(ref);
 
     try {
-      await _httpClient.request<dynamic>(
-        CloudSyncHttpRequest(method: 'DELETE', url: '$_baseUrl/items/$itemId'),
-      );
+      if (permanent) {
+        await _httpClient.request<dynamic>(
+          CloudSyncHttpRequest(
+            method: 'POST',
+            url: '$_baseUrl/items/$itemId/permanentDelete',
+          ),
+        );
+      } else {
+        await _httpClient.request<dynamic>(
+          CloudSyncHttpRequest(
+            method: 'DELETE',
+            url: '$_baseUrl/items/$itemId',
+          ),
+        );
+      }
     } catch (error) {
       throw _mapError(
         error,

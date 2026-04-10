@@ -214,6 +214,11 @@ class _AppState extends ConsumerState<App> {
       ref.read(pendingStoreSettingsModalPageProvider.notifier).clear();
     }
 
+    if (ref.read(isStoreSettingsModalOpenProvider)) {
+      navigatorKey.currentState?.pop();
+      await Future<void>.delayed(Duration.zero);
+    }
+
     await showCloudSyncAuthSheet(
       context: dialogContext,
       container: ProviderScope.containerOf(dialogContext, listen: false),

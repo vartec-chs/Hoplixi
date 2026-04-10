@@ -5,6 +5,11 @@ final pendingStoreSettingsModalPageProvider =
       PendingStoreSettingsModalPageNotifier.new,
     );
 
+final isStoreSettingsModalOpenProvider =
+    NotifierProvider<StoreSettingsModalOpenNotifier, bool>(
+      StoreSettingsModalOpenNotifier.new,
+    );
+
 class PendingStoreSettingsModalPageNotifier extends Notifier<int?> {
   @override
   int? build() => null;
@@ -15,5 +20,14 @@ class PendingStoreSettingsModalPageNotifier extends Notifier<int?> {
 
   void clear() {
     state = null;
+  }
+}
+
+class StoreSettingsModalOpenNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void setOpen(bool isOpen) {
+    state = isOpen;
   }
 }

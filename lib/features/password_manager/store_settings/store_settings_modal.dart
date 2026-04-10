@@ -17,161 +17,166 @@ Future<bool?> showStoreSettingsModal(
 }) async {
   ref.read(pendingStoreSettingsModalPageProvider.notifier).clear();
   final pageIndexNotifier = ValueNotifier<int>(initialPageIndex);
+  ref.read(isStoreSettingsModalOpenProvider.notifier).setOpen(true);
 
-  return await WoltModalSheet.show<bool>(
-    context: context,
-    barrierDismissible: true,
-    useSafeArea: true,
-    useRootNavigator: true,
-    pageIndexNotifier: pageIndexNotifier,
-    pageListBuilder: (modalContext) {
-      return [
-        // Страница 1: Основные настройки
-        WoltModalSheetPage(
-          surfaceTintColor: Colors.transparent,
-          hasTopBarLayer: true,
-          topBarTitle: Builder(
-            builder: (context) {
-              return Text(
-                'Настройки хранилища',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-              );
-            },
-          ),
-          isTopBarLayerAlwaysVisible: true,
-          leadingNavBarWidget: Padding(
-            padding: const EdgeInsets.only(left: 8.0),
-            child: IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: () => Navigator.of(modalContext).pop(false),
-              tooltip: 'Закрыть',
-            ),
-          ),
-          trailingNavBarWidget: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.cloud_sync_outlined),
-                onPressed: () {
-                  pageIndexNotifier.value = 3;
-                },
-                tooltip: 'Cloud Sync',
-              ),
-              IconButton(
-                icon: const Icon(Icons.push_pin_outlined),
-                onPressed: () {
-                  pageIndexNotifier.value = 2;
-                },
-                tooltip: 'Типы записей',
-              ),
-              IconButton(
-                icon: const Icon(Icons.lock_outline),
-                onPressed: () {
-                  pageIndexNotifier.value = 1;
-                },
-                tooltip: 'Сменить пароль',
-              ),
-              const SizedBox(width: 8),
-            ],
-          ),
-
-          child: const StoreSettingsForm(),
-        ),
-
-        // Страница 2: Смена пароля
-        WoltModalSheetPage(
-          surfaceTintColor: Colors.transparent,
-          hasTopBarLayer: true,
-          topBarTitle: Builder(
-            builder: (context) {
-              return Text(
-                'Смена пароля',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-              );
-            },
-          ),
-          isTopBarLayerAlwaysVisible: true,
-          leadingNavBarWidget: Padding(
-            padding: const EdgeInsets.only(left: 8.0),
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () {
-                pageIndexNotifier.value = 0;
+  try {
+    return await WoltModalSheet.show<bool>(
+      context: context,
+      barrierDismissible: true,
+      useSafeArea: true,
+      useRootNavigator: true,
+      pageIndexNotifier: pageIndexNotifier,
+      pageListBuilder: (modalContext) {
+        return [
+          // Страница 1: Основные настройки
+          WoltModalSheetPage(
+            surfaceTintColor: Colors.transparent,
+            hasTopBarLayer: true,
+            topBarTitle: Builder(
+              builder: (context) {
+                return Text(
+                  'Настройки хранилища',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                );
               },
-              tooltip: 'Назад',
             ),
-          ),
-          child: const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: ChangePasswordSection(),
-          ),
-        ),
+            isTopBarLayerAlwaysVisible: true,
+            leadingNavBarWidget: Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(modalContext).pop(false),
+                tooltip: 'Закрыть',
+              ),
+            ),
+            trailingNavBarWidget: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.cloud_sync_outlined),
+                  onPressed: () {
+                    pageIndexNotifier.value = 3;
+                  },
+                  tooltip: 'Cloud Sync',
+                ),
+                IconButton(
+                  icon: const Icon(Icons.push_pin_outlined),
+                  onPressed: () {
+                    pageIndexNotifier.value = 2;
+                  },
+                  tooltip: 'Типы записей',
+                ),
+                IconButton(
+                  icon: const Icon(Icons.lock_outline),
+                  onPressed: () {
+                    pageIndexNotifier.value = 1;
+                  },
+                  tooltip: 'Сменить пароль',
+                ),
+                const SizedBox(width: 8),
+              ],
+            ),
 
-        // Страница 3: Типы записей в навигации
-        WoltModalSheetPage(
-          surfaceTintColor: Colors.transparent,
-          hasTopBarLayer: true,
-          topBarTitle: Builder(
-            builder: (context) {
-              return Text(
-                'Типы записей в навигации',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-              );
-            },
+            child: const StoreSettingsForm(),
           ),
-          isTopBarLayerAlwaysVisible: true,
-          leadingNavBarWidget: Padding(
-            padding: const EdgeInsets.only(left: 8.0),
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () {
-                pageIndexNotifier.value = 0;
-              },
-              tooltip: 'Назад',
-            ),
-          ),
-          child: const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: PinnedEntityTypesSelector(),
-          ),
-        ),
 
-        // Страница 4: Cloud Sync
-        WoltModalSheetPage(
-          surfaceTintColor: Colors.transparent,
-          hasTopBarLayer: true,
-          topBarTitle: Builder(
-            builder: (context) {
-              return Text(
-                'Cloud Sync',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-              );
-            },
-          ),
-          isTopBarLayerAlwaysVisible: true,
-          leadingNavBarWidget: Padding(
-            padding: const EdgeInsets.only(left: 8.0),
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () {
-                pageIndexNotifier.value = 0;
+          // Страница 2: Смена пароля
+          WoltModalSheetPage(
+            surfaceTintColor: Colors.transparent,
+            hasTopBarLayer: true,
+            topBarTitle: Builder(
+              builder: (context) {
+                return Text(
+                  'Смена пароля',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                );
               },
-              tooltip: 'Назад',
+            ),
+            isTopBarLayerAlwaysVisible: true,
+            leadingNavBarWidget: Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  pageIndexNotifier.value = 0;
+                },
+                tooltip: 'Назад',
+              ),
+            ),
+            child: const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: ChangePasswordSection(),
             ),
           ),
-          child: const CloudSyncSettingsPage(
-            reopenStoreSettingsAfterAuth: true,
+
+          // Страница 3: Типы записей в навигации
+          WoltModalSheetPage(
+            surfaceTintColor: Colors.transparent,
+            hasTopBarLayer: true,
+            topBarTitle: Builder(
+              builder: (context) {
+                return Text(
+                  'Типы записей в навигации',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                );
+              },
+            ),
+            isTopBarLayerAlwaysVisible: true,
+            leadingNavBarWidget: Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  pageIndexNotifier.value = 0;
+                },
+                tooltip: 'Назад',
+              ),
+            ),
+            child: const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: PinnedEntityTypesSelector(),
+            ),
           ),
-        ),
-      ];
-    },
-  );
+
+          // Страница 4: Cloud Sync
+          WoltModalSheetPage(
+            surfaceTintColor: Colors.transparent,
+            hasTopBarLayer: true,
+            topBarTitle: Builder(
+              builder: (context) {
+                return Text(
+                  'Cloud Sync',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                );
+              },
+            ),
+            isTopBarLayerAlwaysVisible: true,
+            leadingNavBarWidget: Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  pageIndexNotifier.value = 0;
+                },
+                tooltip: 'Назад',
+              ),
+            ),
+            child: const CloudSyncSettingsPage(
+              reopenStoreSettingsAfterAuth: true,
+            ),
+          ),
+        ];
+      },
+    );
+  } finally {
+    ref.read(isStoreSettingsModalOpenProvider.notifier).setOpen(false);
+  }
 }
