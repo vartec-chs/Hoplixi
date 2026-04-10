@@ -5,14 +5,14 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 import 'package:hoplixi/features/password_manager/create_store/models/create_store_state.dart';
 import 'package:hoplixi/features/password_manager/create_store/providers/create_store_form_provider.dart';
 import 'package:hoplixi/features/password_manager/create_store/widgets/step1_name_description.dart';
 import 'package:hoplixi/features/password_manager/create_store/widgets/step2_select_path.dart';
 import 'package:hoplixi/features/password_manager/create_store/widgets/step3_master_password.dart';
 import 'package:hoplixi/features/password_manager/create_store/widgets/step4_confirmation.dart';
-import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
-import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/widgets/titlebar.dart';
 
@@ -205,6 +205,7 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen>
             : formState.description,
         password: formState.password,
         path: formState.finalPath ?? '',
+        cipher: formState.cipher,
         useDeviceKey: formState.useDeviceKey,
       );
 

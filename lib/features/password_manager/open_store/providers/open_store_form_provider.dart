@@ -7,9 +7,12 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
+import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_exception.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/cloud_manifest.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_service.dart';
+import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/features/password_manager/open_store/models/open_store_state.dart';
 import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
 import 'package:hoplixi/db_core/provider/db_history_provider.dart';
@@ -771,6 +774,7 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
         stackTrace: stackTrace,
         tag: 'OpenStoreForm',
       );
+      _reportManualReauthIfNeeded(error, tokenId: tokenId);
       if (!_isMounted || _currentState.selectedCloudTokenId != tokenId) {
         return;
       }
@@ -783,6 +787,43 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
         ),
       );
     }
+  }
+
+  void _reportManualReauthIfNeeded(Object error, {required String tokenId}) {
+    final cloudError = error is CloudStorageException ? error : null;
+    if (cloudError == null ||
+        cloudError.type != CloudStorageExceptionType.unauthorized) {
+      return;
+    }
+
+    final token = _selectedToken;
+    final provider =
+        token?.provider ??
+        _currentState.selectedCloudProvider ??
+        cloudError.provider;
+    if (provider == null) {
+      return;
+    }
+
+    final description = switch (cloudError.cause) {
+      CloudSyncHttpException(type: CloudSyncHttpExceptionType.refreshFailed) =>
+        'Не удалось автоматически обновить OAuth-токен. Требуется повторная ручная авторизация.',
+      CloudSyncHttpException(type: CloudSyncHttpExceptionType.unauthorized) =>
+        'Облачный провайдер отклонил текущий токен. Требуется повторная ручная авторизация.',
+      _ => 'Текущий OAuth-токен больше не подходит для доступа к облаку.',
+    };
+
+    ref
+        .read(currentStoreSyncManualReauthIssueProvider.notifier)
+        .report(
+          CurrentStoreSyncManualReauthIssue(
+            kind: CurrentStoreSyncIssueKind.manualReauthRequired,
+            tokenId: tokenId,
+            provider: provider,
+            tokenLabel: token?.displayLabel,
+            description: description,
+          ),
+        );
   }
 
   Map<CloudSyncProvider, List<AuthTokenEntry>> _groupTokensByProvider(

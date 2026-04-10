@@ -2,6 +2,7 @@ import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/logger/models.dart' as logger_models;
 import 'package:hoplixi/db_core/main_store.dart';
+import 'package:hoplixi/db_core/models/db_ciphers.dart';
 import 'package:hoplixi/db_core/models/db_errors.dart';
 import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
 import 'package:hoplixi/db_core/models/store_key_config.dart';
@@ -83,10 +84,11 @@ class MainStoreManager {
       final keyConfig = StoreKeyConfig(
         argon2Salt: argon2Salt,
         useDeviceKey: dto.useDeviceKey,
+        cipher: dto.cipher,
       );
       await keyConfig.writeTo(storageDir.path);
       logInfo(
-        'Wrote store_key.json (useDeviceKey=${dto.useDeviceKey})',
+        'Wrote store_key.json (useDeviceKey=${dto.useDeviceKey}, cipher=${dto.cipher.name})',
         tag: _logTag,
       );
 
@@ -104,6 +106,8 @@ class MainStoreManager {
       final dbResult = await _connectionService.createDatabaseConnection(
         dbFilePath,
         pragmaKey,
+        cipher: dto.cipher,
+        isDatabaseCreation: true,
       );
 
       if (dbResult.isError()) {
@@ -213,6 +217,7 @@ class MainStoreManager {
       logInfo('Found database file: $dbFilePath', tag: _logTag);
 
       final keyConfig = await StoreKeyConfigService.readFrom(actualStoragePath);
+      var selectedCipher = keyConfig?.cipher ?? DBCipher.chacha20;
       final String pragmaKey;
       if (keyConfig != null) {
         pragmaKey = await _keyService.derivePragmaKey(
@@ -221,7 +226,7 @@ class MainStoreManager {
           useDeviceKey: keyConfig.useDeviceKey,
         );
         logInfo(
-          'Derived Argon2 PRAGMA key (useDeviceKey=${keyConfig.useDeviceKey})',
+          'Derived Argon2 PRAGMA key (useDeviceKey=${keyConfig.useDeviceKey}, cipher=${selectedCipher.name})',
           tag: _logTag,
         );
       } else {
@@ -236,10 +241,55 @@ class MainStoreManager {
       final dbResult = await _connectionService.createDatabaseConnection(
         dbFilePath,
         pragmaKey,
+        cipher: selectedCipher,
       );
 
-      if (dbResult.isError()) {
-        return dbResult.fold(
+      ResultDart<MainStore, DatabaseError> effectiveDbResult = dbResult;
+
+      // Если первичный cipher не подошел, пробуем альтернативные и сохраняем успешный.
+      if (effectiveDbResult.isError()) {
+        for (final fallbackCipher in DBCipher.values) {
+          if (fallbackCipher == selectedCipher) {
+            continue;
+          }
+
+          logInfo(
+            'Primary cipher failed, trying fallback cipher: ${fallbackCipher.name}',
+            tag: _logTag,
+          );
+
+          final fallbackResult = await _connectionService
+              .createDatabaseConnection(
+                dbFilePath,
+                pragmaKey,
+                cipher: fallbackCipher,
+              );
+
+          if (fallbackResult.isSuccess()) {
+            effectiveDbResult = fallbackResult;
+            selectedCipher = fallbackCipher;
+
+            if (keyConfig != null) {
+              await keyConfig
+                  .copyWith(cipher: fallbackCipher)
+                  .writeTo(actualStoragePath);
+              logInfo(
+                'Updated store_key.json with detected cipher: ${fallbackCipher.name}',
+                tag: _logTag,
+              );
+            } else {
+              logInfo(
+                'Detected working cipher for legacy store without store_key.json: ${fallbackCipher.name}',
+                tag: _logTag,
+              );
+            }
+            break;
+          }
+        }
+      }
+
+      if (effectiveDbResult.isError()) {
+        return effectiveDbResult.fold(
           (_) => Success(
             StoreInfoDto(
               id: '',
@@ -254,7 +304,7 @@ class MainStoreManager {
         );
       }
 
-      final database = dbResult.getOrThrow();
+      final database = effectiveDbResult.getOrThrow();
 
       final storeMetaResult = await _metadataService.getStoreMeta(database);
       if (storeMetaResult.isError()) {

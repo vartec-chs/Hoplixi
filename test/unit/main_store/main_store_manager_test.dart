@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hoplixi/db_core/main_store_manager.dart';
+import 'package:hoplixi/db_core/models/db_ciphers.dart';
 import 'package:hoplixi/db_core/models/db_history_model.dart';
 import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
 import 'package:hoplixi/db_core/services/db_history_services.dart';
@@ -118,6 +119,7 @@ void main() {
         description: 'A test store description',
         password: 'secure_password_123',
         saveMasterPassword: true,
+        cipher: DBCipher.chacha20,
         useDeviceKey: false,
       );
 
@@ -165,6 +167,8 @@ void main() {
       final dto = const CreateStoreDto(
         name: 'Another Store',
         path: '',
+        cipher: DBCipher.chacha20,
+
         password: 'pass',
       );
 
@@ -177,6 +181,8 @@ void main() {
       final identicalDto = const CreateStoreDto(
         name: 'Another Store',
         path: '',
+        cipher: DBCipher.chacha20,
+
         password: 'pass',
       );
       final result2 = await manager.createStore(identicalDto);
@@ -194,6 +200,8 @@ void main() {
       final dto = const CreateStoreDto(
         name: 'Store 1',
         path: '',
+        cipher: DBCipher.chacha20,
+
         password: 'pass',
       );
 
@@ -204,6 +212,8 @@ void main() {
       final dto2 = const CreateStoreDto(
         name: 'Store 2',
         path: '',
+        cipher: DBCipher.chacha20,
+
         password: 'pass',
       );
       final result = await manager.createStore(dto2);

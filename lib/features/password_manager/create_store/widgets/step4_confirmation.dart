@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/theme/constants.dart';
+import 'package:hoplixi/db_core/models/db_ciphers.dart';
 import 'package:hoplixi/features/password_manager/create_store/models/create_store_state.dart';
 import 'package:hoplixi/features/password_manager/create_store/providers/create_store_form_provider.dart';
 
@@ -106,6 +107,16 @@ class Step4Confirmation extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                const Divider(height: 24),
+
+                // Шифрование
+                _InfoRow(
+                  icon: Icons.enhanced_encryption,
+                  label: 'Шифрование',
+                  value:
+                      '${state.cipher.name} - ${state.cipher.shortDescription}',
+                  maxLines: 3,
+                ),
                 const Divider(height: 24),
 
                 // Пароль

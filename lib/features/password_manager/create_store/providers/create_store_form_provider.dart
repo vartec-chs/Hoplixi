@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/db_core/models/db_ciphers.dart';
 import 'package:hoplixi/features/password_manager/create_store/models/create_store_state.dart';
 
 /// Провайдер для управления состоянием формы создания хранилища
@@ -22,6 +23,11 @@ class CreateStoreFormNotifier extends Notifier<CreateStoreFormState> {
   /// Обновить описание
   void updateDescription(String description) {
     state = state.copyWith(description: description);
+  }
+
+  /// Установить алгоритм шифрования БД
+  void setCipher(DBCipher cipher) {
+    state = state.copyWith(cipher: cipher);
   }
 
   /// Установить тип пути

@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/db_core/models/db_ciphers.dart';
 
 part 'create_store_state.freezed.dart';
 
@@ -26,6 +27,7 @@ sealed class CreateStoreFormState with _$CreateStoreFormState {
     // Шаг 1: Имя и описание
     @Default('') String name,
     @Default('') String description,
+    @Default(DBCipher.chacha20) DBCipher cipher,
 
     // Шаг 2: Путь
     @Default(PathType.standard) PathType pathType,

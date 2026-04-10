@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/theme/constants.dart';
+import 'package:hoplixi/db_core/models/db_ciphers.dart';
 import 'package:hoplixi/features/password_manager/create_store/providers/create_store_form_provider.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
@@ -96,6 +97,75 @@ class _Step1NameAndDescriptionState
             maxLines: 3,
             maxLength: 500,
             textInputAction: TextInputAction.done,
+          ),
+          const SizedBox(height: 16),
+
+          // Выбор алгоритма шифрования
+          DropdownButtonFormField<DBCipher>(
+            value: state.cipher,
+            isExpanded: true,
+            itemHeight: null,
+            decoration: primaryInputDecoration(
+              context,
+              labelText: 'Алгоритм шифрования *',
+              hintText: 'Выберите алгоритм',
+              prefixIcon: const Icon(Icons.enhanced_encryption),
+            ),
+            selectedItemBuilder: (context) {
+              return DBCipher.values.map((cipher) {
+                return Text(
+                  cipher.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                );
+              }).toList();
+            },
+            items: DBCipher.values.map((cipher) {
+              return DropdownMenuItem<DBCipher>(
+                value: cipher,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        cipher.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        cipher.shortDescription,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+            onChanged: (value) {
+              if (value != null) {
+                notifier.setCipher(value);
+              }
+            },
+          ),
+          const SizedBox(height: 8),
+          Text(
+            state.cipher.shortDescription,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Технически: ${state.cipher.technicalDescription}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 16),
 

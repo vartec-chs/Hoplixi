@@ -47,7 +47,15 @@ class SnapshotSyncRepository {
 
   Future<CloudManifest?> readCloudManifest(String tokenId) async {
     try {
-      final root = await _ensureRootFolder(tokenId);
+      final provider = await _storageRepository.providerForToken(tokenId);
+      final root = await _findChildFolderByName(
+        tokenId,
+        parentRef: _rootRefForProvider(provider.provider),
+        name: rootFolderName,
+      );
+      if (root == null) {
+        return null;
+      }
       final file = await _findChildFileByName(
         tokenId,
         parentRef: root.ref,

@@ -144,9 +144,6 @@ flutter:
   generate: true # Add this line
 
   assets:
-    - assets/images/
-    - assets/icons/
-    - assets/illustration/
     - assets/logo/
     - .env
 flutter_intl:
