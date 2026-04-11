@@ -1,8 +1,8 @@
 import 'package:hive_ce/hive.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/services/hive_box_manager.dart';
-import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/db_core/models/db_history_model.dart';
+import 'package:hoplixi/setup/di_init.dart';
 
 /// Сервис для работы с историей баз данных
 ///
@@ -10,7 +10,7 @@ import 'package:hoplixi/db_core/models/db_history_model.dart';
 /// зашифрованного Hive бокса через HiveBoxManager
 class DatabaseHistoryService {
   static const String _boxName = 'database_history';
-  static const String _passwordBoxName = 'database_history_passwords';
+  static const String _passwordBoxName = 'database_passwords';
   static const String _logTag = 'DatabaseHistoryService';
 
   final HiveBoxManager _hiveManager;
