@@ -24,7 +24,7 @@ import 'package:toastification/toastification.dart';
 import 'package:typed_prefs/typed_prefs.dart';
 import 'package:universal_platform/universal_platform.dart';
 
-import 'app.dart';
+import 'app/app.dart';
 import 'setup/di_init.dart';
 
 Future<void> _handleLostData() async {
