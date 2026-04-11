@@ -4,7 +4,7 @@ import 'package:hoplixi/core/logger/index.dart';
 import 'package:hoplixi/core/multi_window/multi_window_service.dart';
 import 'package:hoplixi/core/multi_window/sub_window_type.dart';
 import 'package:hoplixi/core/utils/window_manager.dart';
-import 'package:hoplixi/setup_tray.dart';
+import 'package:hoplixi/setup/setup_tray.dart';
 import 'package:open_dir/open_dir.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:universal_platform/universal_platform.dart';

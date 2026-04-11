@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/services/hive_box_manager.dart';
-import 'package:hoplixi/di_init.dart';
+import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_tokens_import_result.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/services/auth_tokens_service.dart';

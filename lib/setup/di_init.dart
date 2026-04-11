@@ -6,7 +6,7 @@ import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:typed_prefs/typed_prefs.dart';
 
-import './core/app_prefs/app_prefs.dart';
+import '../core/app_prefs/app_prefs.dart';
 
 final getIt = GetIt.instance;
 

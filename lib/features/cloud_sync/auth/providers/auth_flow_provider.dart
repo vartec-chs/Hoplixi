@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/services/hive_box_manager.dart';
-import 'package:hoplixi/di_init.dart';
+import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/features/cloud_sync/app_credentials/models/app_credential_entry.dart';
 import 'package:hoplixi/features/cloud_sync/app_credentials/providers/app_credentials_provider.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/auth_credential_option.dart';

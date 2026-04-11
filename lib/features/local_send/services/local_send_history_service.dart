@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/services/hive_box_manager.dart';
-import 'package:hoplixi/di_init.dart';
+import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/features/local_send/models/history_item.dart';
 
 final localSendHistoryServiceProvider = Provider<LocalSendHistoryService>((

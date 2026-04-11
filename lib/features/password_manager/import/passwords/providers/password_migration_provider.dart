@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/db_core/models/dto/password_dto.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
-import 'package:hoplixi/features/password_manager/migration/passwords/services/password_migration_service.dart';
+import 'package:hoplixi/features/password_manager/import/passwords/services/password_migration_service.dart';
 
 const _messageNotChanged = Object();
 

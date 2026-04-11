@@ -6,7 +6,7 @@ import 'package:hoplixi/core/services/local_auth_failure.dart';
 import 'package:hoplixi/core/services/local_auth_service.dart';
 import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/di_init.dart';
+import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';

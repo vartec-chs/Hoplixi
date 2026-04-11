@@ -4,7 +4,7 @@
 library;
 
 import 'package:hoplixi/core/services/hive_box_manager.dart';
-import 'package:hoplixi/di_init.dart';
+import 'package:hoplixi/setup/di_init.dart';
 
 /// Базовое использование
 void quickStart() async {

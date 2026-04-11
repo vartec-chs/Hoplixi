@@ -1,7 +1,7 @@
 import 'package:hive_ce/hive.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/services/hive_box_manager.dart';
-import 'package:hoplixi/di_init.dart';
+import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/db_core/models/db_history_model.dart';
 
 /// Сервис для работы с историей баз данных

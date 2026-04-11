@@ -5,7 +5,7 @@
 library;
 
 import 'package:hoplixi/core/services/hive_box_manager.dart';
-import 'package:hoplixi/di_init.dart';
+import 'package:hoplixi/setup/di_init.dart';
 import 'package:hive_ce/hive.dart';
 
 /// Пример 1: Открытие бокса с автоматической генерацией ключа

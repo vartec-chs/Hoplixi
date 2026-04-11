@@ -13,7 +13,7 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
 import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/core/theme/theme_window_sync_service.dart';
-import 'package:hoplixi/di_init.dart';
+import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/features/cloud_sync/auth/widgets/cloud_sync_auth_flow_listener.dart';
 import 'package:hoplixi/features/cloud_sync/auth/widgets/show_cloud_sync_auth_sheet.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';

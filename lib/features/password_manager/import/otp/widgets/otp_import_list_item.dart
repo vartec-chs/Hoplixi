@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/migration/otp/otp_extractor.dart';
+import 'package:hoplixi/features/password_manager/import/otp/otp_extractor.dart';
 
 class OtpImportListItem extends StatelessWidget {
   const OtpImportListItem({

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_prefs/security_prefs.dart';
 import 'package:hoplixi/core/app_prefs/system_prefs.dart';
 import 'package:hoplixi/core/theme/theme_provider.dart';
-import 'package:hoplixi/di_init.dart';
+import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/features/setup/providers/setup_completed_provider.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:permission_handler/permission_handler.dart';

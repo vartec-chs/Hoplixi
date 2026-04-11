@@ -12,7 +12,7 @@ import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 import 'package:hoplixi/db_core/provider/service_providers.dart';
 import 'package:hoplixi/db_core/services/db_key_derivation_service.dart';
 import 'package:hoplixi/db_core/services/store_key_config_service.dart';
-import 'package:hoplixi/di_init.dart';
+import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/features/password_manager/store_settings/models/store_settings_state.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';

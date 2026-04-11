@@ -5,7 +5,7 @@ import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/services/services.dart';
 import 'package:hoplixi/core/theme/theme_switcher.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/di_init.dart';
+import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/features/settings/providers/settings_prefs_providers.dart';
 import 'package:hoplixi/features/settings/ui/widgets/settings_section_card.dart';
 import 'package:hoplixi/features/settings/ui/widgets/settings_tile.dart';

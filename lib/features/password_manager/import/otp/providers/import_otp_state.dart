@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hoplixi/features/password_manager/migration/otp/otp_extractor.dart';
+import 'package:hoplixi/features/password_manager/import/otp/otp_extractor.dart';
 
 part 'import_otp_state.freezed.dart';
 

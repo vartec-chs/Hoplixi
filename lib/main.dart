@@ -15,17 +15,17 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/core/utils/window_manager.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/global_key.dart';
-import 'package:hoplixi/run_sub_window_entry.dart';
+import 'package:hoplixi/setup/run_sub_window_entry.dart';
 import 'package:hoplixi/rust/frb_generated.dart';
-import 'package:hoplixi/setup_error_handling.dart';
-import 'package:hoplixi/setup_tray.dart';
+import 'package:hoplixi/setup/setup_error_handling.dart';
+import 'package:hoplixi/setup/setup_tray.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:toastification/toastification.dart';
 import 'package:typed_prefs/typed_prefs.dart';
 import 'package:universal_platform/universal_platform.dart';
 
 import 'app.dart';
-import 'di_init.dart';
+import 'setup/di_init.dart';
 
 Future<void> _handleLostData() async {
   final ImagePicker picker = ImagePicker();
