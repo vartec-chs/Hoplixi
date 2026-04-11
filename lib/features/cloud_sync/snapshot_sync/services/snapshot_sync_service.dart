@@ -619,7 +619,6 @@ class SnapshotSyncService {
       binding.tokenId,
       storeUuid: manifestToUpload.storeUuid,
       dbFile: localSnapshot.dbFile,
-      keyFile: localSnapshot.keyFile,
       layout: remoteLayout,
       onProgress: (progress) {
         emitProgress?.call(

@@ -1,4 +1,5 @@
 import 'package:hoplixi/core/app_paths.dart';
+import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/logger/models.dart' as logger_models;
 import 'package:hoplixi/db_core/main_store.dart';
@@ -12,7 +13,6 @@ import 'package:hoplixi/db_core/services/db_key_derivation_service.dart';
 import 'package:hoplixi/db_core/services/main_store_connection_service.dart';
 import 'package:hoplixi/db_core/services/main_store_metadata_service.dart';
 import 'package:hoplixi/db_core/services/main_store_storage_service.dart';
-import 'package:hoplixi/db_core/services/store_key_config_service.dart';
 import 'package:hoplixi/db_core/services/store_manifest_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:result_dart/result_dart.dart';
@@ -86,9 +86,8 @@ class MainStoreManager {
         useDeviceKey: dto.useDeviceKey,
         cipher: dto.cipher,
       );
-      await keyConfig.writeTo(storageDir.path);
       logInfo(
-        'Wrote store_key.json (useDeviceKey=${dto.useDeviceKey}, cipher=${dto.cipher.name})',
+        'Prepared store manifest key config (useDeviceKey=${dto.useDeviceKey}, cipher=${dto.cipher.name})',
         tag: _logTag,
       );
 
@@ -141,7 +140,7 @@ class MainStoreManager {
       logInfo('Created store metadata with id: $storeId', tag: _logTag);
 
       try {
-        await _writeCurrentStoreManifest();
+        await _writeCurrentStoreManifest(keyConfig: keyConfig);
         logInfo('Wrote store_manifest.json', tag: _logTag);
       } on DatabaseError {
         await database.close();
@@ -216,27 +215,28 @@ class MainStoreManager {
 
       logInfo('Found database file: $dbFilePath', tag: _logTag);
 
-      final keyConfig = await StoreKeyConfigService.readFrom(actualStoragePath);
-      var selectedCipher = keyConfig?.cipher ?? DBCipher.chacha20;
-      final String pragmaKey;
-      if (keyConfig != null) {
-        pragmaKey = await _keyService.derivePragmaKey(
-          dto.password,
-          keyConfig.argon2Salt,
-          useDeviceKey: keyConfig.useDeviceKey,
-        );
-        logInfo(
-          'Derived Argon2 PRAGMA key (useDeviceKey=${keyConfig.useDeviceKey}, cipher=${selectedCipher.name})',
-          tag: _logTag,
-        );
-      } else {
-        // Обратная совместимость: сырой пароль как раньше
-        pragmaKey = dto.password;
-        logInfo(
-          'No store_key.json found — using raw password (legacy mode)',
-          tag: _logTag,
+      final manifest = await StoreManifestService.readFrom(actualStoragePath);
+      final keyConfig = manifest?.keyConfig;
+      if (keyConfig == null) {
+        return Failure(
+          DatabaseError.recordNotFound(
+            message: 'В store_manifest.json не найден keyConfig',
+            data: {'path': actualStoragePath},
+            timestamp: DateTime.now(),
+          ),
         );
       }
+
+      var selectedCipher = keyConfig.cipher ?? DBCipher.chacha20;
+      final pragmaKey = await _keyService.derivePragmaKey(
+        dto.password,
+        keyConfig.argon2Salt,
+        useDeviceKey: keyConfig.useDeviceKey,
+      );
+      logInfo(
+        'Derived Argon2 PRAGMA key from store_manifest.json (useDeviceKey=${keyConfig.useDeviceKey}, cipher=${selectedCipher.name})',
+        tag: _logTag,
+      );
 
       final dbResult = await _connectionService.createDatabaseConnection(
         dbFilePath,
@@ -269,20 +269,17 @@ class MainStoreManager {
             effectiveDbResult = fallbackResult;
             selectedCipher = fallbackCipher;
 
-            if (keyConfig != null) {
-              await keyConfig
-                  .copyWith(cipher: fallbackCipher)
-                  .writeTo(actualStoragePath);
-              logInfo(
-                'Updated store_key.json with detected cipher: ${fallbackCipher.name}',
-                tag: _logTag,
-              );
-            } else {
-              logInfo(
-                'Detected working cipher for legacy store without store_key.json: ${fallbackCipher.name}',
-                tag: _logTag,
-              );
-            }
+            await StoreManifestService.writeTo(
+              actualStoragePath,
+              manifest!.copyWith(
+                manifestVersion: MainConstants.storeManifestVersion,
+                keyConfig: keyConfig.copyWith(cipher: fallbackCipher),
+              ),
+            );
+            logInfo(
+              'Updated store_manifest.json with detected cipher: ${fallbackCipher.name}',
+              tag: _logTag,
+            );
             break;
           }
         }
@@ -533,7 +530,7 @@ class MainStoreManager {
     }
   }
 
-  Future<void> _writeCurrentStoreManifest() async {
+  Future<void> _writeCurrentStoreManifest({StoreKeyConfig? keyConfig}) async {
     final storagePath = _currentStorePath;
     if (_currentStore == null || storagePath == null) {
       throw DatabaseError.notInitialized(
@@ -564,19 +561,21 @@ class MainStoreManager {
     );
     final manifest =
         existingManifest?.copyWith(
-          manifestVersion: 2,
+          manifestVersion: MainConstants.storeManifestVersion,
           storeUuid: storeInfo.id,
           storeName: storeInfo.name,
           updatedAt: storeInfo.modifiedAt.toUtc(),
           lastModifiedBy: existingManifest.lastModifiedBy.deviceId.isNotEmpty
               ? existingManifest.lastModifiedBy
               : lastModifiedBy,
+          keyConfig: keyConfig ?? existingManifest.keyConfig,
         ) ??
         StoreManifest.initial(
           storeUuid: storeInfo.id,
           storeName: storeInfo.name,
           updatedAt: storeInfo.modifiedAt.toUtc(),
           lastModifiedBy: lastModifiedBy,
+          keyConfig: keyConfig,
         );
 
     try {

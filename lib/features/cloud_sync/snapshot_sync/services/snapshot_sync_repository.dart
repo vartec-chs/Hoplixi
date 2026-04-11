@@ -37,7 +37,6 @@ class SnapshotSyncRepository {
   static const String cloudManifestFileName = 'cloud_manifest.json';
   static const String storeManifestFileName = 'store_manifest.json';
   static const String attachmentsManifestFileName = 'attachments_manifest.json';
-  static const String keyFileName = 'store_key.json';
   static const String attachmentsFolderName = 'attachments';
 
   final CloudStorageRepository _storageRepository;
@@ -292,7 +291,6 @@ class SnapshotSyncRepository {
     String tokenId, {
     required String storeUuid,
     required File dbFile,
-    File? keyFile,
     RemoteStoreLayout? layout,
     SnapshotSyncTransferProgressCallback? onProgress,
   }) async {
@@ -309,13 +307,6 @@ class SnapshotSyncRepository {
         size: await dbFile.length(),
       ),
     ];
-    if (keyFile != null && await keyFile.exists()) {
-      uploads.add((
-        file: keyFile,
-        name: keyFileName,
-        size: await keyFile.length(),
-      ));
-    }
 
     final totalBytes = uploads.fold<int>(0, (sum, entry) => sum + entry.size);
     var completedFiles = 0;

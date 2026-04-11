@@ -7,6 +7,8 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_m
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/store_snapshot_manifest_builder.dart';
 import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
 import 'package:hoplixi/db_core/models/store_manifest.dart';
+import 'package:hoplixi/db_core/models/store_key_config.dart';
+import 'package:hoplixi/db_core/services/store_manifest_service.dart';
 
 void main() {
   group('StoreManifest.fromJson', () {
@@ -115,12 +117,11 @@ void main() {
 
       final dbFile = File('${storeDir.path}/demo_store.hplxdb')
         ..writeAsStringSync('encrypted_db');
-      final keyFile = File('${storeDir.path}/store_key.json')
-        ..writeAsStringSync('{"argon2Salt":"salt","useDeviceKey":false}');
       final attachmentFile = File('${attachmentsDir.path}/file-1.enc')
         ..writeAsStringSync('encrypted_attachment');
       final ignoredFile = File('${decryptedDir.path}/plain.txt')
         ..writeAsStringSync('plain_attachment');
+      await StoreManifestService.writeTo(storeDir.path, _manifest(revision: 0));
 
       final builder = StoreSnapshotManifestBuilder(
         deviceInfoLoader: () async => logger_models.DeviceInfo(
@@ -156,13 +157,13 @@ void main() {
       );
 
       expect(dbFile.existsSync(), isTrue);
-      expect(keyFile.existsSync(), isTrue);
       expect(attachmentFile.existsSync(), isTrue);
       expect(ignoredFile.existsSync(), isTrue);
       expect(snapshot.attachmentsManifest.files, hasLength(1));
       expect(snapshot.attachmentsManifest.files.first.fileName, 'file-1.enc');
       expect(snapshot.storeManifest.content.attachments.count, 1);
       expect(snapshot.storeManifest.revision, 1);
+      expect(snapshot.storeManifest.keyConfig?.argon2Salt, 'salt');
       expect(File('${storeDir.path}/store_manifest.json').existsSync(), isTrue);
       expect(
         File('${storeDir.path}/attachments_manifest.json').existsSync(),
@@ -179,7 +180,6 @@ StoreManifest _manifest({
   String storeUuid = 'store-1',
   String snapshotId = '',
   String dbHash = 'db-hash',
-  String keyHash = 'key-hash',
   String filesHash = 'files-hash',
   String? manifestSha256,
 }) {
@@ -194,13 +194,13 @@ StoreManifest _manifest({
       clientInstanceId: 'client',
       appVersion: '1.0.0',
     ),
+    keyConfig: const StoreKeyConfig(argon2Salt: 'salt', useDeviceKey: false),
     content: StoreManifestContent(
       dbFile: StoreManifestDbFileContent(
         fileName: 'store.hplxdb',
         size: 10,
         sha256: dbHash,
       ),
-      keyFile: StoreManifestKeyFileContent(sha256: keyHash, size: 5),
       attachments: StoreManifestAttachmentsContent(
         count: 1,
         totalSize: 2,

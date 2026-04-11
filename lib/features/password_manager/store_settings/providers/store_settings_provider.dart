@@ -11,8 +11,8 @@ import 'package:hoplixi/db_core/provider/db_history_provider.dart';
 import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 import 'package:hoplixi/db_core/provider/service_providers.dart';
 import 'package:hoplixi/db_core/services/db_key_derivation_service.dart';
-import 'package:hoplixi/db_core/services/store_key_config_service.dart';
 import 'package:hoplixi/setup/di_init.dart';
+import 'package:hoplixi/db_core/services/store_manifest_service.dart';
 import 'package:hoplixi/features/password_manager/store_settings/models/store_settings_state.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
@@ -419,15 +419,16 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         return const Failure('Не удалось определить текущее хранилище');
       }
 
-      final keyConfig = await StoreKeyConfigService.readFrom(currentPath);
+      final manifest = await StoreManifestService.readFrom(currentPath);
+      final keyConfig = manifest?.keyConfig;
       if (keyConfig == null) {
         state = state.copyWith(
           isChangingPassword: false,
           saveError:
-              'Не найден store_key.json. Смена пароля доступна только для новых хранилищ.',
+              'Не найден keyConfig в store_manifest.json. Смена пароля невозможна.',
         );
         return const Failure(
-          'Не найден store_key.json. Смена пароля доступна только для новых хранилищ.',
+          'Не найден keyConfig в store_manifest.json. Смена пароля невозможна.',
         );
       }
 

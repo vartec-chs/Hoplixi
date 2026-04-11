@@ -21,6 +21,7 @@ import 'package:hoplixi/features/cloud_sync/storage/services/cloud_storage_provi
 import 'package:hoplixi/features/cloud_sync/storage/services/cloud_storage_repository.dart';
 import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
 import 'package:hoplixi/db_core/models/store_manifest.dart';
+import 'package:hoplixi/db_core/models/store_key_config.dart';
 import 'package:hoplixi/db_core/services/store_manifest_service.dart';
 import 'package:path/path.dart' as p;
 
@@ -650,7 +651,6 @@ class _FakeSnapshotSyncRepository extends SnapshotSyncRepository {
     String tokenId, {
     required String storeUuid,
     required File dbFile,
-    File? keyFile,
     RemoteStoreLayout? layout,
     SnapshotSyncTransferProgressCallback? onProgress,
   }) async {
@@ -835,8 +835,6 @@ Future<_StoreFixture> _createStoreFixture(List<Directory> tempDirs) async {
     ..createSync(recursive: true);
   final dbFile = File(p.join(storeDir.path, 'store.hplxdb'))
     ..writeAsStringSync('db');
-  final keyFile = File(p.join(storeDir.path, 'store_key.json'))
-    ..writeAsStringSync('{}');
   final attachmentFile = File(p.join(attachmentsDir.path, 'local.enc'))
     ..writeAsStringSync('attachment');
 
@@ -845,7 +843,6 @@ Future<_StoreFixture> _createStoreFixture(List<Directory> tempDirs) async {
     storeDir: storeDir,
     attachmentsDir: attachmentsDir,
     dbFile: dbFile,
-    keyFile: keyFile,
     attachmentFile: attachmentFile,
   );
 }
@@ -860,7 +857,6 @@ LocalStoreSnapshot _localSnapshot(
       files: <AttachmentManifestEntry>[_attachmentEntry('local.enc')],
     ),
     dbFile: fixture.dbFile,
-    keyFile: fixture.keyFile,
   );
 }
 
@@ -937,7 +933,6 @@ StoreManifest _manifest({
   String storeName = 'Store',
   String snapshotId = '',
   String dbHash = 'db-hash',
-  String keyHash = 'key-hash',
   String filesHash = 'files-hash',
 }) {
   return StoreManifest(
@@ -951,13 +946,13 @@ StoreManifest _manifest({
       clientInstanceId: 'client',
       appVersion: '1.0.0',
     ),
+    keyConfig: const StoreKeyConfig(argon2Salt: 'salt', useDeviceKey: false),
     content: StoreManifestContent(
       dbFile: StoreManifestDbFileContent(
         fileName: 'store.hplxdb',
         size: 10,
         sha256: dbHash,
       ),
-      keyFile: StoreManifestKeyFileContent(sha256: keyHash, size: 5),
       attachments: StoreManifestAttachmentsContent(
         count: 1,
         totalSize: 1,
@@ -974,7 +969,6 @@ class _StoreFixture {
     required this.storeDir,
     required this.attachmentsDir,
     required this.dbFile,
-    required this.keyFile,
     required this.attachmentFile,
   });
 
@@ -982,6 +976,5 @@ class _StoreFixture {
   final Directory storeDir;
   final Directory attachmentsDir;
   final File dbFile;
-  final File keyFile;
   final File attachmentFile;
 }

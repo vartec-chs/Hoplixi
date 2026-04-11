@@ -125,7 +125,7 @@ void main() {
   );
 
   test(
-    'uploadStoreFiles reports aggregate progress for db and key files',
+    'uploadStoreFiles reports aggregate progress for primary files',
     () async {
       final storage = _FakeCloudStorageRepository();
       final repository = SnapshotSyncRepository(storage);
@@ -136,27 +136,20 @@ void main() {
       final dbFile = await File(
         p.join(localDir.path, 'store.hplxdb'),
       ).writeAsString('1234');
-      final keyFile = await File(
-        p.join(localDir.path, 'store_key.json'),
-      ).writeAsString('12');
       final progressEvents = <SnapshotSyncTransferProgress>[];
 
       await repository.uploadStoreFiles(
         'token-1',
         storeUuid: 'store-1',
         dbFile: dbFile,
-        keyFile: keyFile,
         onProgress: progressEvents.add,
       );
 
-      expect(storage.uploadedFileNames, <String>[
-        'store.hplxdb',
-        'store_key.json',
-      ]);
-      expect(progressEvents.last.completedFiles, 2);
-      expect(progressEvents.last.totalFiles, 2);
-      expect(progressEvents.last.transferredBytes, 6);
-      expect(progressEvents.last.totalBytes, 6);
+      expect(storage.uploadedFileNames, <String>['store.hplxdb']);
+      expect(progressEvents.last.completedFiles, 1);
+      expect(progressEvents.last.totalFiles, 1);
+      expect(progressEvents.last.transferredBytes, 4);
+      expect(progressEvents.last.totalBytes, 4);
     },
   );
 
@@ -169,11 +162,6 @@ void main() {
           'store.hplxdb',
           path: '/Hoplixi/stores/store-1/store.hplxdb',
           sizeBytes: 5,
-        ),
-        _fileResource(
-          'store_key.json',
-          path: '/Hoplixi/stores/store-1/store_key.json',
-          sizeBytes: 3,
         ),
         _fileResource(
           'store_manifest.json',
@@ -195,14 +183,11 @@ void main() {
         onProgress: progressEvents.add,
       );
 
-      expect(storage.downloadedFileNames, <String>[
-        'store.hplxdb',
-        'store_key.json',
-      ]);
-      expect(progressEvents.last.completedFiles, 2);
-      expect(progressEvents.last.totalFiles, 2);
-      expect(progressEvents.last.transferredBytes, 8);
-      expect(progressEvents.last.totalBytes, 8);
+      expect(storage.downloadedFileNames, <String>['store.hplxdb']);
+      expect(progressEvents.last.completedFiles, 1);
+      expect(progressEvents.last.totalFiles, 1);
+      expect(progressEvents.last.transferredBytes, 5);
+      expect(progressEvents.last.totalBytes, 5);
     },
   );
 
@@ -226,7 +211,7 @@ void main() {
       final manifest = await repository.readCloudManifest('token-1');
 
       expect(manifest, isNull);
-      expect(storage.getResourceCalls, 1);
+      expect(storage.getResourceCalls, 2);
       expect(storage.listFolderCalls, 1);
     },
   );
@@ -273,6 +258,19 @@ class _FakeCloudStorageRepository implements CloudStorageRepository {
     }
     final resource = _resources[ref.path];
     if (resource == null) {
+      final path = ref.path;
+      if (path != null) {
+        return CloudResource(
+          ref: CloudResourceRef(
+            provider: CloudSyncProvider.dropbox,
+            path: path,
+            resourceId: path,
+          ),
+          provider: CloudSyncProvider.dropbox,
+          kind: CloudResourceKind.folder,
+          name: p.posix.basename(path),
+        );
+      }
       throw StateError('Missing resource for ${ref.path}.');
     }
     return resource;

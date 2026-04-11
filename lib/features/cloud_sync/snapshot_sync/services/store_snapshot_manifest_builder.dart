@@ -1,14 +1,14 @@
 import 'dart:io';
 
+import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/models.dart' as logger_models;
-import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/attachments_manifest.dart';
-import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/attachments_manifest_file_service.dart';
-import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_hash_service.dart';
 import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
 import 'package:hoplixi/db_core/models/store_manifest.dart';
 import 'package:hoplixi/db_core/services/main_store_storage_service.dart';
-import 'package:hoplixi/db_core/services/store_key_config_service.dart';
 import 'package:hoplixi/db_core/services/store_manifest_service.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/attachments_manifest.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/attachments_manifest_file_service.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_hash_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
@@ -18,13 +18,11 @@ class LocalStoreSnapshot {
     required this.storeManifest,
     required this.attachmentsManifest,
     required this.dbFile,
-    required this.keyFile,
   });
 
   final StoreManifest storeManifest;
   final AttachmentsManifest attachmentsManifest;
   final File dbFile;
-  final File? keyFile;
 }
 
 class StoreSnapshotManifestBuilder {
@@ -63,11 +61,6 @@ class StoreSnapshotManifestBuilder {
     final dbFile = File(dbFilePath);
     final dbHash = await _hashService.sha256ForFile(dbFile);
 
-    final keyFile = File(StoreKeyConfigService.configFilePath(storePath));
-    final keyExists = await keyFile.exists();
-    final keyHash = keyExists ? await _hashService.sha256ForFile(keyFile) : '';
-    final keySize = keyExists ? await keyFile.length() : 0;
-
     final draftAttachmentsManifest = await _buildAttachmentsManifest(
       storePath: storePath,
       storeUuid: storeInfo.id,
@@ -91,7 +84,6 @@ class StoreSnapshotManifestBuilder {
         (existingManifest == null ||
             existingManifest.storeName != storeInfo.name ||
             dbChangedLogically ||
-            existingManifest.content.keyFile.sha256 != keyHash ||
             existingManifest.content.attachments.filesHash !=
                 draftAttachmentsManifest.filesHash);
 
@@ -124,7 +116,6 @@ class StoreSnapshotManifestBuilder {
 
     final candidateContent = StoreManifestContent(
       dbFile: candidateDbFile,
-      keyFile: StoreManifestKeyFileContent(sha256: keyHash, size: keySize),
       attachments: StoreManifestAttachmentsContent(
         count: attachmentsManifest.files.where((file) => !file.deleted).length,
         totalSize: attachmentsManifest.files
@@ -146,7 +137,7 @@ class StoreSnapshotManifestBuilder {
                   lastModifiedBy: candidateLastModifiedBy,
                 ))
             .copyWith(
-              manifestVersion: 2,
+              manifestVersion: MainConstants.storeManifestVersion,
               storeUuid: storeInfo.id,
               storeName: storeInfo.name,
               revision: nextRevision,
@@ -161,6 +152,7 @@ class StoreSnapshotManifestBuilder {
                   : (existingManifest?.lastModifiedBy ??
                         candidateLastModifiedBy),
               sync: existingManifest?.sync,
+              keyConfig: existingManifest?.keyConfig,
               content: candidateContent,
             );
 
@@ -176,7 +168,6 @@ class StoreSnapshotManifestBuilder {
       storeManifest: storeManifest,
       attachmentsManifest: attachmentsManifest,
       dbFile: dbFile,
-      keyFile: keyExists ? keyFile : null,
     );
   }
 

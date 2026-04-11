@@ -8,6 +8,7 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_m
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/cloud_sync_settings_page.dart';
 import 'package:hoplixi/db_core/models/store_manifest.dart';
+import 'package:hoplixi/db_core/models/store_key_config.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 
 void main() {
@@ -131,13 +132,13 @@ StoreManifest _manifest({required int revision}) {
       clientInstanceId: 'client',
       appVersion: '1.0.0',
     ),
+    keyConfig: const StoreKeyConfig(argon2Salt: 'salt', useDeviceKey: false),
     content: const StoreManifestContent(
       dbFile: StoreManifestDbFileContent(
         fileName: 'store.hplxdb',
         size: 10,
         sha256: 'db-hash',
       ),
-      keyFile: StoreManifestKeyFileContent(sha256: 'key-hash', size: 5),
       attachments: StoreManifestAttachmentsContent(
         count: 1,
         totalSize: 2,

@@ -1,15 +1,19 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/core/constants/main_constants.dart';
+import 'package:hoplixi/db_core/models/store_key_config.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 
-class StoreManifestLastModifiedBy {
-  const StoreManifestLastModifiedBy({
-    required this.deviceId,
-    required this.clientInstanceId,
-    required this.appVersion,
-  });
+part 'store_manifest.freezed.dart';
 
-  final String deviceId;
-  final String clientInstanceId;
-  final String appVersion;
+@freezed
+sealed class StoreManifestLastModifiedBy with _$StoreManifestLastModifiedBy {
+  const factory StoreManifestLastModifiedBy({
+    required String deviceId,
+    required String clientInstanceId,
+    required String appVersion,
+  }) = _StoreManifestLastModifiedBy;
+
+  const StoreManifestLastModifiedBy._();
 
   factory StoreManifestLastModifiedBy.fromJson(Map<String, dynamic> json) {
     return StoreManifestLastModifiedBy(
@@ -26,34 +30,19 @@ class StoreManifestLastModifiedBy {
       'appVersion': appVersion,
     };
   }
-
-  StoreManifestLastModifiedBy copyWith({
-    String? deviceId,
-    String? clientInstanceId,
-    String? appVersion,
-  }) {
-    return StoreManifestLastModifiedBy(
-      deviceId: deviceId ?? this.deviceId,
-      clientInstanceId: clientInstanceId ?? this.clientInstanceId,
-      appVersion: appVersion ?? this.appVersion,
-    );
-  }
 }
 
-class StoreManifestSyncMetadata {
-  const StoreManifestSyncMetadata({
-    this.provider,
-    this.remoteStoreId,
-    this.remotePath,
-    this.syncedAt,
-    this.providerRevisionTag,
-  });
+@freezed
+sealed class StoreManifestSyncMetadata with _$StoreManifestSyncMetadata {
+  const factory StoreManifestSyncMetadata({
+    CloudSyncProvider? provider,
+    String? remoteStoreId,
+    String? remotePath,
+    DateTime? syncedAt,
+    String? providerRevisionTag,
+  }) = _StoreManifestSyncMetadata;
 
-  final CloudSyncProvider? provider;
-  final String? remoteStoreId;
-  final String? remotePath;
-  final DateTime? syncedAt;
-  final String? providerRevisionTag;
+  const StoreManifestSyncMetadata._();
 
   factory StoreManifestSyncMetadata.fromJson(Map<String, dynamic> json) {
     return StoreManifestSyncMetadata(
@@ -74,44 +63,18 @@ class StoreManifestSyncMetadata {
       'providerRevisionTag': providerRevisionTag,
     };
   }
-
-  StoreManifestSyncMetadata copyWith({
-    CloudSyncProvider? provider,
-    String? remoteStoreId,
-    String? remotePath,
-    DateTime? syncedAt,
-    String? providerRevisionTag,
-    bool clearRemoteStoreId = false,
-    bool clearRemotePath = false,
-    bool clearSyncedAt = false,
-    bool clearProviderRevisionTag = false,
-  }) {
-    return StoreManifestSyncMetadata(
-      provider: provider ?? this.provider,
-      remoteStoreId: clearRemoteStoreId
-          ? null
-          : (remoteStoreId ?? this.remoteStoreId),
-      remotePath: clearRemotePath ? null : (remotePath ?? this.remotePath),
-      syncedAt: clearSyncedAt ? null : (syncedAt ?? this.syncedAt),
-      providerRevisionTag: clearProviderRevisionTag
-          ? null
-          : (providerRevisionTag ?? this.providerRevisionTag),
-    );
-  }
 }
 
-class StoreManifestDbFileContent {
-  const StoreManifestDbFileContent({
-    required this.fileName,
-    required this.size,
-    required this.sha256,
-    this.modifiedAt,
-  });
+@freezed
+sealed class StoreManifestDbFileContent with _$StoreManifestDbFileContent {
+  const factory StoreManifestDbFileContent({
+    required String fileName,
+    required int size,
+    required String sha256,
+    DateTime? modifiedAt,
+  }) = _StoreManifestDbFileContent;
 
-  final String fileName;
-  final int size;
-  final String sha256;
-  final DateTime? modifiedAt;
+  const StoreManifestDbFileContent._();
 
   factory StoreManifestDbFileContent.fromJson(Map<String, dynamic> json) {
     return StoreManifestDbFileContent(
@@ -130,60 +93,19 @@ class StoreManifestDbFileContent {
       'modifiedAt': modifiedAt?.toUtc().toIso8601String(),
     };
   }
-
-  StoreManifestDbFileContent copyWith({
-    String? fileName,
-    int? size,
-    String? sha256,
-    DateTime? modifiedAt,
-    bool clearModifiedAt = false,
-  }) {
-    return StoreManifestDbFileContent(
-      fileName: fileName ?? this.fileName,
-      size: size ?? this.size,
-      sha256: sha256 ?? this.sha256,
-      modifiedAt: clearModifiedAt ? null : (modifiedAt ?? this.modifiedAt),
-    );
-  }
 }
 
-class StoreManifestKeyFileContent {
-  const StoreManifestKeyFileContent({required this.sha256, required this.size});
+@freezed
+sealed class StoreManifestAttachmentsContent
+    with _$StoreManifestAttachmentsContent {
+  const factory StoreManifestAttachmentsContent({
+    required int count,
+    required int totalSize,
+    required String manifestSha256,
+    required String filesHash,
+  }) = _StoreManifestAttachmentsContent;
 
-  final String sha256;
-  final int size;
-
-  factory StoreManifestKeyFileContent.fromJson(Map<String, dynamic> json) {
-    return StoreManifestKeyFileContent(
-      sha256: (json['sha256'] as String?)?.trim() ?? '',
-      size: _toInt(json['size']),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return <String, dynamic>{'sha256': sha256, 'size': size};
-  }
-
-  StoreManifestKeyFileContent copyWith({String? sha256, int? size}) {
-    return StoreManifestKeyFileContent(
-      sha256: sha256 ?? this.sha256,
-      size: size ?? this.size,
-    );
-  }
-}
-
-class StoreManifestAttachmentsContent {
-  const StoreManifestAttachmentsContent({
-    required this.count,
-    required this.totalSize,
-    required this.manifestSha256,
-    required this.filesHash,
-  });
-
-  final int count;
-  final int totalSize;
-  final String manifestSha256;
-  final String filesHash;
+  const StoreManifestAttachmentsContent._();
 
   factory StoreManifestAttachmentsContent.fromJson(Map<String, dynamic> json) {
     return StoreManifestAttachmentsContent(
@@ -202,37 +124,20 @@ class StoreManifestAttachmentsContent {
       'filesHash': filesHash,
     };
   }
-
-  StoreManifestAttachmentsContent copyWith({
-    int? count,
-    int? totalSize,
-    String? manifestSha256,
-    String? filesHash,
-  }) {
-    return StoreManifestAttachmentsContent(
-      count: count ?? this.count,
-      totalSize: totalSize ?? this.totalSize,
-      manifestSha256: manifestSha256 ?? this.manifestSha256,
-      filesHash: filesHash ?? this.filesHash,
-    );
-  }
 }
 
-class StoreManifestContent {
-  const StoreManifestContent({
-    required this.dbFile,
-    required this.keyFile,
-    required this.attachments,
-  });
+@freezed
+sealed class StoreManifestContent with _$StoreManifestContent {
+  const factory StoreManifestContent({
+    required StoreManifestDbFileContent dbFile,
+    required StoreManifestAttachmentsContent attachments,
+  }) = _StoreManifestContent;
 
-  final StoreManifestDbFileContent dbFile;
-  final StoreManifestKeyFileContent keyFile;
-  final StoreManifestAttachmentsContent attachments;
+  const StoreManifestContent._();
 
   factory StoreManifestContent.empty() {
     return const StoreManifestContent(
       dbFile: StoreManifestDbFileContent(fileName: '', size: 0, sha256: ''),
-      keyFile: StoreManifestKeyFileContent(sha256: '', size: 0),
       attachments: StoreManifestAttachmentsContent(
         count: 0,
         totalSize: 0,
@@ -249,11 +154,6 @@ class StoreManifestContent {
               json['dbFile'] as Map<String, dynamic>,
             )
           : const StoreManifestDbFileContent(fileName: '', size: 0, sha256: ''),
-      keyFile: json['keyFile'] is Map<String, dynamic>
-          ? StoreManifestKeyFileContent.fromJson(
-              json['keyFile'] as Map<String, dynamic>,
-            )
-          : const StoreManifestKeyFileContent(sha256: '', size: 0),
       attachments: json['attachments'] is Map<String, dynamic>
           ? StoreManifestAttachmentsContent.fromJson(
               json['attachments'] as Map<String, dynamic>,
@@ -270,60 +170,40 @@ class StoreManifestContent {
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'dbFile': dbFile.toJson(),
-      'keyFile': keyFile.toJson(),
       'attachments': attachments.toJson(),
     };
   }
 
-  StoreManifestContent copyWith({
-    StoreManifestDbFileContent? dbFile,
-    StoreManifestKeyFileContent? keyFile,
-    StoreManifestAttachmentsContent? attachments,
-  }) {
-    return StoreManifestContent(
-      dbFile: dbFile ?? this.dbFile,
-      keyFile: keyFile ?? this.keyFile,
-      attachments: attachments ?? this.attachments,
-    );
-  }
-
   String get signature {
-    return '${dbFile.sha256}:${keyFile.sha256}:${attachments.manifestSha256}:${attachments.filesHash}';
+    return '${dbFile.sha256}:${attachments.manifestSha256}:${attachments.filesHash}';
   }
 }
 
-class StoreManifest {
-  const StoreManifest({
-    this.manifestVersion = 2,
-    required this.storeUuid,
-    required this.storeName,
-    required this.revision,
-    required this.updatedAt,
-    required this.snapshotId,
-    this.baseRevision,
-    this.baseSnapshotId,
-    required this.lastModifiedBy,
-    this.sync,
-    required this.content,
-  });
+@freezed
+sealed class StoreManifest with _$StoreManifest {
+  const factory StoreManifest({
+    @Default(MainConstants.storeManifestVersion) int manifestVersion,
+    required String storeUuid,
+    required String storeName,
+    required int revision,
+    required DateTime updatedAt,
+    required String snapshotId,
+    int? baseRevision,
+    String? baseSnapshotId,
+    required StoreManifestLastModifiedBy lastModifiedBy,
+    StoreManifestSyncMetadata? sync,
+    StoreKeyConfig? keyConfig,
+    required StoreManifestContent content,
+  }) = _StoreManifest;
 
-  final int manifestVersion;
-  final String storeUuid;
-  final String storeName;
-  final int revision;
-  final DateTime updatedAt;
-  final String snapshotId;
-  final int? baseRevision;
-  final String? baseSnapshotId;
-  final StoreManifestLastModifiedBy lastModifiedBy;
-  final StoreManifestSyncMetadata? sync;
-  final StoreManifestContent content;
+  const StoreManifest._();
 
   factory StoreManifest.initial({
     required String storeUuid,
     required String storeName,
     required DateTime updatedAt,
     required StoreManifestLastModifiedBy lastModifiedBy,
+    StoreKeyConfig? keyConfig,
   }) {
     return StoreManifest(
       storeUuid: storeUuid,
@@ -332,6 +212,7 @@ class StoreManifest {
       updatedAt: updatedAt.toUtc(),
       snapshotId: '',
       lastModifiedBy: lastModifiedBy,
+      keyConfig: keyConfig,
       content: StoreManifestContent.empty(),
     );
   }
@@ -341,10 +222,11 @@ class StoreManifest {
         json.containsKey('storeId') ||
         json.containsKey('lastModified') ||
         !json.containsKey('storeUuid');
+
     if (hasLegacyShape) {
       final lastModified = _toInt(json['lastModified']);
       return StoreManifest(
-        manifestVersion: 1,
+        manifestVersion: MainConstants.storeManifestVersion,
         storeUuid: (json['storeId'] as String?)?.trim() ?? '',
         storeName: (json['storeName'] as String?)?.trim() ?? '',
         revision: 0,
@@ -358,12 +240,16 @@ class StoreManifest {
           clientInstanceId: '',
           appVersion: '',
         ),
+        keyConfig: null,
         content: StoreManifestContent.empty(),
       );
     }
 
     return StoreManifest(
-      manifestVersion: _toInt(json['manifestVersion'], fallback: 2),
+      manifestVersion: _toInt(
+        json['manifestVersion'],
+        fallback: MainConstants.storeManifestVersion,
+      ),
       storeUuid: (json['storeUuid'] as String?)?.trim() ?? '',
       storeName: (json['storeName'] as String?)?.trim() ?? '',
       revision: _toInt(json['revision']),
@@ -387,6 +273,9 @@ class StoreManifest {
               json['sync'] as Map<String, dynamic>,
             )
           : null,
+      keyConfig: json['keyConfig'] is Map<String, dynamic>
+          ? StoreKeyConfig.fromJson(json['keyConfig'] as Map<String, dynamic>)
+          : null,
       content: json['content'] is Map<String, dynamic>
           ? StoreManifestContent.fromJson(
               json['content'] as Map<String, dynamic>,
@@ -407,47 +296,14 @@ class StoreManifest {
       'baseSnapshotId': baseSnapshotId,
       'lastModifiedBy': lastModifiedBy.toJson(),
       'sync': sync?.toJson(),
+      'keyConfig': keyConfig?.toJson(),
       'content': content.toJson(),
     };
   }
 
-  StoreManifest copyWith({
-    int? manifestVersion,
-    String? storeUuid,
-    String? storeName,
-    int? revision,
-    DateTime? updatedAt,
-    String? snapshotId,
-    int? baseRevision,
-    String? baseSnapshotId,
-    bool clearBaseRevision = false,
-    bool clearBaseSnapshotId = false,
-    StoreManifestLastModifiedBy? lastModifiedBy,
-    StoreManifestSyncMetadata? sync,
-    bool clearSync = false,
-    StoreManifestContent? content,
-  }) {
-    return StoreManifest(
-      manifestVersion: manifestVersion ?? this.manifestVersion,
-      storeUuid: storeUuid ?? this.storeUuid,
-      storeName: storeName ?? this.storeName,
-      revision: revision ?? this.revision,
-      updatedAt: updatedAt ?? this.updatedAt,
-      snapshotId: snapshotId ?? this.snapshotId,
-      baseRevision: clearBaseRevision
-          ? null
-          : (baseRevision ?? this.baseRevision),
-      baseSnapshotId: clearBaseSnapshotId
-          ? null
-          : (baseSnapshotId ?? this.baseSnapshotId),
-      lastModifiedBy: lastModifiedBy ?? this.lastModifiedBy,
-      sync: clearSync ? null : (sync ?? this.sync),
-      content: content ?? this.content,
-    );
-  }
-
   bool isSameContent(StoreManifest other) {
-    return content.signature == other.content.signature;
+    return content.signature == other.content.signature &&
+        keyConfig == other.keyConfig;
   }
 
   int get version => manifestVersion;

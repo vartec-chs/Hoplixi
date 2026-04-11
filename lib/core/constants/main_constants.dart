@@ -14,6 +14,7 @@ class MainConstants {
   static const bool isCenter = true;
 
   static const int databaseSchemaVersion = 1;
+  static const int storeManifestVersion = 1;
   static const String dbExtension = '.hplxdb';
   static const String encryptedFileExtension = '.hplxenc';
 

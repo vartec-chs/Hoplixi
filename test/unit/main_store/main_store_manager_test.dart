@@ -10,6 +10,7 @@ import 'package:hoplixi/db_core/models/db_history_model.dart';
 import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
 import 'package:hoplixi/db_core/services/db_history_services.dart';
 import 'package:hoplixi/db_core/services/db_key_derivation_service.dart';
+import 'package:hoplixi/db_core/services/store_manifest_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
@@ -140,7 +141,6 @@ class FakeDbKeyService extends Fake implements DbKeyDerivationService {
     String salt, {
     bool useDeviceKey = false,
   }) async {
-    // Return a regular string password, which will trigger the legacy code path
     return 'my_secure_password';
   }
 }
@@ -225,8 +225,11 @@ void main() {
       final dbFile = File(p.join(storeDir.path, 'test_store.hplxdb'));
       expect(dbFile.existsSync(), isTrue);
 
-      final keyConfig = File(p.join(storeDir.path, 'store_key.json'));
-      expect(keyConfig.existsSync(), isTrue);
+      final manifest = await StoreManifestService.readFrom(storeDir.path);
+      expect(manifest, isNotNull);
+      expect(manifest?.keyConfig?.argon2Salt, isNotEmpty);
+      expect(manifest?.keyConfig?.useDeviceKey, isFalse);
+      expect(manifest?.keyConfig?.cipher, DBCipher.chacha20);
 
       final attachmentsDir = Directory(p.join(storeDir.path, 'attachments'));
       expect(attachmentsDir.existsSync(), isTrue);

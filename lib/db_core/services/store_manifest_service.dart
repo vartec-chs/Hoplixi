@@ -9,13 +9,13 @@ typedef StoreManifestEntry = ({String storagePath, StoreManifest manifest});
 
 /// Файловый сервис для чтения и записи [StoreManifest].
 class StoreManifestService {
-  static const String fileName = 'store_manifest.json';
+  static const String manifestFileName = 'store_manifest.json';
 
   const StoreManifestService._();
 
   /// Путь к файлу манифеста для директории хранилища.
   static String manifestFilePath(String storageDir) =>
-      p.join(storageDir, fileName);
+      p.join(storageDir, manifestFileName);
 
   /// Записать манифест на диск в директорию [storageDir].
   static Future<void> writeTo(String storageDir, StoreManifest manifest) async {
