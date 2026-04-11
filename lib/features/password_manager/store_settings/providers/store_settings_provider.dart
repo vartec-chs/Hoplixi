@@ -559,11 +559,8 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       }
 
       // Обновляем пароль только если пользователь сохранял его ранее
-      if (existingEntry.savePassword && existingEntry.password != null) {
-        final updatedEntry = existingEntry.copyWith(password: newPassword);
-
-        await historyService.update(updatedEntry);
-
+      if (existingEntry.savePassword) {
+        await historyService.setSavedPasswordByPath(currentPath, newPassword);
         logInfo(
           'Password updated in database history for path: $currentPath',
           tag: _logTag,

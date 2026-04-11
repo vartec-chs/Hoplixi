@@ -127,7 +127,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       final historyService = await ref.read(dbHistoryProvider.future);
       final historyEntry = await historyService.getByPath(storageDirPath);
 
-      final savedPassword = historyEntry?.password;
+      final savedPassword = historyEntry?.savePassword == true
+          ? await historyService.getSavedPasswordByPath(storageDirPath)
+          : null;
       if (savedPassword != null && savedPassword.isNotEmpty) {
         final opened = await ref
             .read(mainStoreProvider.notifier)

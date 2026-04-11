@@ -465,18 +465,27 @@ class MainStoreManager {
           _currentStorePath!,
         );
         if (historyEntry != null) {
+          final shouldSavePassword =
+              dto.saveMasterPassword ?? historyEntry.savePassword;
           await _dbHistoryService.update(
             historyEntry.copyWith(
               name: dto.name ?? historyEntry.name,
               description: dto.description ?? historyEntry.description,
-              password: dto.saveMasterPassword == true && dto.password != null
-                  ? dto.password
-                  : dto.saveMasterPassword == false
-                  ? null
-                  : historyEntry.password,
-              savePassword: dto.saveMasterPassword ?? historyEntry.savePassword,
+              savePassword: shouldSavePassword,
             ),
           );
+
+          if (dto.saveMasterPassword == false) {
+            await _dbHistoryService.setSavedPasswordByPath(
+              _currentStorePath!,
+              null,
+            );
+          } else if (dto.password != null && shouldSavePassword) {
+            await _dbHistoryService.setSavedPasswordByPath(
+              _currentStorePath!,
+              dto.password,
+            );
+          }
         }
       }
 

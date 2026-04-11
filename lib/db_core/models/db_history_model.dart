@@ -11,7 +11,6 @@ sealed class DatabaseEntry with _$DatabaseEntry {
     required String name,
     required String dbId,
     String? description,
-    String? password,
     required bool savePassword,
     DateTime? lastAccessed,
     DateTime? createdAt,

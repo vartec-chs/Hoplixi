@@ -1,5 +1,8 @@
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:device_info_plus_platform_interface/device_info_plus_platform_interface.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hoplixi/db_core/main_store_manager.dart';
 import 'package:hoplixi/db_core/models/db_ciphers.dart';
@@ -7,6 +10,7 @@ import 'package:hoplixi/db_core/models/db_history_model.dart';
 import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
 import 'package:hoplixi/db_core/services/db_history_services.dart';
 import 'package:hoplixi/db_core/services/db_key_derivation_service.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
@@ -34,8 +38,42 @@ class FakePathProviderPlatform extends Fake
   Future<String?> getApplicationDocumentsPath() async => appDocsPath;
 }
 
+class FakeDeviceInfoPlatform extends DeviceInfoPlatform {
+  @override
+  Future<BaseDeviceInfo> deviceInfo() async {
+    return WindowsDeviceInfo(
+      computerName: 'test-pc',
+      numberOfCores: 8,
+      systemMemoryInMegabytes: 16384,
+      userName: 'tester',
+      majorVersion: 10,
+      minorVersion: 0,
+      buildNumber: 22631,
+      platformId: 2,
+      csdVersion: '',
+      servicePackMajor: 0,
+      servicePackMinor: 0,
+      suitMask: 0,
+      productType: 1,
+      reserved: 0,
+      buildLab: '22631.test',
+      buildLabEx: '22631.1.amd64fre.test',
+      digitalProductId: Uint8List.fromList(List<int>.filled(16, 1)),
+      displayVersion: '23H2',
+      editionId: 'Professional',
+      installDate: DateTime(2024, 1, 1),
+      productId: '00000-00000-00000-AAAAA',
+      productName: 'Windows Test',
+      registeredOwner: 'Test Owner',
+      releaseId: '23H2',
+      deviceId: 'device-test-id',
+    );
+  }
+}
+
 class FakeDbHistoryService extends Fake implements DatabaseHistoryService {
   final entries = <String, DatabaseEntry>{};
+  final savedPasswords = <String, String>{};
 
   @override
   Future<DatabaseEntry> create({
@@ -51,18 +89,47 @@ class FakeDbHistoryService extends Fake implements DatabaseHistoryService {
       path: path,
       name: name,
       description: description,
-      password: password,
       savePassword: savePassword,
       createdAt: DateTime.now(),
       lastAccessed: null,
     );
     entries[path] = entry;
+    if (savePassword && password != null && password.isNotEmpty) {
+      savedPasswords[path] = password;
+    }
     return entry;
   }
 
   @override
   Future<DatabaseEntry?> getByPath(String path) async {
     return entries[path];
+  }
+
+  @override
+  Future<DatabaseEntry> update(DatabaseEntry entry) async {
+    entries[entry.path] = entry;
+    if (!entry.savePassword) {
+      savedPasswords.remove(entry.path);
+    }
+    return entry;
+  }
+
+  @override
+  Future<String?> getSavedPasswordByPath(String path) async {
+    final entry = entries[path];
+    if (entry == null || !entry.savePassword) {
+      return null;
+    }
+    return savedPasswords[path];
+  }
+
+  @override
+  Future<void> setSavedPasswordByPath(String path, String? password) async {
+    if (password == null || password.isEmpty) {
+      savedPasswords.remove(path);
+      return;
+    }
+    savedPasswords[path] = password;
   }
 }
 
@@ -85,6 +152,17 @@ void main() {
   late FakeDbHistoryService historyService;
   late FakeDbKeyService keyService;
   late MainStoreManager manager;
+
+  setUpAll(() {
+    PackageInfo.setMockInitialValues(
+      appName: 'hoplixi_test',
+      packageName: 'dev.hoplixi.test',
+      version: '1.0.0',
+      buildNumber: '1',
+      buildSignature: '',
+    );
+    DeviceInfoPlatform.instance = FakeDeviceInfoPlatform();
+  });
 
   setUp(() async {
     tempDir = await Directory.systemTemp.createTemp('hoplixi_test_');
@@ -157,10 +235,11 @@ void main() {
       expect(historyService.entries.containsKey(storeDir.path), isTrue);
       final historyEntry = historyService.entries[storeDir.path]!;
       expect(historyEntry.name, 'Test Store');
+      expect(historyEntry.savePassword, isTrue);
       expect(
-        historyEntry.password,
+        historyService.savedPasswords[storeDir.path],
         'secure_password_123',
-      ); // because saveMasterPassword is true
+      );
     });
 
     test('fails if a store with same normalized name already exists', () async {

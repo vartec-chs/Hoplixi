@@ -41,11 +41,14 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
 
     final historyService = await ref.read(dbHistoryProvider.future);
     final entry = await historyService.getByPath(dbState!.path!);
+    final savedPassword = entry?.savePassword == true
+        ? await historyService.getSavedPasswordByPath(dbState.path!)
+        : null;
 
-    if (entry != null && entry.savePassword && entry.password != null) {
+    if (entry != null && savedPassword != null) {
       setState(() {
         _hasSavedPassword = true;
-        _passwordController.text = entry.password!;
+        _passwordController.text = savedPassword;
       });
     }
   }

@@ -6,7 +6,12 @@ import 'package:hoplixi/core/services/local_auth_failure.dart';
 import 'package:hoplixi/core/services/local_auth_service.dart';
 import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/setup/di_init.dart';
+import 'package:hoplixi/db_core/models/db_history_model.dart';
+import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/db_core/models/store_manifest.dart';
+import 'package:hoplixi/db_core/provider/db_history_provider.dart';
+import 'package:hoplixi/db_core/provider/main_store_provider.dart';
+import 'package:hoplixi/db_core/services/store_manifest_service.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
@@ -16,12 +21,7 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_stor
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/features/home/providers/recent_database_provider.dart';
-import 'package:hoplixi/db_core/models/db_history_model.dart';
-import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
-import 'package:hoplixi/db_core/models/store_manifest.dart';
-import 'package:hoplixi/db_core/provider/db_history_provider.dart';
-import 'package:hoplixi/db_core/provider/main_store_provider.dart';
-import 'package:hoplixi/db_core/services/store_manifest_service.dart';
+import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:typed_prefs/typed_prefs.dart';
@@ -561,11 +561,12 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
     DatabaseEntry entry,
   ) async {
     final notifier = ref.read(mainStoreProvider.notifier);
-    String? password = entry.password;
+    final historyService = await ref.read(dbHistoryProvider.future);
+    String? password;
     bool shouldSavePassword = false;
 
-    // Если пароль сохранен, проверяем биометрию
-    if (entry.savePassword && password != null) {
+    // Если пользователь выбрал сохранение пароля, сначала подтверждаем доступ
+    if (entry.savePassword) {
       final storageService = getIt<PreferencesService>();
       final isBiometricEnabled =
           await storageService.securityPrefs.biometricEnabled.get() ?? false;
@@ -623,7 +624,11 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
           return; // Не открываем базу, если биометрия не пройдена
         }
       }
-    } else if (!entry.savePassword || password == null) {
+
+      password = await historyService.getSavedPasswordByPath(entry.path);
+    }
+
+    if (password == null) {
       // Пароль не сохранен, показываем диалог
       final result = await showDialog<(String, bool)>(
         context: context,
@@ -642,15 +647,12 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
     if (success) {
       Toaster.success(title: 'Успех', description: 'База данных открыта');
 
-      if (shouldSavePassword) {
-        final historyService = await ref.read(dbHistoryProvider.future);
+      if (shouldSavePassword && password.isNotEmpty) {
         final freshEntry = await historyService.getByPath(entry.path);
         if (freshEntry != null) {
-          final updatedEntry = freshEntry.copyWith(
-            password: password,
-            savePassword: true,
-          );
+          final updatedEntry = freshEntry.copyWith(savePassword: true);
           await historyService.update(updatedEntry);
+          await historyService.setSavedPasswordByPath(entry.path, password);
           ref.invalidate(recentDatabaseProvider);
         }
       }

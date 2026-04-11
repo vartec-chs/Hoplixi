@@ -4,6 +4,11 @@ This project is named Hoplixi, a Flutter application designed to provide users
 with a seamless experience. Hoplixi is a password manager app that helps users
 securely store and manage their passwords.
 
+Usage Serena mcp server and Dart/Flutter mcp context7 for any additional
+information or clarification needed during development. Always prioritize
+project documentation and established rules when making decisions or writing
+code.
+
 ## Target Platform
 
 - Adnroid

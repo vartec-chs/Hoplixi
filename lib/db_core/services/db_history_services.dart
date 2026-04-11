@@ -10,10 +10,12 @@ import 'package:hoplixi/db_core/models/db_history_model.dart';
 /// зашифрованного Hive бокса через HiveBoxManager
 class DatabaseHistoryService {
   static const String _boxName = 'database_history';
+  static const String _passwordBoxName = 'database_history_passwords';
   static const String _logTag = 'DatabaseHistoryService';
 
   final HiveBoxManager _hiveManager;
   Box<Map>? _box;
+  Box<String>? _passwordBox;
 
   DatabaseHistoryService() : _hiveManager = getIt<HiveBoxManager>();
 
@@ -21,6 +23,7 @@ class DatabaseHistoryService {
   Future<void> initialize() async {
     try {
       _box = await _hiveManager.openBox<Map>(_boxName);
+      _passwordBox = await _hiveManager.openBox<String>(_passwordBoxName);
       logInfo('DatabaseHistoryService initialized', tag: _logTag);
     } catch (e, stackTrace) {
       logError(
@@ -34,11 +37,27 @@ class DatabaseHistoryService {
 
   /// Проверка инициализации бокса
   void _ensureInitialized() {
-    if (_box == null || !_box!.isOpen) {
+    if (_box == null ||
+        !_box!.isOpen ||
+        _passwordBox == null ||
+        !_passwordBox!.isOpen) {
       throw StateError(
         'DatabaseHistoryService is not initialized. Call initialize() first.',
       );
     }
+  }
+
+  Future<void> _persistMetadata(DatabaseEntry entry) async {
+    await _box!.put(entry.path, entry.toJson());
+  }
+
+  Future<void> _persistPassword(String path, String? password) async {
+    if (password == null || password.isEmpty) {
+      await _passwordBox!.delete(path);
+      return;
+    }
+
+    await _passwordBox!.put(path, password);
   }
 
   /// Создать новую запись базы данных
@@ -60,13 +79,15 @@ class DatabaseHistoryService {
         path: path,
         name: name,
         description: description,
-        password: password,
         savePassword: savePassword,
         createdAt: DateTime.now(),
         lastAccessed: null,
       );
 
-      await _box!.put(entry.path, entry.toJson());
+      await _persistMetadata(entry);
+      if (savePassword) {
+        await _persistPassword(entry.path, password);
+      }
       logInfo(
         'Created database entry: ${entry.name} at ${entry.path}',
         tag: _logTag,
@@ -177,7 +198,10 @@ class DatabaseHistoryService {
     _ensureInitialized();
 
     try {
-      await _box!.put(entry.path, entry.toJson());
+      await _persistMetadata(entry);
+      if (!entry.savePassword) {
+        await _persistPassword(entry.path, null);
+      }
       logInfo(
         'Updated database entry: ${entry.name} at ${entry.path}',
         tag: _logTag,
@@ -228,6 +252,7 @@ class DatabaseHistoryService {
 
     try {
       await _box!.delete(path);
+      await _passwordBox!.delete(path);
       logInfo('Deleted database entry at: $path', tag: _logTag);
 
       return true;
@@ -256,6 +281,7 @@ class DatabaseHistoryService {
       }
 
       await _box!.delete(entry.path);
+      await _passwordBox!.delete(entry.path);
       logInfo('Deleted database entry: $dbId at ${entry.path}', tag: _logTag);
 
       return true;
@@ -275,6 +301,7 @@ class DatabaseHistoryService {
 
     try {
       await _box!.clear();
+      await _passwordBox!.clear();
       logInfo('Deleted all database entries', tag: _logTag);
 
       return true;
@@ -353,6 +380,65 @@ class DatabaseHistoryService {
     }
   }
 
+  /// Получить сохраненный пароль по пути к файлу
+  Future<String?> getSavedPasswordByPath(String path) async {
+    _ensureInitialized();
+
+    try {
+      final entry = await getByPath(path);
+      if (entry == null || !entry.savePassword) {
+        return null;
+      }
+
+      return _passwordBox!.get(path);
+    } catch (e, stackTrace) {
+      logError(
+        'Failed to get saved password by path $path: $e',
+        stackTrace: stackTrace,
+        tag: _logTag,
+      );
+      return null;
+    }
+  }
+
+  /// Получить сохраненный пароль по dbId
+  Future<String?> getSavedPasswordById(String dbId) async {
+    _ensureInitialized();
+
+    try {
+      final entry = await getById(dbId);
+      if (entry == null) {
+        return null;
+      }
+
+      return getSavedPasswordByPath(entry.path);
+    } catch (e, stackTrace) {
+      logError(
+        'Failed to get saved password by id $dbId: $e',
+        stackTrace: stackTrace,
+        tag: _logTag,
+      );
+      return null;
+    }
+  }
+
+  /// Сохранить или удалить пароль для записи по пути
+  Future<void> setSavedPasswordByPath(String path, String? password) async {
+    _ensureInitialized();
+
+    try {
+      await _persistPassword(path, password);
+      logInfo('Updated saved password for entry at: $path', tag: _logTag);
+    } catch (e, stackTrace) {
+      logError(
+        'Failed to set saved password by path $path: $e',
+        stackTrace: stackTrace,
+        tag: _logTag,
+      );
+      rethrow;
+    }
+  }
+
   /// Экспортировать все записи в JSON
   Future<List<Map<String, dynamic>>> exportToJson() async {
     _ensureInitialized();
@@ -379,7 +465,10 @@ class DatabaseHistoryService {
       for (final json in jsonList) {
         try {
           final entry = DatabaseEntry.fromJson(json);
-          await _box!.put(entry.path, entry.toJson());
+          await _persistMetadata(entry);
+          if (!entry.savePassword) {
+            await _persistPassword(entry.path, null);
+          }
           imported++;
         } catch (e) {
           logWarning('Failed to import entry: $e', tag: _logTag);
@@ -404,8 +493,14 @@ class DatabaseHistoryService {
       if (_box != null && _box!.isOpen) {
         await _hiveManager.closeBox(_boxName);
         _box = null;
-        logInfo('DatabaseHistoryService disposed', tag: _logTag);
       }
+
+      if (_passwordBox != null && _passwordBox!.isOpen) {
+        await _hiveManager.closeBox(_passwordBoxName);
+        _passwordBox = null;
+      }
+
+      logInfo('DatabaseHistoryService disposed', tag: _logTag);
     } catch (e, stackTrace) {
       logError(
         'Failed to dispose DatabaseHistoryService: $e',
