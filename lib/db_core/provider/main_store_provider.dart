@@ -57,6 +57,20 @@ final mainStoreProvider =
       MainStoreAsyncNotifier.new,
     );
 
+final mainStoreOpeningOverlayProvider =
+    NotifierProvider<MainStoreOpeningOverlayNotifier, bool>(
+      MainStoreOpeningOverlayNotifier.new,
+    );
+
+class MainStoreOpeningOverlayNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void show() => state = true;
+
+  void hide() => state = false;
+}
+
 /// state provider
 final mainStoreStateProvider = FutureProvider<DatabaseState>((ref) async {
   return ref.watch(mainStoreProvider.future);
@@ -391,6 +405,8 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   /// [dto] - данные для открытия (путь, пароль)
   /// Возвращает true если успешно, false если ошибка
   Future<bool> openStore(OpenStoreDto dto) async {
+    ref.read(mainStoreOpeningOverlayProvider.notifier).show();
+
     // Защита от race condition
     await _acquireLock();
 
@@ -452,6 +468,8 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
 
       return false;
     } finally {
+      ref.read(mainStoreOpeningOverlayProvider.notifier).hide();
+
       // Освобождаем блокировку в любом случае
       _releaseLock();
     }

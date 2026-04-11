@@ -76,6 +76,13 @@ abstract final class AppTheme {
       textButtonTheme: ButtonThemes.adaptiveTextButtonTheme(context, bs),
       listTileTheme: ComponentThemes.adaptiveListTileTheme(),
       textTheme: GoogleFonts.nunitoTextTheme(bs.textTheme),
+      dropdownMenuTheme: bs.dropdownMenuTheme.copyWith(
+        menuStyle: bs.dropdownMenuTheme.menuStyle?.copyWith(
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+      ),
       // pageTransitionsTheme: pageTransitionsTheme,
       extensions: <ThemeExtension>[
         const WoltModalSheetThemeData(
@@ -130,6 +137,13 @@ abstract final class AppTheme {
       textButtonTheme: ButtonThemes.adaptiveTextButtonTheme(context, bs),
       listTileTheme: ComponentThemes.adaptiveListTileTheme(),
       textTheme: GoogleFonts.nunitoTextTheme(bs.textTheme),
+      dropdownMenuTheme: bs.dropdownMenuTheme.copyWith(
+        menuStyle: bs.dropdownMenuTheme.menuStyle?.copyWith(
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+      ),
 
       // pageTransitionsTheme: pageTransitionsTheme,
       extensions: <ThemeExtension>[

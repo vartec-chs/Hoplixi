@@ -13,7 +13,8 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
 import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/core/theme/theme_window_sync_service.dart';
-import 'package:hoplixi/setup/di_init.dart';
+import 'package:hoplixi/db_core/provider/decrypted_files_guard_provider.dart';
+import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 import 'package:hoplixi/features/cloud_sync/auth/widgets/cloud_sync_auth_flow_listener.dart';
 import 'package:hoplixi/features/cloud_sync/auth/widgets/show_cloud_sync_auth_sheet.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
@@ -22,9 +23,9 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/cloud_sync_sna
 import 'package:hoplixi/features/password_manager/store_settings/providers/store_settings_modal_provider.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/global_key.dart';
-import 'package:hoplixi/db_core/provider/decrypted_files_guard_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/routing/router.dart';
+import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/widgets/app_loading_screen.dart';
 import 'package:hoplixi/shared/widgets/desktop_shell.dart';
@@ -230,6 +231,9 @@ class _AppState extends ConsumerState<App> {
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
+    final isStoreOpeningOverlayVisible = ref.watch(
+      mainStoreOpeningOverlayProvider,
+    );
 
     return ShortcutWatcher(
       child: TrayWatcher(
@@ -268,12 +272,25 @@ class _AppState extends ConsumerState<App> {
                   supportedLocales: AppLocaleUtils.supportedLocales,
                   debugShowCheckedModeBanner: false,
                   builder: (context, child) {
+                    final appContent = Stack(
+                      children: [
+                        child!,
+                        Positioned.fill(
+                          child: _StoreOpeningOverlayHost(
+                            visible: isStoreOpeningOverlayVisible,
+                          ),
+                        ),
+                      ],
+                    );
+
+                    final appShell = UniversalPlatform.isDesktop
+                        ? RootBarsOverlay(child: appContent)
+                        : appContent;
+
                     return CloudSyncSnapshotSyncListener(
                       child: CloudSyncAuthFlowListener(
                         child: animated_theme.ThemeSwitchingArea(
-                          child: UniversalPlatform.isDesktop
-                              ? RootBarsOverlay(child: child!)
-                              : child!,
+                          child: appShell,
                         ),
                       ),
                     );
@@ -281,6 +298,154 @@ class _AppState extends ConsumerState<App> {
                 ),
               );
             },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StoreOpeningOverlayHost extends StatefulWidget {
+  const _StoreOpeningOverlayHost({required this.visible});
+
+  final bool visible;
+
+  @override
+  State<_StoreOpeningOverlayHost> createState() =>
+      _StoreOpeningOverlayHostState();
+}
+
+class _StoreOpeningOverlayHostState extends State<_StoreOpeningOverlayHost> {
+  static const _hideDelay = Duration(milliseconds: 400);
+  static const _animationDuration = Duration(milliseconds: 220);
+
+  Timer? _hideDelayTimer;
+  Timer? _disposeTimer;
+  bool _isMounted = false;
+  bool _isVisible = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.visible) {
+      _showOverlay();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _StoreOpeningOverlayHost oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.visible == oldWidget.visible) return;
+
+    if (widget.visible) {
+      _showOverlay();
+    } else {
+      _hideOverlayWithDelay();
+    }
+  }
+
+  void _showOverlay() {
+    _hideDelayTimer?.cancel();
+    _disposeTimer?.cancel();
+
+    if (!_isMounted) {
+      setState(() {
+        _isMounted = true;
+        _isVisible = false;
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !widget.visible) return;
+        setState(() {
+          _isVisible = true;
+        });
+      });
+      return;
+    }
+
+    if (!_isVisible) {
+      setState(() {
+        _isVisible = true;
+      });
+    }
+  }
+
+  void _hideOverlayWithDelay() {
+    _hideDelayTimer?.cancel();
+    _disposeTimer?.cancel();
+
+    _hideDelayTimer = Timer(_hideDelay, () {
+      if (!mounted || widget.visible || !_isMounted) return;
+
+      setState(() {
+        _isVisible = false;
+      });
+
+      _disposeTimer = Timer(_animationDuration, () {
+        if (!mounted || widget.visible) return;
+
+        setState(() {
+          _isMounted = false;
+        });
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _hideDelayTimer?.cancel();
+    _disposeTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isMounted) {
+      return const SizedBox.shrink();
+    }
+
+    return AbsorbPointer(
+      absorbing: true,
+      child: AnimatedOpacity(
+        opacity: _isVisible ? 1 : 0,
+        duration: _animationDuration,
+        curve: Curves.easeOutCubic,
+        child: _StoreOpeningOverlay(visible: _isVisible),
+      ),
+    );
+  }
+}
+
+class _StoreOpeningOverlay extends StatelessWidget {
+  const _StoreOpeningOverlay({required this.visible});
+
+  final bool visible;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return ColoredBox(
+      color: theme.colorScheme.scrim.withValues(alpha: 0.72),
+      child: Center(
+        child: AnimatedScale(
+          scale: visible ? 1 : 0.96,
+          duration: _StoreOpeningOverlayHostState._animationDuration,
+          curve: Curves.easeOutCubic,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator.adaptive(),
+              const SizedBox(height: 16),
+              Text(
+                'Открытие хранилища...',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
         ),
       ),

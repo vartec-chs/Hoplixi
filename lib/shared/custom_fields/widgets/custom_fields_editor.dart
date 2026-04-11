@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/db_core/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:intl/intl.dart' show DateFormat;
+import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Редактор кастомных полей — переиспользуемый виджет для любых форм сущностей.
@@ -102,6 +104,9 @@ class _CustomFieldRow extends StatefulWidget {
 class _CustomFieldRowState extends State<_CustomFieldRow> {
   late final TextEditingController _labelCtrl;
   late final TextEditingController _valueCtrl;
+  late final FocusNode _phoneFocusNode;
+  PhoneNumber _phoneNumber = PhoneNumber(isoCode: 'US');
+  String? _pendingPhoneValue;
 
   static final _dateTimeFormat = DateFormat('dd.MM.yyyy HH:mm');
 
@@ -110,6 +115,9 @@ class _CustomFieldRowState extends State<_CustomFieldRow> {
     super.initState();
     _labelCtrl = TextEditingController(text: widget.entry.label);
     _valueCtrl = TextEditingController(text: widget.entry.value ?? '');
+    _phoneFocusNode = FocusNode()..addListener(_handlePhoneFocusChange);
+    _pendingPhoneValue = widget.entry.value;
+    _syncPhoneNumberState(widget.entry.value);
   }
 
   @override
@@ -119,13 +127,31 @@ class _CustomFieldRowState extends State<_CustomFieldRow> {
       _labelCtrl.text = widget.entry.label;
     }
     final expectedValue = widget.entry.value ?? '';
-    if (_valueCtrl.text != expectedValue) {
+    final shouldSyncValueController =
+        widget.entry.fieldType != CustomFieldType.phone ||
+        oldWidget.entry.id != widget.entry.id ||
+        oldWidget.entry.fieldType != widget.entry.fieldType;
+    if (shouldSyncValueController && _valueCtrl.text != expectedValue) {
       _valueCtrl.text = expectedValue;
+    }
+    if (oldWidget.entry.fieldType != CustomFieldType.phone &&
+        oldWidget.entry.value != widget.entry.value) {
+      _pendingPhoneValue = widget.entry.value;
+    }
+    final shouldResyncPhoneMetadata =
+        widget.entry.fieldType == CustomFieldType.phone &&
+        (oldWidget.entry.id != widget.entry.id ||
+            oldWidget.entry.fieldType != widget.entry.fieldType);
+    if (shouldResyncPhoneMetadata) {
+      _syncPhoneNumberState(widget.entry.value);
     }
   }
 
   @override
   void dispose() {
+    _phoneFocusNode
+      ..removeListener(_handlePhoneFocusChange)
+      ..dispose();
     _labelCtrl.dispose();
     _valueCtrl.dispose();
     super.dispose();
@@ -136,6 +162,7 @@ class _CustomFieldRowState extends State<_CustomFieldRow> {
     final theme = Theme.of(context);
     final isConcealed = widget.entry.fieldType == CustomFieldType.concealed;
     final isDateField = widget.entry.fieldType == CustomFieldType.date;
+    final isPhoneField = widget.entry.fieldType == CustomFieldType.phone;
 
     return Card(
       elevation: 0,
@@ -182,41 +209,43 @@ class _CustomFieldRowState extends State<_CustomFieldRow> {
             ),
             const SizedBox(height: 8),
             // Поле: значение
-            TextField(
-              controller: _valueCtrl,
-              obscureText: isConcealed && widget.entry.isObscured,
-              readOnly: isDateField,
-              decoration: primaryInputDecoration(
-                context,
-                labelText: 'Значение',
-                isDense: true,
-                suffixIcon: isConcealed
-                    ? IconButton(
-                        icon: Icon(
-                          widget.entry.isObscured
-                              ? LucideIcons.eye
-                              : LucideIcons.eyeOff,
-                          size: 18,
-                        ),
-                        onPressed: () => widget.onChanged(
-                          widget.entry.copyWith(
-                            isObscured: !widget.entry.isObscured,
-                          ),
-                        ),
-                      )
-                    : isDateField
-                    ? IconButton(
-                        icon: const Icon(LucideIcons.calendar, size: 18),
-                        tooltip: 'Выбрать дату и время',
-                        onPressed: _pickDateTime,
-                      )
-                    : null,
-              ),
-              keyboardType: _keyboardTypeFor(widget.entry.fieldType),
-              onChanged: (v) => widget.onChanged(
-                widget.entry.copyWith(value: v.isEmpty ? null : v),
-              ),
-            ),
+            isPhoneField
+                ? _buildPhoneValueField(context)
+                : TextField(
+                    controller: _valueCtrl,
+                    obscureText: isConcealed && widget.entry.isObscured,
+                    readOnly: isDateField,
+                    decoration: primaryInputDecoration(
+                      context,
+                      labelText: 'Значение',
+                      isDense: true,
+                      suffixIcon: isConcealed
+                          ? IconButton(
+                              icon: Icon(
+                                widget.entry.isObscured
+                                    ? LucideIcons.eye
+                                    : LucideIcons.eyeOff,
+                                size: 18,
+                              ),
+                              onPressed: () => widget.onChanged(
+                                widget.entry.copyWith(
+                                  isObscured: !widget.entry.isObscured,
+                                ),
+                              ),
+                            )
+                          : isDateField
+                          ? IconButton(
+                              icon: const Icon(LucideIcons.calendar, size: 18),
+                              tooltip: 'Выбрать дату и время',
+                              onPressed: _pickDateTime,
+                            )
+                          : null,
+                    ),
+                    keyboardType: _keyboardTypeFor(widget.entry.fieldType),
+                    onChanged: (v) => widget.onChanged(
+                      widget.entry.copyWith(value: v.isEmpty ? null : v),
+                    ),
+                  ),
           ],
         ),
       ),
@@ -260,6 +289,90 @@ class _CustomFieldRowState extends State<_CustomFieldRow> {
     widget.onChanged(widget.entry.copyWith(value: formatted));
   }
 
+  Widget _buildPhoneValueField(BuildContext context) {
+    return InternationalPhoneNumberInput(
+      key: ValueKey('phone_${widget.entry.id}_${widget.entry.fieldType.name}'),
+      textFieldController: _valueCtrl,
+      initialValue: _phoneNumber,
+      focusNode: _phoneFocusNode,
+      selectorConfig: const SelectorConfig(
+        selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
+        setSelectorButtonAsPrefixIcon: true,
+        useBottomSheetSafeArea: true,
+        leadingPadding: 12,
+      ),
+      keyboardType: const TextInputType.numberWithOptions(
+        signed: true,
+        decimal: true,
+      ),
+
+      formatInput: true,
+      autoValidateMode: AutovalidateMode.disabled,
+      ignoreBlank: true,
+      locale: Localizations.localeOf(context).languageCode,
+      searchBoxDecoration: primaryInputDecoration(
+        context,
+        labelText: 'Выберите страну',
+        isDense: true,
+      ),
+
+      inputDecoration: primaryInputDecoration(
+        context,
+        labelText: 'Значение',
+        hintText: '+7 999 123-45-67',
+        isDense: true,
+      ).copyWith(counterText: ''),
+      onInputChanged: (number) {
+        final normalized = number.phoneNumber?.trim() ?? _valueCtrl.text.trim();
+        _phoneNumber = number;
+        _pendingPhoneValue = normalized.isEmpty ? null : normalized;
+      },
+      onFieldSubmitted: (_) => _commitPhoneValue(),
+    );
+  }
+
+  Future<void> _syncPhoneNumberState(String? rawValue) async {
+    final phoneText = rawValue?.trim();
+    if (phoneText == null || phoneText.isEmpty) {
+      _setPhoneNumber(PhoneNumber(isoCode: 'US'));
+      return;
+    }
+
+    try {
+      final parsed = await PhoneNumber.getRegionInfoFromPhoneNumber(phoneText);
+      _setPhoneNumber(parsed);
+    } catch (_) {
+      _setPhoneNumber(
+        PhoneNumber(phoneNumber: phoneText, isoCode: _phoneNumber.isoCode),
+      );
+    }
+  }
+
+  void _setPhoneNumber(PhoneNumber phoneNumber) {
+    if (!mounted) return;
+    if (_phoneNumber == phoneNumber) {
+      return;
+    }
+    setState(() {
+      _phoneNumber = phoneNumber;
+    });
+  }
+
+  void _handlePhoneFocusChange() {
+    if (!_phoneFocusNode.hasFocus) {
+      _commitPhoneValue();
+    }
+  }
+
+  void _commitPhoneValue() {
+    final normalized = (_pendingPhoneValue ?? _valueCtrl.text).trim();
+    final nextValue = normalized.isEmpty ? null : normalized;
+    if (nextValue == widget.entry.value) {
+      return;
+    }
+    widget.onChanged(widget.entry.copyWith(value: nextValue));
+  }
+
   DateTime? _parseDateTime(String? value) {
     final text = value?.trim();
     if (text == null || text.isEmpty) return null;
@@ -288,11 +401,15 @@ class _TypeDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final fillColor = AppColors.getInputFieldBackgroundColor(context);
+
     return DropdownButton<CustomFieldType>(
       value: value,
       isDense: true,
       underline: const SizedBox.shrink(),
-      borderRadius: BorderRadius.circular(8),
+      dropdownColor: fillColor,
+      borderRadius: BorderRadius.circular(12),
+
       items: CustomFieldType.values.map((type) {
         return DropdownMenuItem(
           value: type,

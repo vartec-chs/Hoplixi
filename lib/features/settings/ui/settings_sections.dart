@@ -5,11 +5,11 @@ import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/services/services.dart';
 import 'package:hoplixi/core/theme/theme_switcher.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/setup/di_init.dart';
+import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 import 'package:hoplixi/features/settings/providers/settings_prefs_providers.dart';
 import 'package:hoplixi/features/settings/ui/widgets/settings_section_card.dart';
 import 'package:hoplixi/features/settings/ui/widgets/settings_tile.dart';
-import 'package:hoplixi/db_core/provider/main_store_provider.dart';
+import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/widgets/language_switcher.dart';
 import 'package:typed_prefs/typed_prefs.dart';
 import 'package:universal_platform/universal_platform.dart';
@@ -420,21 +420,21 @@ class BackupSettingsSection extends ConsumerWidget {
             backupPath,
           ),
         ),
-        const Divider(height: 1),
-        SettingsTile(
-          title: 'Путь резервных копий',
-          subtitle: backupPath ?? 'Не установлен',
-          leading: const Icon(Icons.folder),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-          onTap: () => _showBackupPathDialog(
-            context,
-            mainStoreNotifier,
-            autoBackupEnabled,
-            backupIntervalMinutes,
-            backupScope,
-            backupMaxPerStore,
-          ),
-        ),
+        // const Divider(height: 1),
+        // SettingsTile(
+        //   title: 'Путь резервных копий',
+        //   subtitle: backupPath ?? 'Не установлен',
+        //   leading: const Icon(Icons.folder),
+        //   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        //   onTap: () => _showBackupPathDialog(
+        //     context,
+        //     mainStoreNotifier,
+        //     autoBackupEnabled,
+        //     backupIntervalMinutes,
+        //     backupScope,
+        //     backupMaxPerStore,
+        //   ),
+        // ),
         // const Divider(height: 1),
         // SettingsTile(
         //   title: 'Создать резервную копию сейчас',
