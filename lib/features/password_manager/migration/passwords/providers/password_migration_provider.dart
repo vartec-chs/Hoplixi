@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/features/password_manager/migration/passwords/services/password_migration_service.dart';
 import 'package:hoplixi/db_core/models/dto/password_dto.dart';
-import 'package:hoplixi/db_core/provider/main_store_provider.dart';
+import 'package:hoplixi/db_core/provider/dao_providers.dart';
+import 'package:hoplixi/features/password_manager/migration/passwords/services/password_migration_service.dart';
 
 const _messageNotChanged = Object();
 
@@ -36,12 +36,9 @@ class PasswordMigrationNotifier extends AsyncNotifier<PasswordMigrationState> {
 
   @override
   Future<PasswordMigrationState> build() async {
-    final manager = await ref.watch(mainStoreManagerProvider.future);
-    if (manager == null || manager.currentStore == null) {
-      throw Exception('Database is not initialized');
-    }
+    final passwordDao = await ref.watch(passwordDaoProvider.future);
 
-    _service = PasswordMigrationService(manager.currentStore!.passwordDao);
+    _service = PasswordMigrationService(passwordDao);
     return const PasswordMigrationState();
   }
 

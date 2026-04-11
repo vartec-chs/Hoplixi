@@ -1,10 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/db_core/dao/custom_field_dao.dart';
+import 'package:hoplixi/db_core/dao/index.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
 import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
 /// Загрузить кастомные поля vault-элемента из БД.
-Future<List<CustomFieldEntry>> loadCustomFields(Object ref, String itemId) async {
+Future<List<CustomFieldEntry>> loadCustomFields(
+  Object ref,
+  String itemId,
+) async {
   final dao = await _readCustomFieldDao(ref);
   final rows = await dao.getByItemId(itemId);
   return rows.map(CustomFieldEntry.fromData).toList();
