@@ -101,7 +101,12 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
     _useUppercase = widget.initialUseUppercase;
     _useDigits = widget.initialUseDigits;
     _useSpecial = widget.initialUseSpecial;
-    _generate();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _generatedPassword.isNotEmpty) {
+        return;
+      }
+      _generate();
+    });
     unawaited(_loadProfiles());
   }
 
