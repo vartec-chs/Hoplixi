@@ -4,6 +4,7 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/crypt_api.dart';
+import 'api/keepass_api.dart';
 import 'api/logging.dart';
 import 'api/simple.dart';
 import 'dart:async';
@@ -51,6 +52,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool dco_decode_bool(dynamic raw);
 
   @protected
+  bool dco_decode_box_autoadd_bool(dynamic raw);
+
+  @protected
   FrbBatchDecryptOptions dco_decode_box_autoadd_frb_batch_decrypt_options(
     dynamic raw,
   );
@@ -83,7 +87,31 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FrbEncryptResult dco_decode_box_autoadd_frb_encrypt_result(dynamic raw);
 
   @protected
+  FrbKeepassAutoType dco_decode_box_autoadd_frb_keepass_auto_type(dynamic raw);
+
+  @protected
+  FrbKeepassExportOptions dco_decode_box_autoadd_frb_keepass_export_options(
+    dynamic raw,
+  );
+
+  @protected
+  FrbKeepassMemoryProtection
+  dco_decode_box_autoadd_frb_keepass_memory_protection(dynamic raw);
+
+  @protected
+  FrbKeepassOtp dco_decode_box_autoadd_frb_keepass_otp(dynamic raw);
+
+  @protected
   FrbProgressEvent dco_decode_box_autoadd_frb_progress_event(dynamic raw);
+
+  @protected
+  int dco_decode_box_autoadd_i_32(dynamic raw);
+
+  @protected
+  int dco_decode_box_autoadd_u_32(dynamic raw);
+
+  @protected
+  BigInt dco_decode_box_autoadd_u_64(dynamic raw);
 
   @protected
   double dco_decode_f_64(dynamic raw);
@@ -134,6 +162,58 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FrbEncryptResult dco_decode_frb_encrypt_result(dynamic raw);
 
   @protected
+  FrbKeepassAttachment dco_decode_frb_keepass_attachment(dynamic raw);
+
+  @protected
+  FrbKeepassAutoType dco_decode_frb_keepass_auto_type(dynamic raw);
+
+  @protected
+  FrbKeepassAutoTypeAssociation dco_decode_frb_keepass_auto_type_association(
+    dynamic raw,
+  );
+
+  @protected
+  FrbKeepassConfig dco_decode_frb_keepass_config(dynamic raw);
+
+  @protected
+  FrbKeepassCustomDataItem dco_decode_frb_keepass_custom_data_item(dynamic raw);
+
+  @protected
+  FrbKeepassDatabaseExport dco_decode_frb_keepass_database_export(dynamic raw);
+
+  @protected
+  FrbKeepassDeletedObject dco_decode_frb_keepass_deleted_object(dynamic raw);
+
+  @protected
+  FrbKeepassEntry dco_decode_frb_keepass_entry(dynamic raw);
+
+  @protected
+  FrbKeepassExportOptions dco_decode_frb_keepass_export_options(dynamic raw);
+
+  @protected
+  FrbKeepassField dco_decode_frb_keepass_field(dynamic raw);
+
+  @protected
+  FrbKeepassGroup dco_decode_frb_keepass_group(dynamic raw);
+
+  @protected
+  FrbKeepassHistoryEntry dco_decode_frb_keepass_history_entry(dynamic raw);
+
+  @protected
+  FrbKeepassMemoryProtection dco_decode_frb_keepass_memory_protection(
+    dynamic raw,
+  );
+
+  @protected
+  FrbKeepassMeta dco_decode_frb_keepass_meta(dynamic raw);
+
+  @protected
+  FrbKeepassOtp dco_decode_frb_keepass_otp(dynamic raw);
+
+  @protected
+  FrbKeepassTimes dco_decode_frb_keepass_times(dynamic raw);
+
+  @protected
   FrbKeyValue dco_decode_frb_key_value(dynamic raw);
 
   @protected
@@ -161,6 +241,39 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<FrbEncryptResult> dco_decode_list_frb_encrypt_result(dynamic raw);
 
   @protected
+  List<FrbKeepassAttachment> dco_decode_list_frb_keepass_attachment(
+    dynamic raw,
+  );
+
+  @protected
+  List<FrbKeepassAutoTypeAssociation>
+  dco_decode_list_frb_keepass_auto_type_association(dynamic raw);
+
+  @protected
+  List<FrbKeepassCustomDataItem> dco_decode_list_frb_keepass_custom_data_item(
+    dynamic raw,
+  );
+
+  @protected
+  List<FrbKeepassDeletedObject> dco_decode_list_frb_keepass_deleted_object(
+    dynamic raw,
+  );
+
+  @protected
+  List<FrbKeepassEntry> dco_decode_list_frb_keepass_entry(dynamic raw);
+
+  @protected
+  List<FrbKeepassField> dco_decode_list_frb_keepass_field(dynamic raw);
+
+  @protected
+  List<FrbKeepassGroup> dco_decode_list_frb_keepass_group(dynamic raw);
+
+  @protected
+  List<FrbKeepassHistoryEntry> dco_decode_list_frb_keepass_history_entry(
+    dynamic raw,
+  );
+
+  @protected
   List<FrbKeyValue> dco_decode_list_frb_key_value(dynamic raw);
 
   @protected
@@ -171,6 +284,33 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
+
+  @protected
+  bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
+
+  @protected
+  FrbKeepassAutoType? dco_decode_opt_box_autoadd_frb_keepass_auto_type(
+    dynamic raw,
+  );
+
+  @protected
+  FrbKeepassMemoryProtection?
+  dco_decode_opt_box_autoadd_frb_keepass_memory_protection(dynamic raw);
+
+  @protected
+  FrbKeepassOtp? dco_decode_opt_box_autoadd_frb_keepass_otp(dynamic raw);
+
+  @protected
+  int? dco_decode_opt_box_autoadd_i_32(dynamic raw);
+
+  @protected
+  int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
+
+  @protected
+  BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw);
+
+  @protected
+  Uint8List? dco_decode_opt_list_prim_u_8_strict(dynamic raw);
 
   @protected
   int dco_decode_u_32(dynamic raw);
@@ -221,6 +361,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool sse_decode_bool(SseDeserializer deserializer);
 
   @protected
+  bool sse_decode_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
   FrbBatchDecryptOptions sse_decode_box_autoadd_frb_batch_decrypt_options(
     SseDeserializer deserializer,
   );
@@ -261,9 +404,39 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  FrbKeepassAutoType sse_decode_box_autoadd_frb_keepass_auto_type(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbKeepassExportOptions sse_decode_box_autoadd_frb_keepass_export_options(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbKeepassMemoryProtection
+  sse_decode_box_autoadd_frb_keepass_memory_protection(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbKeepassOtp sse_decode_box_autoadd_frb_keepass_otp(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   FrbProgressEvent sse_decode_box_autoadd_frb_progress_event(
     SseDeserializer deserializer,
   );
+
+  @protected
+  int sse_decode_box_autoadd_i_32(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
+
+  @protected
+  BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer);
 
   @protected
   double sse_decode_f_64(SseDeserializer deserializer);
@@ -334,6 +507,72 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FrbEncryptResult sse_decode_frb_encrypt_result(SseDeserializer deserializer);
 
   @protected
+  FrbKeepassAttachment sse_decode_frb_keepass_attachment(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbKeepassAutoType sse_decode_frb_keepass_auto_type(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbKeepassAutoTypeAssociation sse_decode_frb_keepass_auto_type_association(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbKeepassConfig sse_decode_frb_keepass_config(SseDeserializer deserializer);
+
+  @protected
+  FrbKeepassCustomDataItem sse_decode_frb_keepass_custom_data_item(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbKeepassDatabaseExport sse_decode_frb_keepass_database_export(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbKeepassDeletedObject sse_decode_frb_keepass_deleted_object(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbKeepassEntry sse_decode_frb_keepass_entry(SseDeserializer deserializer);
+
+  @protected
+  FrbKeepassExportOptions sse_decode_frb_keepass_export_options(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbKeepassField sse_decode_frb_keepass_field(SseDeserializer deserializer);
+
+  @protected
+  FrbKeepassGroup sse_decode_frb_keepass_group(SseDeserializer deserializer);
+
+  @protected
+  FrbKeepassHistoryEntry sse_decode_frb_keepass_history_entry(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbKeepassMemoryProtection sse_decode_frb_keepass_memory_protection(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbKeepassMeta sse_decode_frb_keepass_meta(SseDeserializer deserializer);
+
+  @protected
+  FrbKeepassOtp sse_decode_frb_keepass_otp(SseDeserializer deserializer);
+
+  @protected
+  FrbKeepassTimes sse_decode_frb_keepass_times(SseDeserializer deserializer);
+
+  @protected
   FrbKeyValue sse_decode_frb_key_value(SseDeserializer deserializer);
 
   @protected
@@ -367,6 +606,47 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<FrbKeepassAttachment> sse_decode_list_frb_keepass_attachment(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbKeepassAutoTypeAssociation>
+  sse_decode_list_frb_keepass_auto_type_association(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbKeepassCustomDataItem> sse_decode_list_frb_keepass_custom_data_item(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbKeepassDeletedObject> sse_decode_list_frb_keepass_deleted_object(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbKeepassEntry> sse_decode_list_frb_keepass_entry(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbKeepassField> sse_decode_list_frb_keepass_field(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbKeepassGroup> sse_decode_list_frb_keepass_group(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbKeepassHistoryEntry> sse_decode_list_frb_keepass_history_entry(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<FrbKeyValue> sse_decode_list_frb_key_value(SseDeserializer deserializer);
 
   @protected
@@ -377,6 +657,37 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
+
+  @protected
+  bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
+  FrbKeepassAutoType? sse_decode_opt_box_autoadd_frb_keepass_auto_type(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbKeepassMemoryProtection?
+  sse_decode_opt_box_autoadd_frb_keepass_memory_protection(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbKeepassOtp? sse_decode_opt_box_autoadd_frb_keepass_otp(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer);
+
+  @protected
+  int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
+
+  @protected
+  BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer);
+
+  @protected
+  Uint8List? sse_decode_opt_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_32(SseDeserializer deserializer);
@@ -433,6 +744,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_bool(bool self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_frb_batch_decrypt_options(
     FrbBatchDecryptOptions self,
     SseSerializer serializer,
@@ -481,10 +795,43 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_frb_keepass_auto_type(
+    FrbKeepassAutoType self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_frb_keepass_export_options(
+    FrbKeepassExportOptions self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_frb_keepass_memory_protection(
+    FrbKeepassMemoryProtection self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_frb_keepass_otp(
+    FrbKeepassOtp self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_frb_progress_event(
     FrbProgressEvent self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_box_autoadd_i_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer);
 
   @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
@@ -577,6 +924,99 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_frb_keepass_attachment(
+    FrbKeepassAttachment self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_keepass_auto_type(
+    FrbKeepassAutoType self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_keepass_auto_type_association(
+    FrbKeepassAutoTypeAssociation self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_keepass_config(
+    FrbKeepassConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_keepass_custom_data_item(
+    FrbKeepassCustomDataItem self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_keepass_database_export(
+    FrbKeepassDatabaseExport self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_keepass_deleted_object(
+    FrbKeepassDeletedObject self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_keepass_entry(
+    FrbKeepassEntry self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_keepass_export_options(
+    FrbKeepassExportOptions self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_keepass_field(
+    FrbKeepassField self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_keepass_group(
+    FrbKeepassGroup self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_keepass_history_entry(
+    FrbKeepassHistoryEntry self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_keepass_memory_protection(
+    FrbKeepassMemoryProtection self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_keepass_meta(
+    FrbKeepassMeta self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_keepass_otp(FrbKeepassOtp self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_frb_keepass_times(
+    FrbKeepassTimes self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_frb_key_value(FrbKeyValue self, SseSerializer serializer);
 
   @protected
@@ -619,6 +1059,54 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_frb_keepass_attachment(
+    List<FrbKeepassAttachment> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_keepass_auto_type_association(
+    List<FrbKeepassAutoTypeAssociation> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_keepass_custom_data_item(
+    List<FrbKeepassCustomDataItem> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_keepass_deleted_object(
+    List<FrbKeepassDeletedObject> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_keepass_entry(
+    List<FrbKeepassEntry> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_keepass_field(
+    List<FrbKeepassField> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_keepass_group(
+    List<FrbKeepassGroup> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_keepass_history_entry(
+    List<FrbKeepassHistoryEntry> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_frb_key_value(
     List<FrbKeyValue> self,
     SseSerializer serializer,
@@ -635,6 +1123,42 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_frb_keepass_auto_type(
+    FrbKeepassAutoType? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_frb_keepass_memory_protection(
+    FrbKeepassMemoryProtection? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_frb_keepass_otp(
+    FrbKeepassOtp? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_prim_u_8_strict(
+    Uint8List? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_u_32(int self, SseSerializer serializer);

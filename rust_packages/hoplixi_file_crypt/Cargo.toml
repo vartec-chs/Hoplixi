@@ -26,7 +26,7 @@ rand = "0.10.1"
 tokio = { version = "1.51.1", features = ["full"] }
 uuid = { version = "1.23.0", features = ["v4"] }
 serde = { version = "1.0.228", features = ["derive"] }
-bincode = { version = "3.0.0" }
+bincode = { version = "2.0.1", features = ["serde"] }
 walkdir = "2.5.0"
 tempfile = "3.27.0"
 sevenz-rust2 = { version = "0.20.2", features = ["compress", "util"] }

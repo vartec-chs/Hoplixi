@@ -4,6 +4,7 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/crypt_api.dart';
+import 'api/keepass_api.dart';
 import 'api/logging.dart';
 import 'api/simple.dart';
 import 'dart:async';
@@ -68,7 +69,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 117895093;
+  int get rustContentHash => 698379895;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -98,6 +99,10 @@ abstract class RustLibApi extends BaseApi {
     required FrbEncryptOptions opts,
   });
 
+  Future<FrbKeepassDatabaseExport> crateApiKeepassApiExportKeepassDatabase({
+    required FrbKeepassExportOptions opts,
+  });
+
   Future<FrbDecryptOptions> crateApiCryptApiFrbDecryptOptionsSimple({
     required String inputPath,
     required String outputDir,
@@ -107,6 +112,12 @@ abstract class RustLibApi extends BaseApi {
   Future<FrbEncryptOptions> crateApiCryptApiFrbEncryptOptionsSimple({
     required String inputPath,
     required String outputDir,
+    required String password,
+  });
+
+  Future<FrbKeepassExportOptions>
+  crateApiKeepassApiFrbKeepassExportOptionsSimple({
+    required String inputPath,
     required String password,
   });
 
@@ -346,6 +357,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<FrbKeepassDatabaseExport> crateApiKeepassApiExportKeepassDatabase({
+    required FrbKeepassExportOptions opts,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_frb_keepass_export_options(opts, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 6,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_frb_keepass_database_export,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiKeepassApiExportKeepassDatabaseConstMeta,
+        argValues: [opts],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiKeepassApiExportKeepassDatabaseConstMeta =>
+      const TaskConstMeta(
+        debugName: "export_keepass_database",
+        argNames: ["opts"],
+      );
+
+  @override
   Future<FrbDecryptOptions> crateApiCryptApiFrbDecryptOptionsSimple({
     required String inputPath,
     required String outputDir,
@@ -361,7 +405,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 6,
+            funcId: 7,
             port: port_,
           );
         },
@@ -398,7 +442,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 7,
+            funcId: 8,
             port: port_,
           );
         },
@@ -420,13 +464,49 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<FrbKeepassExportOptions>
+  crateApiKeepassApiFrbKeepassExportOptionsSimple({
+    required String inputPath,
+    required String password,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(inputPath, serializer);
+          sse_encode_String(password, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 9,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_frb_keepass_export_options,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiKeepassApiFrbKeepassExportOptionsSimpleConstMeta,
+        argValues: [inputPath, password],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiKeepassApiFrbKeepassExportOptionsSimpleConstMeta =>
+      const TaskConstMeta(
+        debugName: "frb_keepass_export_options_simple",
+        argNames: ["inputPath", "password"],
+      );
+
+  @override
   String crateApiSimpleGreet({required String name}) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(name, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 8)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 10)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -451,7 +531,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 9,
+            funcId: 11,
             port: port_,
           );
         },
@@ -479,7 +559,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 10,
+            funcId: 12,
             port: port_,
           );
         },
@@ -514,7 +594,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 11,
+            funcId: 13,
             port: port_,
           );
         },
@@ -551,7 +631,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 12,
+            funcId: 14,
             port: port_,
           );
         },
@@ -585,7 +665,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 13,
+            funcId: 15,
             port: port_,
           );
         },
@@ -620,7 +700,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 14,
+            funcId: 16,
             port: port_,
           );
         },
@@ -655,7 +735,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 15,
+            funcId: 17,
             port: port_,
           );
         },
@@ -690,7 +770,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 16,
+            funcId: 18,
             port: port_,
           );
         },
@@ -722,7 +802,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 17,
+            funcId: 19,
             port: port_,
           );
         },
@@ -798,6 +878,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool dco_decode_box_autoadd_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as bool;
+  }
+
+  @protected
   FrbBatchDecryptOptions dco_decode_box_autoadd_frb_batch_decrypt_options(
     dynamic raw,
   ) {
@@ -854,9 +940,54 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FrbKeepassAutoType dco_decode_box_autoadd_frb_keepass_auto_type(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_frb_keepass_auto_type(raw);
+  }
+
+  @protected
+  FrbKeepassExportOptions dco_decode_box_autoadd_frb_keepass_export_options(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_frb_keepass_export_options(raw);
+  }
+
+  @protected
+  FrbKeepassMemoryProtection
+  dco_decode_box_autoadd_frb_keepass_memory_protection(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_frb_keepass_memory_protection(raw);
+  }
+
+  @protected
+  FrbKeepassOtp dco_decode_box_autoadd_frb_keepass_otp(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_frb_keepass_otp(raw);
+  }
+
+  @protected
   FrbProgressEvent dco_decode_box_autoadd_frb_progress_event(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_frb_progress_event(raw);
+  }
+
+  @protected
+  int dco_decode_box_autoadd_i_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
+  int dco_decode_box_autoadd_u_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
+  BigInt dco_decode_box_autoadd_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_u_64(raw);
   }
 
   @protected
@@ -1124,6 +1255,313 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FrbKeepassAttachment dco_decode_frb_keepass_attachment(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return FrbKeepassAttachment(
+      key: dco_decode_String(arr[0]),
+      size: dco_decode_u_64(arr[1]),
+      protected: dco_decode_bool(arr[2]),
+      data: dco_decode_list_prim_u_8_strict(arr[3]),
+    );
+  }
+
+  @protected
+  FrbKeepassAutoType dco_decode_frb_keepass_auto_type(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return FrbKeepassAutoType(
+      enabled: dco_decode_bool(arr[0]),
+      defaultSequence: dco_decode_opt_String(arr[1]),
+      dataTransferObfuscation: dco_decode_opt_box_autoadd_bool(arr[2]),
+      associations: dco_decode_list_frb_keepass_auto_type_association(arr[3]),
+    );
+  }
+
+  @protected
+  FrbKeepassAutoTypeAssociation dco_decode_frb_keepass_auto_type_association(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return FrbKeepassAutoTypeAssociation(
+      window: dco_decode_String(arr[0]),
+      sequence: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
+  FrbKeepassConfig dco_decode_frb_keepass_config(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return FrbKeepassConfig(
+      databaseVersion: dco_decode_String(arr[0]),
+      outerCipher: dco_decode_String(arr[1]),
+      innerCipher: dco_decode_String(arr[2]),
+      compression: dco_decode_String(arr[3]),
+      kdfName: dco_decode_String(arr[4]),
+      kdfDescription: dco_decode_String(arr[5]),
+    );
+  }
+
+  @protected
+  FrbKeepassCustomDataItem dco_decode_frb_keepass_custom_data_item(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return FrbKeepassCustomDataItem(
+      key: dco_decode_String(arr[0]),
+      valueKind: dco_decode_String(arr[1]),
+      stringValue: dco_decode_opt_String(arr[2]),
+      binaryValue: dco_decode_opt_list_prim_u_8_strict(arr[3]),
+      lastModificationTime: dco_decode_opt_String(arr[4]),
+    );
+  }
+
+  @protected
+  FrbKeepassDatabaseExport dco_decode_frb_keepass_database_export(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7)
+      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return FrbKeepassDatabaseExport(
+      sourcePath: dco_decode_String(arr[0]),
+      config: dco_decode_frb_keepass_config(arr[1]),
+      meta: dco_decode_frb_keepass_meta(arr[2]),
+      rootGroupUuid: dco_decode_String(arr[3]),
+      groups: dco_decode_list_frb_keepass_group(arr[4]),
+      entries: dco_decode_list_frb_keepass_entry(arr[5]),
+      deletedObjects: dco_decode_list_frb_keepass_deleted_object(arr[6]),
+    );
+  }
+
+  @protected
+  FrbKeepassDeletedObject dco_decode_frb_keepass_deleted_object(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return FrbKeepassDeletedObject(
+      uuid: dco_decode_String(arr[0]),
+      deletionTime: dco_decode_opt_String(arr[1]),
+    );
+  }
+
+  @protected
+  FrbKeepassEntry dco_decode_frb_keepass_entry(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 23)
+      throw Exception('unexpected arr length: expect 23 but see ${arr.length}');
+    return FrbKeepassEntry(
+      uuid: dco_decode_String(arr[0]),
+      groupUuid: dco_decode_String(arr[1]),
+      groupPath: dco_decode_String(arr[2]),
+      title: dco_decode_opt_String(arr[3]),
+      username: dco_decode_opt_String(arr[4]),
+      password: dco_decode_opt_String(arr[5]),
+      url: dco_decode_opt_String(arr[6]),
+      notes: dco_decode_opt_String(arr[7]),
+      tags: dco_decode_list_String(arr[8]),
+      fields: dco_decode_list_frb_keepass_field(arr[9]),
+      times: dco_decode_frb_keepass_times(arr[10]),
+      customData: dco_decode_list_frb_keepass_custom_data_item(arr[11]),
+      iconId: dco_decode_opt_box_autoadd_u_32(arr[12]),
+      customIconUuid: dco_decode_opt_String(arr[13]),
+      customIconData: dco_decode_opt_list_prim_u_8_strict(arr[14]),
+      foregroundColor: dco_decode_opt_String(arr[15]),
+      backgroundColor: dco_decode_opt_String(arr[16]),
+      overrideUrl: dco_decode_opt_String(arr[17]),
+      qualityCheck: dco_decode_opt_box_autoadd_bool(arr[18]),
+      attachments: dco_decode_list_frb_keepass_attachment(arr[19]),
+      autotype: dco_decode_opt_box_autoadd_frb_keepass_auto_type(arr[20]),
+      otp: dco_decode_opt_box_autoadd_frb_keepass_otp(arr[21]),
+      history: dco_decode_list_frb_keepass_history_entry(arr[22]),
+    );
+  }
+
+  @protected
+  FrbKeepassExportOptions dco_decode_frb_keepass_export_options(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return FrbKeepassExportOptions(
+      inputPath: dco_decode_String(arr[0]),
+      password: dco_decode_opt_String(arr[1]),
+      keyfilePath: dco_decode_opt_String(arr[2]),
+      includeHistory: dco_decode_bool(arr[3]),
+      includeAttachments: dco_decode_bool(arr[4]),
+    );
+  }
+
+  @protected
+  FrbKeepassField dco_decode_frb_keepass_field(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return FrbKeepassField(
+      key: dco_decode_String(arr[0]),
+      value: dco_decode_String(arr[1]),
+      protected: dco_decode_bool(arr[2]),
+    );
+  }
+
+  @protected
+  FrbKeepassGroup dco_decode_frb_keepass_group(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 15)
+      throw Exception('unexpected arr length: expect 15 but see ${arr.length}');
+    return FrbKeepassGroup(
+      uuid: dco_decode_String(arr[0]),
+      parentUuid: dco_decode_opt_String(arr[1]),
+      isRoot: dco_decode_bool(arr[2]),
+      path: dco_decode_String(arr[3]),
+      name: dco_decode_String(arr[4]),
+      notes: dco_decode_opt_String(arr[5]),
+      iconId: dco_decode_opt_box_autoadd_u_32(arr[6]),
+      customIconUuid: dco_decode_opt_String(arr[7]),
+      times: dco_decode_frb_keepass_times(arr[8]),
+      customData: dco_decode_list_frb_keepass_custom_data_item(arr[9]),
+      isExpanded: dco_decode_bool(arr[10]),
+      defaultAutotypeSequence: dco_decode_opt_String(arr[11]),
+      enableAutotype: dco_decode_opt_box_autoadd_bool(arr[12]),
+      enableSearching: dco_decode_opt_box_autoadd_bool(arr[13]),
+      lastTopVisibleEntry: dco_decode_opt_String(arr[14]),
+    );
+  }
+
+  @protected
+  FrbKeepassHistoryEntry dco_decode_frb_keepass_history_entry(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 20)
+      throw Exception('unexpected arr length: expect 20 but see ${arr.length}');
+    return FrbKeepassHistoryEntry(
+      uuid: dco_decode_String(arr[0]),
+      title: dco_decode_opt_String(arr[1]),
+      username: dco_decode_opt_String(arr[2]),
+      password: dco_decode_opt_String(arr[3]),
+      url: dco_decode_opt_String(arr[4]),
+      notes: dco_decode_opt_String(arr[5]),
+      tags: dco_decode_list_String(arr[6]),
+      fields: dco_decode_list_frb_keepass_field(arr[7]),
+      times: dco_decode_frb_keepass_times(arr[8]),
+      customData: dco_decode_list_frb_keepass_custom_data_item(arr[9]),
+      iconId: dco_decode_opt_box_autoadd_u_32(arr[10]),
+      customIconUuid: dco_decode_opt_String(arr[11]),
+      customIconData: dco_decode_opt_list_prim_u_8_strict(arr[12]),
+      foregroundColor: dco_decode_opt_String(arr[13]),
+      backgroundColor: dco_decode_opt_String(arr[14]),
+      overrideUrl: dco_decode_opt_String(arr[15]),
+      qualityCheck: dco_decode_opt_box_autoadd_bool(arr[16]),
+      attachments: dco_decode_list_frb_keepass_attachment(arr[17]),
+      autotype: dco_decode_opt_box_autoadd_frb_keepass_auto_type(arr[18]),
+      otp: dco_decode_opt_box_autoadd_frb_keepass_otp(arr[19]),
+    );
+  }
+
+  @protected
+  FrbKeepassMemoryProtection dco_decode_frb_keepass_memory_protection(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return FrbKeepassMemoryProtection(
+      protectTitle: dco_decode_bool(arr[0]),
+      protectUsername: dco_decode_bool(arr[1]),
+      protectPassword: dco_decode_bool(arr[2]),
+      protectUrl: dco_decode_bool(arr[3]),
+      protectNotes: dco_decode_bool(arr[4]),
+    );
+  }
+
+  @protected
+  FrbKeepassMeta dco_decode_frb_keepass_meta(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 24)
+      throw Exception('unexpected arr length: expect 24 but see ${arr.length}');
+    return FrbKeepassMeta(
+      generator: dco_decode_opt_String(arr[0]),
+      databaseName: dco_decode_opt_String(arr[1]),
+      databaseNameChanged: dco_decode_opt_String(arr[2]),
+      databaseDescription: dco_decode_opt_String(arr[3]),
+      databaseDescriptionChanged: dco_decode_opt_String(arr[4]),
+      defaultUsername: dco_decode_opt_String(arr[5]),
+      defaultUsernameChanged: dco_decode_opt_String(arr[6]),
+      maintenanceHistoryDays: dco_decode_opt_box_autoadd_u_32(arr[7]),
+      color: dco_decode_opt_String(arr[8]),
+      masterKeyChanged: dco_decode_opt_String(arr[9]),
+      masterKeyChangeRec: dco_decode_opt_box_autoadd_i_32(arr[10]),
+      masterKeyChangeForce: dco_decode_opt_box_autoadd_i_32(arr[11]),
+      memoryProtection:
+          dco_decode_opt_box_autoadd_frb_keepass_memory_protection(arr[12]),
+      recyclebinEnabled: dco_decode_opt_box_autoadd_bool(arr[13]),
+      recyclebinUuid: dco_decode_opt_String(arr[14]),
+      recyclebinChanged: dco_decode_opt_String(arr[15]),
+      entryTemplatesGroup: dco_decode_opt_String(arr[16]),
+      entryTemplatesGroupChanged: dco_decode_opt_String(arr[17]),
+      lastSelectedGroup: dco_decode_opt_String(arr[18]),
+      lastTopVisibleGroup: dco_decode_opt_String(arr[19]),
+      historyMaxItems: dco_decode_opt_box_autoadd_i_32(arr[20]),
+      historyMaxSize: dco_decode_opt_box_autoadd_i_32(arr[21]),
+      settingsChanged: dco_decode_opt_String(arr[22]),
+      customData: dco_decode_list_frb_keepass_custom_data_item(arr[23]),
+    );
+  }
+
+  @protected
+  FrbKeepassOtp dco_decode_frb_keepass_otp(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 8)
+      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    return FrbKeepassOtp(
+      rawValue: dco_decode_String(arr[0]),
+      label: dco_decode_opt_String(arr[1]),
+      issuer: dco_decode_opt_String(arr[2]),
+      secret: dco_decode_opt_String(arr[3]),
+      period: dco_decode_opt_box_autoadd_u_64(arr[4]),
+      digits: dco_decode_opt_box_autoadd_u_32(arr[5]),
+      algorithm: dco_decode_opt_String(arr[6]),
+      parseError: dco_decode_opt_String(arr[7]),
+    );
+  }
+
+  @protected
+  FrbKeepassTimes dco_decode_frb_keepass_times(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7)
+      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return FrbKeepassTimes(
+      creation: dco_decode_opt_String(arr[0]),
+      lastModification: dco_decode_opt_String(arr[1]),
+      lastAccess: dco_decode_opt_String(arr[2]),
+      expiry: dco_decode_opt_String(arr[3]),
+      locationChanged: dco_decode_opt_String(arr[4]),
+      expires: dco_decode_opt_box_autoadd_bool(arr[5]),
+      usageCount: dco_decode_opt_box_autoadd_u_32(arr[6]),
+    );
+  }
+
+  @protected
   FrbKeyValue dco_decode_frb_key_value(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -1192,6 +1630,73 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<FrbKeepassAttachment> dco_decode_list_frb_keepass_attachment(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_frb_keepass_attachment)
+        .toList();
+  }
+
+  @protected
+  List<FrbKeepassAutoTypeAssociation>
+  dco_decode_list_frb_keepass_auto_type_association(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_frb_keepass_auto_type_association)
+        .toList();
+  }
+
+  @protected
+  List<FrbKeepassCustomDataItem> dco_decode_list_frb_keepass_custom_data_item(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_frb_keepass_custom_data_item)
+        .toList();
+  }
+
+  @protected
+  List<FrbKeepassDeletedObject> dco_decode_list_frb_keepass_deleted_object(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_frb_keepass_deleted_object)
+        .toList();
+  }
+
+  @protected
+  List<FrbKeepassEntry> dco_decode_list_frb_keepass_entry(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_frb_keepass_entry).toList();
+  }
+
+  @protected
+  List<FrbKeepassField> dco_decode_list_frb_keepass_field(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_frb_keepass_field).toList();
+  }
+
+  @protected
+  List<FrbKeepassGroup> dco_decode_list_frb_keepass_group(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_frb_keepass_group).toList();
+  }
+
+  @protected
+  List<FrbKeepassHistoryEntry> dco_decode_list_frb_keepass_history_entry(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_frb_keepass_history_entry)
+        .toList();
+  }
+
+  @protected
   List<FrbKeyValue> dco_decode_list_frb_key_value(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_frb_key_value).toList();
@@ -1221,6 +1726,61 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   String? dco_decode_opt_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_String(raw);
+  }
+
+  @protected
+  bool? dco_decode_opt_box_autoadd_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_bool(raw);
+  }
+
+  @protected
+  FrbKeepassAutoType? dco_decode_opt_box_autoadd_frb_keepass_auto_type(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null
+        ? null
+        : dco_decode_box_autoadd_frb_keepass_auto_type(raw);
+  }
+
+  @protected
+  FrbKeepassMemoryProtection?
+  dco_decode_opt_box_autoadd_frb_keepass_memory_protection(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null
+        ? null
+        : dco_decode_box_autoadd_frb_keepass_memory_protection(raw);
+  }
+
+  @protected
+  FrbKeepassOtp? dco_decode_opt_box_autoadd_frb_keepass_otp(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_frb_keepass_otp(raw);
+  }
+
+  @protected
+  int? dco_decode_opt_box_autoadd_i_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_i_32(raw);
+  }
+
+  @protected
+  int? dco_decode_opt_box_autoadd_u_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_u_32(raw);
+  }
+
+  @protected
+  BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_u_64(raw);
+  }
+
+  @protected
+  Uint8List? dco_decode_opt_list_prim_u_8_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_list_prim_u_8_strict(raw);
   }
 
   @protected
@@ -1310,6 +1870,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool sse_decode_box_autoadd_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_bool(deserializer));
+  }
+
+  @protected
   FrbBatchDecryptOptions sse_decode_box_autoadd_frb_batch_decrypt_options(
     SseDeserializer deserializer,
   ) {
@@ -1374,11 +1940,62 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FrbKeepassAutoType sse_decode_box_autoadd_frb_keepass_auto_type(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_frb_keepass_auto_type(deserializer));
+  }
+
+  @protected
+  FrbKeepassExportOptions sse_decode_box_autoadd_frb_keepass_export_options(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_frb_keepass_export_options(deserializer));
+  }
+
+  @protected
+  FrbKeepassMemoryProtection
+  sse_decode_box_autoadd_frb_keepass_memory_protection(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_frb_keepass_memory_protection(deserializer));
+  }
+
+  @protected
+  FrbKeepassOtp sse_decode_box_autoadd_frb_keepass_otp(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_frb_keepass_otp(deserializer));
+  }
+
+  @protected
   FrbProgressEvent sse_decode_box_autoadd_frb_progress_event(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_frb_progress_event(deserializer));
+  }
+
+  @protected
+  int sse_decode_box_autoadd_i_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  int sse_decode_box_autoadd_u_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_u_32(deserializer));
+  }
+
+  @protected
+  BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_u_64(deserializer));
   }
 
   @protected
@@ -1712,6 +2329,439 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FrbKeepassAttachment sse_decode_frb_keepass_attachment(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_key = sse_decode_String(deserializer);
+    var var_size = sse_decode_u_64(deserializer);
+    var var_protected = sse_decode_bool(deserializer);
+    var var_data = sse_decode_list_prim_u_8_strict(deserializer);
+    return FrbKeepassAttachment(
+      key: var_key,
+      size: var_size,
+      protected: var_protected,
+      data: var_data,
+    );
+  }
+
+  @protected
+  FrbKeepassAutoType sse_decode_frb_keepass_auto_type(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_enabled = sse_decode_bool(deserializer);
+    var var_defaultSequence = sse_decode_opt_String(deserializer);
+    var var_dataTransferObfuscation = sse_decode_opt_box_autoadd_bool(
+      deserializer,
+    );
+    var var_associations = sse_decode_list_frb_keepass_auto_type_association(
+      deserializer,
+    );
+    return FrbKeepassAutoType(
+      enabled: var_enabled,
+      defaultSequence: var_defaultSequence,
+      dataTransferObfuscation: var_dataTransferObfuscation,
+      associations: var_associations,
+    );
+  }
+
+  @protected
+  FrbKeepassAutoTypeAssociation sse_decode_frb_keepass_auto_type_association(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_window = sse_decode_String(deserializer);
+    var var_sequence = sse_decode_String(deserializer);
+    return FrbKeepassAutoTypeAssociation(
+      window: var_window,
+      sequence: var_sequence,
+    );
+  }
+
+  @protected
+  FrbKeepassConfig sse_decode_frb_keepass_config(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_databaseVersion = sse_decode_String(deserializer);
+    var var_outerCipher = sse_decode_String(deserializer);
+    var var_innerCipher = sse_decode_String(deserializer);
+    var var_compression = sse_decode_String(deserializer);
+    var var_kdfName = sse_decode_String(deserializer);
+    var var_kdfDescription = sse_decode_String(deserializer);
+    return FrbKeepassConfig(
+      databaseVersion: var_databaseVersion,
+      outerCipher: var_outerCipher,
+      innerCipher: var_innerCipher,
+      compression: var_compression,
+      kdfName: var_kdfName,
+      kdfDescription: var_kdfDescription,
+    );
+  }
+
+  @protected
+  FrbKeepassCustomDataItem sse_decode_frb_keepass_custom_data_item(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_key = sse_decode_String(deserializer);
+    var var_valueKind = sse_decode_String(deserializer);
+    var var_stringValue = sse_decode_opt_String(deserializer);
+    var var_binaryValue = sse_decode_opt_list_prim_u_8_strict(deserializer);
+    var var_lastModificationTime = sse_decode_opt_String(deserializer);
+    return FrbKeepassCustomDataItem(
+      key: var_key,
+      valueKind: var_valueKind,
+      stringValue: var_stringValue,
+      binaryValue: var_binaryValue,
+      lastModificationTime: var_lastModificationTime,
+    );
+  }
+
+  @protected
+  FrbKeepassDatabaseExport sse_decode_frb_keepass_database_export(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_sourcePath = sse_decode_String(deserializer);
+    var var_config = sse_decode_frb_keepass_config(deserializer);
+    var var_meta = sse_decode_frb_keepass_meta(deserializer);
+    var var_rootGroupUuid = sse_decode_String(deserializer);
+    var var_groups = sse_decode_list_frb_keepass_group(deserializer);
+    var var_entries = sse_decode_list_frb_keepass_entry(deserializer);
+    var var_deletedObjects = sse_decode_list_frb_keepass_deleted_object(
+      deserializer,
+    );
+    return FrbKeepassDatabaseExport(
+      sourcePath: var_sourcePath,
+      config: var_config,
+      meta: var_meta,
+      rootGroupUuid: var_rootGroupUuid,
+      groups: var_groups,
+      entries: var_entries,
+      deletedObjects: var_deletedObjects,
+    );
+  }
+
+  @protected
+  FrbKeepassDeletedObject sse_decode_frb_keepass_deleted_object(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_uuid = sse_decode_String(deserializer);
+    var var_deletionTime = sse_decode_opt_String(deserializer);
+    return FrbKeepassDeletedObject(
+      uuid: var_uuid,
+      deletionTime: var_deletionTime,
+    );
+  }
+
+  @protected
+  FrbKeepassEntry sse_decode_frb_keepass_entry(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_uuid = sse_decode_String(deserializer);
+    var var_groupUuid = sse_decode_String(deserializer);
+    var var_groupPath = sse_decode_String(deserializer);
+    var var_title = sse_decode_opt_String(deserializer);
+    var var_username = sse_decode_opt_String(deserializer);
+    var var_password = sse_decode_opt_String(deserializer);
+    var var_url = sse_decode_opt_String(deserializer);
+    var var_notes = sse_decode_opt_String(deserializer);
+    var var_tags = sse_decode_list_String(deserializer);
+    var var_fields = sse_decode_list_frb_keepass_field(deserializer);
+    var var_times = sse_decode_frb_keepass_times(deserializer);
+    var var_customData = sse_decode_list_frb_keepass_custom_data_item(
+      deserializer,
+    );
+    var var_iconId = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_customIconUuid = sse_decode_opt_String(deserializer);
+    var var_customIconData = sse_decode_opt_list_prim_u_8_strict(deserializer);
+    var var_foregroundColor = sse_decode_opt_String(deserializer);
+    var var_backgroundColor = sse_decode_opt_String(deserializer);
+    var var_overrideUrl = sse_decode_opt_String(deserializer);
+    var var_qualityCheck = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_attachments = sse_decode_list_frb_keepass_attachment(deserializer);
+    var var_autotype = sse_decode_opt_box_autoadd_frb_keepass_auto_type(
+      deserializer,
+    );
+    var var_otp = sse_decode_opt_box_autoadd_frb_keepass_otp(deserializer);
+    var var_history = sse_decode_list_frb_keepass_history_entry(deserializer);
+    return FrbKeepassEntry(
+      uuid: var_uuid,
+      groupUuid: var_groupUuid,
+      groupPath: var_groupPath,
+      title: var_title,
+      username: var_username,
+      password: var_password,
+      url: var_url,
+      notes: var_notes,
+      tags: var_tags,
+      fields: var_fields,
+      times: var_times,
+      customData: var_customData,
+      iconId: var_iconId,
+      customIconUuid: var_customIconUuid,
+      customIconData: var_customIconData,
+      foregroundColor: var_foregroundColor,
+      backgroundColor: var_backgroundColor,
+      overrideUrl: var_overrideUrl,
+      qualityCheck: var_qualityCheck,
+      attachments: var_attachments,
+      autotype: var_autotype,
+      otp: var_otp,
+      history: var_history,
+    );
+  }
+
+  @protected
+  FrbKeepassExportOptions sse_decode_frb_keepass_export_options(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_inputPath = sse_decode_String(deserializer);
+    var var_password = sse_decode_opt_String(deserializer);
+    var var_keyfilePath = sse_decode_opt_String(deserializer);
+    var var_includeHistory = sse_decode_bool(deserializer);
+    var var_includeAttachments = sse_decode_bool(deserializer);
+    return FrbKeepassExportOptions(
+      inputPath: var_inputPath,
+      password: var_password,
+      keyfilePath: var_keyfilePath,
+      includeHistory: var_includeHistory,
+      includeAttachments: var_includeAttachments,
+    );
+  }
+
+  @protected
+  FrbKeepassField sse_decode_frb_keepass_field(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_key = sse_decode_String(deserializer);
+    var var_value = sse_decode_String(deserializer);
+    var var_protected = sse_decode_bool(deserializer);
+    return FrbKeepassField(
+      key: var_key,
+      value: var_value,
+      protected: var_protected,
+    );
+  }
+
+  @protected
+  FrbKeepassGroup sse_decode_frb_keepass_group(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_uuid = sse_decode_String(deserializer);
+    var var_parentUuid = sse_decode_opt_String(deserializer);
+    var var_isRoot = sse_decode_bool(deserializer);
+    var var_path = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_notes = sse_decode_opt_String(deserializer);
+    var var_iconId = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_customIconUuid = sse_decode_opt_String(deserializer);
+    var var_times = sse_decode_frb_keepass_times(deserializer);
+    var var_customData = sse_decode_list_frb_keepass_custom_data_item(
+      deserializer,
+    );
+    var var_isExpanded = sse_decode_bool(deserializer);
+    var var_defaultAutotypeSequence = sse_decode_opt_String(deserializer);
+    var var_enableAutotype = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_enableSearching = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_lastTopVisibleEntry = sse_decode_opt_String(deserializer);
+    return FrbKeepassGroup(
+      uuid: var_uuid,
+      parentUuid: var_parentUuid,
+      isRoot: var_isRoot,
+      path: var_path,
+      name: var_name,
+      notes: var_notes,
+      iconId: var_iconId,
+      customIconUuid: var_customIconUuid,
+      times: var_times,
+      customData: var_customData,
+      isExpanded: var_isExpanded,
+      defaultAutotypeSequence: var_defaultAutotypeSequence,
+      enableAutotype: var_enableAutotype,
+      enableSearching: var_enableSearching,
+      lastTopVisibleEntry: var_lastTopVisibleEntry,
+    );
+  }
+
+  @protected
+  FrbKeepassHistoryEntry sse_decode_frb_keepass_history_entry(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_uuid = sse_decode_String(deserializer);
+    var var_title = sse_decode_opt_String(deserializer);
+    var var_username = sse_decode_opt_String(deserializer);
+    var var_password = sse_decode_opt_String(deserializer);
+    var var_url = sse_decode_opt_String(deserializer);
+    var var_notes = sse_decode_opt_String(deserializer);
+    var var_tags = sse_decode_list_String(deserializer);
+    var var_fields = sse_decode_list_frb_keepass_field(deserializer);
+    var var_times = sse_decode_frb_keepass_times(deserializer);
+    var var_customData = sse_decode_list_frb_keepass_custom_data_item(
+      deserializer,
+    );
+    var var_iconId = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_customIconUuid = sse_decode_opt_String(deserializer);
+    var var_customIconData = sse_decode_opt_list_prim_u_8_strict(deserializer);
+    var var_foregroundColor = sse_decode_opt_String(deserializer);
+    var var_backgroundColor = sse_decode_opt_String(deserializer);
+    var var_overrideUrl = sse_decode_opt_String(deserializer);
+    var var_qualityCheck = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_attachments = sse_decode_list_frb_keepass_attachment(deserializer);
+    var var_autotype = sse_decode_opt_box_autoadd_frb_keepass_auto_type(
+      deserializer,
+    );
+    var var_otp = sse_decode_opt_box_autoadd_frb_keepass_otp(deserializer);
+    return FrbKeepassHistoryEntry(
+      uuid: var_uuid,
+      title: var_title,
+      username: var_username,
+      password: var_password,
+      url: var_url,
+      notes: var_notes,
+      tags: var_tags,
+      fields: var_fields,
+      times: var_times,
+      customData: var_customData,
+      iconId: var_iconId,
+      customIconUuid: var_customIconUuid,
+      customIconData: var_customIconData,
+      foregroundColor: var_foregroundColor,
+      backgroundColor: var_backgroundColor,
+      overrideUrl: var_overrideUrl,
+      qualityCheck: var_qualityCheck,
+      attachments: var_attachments,
+      autotype: var_autotype,
+      otp: var_otp,
+    );
+  }
+
+  @protected
+  FrbKeepassMemoryProtection sse_decode_frb_keepass_memory_protection(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_protectTitle = sse_decode_bool(deserializer);
+    var var_protectUsername = sse_decode_bool(deserializer);
+    var var_protectPassword = sse_decode_bool(deserializer);
+    var var_protectUrl = sse_decode_bool(deserializer);
+    var var_protectNotes = sse_decode_bool(deserializer);
+    return FrbKeepassMemoryProtection(
+      protectTitle: var_protectTitle,
+      protectUsername: var_protectUsername,
+      protectPassword: var_protectPassword,
+      protectUrl: var_protectUrl,
+      protectNotes: var_protectNotes,
+    );
+  }
+
+  @protected
+  FrbKeepassMeta sse_decode_frb_keepass_meta(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_generator = sse_decode_opt_String(deserializer);
+    var var_databaseName = sse_decode_opt_String(deserializer);
+    var var_databaseNameChanged = sse_decode_opt_String(deserializer);
+    var var_databaseDescription = sse_decode_opt_String(deserializer);
+    var var_databaseDescriptionChanged = sse_decode_opt_String(deserializer);
+    var var_defaultUsername = sse_decode_opt_String(deserializer);
+    var var_defaultUsernameChanged = sse_decode_opt_String(deserializer);
+    var var_maintenanceHistoryDays = sse_decode_opt_box_autoadd_u_32(
+      deserializer,
+    );
+    var var_color = sse_decode_opt_String(deserializer);
+    var var_masterKeyChanged = sse_decode_opt_String(deserializer);
+    var var_masterKeyChangeRec = sse_decode_opt_box_autoadd_i_32(deserializer);
+    var var_masterKeyChangeForce = sse_decode_opt_box_autoadd_i_32(
+      deserializer,
+    );
+    var var_memoryProtection =
+        sse_decode_opt_box_autoadd_frb_keepass_memory_protection(deserializer);
+    var var_recyclebinEnabled = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_recyclebinUuid = sse_decode_opt_String(deserializer);
+    var var_recyclebinChanged = sse_decode_opt_String(deserializer);
+    var var_entryTemplatesGroup = sse_decode_opt_String(deserializer);
+    var var_entryTemplatesGroupChanged = sse_decode_opt_String(deserializer);
+    var var_lastSelectedGroup = sse_decode_opt_String(deserializer);
+    var var_lastTopVisibleGroup = sse_decode_opt_String(deserializer);
+    var var_historyMaxItems = sse_decode_opt_box_autoadd_i_32(deserializer);
+    var var_historyMaxSize = sse_decode_opt_box_autoadd_i_32(deserializer);
+    var var_settingsChanged = sse_decode_opt_String(deserializer);
+    var var_customData = sse_decode_list_frb_keepass_custom_data_item(
+      deserializer,
+    );
+    return FrbKeepassMeta(
+      generator: var_generator,
+      databaseName: var_databaseName,
+      databaseNameChanged: var_databaseNameChanged,
+      databaseDescription: var_databaseDescription,
+      databaseDescriptionChanged: var_databaseDescriptionChanged,
+      defaultUsername: var_defaultUsername,
+      defaultUsernameChanged: var_defaultUsernameChanged,
+      maintenanceHistoryDays: var_maintenanceHistoryDays,
+      color: var_color,
+      masterKeyChanged: var_masterKeyChanged,
+      masterKeyChangeRec: var_masterKeyChangeRec,
+      masterKeyChangeForce: var_masterKeyChangeForce,
+      memoryProtection: var_memoryProtection,
+      recyclebinEnabled: var_recyclebinEnabled,
+      recyclebinUuid: var_recyclebinUuid,
+      recyclebinChanged: var_recyclebinChanged,
+      entryTemplatesGroup: var_entryTemplatesGroup,
+      entryTemplatesGroupChanged: var_entryTemplatesGroupChanged,
+      lastSelectedGroup: var_lastSelectedGroup,
+      lastTopVisibleGroup: var_lastTopVisibleGroup,
+      historyMaxItems: var_historyMaxItems,
+      historyMaxSize: var_historyMaxSize,
+      settingsChanged: var_settingsChanged,
+      customData: var_customData,
+    );
+  }
+
+  @protected
+  FrbKeepassOtp sse_decode_frb_keepass_otp(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_rawValue = sse_decode_String(deserializer);
+    var var_label = sse_decode_opt_String(deserializer);
+    var var_issuer = sse_decode_opt_String(deserializer);
+    var var_secret = sse_decode_opt_String(deserializer);
+    var var_period = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_digits = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_algorithm = sse_decode_opt_String(deserializer);
+    var var_parseError = sse_decode_opt_String(deserializer);
+    return FrbKeepassOtp(
+      rawValue: var_rawValue,
+      label: var_label,
+      issuer: var_issuer,
+      secret: var_secret,
+      period: var_period,
+      digits: var_digits,
+      algorithm: var_algorithm,
+      parseError: var_parseError,
+    );
+  }
+
+  @protected
+  FrbKeepassTimes sse_decode_frb_keepass_times(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_creation = sse_decode_opt_String(deserializer);
+    var var_lastModification = sse_decode_opt_String(deserializer);
+    var var_lastAccess = sse_decode_opt_String(deserializer);
+    var var_expiry = sse_decode_opt_String(deserializer);
+    var var_locationChanged = sse_decode_opt_String(deserializer);
+    var var_expires = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_usageCount = sse_decode_opt_box_autoadd_u_32(deserializer);
+    return FrbKeepassTimes(
+      creation: var_creation,
+      lastModification: var_lastModification,
+      lastAccess: var_lastAccess,
+      expiry: var_expiry,
+      locationChanged: var_locationChanged,
+      expires: var_expires,
+      usageCount: var_usageCount,
+    );
+  }
+
+  @protected
   FrbKeyValue sse_decode_frb_key_value(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_key = sse_decode_String(deserializer);
@@ -1808,6 +2858,119 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<FrbKeepassAttachment> sse_decode_list_frb_keepass_attachment(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FrbKeepassAttachment>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_frb_keepass_attachment(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FrbKeepassAutoTypeAssociation>
+  sse_decode_list_frb_keepass_auto_type_association(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FrbKeepassAutoTypeAssociation>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_frb_keepass_auto_type_association(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FrbKeepassCustomDataItem> sse_decode_list_frb_keepass_custom_data_item(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FrbKeepassCustomDataItem>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_frb_keepass_custom_data_item(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FrbKeepassDeletedObject> sse_decode_list_frb_keepass_deleted_object(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FrbKeepassDeletedObject>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_frb_keepass_deleted_object(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FrbKeepassEntry> sse_decode_list_frb_keepass_entry(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FrbKeepassEntry>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_frb_keepass_entry(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FrbKeepassField> sse_decode_list_frb_keepass_field(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FrbKeepassField>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_frb_keepass_field(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FrbKeepassGroup> sse_decode_list_frb_keepass_group(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FrbKeepassGroup>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_frb_keepass_group(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FrbKeepassHistoryEntry> sse_decode_list_frb_keepass_history_entry(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FrbKeepassHistoryEntry>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_frb_keepass_history_entry(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<FrbKeyValue> sse_decode_list_frb_key_value(
     SseDeserializer deserializer,
   ) {
@@ -1849,6 +3012,103 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
     if (sse_decode_bool(deserializer)) {
       return (sse_decode_String(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_bool(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  FrbKeepassAutoType? sse_decode_opt_box_autoadd_frb_keepass_auto_type(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_frb_keepass_auto_type(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  FrbKeepassMemoryProtection?
+  sse_decode_opt_box_autoadd_frb_keepass_memory_protection(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_frb_keepass_memory_protection(
+        deserializer,
+      ));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  FrbKeepassOtp? sse_decode_opt_box_autoadd_frb_keepass_otp(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_frb_keepass_otp(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_i_32(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_u_32(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_u_64(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  Uint8List? sse_decode_opt_list_prim_u_8_strict(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_list_prim_u_8_strict(deserializer));
     } else {
       return null;
     }
@@ -1984,6 +3244,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_bool(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_frb_batch_decrypt_options(
     FrbBatchDecryptOptions self,
     SseSerializer serializer,
@@ -2056,12 +3322,66 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_frb_keepass_auto_type(
+    FrbKeepassAutoType self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_frb_keepass_auto_type(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_frb_keepass_export_options(
+    FrbKeepassExportOptions self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_frb_keepass_export_options(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_frb_keepass_memory_protection(
+    FrbKeepassMemoryProtection self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_frb_keepass_memory_protection(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_frb_keepass_otp(
+    FrbKeepassOtp self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_frb_keepass_otp(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_frb_progress_event(
     FrbProgressEvent self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_frb_progress_event(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_i_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(self, serializer);
   }
 
   @protected
@@ -2329,6 +3649,280 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_frb_keepass_attachment(
+    FrbKeepassAttachment self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.key, serializer);
+    sse_encode_u_64(self.size, serializer);
+    sse_encode_bool(self.protected, serializer);
+    sse_encode_list_prim_u_8_strict(self.data, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_keepass_auto_type(
+    FrbKeepassAutoType self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_bool(self.enabled, serializer);
+    sse_encode_opt_String(self.defaultSequence, serializer);
+    sse_encode_opt_box_autoadd_bool(self.dataTransferObfuscation, serializer);
+    sse_encode_list_frb_keepass_auto_type_association(
+      self.associations,
+      serializer,
+    );
+  }
+
+  @protected
+  void sse_encode_frb_keepass_auto_type_association(
+    FrbKeepassAutoTypeAssociation self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.window, serializer);
+    sse_encode_String(self.sequence, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_keepass_config(
+    FrbKeepassConfig self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.databaseVersion, serializer);
+    sse_encode_String(self.outerCipher, serializer);
+    sse_encode_String(self.innerCipher, serializer);
+    sse_encode_String(self.compression, serializer);
+    sse_encode_String(self.kdfName, serializer);
+    sse_encode_String(self.kdfDescription, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_keepass_custom_data_item(
+    FrbKeepassCustomDataItem self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.key, serializer);
+    sse_encode_String(self.valueKind, serializer);
+    sse_encode_opt_String(self.stringValue, serializer);
+    sse_encode_opt_list_prim_u_8_strict(self.binaryValue, serializer);
+    sse_encode_opt_String(self.lastModificationTime, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_keepass_database_export(
+    FrbKeepassDatabaseExport self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.sourcePath, serializer);
+    sse_encode_frb_keepass_config(self.config, serializer);
+    sse_encode_frb_keepass_meta(self.meta, serializer);
+    sse_encode_String(self.rootGroupUuid, serializer);
+    sse_encode_list_frb_keepass_group(self.groups, serializer);
+    sse_encode_list_frb_keepass_entry(self.entries, serializer);
+    sse_encode_list_frb_keepass_deleted_object(self.deletedObjects, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_keepass_deleted_object(
+    FrbKeepassDeletedObject self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.uuid, serializer);
+    sse_encode_opt_String(self.deletionTime, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_keepass_entry(
+    FrbKeepassEntry self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.uuid, serializer);
+    sse_encode_String(self.groupUuid, serializer);
+    sse_encode_String(self.groupPath, serializer);
+    sse_encode_opt_String(self.title, serializer);
+    sse_encode_opt_String(self.username, serializer);
+    sse_encode_opt_String(self.password, serializer);
+    sse_encode_opt_String(self.url, serializer);
+    sse_encode_opt_String(self.notes, serializer);
+    sse_encode_list_String(self.tags, serializer);
+    sse_encode_list_frb_keepass_field(self.fields, serializer);
+    sse_encode_frb_keepass_times(self.times, serializer);
+    sse_encode_list_frb_keepass_custom_data_item(self.customData, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.iconId, serializer);
+    sse_encode_opt_String(self.customIconUuid, serializer);
+    sse_encode_opt_list_prim_u_8_strict(self.customIconData, serializer);
+    sse_encode_opt_String(self.foregroundColor, serializer);
+    sse_encode_opt_String(self.backgroundColor, serializer);
+    sse_encode_opt_String(self.overrideUrl, serializer);
+    sse_encode_opt_box_autoadd_bool(self.qualityCheck, serializer);
+    sse_encode_list_frb_keepass_attachment(self.attachments, serializer);
+    sse_encode_opt_box_autoadd_frb_keepass_auto_type(self.autotype, serializer);
+    sse_encode_opt_box_autoadd_frb_keepass_otp(self.otp, serializer);
+    sse_encode_list_frb_keepass_history_entry(self.history, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_keepass_export_options(
+    FrbKeepassExportOptions self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.inputPath, serializer);
+    sse_encode_opt_String(self.password, serializer);
+    sse_encode_opt_String(self.keyfilePath, serializer);
+    sse_encode_bool(self.includeHistory, serializer);
+    sse_encode_bool(self.includeAttachments, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_keepass_field(
+    FrbKeepassField self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.key, serializer);
+    sse_encode_String(self.value, serializer);
+    sse_encode_bool(self.protected, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_keepass_group(
+    FrbKeepassGroup self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.uuid, serializer);
+    sse_encode_opt_String(self.parentUuid, serializer);
+    sse_encode_bool(self.isRoot, serializer);
+    sse_encode_String(self.path, serializer);
+    sse_encode_String(self.name, serializer);
+    sse_encode_opt_String(self.notes, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.iconId, serializer);
+    sse_encode_opt_String(self.customIconUuid, serializer);
+    sse_encode_frb_keepass_times(self.times, serializer);
+    sse_encode_list_frb_keepass_custom_data_item(self.customData, serializer);
+    sse_encode_bool(self.isExpanded, serializer);
+    sse_encode_opt_String(self.defaultAutotypeSequence, serializer);
+    sse_encode_opt_box_autoadd_bool(self.enableAutotype, serializer);
+    sse_encode_opt_box_autoadd_bool(self.enableSearching, serializer);
+    sse_encode_opt_String(self.lastTopVisibleEntry, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_keepass_history_entry(
+    FrbKeepassHistoryEntry self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.uuid, serializer);
+    sse_encode_opt_String(self.title, serializer);
+    sse_encode_opt_String(self.username, serializer);
+    sse_encode_opt_String(self.password, serializer);
+    sse_encode_opt_String(self.url, serializer);
+    sse_encode_opt_String(self.notes, serializer);
+    sse_encode_list_String(self.tags, serializer);
+    sse_encode_list_frb_keepass_field(self.fields, serializer);
+    sse_encode_frb_keepass_times(self.times, serializer);
+    sse_encode_list_frb_keepass_custom_data_item(self.customData, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.iconId, serializer);
+    sse_encode_opt_String(self.customIconUuid, serializer);
+    sse_encode_opt_list_prim_u_8_strict(self.customIconData, serializer);
+    sse_encode_opt_String(self.foregroundColor, serializer);
+    sse_encode_opt_String(self.backgroundColor, serializer);
+    sse_encode_opt_String(self.overrideUrl, serializer);
+    sse_encode_opt_box_autoadd_bool(self.qualityCheck, serializer);
+    sse_encode_list_frb_keepass_attachment(self.attachments, serializer);
+    sse_encode_opt_box_autoadd_frb_keepass_auto_type(self.autotype, serializer);
+    sse_encode_opt_box_autoadd_frb_keepass_otp(self.otp, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_keepass_memory_protection(
+    FrbKeepassMemoryProtection self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_bool(self.protectTitle, serializer);
+    sse_encode_bool(self.protectUsername, serializer);
+    sse_encode_bool(self.protectPassword, serializer);
+    sse_encode_bool(self.protectUrl, serializer);
+    sse_encode_bool(self.protectNotes, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_keepass_meta(
+    FrbKeepassMeta self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_String(self.generator, serializer);
+    sse_encode_opt_String(self.databaseName, serializer);
+    sse_encode_opt_String(self.databaseNameChanged, serializer);
+    sse_encode_opt_String(self.databaseDescription, serializer);
+    sse_encode_opt_String(self.databaseDescriptionChanged, serializer);
+    sse_encode_opt_String(self.defaultUsername, serializer);
+    sse_encode_opt_String(self.defaultUsernameChanged, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.maintenanceHistoryDays, serializer);
+    sse_encode_opt_String(self.color, serializer);
+    sse_encode_opt_String(self.masterKeyChanged, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.masterKeyChangeRec, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.masterKeyChangeForce, serializer);
+    sse_encode_opt_box_autoadd_frb_keepass_memory_protection(
+      self.memoryProtection,
+      serializer,
+    );
+    sse_encode_opt_box_autoadd_bool(self.recyclebinEnabled, serializer);
+    sse_encode_opt_String(self.recyclebinUuid, serializer);
+    sse_encode_opt_String(self.recyclebinChanged, serializer);
+    sse_encode_opt_String(self.entryTemplatesGroup, serializer);
+    sse_encode_opt_String(self.entryTemplatesGroupChanged, serializer);
+    sse_encode_opt_String(self.lastSelectedGroup, serializer);
+    sse_encode_opt_String(self.lastTopVisibleGroup, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.historyMaxItems, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.historyMaxSize, serializer);
+    sse_encode_opt_String(self.settingsChanged, serializer);
+    sse_encode_list_frb_keepass_custom_data_item(self.customData, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_keepass_otp(
+    FrbKeepassOtp self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.rawValue, serializer);
+    sse_encode_opt_String(self.label, serializer);
+    sse_encode_opt_String(self.issuer, serializer);
+    sse_encode_opt_String(self.secret, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.period, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.digits, serializer);
+    sse_encode_opt_String(self.algorithm, serializer);
+    sse_encode_opt_String(self.parseError, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_keepass_times(
+    FrbKeepassTimes self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_String(self.creation, serializer);
+    sse_encode_opt_String(self.lastModification, serializer);
+    sse_encode_opt_String(self.lastAccess, serializer);
+    sse_encode_opt_String(self.expiry, serializer);
+    sse_encode_opt_String(self.locationChanged, serializer);
+    sse_encode_opt_box_autoadd_bool(self.expires, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.usageCount, serializer);
+  }
+
+  @protected
   void sse_encode_frb_key_value(FrbKeyValue self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.key, serializer);
@@ -2414,6 +4008,102 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_frb_keepass_attachment(
+    List<FrbKeepassAttachment> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_frb_keepass_attachment(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_frb_keepass_auto_type_association(
+    List<FrbKeepassAutoTypeAssociation> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_frb_keepass_auto_type_association(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_frb_keepass_custom_data_item(
+    List<FrbKeepassCustomDataItem> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_frb_keepass_custom_data_item(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_frb_keepass_deleted_object(
+    List<FrbKeepassDeletedObject> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_frb_keepass_deleted_object(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_frb_keepass_entry(
+    List<FrbKeepassEntry> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_frb_keepass_entry(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_frb_keepass_field(
+    List<FrbKeepassField> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_frb_keepass_field(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_frb_keepass_group(
+    List<FrbKeepassGroup> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_frb_keepass_group(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_frb_keepass_history_entry(
+    List<FrbKeepassHistoryEntry> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_frb_keepass_history_entry(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_frb_key_value(
     List<FrbKeyValue> self,
     SseSerializer serializer,
@@ -2451,6 +4141,98 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self != null, serializer);
     if (self != null) {
       sse_encode_String(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_bool(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_frb_keepass_auto_type(
+    FrbKeepassAutoType? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_frb_keepass_auto_type(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_frb_keepass_memory_protection(
+    FrbKeepassMemoryProtection? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_frb_keepass_memory_protection(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_frb_keepass_otp(
+    FrbKeepassOtp? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_frb_keepass_otp(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_i_32(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_u_32(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_u_64(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_list_prim_u_8_strict(
+    Uint8List? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_list_prim_u_8_strict(self, serializer);
     }
   }
 

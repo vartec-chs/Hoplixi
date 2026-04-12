@@ -13,6 +13,7 @@ anyhow = "1.0.102"
 tokio = { version = "1.51.1", features = ["full"] }
 keepass = {	version = "0.10.5", features = ["utilities"] }
 hoplixi_file_crypt = { path = "../rust_packages/hoplixi_file_crypt" }
+chrono = "0.4.44"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }

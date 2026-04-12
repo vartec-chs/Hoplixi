@@ -38,7 +38,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 117895093;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 698379895;
 
 // Section: executor
 
@@ -254,6 +254,44 @@ fn wire__crate__api__crypt_api__encrypt_file_impl(
         },
     )
 }
+fn wire__crate__api__keepass_api__export_keepass_database_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "export_keepass_database",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_opts =
+                <crate::api::keepass_api::FrbKeepassExportOptions>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::keepass_api::export_keepass_database(api_opts).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__crypt_api__frb_decrypt_options_simple_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -328,6 +366,45 @@ fn wire__crate__api__crypt_api__frb_encrypt_options_simple_impl(
                             api_output_dir,
                             api_password,
                         ))?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__keepass_api__frb_keepass_export_options_simple_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "frb_keepass_export_options_simple",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_input_path = <String>::sse_decode(&mut deserializer);
+            let api_password = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Result::<_, ()>::Ok(
+                        crate::api::keepass_api::FrbKeepassExportOptions::simple(
+                            api_input_path,
+                            api_password,
+                        ),
+                    )?;
                     Ok(output_ok)
                 })())
             }
@@ -1129,6 +1206,432 @@ impl SseDecode for crate::api::crypt_api::FrbEncryptResult {
     }
 }
 
+impl SseDecode for crate::api::keepass_api::FrbKeepassAttachment {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_key = <String>::sse_decode(deserializer);
+        let mut var_size = <u64>::sse_decode(deserializer);
+        let mut var_protected = <bool>::sse_decode(deserializer);
+        let mut var_data = <Vec<u8>>::sse_decode(deserializer);
+        return crate::api::keepass_api::FrbKeepassAttachment {
+            key: var_key,
+            size: var_size,
+            protected: var_protected,
+            data: var_data,
+        };
+    }
+}
+
+impl SseDecode for crate::api::keepass_api::FrbKeepassAutoType {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_enabled = <bool>::sse_decode(deserializer);
+        let mut var_defaultSequence = <Option<String>>::sse_decode(deserializer);
+        let mut var_dataTransferObfuscation = <Option<bool>>::sse_decode(deserializer);
+        let mut var_associations =
+            <Vec<crate::api::keepass_api::FrbKeepassAutoTypeAssociation>>::sse_decode(deserializer);
+        return crate::api::keepass_api::FrbKeepassAutoType {
+            enabled: var_enabled,
+            default_sequence: var_defaultSequence,
+            data_transfer_obfuscation: var_dataTransferObfuscation,
+            associations: var_associations,
+        };
+    }
+}
+
+impl SseDecode for crate::api::keepass_api::FrbKeepassAutoTypeAssociation {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_window = <String>::sse_decode(deserializer);
+        let mut var_sequence = <String>::sse_decode(deserializer);
+        return crate::api::keepass_api::FrbKeepassAutoTypeAssociation {
+            window: var_window,
+            sequence: var_sequence,
+        };
+    }
+}
+
+impl SseDecode for crate::api::keepass_api::FrbKeepassConfig {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_databaseVersion = <String>::sse_decode(deserializer);
+        let mut var_outerCipher = <String>::sse_decode(deserializer);
+        let mut var_innerCipher = <String>::sse_decode(deserializer);
+        let mut var_compression = <String>::sse_decode(deserializer);
+        let mut var_kdfName = <String>::sse_decode(deserializer);
+        let mut var_kdfDescription = <String>::sse_decode(deserializer);
+        return crate::api::keepass_api::FrbKeepassConfig {
+            database_version: var_databaseVersion,
+            outer_cipher: var_outerCipher,
+            inner_cipher: var_innerCipher,
+            compression: var_compression,
+            kdf_name: var_kdfName,
+            kdf_description: var_kdfDescription,
+        };
+    }
+}
+
+impl SseDecode for crate::api::keepass_api::FrbKeepassCustomDataItem {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_key = <String>::sse_decode(deserializer);
+        let mut var_valueKind = <String>::sse_decode(deserializer);
+        let mut var_stringValue = <Option<String>>::sse_decode(deserializer);
+        let mut var_binaryValue = <Option<Vec<u8>>>::sse_decode(deserializer);
+        let mut var_lastModificationTime = <Option<String>>::sse_decode(deserializer);
+        return crate::api::keepass_api::FrbKeepassCustomDataItem {
+            key: var_key,
+            value_kind: var_valueKind,
+            string_value: var_stringValue,
+            binary_value: var_binaryValue,
+            last_modification_time: var_lastModificationTime,
+        };
+    }
+}
+
+impl SseDecode for crate::api::keepass_api::FrbKeepassDatabaseExport {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_sourcePath = <String>::sse_decode(deserializer);
+        let mut var_config = <crate::api::keepass_api::FrbKeepassConfig>::sse_decode(deserializer);
+        let mut var_meta = <crate::api::keepass_api::FrbKeepassMeta>::sse_decode(deserializer);
+        let mut var_rootGroupUuid = <String>::sse_decode(deserializer);
+        let mut var_groups =
+            <Vec<crate::api::keepass_api::FrbKeepassGroup>>::sse_decode(deserializer);
+        let mut var_entries =
+            <Vec<crate::api::keepass_api::FrbKeepassEntry>>::sse_decode(deserializer);
+        let mut var_deletedObjects =
+            <Vec<crate::api::keepass_api::FrbKeepassDeletedObject>>::sse_decode(deserializer);
+        return crate::api::keepass_api::FrbKeepassDatabaseExport {
+            source_path: var_sourcePath,
+            config: var_config,
+            meta: var_meta,
+            root_group_uuid: var_rootGroupUuid,
+            groups: var_groups,
+            entries: var_entries,
+            deleted_objects: var_deletedObjects,
+        };
+    }
+}
+
+impl SseDecode for crate::api::keepass_api::FrbKeepassDeletedObject {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_uuid = <String>::sse_decode(deserializer);
+        let mut var_deletionTime = <Option<String>>::sse_decode(deserializer);
+        return crate::api::keepass_api::FrbKeepassDeletedObject {
+            uuid: var_uuid,
+            deletion_time: var_deletionTime,
+        };
+    }
+}
+
+impl SseDecode for crate::api::keepass_api::FrbKeepassEntry {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_uuid = <String>::sse_decode(deserializer);
+        let mut var_groupUuid = <String>::sse_decode(deserializer);
+        let mut var_groupPath = <String>::sse_decode(deserializer);
+        let mut var_title = <Option<String>>::sse_decode(deserializer);
+        let mut var_username = <Option<String>>::sse_decode(deserializer);
+        let mut var_password = <Option<String>>::sse_decode(deserializer);
+        let mut var_url = <Option<String>>::sse_decode(deserializer);
+        let mut var_notes = <Option<String>>::sse_decode(deserializer);
+        let mut var_tags = <Vec<String>>::sse_decode(deserializer);
+        let mut var_fields =
+            <Vec<crate::api::keepass_api::FrbKeepassField>>::sse_decode(deserializer);
+        let mut var_times = <crate::api::keepass_api::FrbKeepassTimes>::sse_decode(deserializer);
+        let mut var_customData =
+            <Vec<crate::api::keepass_api::FrbKeepassCustomDataItem>>::sse_decode(deserializer);
+        let mut var_iconId = <Option<u32>>::sse_decode(deserializer);
+        let mut var_customIconUuid = <Option<String>>::sse_decode(deserializer);
+        let mut var_customIconData = <Option<Vec<u8>>>::sse_decode(deserializer);
+        let mut var_foregroundColor = <Option<String>>::sse_decode(deserializer);
+        let mut var_backgroundColor = <Option<String>>::sse_decode(deserializer);
+        let mut var_overrideUrl = <Option<String>>::sse_decode(deserializer);
+        let mut var_qualityCheck = <Option<bool>>::sse_decode(deserializer);
+        let mut var_attachments =
+            <Vec<crate::api::keepass_api::FrbKeepassAttachment>>::sse_decode(deserializer);
+        let mut var_autotype =
+            <Option<crate::api::keepass_api::FrbKeepassAutoType>>::sse_decode(deserializer);
+        let mut var_otp =
+            <Option<crate::api::keepass_api::FrbKeepassOtp>>::sse_decode(deserializer);
+        let mut var_history =
+            <Vec<crate::api::keepass_api::FrbKeepassHistoryEntry>>::sse_decode(deserializer);
+        return crate::api::keepass_api::FrbKeepassEntry {
+            uuid: var_uuid,
+            group_uuid: var_groupUuid,
+            group_path: var_groupPath,
+            title: var_title,
+            username: var_username,
+            password: var_password,
+            url: var_url,
+            notes: var_notes,
+            tags: var_tags,
+            fields: var_fields,
+            times: var_times,
+            custom_data: var_customData,
+            icon_id: var_iconId,
+            custom_icon_uuid: var_customIconUuid,
+            custom_icon_data: var_customIconData,
+            foreground_color: var_foregroundColor,
+            background_color: var_backgroundColor,
+            override_url: var_overrideUrl,
+            quality_check: var_qualityCheck,
+            attachments: var_attachments,
+            autotype: var_autotype,
+            otp: var_otp,
+            history: var_history,
+        };
+    }
+}
+
+impl SseDecode for crate::api::keepass_api::FrbKeepassExportOptions {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_inputPath = <String>::sse_decode(deserializer);
+        let mut var_password = <Option<String>>::sse_decode(deserializer);
+        let mut var_keyfilePath = <Option<String>>::sse_decode(deserializer);
+        let mut var_includeHistory = <bool>::sse_decode(deserializer);
+        let mut var_includeAttachments = <bool>::sse_decode(deserializer);
+        return crate::api::keepass_api::FrbKeepassExportOptions {
+            input_path: var_inputPath,
+            password: var_password,
+            keyfile_path: var_keyfilePath,
+            include_history: var_includeHistory,
+            include_attachments: var_includeAttachments,
+        };
+    }
+}
+
+impl SseDecode for crate::api::keepass_api::FrbKeepassField {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_key = <String>::sse_decode(deserializer);
+        let mut var_value = <String>::sse_decode(deserializer);
+        let mut var_protected = <bool>::sse_decode(deserializer);
+        return crate::api::keepass_api::FrbKeepassField {
+            key: var_key,
+            value: var_value,
+            protected: var_protected,
+        };
+    }
+}
+
+impl SseDecode for crate::api::keepass_api::FrbKeepassGroup {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_uuid = <String>::sse_decode(deserializer);
+        let mut var_parentUuid = <Option<String>>::sse_decode(deserializer);
+        let mut var_isRoot = <bool>::sse_decode(deserializer);
+        let mut var_path = <String>::sse_decode(deserializer);
+        let mut var_name = <String>::sse_decode(deserializer);
+        let mut var_notes = <Option<String>>::sse_decode(deserializer);
+        let mut var_iconId = <Option<u32>>::sse_decode(deserializer);
+        let mut var_customIconUuid = <Option<String>>::sse_decode(deserializer);
+        let mut var_times = <crate::api::keepass_api::FrbKeepassTimes>::sse_decode(deserializer);
+        let mut var_customData =
+            <Vec<crate::api::keepass_api::FrbKeepassCustomDataItem>>::sse_decode(deserializer);
+        let mut var_isExpanded = <bool>::sse_decode(deserializer);
+        let mut var_defaultAutotypeSequence = <Option<String>>::sse_decode(deserializer);
+        let mut var_enableAutotype = <Option<bool>>::sse_decode(deserializer);
+        let mut var_enableSearching = <Option<bool>>::sse_decode(deserializer);
+        let mut var_lastTopVisibleEntry = <Option<String>>::sse_decode(deserializer);
+        return crate::api::keepass_api::FrbKeepassGroup {
+            uuid: var_uuid,
+            parent_uuid: var_parentUuid,
+            is_root: var_isRoot,
+            path: var_path,
+            name: var_name,
+            notes: var_notes,
+            icon_id: var_iconId,
+            custom_icon_uuid: var_customIconUuid,
+            times: var_times,
+            custom_data: var_customData,
+            is_expanded: var_isExpanded,
+            default_autotype_sequence: var_defaultAutotypeSequence,
+            enable_autotype: var_enableAutotype,
+            enable_searching: var_enableSearching,
+            last_top_visible_entry: var_lastTopVisibleEntry,
+        };
+    }
+}
+
+impl SseDecode for crate::api::keepass_api::FrbKeepassHistoryEntry {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_uuid = <String>::sse_decode(deserializer);
+        let mut var_title = <Option<String>>::sse_decode(deserializer);
+        let mut var_username = <Option<String>>::sse_decode(deserializer);
+        let mut var_password = <Option<String>>::sse_decode(deserializer);
+        let mut var_url = <Option<String>>::sse_decode(deserializer);
+        let mut var_notes = <Option<String>>::sse_decode(deserializer);
+        let mut var_tags = <Vec<String>>::sse_decode(deserializer);
+        let mut var_fields =
+            <Vec<crate::api::keepass_api::FrbKeepassField>>::sse_decode(deserializer);
+        let mut var_times = <crate::api::keepass_api::FrbKeepassTimes>::sse_decode(deserializer);
+        let mut var_customData =
+            <Vec<crate::api::keepass_api::FrbKeepassCustomDataItem>>::sse_decode(deserializer);
+        let mut var_iconId = <Option<u32>>::sse_decode(deserializer);
+        let mut var_customIconUuid = <Option<String>>::sse_decode(deserializer);
+        let mut var_customIconData = <Option<Vec<u8>>>::sse_decode(deserializer);
+        let mut var_foregroundColor = <Option<String>>::sse_decode(deserializer);
+        let mut var_backgroundColor = <Option<String>>::sse_decode(deserializer);
+        let mut var_overrideUrl = <Option<String>>::sse_decode(deserializer);
+        let mut var_qualityCheck = <Option<bool>>::sse_decode(deserializer);
+        let mut var_attachments =
+            <Vec<crate::api::keepass_api::FrbKeepassAttachment>>::sse_decode(deserializer);
+        let mut var_autotype =
+            <Option<crate::api::keepass_api::FrbKeepassAutoType>>::sse_decode(deserializer);
+        let mut var_otp =
+            <Option<crate::api::keepass_api::FrbKeepassOtp>>::sse_decode(deserializer);
+        return crate::api::keepass_api::FrbKeepassHistoryEntry {
+            uuid: var_uuid,
+            title: var_title,
+            username: var_username,
+            password: var_password,
+            url: var_url,
+            notes: var_notes,
+            tags: var_tags,
+            fields: var_fields,
+            times: var_times,
+            custom_data: var_customData,
+            icon_id: var_iconId,
+            custom_icon_uuid: var_customIconUuid,
+            custom_icon_data: var_customIconData,
+            foreground_color: var_foregroundColor,
+            background_color: var_backgroundColor,
+            override_url: var_overrideUrl,
+            quality_check: var_qualityCheck,
+            attachments: var_attachments,
+            autotype: var_autotype,
+            otp: var_otp,
+        };
+    }
+}
+
+impl SseDecode for crate::api::keepass_api::FrbKeepassMemoryProtection {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_protectTitle = <bool>::sse_decode(deserializer);
+        let mut var_protectUsername = <bool>::sse_decode(deserializer);
+        let mut var_protectPassword = <bool>::sse_decode(deserializer);
+        let mut var_protectUrl = <bool>::sse_decode(deserializer);
+        let mut var_protectNotes = <bool>::sse_decode(deserializer);
+        return crate::api::keepass_api::FrbKeepassMemoryProtection {
+            protect_title: var_protectTitle,
+            protect_username: var_protectUsername,
+            protect_password: var_protectPassword,
+            protect_url: var_protectUrl,
+            protect_notes: var_protectNotes,
+        };
+    }
+}
+
+impl SseDecode for crate::api::keepass_api::FrbKeepassMeta {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_generator = <Option<String>>::sse_decode(deserializer);
+        let mut var_databaseName = <Option<String>>::sse_decode(deserializer);
+        let mut var_databaseNameChanged = <Option<String>>::sse_decode(deserializer);
+        let mut var_databaseDescription = <Option<String>>::sse_decode(deserializer);
+        let mut var_databaseDescriptionChanged = <Option<String>>::sse_decode(deserializer);
+        let mut var_defaultUsername = <Option<String>>::sse_decode(deserializer);
+        let mut var_defaultUsernameChanged = <Option<String>>::sse_decode(deserializer);
+        let mut var_maintenanceHistoryDays = <Option<u32>>::sse_decode(deserializer);
+        let mut var_color = <Option<String>>::sse_decode(deserializer);
+        let mut var_masterKeyChanged = <Option<String>>::sse_decode(deserializer);
+        let mut var_masterKeyChangeRec = <Option<i32>>::sse_decode(deserializer);
+        let mut var_masterKeyChangeForce = <Option<i32>>::sse_decode(deserializer);
+        let mut var_memoryProtection =
+            <Option<crate::api::keepass_api::FrbKeepassMemoryProtection>>::sse_decode(deserializer);
+        let mut var_recyclebinEnabled = <Option<bool>>::sse_decode(deserializer);
+        let mut var_recyclebinUuid = <Option<String>>::sse_decode(deserializer);
+        let mut var_recyclebinChanged = <Option<String>>::sse_decode(deserializer);
+        let mut var_entryTemplatesGroup = <Option<String>>::sse_decode(deserializer);
+        let mut var_entryTemplatesGroupChanged = <Option<String>>::sse_decode(deserializer);
+        let mut var_lastSelectedGroup = <Option<String>>::sse_decode(deserializer);
+        let mut var_lastTopVisibleGroup = <Option<String>>::sse_decode(deserializer);
+        let mut var_historyMaxItems = <Option<i32>>::sse_decode(deserializer);
+        let mut var_historyMaxSize = <Option<i32>>::sse_decode(deserializer);
+        let mut var_settingsChanged = <Option<String>>::sse_decode(deserializer);
+        let mut var_customData =
+            <Vec<crate::api::keepass_api::FrbKeepassCustomDataItem>>::sse_decode(deserializer);
+        return crate::api::keepass_api::FrbKeepassMeta {
+            generator: var_generator,
+            database_name: var_databaseName,
+            database_name_changed: var_databaseNameChanged,
+            database_description: var_databaseDescription,
+            database_description_changed: var_databaseDescriptionChanged,
+            default_username: var_defaultUsername,
+            default_username_changed: var_defaultUsernameChanged,
+            maintenance_history_days: var_maintenanceHistoryDays,
+            color: var_color,
+            master_key_changed: var_masterKeyChanged,
+            master_key_change_rec: var_masterKeyChangeRec,
+            master_key_change_force: var_masterKeyChangeForce,
+            memory_protection: var_memoryProtection,
+            recyclebin_enabled: var_recyclebinEnabled,
+            recyclebin_uuid: var_recyclebinUuid,
+            recyclebin_changed: var_recyclebinChanged,
+            entry_templates_group: var_entryTemplatesGroup,
+            entry_templates_group_changed: var_entryTemplatesGroupChanged,
+            last_selected_group: var_lastSelectedGroup,
+            last_top_visible_group: var_lastTopVisibleGroup,
+            history_max_items: var_historyMaxItems,
+            history_max_size: var_historyMaxSize,
+            settings_changed: var_settingsChanged,
+            custom_data: var_customData,
+        };
+    }
+}
+
+impl SseDecode for crate::api::keepass_api::FrbKeepassOtp {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_rawValue = <String>::sse_decode(deserializer);
+        let mut var_label = <Option<String>>::sse_decode(deserializer);
+        let mut var_issuer = <Option<String>>::sse_decode(deserializer);
+        let mut var_secret = <Option<String>>::sse_decode(deserializer);
+        let mut var_period = <Option<u64>>::sse_decode(deserializer);
+        let mut var_digits = <Option<u32>>::sse_decode(deserializer);
+        let mut var_algorithm = <Option<String>>::sse_decode(deserializer);
+        let mut var_parseError = <Option<String>>::sse_decode(deserializer);
+        return crate::api::keepass_api::FrbKeepassOtp {
+            raw_value: var_rawValue,
+            label: var_label,
+            issuer: var_issuer,
+            secret: var_secret,
+            period: var_period,
+            digits: var_digits,
+            algorithm: var_algorithm,
+            parse_error: var_parseError,
+        };
+    }
+}
+
+impl SseDecode for crate::api::keepass_api::FrbKeepassTimes {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_creation = <Option<String>>::sse_decode(deserializer);
+        let mut var_lastModification = <Option<String>>::sse_decode(deserializer);
+        let mut var_lastAccess = <Option<String>>::sse_decode(deserializer);
+        let mut var_expiry = <Option<String>>::sse_decode(deserializer);
+        let mut var_locationChanged = <Option<String>>::sse_decode(deserializer);
+        let mut var_expires = <Option<bool>>::sse_decode(deserializer);
+        let mut var_usageCount = <Option<u32>>::sse_decode(deserializer);
+        return crate::api::keepass_api::FrbKeepassTimes {
+            creation: var_creation,
+            last_modification: var_lastModification,
+            last_access: var_lastAccess,
+            expiry: var_expiry,
+            location_changed: var_locationChanged,
+            expires: var_expires,
+            usage_count: var_usageCount,
+        };
+    }
+}
+
 impl SseDecode for crate::api::crypt_api::FrbKeyValue {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1242,6 +1745,114 @@ impl SseDecode for Vec<crate::api::crypt_api::FrbEncryptResult> {
     }
 }
 
+impl SseDecode for Vec<crate::api::keepass_api::FrbKeepassAttachment> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::keepass_api::FrbKeepassAttachment>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::keepass_api::FrbKeepassAutoTypeAssociation> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(
+                <crate::api::keepass_api::FrbKeepassAutoTypeAssociation>::sse_decode(deserializer),
+            );
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::keepass_api::FrbKeepassCustomDataItem> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(
+                <crate::api::keepass_api::FrbKeepassCustomDataItem>::sse_decode(deserializer),
+            );
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::keepass_api::FrbKeepassDeletedObject> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::keepass_api::FrbKeepassDeletedObject>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::keepass_api::FrbKeepassEntry> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::keepass_api::FrbKeepassEntry>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::keepass_api::FrbKeepassField> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::keepass_api::FrbKeepassField>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::keepass_api::FrbKeepassGroup> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::keepass_api::FrbKeepassGroup>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::keepass_api::FrbKeepassHistoryEntry> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::keepass_api::FrbKeepassHistoryEntry>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::api::crypt_api::FrbKeyValue> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1295,6 +1906,100 @@ impl SseDecode for Option<String> {
     }
 }
 
+impl SseDecode for Option<bool> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<bool>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<crate::api::keepass_api::FrbKeepassAutoType> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::api::keepass_api::FrbKeepassAutoType>::sse_decode(
+                deserializer,
+            ));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<crate::api::keepass_api::FrbKeepassMemoryProtection> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(
+                <crate::api::keepass_api::FrbKeepassMemoryProtection>::sse_decode(deserializer),
+            );
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<crate::api::keepass_api::FrbKeepassOtp> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::api::keepass_api::FrbKeepassOtp>::sse_decode(
+                deserializer,
+            ));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<i32> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<i32>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<u32> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<u32>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<u64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<u64>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<Vec<u8>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<Vec<u8>>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for u32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1335,37 +2040,49 @@ fn pde_ffi_dispatcher_primary_impl(
         3 => wire__crate__api__crypt_api__decrypt_file_impl(port, ptr, rust_vec_len, data_len),
         4 => wire__crate__api__crypt_api__encrypt_batch_impl(port, ptr, rust_vec_len, data_len),
         5 => wire__crate__api__crypt_api__encrypt_file_impl(port, ptr, rust_vec_len, data_len),
-        6 => wire__crate__api__crypt_api__frb_decrypt_options_simple_impl(
+        6 => wire__crate__api__keepass_api__export_keepass_database_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        7 => wire__crate__api__crypt_api__frb_encrypt_options_simple_impl(
+        7 => wire__crate__api__crypt_api__frb_decrypt_options_simple_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        9 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
-        10 => wire__crate__api__logging__install_rust_log_bridge_impl(
+        8 => wire__crate__api__crypt_api__frb_encrypt_options_simple_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        11 => wire__crate__api__crypt_api__read_encrypted_header_impl(
+        9 => wire__crate__api__keepass_api__frb_keepass_export_options_simple_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        12 => wire__crate__api__logging__rust_log_impl(port, ptr, rust_vec_len, data_len),
-        13 => wire__crate__api__logging__rust_log_debug_impl(port, ptr, rust_vec_len, data_len),
-        14 => wire__crate__api__logging__rust_log_error_impl(port, ptr, rust_vec_len, data_len),
-        15 => wire__crate__api__logging__rust_log_fatal_impl(port, ptr, rust_vec_len, data_len),
-        16 => wire__crate__api__logging__rust_log_info_impl(port, ptr, rust_vec_len, data_len),
-        17 => wire__crate__api__logging__rust_log_warning_impl(port, ptr, rust_vec_len, data_len),
+        11 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
+        12 => wire__crate__api__logging__install_rust_log_bridge_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        13 => wire__crate__api__crypt_api__read_encrypted_header_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        14 => wire__crate__api__logging__rust_log_impl(port, ptr, rust_vec_len, data_len),
+        15 => wire__crate__api__logging__rust_log_debug_impl(port, ptr, rust_vec_len, data_len),
+        16 => wire__crate__api__logging__rust_log_error_impl(port, ptr, rust_vec_len, data_len),
+        17 => wire__crate__api__logging__rust_log_fatal_impl(port, ptr, rust_vec_len, data_len),
+        18 => wire__crate__api__logging__rust_log_info_impl(port, ptr, rust_vec_len, data_len),
+        19 => wire__crate__api__logging__rust_log_warning_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -1378,7 +2095,7 @@ fn pde_ffi_dispatcher_sync_impl(
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        8 => wire__crate__api__simple__greet_impl(ptr, rust_vec_len, data_len),
+        10 => wire__crate__api__simple__greet_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -1813,6 +2530,454 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::crypt_api::FrbEncryptResult>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::keepass_api::FrbKeepassAttachment {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.key.into_into_dart().into_dart(),
+            self.size.into_into_dart().into_dart(),
+            self.protected.into_into_dart().into_dart(),
+            self.data.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::keepass_api::FrbKeepassAttachment
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::keepass_api::FrbKeepassAttachment>
+    for crate::api::keepass_api::FrbKeepassAttachment
+{
+    fn into_into_dart(self) -> crate::api::keepass_api::FrbKeepassAttachment {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::keepass_api::FrbKeepassAutoType {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.enabled.into_into_dart().into_dart(),
+            self.default_sequence.into_into_dart().into_dart(),
+            self.data_transfer_obfuscation.into_into_dart().into_dart(),
+            self.associations.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::keepass_api::FrbKeepassAutoType
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::keepass_api::FrbKeepassAutoType>
+    for crate::api::keepass_api::FrbKeepassAutoType
+{
+    fn into_into_dart(self) -> crate::api::keepass_api::FrbKeepassAutoType {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::keepass_api::FrbKeepassAutoTypeAssociation {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.window.into_into_dart().into_dart(),
+            self.sequence.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::keepass_api::FrbKeepassAutoTypeAssociation
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::keepass_api::FrbKeepassAutoTypeAssociation>
+    for crate::api::keepass_api::FrbKeepassAutoTypeAssociation
+{
+    fn into_into_dart(self) -> crate::api::keepass_api::FrbKeepassAutoTypeAssociation {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::keepass_api::FrbKeepassConfig {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.database_version.into_into_dart().into_dart(),
+            self.outer_cipher.into_into_dart().into_dart(),
+            self.inner_cipher.into_into_dart().into_dart(),
+            self.compression.into_into_dart().into_dart(),
+            self.kdf_name.into_into_dart().into_dart(),
+            self.kdf_description.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::keepass_api::FrbKeepassConfig
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::keepass_api::FrbKeepassConfig>
+    for crate::api::keepass_api::FrbKeepassConfig
+{
+    fn into_into_dart(self) -> crate::api::keepass_api::FrbKeepassConfig {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::keepass_api::FrbKeepassCustomDataItem {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.key.into_into_dart().into_dart(),
+            self.value_kind.into_into_dart().into_dart(),
+            self.string_value.into_into_dart().into_dart(),
+            self.binary_value.into_into_dart().into_dart(),
+            self.last_modification_time.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::keepass_api::FrbKeepassCustomDataItem
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::keepass_api::FrbKeepassCustomDataItem>
+    for crate::api::keepass_api::FrbKeepassCustomDataItem
+{
+    fn into_into_dart(self) -> crate::api::keepass_api::FrbKeepassCustomDataItem {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::keepass_api::FrbKeepassDatabaseExport {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.source_path.into_into_dart().into_dart(),
+            self.config.into_into_dart().into_dart(),
+            self.meta.into_into_dart().into_dart(),
+            self.root_group_uuid.into_into_dart().into_dart(),
+            self.groups.into_into_dart().into_dart(),
+            self.entries.into_into_dart().into_dart(),
+            self.deleted_objects.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::keepass_api::FrbKeepassDatabaseExport
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::keepass_api::FrbKeepassDatabaseExport>
+    for crate::api::keepass_api::FrbKeepassDatabaseExport
+{
+    fn into_into_dart(self) -> crate::api::keepass_api::FrbKeepassDatabaseExport {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::keepass_api::FrbKeepassDeletedObject {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.uuid.into_into_dart().into_dart(),
+            self.deletion_time.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::keepass_api::FrbKeepassDeletedObject
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::keepass_api::FrbKeepassDeletedObject>
+    for crate::api::keepass_api::FrbKeepassDeletedObject
+{
+    fn into_into_dart(self) -> crate::api::keepass_api::FrbKeepassDeletedObject {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::keepass_api::FrbKeepassEntry {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.uuid.into_into_dart().into_dart(),
+            self.group_uuid.into_into_dart().into_dart(),
+            self.group_path.into_into_dart().into_dart(),
+            self.title.into_into_dart().into_dart(),
+            self.username.into_into_dart().into_dart(),
+            self.password.into_into_dart().into_dart(),
+            self.url.into_into_dart().into_dart(),
+            self.notes.into_into_dart().into_dart(),
+            self.tags.into_into_dart().into_dart(),
+            self.fields.into_into_dart().into_dart(),
+            self.times.into_into_dart().into_dart(),
+            self.custom_data.into_into_dart().into_dart(),
+            self.icon_id.into_into_dart().into_dart(),
+            self.custom_icon_uuid.into_into_dart().into_dart(),
+            self.custom_icon_data.into_into_dart().into_dart(),
+            self.foreground_color.into_into_dart().into_dart(),
+            self.background_color.into_into_dart().into_dart(),
+            self.override_url.into_into_dart().into_dart(),
+            self.quality_check.into_into_dart().into_dart(),
+            self.attachments.into_into_dart().into_dart(),
+            self.autotype.into_into_dart().into_dart(),
+            self.otp.into_into_dart().into_dart(),
+            self.history.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::keepass_api::FrbKeepassEntry
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::keepass_api::FrbKeepassEntry>
+    for crate::api::keepass_api::FrbKeepassEntry
+{
+    fn into_into_dart(self) -> crate::api::keepass_api::FrbKeepassEntry {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::keepass_api::FrbKeepassExportOptions {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.input_path.into_into_dart().into_dart(),
+            self.password.into_into_dart().into_dart(),
+            self.keyfile_path.into_into_dart().into_dart(),
+            self.include_history.into_into_dart().into_dart(),
+            self.include_attachments.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::keepass_api::FrbKeepassExportOptions
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::keepass_api::FrbKeepassExportOptions>
+    for crate::api::keepass_api::FrbKeepassExportOptions
+{
+    fn into_into_dart(self) -> crate::api::keepass_api::FrbKeepassExportOptions {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::keepass_api::FrbKeepassField {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.key.into_into_dart().into_dart(),
+            self.value.into_into_dart().into_dart(),
+            self.protected.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::keepass_api::FrbKeepassField
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::keepass_api::FrbKeepassField>
+    for crate::api::keepass_api::FrbKeepassField
+{
+    fn into_into_dart(self) -> crate::api::keepass_api::FrbKeepassField {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::keepass_api::FrbKeepassGroup {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.uuid.into_into_dart().into_dart(),
+            self.parent_uuid.into_into_dart().into_dart(),
+            self.is_root.into_into_dart().into_dart(),
+            self.path.into_into_dart().into_dart(),
+            self.name.into_into_dart().into_dart(),
+            self.notes.into_into_dart().into_dart(),
+            self.icon_id.into_into_dart().into_dart(),
+            self.custom_icon_uuid.into_into_dart().into_dart(),
+            self.times.into_into_dart().into_dart(),
+            self.custom_data.into_into_dart().into_dart(),
+            self.is_expanded.into_into_dart().into_dart(),
+            self.default_autotype_sequence.into_into_dart().into_dart(),
+            self.enable_autotype.into_into_dart().into_dart(),
+            self.enable_searching.into_into_dart().into_dart(),
+            self.last_top_visible_entry.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::keepass_api::FrbKeepassGroup
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::keepass_api::FrbKeepassGroup>
+    for crate::api::keepass_api::FrbKeepassGroup
+{
+    fn into_into_dart(self) -> crate::api::keepass_api::FrbKeepassGroup {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::keepass_api::FrbKeepassHistoryEntry {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.uuid.into_into_dart().into_dart(),
+            self.title.into_into_dart().into_dart(),
+            self.username.into_into_dart().into_dart(),
+            self.password.into_into_dart().into_dart(),
+            self.url.into_into_dart().into_dart(),
+            self.notes.into_into_dart().into_dart(),
+            self.tags.into_into_dart().into_dart(),
+            self.fields.into_into_dart().into_dart(),
+            self.times.into_into_dart().into_dart(),
+            self.custom_data.into_into_dart().into_dart(),
+            self.icon_id.into_into_dart().into_dart(),
+            self.custom_icon_uuid.into_into_dart().into_dart(),
+            self.custom_icon_data.into_into_dart().into_dart(),
+            self.foreground_color.into_into_dart().into_dart(),
+            self.background_color.into_into_dart().into_dart(),
+            self.override_url.into_into_dart().into_dart(),
+            self.quality_check.into_into_dart().into_dart(),
+            self.attachments.into_into_dart().into_dart(),
+            self.autotype.into_into_dart().into_dart(),
+            self.otp.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::keepass_api::FrbKeepassHistoryEntry
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::keepass_api::FrbKeepassHistoryEntry>
+    for crate::api::keepass_api::FrbKeepassHistoryEntry
+{
+    fn into_into_dart(self) -> crate::api::keepass_api::FrbKeepassHistoryEntry {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::keepass_api::FrbKeepassMemoryProtection {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.protect_title.into_into_dart().into_dart(),
+            self.protect_username.into_into_dart().into_dart(),
+            self.protect_password.into_into_dart().into_dart(),
+            self.protect_url.into_into_dart().into_dart(),
+            self.protect_notes.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::keepass_api::FrbKeepassMemoryProtection
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::keepass_api::FrbKeepassMemoryProtection>
+    for crate::api::keepass_api::FrbKeepassMemoryProtection
+{
+    fn into_into_dart(self) -> crate::api::keepass_api::FrbKeepassMemoryProtection {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::keepass_api::FrbKeepassMeta {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.generator.into_into_dart().into_dart(),
+            self.database_name.into_into_dart().into_dart(),
+            self.database_name_changed.into_into_dart().into_dart(),
+            self.database_description.into_into_dart().into_dart(),
+            self.database_description_changed
+                .into_into_dart()
+                .into_dart(),
+            self.default_username.into_into_dart().into_dart(),
+            self.default_username_changed.into_into_dart().into_dart(),
+            self.maintenance_history_days.into_into_dart().into_dart(),
+            self.color.into_into_dart().into_dart(),
+            self.master_key_changed.into_into_dart().into_dart(),
+            self.master_key_change_rec.into_into_dart().into_dart(),
+            self.master_key_change_force.into_into_dart().into_dart(),
+            self.memory_protection.into_into_dart().into_dart(),
+            self.recyclebin_enabled.into_into_dart().into_dart(),
+            self.recyclebin_uuid.into_into_dart().into_dart(),
+            self.recyclebin_changed.into_into_dart().into_dart(),
+            self.entry_templates_group.into_into_dart().into_dart(),
+            self.entry_templates_group_changed
+                .into_into_dart()
+                .into_dart(),
+            self.last_selected_group.into_into_dart().into_dart(),
+            self.last_top_visible_group.into_into_dart().into_dart(),
+            self.history_max_items.into_into_dart().into_dart(),
+            self.history_max_size.into_into_dart().into_dart(),
+            self.settings_changed.into_into_dart().into_dart(),
+            self.custom_data.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::keepass_api::FrbKeepassMeta
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::keepass_api::FrbKeepassMeta>
+    for crate::api::keepass_api::FrbKeepassMeta
+{
+    fn into_into_dart(self) -> crate::api::keepass_api::FrbKeepassMeta {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::keepass_api::FrbKeepassOtp {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.raw_value.into_into_dart().into_dart(),
+            self.label.into_into_dart().into_dart(),
+            self.issuer.into_into_dart().into_dart(),
+            self.secret.into_into_dart().into_dart(),
+            self.period.into_into_dart().into_dart(),
+            self.digits.into_into_dart().into_dart(),
+            self.algorithm.into_into_dart().into_dart(),
+            self.parse_error.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::keepass_api::FrbKeepassOtp
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::keepass_api::FrbKeepassOtp>
+    for crate::api::keepass_api::FrbKeepassOtp
+{
+    fn into_into_dart(self) -> crate::api::keepass_api::FrbKeepassOtp {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::keepass_api::FrbKeepassTimes {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.creation.into_into_dart().into_dart(),
+            self.last_modification.into_into_dart().into_dart(),
+            self.last_access.into_into_dart().into_dart(),
+            self.expiry.into_into_dart().into_dart(),
+            self.location_changed.into_into_dart().into_dart(),
+            self.expires.into_into_dart().into_dart(),
+            self.usage_count.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::keepass_api::FrbKeepassTimes
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::keepass_api::FrbKeepassTimes>
+    for crate::api::keepass_api::FrbKeepassTimes
+{
+    fn into_into_dart(self) -> crate::api::keepass_api::FrbKeepassTimes {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::crypt_api::FrbKeyValue {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -2242,6 +3407,278 @@ impl SseEncode for crate::api::crypt_api::FrbEncryptResult {
     }
 }
 
+impl SseEncode for crate::api::keepass_api::FrbKeepassAttachment {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.key, serializer);
+        <u64>::sse_encode(self.size, serializer);
+        <bool>::sse_encode(self.protected, serializer);
+        <Vec<u8>>::sse_encode(self.data, serializer);
+    }
+}
+
+impl SseEncode for crate::api::keepass_api::FrbKeepassAutoType {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.enabled, serializer);
+        <Option<String>>::sse_encode(self.default_sequence, serializer);
+        <Option<bool>>::sse_encode(self.data_transfer_obfuscation, serializer);
+        <Vec<crate::api::keepass_api::FrbKeepassAutoTypeAssociation>>::sse_encode(
+            self.associations,
+            serializer,
+        );
+    }
+}
+
+impl SseEncode for crate::api::keepass_api::FrbKeepassAutoTypeAssociation {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.window, serializer);
+        <String>::sse_encode(self.sequence, serializer);
+    }
+}
+
+impl SseEncode for crate::api::keepass_api::FrbKeepassConfig {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.database_version, serializer);
+        <String>::sse_encode(self.outer_cipher, serializer);
+        <String>::sse_encode(self.inner_cipher, serializer);
+        <String>::sse_encode(self.compression, serializer);
+        <String>::sse_encode(self.kdf_name, serializer);
+        <String>::sse_encode(self.kdf_description, serializer);
+    }
+}
+
+impl SseEncode for crate::api::keepass_api::FrbKeepassCustomDataItem {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.key, serializer);
+        <String>::sse_encode(self.value_kind, serializer);
+        <Option<String>>::sse_encode(self.string_value, serializer);
+        <Option<Vec<u8>>>::sse_encode(self.binary_value, serializer);
+        <Option<String>>::sse_encode(self.last_modification_time, serializer);
+    }
+}
+
+impl SseEncode for crate::api::keepass_api::FrbKeepassDatabaseExport {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.source_path, serializer);
+        <crate::api::keepass_api::FrbKeepassConfig>::sse_encode(self.config, serializer);
+        <crate::api::keepass_api::FrbKeepassMeta>::sse_encode(self.meta, serializer);
+        <String>::sse_encode(self.root_group_uuid, serializer);
+        <Vec<crate::api::keepass_api::FrbKeepassGroup>>::sse_encode(self.groups, serializer);
+        <Vec<crate::api::keepass_api::FrbKeepassEntry>>::sse_encode(self.entries, serializer);
+        <Vec<crate::api::keepass_api::FrbKeepassDeletedObject>>::sse_encode(
+            self.deleted_objects,
+            serializer,
+        );
+    }
+}
+
+impl SseEncode for crate::api::keepass_api::FrbKeepassDeletedObject {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.uuid, serializer);
+        <Option<String>>::sse_encode(self.deletion_time, serializer);
+    }
+}
+
+impl SseEncode for crate::api::keepass_api::FrbKeepassEntry {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.uuid, serializer);
+        <String>::sse_encode(self.group_uuid, serializer);
+        <String>::sse_encode(self.group_path, serializer);
+        <Option<String>>::sse_encode(self.title, serializer);
+        <Option<String>>::sse_encode(self.username, serializer);
+        <Option<String>>::sse_encode(self.password, serializer);
+        <Option<String>>::sse_encode(self.url, serializer);
+        <Option<String>>::sse_encode(self.notes, serializer);
+        <Vec<String>>::sse_encode(self.tags, serializer);
+        <Vec<crate::api::keepass_api::FrbKeepassField>>::sse_encode(self.fields, serializer);
+        <crate::api::keepass_api::FrbKeepassTimes>::sse_encode(self.times, serializer);
+        <Vec<crate::api::keepass_api::FrbKeepassCustomDataItem>>::sse_encode(
+            self.custom_data,
+            serializer,
+        );
+        <Option<u32>>::sse_encode(self.icon_id, serializer);
+        <Option<String>>::sse_encode(self.custom_icon_uuid, serializer);
+        <Option<Vec<u8>>>::sse_encode(self.custom_icon_data, serializer);
+        <Option<String>>::sse_encode(self.foreground_color, serializer);
+        <Option<String>>::sse_encode(self.background_color, serializer);
+        <Option<String>>::sse_encode(self.override_url, serializer);
+        <Option<bool>>::sse_encode(self.quality_check, serializer);
+        <Vec<crate::api::keepass_api::FrbKeepassAttachment>>::sse_encode(
+            self.attachments,
+            serializer,
+        );
+        <Option<crate::api::keepass_api::FrbKeepassAutoType>>::sse_encode(
+            self.autotype,
+            serializer,
+        );
+        <Option<crate::api::keepass_api::FrbKeepassOtp>>::sse_encode(self.otp, serializer);
+        <Vec<crate::api::keepass_api::FrbKeepassHistoryEntry>>::sse_encode(
+            self.history,
+            serializer,
+        );
+    }
+}
+
+impl SseEncode for crate::api::keepass_api::FrbKeepassExportOptions {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.input_path, serializer);
+        <Option<String>>::sse_encode(self.password, serializer);
+        <Option<String>>::sse_encode(self.keyfile_path, serializer);
+        <bool>::sse_encode(self.include_history, serializer);
+        <bool>::sse_encode(self.include_attachments, serializer);
+    }
+}
+
+impl SseEncode for crate::api::keepass_api::FrbKeepassField {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.key, serializer);
+        <String>::sse_encode(self.value, serializer);
+        <bool>::sse_encode(self.protected, serializer);
+    }
+}
+
+impl SseEncode for crate::api::keepass_api::FrbKeepassGroup {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.uuid, serializer);
+        <Option<String>>::sse_encode(self.parent_uuid, serializer);
+        <bool>::sse_encode(self.is_root, serializer);
+        <String>::sse_encode(self.path, serializer);
+        <String>::sse_encode(self.name, serializer);
+        <Option<String>>::sse_encode(self.notes, serializer);
+        <Option<u32>>::sse_encode(self.icon_id, serializer);
+        <Option<String>>::sse_encode(self.custom_icon_uuid, serializer);
+        <crate::api::keepass_api::FrbKeepassTimes>::sse_encode(self.times, serializer);
+        <Vec<crate::api::keepass_api::FrbKeepassCustomDataItem>>::sse_encode(
+            self.custom_data,
+            serializer,
+        );
+        <bool>::sse_encode(self.is_expanded, serializer);
+        <Option<String>>::sse_encode(self.default_autotype_sequence, serializer);
+        <Option<bool>>::sse_encode(self.enable_autotype, serializer);
+        <Option<bool>>::sse_encode(self.enable_searching, serializer);
+        <Option<String>>::sse_encode(self.last_top_visible_entry, serializer);
+    }
+}
+
+impl SseEncode for crate::api::keepass_api::FrbKeepassHistoryEntry {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.uuid, serializer);
+        <Option<String>>::sse_encode(self.title, serializer);
+        <Option<String>>::sse_encode(self.username, serializer);
+        <Option<String>>::sse_encode(self.password, serializer);
+        <Option<String>>::sse_encode(self.url, serializer);
+        <Option<String>>::sse_encode(self.notes, serializer);
+        <Vec<String>>::sse_encode(self.tags, serializer);
+        <Vec<crate::api::keepass_api::FrbKeepassField>>::sse_encode(self.fields, serializer);
+        <crate::api::keepass_api::FrbKeepassTimes>::sse_encode(self.times, serializer);
+        <Vec<crate::api::keepass_api::FrbKeepassCustomDataItem>>::sse_encode(
+            self.custom_data,
+            serializer,
+        );
+        <Option<u32>>::sse_encode(self.icon_id, serializer);
+        <Option<String>>::sse_encode(self.custom_icon_uuid, serializer);
+        <Option<Vec<u8>>>::sse_encode(self.custom_icon_data, serializer);
+        <Option<String>>::sse_encode(self.foreground_color, serializer);
+        <Option<String>>::sse_encode(self.background_color, serializer);
+        <Option<String>>::sse_encode(self.override_url, serializer);
+        <Option<bool>>::sse_encode(self.quality_check, serializer);
+        <Vec<crate::api::keepass_api::FrbKeepassAttachment>>::sse_encode(
+            self.attachments,
+            serializer,
+        );
+        <Option<crate::api::keepass_api::FrbKeepassAutoType>>::sse_encode(
+            self.autotype,
+            serializer,
+        );
+        <Option<crate::api::keepass_api::FrbKeepassOtp>>::sse_encode(self.otp, serializer);
+    }
+}
+
+impl SseEncode for crate::api::keepass_api::FrbKeepassMemoryProtection {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.protect_title, serializer);
+        <bool>::sse_encode(self.protect_username, serializer);
+        <bool>::sse_encode(self.protect_password, serializer);
+        <bool>::sse_encode(self.protect_url, serializer);
+        <bool>::sse_encode(self.protect_notes, serializer);
+    }
+}
+
+impl SseEncode for crate::api::keepass_api::FrbKeepassMeta {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<String>>::sse_encode(self.generator, serializer);
+        <Option<String>>::sse_encode(self.database_name, serializer);
+        <Option<String>>::sse_encode(self.database_name_changed, serializer);
+        <Option<String>>::sse_encode(self.database_description, serializer);
+        <Option<String>>::sse_encode(self.database_description_changed, serializer);
+        <Option<String>>::sse_encode(self.default_username, serializer);
+        <Option<String>>::sse_encode(self.default_username_changed, serializer);
+        <Option<u32>>::sse_encode(self.maintenance_history_days, serializer);
+        <Option<String>>::sse_encode(self.color, serializer);
+        <Option<String>>::sse_encode(self.master_key_changed, serializer);
+        <Option<i32>>::sse_encode(self.master_key_change_rec, serializer);
+        <Option<i32>>::sse_encode(self.master_key_change_force, serializer);
+        <Option<crate::api::keepass_api::FrbKeepassMemoryProtection>>::sse_encode(
+            self.memory_protection,
+            serializer,
+        );
+        <Option<bool>>::sse_encode(self.recyclebin_enabled, serializer);
+        <Option<String>>::sse_encode(self.recyclebin_uuid, serializer);
+        <Option<String>>::sse_encode(self.recyclebin_changed, serializer);
+        <Option<String>>::sse_encode(self.entry_templates_group, serializer);
+        <Option<String>>::sse_encode(self.entry_templates_group_changed, serializer);
+        <Option<String>>::sse_encode(self.last_selected_group, serializer);
+        <Option<String>>::sse_encode(self.last_top_visible_group, serializer);
+        <Option<i32>>::sse_encode(self.history_max_items, serializer);
+        <Option<i32>>::sse_encode(self.history_max_size, serializer);
+        <Option<String>>::sse_encode(self.settings_changed, serializer);
+        <Vec<crate::api::keepass_api::FrbKeepassCustomDataItem>>::sse_encode(
+            self.custom_data,
+            serializer,
+        );
+    }
+}
+
+impl SseEncode for crate::api::keepass_api::FrbKeepassOtp {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.raw_value, serializer);
+        <Option<String>>::sse_encode(self.label, serializer);
+        <Option<String>>::sse_encode(self.issuer, serializer);
+        <Option<String>>::sse_encode(self.secret, serializer);
+        <Option<u64>>::sse_encode(self.period, serializer);
+        <Option<u32>>::sse_encode(self.digits, serializer);
+        <Option<String>>::sse_encode(self.algorithm, serializer);
+        <Option<String>>::sse_encode(self.parse_error, serializer);
+    }
+}
+
+impl SseEncode for crate::api::keepass_api::FrbKeepassTimes {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<String>>::sse_encode(self.creation, serializer);
+        <Option<String>>::sse_encode(self.last_modification, serializer);
+        <Option<String>>::sse_encode(self.last_access, serializer);
+        <Option<String>>::sse_encode(self.expiry, serializer);
+        <Option<String>>::sse_encode(self.location_changed, serializer);
+        <Option<bool>>::sse_encode(self.expires, serializer);
+        <Option<u32>>::sse_encode(self.usage_count, serializer);
+    }
+}
+
 impl SseEncode for crate::api::crypt_api::FrbKeyValue {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -2335,6 +3772,86 @@ impl SseEncode for Vec<crate::api::crypt_api::FrbEncryptResult> {
     }
 }
 
+impl SseEncode for Vec<crate::api::keepass_api::FrbKeepassAttachment> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::keepass_api::FrbKeepassAttachment>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::keepass_api::FrbKeepassAutoTypeAssociation> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::keepass_api::FrbKeepassAutoTypeAssociation>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::keepass_api::FrbKeepassCustomDataItem> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::keepass_api::FrbKeepassCustomDataItem>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::keepass_api::FrbKeepassDeletedObject> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::keepass_api::FrbKeepassDeletedObject>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::keepass_api::FrbKeepassEntry> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::keepass_api::FrbKeepassEntry>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::keepass_api::FrbKeepassField> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::keepass_api::FrbKeepassField>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::keepass_api::FrbKeepassGroup> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::keepass_api::FrbKeepassGroup>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::keepass_api::FrbKeepassHistoryEntry> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::keepass_api::FrbKeepassHistoryEntry>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::api::crypt_api::FrbKeyValue> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -2371,6 +3888,86 @@ impl SseEncode for Option<String> {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
             <String>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<bool> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <bool>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<crate::api::keepass_api::FrbKeepassAutoType> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::api::keepass_api::FrbKeepassAutoType>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<crate::api::keepass_api::FrbKeepassMemoryProtection> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::api::keepass_api::FrbKeepassMemoryProtection>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<crate::api::keepass_api::FrbKeepassOtp> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::api::keepass_api::FrbKeepassOtp>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<i32> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <i32>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<u32> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <u32>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<u64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <u64>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<Vec<u8>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <Vec<u8>>::sse_encode(value, serializer);
         }
     }
 }

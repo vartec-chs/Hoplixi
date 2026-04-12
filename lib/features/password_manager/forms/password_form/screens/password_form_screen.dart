@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
@@ -167,7 +167,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
           IconButton(
             icon: const Icon(LucideIcons.import),
             tooltip: context.t.dashboard_forms.password_migration,
-            onPressed: () => context.go(AppRoutesPaths.passwordImport),
+            onPressed: () => context.go(AppRoutesPaths.keepassImport),
           ),
           if (state.isSaving)
             const Padding(

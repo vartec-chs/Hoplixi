@@ -34,6 +34,7 @@ import 'package:hoplixi/features/password_manager/managers/icon_manager/icon_for
 import 'package:hoplixi/features/password_manager/managers/icon_manager/icon_manager_screen.dart';
 import 'package:hoplixi/features/password_manager/managers/tags_manager/tag_form_screen.dart';
 import 'package:hoplixi/features/password_manager/managers/tags_manager/tags_manager_screen.dart';
+import 'package:hoplixi/features/password_manager/import/keepass/screens/keepass_import_screen.dart';
 import 'package:hoplixi/features/password_manager/import/otp/screens/import_otp_screen.dart';
 import 'package:hoplixi/features/password_manager/import/passwords/screens/password_migration_screen.dart';
 import 'package:hoplixi/features/password_manager/open_store/open_store_cloud_import_screen.dart';
@@ -166,6 +167,16 @@ final List<RouteBase> appRoutes = [
       return AppNavigationShell(state: state, child: child);
     },
     routes: [
+      GoRoute(
+        path: AppRoutesPaths.keepassImport,
+        pageBuilder: (context, state) {
+          return buildResponsivePage(
+            context: context,
+            state: state,
+            child: const KeepassImportScreen(),
+          );
+        },
+      ),
       GoRoute(
         path: '/dashboard/:entity',
         name: 'entity',
