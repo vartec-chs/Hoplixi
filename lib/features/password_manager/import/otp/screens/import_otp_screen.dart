@@ -58,12 +58,12 @@ class ImportOtpScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Начать импорт OTP',
+                          'Импорт OTP из других сервисов',
                           style: theme.textTheme.titleLarge,
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Отсканируйте QR-код или выберите изображение, чтобы начать',
+                          'Поддерживаются QR-коды из Google Authenticator, Microsoft Authenticator, Authy, 2FAS и других OTP-приложений.',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: Colors.grey,
                           ),
@@ -71,7 +71,8 @@ class ImportOtpScreen extends ConsumerWidget {
                         const SizedBox(height: 24),
                         QrScannerWidget(
                           title: 'Импорт OTP',
-                          subtitle: 'Выберите способ сканирования QR-кода',
+                          subtitle:
+                              'Сканируйте QR-код из Google Authenticator или другого OTP-сервиса',
                           onResult: (data) async {
                             await notifier.importOtp(
                               Uint8List.fromList(data.text.codeUnits),
