@@ -628,7 +628,9 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
         }
       }
 
-      password = await historyService.getSavedPasswordByPath(entry.path);
+      password = entry.savePassword
+          ? await historyService.getSavedPasswordByPath(entry.path)
+          : null;
     }
 
     if (password == null) {

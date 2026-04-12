@@ -48,35 +48,49 @@ class _TagSectionState extends ConsumerState<TagSection> {
       drawerTagFilterProvider(widget.entityType).notifier,
     );
 
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 200),
-      child: tagStateAsync.when(
-        data: (state) => KeyedSubtree(
-          key: const ValueKey('data'),
-          child: _buildData(state, theme, notifier),
+    final selectedIds = tagStateAsync.whenOrNull(
+      data: (state) => state.selectedIds,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHeader(
+          context,
+          theme,
+          notifier,
+          selectedIds: selectedIds ?? const [],
         ),
-        loading: () => const Center(
-          key: ValueKey('loading'),
-          child: CircularProgressIndicator(),
-        ),
-        error: (e, _) => Center(
-          key: const ValueKey('error'),
-          child: Text(
-            'Ошибка загрузки тегов',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.error,
+        const SizedBox(height: 8.0),
+        Expanded(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: tagStateAsync.when(
+              data: (state) => KeyedSubtree(
+                key: const ValueKey('data'),
+                child: _buildBody(state, theme, notifier),
+              ),
+              loading: () => const Center(
+                key: ValueKey('loading'),
+                child: CircularProgressIndicator(),
+              ),
+              error: (e, _) => Center(
+                key: const ValueKey('error'),
+                child: Text('Ошибка загрузки тегов'),
+              ),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildData(
-    DrawerTagFilterState state,
+  Widget _buildHeader(
+    BuildContext context,
     ThemeData theme,
-    DrawerTagFilterNotifier notifier,
-  ) {
+    DrawerTagFilterNotifier notifier, {
+    required List<String> selectedIds,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -88,7 +102,7 @@ class _TagSectionState extends ConsumerState<TagSection> {
               Text('Теги', style: theme.textTheme.titleMedium),
               Row(
                 children: [
-                  if (state.selectedIds.isNotEmpty)
+                  if (selectedIds.isNotEmpty)
                     SmoothButton(
                       onPressed: notifier.clearSelection,
                       label: 'Очистить',
@@ -111,7 +125,6 @@ class _TagSectionState extends ConsumerState<TagSection> {
           ),
         ),
         const SizedBox(height: 8.0),
-
         SizedBox(
           height: 40.0,
           child: TextField(
@@ -123,78 +136,73 @@ class _TagSectionState extends ConsumerState<TagSection> {
             onChanged: notifier.search,
           ),
         ),
-        const SizedBox(height: 8.0),
+      ],
+    );
+  }
 
-        Expanded(
-          child: state.tags.isEmpty && !state.isLoading
-              ? Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Center(
-                    child: Text(
-                      'Теги не найдены',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
+  Widget _buildBody(
+    DrawerTagFilterState state,
+    ThemeData theme,
+    DrawerTagFilterNotifier notifier,
+  ) {
+    if (state.tags.isEmpty && !state.isLoading) {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Center(
+          child: Text(
+            'Теги не найдены',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      controller: _scrollController,
+      itemCount: state.tags.length + (state.hasMore ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index == state.tags.length) {
+          return state.isLoading
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: CircularProgressIndicator(),
                   ),
                 )
-              : ListView.builder(
-                  controller: _scrollController,
-                  itemCount: state.tags.length + (state.hasMore ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index == state.tags.length) {
-                      return state.isLoading
-                          ? const Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(16.0),
-                                child: CircularProgressIndicator(),
-                              ),
-                            )
-                          : const SizedBox.shrink();
-                    }
+              : const SizedBox.shrink();
+        }
 
-                    final tag = state.tags[index];
-                    final isSelected = state.selectedIds.contains(tag.id);
+        final tag = state.tags[index];
+        final isSelected = state.selectedIds.contains(tag.id);
 
-                    return CheckboxListTile(
-                      checkboxShape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      checkColor: ColorsHelper.onColorFor(
-                        ColorsHelper.parseColor(
-                          tag.color,
-                          theme.colorScheme.primary,
-                        ),
-                      ),
-                      fillColor: WidgetStateProperty.resolveWith(
-                        (s) => s.contains(WidgetState.selected)
-                            ? ColorsHelper.parseColor(
-                                tag.color,
-                                theme.colorScheme.primary,
-                              )
-                            : null,
-                      ),
-                      controlAffinity: .leading,
-                      value: isSelected,
-                      onChanged: (_) => notifier.toggle(tag.id),
-                      title: Text(tag.name),
-                      subtitle: tag.itemsCount > 0
-                          ? Text('${tag.itemsCount} элементов')
-                          : null,
-                      secondary: tag.color != null
-                          ? Icon(
-                              Icons.tag,
-                              size: 18,
-                              color: parseColor(tag.color, context),
-                            )
-                          : null,
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                    );
-                  },
-                ),
-        ),
-      ],
+        return CheckboxListTile(
+          checkboxShape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6),
+          ),
+          checkColor: ColorsHelper.onColorFor(
+            ColorsHelper.parseColor(tag.color, theme.colorScheme.primary),
+          ),
+          fillColor: WidgetStateProperty.resolveWith(
+            (s) => s.contains(WidgetState.selected)
+                ? ColorsHelper.parseColor(tag.color, theme.colorScheme.primary)
+                : null,
+          ),
+          controlAffinity: .leading,
+          value: isSelected,
+          onChanged: (_) => notifier.toggle(tag.id),
+          title: Text(tag.name),
+          subtitle: tag.itemsCount > 0
+              ? Text('${tag.itemsCount} элементов')
+              : null,
+          secondary: tag.color != null
+              ? Icon(Icons.tag, size: 18, color: parseColor(tag.color, context))
+              : null,
+          dense: true,
+          contentPadding: EdgeInsets.zero,
+        );
+      },
     );
   }
 }

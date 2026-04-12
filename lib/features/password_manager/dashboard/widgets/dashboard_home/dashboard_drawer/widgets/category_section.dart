@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/db_core/models/dto/category_dto.dart';
+import 'package:hoplixi/db_core/models/dto/category_tree_node.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/models/drawer_category_filter_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/providers/drawer_category_filter_provider.dart';
-import 'package:hoplixi/db_core/models/dto/category_dto.dart';
-import 'package:hoplixi/db_core/models/dto/category_tree_node.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
@@ -71,42 +71,49 @@ class _CategorySectionState extends ConsumerState<CategorySection> {
       drawerCategoryFilterProvider(widget.entityType).notifier,
     );
 
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 200),
-      child: categoryStateAsync.when(
-        data: (state) => KeyedSubtree(
-          key: const ValueKey('data'),
-          child: _buildData(state, theme, notifier),
+    final selectedIds = categoryStateAsync.whenOrNull(
+      data: (state) => state.selectedIds,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHeader(
+          context,
+          theme,
+          notifier,
+          selectedIds: selectedIds ?? const [],
         ),
-        loading: () => const Center(
-          key: ValueKey('loading'),
-          child: CircularProgressIndicator(),
-        ),
-        error: (e, _) => Center(
-          key: const ValueKey('error'),
-          child: Text(
-            'Ошибка загрузки категорий',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.error,
+        const SizedBox(height: 8.0),
+        Expanded(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: categoryStateAsync.when(
+              data: (state) => KeyedSubtree(
+                key: const ValueKey('data'),
+                child: _buildBody(state, theme, notifier),
+              ),
+              loading: () => const Center(
+                key: ValueKey('loading'),
+                child: CircularProgressIndicator(),
+              ),
+              error: (e, _) => const Center(
+                key: ValueKey('error'),
+                child: Text('Ошибка загрузки категорий'),
+              ),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildData(
-    DrawerCategoryFilterState state,
+  Widget _buildHeader(
+    BuildContext context,
     ThemeData theme,
-    DrawerCategoryFilterNotifier notifier,
-  ) {
-    final searchTree = state.isSearching
-        ? _buildTree(state.searchResults)
-        : null;
-    final hasVisibleContent = state.isSearching
-        ? state.searchResults.isNotEmpty
-        : state.roots.isNotEmpty;
-
+    DrawerCategoryFilterNotifier notifier, {
+    required List<String> selectedIds,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -118,7 +125,7 @@ class _CategorySectionState extends ConsumerState<CategorySection> {
               Text('Категории', style: theme.textTheme.titleMedium),
               Row(
                 children: [
-                  if (state.selectedIds.isNotEmpty)
+                  if (selectedIds.isNotEmpty)
                     SmoothButton(
                       onPressed: notifier.clearSelection,
                       label: 'Очистить',
@@ -152,53 +159,65 @@ class _CategorySectionState extends ConsumerState<CategorySection> {
             onChanged: notifier.search,
           ),
         ),
-        const SizedBox(height: 8.0),
-        Expanded(
-          child: !hasVisibleContent && !state.isLoading
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      'Категории не найдены',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                )
-              : SingleChildScrollView(
-                  controller: _scrollController,
-                  child: Column(
-                    children: [
-                      if (state.isSearching) ...[
-                        for (final root in searchTree!)
-                          _CategoryTreeTile(
-                            entry: root,
-                            selectedIds: state.selectedIds,
-                            onToggle: notifier.toggle,
-                            depth: 0,
-                          ),
-                      ] else ...[
-                        for (var index = 0; index < state.roots.length; index++)
-                          _LazyCategoryTreeTile(
-                            node: state.roots[index],
-                            selectedIds: state.selectedIds,
-                            onToggle: notifier.toggle,
-                            onExpandChanged: notifier.toggleExpand,
-                            depth: 0,
-                          ),
-                      ],
-                      if (state.isLoadingMore ||
-                          (state.isLoading && hasVisibleContent))
-                        const Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Center(child: CircularProgressIndicator()),
-                        ),
-                    ],
-                  ),
-                ),
-        ),
       ],
+    );
+  }
+
+  Widget _buildBody(
+    DrawerCategoryFilterState state,
+    ThemeData theme,
+    DrawerCategoryFilterNotifier notifier,
+  ) {
+    final searchTree = state.isSearching
+        ? _buildTree(state.searchResults)
+        : null;
+    final hasVisibleContent = state.isSearching
+        ? state.searchResults.isNotEmpty
+        : state.roots.isNotEmpty;
+
+    if (!hasVisibleContent && !state.isLoading) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            'Категории не найдены',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      controller: _scrollController,
+      child: Column(
+        children: [
+          if (state.isSearching) ...[
+            for (final root in searchTree!)
+              _CategoryTreeTile(
+                entry: root,
+                selectedIds: state.selectedIds,
+                onToggle: notifier.toggle,
+                depth: 0,
+              ),
+          ] else ...[
+            for (var index = 0; index < state.roots.length; index++)
+              _LazyCategoryTreeTile(
+                node: state.roots[index],
+                selectedIds: state.selectedIds,
+                onToggle: notifier.toggle,
+                onExpandChanged: notifier.toggleExpand,
+                depth: 0,
+              ),
+          ],
+          if (state.isLoadingMore || (state.isLoading && hasVisibleContent))
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+        ],
+      ),
     );
   }
 }
