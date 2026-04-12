@@ -55,10 +55,11 @@ class _FilterTabsState extends ConsumerState<FilterTabs>
   }
 
   void _updateTabController() {
-    final pathParams = GoRouterState.of(context).pathParameters;
-    final entityId = pathParams['entity'];
+    final entityId = GoRouterState.of(context).pathParameters['entity'];
     final currentType =
-        EntityType.fromId(entityId ?? '') ?? EntityType.password;
+        (entityId != null && EntityType.allTypesString.contains(entityId))
+        ? (EntityType.fromId(entityId) ?? EntityType.password)
+        : EntityType.password;
     final newTabs = FilterTab.getAvailableTabsForEntity(currentType);
     final currentTab = ref.read(filterTabProvider);
 

@@ -7,6 +7,14 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/pinned_ent
 
 import '../../models/entity_type.dart';
 
+EntityType? _resolveRouteEntityType(BuildContext context) {
+  final entityId = GoRouterState.of(context).pathParameters['entity'];
+  if (entityId == null || !EntityType.allTypesString.contains(entityId)) {
+    return null;
+  }
+  return EntityType.fromId(entityId);
+}
+
 /// Компактный выпадающий список для выбора типа сущности
 /// Используется в AppBar для переключения между типами.
 /// Отображает только закреплённые типы (из [pinnedEntityTypesProvider]).
@@ -39,10 +47,8 @@ class EntityTypeCompactDropdown extends ConsumerWidget {
         EntityType.allTypes;
 
     // Получаем текущий тип из пути
-    final pathParams = GoRouterState.of(context).pathParameters;
-    final entityId = pathParams['entity'];
     // Если текущий тип не входит в список закреплённых, берём первый в списке
-    final routeType = EntityType.fromId(entityId ?? '');
+    final routeType = _resolveRouteEntityType(context);
     final currentType =
         (routeType != null && availableTypes.contains(routeType))
         ? routeType
@@ -170,10 +176,7 @@ class EntityTypeFullDropdown extends StatelessWidget {
     final theme = Theme.of(context);
 
     // Получаем текущий тип из пути
-    final pathParams = GoRouterState.of(context).pathParameters;
-    final entityId = pathParams['entity'];
-    final currentType =
-        EntityType.fromId(entityId ?? '') ?? EntityType.password;
+    final currentType = _resolveRouteEntityType(context) ?? EntityType.password;
 
     // Получаем все доступные типы
     final availableTypes = EntityType.allTypes;

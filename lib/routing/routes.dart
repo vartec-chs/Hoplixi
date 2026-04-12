@@ -65,6 +65,9 @@ Page<void> buildResponsivePage({
   return MaterialPage<void>(key: state.pageKey, child: child);
 }
 
+final String _dashboardEntityRoutePattern =
+    '/dashboard/:entity(${EntityType.allTypesString.join('|')})';
+
 final List<RouteBase> appRoutes = [
   GoRoute(
     path: AppRoutesPaths.splash,
@@ -166,16 +169,6 @@ final List<RouteBase> appRoutes = [
     path: '/dashboard',
     redirect: (context, state) => '/dashboard/${EntityType.password.id}',
   ),
-  GoRoute(
-    path: AppRoutesPaths.keepassImport,
-    pageBuilder: (context, state) {
-      return buildResponsivePage(
-        context: context,
-        state: state,
-        child: const KeepassImportScreen(),
-      );
-    },
-  ),
   ShellRoute(
     navigatorKey: dashboardNavigatorKey,
     builder: (context, state, child) {
@@ -183,7 +176,17 @@ final List<RouteBase> appRoutes = [
     },
     routes: [
       GoRoute(
-        path: '/dashboard/:entity',
+        path: AppRoutesPaths.keepassImport,
+        pageBuilder: (context, state) {
+          return buildResponsivePage(
+            context: context,
+            state: state,
+            child: const KeepassImportScreen(),
+          );
+        },
+      ),
+      GoRoute(
+        path: _dashboardEntityRoutePattern,
         name: 'entity',
         pageBuilder: (context, state) {
           final entity = EntityType.fromId(state.pathParameters['entity']!)!;
@@ -404,41 +407,26 @@ final List<RouteBase> appRoutes = [
           ),
           GoRoute(
             path: 'import',
-            name: 'entity_import_passwords',
+            name: 'entity_import',
             redirect: (context, state) {
               final entity = EntityType.fromId(
                 state.pathParameters['entity']!,
               )!;
-              if (entity != EntityType.password) {
+              if (entity != EntityType.password && entity != EntityType.otp) {
                 return '/dashboard/${entity.id}';
               }
               return null;
             },
             pageBuilder: (context, state) {
-              return buildResponsivePage(
-                context: context,
-                state: state,
-                child: const PasswordMigrationScreen(),
-              );
-            },
-          ),
-          GoRoute(
-            path: 'import',
-            name: 'entity_import_otp',
-            redirect: (context, state) {
               final entity = EntityType.fromId(
                 state.pathParameters['entity']!,
               )!;
-              if (entity != EntityType.otp) {
-                return '/dashboard/${entity.id}';
-              }
-              return null;
-            },
-            pageBuilder: (context, state) {
               return buildResponsivePage(
                 context: context,
                 state: state,
-                child: const ImportOtpScreen(),
+                child: entity == EntityType.otp
+                    ? const ImportOtpScreen()
+                    : const PasswordMigrationScreen(),
               );
             },
           ),
