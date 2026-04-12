@@ -47,6 +47,7 @@ import 'package:sliver_tools/sliver_tools.dart';
 
 /// Длительность анимации переключения состояний.
 const kStatusSwitchDuration = Duration(milliseconds: 180);
+const kDashboardAnimatedItemsThreshold = 10;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Callbacks
@@ -236,26 +237,46 @@ class DashboardHomeBuilders {
   }) {
     final hasMore = state?.hasMore ?? false;
     final isLoadingMore = state?.isLoadingMore ?? false;
+    final useAnimatedSliver =
+        displayedItems.length <= kDashboardAnimatedItemsThreshold;
 
     final listSliver = viewMode == ViewMode.list
-        ? _buildSliverAnimatedList(
-            listKey: listKey,
-            displayedItems: displayedItems,
-            context: context,
-            ref: ref,
-            entityType: entityType,
-            viewMode: viewMode,
-            callbacks: callbacks,
-          )
-        : _buildSliverAnimatedGrid(
-            gridKey: gridKey,
-            displayedItems: displayedItems,
-            context: context,
-            ref: ref,
-            entityType: entityType,
-            viewMode: viewMode,
-            callbacks: callbacks,
-          );
+        ? (useAnimatedSliver
+              ? _buildSliverAnimatedList(
+                  listKey: listKey,
+                  displayedItems: displayedItems,
+                  context: context,
+                  ref: ref,
+                  entityType: entityType,
+                  viewMode: viewMode,
+                  callbacks: callbacks,
+                )
+              : _buildSliverList(
+                  displayedItems: displayedItems,
+                  context: context,
+                  ref: ref,
+                  entityType: entityType,
+                  viewMode: viewMode,
+                  callbacks: callbacks,
+                ))
+        : (useAnimatedSliver
+              ? _buildSliverAnimatedGrid(
+                  gridKey: gridKey,
+                  displayedItems: displayedItems,
+                  context: context,
+                  ref: ref,
+                  entityType: entityType,
+                  viewMode: viewMode,
+                  callbacks: callbacks,
+                )
+              : _buildSliverGrid(
+                  displayedItems: displayedItems,
+                  context: context,
+                  ref: ref,
+                  entityType: entityType,
+                  viewMode: viewMode,
+                  callbacks: callbacks,
+                ));
 
     return SliverMainAxisGroup(
       key: key,
@@ -336,6 +357,70 @@ class DashboardHomeBuilders {
     );
   }
 
+  static Widget _buildSliverList({
+    required List<BaseCardDto> displayedItems,
+    required BuildContext context,
+    required WidgetRef ref,
+    required EntityType entityType,
+    required ViewMode viewMode,
+    required DashboardCardCallbacks callbacks,
+  }) {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate((ctx, index) {
+          if (index >= displayedItems.length) {
+            return const SizedBox.shrink();
+          }
+
+          return _buildStaticItem(
+            context: ctx,
+            ref: ref,
+            item: displayedItems[index],
+            viewMode: viewMode,
+            entityType: entityType,
+            callbacks: callbacks,
+          );
+        }, childCount: displayedItems.length),
+      ),
+    );
+  }
+
+  static Widget _buildSliverGrid({
+    required List<BaseCardDto> displayedItems,
+    required BuildContext context,
+    required WidgetRef ref,
+    required EntityType entityType,
+    required ViewMode viewMode,
+    required DashboardCardCallbacks callbacks,
+  }) {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.6,
+        ),
+        delegate: SliverChildBuilderDelegate((ctx, index) {
+          if (index >= displayedItems.length) {
+            return const SizedBox.shrink();
+          }
+
+          return _buildStaticItem(
+            context: ctx,
+            ref: ref,
+            item: displayedItems[index],
+            viewMode: viewMode,
+            entityType: entityType,
+            callbacks: callbacks,
+          );
+        }, childCount: displayedItems.length),
+      ),
+    );
+  }
+
   // ───────────────────────────────────────────────────────────────────────────
   // Item Transitions
   // ───────────────────────────────────────────────────────────────────────────
@@ -378,6 +463,36 @@ class DashboardHomeBuilders {
           child: card,
         ),
       ),
+    );
+  }
+
+  static Widget _buildStaticItem({
+    required BuildContext context,
+    required WidgetRef ref,
+    required BaseCardDto item,
+    required ViewMode viewMode,
+    required EntityType entityType,
+    required DashboardCardCallbacks callbacks,
+  }) {
+    final card = viewMode == ViewMode.list
+        ? buildListCardFor(
+            context: context,
+            ref: ref,
+            type: entityType,
+            item: item,
+            callbacks: callbacks,
+          )
+        : buildGridCardFor(
+            context: context,
+            ref: ref,
+            type: entityType,
+            item: item,
+            callbacks: callbacks,
+          );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: card,
     );
   }
 

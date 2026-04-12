@@ -134,7 +134,28 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
       return;
     }
 
+    if (!_shouldAnimateItems(newItems)) {
+      _replaceItemsWithoutAnimation(newItems);
+      return;
+    }
+
     _performDiff(newItems, viewMode, listState, gridState);
+  }
+
+  bool _shouldAnimateItems(List<BaseCardDto> newItems) {
+    final totalItems = newItems.length > _displayedItems.length
+        ? newItems.length
+        : _displayedItems.length;
+    return totalItems <= kDashboardAnimatedItemsThreshold;
+  }
+
+  void _replaceItemsWithoutAnimation(List<BaseCardDto> newItems) {
+    setState(() {
+      _displayedItems = List.of(newItems);
+      _isClearing = false;
+      _listKey = GlobalKey<SliverAnimatedListState>();
+      _gridKey = GlobalKey<SliverAnimatedGridState>();
+    });
   }
 
   /// Выполняет diff между [_displayedItems] и [newItems] с анимациями.
