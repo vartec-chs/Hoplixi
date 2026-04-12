@@ -161,22 +161,22 @@ final List<RouteBase> appRoutes = [
     path: '/dashboard',
     redirect: (context, state) => '/dashboard/${EntityType.password.id}',
   ),
+  GoRoute(
+    path: AppRoutesPaths.keepassImport,
+    pageBuilder: (context, state) {
+      return buildResponsivePage(
+        context: context,
+        state: state,
+        child: const KeepassImportScreen(),
+      );
+    },
+  ),
   ShellRoute(
     navigatorKey: dashboardNavigatorKey,
     builder: (context, state, child) {
       return AppNavigationShell(state: state, child: child);
     },
     routes: [
-      GoRoute(
-        path: AppRoutesPaths.keepassImport,
-        pageBuilder: (context, state) {
-          return buildResponsivePage(
-            context: context,
-            state: state,
-            child: const KeepassImportScreen(),
-          );
-        },
-      ),
       GoRoute(
         path: '/dashboard/:entity',
         name: 'entity',

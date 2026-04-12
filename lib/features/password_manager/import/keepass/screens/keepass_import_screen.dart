@@ -138,7 +138,7 @@ class _KeepassImportScreenState extends ConsumerState<KeepassImportScreen> {
     return Card(
       color: color,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -165,7 +165,7 @@ class _KeepassImportScreenState extends ConsumerState<KeepassImportScreen> {
   ) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -219,7 +219,7 @@ class _KeepassImportScreenState extends ConsumerState<KeepassImportScreen> {
   ) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -283,7 +283,7 @@ class _KeepassImportScreenState extends ConsumerState<KeepassImportScreen> {
   ) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Wrap(
           spacing: 12,
           runSpacing: 12,
@@ -312,7 +312,7 @@ class _KeepassImportScreenState extends ConsumerState<KeepassImportScreen> {
     if (preview == null) {
       return Card(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -340,7 +340,7 @@ class _KeepassImportScreenState extends ConsumerState<KeepassImportScreen> {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -434,7 +434,7 @@ class _KeepassImportScreenState extends ConsumerState<KeepassImportScreen> {
     final summary = state.lastImportSummary!;
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

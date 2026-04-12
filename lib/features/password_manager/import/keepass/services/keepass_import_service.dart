@@ -146,7 +146,12 @@ class KeepassImportService {
         consumedFieldKeys.add(_normalizeKey(emailField.key));
       }
 
-      final login = _resolveLogin(entry.username, email);
+      final entryTitle = _resolveEntryTitle(entry);
+      final login = _resolveLogin(
+        username: entry.username,
+        email: email,
+        fallbackTitle: entryTitle,
+      );
       final extraFields = _extractExtraFields(entry.fields, consumedFieldKeys);
       final shouldCreatePassword = _shouldCreatePasswordItem(
         entry: entry,
@@ -159,7 +164,7 @@ class KeepassImportService {
       if (noteContent != null && noteContent.trim().isNotEmpty) {
         noteId = await noteDao.createNote(
           CreateNoteDto(
-            title: _resolveEntryTitle(entry),
+            title: entryTitle,
             content: noteContent,
             deltaJson: jsonEncode([
               {'insert': '$noteContent\n'},
@@ -176,7 +181,7 @@ class KeepassImportService {
       if (shouldCreatePassword) {
         passwordId = await passwordDao.createPassword(
           CreatePasswordDto(
-            name: _resolveEntryTitle(entry),
+            name: entryTitle,
             password: entry.password ?? '',
             login: login,
             email: email,
@@ -442,10 +447,14 @@ class KeepassImportService {
     return null;
   }
 
-  String? _resolveLogin(String? username, String? email) {
+  String? _resolveLogin({
+    required String? username,
+    required String? email,
+    required String fallbackTitle,
+  }) {
     final cleanUsername = _clean(username);
     if (cleanUsername == null) {
-      return null;
+      return email == null ? fallbackTitle : null;
     }
 
     if (email != null && cleanUsername == email) {
