@@ -2,20 +2,20 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/base_filter_provider.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/models/drawer_category_filter_state.dart';
-import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
 import 'package:hoplixi/db_core/models/dto/category_tree_node.dart';
 import 'package:hoplixi/db_core/models/enums/entity_types.dart';
 import 'package:hoplixi/db_core/models/filter/index.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/base_filter_provider.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/models/drawer_category_filter_state.dart';
+import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
 
 const int _kCategoryPageSize = 20;
 const Duration _kCategorySearchDebounce = Duration(milliseconds: 300);
 
-final drawerCategoryFilterProvider =
-    AsyncNotifierProvider.family<
+final drawerCategoryFilterProvider = AsyncNotifierProvider.autoDispose
+    .family<
       DrawerCategoryFilterNotifier,
       DrawerCategoryFilterState,
       EntityType

@@ -15,7 +15,7 @@ sealed class DrawerFilterSelection with _$DrawerFilterSelection {
 
 /// Провайдер для хранения выборов фильтров для каждой сущности
 final drawerFilterSelectionStorageProvider =
-    NotifierProvider<
+    NotifierProvider.autoDispose<
       DrawerFilterSelectionStorage,
       Map<EntityType, DrawerFilterSelection>
     >(DrawerFilterSelectionStorage.new);

@@ -2,6 +2,7 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hoplixi/db_core/models/dto/index.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/list_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/current_view_mode_provider.dart';
@@ -40,7 +41,6 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/wifi/w
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/wifi/wifi_list_card.dart';
 import 'package:hoplixi/features/password_manager/decrypt_modal/document_decrypt_modal.dart';
 import 'package:hoplixi/features/password_manager/decrypt_modal/file_decrypt_modal.dart';
-import 'package:hoplixi/db_core/models/dto/index.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:sliver_tools/sliver_tools.dart';
@@ -138,7 +138,7 @@ class DashboardHomeBuilders {
       );
     }
 
-    // Определяем, какой статусный слайвер показывать
+    // Определяем, какой статусный сливер показывать
     final statusSliver = _resolveStatusSliver(
       context: context,
       asyncValue: asyncValue,
@@ -286,6 +286,7 @@ class DashboardHomeBuilders {
           hasMore: hasMore,
           isLoadingMore: isLoadingMore,
           hasDisplayedItems: displayedItems.isNotEmpty,
+          context: context,
         ),
       ],
     );
@@ -538,7 +539,13 @@ class DashboardHomeBuilders {
     required bool hasMore,
     required bool isLoadingMore,
     required bool hasDisplayedItems,
+    required BuildContext context,
   }) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isSmallScreen = screenWidth <= 700;
+    final smallScreenBottomInset =
+        MediaQuery.paddingOf(context).bottom + kBottomNavigationBarHeight + 24;
+
     if (isLoadingMore) {
       return const SliverToBoxAdapter(
         child: Padding(
@@ -555,10 +562,14 @@ class DashboardHomeBuilders {
     }
 
     if (!hasMore && hasDisplayedItems) {
-      return const SliverToBoxAdapter(
+      return SliverToBoxAdapter(
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 20),
-          child: Center(
+          padding: EdgeInsets.only(
+            top: isSmallScreen ? 8 : 20,
+            bottom: isSmallScreen ? smallScreenBottomInset : 20,
+          ),
+          child: const Align(
+            alignment: Alignment.topCenter,
             child: Text(
               'Больше нет данных',
               style: TextStyle(color: Colors.grey),

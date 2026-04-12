@@ -27,6 +27,9 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_la
 import 'package:hoplixi/features/password_manager/dashboard/widgets/entity_add_edit.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/entity_view.dart';
 import 'package:hoplixi/features/password_manager/history/ui/screens/history_screen.dart';
+import 'package:hoplixi/features/password_manager/import/keepass/screens/keepass_import_screen.dart';
+import 'package:hoplixi/features/password_manager/import/otp/screens/import_otp_screen.dart';
+import 'package:hoplixi/features/password_manager/import/passwords/screens/password_migration_screen.dart';
 import 'package:hoplixi/features/password_manager/lock_store/lock_store_screen.dart';
 import 'package:hoplixi/features/password_manager/managers/category_manager/screens/category_form_screen.dart';
 import 'package:hoplixi/features/password_manager/managers/category_manager/screens/category_manager_screen.dart';
@@ -34,9 +37,6 @@ import 'package:hoplixi/features/password_manager/managers/icon_manager/icon_for
 import 'package:hoplixi/features/password_manager/managers/icon_manager/icon_manager_screen.dart';
 import 'package:hoplixi/features/password_manager/managers/tags_manager/tag_form_screen.dart';
 import 'package:hoplixi/features/password_manager/managers/tags_manager/tags_manager_screen.dart';
-import 'package:hoplixi/features/password_manager/import/keepass/screens/keepass_import_screen.dart';
-import 'package:hoplixi/features/password_manager/import/otp/screens/import_otp_screen.dart';
-import 'package:hoplixi/features/password_manager/import/passwords/screens/password_migration_screen.dart';
 import 'package:hoplixi/features/password_manager/open_store/open_store_cloud_import_screen.dart';
 import 'package:hoplixi/features/password_manager/open_store/open_store_screen.dart';
 import 'package:hoplixi/features/settings/screens/settings_screen.dart';
@@ -398,8 +398,8 @@ final List<RouteBase> appRoutes = [
             },
           ),
           GoRoute(
-            path: 'migrate',
-            name: 'entity_migrate',
+            path: 'import',
+            name: 'entity_import_passwords',
             redirect: (context, state) {
               final entity = EntityType.fromId(
                 state.pathParameters['entity']!,
@@ -419,7 +419,7 @@ final List<RouteBase> appRoutes = [
           ),
           GoRoute(
             path: 'import',
-            name: 'entity_import',
+            name: 'entity_import_otp',
             redirect: (context, state) {
               final entity = EntityType.fromId(
                 state.pathParameters['entity']!,

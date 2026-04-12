@@ -307,5 +307,6 @@
 	"documentDescriptionHint": "Brief document description",
 	"selectTypeHint": "Select type",
 	"fileNameHint": "Enter file name",
-	"fileDescriptionHint": "Brief file description"
+	"fileDescriptionHint": "Brief file description",
+	"keepassImport": "Keepass import"
 }

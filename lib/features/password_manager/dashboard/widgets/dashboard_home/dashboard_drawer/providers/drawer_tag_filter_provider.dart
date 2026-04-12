@@ -16,7 +16,7 @@ const Duration _kTagSearchDebounce = Duration(milliseconds: 300);
 /// Провайдер для загрузки и фильтрации тегов в drawer
 /// Family по EntityType — отдельный экземпляр для каждого типа сущности
 final drawerTagFilterProvider =
-    AsyncNotifierProvider.family<
+    AsyncNotifierProvider.autoDispose.family<
       DrawerTagFilterNotifier,
       DrawerTagFilterState,
       EntityType

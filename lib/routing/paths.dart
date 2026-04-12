@@ -60,7 +60,7 @@ class AppRoutesPaths {
   static String passwordAdd = '/dashboard/${EntityType.password.id}/add';
   static String passwordEdit = '/dashboard/${EntityType.password.id}/edit/:id';
   static const String keepassImport = '/dashboard/import/keepass';
-  static String passwordImport = keepassImport;
+  static String passwordImport = '/dashboard/${EntityType.password.id}/import';
 
   /// otps
   static String otps = '/dashboard/${EntityType.otp.id}';

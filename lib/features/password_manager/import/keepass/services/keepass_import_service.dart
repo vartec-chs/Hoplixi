@@ -20,11 +20,13 @@ class KeepassImportExecutionOptions {
   final bool importOtps;
   final bool importNotes;
   final bool importCustomFields;
+  final bool createCategories;
 
   const KeepassImportExecutionOptions({
     required this.importOtps,
     required this.importNotes,
     required this.importCustomFields,
+    required this.createCategories,
   });
 }
 
@@ -125,6 +127,7 @@ class KeepassImportService {
         entry.groupPath,
         categoriesByName,
         categoryIdsByPath,
+        allowCreate: options.createCategories,
       );
       final categoryId = categoryResult.categoryId;
       createdCategories += categoryResult.createdCount;
@@ -264,8 +267,9 @@ class KeepassImportService {
   Future<_EnsureCategoryResult> _ensureCategoryTree(
     String rawPath,
     Map<String, _ExistingCategoryRef> categoriesByName,
-    Map<String, String> categoryIdsByPath,
-  ) async {
+    Map<String, String> categoryIdsByPath, {
+    required bool allowCreate,
+  }) async {
     final path = rawPath.trim();
     if (path.isEmpty) {
       return const _EnsureCategoryResult(categoryId: null, createdCount: 0);
@@ -308,6 +312,13 @@ class KeepassImportService {
       }
 
       if (category == null || category.type != CategoryType.mixed) {
+        if (!allowCreate) {
+          return _EnsureCategoryResult(
+            categoryId: parentId,
+            createdCount: createdCount,
+          );
+        }
+
         final selectedName = category == null ? desiredName : fallbackName;
         final newId = await categoryDao.createCategory(
           CreateCategoryDto(

@@ -307,5 +307,6 @@
 	"documentDescriptionHint": "Краткое описание документа",
 	"selectTypeHint": "Выберите тип",
 	"fileNameHint": "Введите название файла",
-	"fileDescriptionHint": "Краткое описание файла"
+	"fileDescriptionHint": "Краткое описание файла",
+	"keepassImport": "Импорт из KeePass"
 }

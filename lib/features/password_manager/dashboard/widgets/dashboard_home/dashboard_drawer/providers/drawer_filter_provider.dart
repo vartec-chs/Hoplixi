@@ -15,7 +15,7 @@ const Duration _kSearchDebounce = Duration(milliseconds: 300);
 /// Провайдер для управления состоянием фильтра в drawer
 /// Family по EntityType для правильной фильтрации по типу
 final drawerFilterProvider =
-    AsyncNotifierProvider.family<
+    AsyncNotifierProvider.autoDispose.family<
       DrawerFilterNotifier,
       DrawerFilterState,
       EntityType

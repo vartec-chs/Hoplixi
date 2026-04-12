@@ -8,7 +8,10 @@ import 'package:hoplixi/rust/api/keepass_api.dart';
 
 const _messageNotChanged = Object();
 
+enum KeepassImportStep { source, options, preview }
+
 class KeepassImportState {
+  final KeepassImportStep currentStep;
   final String? databasePath;
   final String? keyfilePath;
   final String password;
@@ -17,6 +20,7 @@ class KeepassImportState {
   final bool importOtps;
   final bool importNotes;
   final bool importCustomFields;
+  final bool createCategories;
   final bool isLoadingPreview;
   final bool isImporting;
   final String? message;
@@ -25,6 +29,7 @@ class KeepassImportState {
   final KeepassImportSummary? lastImportSummary;
 
   const KeepassImportState({
+    this.currentStep = KeepassImportStep.source,
     this.databasePath,
     this.keyfilePath,
     this.password = '',
@@ -33,6 +38,7 @@ class KeepassImportState {
     this.importOtps = true,
     this.importNotes = true,
     this.importCustomFields = true,
+    this.createCategories = true,
     this.isLoadingPreview = false,
     this.isImporting = false,
     this.message,
@@ -48,7 +54,37 @@ class KeepassImportState {
 
   bool get canImport => !isImporting && preview != null;
 
+  int get stepIndex => currentStep.index;
+
+  bool get isFirstStep => currentStep == KeepassImportStep.source;
+
+  bool get isLastStep => currentStep == KeepassImportStep.preview;
+
+  bool get canGoToNextStep {
+    switch (currentStep) {
+      case KeepassImportStep.source:
+        return (databasePath?.trim().isNotEmpty ?? false);
+      case KeepassImportStep.options:
+        return true;
+      case KeepassImportStep.preview:
+        return false;
+    }
+  }
+
+  bool canGoToStep(KeepassImportStep step) {
+    if (step.index <= stepIndex) {
+      return true;
+    }
+
+    if (step == KeepassImportStep.options) {
+      return (databasePath?.trim().isNotEmpty ?? false);
+    }
+
+    return false;
+  }
+
   KeepassImportState copyWith({
+    KeepassImportStep? currentStep,
     String? databasePath,
     Object? keyfilePath = _messageNotChanged,
     String? password,
@@ -57,6 +93,7 @@ class KeepassImportState {
     bool? importOtps,
     bool? importNotes,
     bool? importCustomFields,
+    bool? createCategories,
     bool? isLoadingPreview,
     bool? isImporting,
     Object? message = _messageNotChanged,
@@ -65,6 +102,7 @@ class KeepassImportState {
     Object? lastImportSummary = _messageNotChanged,
   }) {
     return KeepassImportState(
+      currentStep: currentStep ?? this.currentStep,
       databasePath: databasePath ?? this.databasePath,
       keyfilePath: identical(keyfilePath, _messageNotChanged)
           ? this.keyfilePath
@@ -75,6 +113,7 @@ class KeepassImportState {
       importOtps: importOtps ?? this.importOtps,
       importNotes: importNotes ?? this.importNotes,
       importCustomFields: importCustomFields ?? this.importCustomFields,
+      createCategories: createCategories ?? this.createCategories,
       isLoadingPreview: isLoadingPreview ?? this.isLoadingPreview,
       isImporting: isImporting ?? this.isImporting,
       message: identical(message, _messageNotChanged)
@@ -94,6 +133,32 @@ class KeepassImportState {
 class KeepassImportNotifier extends Notifier<KeepassImportState> {
   @override
   KeepassImportState build() => const KeepassImportState();
+
+  void nextStep() {
+    if (!state.canGoToNextStep || state.isLastStep) {
+      return;
+    }
+
+    final next = KeepassImportStep.values[state.stepIndex + 1];
+    state = state.copyWith(currentStep: next);
+  }
+
+  void previousStep() {
+    if (state.isFirstStep) {
+      return;
+    }
+
+    final previous = KeepassImportStep.values[state.stepIndex - 1];
+    state = state.copyWith(currentStep: previous);
+  }
+
+  void goToStep(KeepassImportStep step) {
+    if (!state.canGoToStep(step)) {
+      return;
+    }
+
+    state = state.copyWith(currentStep: step);
+  }
 
   void setPassword(String value) {
     state = state.copyWith(password: value);
@@ -119,6 +184,10 @@ class KeepassImportNotifier extends Notifier<KeepassImportState> {
 
   void setImportCustomFields(bool value) {
     state = state.copyWith(importCustomFields: value);
+  }
+
+  void setCreateCategories(bool value) {
+    state = state.copyWith(createCategories: value);
   }
 
   Future<void> pickDatabase() async {
@@ -189,6 +258,7 @@ class KeepassImportNotifier extends Notifier<KeepassImportState> {
 
       state = state.copyWith(
         isLoadingPreview: false,
+        currentStep: KeepassImportStep.preview,
         preview: preview,
         message:
             'База прочитана: ${preview.entries.length} записей, ${preview.groups.length} групп.',
@@ -229,6 +299,7 @@ class KeepassImportNotifier extends Notifier<KeepassImportState> {
           importOtps: state.importOtps,
           importNotes: state.importNotes,
           importCustomFields: state.importCustomFields,
+          createCategories: state.createCategories,
         ),
       );
 

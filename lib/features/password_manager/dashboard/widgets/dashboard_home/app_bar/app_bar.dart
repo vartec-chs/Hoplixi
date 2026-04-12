@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/store_settings/index.dart';
 import 'package:hoplixi/db_core/models/filter/index.dart';
+import 'package:hoplixi/features/password_manager/store_settings/index.dart';
+import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../models/entity_type.dart';
 import '../../../providers/filter_providers/base_filter_provider.dart';
 import '../entity_type_dropdown.dart';
 import 'app_bar_widgets.dart';
+
+enum _DashboardMenuAction { storeSettings, keepassImport }
 
 /// Полноценный SliverAppBar для дашборда с фильтрацией и поиском
 /// Включает drawer кнопку, выбор типа сущности, кнопку фильтров, поиск и вкладки
@@ -231,11 +236,46 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
           tooltip: 'Открыть фильтры',
         ),
 
-        // Кнопка настроек хранилища
-        IconButton(
-          icon: const Icon(Icons.settings),
-          onPressed: _openStoreSettingsModal,
-          tooltip: 'Настройки хранилища',
+        // Меню действий: настройки и импорт
+        PopupMenuButton<_DashboardMenuAction>(
+          icon: const Icon(LucideIcons.settings),
+          tooltip: 'Меню хранилища',
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+
+          onSelected: (action) {
+            switch (action) {
+              case _DashboardMenuAction.storeSettings:
+                _openStoreSettingsModal();
+                break;
+              case _DashboardMenuAction.keepassImport:
+                context.go(AppRoutesPaths.keepassImport);
+                break;
+            }
+          },
+          itemBuilder: (context) => const [
+            PopupMenuItem<_DashboardMenuAction>(
+              value: _DashboardMenuAction.storeSettings,
+              child: Row(
+                children: [
+                  Icon(LucideIcons.settings, size: 20),
+                  SizedBox(width: 8),
+                  Text('Настройки хранилища'),
+                ],
+              ),
+            ),
+            PopupMenuItem<_DashboardMenuAction>(
+              value: _DashboardMenuAction.keepassImport,
+              child: Row(
+                children: [
+                  Icon(LucideIcons.import, size: 20),
+                  SizedBox(width: 8),
+                  Text('Импорт данных из KeePass'),
+                ],
+              ),
+            ),
+          ],
         ),
 
         // Дополнительные actions

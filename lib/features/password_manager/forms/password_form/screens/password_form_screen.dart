@@ -18,6 +18,8 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../providers/password_form_provider.dart';
 
+enum _MigrationMenuAction { passwordImport, keepassImport }
+
 /// Экран формы создания/редактирования пароля
 class PasswordFormScreen extends ConsumerStatefulWidget {
   const PasswordFormScreen({super.key, this.passwordId});
@@ -163,11 +165,28 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
               : context.t.dashboard_forms.new_password,
         ),
         actions: [
-          // Кнопка миграции паролей
-          IconButton(
+          // Выпадающее меню миграции
+          PopupMenuButton<_MigrationMenuAction>(
             icon: const Icon(LucideIcons.import),
             tooltip: context.t.dashboard_forms.password_migration,
-            onPressed: () => context.go(AppRoutesPaths.keepassImport),
+            onSelected: (action) {
+              switch (action) {
+                case _MigrationMenuAction.passwordImport:
+                  context.go(AppRoutesPaths.passwordImport);
+                case _MigrationMenuAction.keepassImport:
+                  context.go(AppRoutesPaths.keepassImport);
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: _MigrationMenuAction.passwordImport,
+                child: Text(context.t.dashboard_forms.password_migration),
+              ),
+              PopupMenuItem(
+                value: _MigrationMenuAction.keepassImport,
+                child: Text(context.t.dashboard_forms.keepass_import),
+              ),
+            ],
           ),
           if (state.isSaving)
             const Padding(
