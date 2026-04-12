@@ -7,6 +7,8 @@ class AppRoutesPaths {
   static const String settings = '/settings';
   static const String logs = '/logs';
   static const String componentShowcase = '/component-showcase';
+  static const String about = '/about';
+  static const String aboutLicenses = '/about/licenses';
 
   // LocalSend
   static const String localSendSend = '/localsend/send';

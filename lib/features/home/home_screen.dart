@@ -12,6 +12,7 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
 import 'package:hoplixi/db_core/provider/db_history_provider.dart';
 import 'package:hoplixi/db_core/provider/main_store_provider.dart';
+import 'package:hoplixi/features/about/ui/about_app_modal.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/password_generator_widget.dart';
@@ -485,17 +486,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
           ),
 
-          // кнопка настроек
+          // кнопки about и настроек
           Positioned(
             top: UniversalPlatform.isMobile
                 ? MediaQuery.of(context).padding.top
                 : 36,
             right: 12,
-            child: IconButton(
-              icon: const Icon(LucideIcons.settings),
-              color: Colors.white.withOpacity(0.8),
-              tooltip: 'Настройки',
-              onPressed: () => context.push(AppRoutesPaths.settings),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(LucideIcons.settings),
+                  color: Colors.white.withOpacity(0.8),
+                  tooltip: 'Настройки',
+                  onPressed: () => context.push(AppRoutesPaths.settings),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.info_outline),
+                  color: Colors.white.withOpacity(0.8),
+                  tooltip: 'О приложении',
+                  onPressed: () => showAppAboutModal(context),
+                ),
+              ],
             ),
           ),
 

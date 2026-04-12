@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
+import 'package:hoplixi/features/about/screens/about_licenses_screen.dart';
 import 'package:hoplixi/features/archive_storage/ui/archive_screen.dart';
 import 'package:hoplixi/features/cloud_sync/app_credentials/screens/app_credentials_screen.dart';
 import 'package:hoplixi/features/cloud_sync/auth/screens/auth_progress_screen.dart';
@@ -84,6 +85,10 @@ final List<RouteBase> appRoutes = [
   GoRoute(
     path: AppRoutesPaths.logs,
     builder: (context, state) => const LogsTabsScreen(),
+  ),
+  GoRoute(
+    path: AppRoutesPaths.aboutLicenses,
+    builder: (context, state) => const AboutLicensesScreen(),
   ),
   GoRoute(
     path: AppRoutesPaths.componentShowcase,
