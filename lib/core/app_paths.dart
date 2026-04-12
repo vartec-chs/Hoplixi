@@ -21,6 +21,8 @@ class AppPaths {
   static Future<String> get cloudSyncFilePath async =>
       await _getCloudSyncFilePath();
   static Future<String> get localSendPath async => await _getLocalSendPath();
+  static Future<String> get passwordGeneratorProfilesFilePath async =>
+      await _getPasswordGeneratorProfilesFilePath();
 
   static Future<String> get backupsPath async => await _getBackupsPath();
 
@@ -116,6 +118,16 @@ Future<String> _getCloudSyncFilePath() async {
   final basePath = p.join(appDir.path, 'cloud_sync.json');
 
   return basePath;
+}
+
+/// Password generator profiles file path
+Future<String> _getPasswordGeneratorProfilesFilePath() async {
+  final directory = await _getAppPath();
+  if (!await directory.exists()) {
+    await directory.create(recursive: true);
+  }
+
+  return p.join(directory.path, 'password_generator_profiles.json');
 }
 
 /// LocalSend data directory

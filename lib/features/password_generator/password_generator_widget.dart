@@ -1,9 +1,14 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/password_generator/models/password_generator_profile.dart';
+import 'package:hoplixi/features/password_generator/services/password_generator_profile_service.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/password_strength_indicator.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
 
 /// Кастомизируемый генератор паролей.
 ///
@@ -28,6 +33,7 @@ class PasswordGeneratorWidget extends StatefulWidget {
     this.canSubmit = true,
     this.onPasswordChanged,
     this.onPasswordSubmitted,
+    this.profileService,
   });
 
   final EdgeInsetsGeometry padding;
@@ -46,6 +52,7 @@ class PasswordGeneratorWidget extends StatefulWidget {
   final bool canSubmit;
   final ValueChanged<String>? onPasswordChanged;
   final ValueChanged<String>? onPasswordSubmitted;
+  final PasswordGeneratorProfileService? profileService;
 
   @override
   State<PasswordGeneratorWidget> createState() =>
@@ -57,6 +64,10 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
   static const String _uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   static const String _digits = '0123456789';
   static const String _special = '!@#\$%^&*()_+-=[]{}|;:,.<>?';
+  static const List<int> _batchCountOptions = [3, 5, 10, 20];
+
+  late final PasswordGeneratorProfileService _profileService;
+  late final TextEditingController _profileNameController;
 
   late double _length;
   late bool _useLowercase;
@@ -65,11 +76,23 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
   late bool _useSpecial;
 
   String _generatedPassword = '';
+  List<String> _batchPasswords = const [];
   bool _copied = false;
+  int? _copiedBatchIndex;
+  bool _isLoadingProfiles = true;
+  bool _isSavingProfile = false;
+  bool _isDeletingProfile = false;
+  int _batchSize = 5;
+  List<PasswordGeneratorProfile> _profiles = const [];
+  String? _selectedProfileId;
 
   @override
   void initState() {
     super.initState();
+    _profileService =
+        widget.profileService ?? PasswordGeneratorProfileService();
+    _profileNameController = TextEditingController();
+    _profileNameController.addListener(_handleProfileNameChanged);
     _length = widget.initialLength.clamp(
       widget.minLength.toDouble(),
       widget.maxLength.toDouble(),
@@ -79,16 +102,24 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
     _useDigits = widget.initialUseDigits;
     _useSpecial = widget.initialUseSpecial;
     _generate();
+    unawaited(_loadProfiles());
+  }
+
+  @override
+  void dispose() {
+    _profileNameController.removeListener(_handleProfileNameChanged);
+    _profileNameController.dispose();
+    super.dispose();
+  }
+
+  void _handleProfileNameChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _generate() {
-    final buffer = StringBuffer();
-    if (_useLowercase) buffer.write(_lowercase);
-    if (_useUppercase) buffer.write(_uppercase);
-    if (_useDigits) buffer.write(_digits);
-    if (_useSpecial) buffer.write(_special);
-
-    final chars = buffer.toString();
+    final chars = _buildCharacterPool();
     if (chars.isEmpty) {
       setState(() {
         _generatedPassword = '';
@@ -98,17 +129,37 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
       return;
     }
 
-    final random = Random.secure();
-    final password = List.generate(
-      _length.round(),
-      (_) => chars[random.nextInt(chars.length)],
-    ).join();
+    final password = _generatePasswordFromPool(chars, Random.secure());
 
     setState(() {
       _generatedPassword = password;
       _copied = false;
     });
     widget.onPasswordChanged?.call(password);
+  }
+
+  String _buildCharacterPool() {
+    final buffer = StringBuffer();
+    if (_useLowercase) {
+      buffer.write(_lowercase);
+    }
+    if (_useUppercase) {
+      buffer.write(_uppercase);
+    }
+    if (_useDigits) {
+      buffer.write(_digits);
+    }
+    if (_useSpecial) {
+      buffer.write(_special);
+    }
+    return buffer.toString();
+  }
+
+  String _generatePasswordFromPool(String chars, Random random) {
+    return List.generate(
+      _length.round(),
+      (_) => chars[random.nextInt(chars.length)],
+    ).join();
   }
 
   Future<void> _copyToClipboard() async {
@@ -123,6 +174,191 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
     });
   }
 
+  void _generateBatchPasswords() {
+    final chars = _buildCharacterPool();
+    if (chars.isEmpty) {
+      Toaster.warning(
+        title: 'Генератор',
+        description: 'Выберите хотя бы один набор символов.',
+      );
+      return;
+    }
+
+    final random = Random.secure();
+    final passwords = List.generate(
+      _batchSize,
+      (_) => _generatePasswordFromPool(chars, random),
+      growable: false,
+    );
+
+    setState(() {
+      _batchPasswords = passwords;
+      _copiedBatchIndex = null;
+    });
+  }
+
+  Future<void> _copyBatchPassword(int index) async {
+    if (index < 0 || index >= _batchPasswords.length) {
+      return;
+    }
+
+    await Clipboard.setData(ClipboardData(text: _batchPasswords[index]));
+    if (!mounted) {
+      return;
+    }
+
+    setState(() => _copiedBatchIndex = index);
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted && _copiedBatchIndex == index) {
+        setState(() => _copiedBatchIndex = null);
+      }
+    });
+  }
+
+  Future<void> _loadProfiles() async {
+    setState(() => _isLoadingProfiles = true);
+    final document = await _profileService.loadDocument();
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _profiles = document.profiles;
+      _selectedProfileId = document.lastSelectedProfileId;
+      _isLoadingProfiles = false;
+    });
+
+    final selectedProfile = _findProfileById(document.lastSelectedProfileId);
+    if (selectedProfile != null) {
+      _applyProfile(selectedProfile);
+      return;
+    }
+
+    _profileNameController.text = '';
+  }
+
+  PasswordGeneratorProfile? _findProfileById(String? profileId) {
+    if (profileId == null) {
+      return null;
+    }
+    for (final profile in _profiles) {
+      if (profile.id == profileId) {
+        return profile;
+      }
+    }
+    return null;
+  }
+
+  void _applyProfile(PasswordGeneratorProfile profile) {
+    setState(() {
+      _selectedProfileId = profile.id;
+      _profileNameController.text = profile.name;
+      _length = profile.length
+          .clamp(widget.minLength, widget.maxLength)
+          .toDouble();
+      _useLowercase = profile.useLowercase;
+      _useUppercase = profile.useUppercase;
+      _useDigits = profile.useDigits;
+      _useSpecial = profile.useSpecial;
+    });
+    unawaited(_profileService.rememberSelectedProfile(profile.id));
+    _generate();
+  }
+
+  Future<void> _saveProfile() async {
+    final profileName = _profileNameController.text.trim();
+    if (profileName.isEmpty) {
+      Toaster.warning(
+        title: 'Профиль',
+        description: 'Укажите имя профиля для сохранения.',
+      );
+      return;
+    }
+
+    setState(() => _isSavingProfile = true);
+    try {
+      final document = await _profileService.saveProfile(
+        profileId: _selectedProfileId,
+        name: profileName,
+        length: _length.round(),
+        useLowercase: _useLowercase,
+        useUppercase: _useUppercase,
+        useDigits: _useDigits,
+        useSpecial: _useSpecial,
+      );
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _profiles = document.profiles;
+        _selectedProfileId = document.lastSelectedProfileId;
+      });
+
+      final savedProfile = _findProfileById(document.lastSelectedProfileId);
+      _profileNameController.text = savedProfile?.name ?? profileName;
+      Toaster.success(
+        title: 'Профиль сохранён',
+        description: 'Настройки генератора сохранены в профиль.',
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      Toaster.error(
+        title: 'Ошибка',
+        description: 'Не удалось сохранить профиль: $error',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingProfile = false);
+      }
+    }
+  }
+
+  Future<void> _deleteProfile() async {
+    final selectedProfile = _findProfileById(_selectedProfileId);
+    if (selectedProfile == null) {
+      return;
+    }
+
+    setState(() => _isDeletingProfile = true);
+    try {
+      final document = await _profileService.deleteProfile(selectedProfile.id);
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _profiles = document.profiles;
+        _selectedProfileId = document.lastSelectedProfileId;
+      });
+      _profileNameController.clear();
+      Toaster.success(
+        title: 'Профиль удалён',
+        description: 'Профиль "${selectedProfile.name}" удалён.',
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      Toaster.error(
+        title: 'Ошибка',
+        description: 'Не удалось удалить профиль: $error',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isDeletingProfile = false);
+      }
+    }
+  }
+
+  void _startNewProfile() {
+    setState(() => _selectedProfileId = null);
+    _profileNameController.clear();
+    unawaited(_profileService.rememberSelectedProfile(null));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -134,6 +370,8 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
             password: _generatedPassword,
             copied: _copied,
             placeholder: widget.emptyPlaceholder,
+            onRegenerate: widget.showRefreshButton ? _generate : null,
+            regenerateTooltip: widget.refreshLabel,
             onCopy: _copyToClipboard,
           ),
 
@@ -154,6 +392,46 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
               setState(() => _length = value);
               _generate();
             },
+          ),
+
+          const SizedBox(height: 16),
+
+          _BatchPasswordsSection(
+            selectedCount: _batchSize,
+            countOptions: _batchCountOptions,
+            passwords: _batchPasswords,
+            copiedIndex: _copiedBatchIndex,
+            onCountChanged: (value) {
+              setState(() => _batchSize = value);
+            },
+            onGeneratePressed: _generateBatchPasswords,
+            onCopyPressed: _copyBatchPassword,
+          ),
+
+          const SizedBox(height: 24),
+
+          _ProfilesSection(
+            controller: _profileNameController,
+            profiles: _profiles,
+            selectedProfileId: _selectedProfileId,
+            isLoading: _isLoadingProfiles,
+            isSaving: _isSavingProfile,
+            isDeleting: _isDeletingProfile,
+            onProfileSelected: (profileId) {
+              if (profileId == null) {
+                _startNewProfile();
+                return;
+              }
+
+              final profile = _findProfileById(profileId);
+              if (profile == null) {
+                return;
+              }
+              _applyProfile(profile);
+            },
+            onSavePressed: _saveProfile,
+            onDeletePressed: _deleteProfile,
+            onCreateNewPressed: _startNewProfile,
           ),
 
           const SizedBox(height: 8),
@@ -191,42 +469,132 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
             },
           ),
 
-          if (widget.showRefreshButton || widget.showSubmitButton) ...[
+          if (widget.showSubmitButton) ...[
             const SizedBox(height: 16),
-            Row(
-              children: [
-                if (widget.showRefreshButton)
-                  Expanded(
-                    child: SmoothButton(
-                      onPressed: _generate,
-                      icon: const Icon(Icons.refresh, size: 18),
-                      label: widget.refreshLabel,
-                      type: .text,
-                    ),
-                  ),
-                if (widget.showRefreshButton && widget.showSubmitButton)
-                  const SizedBox(width: 12),
-                if (widget.showSubmitButton)
-                  Expanded(
-                    child: SmoothButton(
-                      onPressed:
-                          widget.canSubmit &&
-                              _generatedPassword.isNotEmpty &&
-                              widget.onPasswordSubmitted != null
-                          ? () => widget.onPasswordSubmitted!.call(
-                              _generatedPassword,
-                            )
-                          : null,
-                      icon: const Icon(Icons.check, size: 18),
-                      label: widget.submitLabel,
-                      type: .filled,
-                    ),
-                  ),
-              ],
+            SmoothButton(
+              onPressed:
+                  widget.canSubmit &&
+                      _generatedPassword.isNotEmpty &&
+                      widget.onPasswordSubmitted != null
+                  ? () => widget.onPasswordSubmitted!.call(_generatedPassword)
+                  : null,
+              icon: const Icon(Icons.check, size: 18),
+              label: widget.submitLabel,
+              type: SmoothButtonType.filled,
             ),
           ],
         ],
       ),
+    );
+  }
+}
+
+class _ProfilesSection extends StatelessWidget {
+  const _ProfilesSection({
+    required this.controller,
+    required this.profiles,
+    required this.selectedProfileId,
+    required this.isLoading,
+    required this.isSaving,
+    required this.isDeleting,
+    required this.onProfileSelected,
+    required this.onSavePressed,
+    required this.onDeletePressed,
+    required this.onCreateNewPressed,
+  });
+
+  final TextEditingController controller;
+  final List<PasswordGeneratorProfile> profiles;
+  final String? selectedProfileId;
+  final bool isLoading;
+  final bool isSaving;
+  final bool isDeleting;
+  final ValueChanged<String?> onProfileSelected;
+  final VoidCallback onSavePressed;
+  final VoidCallback onDeletePressed;
+  final VoidCallback onCreateNewPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final canSave =
+        !isLoading && !isSaving && controller.text.trim().isNotEmpty;
+    final canDelete = !isLoading && !isDeleting && selectedProfileId != null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Профили генератора',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String?>(
+          value: selectedProfileId,
+
+          items: [
+            const DropdownMenuItem<String?>(
+              value: null,
+              child: Text('Новый профиль'),
+            ),
+            ...profiles.map(
+              (profile) => DropdownMenuItem<String?>(
+                value: profile.id,
+                child: Text(profile.name),
+              ),
+            ),
+          ],
+          onChanged: isLoading ? null : onProfileSelected,
+          decoration: primaryInputDecoration(
+            context,
+            labelText: 'Сохранённый профиль',
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: controller,
+          decoration: primaryInputDecoration(
+            context,
+            labelText: 'Имя профиля',
+            suffixIcon: selectedProfileId == null
+                ? null
+                : IconButton(
+                    tooltip: 'Создать новый профиль',
+                    onPressed: onCreateNewPressed,
+                    icon: const Icon(Icons.add_circle_outline),
+                  ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: SmoothButton(
+                onPressed: canSave ? onSavePressed : null,
+                loading: isSaving,
+                icon: const Icon(Icons.save_outlined, size: 18),
+                label: selectedProfileId == null
+                    ? 'Сохранить профиль'
+                    : 'Обновить профиль',
+                type: SmoothButtonType.outlined,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: SmoothButton(
+                onPressed: canDelete ? onDeletePressed : null,
+                loading: isDeleting,
+                icon: const Icon(Icons.delete_outline, size: 18),
+                label: 'Удалить',
+                variant: SmoothButtonVariant.error,
+                type: SmoothButtonType.outlined,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -236,13 +604,17 @@ class _PasswordField extends StatelessWidget {
     required this.password,
     required this.copied,
     required this.placeholder,
+    required this.regenerateTooltip,
     required this.onCopy,
+    this.onRegenerate,
   });
 
   final String password;
   final bool copied;
   final String placeholder;
+  final String regenerateTooltip;
   final VoidCallback onCopy;
+  final VoidCallback? onRegenerate;
 
   @override
   Widget build(BuildContext context) {
@@ -258,6 +630,12 @@ class _PasswordField extends StatelessWidget {
       ),
       child: Row(
         children: [
+          IconButton.filledTonal(
+            onPressed: onRegenerate,
+            icon: const Icon(Icons.refresh, size: 18),
+            tooltip: regenerateTooltip,
+          ),
+          const SizedBox(width: 8),
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -273,7 +651,7 @@ class _PasswordField extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           IconButton.filledTonal(
-            onPressed: onCopy,
+            onPressed: password.isEmpty ? null : onCopy,
             icon: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: Icon(
@@ -286,6 +664,124 @@ class _PasswordField extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _BatchPasswordsSection extends StatelessWidget {
+  const _BatchPasswordsSection({
+    required this.selectedCount,
+    required this.countOptions,
+    required this.passwords,
+    required this.copiedIndex,
+    required this.onCountChanged,
+    required this.onGeneratePressed,
+    required this.onCopyPressed,
+  });
+
+  final int selectedCount;
+  final List<int> countOptions;
+  final List<String> passwords;
+  final int? copiedIndex;
+  final ValueChanged<int> onCountChanged;
+  final VoidCallback onGeneratePressed;
+  final ValueChanged<int> onCopyPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Пакетная генерация',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: DropdownButtonFormField<int>(
+                value: selectedCount,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Количество паролей',
+                ),
+                items: countOptions
+                    .map(
+                      (count) => DropdownMenuItem<int>(
+                        value: count,
+                        child: Text(count.toString()),
+                      ),
+                    )
+                    .toList(growable: false),
+                onChanged: (value) {
+                  if (value != null) {
+                    onCountChanged(value);
+                  }
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            SmoothButton(
+              onPressed: onGeneratePressed,
+              icon: const Icon(Icons.auto_awesome, size: 18),
+              label: 'Сгенерировать',
+              type: SmoothButtonType.outlined,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (passwords.isEmpty)
+          Text(
+            'Нажмите "Сгенерировать", чтобы получить список паролей.',
+            style: theme.textTheme.bodyMedium,
+          )
+        else
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: passwords.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final password = passwords[index];
+              final copied = copiedIndex == index;
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SelectableText(
+                        password,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      tooltip: copied ? 'Скопировано!' : 'Копировать',
+                      onPressed: () => onCopyPressed(index),
+                      icon: Icon(copied ? Icons.check : Icons.copy_outlined),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+      ],
     );
   }
 }

@@ -6,16 +6,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
-import 'package:hoplixi/core/multi_window/index.dart';
 import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
 import 'package:hoplixi/db_core/provider/db_history_provider.dart';
 import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 import 'package:hoplixi/features/about/ui/about_app_modal.dart';
+import 'package:hoplixi/features/password_generator/password_generator_widget.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
-import 'package:hoplixi/features/password_generator/password_generator_widget.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/widgets/titlebar.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -607,15 +606,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         label: 'Генератор',
         description: 'Генерация паролей',
         onTap: () async {
-          if (UniversalPlatform.isDesktop) {
-            unawaited(
-              MultiWindowService.instance.openWindow(
-                type: SubWindowType.passwordGenerator,
-              ),
-            );
-          } else {
-            await _openPasswordGeneratorModal();
-          }
+          // if (!UniversalPlatform.isDesktop) {
+          //   unawaited(
+          //     MultiWindowService.instance.openWindow(
+          //       type: SubWindowType.passwordGenerator,
+          //     ),
+          //   );
+          // } else {
+          await _openPasswordGeneratorModal();
+          // }
         },
       ),
 
@@ -700,7 +699,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Future<void> _openPasswordGeneratorModal() async {
-    await WoltModalSheet.show<String>(
+    await WoltModalSheet.show<void>(
       context: context,
       useSafeArea: true,
       useRootNavigator: true,
@@ -723,15 +722,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               onPressed: () => Navigator.of(modalContext).pop(),
             ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(8),
+          child: const Padding(
+            padding: EdgeInsets.all(8),
             child: PasswordGeneratorWidget(
               showRefreshButton: true,
-              showSubmitButton: true,
+              showSubmitButton: false,
+
               submitLabel: 'Использовать пароль',
-              onPasswordSubmitted: (password) {
-                Navigator.of(modalContext).pop(password);
-              },
+              // onPasswordSubmitted: (password) {
+              //   Navigator.of(modalContext).pop(password);
+              // },
             ),
           ),
         ),
