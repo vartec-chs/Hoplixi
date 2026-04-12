@@ -84,55 +84,10 @@ class _OpenStoreScreenState extends ConsumerState<OpenStoreScreen> {
       previous,
       next,
     ) {
-      next.whenData((state) async {
+      next.whenData((state) {
         if (state.selectedStorage != null &&
             previous?.value?.selectedStorage != state.selectedStorage) {
           _showPasswordFormDialog(state);
-        }
-
-        final pendingBinding = state.pendingImportedStoreBinding;
-        final previousBinding = previous?.value?.pendingImportedStoreBinding;
-        if (pendingBinding == null ||
-            identical(pendingBinding, previousBinding)) {
-          return;
-        }
-
-        final shouldBind = await showDialog<bool>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: const Text('Привязать к cloud sync'),
-            content: Text(pendingBinding.promptDescription),
-            actions: [
-              SmoothButton(
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                label: 'Нет',
-                type: SmoothButtonType.text,
-              ),
-              SmoothButton(
-                onPressed: () => Navigator.of(dialogContext).pop(true),
-                label: 'Привязать',
-              ),
-            ],
-          ),
-        );
-
-        if (!mounted) {
-          return;
-        }
-
-        final didBind = await notifier.resolvePendingImportedStoreBinding(
-          bind: shouldBind == true,
-        );
-        if (!mounted) {
-          return;
-        }
-
-        if (didBind) {
-          Toaster.success(
-            context: context,
-            title: 'Cloud Sync',
-            description: 'Локальная копия привязана к облачному store.',
-          );
         }
       });
     });
