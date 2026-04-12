@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/shared/ui/password_generator_widget.dart';
+import 'package:hoplixi/features/password_generator/password_generator_widget.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../../core/multi_window/window_channel_service.dart';

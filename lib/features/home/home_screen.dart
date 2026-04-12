@@ -15,7 +15,7 @@ import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 import 'package:hoplixi/features/about/ui/about_app_modal.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
-import 'package:hoplixi/shared/ui/password_generator_widget.dart';
+import 'package:hoplixi/features/password_generator/password_generator_widget.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/widgets/titlebar.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';

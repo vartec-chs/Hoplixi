@@ -4,7 +4,7 @@ import 'package:hoplixi/core/theme/constants.dart';
 import 'package:hoplixi/features/password_manager/create_store/providers/create_store_form_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/notification_card.dart';
-import 'package:hoplixi/shared/ui/password_generator_widget.dart';
+import 'package:hoplixi/features/password_generator/password_generator_widget.dart';
 import 'package:hoplixi/shared/ui/password_strength_indicator.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
