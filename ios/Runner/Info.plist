@@ -97,6 +97,20 @@
     <string>This app needs Bluetooth access</string>
     <key>NSBluetoothPeripheralUsageDescription</key>
     <string>This app needs access to Bluetooth peripherals</string>
+    <key>NFCReaderUsageDescription</key>
+    <string>This app uses NFC to read payment card data that the card exposes.</string>
+    <key>com.apple.developer.nfc.readersession.iso7816.select-identifiers</key>
+    <array>
+      <string>A0000000031010</string>
+      <string>A0000000032010</string>
+      <string>A0000000041010</string>
+      <string>A0000000043060</string>
+      <string>A00000002501</string>
+      <string>A0000001523010</string>
+      <string>A0000000651010</string>
+      <string>A000000333010101</string>
+      <string>A0000006581010</string>
+    </array>
     <key>NSUserTrackingUsageDescription</key>
     <string>This app needs to track user activity for advertising</string>
     <key>NSSiriUsageDescription</key>

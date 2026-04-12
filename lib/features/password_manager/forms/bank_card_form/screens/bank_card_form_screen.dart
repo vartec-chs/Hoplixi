@@ -18,6 +18,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:universal_platform/universal_platform.dart';
 
 import '../providers/bank_card_form_provider.dart';
+import '../services/bank_card_nfc_reader_service.dart';
 
 /// Экран формы создания/редактирования банковской карты
 class BankCardFormScreen extends ConsumerStatefulWidget {
@@ -32,6 +33,7 @@ class BankCardFormScreen extends ConsumerStatefulWidget {
 
 class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _bankCardNfcReaderService = BankCardNfcReaderService();
 
   late final TextEditingController _nameController;
   late final TextEditingController _cardholderNameController;
@@ -137,6 +139,69 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
     }
   }
 
+  Future<void> _scanCardWithNfc() async {
+    if (!(UniversalPlatform.isAndroid || UniversalPlatform.isIOS)) {
+      return;
+    }
+
+    try {
+      final result = await _bankCardNfcReaderService.readCard();
+      if (!mounted) {
+        return;
+      }
+
+      if (!result.hasReadableData) {
+        Toaster.info(
+          title: 'NFC',
+          description: 'Карта обнаружена, но читаемых EMV-данных не найдено.',
+        );
+        return;
+      }
+
+      final notifier = ref.read(bankCardFormProvider.notifier);
+      final state = ref.read(bankCardFormProvider);
+
+      if ((state.cardNumber).trim().isEmpty && result.cardNumber != null) {
+        notifier.setCardNumber(_formatCardNumber(result.cardNumber!));
+      }
+      if (state.cardholderName.trim().isEmpty &&
+          result.cardholderName != null) {
+        notifier.setCardholderName(result.cardholderName!);
+      }
+      if (state.expiryMonth.trim().isEmpty && result.expiryMonth != null) {
+        notifier.setExpiryMonth(result.expiryMonth!);
+      }
+      if (state.expiryYear.trim().isEmpty && result.expiryYear != null) {
+        notifier.setExpiryYear(result.expiryYear!);
+      }
+      if (state.cardNetwork == null && result.cardNetwork != null) {
+        notifier.setCardNetwork(result.cardNetwork);
+      }
+      if (state.name.trim().isEmpty) {
+        final generatedName = _buildReadableCardTitle(result);
+        if (generatedName != null) {
+          notifier.setName(generatedName);
+        }
+      }
+
+      final summary = result.buildReadableSummary();
+      Toaster.success(
+        title: 'NFC',
+        description: summary.isEmpty
+            ? 'Данные карты прочитаны.'
+            : 'Прочитаны поля:\n${summary.join('\n')}',
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      Toaster.error(
+        title: 'NFC',
+        description: 'Не удалось прочитать карту по NFC: $error',
+      );
+    }
+  }
+
   void _handleSave() async {
     final notifier = ref.read(bankCardFormProvider.notifier);
     final success = await notifier.save();
@@ -168,6 +233,28 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
       buffer.write(cleanNumber[i]);
     }
     return buffer.toString();
+  }
+
+  String? _buildReadableCardTitle(BankCardNfcReadResult result) {
+    final last4 = result.last4Digits;
+    final network = switch (result.cardNetwork) {
+      'visa' => 'Visa',
+      'mastercard' => 'Mastercard',
+      'amex' => 'American Express',
+      'discover' => 'Discover',
+      'dinersclub' => 'Diners Club',
+      'jcb' => 'JCB',
+      'unionpay' => 'UnionPay',
+      _ => result.applicationLabel,
+    };
+
+    if (network == null && last4 == null) {
+      return null;
+    }
+    if (network != null && last4 != null) {
+      return '$network •••• $last4';
+    }
+    return network ?? 'Карта •••• $last4';
   }
 
   Future<void> _loadNoteName(String noteId) async {
@@ -407,13 +494,33 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                               errorText: state.cardNumberError,
                               prefixIcon: const Icon(LucideIcons.creditCard),
                               suffixIcon: UniversalPlatform.isMobile
-                                  ? IconButton(
-                                      icon: const Icon(Icons.camera_alt),
-                                      onPressed: _scanCard,
-                                      tooltip: context
-                                          .t
-                                          .dashboard_forms
-                                          .scan_card_tooltip,
+                                  ? SizedBox(
+                                      width:
+                                          (UniversalPlatform.isAndroid ||
+                                              UniversalPlatform.isIOS)
+                                          ? 96
+                                          : 48,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          if (UniversalPlatform.isAndroid ||
+                                              UniversalPlatform.isIOS)
+                                            IconButton(
+                                              icon: const Icon(Icons.nfc),
+                                              onPressed: _scanCardWithNfc,
+                                              tooltip: 'Прочитать карту по NFC',
+                                            ),
+                                          IconButton(
+                                            icon: const Icon(Icons.camera_alt),
+                                            onPressed: _scanCard,
+                                            tooltip: context
+                                                .t
+                                                .dashboard_forms
+                                                .scan_card_tooltip,
+                                          ),
+                                        ],
+                                      ),
                                     )
                                   : null,
                             ),
