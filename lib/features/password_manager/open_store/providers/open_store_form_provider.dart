@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/open_store/models/open_store_state.dart';
 import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
 import 'package:hoplixi/db_core/provider/db_history_provider.dart';
 import 'package:hoplixi/db_core/provider/main_store_provider.dart';
+import 'package:hoplixi/features/password_manager/open_store/models/open_store_state.dart';
+import 'package:hoplixi/features/password_manager/open_store/services/store_password_attempt_limiter_service.dart';
+import 'package:hoplixi/setup/di_init.dart';
 import 'package:path/path.dart' as p;
 
 final openStoreFormProvider =
@@ -137,8 +139,9 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
 
   Future<bool> openStorage() async {
     final currentState = _currentState;
+    final selectedStorage = currentState.selectedStorage;
 
-    if (currentState.selectedStorage == null) {
+    if (selectedStorage == null) {
       _setState(currentState.copyWith(error: 'Хранилище не выбрано'));
       return false;
     }
@@ -148,13 +151,28 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
       return false;
     }
 
+    final attemptLimiter = getIt<StorePasswordAttemptLimiterService>();
+    final attemptStatus = await attemptLimiter.getStatus(selectedStorage.path);
+    if (!_isMounted) {
+      return false;
+    }
+
+    if (attemptStatus.isBlocked) {
+      _setState(
+        currentState.copyWith(
+          passwordError: attemptLimiter.buildBlockedDescription(attemptStatus),
+        ),
+      );
+      return false;
+    }
+
     _setState(
       currentState.copyWith(isOpening: true, passwordError: null, error: null),
     );
 
     try {
       final dto = OpenStoreDto(
-        path: currentState.selectedStorage!.path,
+        path: selectedStorage.path,
         password: currentState.password,
       );
 
@@ -165,8 +183,9 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
       }
 
       if (success) {
+        await attemptLimiter.reset(selectedStorage.path);
         logInfo(
-          'Store opened successfully: ${currentState.selectedStorage!.name}',
+          'Store opened successfully: ${selectedStorage.name}',
           tag: 'OpenStoreForm',
         );
         return true;
@@ -177,8 +196,20 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
         return false;
       }
 
-      final errorMessage =
+      var errorMessage =
           storeState.error?.message ?? 'Не удалось открыть хранилище';
+
+      if (storeState.error?.code == 'DB_INVALID_PASSWORD') {
+        final failureStatus = await attemptLimiter.registerFailure(
+          selectedStorage.path,
+        );
+        if (!_isMounted) {
+          return false;
+        }
+        errorMessage =
+            '$errorMessage ${attemptLimiter.buildFailureDescription(failureStatus)}';
+      }
+
       _setState(
         _currentState.copyWith(isOpening: false, passwordError: errorMessage),
       );

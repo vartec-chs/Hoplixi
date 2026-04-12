@@ -21,6 +21,7 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_stor
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/features/home/providers/recent_database_provider.dart';
+import 'package:hoplixi/features/password_manager/open_store/services/store_password_attempt_limiter_service.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
@@ -562,8 +563,10 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
   ) async {
     final notifier = ref.read(mainStoreProvider.notifier);
     final historyService = await ref.read(dbHistoryProvider.future);
+    final attemptLimiter = getIt<StorePasswordAttemptLimiterService>();
     String? password;
     bool shouldSavePassword = false;
+    bool usedManualPassword = false;
 
     // Если пользователь выбрал сохранение пароля, сначала подтверждаем доступ
     if (entry.savePassword) {
@@ -629,6 +632,15 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
     }
 
     if (password == null) {
+      final attemptStatus = await attemptLimiter.getStatus(entry.path);
+      if (attemptStatus.isBlocked) {
+        Toaster.error(
+          title: 'Хранилище временно заблокировано',
+          description: attemptLimiter.buildBlockedDescription(attemptStatus),
+        );
+        return;
+      }
+
       // Пароль не сохранен, показываем диалог
       final result = await showDialog<(String, bool)>(
         context: context,
@@ -638,6 +650,7 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
       if (result == null) return; // User cancelled
       password = result.$1;
       shouldSavePassword = result.$2;
+      usedManualPassword = true;
     }
 
     final success = await notifier.openStore(
@@ -645,6 +658,7 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
     );
 
     if (success) {
+      await attemptLimiter.reset(entry.path);
       Toaster.success(title: 'Успех', description: 'База данных открыта');
 
       if (shouldSavePassword && password.isNotEmpty) {
@@ -658,8 +672,16 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
       }
     } else {
       final state = ref.read(mainStoreProvider);
-      final errorMessage =
+      var errorMessage =
           state.value?.error?.message ?? 'Не удалось открыть базу данных';
+
+      if (usedManualPassword &&
+          state.value?.error?.code == 'DB_INVALID_PASSWORD') {
+        final failureStatus = await attemptLimiter.registerFailure(entry.path);
+        errorMessage =
+            '$errorMessage ${attemptLimiter.buildFailureDescription(failureStatus)}';
+      }
+
       Toaster.error(title: 'Ошибка', description: errorMessage);
     }
   }

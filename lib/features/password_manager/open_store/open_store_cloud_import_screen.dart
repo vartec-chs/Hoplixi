@@ -108,6 +108,14 @@ class _OpenStoreCloudImportScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Импорт из Cloud Sync'),
+        leading: BackButton(
+          onPressed: () => {
+            if (context.canPop())
+              {context.pop()}
+            else
+              {context.go(AppRoutesPaths.openStore)},
+          },
+        ),
         actions: [
           IconButton(
             onPressed: asyncState.isLoading

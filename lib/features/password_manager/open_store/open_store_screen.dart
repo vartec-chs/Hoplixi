@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,8 +7,10 @@ import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/open_store/models/open_store_state.dart';
 import 'package:hoplixi/features/password_manager/open_store/providers/open_store_form_provider.dart';
+import 'package:hoplixi/features/password_manager/open_store/services/store_password_attempt_limiter_service.dart';
 import 'package:hoplixi/features/password_manager/open_store/widgets/index.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/widgets/titlebar.dart';
 
@@ -18,12 +22,37 @@ class OpenStoreScreen extends ConsumerStatefulWidget {
 }
 
 class _OpenStoreScreenState extends ConsumerState<OpenStoreScreen> {
+  final _attemptLimiter = getIt<StorePasswordAttemptLimiterService>();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(titlebarStateProvider.notifier).setBackgroundTransparent(false);
     });
+  }
+
+  Future<void> _handleStorageSelected(OpenStoreState state) async {
+    final storage = state.selectedStorage;
+    if (storage == null) {
+      return;
+    }
+
+    final status = await _attemptLimiter.getStatus(storage.path);
+    if (!mounted) {
+      return;
+    }
+
+    if (status.isBlocked) {
+      ref.read(openStoreFormProvider.notifier).cancelSelection();
+      Toaster.error(
+        title: 'Хранилище временно заблокировано',
+        description: _attemptLimiter.buildBlockedDescription(status),
+      );
+      return;
+    }
+
+    _showPasswordFormDialog(state);
   }
 
   void _showPasswordFormDialog(OpenStoreState state) {
@@ -87,7 +116,7 @@ class _OpenStoreScreenState extends ConsumerState<OpenStoreScreen> {
       next.whenData((state) {
         if (state.selectedStorage != null &&
             previous?.value?.selectedStorage != state.selectedStorage) {
-          _showPasswordFormDialog(state);
+          unawaited(_handleStorageSelected(state));
         }
       });
     });
@@ -101,7 +130,11 @@ class _OpenStoreScreenState extends ConsumerState<OpenStoreScreen> {
             ref
                 .read(titlebarStateProvider.notifier)
                 .setBackgroundTransparent(true);
-            context.pop();
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(AppRoutesPaths.home);
+            }
           },
         ),
         actions: [

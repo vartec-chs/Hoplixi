@@ -47,8 +47,9 @@ class _KeepassImportScreenState extends ConsumerState<KeepassImportScreen> {
 
     final state = ref.watch(keepassImportProvider);
     final notifier = ref.read(keepassImportProvider.notifier);
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final shouldConstrainBody = screenWidth > 600;
+    // final screenWidth = MediaQuery.sizeOf(context).width;
+    // final shouldConstrainBody = screenWidth > 600;
+    const shouldConstrainBody = false;
 
     final bodyContent = SafeArea(
       child: Column(
