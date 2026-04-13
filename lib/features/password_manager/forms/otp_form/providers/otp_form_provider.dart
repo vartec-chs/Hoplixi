@@ -1,12 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/smart_converter_base.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
-import 'package:hoplixi/features/password_manager/forms/otp_form/utils/otp_uri_parser.dart';
 import 'package:hoplixi/db_core/models/dto/otp_dto.dart';
 import 'package:hoplixi/db_core/models/enums/entity_types.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
+import 'package:hoplixi/features/password_manager/forms/otp_form/utils/otp_uri_parser.dart';
 import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
@@ -98,7 +98,7 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
     final parseResult = OtpUriParser.parse(qrData);
 
     if (parseResult == null) {
-      logWarning('Failed to parse OTP URI: $qrData', tag: _logTag);
+      logWarning('Failed to parse OTP URI from scanned data', tag: _logTag);
       return;
     }
 
@@ -118,10 +118,7 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
       accountNameError: null,
     );
 
-    logInfo(
-      'OTP data loaded from QR code: ${parseResult.issuer}',
-      tag: _logTag,
-    );
+    logInfo('OTP data loaded from QR code', tag: _logTag);
   }
 
   /// Обновить тип OTP

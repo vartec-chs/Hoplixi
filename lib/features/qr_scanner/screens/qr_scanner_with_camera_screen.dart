@@ -193,7 +193,7 @@ class _QrScannerWithCameraScreenState extends State<QrScannerWithCameraScreen>
 
     if (rawValue == null || rawValue.isEmpty) return;
 
-    logInfo('Code detected [${barcode.format.name}]: $rawValue', tag: _logTag);
+    logInfo('Code detected [${barcode.format.name}]', tag: _logTag);
 
     // Set processing flag to prevent duplicate scans
     setState(() {

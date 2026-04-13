@@ -19,3 +19,8 @@
 - fix(password_manager): исправлен сброс текста при вводе в фильтрах
   `lib/features/password_manager/dashboard/widgets/dashboard_home/filter_sections`
   за счет безопасной синхронизации `TextEditingController` в `didUpdateWidget`
+- chore(security): проверено, что в модуле qr_scanner не логируются
+  отсканированные данные; в логах остаются только служебные события и формат
+  кода
+- fix(security): в otp_form_provider удалено логирование данных из сканирования
+  (сырой OTP URI и issuer) при обработке QR-кода
