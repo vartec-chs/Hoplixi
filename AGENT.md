@@ -81,6 +81,10 @@ code.
 
 - One source of truth
 
+- Changelog is mandatory:
+  - after any code/content changes made by the agent, add a concise entry to
+    root `CHANGELOG.md` describing what was changed
+
 ## Best Practices
 
 See [docs-ai/widget-patterns.md](docs-ai/widget-patterns.md) for optimized
