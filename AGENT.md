@@ -84,6 +84,8 @@ code.
 - Changelog is mandatory:
   - after any code/content changes made by the agent, add a concise entry to
     root `CHANGELOG.md` describing what was changed
+  - group entries by feature/module using subheadings (for example:
+    `password_manager`, `cloud_sync`, `logs_viewer`) instead of one flat list
 
 ## Best Practices
 

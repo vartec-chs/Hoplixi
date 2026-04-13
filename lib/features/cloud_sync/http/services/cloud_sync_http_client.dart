@@ -10,8 +10,8 @@ import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.da
 import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_download_request.dart';
 import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_exception.dart';
 import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_request.dart';
-import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_upload_request.dart';
 import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_transport.dart';
+import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_upload_request.dart';
 import 'package:hoplixi/features/cloud_sync/http/services/cloud_sync_token_refresh_service.dart';
 import 'package:hoplixi/features/cloud_sync/http/services/cloud_sync_token_resolver.dart';
 
@@ -75,6 +75,7 @@ class CloudSyncHttpClient implements CloudSyncHttpTransport {
   final CloudSyncTokenRefreshService _tokenRefreshService;
   late final Dio _dio;
   late final Dio _retryDio;
+  Future<AuthTokenEntry>? _refreshInFlight;
 
   static BaseOptions _createBaseOptions() {
     return BaseOptions(
@@ -110,18 +111,21 @@ class CloudSyncHttpClient implements CloudSyncHttpTransport {
 
   @override
   Future<Response<T>> request<T>(CloudSyncHttpRequest request) async {
-    try {
-      return await _dio.requestUri<T>(
-        request.uri,
-        data: request.data,
-        cancelToken: request.cancelToken,
-        options: request.toOptions(extra: _requestExtra()),
-        onSendProgress: request.onSendProgress,
-        onReceiveProgress: request.onReceiveProgress,
-      );
-    } on DioException catch (error, stackTrace) {
-      throw _mapDioException(error, stackTrace: stackTrace);
-    }
+    return _runWithUnauthorizedRetry<T>(
+      execute: (dio, extra, authToken) async {
+        return dio.requestUri<T>(
+          request.uri,
+          data: request.data,
+          cancelToken: request.cancelToken,
+          options: _applyAuthorizationHeader(
+            request.toOptions(extra: extra),
+            authToken,
+          ),
+          onSendProgress: request.onSendProgress,
+          onReceiveProgress: request.onReceiveProgress,
+        );
+      },
+    );
   }
 
   @override
@@ -132,53 +136,59 @@ class CloudSyncHttpClient implements CloudSyncHttpTransport {
       );
     }
 
-    try {
-      final response = await _dio.requestUri<ResponseBody>(
-        request.uri,
-        data: request.data,
-        cancelToken: request.cancelToken,
-        options: request.toOptions(extra: _requestExtra()),
-      );
-      final body = response.data;
-      if (body == null) {
-        throw CloudSyncHttpException(
-          type: CloudSyncHttpExceptionType.badResponse,
-          message: 'Download response body is empty.',
-          provider: provider,
-          tokenId: tokenId,
-          statusCode: response.statusCode,
-          requestUri: request.uri,
+    final response = await _runWithUnauthorizedRetry<ResponseBody>(
+      execute: (dio, extra, authToken) {
+        return dio.requestUri<ResponseBody>(
+          request.uri,
+          data: request.data,
+          cancelToken: request.cancelToken,
+          options: _applyAuthorizationHeader(
+            request.toOptions(extra: extra),
+            authToken,
+          ),
         );
-      }
-
-      if (request.savePath != null) {
-        return _persistDownloadToFile(body, request: request);
-      }
-
-      if (request.responseSink != null) {
-        return _pipeDownloadToSink(body, request: request);
-      }
-
-      return body;
-    } on DioException catch (error, stackTrace) {
-      throw _mapDioException(error, stackTrace: stackTrace);
+      },
+    );
+    final body = response.data;
+    if (body == null) {
+      throw CloudSyncHttpException(
+        type: CloudSyncHttpExceptionType.badResponse,
+        message: 'Download response body is empty.',
+        provider: provider,
+        tokenId: tokenId,
+        statusCode: response.statusCode,
+        requestUri: request.uri,
+      );
     }
+
+    if (request.savePath != null) {
+      return _persistDownloadToFile(body, request: request);
+    }
+
+    if (request.responseSink != null) {
+      return _pipeDownloadToSink(body, request: request);
+    }
+
+    return body;
   }
 
   @override
   Future<Response<T>> upload<T>(CloudSyncUploadRequest request) async {
-    try {
-      return await _dio.requestUri<T>(
-        request.uri,
-        data: request.data,
-        cancelToken: request.cancelToken,
-        options: request.toOptions(extra: _requestExtra()),
-        onSendProgress: request.onSendProgress,
-        onReceiveProgress: request.onReceiveProgress,
-      );
-    } on DioException catch (error, stackTrace) {
-      throw _mapDioException(error, stackTrace: stackTrace);
-    }
+    return _runWithUnauthorizedRetry<T>(
+      execute: (dio, extra, authToken) {
+        return dio.requestUri<T>(
+          request.uri,
+          data: request.data,
+          cancelToken: request.cancelToken,
+          options: _applyAuthorizationHeader(
+            request.toOptions(extra: extra),
+            authToken,
+          ),
+          onSendProgress: request.onSendProgress,
+          onReceiveProgress: request.onReceiveProgress,
+        );
+      },
+    );
   }
 
   @override
@@ -262,11 +272,93 @@ class CloudSyncHttpClient implements CloudSyncHttpTransport {
     }
   }
 
-  Map<String, dynamic> _requestExtra() => <String, dynamic>{
-    extraTokenIdKey: tokenId,
-    extraProviderKey: provider.id,
-    extraRetriedKey: false,
-  };
+  Map<String, dynamic> _requestExtra({bool retried = false}) =>
+      <String, dynamic>{
+        extraTokenIdKey: tokenId,
+        extraProviderKey: provider.id,
+        extraRetriedKey: retried,
+      };
+
+  Future<Response<T>> _runWithUnauthorizedRetry<T>({
+    required Future<Response<T>> Function(
+      Dio dio,
+      Map<String, dynamic> extra,
+      AuthTokenEntry? authToken,
+    )
+    execute,
+  }) async {
+    try {
+      return await execute(_dio, _requestExtra(), null);
+    } on DioException catch (error, stackTrace) {
+      final mapped = _mapDioException(error, stackTrace: stackTrace);
+      if (mapped.type != CloudSyncHttpExceptionType.unauthorized) {
+        throw mapped;
+      }
+
+      try {
+        final token = await _refreshTokenOnce();
+        return await execute(_retryDio, _requestExtra(retried: true), token);
+      } on DioException catch (retryError, retryStackTrace) {
+        throw _mapDioException(retryError, stackTrace: retryStackTrace);
+      } on CloudSyncHttpException {
+        rethrow;
+      } catch (retryError, retryStackTrace) {
+        throw CloudSyncHttpException(
+          type: CloudSyncHttpExceptionType.refreshFailed,
+          message: 'Failed to refresh OAuth token for cloud request.',
+          provider: provider,
+          tokenId: tokenId,
+          statusCode: mapped.statusCode,
+          requestUri: mapped.requestUri,
+          responseBodySnippet: mapped.responseBodySnippet,
+          cause: AsyncError(retryError, retryStackTrace),
+        );
+      }
+    }
+  }
+
+  Options _applyAuthorizationHeader(Options options, AuthTokenEntry? token) {
+    if (token == null) {
+      return options;
+    }
+
+    return options.copyWith(
+      headers: <String, dynamic>{
+        ...options.headers ?? <String, dynamic>{},
+        HttpHeaders.authorizationHeader: _buildAuthorizationHeader(token),
+      },
+      extra: <String, dynamic>{
+        ...options.extra ?? <String, dynamic>{},
+        extraRetriedKey: true,
+      },
+    );
+  }
+
+  Future<AuthTokenEntry> _refreshTokenOnce() {
+    final inFlight = _refreshInFlight;
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final refreshFuture = _tokenRefreshService.refreshToken(tokenId);
+    _refreshInFlight = refreshFuture;
+    return refreshFuture.whenComplete(() {
+      if (identical(_refreshInFlight, refreshFuture)) {
+        _refreshInFlight = null;
+      }
+    });
+  }
+
+  String _buildAuthorizationHeader(AuthTokenEntry token) {
+    final overrideScheme = provider.metadata.apiAuthSchemeOverride?.trim();
+    final tokenType = token.tokenType?.trim();
+    final scheme = overrideScheme != null && overrideScheme.isNotEmpty
+        ? overrideScheme
+        : tokenType == null || tokenType.isEmpty
+        ? 'Bearer'
+        : tokenType;
+    return '$scheme ${token.accessToken.trim()}';
+  }
 
   CloudSyncHttpException _mapDioException(
     DioException error, {
