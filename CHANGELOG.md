@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 2026-04-14
+## 2026-04-14 (1.1.1)
 
 ### docs
 
@@ -12,6 +12,9 @@
 
 - Добавлена настройка стора для управления инкрементом `usedCount` при
   копировании данных.
+- При сохранении настроек стора через `store_settings_provider.dart`
+  теперь явно обновляется `store_meta.modified_at`, даже если менялись только
+  значения в `store_settings`.
 - Логика копирования и условного `incrementUsage` вынесена в общий util
   `lib/features/password_manager/shared/utils/copy_usage_utils.dart`.
 - Карточки в `lib/features/password_manager/dashboard/widgets/cards` переведены
@@ -31,8 +34,8 @@
 
 ### db_core
 
-- В `meta_touch_triggers.dart` добавлены триггеры для `store_settings`,
-  чтобы изменения настроек стора тоже обновляли `store_meta.modified_at`.
+- В `meta_touch_triggers.dart` добавлены триггеры для `store_settings`, чтобы
+  изменения настроек стора тоже обновляли `store_meta.modified_at`.
 
 ### local_send
 

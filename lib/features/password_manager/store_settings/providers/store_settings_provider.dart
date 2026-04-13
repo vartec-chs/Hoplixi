@@ -239,6 +239,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
 
     try {
       final daoResult = await ref.read(storeMetaDaoProvider.future);
+      var settingsChanged = false;
 
       // Обновляем имя если изменилось
       if (state.newName.trim() != state.name) {
@@ -274,6 +275,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
           StoreSettingsKeys.historyLimit,
           state.newHistoryLimit.toString(),
         );
+        settingsChanged = true;
         shouldCleanupHistory = true;
       }
       if (state.newHistoryMaxAgeDays != state.historyMaxAgeDays) {
@@ -281,6 +283,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
           StoreSettingsKeys.historyMaxAgeDays,
           state.newHistoryMaxAgeDays.toString(),
         );
+        settingsChanged = true;
         shouldCleanupHistory = true;
       }
       if (state.newHistoryEnabled != state.historyEnabled) {
@@ -288,6 +291,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
           StoreSettingsKeys.historyEnabled,
           state.newHistoryEnabled.toString(),
         );
+        settingsChanged = true;
         shouldCleanupHistory = true;
       }
       if (state.newIncrementUsageOnCopy != state.incrementUsageOnCopy) {
@@ -295,6 +299,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
           StoreSettingsKeys.incrementUsageOnCopy,
           state.newIncrementUsageOnCopy.toString(),
         );
+        settingsChanged = true;
       }
       if (state.newHistoryCleanupIntervalDays !=
           state.historyCleanupIntervalDays) {
@@ -302,6 +307,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
           StoreSettingsKeys.historyCleanupIntervalDays,
           state.newHistoryCleanupIntervalDays.toString(),
         );
+        settingsChanged = true;
       }
 
       if (!_listEquals(state.newPinnedEntityTypes, state.pinnedEntityTypes)) {
@@ -309,8 +315,13 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
           StoreSettingsKeys.pinnedEntityTypes,
           jsonEncode(state.newPinnedEntityTypes),
         );
+        settingsChanged = true;
         // Сбрасываем кэш провайдера закреплённых типов
         ref.invalidate(storeSettingsDaoProvider);
+      }
+
+      if (settingsChanged) {
+        await daoResult.touchModifiedAt();
       }
 
       if (shouldCleanupHistory) {

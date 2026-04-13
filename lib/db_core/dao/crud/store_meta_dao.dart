@@ -92,6 +92,18 @@ class StoreMetaDao extends DatabaseAccessor<MainStore>
     return result > 0;
   }
 
+  /// Явно обновить modified_at для текущего хранилища.
+  Future<bool> touchModifiedAt() async {
+    final meta = await getStoreMeta();
+    if (meta == null) return false;
+
+    final result =
+        await (update(storeMetaTable)..where((t) => t.id.equals(meta.id)))
+            .write(StoreMetaTableCompanion(modifiedAt: Value(DateTime.now())));
+
+    return result > 0;
+  }
+
   /// Обновить хеш пароля и соль
   Future<bool> updatePasswordHash({
     required String newPasswordHash,
