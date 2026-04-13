@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/db_core/models/filter/index.dart';
 import 'package:hoplixi/db_core/models/enums/index.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/filter_sections/controller_sync.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 class BankCardsFilterSection extends StatefulWidget {
@@ -33,12 +34,16 @@ class _BankCardsFilterSectionState extends State<BankCardsFilterSection> {
   @override
   void didUpdateWidget(BankCardsFilterSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.filter.bankName != widget.filter.bankName) {
-      _bankNameController.text = widget.filter.bankName ?? '';
-    }
-    if (oldWidget.filter.cardholderName != widget.filter.cardholderName) {
-      _cardholderNameController.text = widget.filter.cardholderName ?? '';
-    }
+    syncTextController(
+      controller: _bankNameController,
+      oldValue: oldWidget.filter.bankName ?? '',
+      newValue: widget.filter.bankName ?? '',
+    );
+    syncTextController(
+      controller: _cardholderNameController,
+      oldValue: oldWidget.filter.cardholderName ?? '',
+      newValue: widget.filter.cardholderName ?? '',
+    );
   }
 
   @override

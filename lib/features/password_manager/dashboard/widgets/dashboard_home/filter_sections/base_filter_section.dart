@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hoplixi/db_core/models/filter/base_filter.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/filter_sections/controller_sync.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:intl/intl.dart' show DateFormat;
-
-
 
 class BaseFilterSection extends StatefulWidget {
   final BaseFilter filter;
@@ -48,22 +47,26 @@ class _BaseFilterSectionState extends State<BaseFilterSection> {
   @override
   void didUpdateWidget(BaseFilterSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.filter.query != widget.filter.query) {
-      _queryController.text = widget.filter.query;
-    }
-    if (oldWidget.filter.minUsedCount != widget.filter.minUsedCount) {
-      _minUsedCountController.text =
-          widget.filter.minUsedCount?.toString() ?? '';
-    }
-    if (oldWidget.filter.maxUsedCount != widget.filter.maxUsedCount) {
-      _maxUsedCountController.text =
-          widget.filter.maxUsedCount?.toString() ?? '';
-    }
-    if (oldWidget.filter.frequencyWindowDays !=
-        widget.filter.frequencyWindowDays) {
-      _frequencyWindowDaysController.text =
-          widget.filter.frequencyWindowDays?.toString() ?? '';
-    }
+    syncTextController(
+      controller: _queryController,
+      oldValue: oldWidget.filter.query,
+      newValue: widget.filter.query,
+    );
+    syncTextController(
+      controller: _minUsedCountController,
+      oldValue: oldWidget.filter.minUsedCount?.toString() ?? '',
+      newValue: widget.filter.minUsedCount?.toString() ?? '',
+    );
+    syncTextController(
+      controller: _maxUsedCountController,
+      oldValue: oldWidget.filter.maxUsedCount?.toString() ?? '',
+      newValue: widget.filter.maxUsedCount?.toString() ?? '',
+    );
+    syncTextController(
+      controller: _frequencyWindowDaysController,
+      oldValue: oldWidget.filter.frequencyWindowDays?.toString() ?? '',
+      newValue: widget.filter.frequencyWindowDays?.toString() ?? '',
+    );
   }
 
   @override

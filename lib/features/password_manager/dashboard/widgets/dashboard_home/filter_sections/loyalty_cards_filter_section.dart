@@ -1,5 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:hoplixi/db_core/models/filter/loyalty_cards_filter.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/filter_sections/controller_sync.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 class LoyaltyCardsFilterSection extends StatefulWidget {
@@ -25,23 +26,33 @@ class _LoyaltyCardsFilterSectionState extends State<LoyaltyCardsFilterSection> {
   @override
   void initState() {
     super.initState();
-    _programNameController = TextEditingController(text: widget.filter.programName ?? '');
-    _holderNameController = TextEditingController(text: widget.filter.holderName ?? '');
+    _programNameController = TextEditingController(
+      text: widget.filter.programName ?? '',
+    );
+    _holderNameController = TextEditingController(
+      text: widget.filter.holderName ?? '',
+    );
     _tierController = TextEditingController(text: widget.filter.tier ?? '');
   }
 
   @override
   void didUpdateWidget(covariant LoyaltyCardsFilterSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (_programNameController.text != (widget.filter.programName ?? '')) {
-      _programNameController.text = widget.filter.programName ?? '';
-    }
-    if (_holderNameController.text != (widget.filter.holderName ?? '')) {
-      _holderNameController.text = widget.filter.holderName ?? '';
-    }
-    if (_tierController.text != (widget.filter.tier ?? '')) {
-      _tierController.text = widget.filter.tier ?? '';
-    }
+    syncTextController(
+      controller: _programNameController,
+      oldValue: oldWidget.filter.programName ?? '',
+      newValue: widget.filter.programName ?? '',
+    );
+    syncTextController(
+      controller: _holderNameController,
+      oldValue: oldWidget.filter.holderName ?? '',
+      newValue: widget.filter.holderName ?? '',
+    );
+    syncTextController(
+      controller: _tierController,
+      oldValue: oldWidget.filter.tier ?? '',
+      newValue: widget.filter.tier ?? '',
+    );
   }
 
   @override
@@ -76,7 +87,11 @@ class _LoyaltyCardsFilterSectionState extends State<LoyaltyCardsFilterSection> {
           ),
           onChanged: (value) {
             final normalized = value.trim();
-            _update((f) => f.copyWith(programName: normalized.isEmpty ? null : normalized));
+            _update(
+              (f) => f.copyWith(
+                programName: normalized.isEmpty ? null : normalized,
+              ),
+            );
           },
         ),
         const SizedBox(height: 12),
@@ -90,7 +105,11 @@ class _LoyaltyCardsFilterSectionState extends State<LoyaltyCardsFilterSection> {
           ),
           onChanged: (value) {
             final normalized = value.trim();
-            _update((f) => f.copyWith(holderName: normalized.isEmpty ? null : normalized));
+            _update(
+              (f) => f.copyWith(
+                holderName: normalized.isEmpty ? null : normalized,
+              ),
+            );
           },
         ),
         const SizedBox(height: 12),
@@ -104,7 +123,9 @@ class _LoyaltyCardsFilterSectionState extends State<LoyaltyCardsFilterSection> {
           ),
           onChanged: (value) {
             final normalized = value.trim();
-            _update((f) => f.copyWith(tier: normalized.isEmpty ? null : normalized));
+            _update(
+              (f) => f.copyWith(tier: normalized.isEmpty ? null : normalized),
+            );
           },
         ),
         const SizedBox(height: 12),
@@ -123,14 +144,19 @@ class _LoyaltyCardsFilterSectionState extends State<LoyaltyCardsFilterSection> {
               label: const Text('Срок истёк'),
               selected: widget.filter.hasExpiryDatePassed == true,
               onSelected: (selected) {
-                _update((f) => f.copyWith(hasExpiryDatePassed: selected ? true : null));
+                _update(
+                  (f) =>
+                      f.copyWith(hasExpiryDatePassed: selected ? true : null),
+                );
               },
             ),
             FilterChip(
               label: const Text('Истекает скоро'),
               selected: widget.filter.isExpiringSoon == true,
               onSelected: (selected) {
-                _update((f) => f.copyWith(isExpiringSoon: selected ? true : null));
+                _update(
+                  (f) => f.copyWith(isExpiringSoon: selected ? true : null),
+                );
               },
             ),
           ],
@@ -141,8 +167,16 @@ class _LoyaltyCardsFilterSectionState extends State<LoyaltyCardsFilterSection> {
           runSpacing: 8,
           children: [
             _sortChip(context, 'По названию', LoyaltyCardsSortField.name),
-            _sortChip(context, 'По программе', LoyaltyCardsSortField.programName),
-            _sortChip(context, 'По владельцу', LoyaltyCardsSortField.holderName),
+            _sortChip(
+              context,
+              'По программе',
+              LoyaltyCardsSortField.programName,
+            ),
+            _sortChip(
+              context,
+              'По владельцу',
+              LoyaltyCardsSortField.holderName,
+            ),
             _sortChip(context, 'По уровню', LoyaltyCardsSortField.tier),
             _sortChip(context, 'По сроку', LoyaltyCardsSortField.expiryDate),
           ],

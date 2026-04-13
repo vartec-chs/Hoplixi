@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/db_core/models/filter/index.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/filter_sections/controller_sync.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 class PasswordFilterSection extends StatefulWidget {
@@ -34,18 +35,26 @@ class _PasswordFilterSectionState extends State<PasswordFilterSection> {
   @override
   void didUpdateWidget(PasswordFilterSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.filter.name != widget.filter.name) {
-      _nameController.text = widget.filter.name ?? '';
-    }
-    if (oldWidget.filter.login != widget.filter.login) {
-      _loginController.text = widget.filter.login ?? '';
-    }
-    if (oldWidget.filter.email != widget.filter.email) {
-      _emailController.text = widget.filter.email ?? '';
-    }
-    if (oldWidget.filter.url != widget.filter.url) {
-      _urlController.text = widget.filter.url ?? '';
-    }
+    syncTextController(
+      controller: _nameController,
+      oldValue: oldWidget.filter.name ?? '',
+      newValue: widget.filter.name ?? '',
+    );
+    syncTextController(
+      controller: _loginController,
+      oldValue: oldWidget.filter.login ?? '',
+      newValue: widget.filter.login ?? '',
+    );
+    syncTextController(
+      controller: _emailController,
+      oldValue: oldWidget.filter.email ?? '',
+      newValue: widget.filter.email ?? '',
+    );
+    syncTextController(
+      controller: _urlController,
+      oldValue: oldWidget.filter.url ?? '',
+      newValue: widget.filter.url ?? '',
+    );
   }
 
   @override

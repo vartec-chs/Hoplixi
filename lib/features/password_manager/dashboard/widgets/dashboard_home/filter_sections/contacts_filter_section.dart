@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/db_core/models/filter/index.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/filter_sections/controller_sync.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 class ContactsFilterSection extends StatefulWidget {
@@ -36,18 +37,26 @@ class _ContactsFilterSectionState extends State<ContactsFilterSection> {
   @override
   void didUpdateWidget(covariant ContactsFilterSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.filter.name != widget.filter.name) {
-      _nameController.text = widget.filter.name ?? '';
-    }
-    if (oldWidget.filter.phone != widget.filter.phone) {
-      _phoneController.text = widget.filter.phone ?? '';
-    }
-    if (oldWidget.filter.email != widget.filter.email) {
-      _emailController.text = widget.filter.email ?? '';
-    }
-    if (oldWidget.filter.company != widget.filter.company) {
-      _companyController.text = widget.filter.company ?? '';
-    }
+    syncTextController(
+      controller: _nameController,
+      oldValue: oldWidget.filter.name ?? '',
+      newValue: widget.filter.name ?? '',
+    );
+    syncTextController(
+      controller: _phoneController,
+      oldValue: oldWidget.filter.phone ?? '',
+      newValue: widget.filter.phone ?? '',
+    );
+    syncTextController(
+      controller: _emailController,
+      oldValue: oldWidget.filter.email ?? '',
+      newValue: widget.filter.email ?? '',
+    );
+    syncTextController(
+      controller: _companyController,
+      oldValue: oldWidget.filter.company ?? '',
+      newValue: widget.filter.company ?? '',
+    );
   }
 
   @override

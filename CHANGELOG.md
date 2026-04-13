@@ -16,3 +16,6 @@
 - refactor(password_manager): `view_screen.dart` в
   `lib/features/password_manager/forms` с существующим `incrementUsage`
   переведены на тот же общий util
+- fix(password_manager): исправлен сброс текста при вводе в фильтрах
+  `lib/features/password_manager/dashboard/widgets/dashboard_home/filter_sections`
+  за счет безопасной синхронизации `TextEditingController` в `didUpdateWidget`

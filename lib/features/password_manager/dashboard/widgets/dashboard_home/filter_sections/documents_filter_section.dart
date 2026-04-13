@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hoplixi/db_core/models/filter/index.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/filter_sections/controller_sync.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 class DocumentsFilterSection extends StatefulWidget {
@@ -47,24 +48,31 @@ class _DocumentsFilterSectionState extends State<DocumentsFilterSection> {
   @override
   void didUpdateWidget(DocumentsFilterSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.filter.titleQuery != widget.filter.titleQuery) {
-      _titleController.text = widget.filter.titleQuery ?? '';
-    }
-    if (oldWidget.filter.descriptionQuery != widget.filter.descriptionQuery) {
-      _descriptionController.text = widget.filter.descriptionQuery ?? '';
-    }
-    if (oldWidget.filter.aggregatedTextQuery !=
-        widget.filter.aggregatedTextQuery) {
-      _aggregatedTextController.text = widget.filter.aggregatedTextQuery ?? '';
-    }
-    if (oldWidget.filter.minPageCount != widget.filter.minPageCount) {
-      _minPageCountController.text =
-          widget.filter.minPageCount?.toString() ?? '';
-    }
-    if (oldWidget.filter.maxPageCount != widget.filter.maxPageCount) {
-      _maxPageCountController.text =
-          widget.filter.maxPageCount?.toString() ?? '';
-    }
+    syncTextController(
+      controller: _titleController,
+      oldValue: oldWidget.filter.titleQuery ?? '',
+      newValue: widget.filter.titleQuery ?? '',
+    );
+    syncTextController(
+      controller: _descriptionController,
+      oldValue: oldWidget.filter.descriptionQuery ?? '',
+      newValue: widget.filter.descriptionQuery ?? '',
+    );
+    syncTextController(
+      controller: _aggregatedTextController,
+      oldValue: oldWidget.filter.aggregatedTextQuery ?? '',
+      newValue: widget.filter.aggregatedTextQuery ?? '',
+    );
+    syncTextController(
+      controller: _minPageCountController,
+      oldValue: oldWidget.filter.minPageCount?.toString() ?? '',
+      newValue: widget.filter.minPageCount?.toString() ?? '',
+    );
+    syncTextController(
+      controller: _maxPageCountController,
+      oldValue: oldWidget.filter.maxPageCount?.toString() ?? '',
+      newValue: widget.filter.maxPageCount?.toString() ?? '',
+    );
   }
 
   @override

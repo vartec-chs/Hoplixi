@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/db_core/models/filter/index.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/filter_sections/controller_sync.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 class ApiKeysFilterSection extends StatefulWidget {
@@ -40,18 +41,26 @@ class _ApiKeysFilterSectionState extends State<ApiKeysFilterSection> {
   @override
   void didUpdateWidget(covariant ApiKeysFilterSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.filter.name != widget.filter.name) {
-      _nameController.text = widget.filter.name ?? '';
-    }
-    if (oldWidget.filter.service != widget.filter.service) {
-      _serviceController.text = widget.filter.service ?? '';
-    }
-    if (oldWidget.filter.tokenType != widget.filter.tokenType) {
-      _tokenTypeController.text = widget.filter.tokenType ?? '';
-    }
-    if (oldWidget.filter.environment != widget.filter.environment) {
-      _environmentController.text = widget.filter.environment ?? '';
-    }
+    syncTextController(
+      controller: _nameController,
+      oldValue: oldWidget.filter.name ?? '',
+      newValue: widget.filter.name ?? '',
+    );
+    syncTextController(
+      controller: _serviceController,
+      oldValue: oldWidget.filter.service ?? '',
+      newValue: widget.filter.service ?? '',
+    );
+    syncTextController(
+      controller: _tokenTypeController,
+      oldValue: oldWidget.filter.tokenType ?? '',
+      newValue: widget.filter.tokenType ?? '',
+    );
+    syncTextController(
+      controller: _environmentController,
+      oldValue: oldWidget.filter.environment ?? '',
+      newValue: widget.filter.environment ?? '',
+    );
   }
 
   @override

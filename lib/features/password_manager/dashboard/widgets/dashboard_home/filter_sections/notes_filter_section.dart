@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hoplixi/db_core/models/filter/index.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/filter_sections/controller_sync.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 class NotesFilterSection extends StatefulWidget {
@@ -39,20 +40,26 @@ class _NotesFilterSectionState extends State<NotesFilterSection> {
   @override
   void didUpdateWidget(NotesFilterSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.filter.title != widget.filter.title) {
-      _titleController.text = widget.filter.title ?? '';
-    }
-    if (oldWidget.filter.content != widget.filter.content) {
-      _contentController.text = widget.filter.content ?? '';
-    }
-    if (oldWidget.filter.minContentLength != widget.filter.minContentLength) {
-      _minContentLengthController.text =
-          widget.filter.minContentLength?.toString() ?? '';
-    }
-    if (oldWidget.filter.maxContentLength != widget.filter.maxContentLength) {
-      _maxContentLengthController.text =
-          widget.filter.maxContentLength?.toString() ?? '';
-    }
+    syncTextController(
+      controller: _titleController,
+      oldValue: oldWidget.filter.title ?? '',
+      newValue: widget.filter.title ?? '',
+    );
+    syncTextController(
+      controller: _contentController,
+      oldValue: oldWidget.filter.content ?? '',
+      newValue: widget.filter.content ?? '',
+    );
+    syncTextController(
+      controller: _minContentLengthController,
+      oldValue: oldWidget.filter.minContentLength?.toString() ?? '',
+      newValue: widget.filter.minContentLength?.toString() ?? '',
+    );
+    syncTextController(
+      controller: _maxContentLengthController,
+      oldValue: oldWidget.filter.maxContentLength?.toString() ?? '',
+      newValue: widget.filter.maxContentLength?.toString() ?? '',
+    );
   }
 
   @override

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/db_core/models/filter/index.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/filter_sections/controller_sync.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 class FilesFilterSection extends StatefulWidget {
@@ -44,19 +45,29 @@ class _FilesFilterSectionState extends State<FilesFilterSection> {
   @override
   void didUpdateWidget(FilesFilterSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.filter.fileName != widget.filter.fileName) {
-      _fileNameController.text = widget.filter.fileName ?? '';
-    }
-    if (oldWidget.filter.minFileSize != widget.filter.minFileSize) {
-      _minFileSizeController.text = widget.filter.minFileSize != null
+    syncTextController(
+      controller: _fileNameController,
+      oldValue: oldWidget.filter.fileName ?? '',
+      newValue: widget.filter.fileName ?? '',
+    );
+    syncTextController(
+      controller: _minFileSizeController,
+      oldValue: oldWidget.filter.minFileSize != null
+          ? _formatBytes(oldWidget.filter.minFileSize!)
+          : '',
+      newValue: widget.filter.minFileSize != null
           ? _formatBytes(widget.filter.minFileSize!)
-          : '';
-    }
-    if (oldWidget.filter.maxFileSize != widget.filter.maxFileSize) {
-      _maxFileSizeController.text = widget.filter.maxFileSize != null
+          : '',
+    );
+    syncTextController(
+      controller: _maxFileSizeController,
+      oldValue: oldWidget.filter.maxFileSize != null
+          ? _formatBytes(oldWidget.filter.maxFileSize!)
+          : '',
+      newValue: widget.filter.maxFileSize != null
           ? _formatBytes(widget.filter.maxFileSize!)
-          : '';
-    }
+          : '',
+    );
   }
 
   @override

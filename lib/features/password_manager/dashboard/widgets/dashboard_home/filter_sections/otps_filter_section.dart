@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hoplixi/db_core/models/filter/index.dart';
 import 'package:hoplixi/db_core/models/enums/index.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/filter_sections/controller_sync.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 class OtpsFilterSection extends StatefulWidget {
@@ -38,12 +39,16 @@ class _OtpsFilterSectionState extends State<OtpsFilterSection> {
   @override
   void didUpdateWidget(OtpsFilterSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.filter.issuer != widget.filter.issuer) {
-      _issuerController.text = widget.filter.issuer ?? '';
-    }
-    if (oldWidget.filter.accountName != widget.filter.accountName) {
-      _accountNameController.text = widget.filter.accountName ?? '';
-    }
+    syncTextController(
+      controller: _issuerController,
+      oldValue: oldWidget.filter.issuer ?? '',
+      newValue: widget.filter.issuer ?? '',
+    );
+    syncTextController(
+      controller: _accountNameController,
+      oldValue: oldWidget.filter.accountName ?? '',
+      newValue: widget.filter.accountName ?? '',
+    );
   }
 
   @override
