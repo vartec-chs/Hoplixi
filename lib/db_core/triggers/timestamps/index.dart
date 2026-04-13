@@ -3,27 +3,17 @@
 /// Этот файл экспортирует все триггеры временных меток для удобного импорта.
 library;
 
-import 'bank_cards_timestamps.dart';
 import 'categories_timestamps.dart';
 import 'document_pages_timestamps.dart';
-import 'documents_timestamps.dart';
-import 'files_timestamps.dart';
 import 'icons_timestamps.dart';
-import 'notes_timestamps.dart';
-import 'otps_timestamps.dart';
 import 'passwords_timestamps.dart';
 import 'store_meta_timestamps.dart';
 import 'tags_timestamps.dart';
 
-export 'bank_cards_timestamps.dart';
 export 'categories_timestamps.dart';
 export 'document_pages_timestamps.dart';
-export 'documents_timestamps.dart';
-export 'files_timestamps.dart';
 export 'icons_timestamps.dart';
 export 'meta_touch_triggers.dart';
-export 'notes_timestamps.dart';
-export 'otps_timestamps.dart';
 export 'passwords_timestamps.dart';
 export 'store_meta_timestamps.dart';
 export 'tags_timestamps.dart';
@@ -73,12 +63,7 @@ final List<String> allTimestampDropTriggers = [
   // Vault Items (новые)
   ...vaultItemsTimestampDropTriggers,
   // Устаревшие триггеры старой схемы (для миграции)
-  ...passwordsTimestampDropTriggers,
-  ...notesTimestampDropTriggers,
-  ...bankCardsTimestampDropTriggers,
-  ...otpsTimestampDropTriggers,
-  ...filesTimestampDropTriggers,
-  ...documentsTimestampDropTriggers,
+
   // Document Pages
   ...documentPagesTimestampDropTriggers,
   // Categories

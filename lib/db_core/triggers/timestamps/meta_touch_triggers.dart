@@ -157,6 +157,37 @@ const List<String> iconsMetaTouchTriggers = [
   ''',
 ];
 
+/// Триггеры для обновления store_meta при изменениях в таблице store_settings.
+const List<String> storeSettingsMetaTouchTriggers = [
+  '''
+    CREATE TRIGGER IF NOT EXISTS touch_meta_on_store_settings_insert
+    AFTER INSERT ON store_settings
+    BEGIN
+      UPDATE store_meta
+      SET modified_at = strftime('%s','now')
+      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
+    END;
+  ''',
+  '''
+    CREATE TRIGGER IF NOT EXISTS touch_meta_on_store_settings_update
+    AFTER UPDATE ON store_settings
+    BEGIN
+      UPDATE store_meta
+      SET modified_at = strftime('%s','now')
+      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
+    END;
+  ''',
+  '''
+    CREATE TRIGGER IF NOT EXISTS touch_meta_on_store_settings_delete
+    AFTER DELETE ON store_settings
+    BEGIN
+      UPDATE store_meta
+      SET modified_at = strftime('%s','now')
+      WHERE id = (SELECT id FROM store_meta ORDER BY created_at LIMIT 1);
+    END;
+  ''',
+];
+
 /// Триггеры для обновления store_meta при изменениях в таблице
 /// note_links (note -> vault item links).
 const List<String> noteLinksMetaTouchTriggers = [
@@ -199,6 +230,7 @@ const List<String> allMetaTouchCreateTriggers = [
   ...categoriesMetaTouchTriggers,
   ...tagsMetaTouchTriggers,
   ...iconsMetaTouchTriggers,
+  ...storeSettingsMetaTouchTriggers,
   ...noteLinksMetaTouchTriggers,
 ];
 
@@ -253,6 +285,9 @@ const List<String> allMetaTouchDropTriggers = [
   'DROP TRIGGER IF EXISTS touch_meta_on_icons_insert;',
   'DROP TRIGGER IF EXISTS touch_meta_on_icons_update;',
   'DROP TRIGGER IF EXISTS touch_meta_on_icons_delete;',
+  'DROP TRIGGER IF EXISTS touch_meta_on_store_settings_insert;',
+  'DROP TRIGGER IF EXISTS touch_meta_on_store_settings_update;',
+  'DROP TRIGGER IF EXISTS touch_meta_on_store_settings_delete;',
   'DROP TRIGGER IF EXISTS touch_meta_on_note_links_insert;',
   'DROP TRIGGER IF EXISTS touch_meta_on_note_links_update;',
   'DROP TRIGGER IF EXISTS touch_meta_on_note_links_delete;',

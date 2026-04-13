@@ -235,11 +235,7 @@ class _MobileCloudSyncOverlayState
       return 'Проверяем облачную версию хранилища...';
     }
 
-    if (_showInitialCheckHint && status?.binding != null) {
-      return 'Проверяем облачную версию хранилища...';
-    }
-
-    if (_showInitialCheckHint) {
+    if (_showInitialCheckHint && _currentStoreHasCloudSyncBinding) {
       return 'Проверяем облачную версию хранилища...';
     }
 

@@ -25,6 +25,14 @@
 - Убрано ложное кратковременное появление `MobileCloudSyncOverlay` при открытии
   неподключенного хранилища: overlay теперь ждет подтвержденный `binding`
   текущего store перед показом статуса проверки cloud sync.
+- Уточнена логика `MobileCloudSyncOverlay`: удален fallback-показ отложенного
+  hint без `binding`, из-за которого overlay мог появляться позже даже у store
+  без cloud sync.
+
+### db_core
+
+- В `meta_touch_triggers.dart` добавлены триггеры для `store_settings`,
+  чтобы изменения настроек стора тоже обновляли `store_meta.modified_at`.
 
 ### local_send
 
