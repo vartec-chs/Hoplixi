@@ -19,6 +19,9 @@
 - fix(password_manager): исправлен сброс текста при вводе в фильтрах
   `lib/features/password_manager/dashboard/widgets/dashboard_home/filter_sections`
   за счет безопасной синхронизации `TextEditingController` в `didUpdateWidget`
+- fix(local_send): большие текстовые сообщения теперь отправляются через
+  `WebRtcTransferService` чанками по control-channel вместо одного большого
+  JSON-сообщения, чтобы не забивать буфер DataChannel и не подвешивать систему
 - chore(security): проверено, что в модуле qr_scanner не логируются
   отсканированные данные; в логах остаются только служебные события и формат
   кода

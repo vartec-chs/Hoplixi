@@ -588,7 +588,7 @@ class SessionNotifier extends Notifier<SessionState> {
     };
 
     _webrtc!.onTextReceived = (text) {
-      logInfo('Text received: $text');
+      logInfo('Text received (${text.length} chars)');
 
       ref
           .read(sessionHistoryProvider.notifier)

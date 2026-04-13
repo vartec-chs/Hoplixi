@@ -10,12 +10,18 @@ import 'package:hoplixi/core/logger/index.dart';
 /// Размер чанка для передачи файлов (16 KB).
 const int kChunkSize = 16 * 1024;
 
+/// Размер чанка для передачи текстовых сообщений (8 KB).
+const int kTextMessageChunkSize = 8 * 1024;
+
 /// Типы control-сообщений через DataChannel.
 class DataChannelMessage {
   static const String fileStart = 'file_start';
   static const String fileEnd = 'file_end';
   static const String fileReceived = 'file_received';
   static const String textMessage = 'text_message';
+  static const String textMessageStart = 'text_message_start';
+  static const String textMessageChunk = 'text_message_chunk';
+  static const String textMessageEnd = 'text_message_end';
   static const String securePayload = 'secure_payload';
   static const String transferComplete = 'transfer_complete';
   static const String cancel = 'cancel';
@@ -42,6 +48,9 @@ class WebRtcTransferService {
   bool _isTransferDone = false;
   Completer<void>? _fileReceivedCompleter;
   String? _pendingFileAckName;
+  String? _incomingTextTransferId;
+  BytesBuilder? _incomingTextBytes;
+  int _incomingTextLength = 0;
 
   // ── Колбэки ──
 
@@ -177,11 +186,18 @@ class WebRtcTransferService {
   Future<void> sendText(String text) async {
     _ensureControlChannel();
 
-    final message = jsonEncode({
-      'type': DataChannelMessage.textMessage,
-      'text': text,
-    });
-    await _sendControlMessage(message);
+    final bytes = Uint8List.fromList(utf8.encode(text));
+
+    if (bytes.length <= kTextMessageChunkSize) {
+      final message = jsonEncode({
+        'type': DataChannelMessage.textMessage,
+        'text': text,
+      });
+      await _sendControlMessage(message);
+      return;
+    }
+
+    await _sendChunkedText(bytes);
   }
 
   /// Отправляет секретный payload через control-канал.
@@ -371,6 +387,7 @@ class WebRtcTransferService {
     onError = null;
     _pendingFileAckName = null;
     _fileReceivedCompleter = null;
+    _resetIncomingTextTransfer();
   }
 
   // ── Private ──
@@ -412,6 +429,12 @@ class WebRtcTransferService {
         switch (type) {
           case DataChannelMessage.textMessage:
             onTextReceived?.call(json['text'] as String);
+          case DataChannelMessage.textMessageStart:
+            _handleIncomingTextStart(json);
+          case DataChannelMessage.textMessageChunk:
+            _handleIncomingTextChunk(json);
+          case DataChannelMessage.textMessageEnd:
+            _handleIncomingTextEnd(json);
           case DataChannelMessage.securePayload:
             final payload = json['payload'];
             if (payload is Map<String, dynamic>) {
@@ -454,9 +477,16 @@ class WebRtcTransferService {
   }
 
   Future<void> _waitForBufferDrain() async {
-    while (_dataChannel != null &&
-        !_isDisposed &&
-        (_dataChannel!.bufferedAmount ?? 0) > kChunkSize * 4) {
+    await _waitForChannelBufferDrain(_dataChannel, threshold: kChunkSize * 4);
+  }
+
+  Future<void> _waitForChannelBufferDrain(
+    RTCDataChannel? channel, {
+    required int threshold,
+  }) async {
+    while (!_isDisposed &&
+        _isChannelOpen(channel) &&
+        (channel!.bufferedAmount ?? 0) > threshold) {
       await Future<void>.delayed(const Duration(milliseconds: 10));
     }
   }
@@ -467,7 +497,103 @@ class WebRtcTransferService {
       throw StateError('Control DataChannel is not open');
     }
 
+    await _waitForChannelBufferDrain(
+      channel,
+      threshold: kTextMessageChunkSize * 4,
+    );
     await channel!.send(RTCDataChannelMessage(text));
+  }
+
+  Future<void> _sendChunkedText(Uint8List bytes) async {
+    final transferId =
+        '${DateTime.now().microsecondsSinceEpoch}-${math.Random().nextInt(1 << 32)}';
+
+    await _sendControlMessage(
+      jsonEncode({
+        'type': DataChannelMessage.textMessageStart,
+        'id': transferId,
+        'length': bytes.length,
+      }),
+    );
+
+    for (
+      var offset = 0;
+      offset < bytes.length;
+      offset += kTextMessageChunkSize
+    ) {
+      final end = math.min(offset + kTextMessageChunkSize, bytes.length);
+      final chunk = Uint8List.sublistView(bytes, offset, end);
+
+      await _sendControlMessage(
+        jsonEncode({
+          'type': DataChannelMessage.textMessageChunk,
+          'id': transferId,
+          'chunk': base64Encode(chunk),
+        }),
+      );
+    }
+
+    await _sendControlMessage(
+      jsonEncode({'type': DataChannelMessage.textMessageEnd, 'id': transferId}),
+    );
+  }
+
+  void _handleIncomingTextStart(Map<String, dynamic> json) {
+    final transferId = json['id'] as String?;
+    if (transferId == null || transferId.isEmpty) {
+      return;
+    }
+
+    _incomingTextTransferId = transferId;
+    _incomingTextBytes = BytesBuilder(copy: false);
+    _incomingTextLength = json['length'] as int? ?? 0;
+  }
+
+  void _handleIncomingTextChunk(Map<String, dynamic> json) {
+    final transferId = json['id'] as String?;
+    final chunk = json['chunk'] as String?;
+
+    if (transferId == null ||
+        chunk == null ||
+        transferId != _incomingTextTransferId) {
+      return;
+    }
+
+    try {
+      _incomingTextBytes?.add(base64Decode(chunk));
+    } catch (e, s) {
+      logError(
+        'WebRtcTransfer: failed to decode text chunk',
+        error: e,
+        stackTrace: s,
+      );
+      _resetIncomingTextTransfer();
+    }
+  }
+
+  void _handleIncomingTextEnd(Map<String, dynamic> json) {
+    final transferId = json['id'] as String?;
+    if (transferId == null || transferId != _incomingTextTransferId) {
+      return;
+    }
+
+    final bytes = _incomingTextBytes?.toBytes() ?? Uint8List(0);
+    if (_incomingTextLength > 0 && bytes.length != _incomingTextLength) {
+      logInfo(
+        'WebRtcTransfer: text length mismatch '
+        '(expected $_incomingTextLength, got ${bytes.length})',
+      );
+    }
+
+    final text = utf8.decode(bytes, allowMalformed: true);
+    _resetIncomingTextTransfer();
+    onTextReceived?.call(text);
+  }
+
+  void _resetIncomingTextTransfer() {
+    _incomingTextTransferId = null;
+    _incomingTextBytes = null;
+    _incomingTextLength = 0;
   }
 
   Future<void> _sendDataChunk(Uint8List chunk) async {
