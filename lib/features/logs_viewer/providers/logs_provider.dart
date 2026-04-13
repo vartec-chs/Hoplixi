@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/logger/models.dart';
@@ -191,7 +192,7 @@ class PaginatedLogsNotifier extends AsyncNotifier<LogsPaginationState> {
 
     final levelFilter = ref.read(logLevelFilterProvider);
     final tagFilter = ref.read(logTagFilterProvider);
-    final searchQuery = ref.read(logSearchQueryProvider).toLowerCase();
+    final searchQuery = ref.read(logSearchQueryProvider).trim().toLowerCase();
 
     final newLogs = <LogEntry>[];
     bool hasMore = true;
@@ -231,21 +232,38 @@ class PaginatedLogsNotifier extends AsyncNotifier<LogsPaginationState> {
     }
 
     // Фильтр по тегу
-    if (tagFilter != null && log.tag != tagFilter) {
-      return false;
+    if (tagFilter != null) {
+      final logTag = log.tag;
+      if (logTag == null || logTag.toLowerCase() != tagFilter.toLowerCase()) {
+        return false;
+      }
+    }
+
+    // Нормализованный поисковый запрос
+    if (searchQuery.isEmpty) {
+      return true;
     }
 
     // Фильтр по поисковому запросу
-    if (searchQuery.isNotEmpty) {
-      final messageMatch = log.message.toLowerCase().contains(searchQuery);
-      final tagMatch = (log.tag ?? '').toLowerCase().contains(searchQuery);
-      final errorMatch = (log.error?.toString() ?? '').toLowerCase().contains(
-        searchQuery,
-      );
+    final messageMatch = log.message.toLowerCase().contains(searchQuery);
+    final tagMatch = (log.tag ?? '').toLowerCase().contains(searchQuery);
+    final errorMatch = (log.error?.toString() ?? '').toLowerCase().contains(
+      searchQuery,
+    );
+    final stackMatch = (log.stackTrace?.toString() ?? '')
+        .toLowerCase()
+        .contains(searchQuery);
+    final additionalDataMatch = (log.additionalData?.toString() ?? '')
+        .toLowerCase()
+        .contains(searchQuery);
 
-      return messageMatch || tagMatch || errorMatch;
+    if (!(messageMatch ||
+        tagMatch ||
+        errorMatch ||
+        stackMatch ||
+        additionalDataMatch)) {
+      return false;
     }
-
     return true;
   }
 }

@@ -5,16 +5,64 @@ import 'package:hoplixi/features/logs_viewer/providers/logs_provider.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 /// Виджет для фильтрации и поиска логов
-class LogsFilterBar extends ConsumerWidget {
+class LogsFilterBar extends ConsumerStatefulWidget {
   const LogsFilterBar({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LogsFilterBar> createState() => _LogsFilterBarState();
+}
+
+class _LogsFilterBarState extends ConsumerState<LogsFilterBar> {
+  late final TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController(
+      text: ref.read(logSearchQueryProvider),
+    );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  String _levelLabel(LogLevel level) {
+    switch (level) {
+      case LogLevel.debug:
+        return 'DEBUG';
+      case LogLevel.info:
+        return 'INFO';
+      case LogLevel.warning:
+        return 'WARNING';
+      case LogLevel.error:
+        return 'ERROR';
+      case LogLevel.trace:
+        return 'TRACE';
+      case LogLevel.fatal:
+        return 'FATAL';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final levelFilter = ref.watch(logLevelFilterProvider);
     final tagFilter = ref.watch(logTagFilterProvider);
     final searchQuery = ref.watch(logSearchQueryProvider);
     final availableTags = ref.watch(availableTagsProvider);
     final theme = Theme.of(context);
+
+    if (_searchController.text != searchQuery) {
+      _searchController.value = TextEditingValue(
+        text: searchQuery,
+        selection: TextSelection.collapsed(offset: searchQuery.length),
+      );
+    }
+
+    final hasActiveFilters =
+        levelFilter != null || tagFilter != null || searchQuery.isNotEmpty;
 
     return Container(
       decoration: BoxDecoration(color: theme.colorScheme.surface),
@@ -23,14 +71,32 @@ class LogsFilterBar extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              Text('Фильтры', style: theme.textTheme.titleSmall),
+              const Spacer(),
+              if (hasActiveFilters)
+                TextButton.icon(
+                  onPressed: () {
+                    ref.read(logLevelFilterProvider.notifier).setLevel(null);
+                    ref.read(logTagFilterProvider.notifier).setTag(null);
+                    ref.read(logSearchQueryProvider.notifier).setQuery('');
+                  },
+                  icon: const Icon(Icons.clear_all),
+                  label: const Text('Сбросить'),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
           // Поиск
           TextField(
+            controller: _searchController,
             onChanged: (value) {
               ref.read(logSearchQueryProvider.notifier).setQuery(value);
             },
             decoration: primaryInputDecoration(
               context,
-              hintText: 'Поиск по сообщению, тегу или ошибке...',
+              hintText: 'Поиск: сообщение, тег, ошибка, stack trace, данные...',
               prefixIcon: const Icon(Icons.search),
               suffixIcon: searchQuery.isNotEmpty
                   ? IconButton(
@@ -43,104 +109,77 @@ class LogsFilterBar extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 12),
-          // Фильтры
+          // Фильтр по уровню
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              // Фильтр по уровню
-              PopupMenuButton<LogLevel?>(
-                tooltip: 'Фильтр по уровню',
-                child: FilterChip(
-                  label: Text(
-                    levelFilter == null
-                        ? 'Уровень'
-                        : 'Уровень: ${levelFilter.name}',
-                  ),
-                  selected: levelFilter != null,
-                  onSelected: (_) {},
-                ),
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: null,
-                    child: const Text('Все уровни'),
-                    onTap: () {
-                      ref.read(logLevelFilterProvider.notifier).setLevel(null);
-                    },
-                  ),
-                  ...LogLevel.values.map(
-                    (level) => PopupMenuItem(
-                      value: level,
-                      child: Text(level.name),
-                      onTap: () {
-                        ref
-                            .read(logLevelFilterProvider.notifier)
-                            .setLevel(level);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              // Фильтр по тегу
-              availableTags.when(
-                loading: () => const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                error: (error, stackTrace) => const SizedBox(),
-                data: (tags) {
-                  if (tags.isEmpty) {
-                    return const SizedBox();
-                  }
-
-                  return PopupMenuButton<String?>(
-                    tooltip: 'Фильтр по тегу',
-                    child: FilterChip(
-                      label: Text(
-                        tagFilter == null ? 'Теги' : 'Теги: $tagFilter',
-                      ),
-                      selected: tagFilter != null,
-                      onSelected: (_) {},
-                    ),
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: null,
-                        child: const Text('Все теги'),
-                        onTap: () {
-                          ref.read(logTagFilterProvider.notifier).setTag(null);
-                        },
-                      ),
-                      ...tags.map(
-                        (tag) => PopupMenuItem(
-                          value: tag,
-                          child: Text(tag),
-                          onTap: () {
-                            ref.read(logTagFilterProvider.notifier).setTag(tag);
-                          },
-                        ),
-                      ),
-                    ],
-                  );
+              ChoiceChip(
+                label: const Text('Все уровни'),
+                selected: levelFilter == null,
+                onSelected: (_) {
+                  ref.read(logLevelFilterProvider.notifier).setLevel(null);
                 },
               ),
-              // Кнопка очистки фильтров
-              if (levelFilter != null ||
-                  tagFilter != null ||
-                  searchQuery.isNotEmpty)
-                FilterChip(
-                  label: const Text('Очистить'),
+              ...LogLevel.values.map(
+                (level) => ChoiceChip(
+                  label: Text(_levelLabel(level)),
+                  selected: levelFilter == level,
                   onSelected: (_) {
-                    ref.read(logLevelFilterProvider.notifier).setLevel(null);
-                    ref.read(logTagFilterProvider.notifier).setTag(null);
-                    ref.read(logSearchQueryProvider.notifier).setQuery('');
+                    ref.read(logLevelFilterProvider.notifier).setLevel(level);
                   },
-                  backgroundColor: theme.colorScheme.errorContainer,
-                  labelStyle: TextStyle(
-                    color: theme.colorScheme.onErrorContainer,
-                  ),
                 ),
+              ),
             ],
+          ),
+          const SizedBox(height: 12),
+          // Фильтр по тегу
+          availableTags.when(
+            loading: () => const SizedBox(
+              height: 44,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
+            error: (error, stackTrace) => const SizedBox.shrink(),
+            data: (tags) {
+              if (tags.isEmpty) {
+                return const SizedBox.shrink();
+              }
+
+              final resolvedTagFilter =
+                  tagFilter != null && tags.contains(tagFilter)
+                  ? tagFilter
+                  : null;
+
+              return DropdownButtonFormField<String?>(
+                value: resolvedTagFilter,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Тег',
+                  prefixIcon: const Icon(Icons.sell_outlined),
+                ),
+                isExpanded: true,
+                items: [
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('Все теги'),
+                  ),
+                  ...tags.map(
+                    (tag) =>
+                        DropdownMenuItem<String?>(value: tag, child: Text(tag)),
+                  ),
+                ],
+                onChanged: (value) {
+                  ref.read(logTagFilterProvider.notifier).setTag(value);
+                },
+              );
+            },
           ),
         ],
       ),
