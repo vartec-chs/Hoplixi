@@ -191,6 +191,7 @@ class MainStore extends _$MainStore {
     return customSelect(
       'SELECT 1',
       readsFrom: {
+        storeSettings,
         vaultItems,
         passwordItems,
         passwordHistory,

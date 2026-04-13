@@ -22,6 +22,9 @@
 - Исправлен сброс текста при вводе в фильтрах
   `lib/features/password_manager/dashboard/widgets/dashboard_home/filter_sections`
   за счет безопасной синхронизации `TextEditingController` в `didUpdateWidget`.
+- Убрано ложное кратковременное появление `MobileCloudSyncOverlay` при открытии
+  неподключенного хранилища: overlay теперь ждет подтвержденный `binding`
+  текущего store перед показом статуса проверки cloud sync.
 
 ### local_send
 
@@ -34,6 +37,9 @@
 - HTTP-клиент облачной синхронизации теперь повторяет запрос после refresh
   токена при первом `unauthorized`/`expired_access_token`, чтобы
   Dropbox-операции не требовали второго ручного запроса.
+- В `recent_database_card.dart` добавлен автоматический повтор проверки
+  cloud-версии при первом auth/timeout-сбое, чтобы кнопка проверки новой версии
+  не требовала второго ручного нажатия после простоя или истечения токена.
 
 ### security
 

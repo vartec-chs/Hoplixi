@@ -214,135 +214,38 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
       );
     });
 
-    StoreManifest? manifest;
-    StoreSyncBinding? binding;
-    AuthTokenEntry? token;
-
     try {
-      manifest = await StoreManifestService.readFrom(entry.path);
-      final syncProvider = manifest?.sync?.provider;
-      if (manifest == null || syncProvider == null) {
-        Toaster.info(
-          title: 'Cloud Sync',
-          description:
-              'У этого хранилища нет сохранённой cloud sync конфигурации.',
-        );
-        return;
-      }
+      for (var attempt = 0; attempt < 2; attempt++) {
+        final checkData = await _loadCloudVersionCheckData(entry);
+        if (checkData == null) {
+          return;
+        }
 
-      binding = await ref
-          .read(storeSyncBindingServiceProvider)
-          .getByStoreUuid(manifest.storeUuid);
-      if (binding == null) {
-        Toaster.warning(
-          title: 'Cloud Sync',
-          description:
-              'В store_manifest есть sync-метаданные, но локальная привязка токена не найдена.',
-        );
-        return;
-      }
-
-      token = await ref
-          .read(authTokensProvider.notifier)
-          .getTokenById(binding.tokenId);
-      if (token == null) {
-        _reportMissingTokenIssue(manifest: manifest, binding: binding);
-        Toaster.warning(
-          title: 'Cloud Sync',
-          description:
-              'Связанный OAuth-токен отсутствует. Нужна повторная авторизация.',
-        );
-        return;
-      }
-
-      final syncService = ref.read(snapshotSyncServiceProvider);
-      _updateCloudSyncProgress(
-        const SnapshotSyncProgress(
-          stage: SnapshotSyncStage.checkingRemoteVersion,
-          stepIndex: 2,
-          totalSteps: 6,
-          title: 'Проверка облачной версии',
-          description: 'Читаем удалённый manifest и сравниваем версии.',
-        ),
-      );
-      final status = await syncService.loadStatus(
-        storePath: entry.path,
-        storeInfo: _buildStoreInfo(entry, manifest),
-        binding: binding,
-        token: token,
-      );
-
-      switch (status.compareResult) {
-        case StoreVersionCompareResult.remoteNewer:
-          _updateCloudSyncProgress(
-            const SnapshotSyncProgress(
-              stage: SnapshotSyncStage.transferringPrimaryFiles,
-              stepIndex: 3,
-              totalSteps: 6,
-              title: 'Скачивание из облака',
-              description: 'Загружаем более новую remote snapshot-версию.',
-            ),
+        try {
+          await _runCloudVersionCheckAttempt(
+            entry: entry,
+            manifest: checkData.manifest,
+            binding: checkData.binding,
+            token: checkData.token,
           );
-          await syncService.downloadRemoteSnapshot(
+          return;
+        } catch (error) {
+          if (attempt == 0 && _shouldRetryCloudVersionCheck(error)) {
+            await ref.read(authTokensProvider.notifier).reload();
+            continue;
+          }
+
+          _reportManualReauthIfNeeded(
+            error,
+            manifest: checkData.manifest,
+            binding: checkData.binding,
+            token: checkData.token,
             storePath: entry.path,
-            binding: binding,
-            lockBeforeApply: false,
-            emitProgress: (progress) {
-              _updateCloudSyncProgress(progress);
-            },
           );
-          ref.invalidate(_recentDatabaseManifestProvider(entry.path));
-          Toaster.success(
-            title: 'Cloud Sync',
-            description:
-                'Новая версия из ${binding.provider.metadata.displayName} установлена локально.',
-          );
-          break;
-        case StoreVersionCompareResult.same:
-          Toaster.info(
-            title: 'Cloud Sync',
-            description: 'Локальная версия уже совпадает с облачной.',
-          );
-          break;
-        case StoreVersionCompareResult.remoteMissing:
-          Toaster.info(
-            title: 'Cloud Sync',
-            description: 'В облаке ещё нет snapshot для этого хранилища.',
-          );
-          break;
-        case StoreVersionCompareResult.localNewer:
-          Toaster.info(
-            title: 'Cloud Sync',
-            description:
-                'Локальная версия новее облачной. Для отправки изменений откройте хранилище и выполните sync.',
-          );
-          break;
-        case StoreVersionCompareResult.conflict:
-          Toaster.warning(
-            title: 'Cloud Sync',
-            description:
-                'Обнаружен конфликт локальной и удалённой версий. Откройте хранилище для ручного разрешения.',
-          );
-          break;
-        case StoreVersionCompareResult.differentStore:
-          Toaster.error(
-            title: 'Cloud Sync',
-            description:
-                'Удалённый manifest относится к другому хранилищу. Проверьте привязку sync.',
-          );
-          break;
+          rethrow;
+        }
       }
     } catch (error) {
-      if (manifest != null && binding != null && token != null) {
-        _reportManualReauthIfNeeded(
-          error,
-          manifest: manifest,
-          binding: binding,
-          token: token,
-          storePath: entry.path,
-        );
-      }
-
       Toaster.error(
         title: 'Cloud Sync',
         description: _buildCloudSyncErrorMessage(error),
@@ -355,6 +258,152 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
         });
       }
     }
+  }
+
+  Future<_CloudVersionCheckData?> _loadCloudVersionCheckData(
+    DatabaseEntry entry,
+  ) async {
+    final manifest = await StoreManifestService.readFrom(entry.path);
+    final syncProvider = manifest?.sync?.provider;
+    if (manifest == null || syncProvider == null) {
+      Toaster.info(
+        title: 'Cloud Sync',
+        description:
+            'У этого хранилища нет сохранённой cloud sync конфигурации.',
+      );
+      return null;
+    }
+
+    final binding = await ref
+        .read(storeSyncBindingServiceProvider)
+        .getByStoreUuid(manifest.storeUuid);
+    if (binding == null) {
+      Toaster.warning(
+        title: 'Cloud Sync',
+        description:
+            'В store_manifest есть sync-метаданные, но локальная привязка токена не найдена.',
+      );
+      return null;
+    }
+
+    final token = await ref
+        .read(authTokensProvider.notifier)
+        .getTokenById(binding.tokenId);
+    if (token == null) {
+      _reportMissingTokenIssue(manifest: manifest, binding: binding);
+      Toaster.warning(
+        title: 'Cloud Sync',
+        description:
+            'Связанный OAuth-токен отсутствует. Нужна повторная авторизация.',
+      );
+      return null;
+    }
+
+    return _CloudVersionCheckData(
+      manifest: manifest,
+      binding: binding,
+      token: token,
+    );
+  }
+
+  Future<void> _runCloudVersionCheckAttempt({
+    required DatabaseEntry entry,
+    required StoreManifest manifest,
+    required StoreSyncBinding binding,
+    required AuthTokenEntry token,
+  }) async {
+    final syncService = ref.read(snapshotSyncServiceProvider);
+    _updateCloudSyncProgress(
+      const SnapshotSyncProgress(
+        stage: SnapshotSyncStage.checkingRemoteVersion,
+        stepIndex: 2,
+        totalSteps: 6,
+        title: 'Проверка облачной версии',
+        description: 'Читаем удалённый manifest и сравниваем версии.',
+      ),
+    );
+    final status = await syncService.loadStatus(
+      storePath: entry.path,
+      storeInfo: _buildStoreInfo(entry, manifest),
+      binding: binding,
+      token: token,
+    );
+
+    switch (status.compareResult) {
+      case StoreVersionCompareResult.remoteNewer:
+        _updateCloudSyncProgress(
+          const SnapshotSyncProgress(
+            stage: SnapshotSyncStage.transferringPrimaryFiles,
+            stepIndex: 3,
+            totalSteps: 6,
+            title: 'Скачивание из облака',
+            description: 'Загружаем более новую remote snapshot-версию.',
+          ),
+        );
+        await syncService.downloadRemoteSnapshot(
+          storePath: entry.path,
+          binding: binding,
+          lockBeforeApply: false,
+          emitProgress: (progress) {
+            _updateCloudSyncProgress(progress);
+          },
+        );
+        ref.invalidate(_recentDatabaseManifestProvider(entry.path));
+        Toaster.success(
+          title: 'Cloud Sync',
+          description:
+              'Новая версия из ${binding.provider.metadata.displayName} установлена локально.',
+        );
+        break;
+      case StoreVersionCompareResult.same:
+        Toaster.info(
+          title: 'Cloud Sync',
+          description: 'Локальная версия уже совпадает с облачной.',
+        );
+        break;
+      case StoreVersionCompareResult.remoteMissing:
+        Toaster.info(
+          title: 'Cloud Sync',
+          description: 'В облаке ещё нет snapshot для этого хранилища.',
+        );
+        break;
+      case StoreVersionCompareResult.localNewer:
+        Toaster.info(
+          title: 'Cloud Sync',
+          description:
+              'Локальная версия новее облачной. Для отправки изменений откройте хранилище и выполните sync.',
+        );
+        break;
+      case StoreVersionCompareResult.conflict:
+        Toaster.warning(
+          title: 'Cloud Sync',
+          description:
+              'Обнаружен конфликт локальной и удалённой версий. Откройте хранилище для ручного разрешения.',
+        );
+        break;
+      case StoreVersionCompareResult.differentStore:
+        Toaster.error(
+          title: 'Cloud Sync',
+          description:
+              'Удалённый manifest относится к другому хранилищу. Проверьте привязку sync.',
+        );
+        break;
+    }
+  }
+
+  bool _shouldRetryCloudVersionCheck(Object error) {
+    if (error case CloudStorageException(type: final type)) {
+      return type == CloudStorageExceptionType.unauthorized ||
+          type == CloudStorageExceptionType.timeout;
+    }
+
+    if (error case CloudSyncHttpException(type: final type)) {
+      return type == CloudSyncHttpExceptionType.unauthorized ||
+          type == CloudSyncHttpExceptionType.refreshFailed ||
+          type == CloudSyncHttpExceptionType.timeout;
+    }
+
+    return false;
   }
 
   void _updateCloudSyncProgress(SnapshotSyncProgress progress) {
@@ -738,6 +787,18 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
       }
     }
   }
+}
+
+class _CloudVersionCheckData {
+  const _CloudVersionCheckData({
+    required this.manifest,
+    required this.binding,
+    required this.token,
+  });
+
+  final StoreManifest manifest;
+  final StoreSyncBinding binding;
+  final AuthTokenEntry token;
 }
 
 class _PasswordDialog extends StatefulWidget {

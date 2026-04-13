@@ -20,6 +20,7 @@ class _MobileCloudSyncOverlayState
   bool _showInitialCheckHint = false;
   bool _handledInitialSnapshot = false;
   String? _currentStoreKey;
+  bool _currentStoreHasCloudSyncBinding = false;
   Timer? _hideTimer;
 
   @override
@@ -171,9 +172,14 @@ class _MobileCloudSyncOverlayState
       _currentStoreKey = nextStoreKey;
       _hideTimer?.cancel();
       _showInitialCheckHint = false;
+      _currentStoreHasCloudSyncBinding = false;
     }
 
-    if (syncState.isLoading) {
+    if (status?.binding != null) {
+      _currentStoreHasCloudSyncBinding = true;
+    }
+
+    if (syncState.isLoading && _currentStoreHasCloudSyncBinding) {
       _hideTimer?.cancel();
       _setHintVisible(true);
       return;
@@ -225,7 +231,7 @@ class _MobileCloudSyncOverlayState
       return '${status!.syncProgress!.title} · шаг ${status.syncProgress!.stepIndex} из ${status.syncProgress!.totalSteps}';
     }
 
-    if (syncState.isLoading) {
+    if (syncState.isLoading && _currentStoreHasCloudSyncBinding) {
       return 'Проверяем облачную версию хранилища...';
     }
 
