@@ -91,6 +91,9 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       final historyEnabledStr = await settingsDao.getSetting(
         StoreSettingsKeys.historyEnabled,
       );
+      final incrementUsageOnCopyStr = await settingsDao.getSetting(
+        StoreSettingsKeys.incrementUsageOnCopy,
+      );
       final historyCleanupIntervalDaysStr = await settingsDao.getSetting(
         StoreSettingsKeys.historyCleanupIntervalDays,
       );
@@ -103,6 +106,9 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
           : 30;
       final historyEnabled = historyEnabledStr != null
           ? historyEnabledStr == 'true'
+          : true;
+      final incrementUsageOnCopy = incrementUsageOnCopyStr != null
+          ? incrementUsageOnCopyStr == 'true'
           : true;
       final historyCleanupIntervalDays = historyCleanupIntervalDaysStr != null
           ? int.tryParse(historyCleanupIntervalDaysStr) ?? 7
@@ -122,10 +128,12 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
           historyLimit: historyLimit,
           historyMaxAgeDays: historyMaxAgeDays,
           historyEnabled: historyEnabled,
+          incrementUsageOnCopy: incrementUsageOnCopy,
           historyCleanupIntervalDays: historyCleanupIntervalDays,
           newHistoryLimit: historyLimit,
           newHistoryMaxAgeDays: historyMaxAgeDays,
           newHistoryEnabled: historyEnabled,
+          newIncrementUsageOnCopy: incrementUsageOnCopy,
           newHistoryCleanupIntervalDays: historyCleanupIntervalDays,
           pinnedEntityTypes: pinnedIds,
           newPinnedEntityTypes: pinnedIds,
@@ -185,6 +193,15 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
   void updateHistoryEnabled(bool enabled) {
     state = state.copyWith(
       newHistoryEnabled: enabled,
+      saveError: null,
+      successMessage: null,
+    );
+  }
+
+  /// Обновить настройку инкремента использования при копировании
+  void updateIncrementUsageOnCopy(bool enabled) {
+    state = state.copyWith(
+      newIncrementUsageOnCopy: enabled,
       saveError: null,
       successMessage: null,
     );
@@ -273,6 +290,12 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         );
         shouldCleanupHistory = true;
       }
+      if (state.newIncrementUsageOnCopy != state.incrementUsageOnCopy) {
+        await settingsDao.setSetting(
+          StoreSettingsKeys.incrementUsageOnCopy,
+          state.newIncrementUsageOnCopy.toString(),
+        );
+      }
       if (state.newHistoryCleanupIntervalDays !=
           state.historyCleanupIntervalDays) {
         await settingsDao.setSetting(
@@ -305,6 +328,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         historyLimit: state.newHistoryLimit,
         historyMaxAgeDays: state.newHistoryMaxAgeDays,
         historyEnabled: state.newHistoryEnabled,
+        incrementUsageOnCopy: state.newIncrementUsageOnCopy,
         historyCleanupIntervalDays: state.newHistoryCleanupIntervalDays,
         pinnedEntityTypes: state.newPinnedEntityTypes,
         successMessage: 'Настройки успешно сохранены',
@@ -337,6 +361,8 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       newHistoryLimit: state.historyLimit,
       newHistoryMaxAgeDays: state.historyMaxAgeDays,
       newHistoryEnabled: state.historyEnabled,
+      newIncrementUsageOnCopy: state.incrementUsageOnCopy,
+      newHistoryCleanupIntervalDays: state.historyCleanupIntervalDays,
       newPinnedEntityTypes: state.pinnedEntityTypes,
       nameError: null,
       saveError: null,

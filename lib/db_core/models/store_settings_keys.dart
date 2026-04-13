@@ -6,6 +6,7 @@ class StoreSettingsKeys {
       'history_cleanup_interval_days';
   static const String historyLastCleanupTimestamp =
       'history_last_cleanup_timestamp';
+  static const String incrementUsageOnCopy = 'increment_usage_on_copy';
 
   /// Закреплённые типы сущностей в выпадающем списке (JSON-массив id)
   static const String pinnedEntityTypes = 'pinned_entity_types';

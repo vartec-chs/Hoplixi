@@ -39,14 +39,17 @@ class _DocumentListCardState extends ConsumerState<DocumentListCard> {
 
   Future<void> _copyTitle() async {
     final title = widget.document.title ?? 'Без названия';
-    await Clipboard.setData(ClipboardData(text: title));
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.document.id,
+      text: title,
+    );
+    if (!copied) return;
     setState(() => _titleCopied = true);
     Toaster.success(title: 'Название документа скопировано');
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _titleCopied = false);
     });
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.document.id);
   }
 
   @override

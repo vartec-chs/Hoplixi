@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
 import 'package:hoplixi/db_core/main_store.dart';
 import 'package:hoplixi/db_core/models/enums/entity_types.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
@@ -144,10 +145,13 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
   }
 
   Future<void> _copyCode() async {
-    Clipboard.setData(ClipboardData(text: _currentCode));
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.otpId,
+      text: _currentCode,
+    );
+    if (!copied) return;
     Toaster.success(title: 'Скопировано', description: 'OTP код скопирован');
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.otpId);
   }
 
   void _edit() => context.go(

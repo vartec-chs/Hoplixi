@@ -222,6 +222,22 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
             contentPadding: EdgeInsets.zero,
           ),
 
+          SwitchListTile(
+            title: const Text('Увеличивать использование при копировании'),
+            subtitle: const Text(
+              'Если отключено, раздел «Часто используемые» может работать менее эффективно или не работать вовсе. Рекомендуется оставить эту опцию включенной если вам важна точность отображения часто используемых элементов. Вы можете включить эту опцию в любой момент, и она начнет работать для всех последующих копирований.',
+            ),
+            value: state.newIncrementUsageOnCopy,
+            onChanged: state.isSaving
+                ? null
+                : (value) {
+                    ref
+                        .read(storeSettingsProvider.notifier)
+                        .updateIncrementUsageOnCopy(value);
+                  },
+            contentPadding: EdgeInsets.zero,
+          ),
+
           if (state.newHistoryEnabled) ...[
             const SizedBox(height: 16),
             TextField(

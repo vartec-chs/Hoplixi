@@ -1,12 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
 import 'package:hoplixi/db_core/main_store.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -102,10 +102,13 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
   Future<void> _copyContent() async {
     if (_quillController != null) {
       final text = _quillController!.document.toPlainText();
-      Clipboard.setData(ClipboardData(text: text));
+      final copied = await copyCardValue(
+        ref: ref,
+        itemId: widget.noteId,
+        text: text,
+      );
+      if (!copied) return;
       Toaster.success(title: 'Скопировано', description: 'Текст скопирован');
-      final dao = await ref.read(vaultItemDaoProvider.future);
-      await dao.incrementUsage(widget.noteId);
     }
   }
 

@@ -62,44 +62,47 @@ class _BankCardListCardState extends ConsumerState<BankCardListCard> {
   }
 
   Future<void> _copyCardNumber() async {
-    await Clipboard.setData(
-      ClipboardData(
-        text: widget.bankCard.cardNumber.replaceAll(RegExp(r'\D'), ''),
-      ),
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.bankCard.id,
+      text: widget.bankCard.cardNumber.replaceAll(RegExp(r'\D'), ''),
     );
+    if (!copied) return;
     setState(() => _cardNumberCopied = true);
     Toaster.success(title: 'Номер карты скопирован');
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _cardNumberCopied = false);
     });
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.bankCard.id);
   }
 
   Future<void> _copyHolderName() async {
-    await Clipboard.setData(
-      ClipboardData(text: widget.bankCard.cardholderName),
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.bankCard.id,
+      text: widget.bankCard.cardholderName,
     );
+    if (!copied) return;
     setState(() => _holderNameCopied = true);
     Toaster.success(title: 'Имя держателя скопировано');
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _holderNameCopied = false);
     });
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.bankCard.id);
   }
 
   Future<void> _copyExpiry() async {
     final expiry =
         '${widget.bankCard.expiryMonth}/${widget.bankCard.expiryYear}';
-    await Clipboard.setData(ClipboardData(text: expiry));
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.bankCard.id,
+      text: expiry,
+    );
+    if (!copied) return;
     setState(() => _expiryCopied = true);
     Toaster.success(title: 'Срок действия скопирован');
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _expiryCopied = false);
     });
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.bankCard.id);
   }
 
   @override

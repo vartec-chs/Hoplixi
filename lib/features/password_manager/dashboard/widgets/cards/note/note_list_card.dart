@@ -39,16 +39,18 @@ class _NoteListCardState extends ConsumerState<NoteListCard> {
   bool _titleCopied = false;
 
   Future<void> _copyTitle() async {
-    await Clipboard.setData(ClipboardData(text: widget.note.title));
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.note.id,
+      text: widget.note.title,
+    );
+    if (!copied) return;
     setState(() => _titleCopied = true);
     Toaster.success(title: 'Заголовок скопирован');
 
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _titleCopied = false);
     });
-
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.note.id);
   }
 
   @override

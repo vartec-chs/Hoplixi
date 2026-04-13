@@ -37,19 +37,20 @@ class _SshKeyGridCardState extends ConsumerState<SshKeyGridCard> {
   Future<void> _copyPrivateKey() async {
     final dao = await ref.read(sshKeyDaoProvider.future);
     final text = await dao.getPrivateKeyFieldById(widget.sshKey.id);
-    if (text != null && text.isNotEmpty) {
-      await Clipboard.setData(ClipboardData(text: text));
-      setState(() => _privateKeyCopied = true);
-      Toaster.success(title: 'Приватный ключ скопирован');
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) setState(() => _privateKeyCopied = false);
-      });
-    } else {
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.sshKey.id,
+      text: text,
+    );
+    if (!copied) {
       Toaster.error(title: 'Приватный ключ не найден');
+      return;
     }
-
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.sshKey.id);
+    setState(() => _privateKeyCopied = true);
+    Toaster.success(title: 'Приватный ключ скопирован');
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _privateKeyCopied = false);
+    });
   }
 
   @override

@@ -58,18 +58,17 @@ class _BankCardGridCardState extends ConsumerState<BankCardGridCard> {
   }
 
   Future<void> _copyCardNumber() async {
-    await Clipboard.setData(
-      ClipboardData(
-        text: widget.bankCard.cardNumber.replaceAll(RegExp(r'\D'), ''),
-      ),
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.bankCard.id,
+      text: widget.bankCard.cardNumber.replaceAll(RegExp(r'\D'), ''),
     );
+    if (!copied) return;
     setState(() => _cardNumberCopied = true);
     Toaster.success(title: 'Номер карты скопирован');
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _cardNumberCopied = false);
     });
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.bankCard.id);
   }
 
   @override

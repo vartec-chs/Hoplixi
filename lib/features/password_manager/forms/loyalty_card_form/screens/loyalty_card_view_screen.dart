@@ -1,10 +1,12 @@
-﻿import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+﻿import 'dart:typed_data';
+
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
 import 'package:hoplixi/db_core/main_store.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -165,10 +167,13 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
   }
 
   Future<void> _copy(String value, String field) async {
-    await Clipboard.setData(ClipboardData(text: value));
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.loyaltyCardId,
+      text: value,
+    );
+    if (!copied) return;
     Toaster.success(title: 'Скопировано', description: '$field скопировано');
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.loyaltyCardId);
   }
 
   void _edit() => context.go(

@@ -34,16 +34,18 @@ class _IdentityListCardState extends ConsumerState<IdentityListCard> {
   bool _idCopied = false;
 
   Future<void> _copyIdNumber() async {
-    await Clipboard.setData(ClipboardData(text: widget.identity.idNumber));
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.identity.id,
+      text: widget.identity.idNumber,
+    );
+    if (!copied) return;
     setState(() => _idCopied = true);
     Toaster.success(title: 'Номер документа скопирован');
 
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _idCopied = false);
     });
-
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.identity.id);
   }
 
   @override

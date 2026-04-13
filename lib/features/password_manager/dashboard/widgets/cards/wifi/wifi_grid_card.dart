@@ -37,19 +37,20 @@ class _WifiGridCardState extends ConsumerState<WifiGridCard> {
   Future<void> _copyPassword() async {
     final dao = await ref.read(wifiDaoProvider.future);
     final text = await dao.getPasswordFieldById(widget.wifi.id);
-    if (text != null && text.isNotEmpty) {
-      await Clipboard.setData(ClipboardData(text: text));
-      setState(() => _passwordCopied = true);
-      Toaster.success(title: 'Пароль Wi-Fi скопирован');
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) setState(() => _passwordCopied = false);
-      });
-    } else {
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.wifi.id,
+      text: text,
+    );
+    if (!copied) {
       Toaster.error(title: 'Пароль Wi-Fi не найден');
+      return;
     }
-
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.wifi.id);
+    setState(() => _passwordCopied = true);
+    Toaster.success(title: 'Пароль Wi-Fi скопирован');
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _passwordCopied = false);
+    });
   }
 
   @override

@@ -161,16 +161,18 @@ class _TotpListCardState extends ConsumerState<TotpListCard> {
   Future<void> _copyCode() async {
     if (_currentCode == null) return;
 
-    await Clipboard.setData(ClipboardData(text: _currentCode!));
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.otp.id,
+      text: _currentCode,
+    );
+    if (!copied) return;
     setState(() => _codeCopied = true);
     Toaster.success(title: 'Код скопирован');
 
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _codeCopied = false);
     });
-
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.otp.id);
   }
 
   Widget? _buildTotpSection(ThemeData theme) {

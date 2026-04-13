@@ -35,15 +35,17 @@ class _LicenseKeyGridCardState extends ConsumerState<LicenseKeyGridCard> {
   bool _productCopied = false;
 
   Future<void> _copyProduct() async {
-    await Clipboard.setData(ClipboardData(text: widget.license.product));
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.license.id,
+      text: widget.license.product,
+    );
+    if (!copied) return;
     setState(() => _productCopied = true);
     Toaster.success(title: 'Продукт скопирован');
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _productCopied = false);
     });
-
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.license.id);
   }
 
   @override

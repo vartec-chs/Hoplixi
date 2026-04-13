@@ -31,6 +31,9 @@ sealed class StoreSettingsState with _$StoreSettingsState {
     /// Включена ли история
     @Default(true) bool historyEnabled,
 
+    /// Инкрементировать ли использование при копировании
+    @Default(true) bool incrementUsageOnCopy,
+
     /// Новый лимит истории (в процессе редактирования)
     @Default(100) int newHistoryLimit,
 
@@ -39,6 +42,9 @@ sealed class StoreSettingsState with _$StoreSettingsState {
 
     /// Новое состояние включения истории (в процессе редактирования)
     @Default(true) bool newHistoryEnabled,
+
+    /// Новое состояние инкремента использования при копировании
+    @Default(true) bool newIncrementUsageOnCopy,
 
     /// Интервал очистки истории в днях
     @Default(7) int historyCleanupIntervalDays,
@@ -98,6 +104,7 @@ sealed class StoreSettingsState with _$StoreSettingsState {
           newHistoryLimit != historyLimit ||
           newHistoryMaxAgeDays != historyMaxAgeDays ||
           newHistoryEnabled != historyEnabled ||
+          newIncrementUsageOnCopy != incrementUsageOnCopy ||
           newHistoryCleanupIntervalDays != historyCleanupIntervalDays ||
           !listEquals(newPinnedEntityTypes, pinnedEntityTypes));
 

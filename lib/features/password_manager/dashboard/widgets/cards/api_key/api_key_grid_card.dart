@@ -40,19 +40,22 @@ class _ApiKeyGridCardState extends ConsumerState<ApiKeyGridCard> {
     final dao = await ref.read(apiKeyDaoProvider.future);
     final keyText = await dao.getKeyFieldById(widget.apiKey.id);
 
-    if (keyText != null) {
-      await Clipboard.setData(ClipboardData(text: keyText));
-      setState(() => _keyCopied = true);
-      Toaster.success(title: 'Ключ скопирован');
-
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) setState(() => _keyCopied = false);
-      });
-    } else {
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.apiKey.id,
+      text: keyText,
+    );
+    if (!copied) {
       Toaster.error(title: 'Не удалось получить ключ');
+      return;
     }
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.apiKey.id);
+
+    setState(() => _keyCopied = true);
+    Toaster.success(title: 'Ключ скопирован');
+
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _keyCopied = false);
+    });
   }
 
   @override

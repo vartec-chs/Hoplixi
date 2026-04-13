@@ -37,19 +37,20 @@ class _RecoveryCodesGridCardState extends ConsumerState<RecoveryCodesGridCard> {
 
   Future<void> _copyHint() async {
     final hint = widget.recoveryCodes.displayHint;
-    if (hint == null || hint.isEmpty) {
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.recoveryCodes.id,
+      text: hint,
+    );
+    if (!copied) {
       Toaster.error(title: 'Подсказка отсутствует');
       return;
     }
-    await Clipboard.setData(ClipboardData(text: hint));
     setState(() => _hintCopied = true);
     Toaster.success(title: 'Подсказка скопирована');
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _hintCopied = false);
     });
-
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.recoveryCodes.id);
   }
 
   @override

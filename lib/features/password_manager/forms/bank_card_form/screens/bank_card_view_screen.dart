@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_credit_card/flutter_credit_card.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
 import 'package:hoplixi/db_core/main_store.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -73,10 +73,13 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
   }
 
   Future<void> _copy(String v, String f) async {
-    Clipboard.setData(ClipboardData(text: v));
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.bankCardId,
+      text: v,
+    );
+    if (!copied) return;
     Toaster.success(title: 'Скопировано', description: '$f скопирован');
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.bankCardId);
   }
 
   void _edit() => context.go(

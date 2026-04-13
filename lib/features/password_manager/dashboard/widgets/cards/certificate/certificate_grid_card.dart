@@ -38,19 +38,20 @@ class _CertificateGridCardState extends ConsumerState<CertificateGridCard> {
   Future<void> _copyPrivateKey() async {
     final dao = await ref.read(certificateDaoProvider.future);
     final text = await dao.getPrivateKeyFieldById(widget.certificate.id);
-    if (text != null && text.isNotEmpty) {
-      await Clipboard.setData(ClipboardData(text: text));
-      setState(() => _privateKeyCopied = true);
-      Toaster.success(title: 'Приватный ключ скопирован');
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) setState(() => _privateKeyCopied = false);
-      });
-    } else {
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.certificate.id,
+      text: text,
+    );
+    if (!copied) {
       Toaster.error(title: 'Приватный ключ не найден');
+      return;
     }
-
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.certificate.id);
+    setState(() => _privateKeyCopied = true);
+    Toaster.success(title: 'Приватный ключ скопирован');
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _privateKeyCopied = false);
+    });
   }
 
   @override

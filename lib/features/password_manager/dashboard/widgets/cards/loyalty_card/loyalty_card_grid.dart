@@ -55,16 +55,17 @@ class _LoyaltyCardGridCardState extends ConsumerState<LoyaltyCardGridCard> {
       Toaster.warning(title: 'Номер карты отсутствует');
       return;
     }
-    await Clipboard.setData(
-      ClipboardData(text: widget.loyaltyCard.cardNumber!),
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.loyaltyCard.id,
+      text: widget.loyaltyCard.cardNumber,
     );
+    if (!copied) return;
     setState(() => _numberCopied = true);
     Toaster.success(title: 'Номер карты скопирован');
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _numberCopied = false);
     });
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.loyaltyCard.id);
   }
 
   @override

@@ -38,20 +38,20 @@ class _CertificateListCardState extends ConsumerState<CertificateListCard> {
   Future<void> _copyPrivateKey() async {
     final dao = await ref.read(certificateDaoProvider.future);
     final privateKey = await dao.getPrivateKeyFieldById(widget.certificate.id);
-
-    if (privateKey != null && privateKey.isNotEmpty) {
-      await Clipboard.setData(ClipboardData(text: privateKey));
-      setState(() => _privateKeyCopied = true);
-      Toaster.success(title: 'Приватный ключ скопирован');
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) setState(() => _privateKeyCopied = false);
-      });
-    } else {
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.certificate.id,
+      text: privateKey,
+    );
+    if (!copied) {
       Toaster.error(title: 'Приватный ключ не найден');
+      return;
     }
-
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.certificate.id);
+    setState(() => _privateKeyCopied = true);
+    Toaster.success(title: 'Приватный ключ скопирован');
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _privateKeyCopied = false);
+    });
   }
 
   Future<void> _copyPfxPassword() async {
@@ -60,19 +60,20 @@ class _CertificateListCardState extends ConsumerState<CertificateListCard> {
       widget.certificate.id,
     );
 
-    if (pfxPassword != null && pfxPassword.isNotEmpty) {
-      await Clipboard.setData(ClipboardData(text: pfxPassword));
-      setState(() => _pfxPasswordCopied = true);
-      Toaster.success(title: 'Пароль PFX скопирован');
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) setState(() => _pfxPasswordCopied = false);
-      });
-    } else {
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.certificate.id,
+      text: pfxPassword,
+    );
+    if (!copied) {
       Toaster.error(title: 'Пароль PFX не найден');
+      return;
     }
-
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.certificate.id);
+    setState(() => _pfxPasswordCopied = true);
+    Toaster.success(title: 'Пароль PFX скопирован');
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _pfxPasswordCopied = false);
+    });
   }
 
   List<CardActionItem> _buildCopyActions() {

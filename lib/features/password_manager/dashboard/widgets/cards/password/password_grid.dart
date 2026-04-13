@@ -43,37 +43,38 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard> {
       widget.password.id,
     );
 
-    if (passwordText == null) {
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.password.id,
+      text: passwordText,
+    );
+    if (!copied) {
       Toaster.error(title: 'Не удалось получить пароль');
       return;
     }
-
-    await Clipboard.setData(ClipboardData(text: passwordText));
     setState(() => _passwordCopied = true);
     Toaster.success(title: 'Пароль скопирован');
 
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _passwordCopied = false);
     });
-
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.password.id);
   }
 
   Future<void> _copyLogin() async {
     final text = widget.password.email ?? widget.password.login;
     if (text == null || text.isEmpty) return;
-
-    await Clipboard.setData(ClipboardData(text: text));
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.password.id,
+      text: text,
+    );
+    if (!copied) return;
     setState(() => _loginCopied = true);
     Toaster.success(title: 'Логин скопирован');
 
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _loginCopied = false);
     });
-
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.password.id);
   }
 
   @override

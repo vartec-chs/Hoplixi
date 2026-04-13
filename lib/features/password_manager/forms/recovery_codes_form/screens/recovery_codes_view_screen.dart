@@ -1,9 +1,9 @@
 ﻿import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/db_core/models/dto/recovery_code_item_dto.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
@@ -99,11 +99,13 @@ class _RecoveryCodesViewScreenState
   }
 
   Future<void> _copyCode(String code) async {
-    await Clipboard.setData(ClipboardData(text: code));
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.recoveryCodesId,
+      text: code,
+    );
+    if (!copied) return;
     if (mounted) Toaster.success(title: context.t.dashboard_forms.code_copied);
-
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.recoveryCodesId);
   }
 
   Future<void> _copyNextUnused() async {

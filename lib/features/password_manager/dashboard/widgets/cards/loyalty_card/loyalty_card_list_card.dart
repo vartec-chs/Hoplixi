@@ -58,11 +58,14 @@ class _LoyaltyCardListCardState extends ConsumerState<LoyaltyCardListCard> {
     String title,
     void Function() markSuccess,
   ) async {
-    await Clipboard.setData(ClipboardData(text: value));
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.loyaltyCard.id,
+      text: value,
+    );
+    if (!copied) return;
     markSuccess();
     Toaster.success(title: title);
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.loyaltyCard.id);
   }
 
   @override

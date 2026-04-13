@@ -38,35 +38,39 @@ class _CryptoWalletListCardState extends ConsumerState<CryptoWalletListCard> {
   Future<void> _copyMnemonic() async {
     final dao = await ref.read(cryptoWalletDaoProvider.future);
     final text = await dao.getMnemonicFieldById(widget.wallet.id);
-    if (text != null && text.isNotEmpty) {
-      await Clipboard.setData(ClipboardData(text: text));
-      setState(() => _mnemonicCopied = true);
-      Toaster.success(title: 'Mnemonic скопирован');
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) setState(() => _mnemonicCopied = false);
-      });
-    } else {
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.wallet.id,
+      text: text,
+    );
+    if (!copied) {
       Toaster.error(title: 'Mnemonic не найден');
+      return;
     }
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.wallet.id);
+    setState(() => _mnemonicCopied = true);
+    Toaster.success(title: 'Mnemonic скопирован');
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _mnemonicCopied = false);
+    });
   }
 
   Future<void> _copyPrivateKey() async {
     final dao = await ref.read(cryptoWalletDaoProvider.future);
     final text = await dao.getPrivateKeyFieldById(widget.wallet.id);
-    if (text != null && text.isNotEmpty) {
-      await Clipboard.setData(ClipboardData(text: text));
-      setState(() => _privateKeyCopied = true);
-      Toaster.success(title: 'Private key скопирован');
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) setState(() => _privateKeyCopied = false);
-      });
-    } else {
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.wallet.id,
+      text: text,
+    );
+    if (!copied) {
       Toaster.error(title: 'Private key не найден');
+      return;
     }
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.wallet.id);
+    setState(() => _privateKeyCopied = true);
+    Toaster.success(title: 'Private key скопирован');
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _privateKeyCopied = false);
+    });
   }
 
   List<CardActionItem> _buildCopyActions() {

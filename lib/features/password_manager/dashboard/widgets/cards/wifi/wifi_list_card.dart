@@ -35,33 +35,36 @@ class _WifiListCardState extends ConsumerState<WifiListCard> {
   bool _passwordCopied = false;
 
   Future<void> _copySsid() async {
-    await Clipboard.setData(ClipboardData(text: widget.wifi.ssid));
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.wifi.id,
+      text: widget.wifi.ssid,
+    );
+    if (!copied) return;
     setState(() => _ssidCopied = true);
     Toaster.success(title: 'SSID скопирован');
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _ssidCopied = false);
     });
-
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.wifi.id);
   }
 
   Future<void> _copyPassword() async {
     final dao = await ref.read(wifiDaoProvider.future);
     final password = await dao.getPasswordFieldById(widget.wifi.id);
-    if (password != null && password.isNotEmpty) {
-      await Clipboard.setData(ClipboardData(text: password));
-      setState(() => _passwordCopied = true);
-      Toaster.success(title: 'Пароль Wi-Fi скопирован');
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) setState(() => _passwordCopied = false);
-      });
-    } else {
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.wifi.id,
+      text: password,
+    );
+    if (!copied) {
       Toaster.error(title: 'Пароль Wi-Fi не найден');
+      return;
     }
-
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.wifi.id);
+    setState(() => _passwordCopied = true);
+    Toaster.success(title: 'Пароль Wi-Fi скопирован');
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _passwordCopied = false);
+    });
   }
 
   @override

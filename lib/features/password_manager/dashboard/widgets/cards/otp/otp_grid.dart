@@ -56,16 +56,18 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard> {
       algorithm: Algorithm.SHA1,
     );
 
-    await Clipboard.setData(ClipboardData(text: code));
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.otp.id,
+      text: code,
+    );
+    if (!copied) return;
     setState(() => _codeCopied = true);
     Toaster.success(title: 'Код скопирован');
 
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _codeCopied = false);
     });
-
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.otp.id);
   }
 
   @override

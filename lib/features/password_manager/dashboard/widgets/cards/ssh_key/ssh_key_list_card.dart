@@ -35,33 +35,36 @@ class _SshKeyListCardState extends ConsumerState<SshKeyListCard> {
   bool _privateKeyCopied = false;
 
   Future<void> _copyPublicKey() async {
-    await Clipboard.setData(ClipboardData(text: widget.sshKey.publicKey));
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.sshKey.id,
+      text: widget.sshKey.publicKey,
+    );
+    if (!copied) return;
     setState(() => _publicKeyCopied = true);
     Toaster.success(title: 'Публичный ключ скопирован');
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _publicKeyCopied = false);
     });
-
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.sshKey.id);
   }
 
   Future<void> _copyPrivateKey() async {
     final dao = await ref.read(sshKeyDaoProvider.future);
     final privateKey = await dao.getPrivateKeyFieldById(widget.sshKey.id);
-    if (privateKey != null && privateKey.isNotEmpty) {
-      await Clipboard.setData(ClipboardData(text: privateKey));
-      setState(() => _privateKeyCopied = true);
-      Toaster.success(title: 'Приватный ключ скопирован');
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) setState(() => _privateKeyCopied = false);
-      });
-    } else {
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.sshKey.id,
+      text: privateKey,
+    );
+    if (!copied) {
       Toaster.error(title: 'Приватный ключ не найден');
+      return;
     }
-
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.sshKey.id);
+    setState(() => _privateKeyCopied = true);
+    Toaster.success(title: 'Приватный ключ скопирован');
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _privateKeyCopied = false);
+    });
   }
 
   @override

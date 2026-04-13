@@ -148,18 +148,19 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard> {
 
   Future<void> _copyCode() async {
     if (_currentCode == null) return;
-    await Clipboard.setData(ClipboardData(text: _currentCode!));
+    final linkedOtp = _linkedOtp;
+    if (linkedOtp == null) return;
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: linkedOtp.$1.id,
+      text: _currentCode,
+    );
+    if (!copied) return;
     setState(() => _codeCopied = true);
     Toaster.success(title: 'Код скопирован');
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _codeCopied = false);
     });
-
-    if (_linkedOtp != null) {
-      final (vaultOtp, _) = _linkedOtp!;
-      final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-      await vaultItemDao.incrementUsage(vaultOtp.id);
-    }
   }
 
   Future<void> _copyPassword() async {
@@ -167,44 +168,52 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard> {
     final passwordText = await passwordDao.getPasswordFieldById(
       widget.password.id,
     );
-    if (passwordText == null) {
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.password.id,
+      text: passwordText,
+    );
+    if (!copied) {
       Toaster.error(title: 'Не удалось получить пароль');
       return;
     }
-    await Clipboard.setData(ClipboardData(text: passwordText));
     setState(() => _passwordCopied = true);
     Toaster.success(title: 'Пароль скопирован');
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _passwordCopied = false);
     });
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.password.id);
   }
 
   Future<void> _copyLogin() async {
     final text = widget.password.email ?? widget.password.login;
     if (text == null || text.isEmpty) return;
-    await Clipboard.setData(ClipboardData(text: text));
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.password.id,
+      text: text,
+    );
+    if (!copied) return;
     setState(() => _loginCopied = true);
     Toaster.success(title: 'Логин скопирован');
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _loginCopied = false);
     });
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.password.id);
   }
 
   Future<void> _copyUrl() async {
     final text = widget.password.url;
     if (text == null || text.isEmpty) return;
-    await Clipboard.setData(ClipboardData(text: text));
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.password.id,
+      text: text,
+    );
+    if (!copied) return;
     setState(() => _urlCopied = true);
     Toaster.success(title: 'URL скопирован');
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _urlCopied = false);
     });
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    await vaultItemDao.incrementUsage(widget.password.id);
   }
 
   Widget? _buildTotpSection(ThemeData theme) {
