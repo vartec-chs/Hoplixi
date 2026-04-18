@@ -262,11 +262,6 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
                   if (_tagNames.isNotEmpty) _tags(theme),
                   CustomFieldsViewSection(itemId: widget.otpId),
                   const SizedBox(height: 24),
-                  FilledButton.icon(
-                    onPressed: _edit,
-                    icon: const Icon(LucideIcons.pencil),
-                    label: const Text('Редактировать'),
-                  ),
                 ],
               ),
       ),

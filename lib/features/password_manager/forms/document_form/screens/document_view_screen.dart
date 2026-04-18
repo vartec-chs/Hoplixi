@@ -191,11 +191,6 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
                     ),
                   CustomFieldsViewSection(itemId: widget.documentId),
                   const SizedBox(height: 24),
-                  FilledButton.icon(
-                    onPressed: _edit,
-                    icon: const Icon(LucideIcons.pencil),
-                    label: const Text('Редактировать'),
-                  ),
                 ],
               ),
       ),

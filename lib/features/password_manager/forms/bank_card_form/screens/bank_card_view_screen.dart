@@ -218,11 +218,6 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
                     ),
                   CustomFieldsViewSection(itemId: widget.bankCardId),
                   const SizedBox(height: 24),
-                  FilledButton.icon(
-                    onPressed: _edit,
-                    icon: const Icon(LucideIcons.pencil),
-                    label: const Text('Редактировать'),
-                  ),
                 ],
               ),
       ),

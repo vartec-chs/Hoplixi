@@ -309,11 +309,6 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
                     ),
                   CustomFieldsViewSection(itemId: widget.loyaltyCardId),
                   const SizedBox(height: 24),
-                  FilledButton.icon(
-                    onPressed: _edit,
-                    icon: const Icon(LucideIcons.pencil),
-                    label: const Text('Редактировать'),
-                  ),
                 ],
               ),
       ),
