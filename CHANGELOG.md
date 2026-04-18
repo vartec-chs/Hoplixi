@@ -65,6 +65,29 @@
   списках колонок `vault_item_history` после добавления
   `icon_source`/`icon_value`.
 
+### db_core (migrations)
+
+- Добавлен каркас версионированных миграций в `lib/db_core/migrations/`:
+  выделены раннер, runtime-контекст и файл миграции
+  `versions/migration_v2.dart`.
+
+- `MainStore.onUpgrade` переведен на вызов централизованного раннера
+  `runMainStoreKnownMigrations(...)`, чтобы новые миграции добавлялись в
+  отдельные файлы по версии.
+
+- В `main_store_migration_types.dart` уточнены generic-типы колонок до
+  `GeneratedColumn<Object>`, чтобы убрать несовместимость с
+  `Migrator.addColumn`.
+
+- Добавлен гайд `docs-ai/db-migrations.md` с пошаговой инструкцией по реализации
+  миграций (создание `migration_v{N}`, регистрация в раннере, расширение
+  runtime-контекста и проверка перед merge).
+
+### docs (agent)
+
+- В `AGENT.md` добавлено упоминание гайда `docs-ai/db-migrations.md` как
+  основного источника по реализации версионированных миграций `MainStore`.
+
 ### category_manager
 
 - В `CategoryManagerScreen` добавлен скролл для всей формы: контент обернут в

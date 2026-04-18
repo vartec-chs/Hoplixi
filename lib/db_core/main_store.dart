@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/db_core/dao/index.dart';
+import 'package:hoplixi/db_core/migrations/index.dart';
 import 'package:hoplixi/db_core/models/enums/index.dart';
 import 'package:hoplixi/db_core/tables/index.dart';
 import 'package:hoplixi/db_core/triggers/index.dart';
@@ -153,10 +154,27 @@ class MainStore extends _$MainStore {
 
         var currentVersion = from;
 
-        if (currentVersion < 2) {
-          await _migrateToV2(m);
-          currentVersion = 2;
-        }
+        final migrationRuntime = MainStoreMigrationRuntime(
+          customStatement: (sql) => customStatement(sql),
+          reinstallHistoryTriggers: _installHistoryTriggers,
+          categoriesTable: categories,
+          categoriesIconSource: categories.iconSource,
+          categoriesIconValue: categories.iconValue,
+          vaultItemsTable: vaultItems,
+          vaultItemsIconSource: vaultItems.iconSource,
+          vaultItemsIconValue: vaultItems.iconValue,
+          vaultItemHistoryTable: vaultItemHistory,
+          vaultItemHistoryIconSource: vaultItemHistory.iconSource,
+          vaultItemHistoryIconValue: vaultItemHistory.iconValue,
+        );
+
+        currentVersion = await runMainStoreKnownMigrations(
+          migrator: m,
+          from: currentVersion,
+          to: to,
+          runtime: migrationRuntime,
+          logTag: '${_logTag}Migration',
+        );
 
         if (currentVersion < to) {
           logWarning(
@@ -339,32 +357,6 @@ class MainStore extends _$MainStore {
       );
       rethrow;
     }
-  }
-
-  Future<void> _migrateToV2(Migrator m) async {
-    logInfo('Running migration to schema version 2', tag: '${_logTag}Migration');
-
-    await m.addColumn(categories, categories.iconSource);
-    await m.addColumn(categories, categories.iconValue);
-    await m.addColumn(vaultItems, vaultItems.iconSource);
-    await m.addColumn(vaultItems, vaultItems.iconValue);
-    await m.addColumn(vaultItemHistory, vaultItemHistory.iconSource);
-    await m.addColumn(vaultItemHistory, vaultItemHistory.iconValue);
-
-    await customStatement(
-      '''
-      UPDATE categories
-      SET icon_source = 'db',
-          icon_value = icon_id
-      WHERE icon_id IS NOT NULL
-        AND TRIM(icon_id) != ''
-        AND (icon_source IS NULL OR TRIM(icon_source) = '')
-        AND (icon_value IS NULL OR TRIM(icon_value) = '')
-      ''',
-    );
-
-    await _installHistoryTriggers();
-    logInfo('Schema version 2 migration completed', tag: '${_logTag}Migration');
   }
 
   /// Создание индексов для оптимизации запросов.

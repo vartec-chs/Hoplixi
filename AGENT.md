@@ -38,6 +38,9 @@ code.
   Currently supported locales: `ru` (base) and `en`.
 - See [docs-ai/crypt-api-usage.md](docs-ai/crypt-api-usage.md) for usage
   instructions of the Hoplixi File Crypt API from Dart.
+- See [docs-ai/db-migrations.md](docs-ai/db-migrations.md) for the process of
+  implementing versioned MainStore migrations (`migration_v{N}.dart`),
+  registering them in the runner, and validating upgrade safety.
 
 ## Technologies Used
 
