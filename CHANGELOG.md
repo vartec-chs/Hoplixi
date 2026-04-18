@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 2026-04-16
+
+### password_manager
+
+- В форму пароля добавлен вызов встроенного генератора паролей: на экране
+  `PasswordFormScreen` появилась кнопка генерации, открывающая
+  `PasswordGeneratorWidget` в `WoltModalSheet`, с подстановкой выбранного пароля
+  в поле формы и синхронизацией через `passwordFormProvider`.
+- Для экрана формы пароля добавлены новые ключи локализации в модуле
+  `dashboard_forms` (`passwordGeneratorTitle`, `generatePasswordAction`,
+  `useGeneratedPassword`) для `ru` и `en`.
+
 ## 2026-04-14 (1.1.1)
 
 ### docs
@@ -12,9 +24,9 @@
 
 - Добавлена настройка стора для управления инкрементом `usedCount` при
   копировании данных.
-- При сохранении настроек стора через `store_settings_provider.dart`
-  теперь явно обновляется `store_meta.modified_at`, даже если менялись только
-  значения в `store_settings`.
+- При сохранении настроек стора через `store_settings_provider.dart` теперь явно
+  обновляется `store_meta.modified_at`, даже если менялись только значения в
+  `store_settings`.
 - Логика копирования и условного `incrementUsage` вынесена в общий util
   `lib/features/password_manager/shared/utils/copy_usage_utils.dart`.
 - Карточки в `lib/features/password_manager/dashboard/widgets/cards` переведены

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/db_core/models/enums/entity_types.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
+import 'package:hoplixi/features/password_generator/password_generator_widget.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_button.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
@@ -12,9 +13,11 @@ import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picke
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_editor.dart';
+import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 import '../providers/password_form_provider.dart';
 
@@ -114,6 +117,53 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
         description: context.t.dashboard_forms.failed_to_save_password,
       );
     }
+  }
+
+  Future<void> _openPasswordGeneratorModal() async {
+    final generatedPassword = await WoltModalSheet.show<String>(
+      context: context,
+      useSafeArea: true,
+      useRootNavigator: true,
+      pageListBuilder: (modalContext) => [
+        WoltModalSheetPage(
+          surfaceTintColor: Colors.transparent,
+          hasTopBarLayer: true,
+          isTopBarLayerAlwaysVisible: true,
+          topBarTitle: Text(
+            context.t.dashboard_forms.password_generator_title,
+            style: Theme.of(
+              modalContext,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          leadingNavBarWidget: Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: IconButton(
+              icon: const Icon(Icons.close),
+              tooltip: MaterialLocalizations.of(modalContext).closeButtonTooltip,
+              onPressed: () => Navigator.of(modalContext).pop(),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: PasswordGeneratorWidget(
+              showRefreshButton: true,
+              showSubmitButton: true,
+              submitLabel: context.t.dashboard_forms.use_generated_password,
+              onPasswordSubmitted: (password) {
+                Navigator.of(modalContext).pop(password);
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+
+    if (!mounted || generatedPassword == null || generatedPassword.isEmpty) {
+      return;
+    }
+
+    _passwordController.text = generatedPassword;
+    ref.read(passwordFormProvider.notifier).setPassword(generatedPassword);
   }
 
   @override
@@ -263,6 +313,23 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                                   .read(passwordFormProvider.notifier)
                                   .setPassword(value);
                             },
+                          ),
+                          const SizedBox(height: 8),
+
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: SmoothButton(
+                              onPressed: state.isSaving
+                                  ? null
+                                  : _openPasswordGeneratorModal,
+                              icon: const Icon(Icons.password, size: 18),
+                              label: context
+                                  .t
+                                  .dashboard_forms
+                                  .generate_password_action,
+                              type: SmoothButtonType.text,
+                              size: SmoothButtonSize.small,
+                            ),
                           ),
                           const SizedBox(height: 16),
 
