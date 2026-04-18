@@ -713,7 +713,7 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
 
     if (success) {
       await attemptLimiter.reset(entry.path);
-      Toaster.success(title: 'Успех', description: 'База данных открыта');
+      // Toaster.success(title: 'Успех', description: 'База данных открыта');
 
       if (shouldSavePassword && password.isNotEmpty) {
         final freshEntry = await historyService.getByPath(entry.path);

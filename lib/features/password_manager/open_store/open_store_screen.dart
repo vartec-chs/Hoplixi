@@ -505,11 +505,11 @@ class _OpenStoreScreenState extends ConsumerState<OpenStoreScreen> {
     }
 
     Navigator.of(dialogContext).pop();
-    Toaster.success(
-      context: context,
-      title: 'Успешно',
-      description: 'Хранилище открыто',
-    );
+    // Toaster.success(
+    //   context: context,
+    //   title: 'Успешно',
+    //   description: 'Хранилище открыто',
+    // );
     context.go(AppRoutesPaths.home);
     ref.read(titlebarStateProvider.notifier).setBackgroundTransparent(true);
   }

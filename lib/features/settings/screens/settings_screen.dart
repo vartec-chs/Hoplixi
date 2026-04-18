@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/settings/ui/settings_sections.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/ui/button.dart';
 
 /// Экран настроек приложения
 class SettingsScreen extends ConsumerWidget {
@@ -49,10 +50,10 @@ class SettingsScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: SizedBox(
                   width: double.infinity,
-                  child: FilledButton.icon(
+                  child: SmoothButton(
                     onPressed: () => context.push(AppRoutesPaths.logs),
                     icon: const Icon(Icons.description_outlined),
-                    label: const Text('Открыть логи'),
+                    label: 'Открыть логи',
                   ),
                 ),
               ),

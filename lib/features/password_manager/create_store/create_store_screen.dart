@@ -214,10 +214,10 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen>
       if (!mounted) return;
 
       if (success) {
-        Toaster.success(
-          title: 'Хранилище создано',
-          description: 'Хранилище "${formState.name}" успешно создано!',
-        );
+        // Toaster.success(
+        //   title: 'Хранилище создано',
+        //   description: 'Хранилище "${formState.name}" успешно создано!',
+        // );
         formNotifier.reset();
         ref.read(titlebarStateProvider.notifier).setBackgroundTransparent(true);
 

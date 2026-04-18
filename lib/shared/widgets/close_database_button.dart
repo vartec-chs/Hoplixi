@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 
@@ -43,9 +42,9 @@ class CloseDatabaseButton extends ConsumerWidget {
   }
 
   Future<void> _closeDatabase(BuildContext context, WidgetRef ref) async {
-    final success = await ref.read(mainStoreProvider.notifier).closeStore();
-    if (success) {
-      Toaster.info(title: 'База данных закрыта', description: '');
-    }
+    await ref.read(mainStoreProvider.notifier).closeStore();
+    // if (success) {
+    //   Toaster.info(title: 'База данных закрыта', description: '');
+    // }
   }
 }
