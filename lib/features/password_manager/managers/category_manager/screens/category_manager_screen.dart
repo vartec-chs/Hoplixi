@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hoplixi/db_core/models/filter/index.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/managers/category_manager/providers/category_filter_provider.dart';
 import 'package:hoplixi/features/password_manager/managers/category_manager/providers/category_pagination_provider.dart';
 import 'package:hoplixi/features/password_manager/managers/category_manager/providers/category_tree_provider.dart';
-import 'package:hoplixi/db_core/models/filter/index.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 import '../widgets/category_manager_app_bar.dart';
@@ -79,18 +79,23 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
     );
 
     return Scaffold(
-      body: CustomScrollView(
+      body: Scrollbar(
         controller: _scrollController,
-        slivers: [
-          const CategoryManagerAppBar(),
-          if (hasActiveFilters)
-            CategoryManagerFilteredListView(
-              entity: widget.entity,
-              onRefresh: _refresh,
-            )
-          else
-            CategoryTreeView(entity: widget.entity, onRefresh: _refresh),
-        ],
+        child: CustomScrollView(
+          controller: _scrollController,
+          primary: false,
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            const CategoryManagerAppBar(),
+            if (hasActiveFilters)
+              CategoryManagerFilteredListView(
+                entity: widget.entity,
+                onRefresh: _refresh,
+              )
+            else
+              CategoryTreeView(entity: widget.entity, onRefresh: _refresh),
+          ],
+        ),
       ),
       floatingActionButton: _isMobileLayout(context)
           ? FloatingActionButton(

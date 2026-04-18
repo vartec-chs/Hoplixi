@@ -62,6 +62,18 @@
   списках колонок `vault_item_history` после добавления
   `icon_source`/`icon_value`.
 
+### category_manager
+
+- В `CategoryManagerScreen` добавлен скролл для всей формы: контент обернут в
+  `Scrollbar`, а `CustomScrollView` переведен на
+  `AlwaysScrollableScrollPhysics`, чтобы экран прокручивался стабильно в любом
+  состоянии списка/дерева.
+
+### shared_widgets
+
+- В `IconSourcePickerButton` кнопка очистки выбора иконки перенесена из нижнего
+  ряда действий в `IconButton` в правом верхнем углу карточки.
+
 ## 2026-04-16
 
 ### password_manager
