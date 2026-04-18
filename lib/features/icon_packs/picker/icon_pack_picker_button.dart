@@ -122,7 +122,7 @@ class _IconPackPickerButtonState extends ConsumerState<IconPackPickerButton> {
       children: [
         InkWell(
           onTap: _openPicker,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           child: Container(
             width: widget.size,
             height: widget.size,
@@ -131,7 +131,7 @@ class _IconPackPickerButtonState extends ConsumerState<IconPackPickerButton> {
                 color: Theme.of(context).colorScheme.outline,
                 width: 2,
               ),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
             ),
             child: _buildContent(context),
@@ -147,17 +147,17 @@ class _IconPackPickerButtonState extends ConsumerState<IconPackPickerButton> {
                 message: 'Удалить иконку',
                 child: InkWell(
                   onTap: _clearIcon,
-                  customBorder: const CircleBorder(),
+                  customBorder: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(14)),
+                  ),
                   child: Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: Colors.redAccent,
-                      shape: BoxShape.circle,
-                    ),
+
                     child: Icon(
                       Icons.delete_outline,
+
                       size: 20,
-                      color: Theme.of(context).colorScheme.onError,
+                      color: Theme.of(context).colorScheme.error,
                     ),
                   ),
                 ),

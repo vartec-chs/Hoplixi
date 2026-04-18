@@ -35,7 +35,6 @@ class _IconPackPickerIconPageState
   static const int _pageSize = 48;
 
   final TextEditingController _searchController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
   Timer? _searchDebounce;
 
   List<IconPackEntry> _items = const [];
@@ -47,7 +46,6 @@ class _IconPackPickerIconPageState
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
     _loadInitial();
   }
 
@@ -55,7 +53,6 @@ class _IconPackPickerIconPageState
   void dispose() {
     _searchDebounce?.cancel();
     _searchController.dispose();
-    _scrollController.dispose();
     super.dispose();
   }
 
@@ -66,20 +63,6 @@ class _IconPackPickerIconPageState
       _searchController.clear();
       _searchDebounce?.cancel();
       _loadInitial();
-    }
-  }
-
-  void _onScroll() {
-    if (!_scrollController.hasClients ||
-        _isInitialLoading ||
-        _isLoadingMore ||
-        !_hasMore) {
-      return;
-    }
-
-    final position = _scrollController.position;
-    if (position.pixels >= position.maxScrollExtent * 0.8) {
-      _loadMore();
     }
   }
 
@@ -170,194 +153,196 @@ class _IconPackPickerIconPageState
     return ValueListenableBuilder<Color?>(
       valueListenable: widget.previewColor,
       builder: (context, selectedPreviewColor, _) {
-        return Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _searchController,
-                    decoration: primaryInputDecoration(
-                      context,
-                      labelText: 'Поиск иконки',
-                      hintText: 'Введите имя, ключ или путь',
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: _searchController.text.isEmpty
-                          ? null
-                          : IconButton(
-                              tooltip: 'Очистить поиск',
-                              onPressed: () {
-                                _searchController.clear();
-                                _searchDebounce?.cancel();
-                                _loadInitial();
-                                setState(() {});
-                              },
-                              icon: const Icon(Icons.close),
-                            ),
+        return SliverMainAxisGroup(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _searchController,
+                      decoration: primaryInputDecoration(
+                        context,
+                        labelText: 'Поиск иконки',
+                        hintText: 'Введите имя, ключ или путь',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: _searchController.text.isEmpty
+                            ? null
+                            : IconButton(
+                                tooltip: 'Очистить поиск',
+                                onPressed: () {
+                                  _searchController.clear();
+                                  _searchDebounce?.cancel();
+                                  _loadInitial();
+                                  setState(() {});
+                                },
+                                icon: const Icon(Icons.close),
+                              ),
+                      ),
+                      onChanged: (_) {
+                        setState(() {});
+                        _searchDebounce?.cancel();
+                        _searchDebounce = Timer(
+                          const Duration(milliseconds: 250),
+                          _loadInitial,
+                        );
+                      },
                     ),
-                    onChanged: (_) {
-                      setState(() {});
-                      _searchDebounce?.cancel();
-                      _searchDebounce = Timer(
-                        const Duration(milliseconds: 250),
-                        _loadInitial,
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Text(
-                        //   widget.pack.displayName,
-                        //   style: theme.textTheme.titleSmall,
-                        // ),
-                        // const SizedBox(height: 4),
-                        // Text('Ключ пака: ${widget.pack.packKey}'),
-                        // Text('Иконок в паке: ${widget.pack.iconCount}'),
-                        // const SizedBox(height: 12),
-                        Text(
-                          'Цвет предпросмотра',
-                          style: theme.textTheme.labelLarge,
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            ChoiceChip(
-                              label: const Text('Оригинал'),
-                              selected: selectedPreviewColor == null,
-                              onSelected: (_) {
-                                widget.previewColor.value = null;
-                              },
-                            ),
-                            _buildColorChip(
-                              context,
-                              label: 'Текст',
-                              color: theme.colorScheme.onSurface,
-                              selectedPreviewColor: selectedPreviewColor,
-                            ),
-                            _buildColorChip(
-                              context,
-                              label: 'Primary',
-                              color: theme.colorScheme.primary,
-                              selectedPreviewColor: selectedPreviewColor,
-                            ),
-                            _buildColorChip(
-                              context,
-                              label: 'Secondary',
-                              color: theme.colorScheme.secondary,
-                              selectedPreviewColor: selectedPreviewColor,
-                            ),
-                            _buildColorChip(
-                              context,
-                              label: 'Error',
-                              color: theme.colorScheme.error,
-                              selectedPreviewColor: selectedPreviewColor,
-                            ),
-                            SmoothButton(
-                              type: .text,
-                              size: .small,
-                              onPressed: () => _pickPreviewColor(
+                    const SizedBox(height: 10),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Цвет предпросмотра',
+                            style: theme.textTheme.labelLarge,
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              ChoiceChip(
+                                label: const Text('Оригинал'),
+                                selected: selectedPreviewColor == null,
+                                onSelected: (_) {
+                                  widget.previewColor.value = null;
+                                },
+                              ),
+                              _buildColorChip(
                                 context,
-                                initialColor:
-                                    selectedPreviewColor ??
-                                    theme.colorScheme.primary,
+                                label: 'Текст',
+                                color: theme.colorScheme.onSurface,
+                                selectedPreviewColor: selectedPreviewColor,
                               ),
-                              icon: _PreviewColorDot(
-                                color:
-                                    selectedPreviewColor ??
-                                    theme.colorScheme.outline,
+                              _buildColorChip(
+                                context,
+                                label: 'Primary',
+                                color: theme.colorScheme.primary,
+                                selectedPreviewColor: selectedPreviewColor,
                               ),
-                              label: 'Другой',
-                            ),
-                          ],
-                        ),
-                      ],
+                              _buildColorChip(
+                                context,
+                                label: 'Secondary',
+                                color: theme.colorScheme.secondary,
+                                selectedPreviewColor: selectedPreviewColor,
+                              ),
+                              _buildColorChip(
+                                context,
+                                label: 'Error',
+                                color: theme.colorScheme.error,
+                                selectedPreviewColor: selectedPreviewColor,
+                              ),
+                              SmoothButton(
+                                type: .text,
+                                size: .small,
+                                onPressed: () => _pickPreviewColor(
+                                  context,
+                                  initialColor:
+                                      selectedPreviewColor ??
+                                      theme.colorScheme.primary,
+                                ),
+                                icon: _PreviewColorDot(
+                                  color:
+                                      selectedPreviewColor ??
+                                      theme.colorScheme.outline,
+                                ),
+                                label: 'Другой',
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-            const Divider(height: 1),
-            Expanded(
-              child: _buildBody(context, previewColor: selectedPreviewColor),
-            ),
+            const SliverToBoxAdapter(child: Divider(height: 1)),
+            ..._buildBodySlivers(context, previewColor: selectedPreviewColor),
           ],
         );
       },
     );
   }
 
-  Widget _buildBody(BuildContext context, {Color? previewColor}) {
+  List<Widget> _buildBodySlivers(BuildContext context, {Color? previewColor}) {
     if (_isInitialLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const [
+        SliverFillRemaining(child: Center(child: CircularProgressIndicator())),
+      ];
     }
 
     if (_items.isEmpty && _errorText != null) {
-      return IconPackPickerLoadErrorState(
-        title: 'Не удалось загрузить иконки',
-        errorText: _errorText!,
-        onRetry: _loadInitial,
-      );
+      return [
+        SliverFillRemaining(
+          child: IconPackPickerLoadErrorState(
+            title: 'Не удалось загрузить иконки',
+            errorText: _errorText!,
+            onRetry: _loadInitial,
+          ),
+        ),
+      ];
     }
 
     if (_items.isEmpty) {
-      return const IconPackPickerEmptyState(
-        icon: Icons.image_search_outlined,
-        title: 'Иконки не найдены',
-        description: 'Попробуйте изменить поисковый запрос.',
-      );
-    }
-
-    return Column(
-      children: [
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final crossAxisCount = _resolveCrossAxisCount(
-                constraints.maxWidth,
-              );
-
-              return GridView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.all(12),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  childAspectRatio: 0.84,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                ),
-                itemCount: _items.length,
-                itemBuilder: (context, index) {
-                  final entry = _items[index];
-                  return IconPackPickerIconCard(
-                    entry: entry,
-                    previewColor: previewColor,
-                    isSelected: entry.key == widget.initialIconKey,
-                    onTap: () => widget.onIconSelected(entry.key),
-                  );
-                },
-              );
-            },
+      return const [
+        SliverFillRemaining(
+          child: IconPackPickerEmptyState(
+            icon: Icons.image_search_outlined,
+            title: 'Иконки не найдены',
+            description: 'Попробуйте изменить поисковый запрос.',
           ),
         ),
-        if (_isLoadingMore)
-          const Padding(
+      ];
+    }
+
+    return [
+      SliverLayoutBuilder(
+        builder: (context, constraints) {
+          final crossAxisCount = _resolveCrossAxisCount(
+            constraints.crossAxisExtent,
+          );
+
+          return SliverPadding(
+            padding: const EdgeInsets.all(12),
+            sliver: SliverGrid(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                childAspectRatio: 0.84,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final entry = _items[index];
+                return IconPackPickerIconCard(
+                  entry: entry,
+                  previewColor: previewColor,
+                  isSelected: entry.key == widget.initialIconKey,
+                  onTap: () => widget.onIconSelected(entry.key),
+                );
+              }, childCount: _items.length),
+            ),
+          );
+        },
+      ),
+      if (_isLoadingMore)
+        const SliverToBoxAdapter(
+          child: Padding(
             padding: EdgeInsets.all(16),
-            child: CircularProgressIndicator(),
+            child: Center(child: CircularProgressIndicator()),
           ),
-        if (_errorText != null && _items.isNotEmpty)
-          Padding(
+        ),
+      if (_errorText != null && _items.isNotEmpty)
+        SliverToBoxAdapter(
+          child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
             child: TextButton.icon(
               onPressed: _loadMore,
@@ -365,8 +350,19 @@ class _IconPackPickerIconPageState
               label: const Text('Ошибка загрузки. Повторить'),
             ),
           ),
-      ],
-    );
+        ),
+      if (_hasMore && !_isLoadingMore)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+            child: TextButton.icon(
+              onPressed: _loadMore,
+              icon: const Icon(Icons.expand_more),
+              label: const Text('Загрузить ещё'),
+            ),
+          ),
+        ),
+    ];
   }
 
   int _resolveCrossAxisCount(double width) {

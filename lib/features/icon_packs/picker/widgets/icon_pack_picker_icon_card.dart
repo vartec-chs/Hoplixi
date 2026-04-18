@@ -137,6 +137,8 @@ class _IconPackSvgPreviewState extends ConsumerState<IconPackSvgPreview> {
         }
 
         return SvgPicture.string(
+          width: 42,
+          height: 42,
           svg,
           fit: BoxFit.contain,
           colorFilter: widget.previewColor == null

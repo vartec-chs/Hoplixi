@@ -33,6 +33,7 @@ Future<String?> showIconPackPickerModal(
           WoltModalSheetPage(
             surfaceTintColor: Colors.transparent,
             hasTopBarLayer: true,
+            forceMaxHeight: true,
             isTopBarLayerAlwaysVisible: true,
             topBarTitle: Text(
               'Выберите пак',
@@ -58,9 +59,10 @@ Future<String?> showIconPackPickerModal(
               ),
             ),
           ),
-          WoltModalSheetPage(
+          SliverWoltModalSheetPage(
             surfaceTintColor: Colors.transparent,
             hasTopBarLayer: true,
+            forceMaxHeight: true,
             isTopBarLayerAlwaysVisible: true,
             topBarTitle: ValueListenableBuilder<IconPackSummary?>(
               valueListenable: selectedPack,
@@ -92,13 +94,14 @@ Future<String?> showIconPackPickerModal(
                 onPressed: () => Navigator.of(modalContext).pop(),
               ),
             ),
-            child: SizedBox(
-              height: modalHeight,
-              child: ValueListenableBuilder<IconPackSummary?>(
+            mainContentSliversBuilder: (context) => [
+              ValueListenableBuilder<IconPackSummary?>(
                 valueListenable: selectedPack,
                 builder: (context, pack, _) {
                   if (pack == null) {
-                    return const IconPackPickerEmptySelection();
+                    return const SliverFillRemaining(
+                      child: IconPackPickerEmptySelection(),
+                    );
                   }
 
                   return IconPackPickerIconPage(
@@ -112,7 +115,7 @@ Future<String?> showIconPackPickerModal(
                   );
                 },
               ),
-            ),
+            ],
           ),
         ];
       },
