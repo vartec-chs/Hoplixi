@@ -51,6 +51,10 @@ class MainStoreManager {
 
   MainStore? get currentStore => _currentStore;
 
+  Future<String> resolveStoragePath(String path) {
+    return _storageService.resolveExistingStoragePath(path);
+  }
+
   /// Создать новое хранилище
   ///
   /// [dto] - данные для создания хранилища
@@ -187,15 +191,11 @@ class MainStoreManager {
   /// [dto] - данные для открытия хранилища
   /// Возвращает информацию о хранилище или ошибку
   AsyncResultDart<StoreInfoDto, DatabaseError> openStore(
-    OpenStoreDto dto,
-  ) async {
+    OpenStoreDto dto, {
+    bool allowMigration = false,
+  }) async {
     try {
       logInfo('Opening store at: ${dto.path}', tag: _logTag);
-
-      // Проверка, открыто ли уже хранилище
-      if (isStoreOpen) {
-        await _closeCurrentStore();
-      }
 
       final actualStoragePath = await _storageService
           .resolveExistingStoragePath(dto.path);
@@ -216,6 +216,16 @@ class MainStoreManager {
       logInfo('Found database file: $dbFilePath', tag: _logTag);
 
       final manifest = await StoreManifestService.readFrom(actualStoragePath);
+      final compatibility = await _checkStoreOpenCompatibility(manifest);
+      final compatibilityError = _buildCompatibilityError(
+        compatibility: compatibility,
+        storagePath: actualStoragePath,
+        allowMigration: allowMigration,
+      );
+      if (compatibilityError != null) {
+        return Failure(compatibilityError);
+      }
+
       final keyConfig = manifest?.keyConfig;
       if (keyConfig == null) {
         return Failure(
@@ -225,6 +235,11 @@ class MainStoreManager {
             timestamp: DateTime.now(),
           ),
         );
+      }
+
+      // Проверка, открыто ли уже хранилище
+      if (isStoreOpen) {
+        await _closeCurrentStore();
       }
 
       var selectedCipher = keyConfig.cipher ?? DBCipher.chacha20;
@@ -268,11 +283,14 @@ class MainStoreManager {
           if (fallbackResult.isSuccess()) {
             effectiveDbResult = fallbackResult;
             selectedCipher = fallbackCipher;
+            final packageInfo = await PackageInfo.fromPlatform();
 
             await StoreManifestService.writeTo(
               actualStoragePath,
               manifest!.copyWith(
                 manifestVersion: MainConstants.storeManifestVersion,
+                lastMigrationVersion: MainConstants.databaseSchemaVersion,
+                appVersion: packageInfo.version,
                 keyConfig: keyConfig.copyWith(cipher: fallbackCipher),
               ),
             );
@@ -302,6 +320,7 @@ class MainStoreManager {
       }
 
       final database = effectiveDbResult.getOrThrow();
+      final effectiveKeyConfig = keyConfig.copyWith(cipher: selectedCipher);
 
       final storeMetaResult = await _metadataService.getStoreMeta(database);
       if (storeMetaResult.isError()) {
@@ -327,6 +346,14 @@ class MainStoreManager {
       _currentStorePath = actualStoragePath;
 
       await _metadataService.updateLastOpenedAt(database);
+
+      if (allowMigration && compatibility.requiresMigration) {
+        await _writeCurrentStoreManifest(keyConfig: effectiveKeyConfig);
+        logInfo(
+          'Updated store_manifest.json after compatibility migration',
+          tag: _logTag,
+        );
+      }
 
       final existingHistory = await _dbHistoryService.getByPath(
         actualStoragePath,
@@ -554,14 +581,18 @@ class MainStoreManager {
     final existingManifest = await StoreManifestService.readFrom(storagePath);
     final deviceInfo = await logger_models.DeviceInfo.collect();
     final packageInfo = await PackageInfo.fromPlatform();
+    final currentAppVersion = packageInfo.version;
+    const currentMigrationVersion = MainConstants.databaseSchemaVersion;
     final lastModifiedBy = StoreManifestLastModifiedBy(
       deviceId: deviceInfo.deviceId,
       clientInstanceId: '${deviceInfo.deviceId}:${packageInfo.packageName}',
-      appVersion: packageInfo.version,
+      appVersion: currentAppVersion,
     );
     final manifest =
         existingManifest?.copyWith(
           manifestVersion: MainConstants.storeManifestVersion,
+          lastMigrationVersion: currentMigrationVersion,
+          appVersion: currentAppVersion,
           storeUuid: storeInfo.id,
           storeName: storeInfo.name,
           updatedAt: storeInfo.modifiedAt.toUtc(),
@@ -571,6 +602,8 @@ class MainStoreManager {
           keyConfig: keyConfig ?? existingManifest.keyConfig,
         ) ??
         StoreManifest.initial(
+          lastMigrationVersion: currentMigrationVersion,
+          appVersion: currentAppVersion,
           storeUuid: storeInfo.id,
           storeName: storeInfo.name,
           updatedAt: storeInfo.modifiedAt.toUtc(),
@@ -588,4 +621,184 @@ class MainStoreManager {
       );
     }
   }
+
+  Future<_StoreOpenCompatibility> _checkStoreOpenCompatibility(
+    StoreManifest? manifest,
+  ) async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    final currentAppVersion = packageInfo.version;
+    const currentManifestVersion = MainConstants.storeManifestVersion;
+    const currentSchemaVersion = MainConstants.databaseSchemaVersion;
+
+    if (manifest == null) {
+      return const _StoreOpenCompatibility(
+        currentManifestVersion: currentManifestVersion,
+        currentSchemaVersion: currentSchemaVersion,
+        currentAppVersion: '',
+      );
+    }
+
+    final storeManifestVersion = manifest.manifestVersion;
+    final storeSchemaVersion = manifest.lastMigrationVersion;
+    final storeAppVersion = manifest.appVersion?.trim();
+    final appVersionComparison = _compareAppVersions(
+      storeAppVersion,
+      currentAppVersion,
+    );
+
+    final manifestVersionTooNew = storeManifestVersion > currentManifestVersion;
+    final schemaVersionTooNew =
+        storeSchemaVersion != null && storeSchemaVersion > currentSchemaVersion;
+    final appVersionTooNew = appVersionComparison > 0;
+
+    final requiresMigration =
+        !manifestVersionTooNew &&
+        !schemaVersionTooNew &&
+        !appVersionTooNew &&
+        (storeManifestVersion < currentManifestVersion ||
+            storeSchemaVersion == null ||
+            storeSchemaVersion < currentSchemaVersion ||
+            storeAppVersion == null ||
+            storeAppVersion.isEmpty ||
+            appVersionComparison < 0);
+
+    return _StoreOpenCompatibility(
+      currentManifestVersion: currentManifestVersion,
+      storeManifestVersion: storeManifestVersion,
+      currentSchemaVersion: currentSchemaVersion,
+      storeSchemaVersion: storeSchemaVersion,
+      currentAppVersion: currentAppVersion,
+      storeAppVersion: storeAppVersion,
+      requiresMigration: requiresMigration,
+      manifestVersionTooNew: manifestVersionTooNew,
+      schemaVersionTooNew: schemaVersionTooNew,
+      appVersionTooNew: appVersionTooNew,
+    );
+  }
+
+  DatabaseError? _buildCompatibilityError({
+    required _StoreOpenCompatibility compatibility,
+    required String storagePath,
+    required bool allowMigration,
+  }) {
+    if (compatibility.blocksOpen) {
+      final reasons = <String>[];
+
+      if (compatibility.manifestVersionTooNew) {
+        reasons.add(
+          'Версия manifest (${compatibility.storeManifestVersion}) новее поддерживаемой (${compatibility.currentManifestVersion})',
+        );
+      }
+      if (compatibility.schemaVersionTooNew) {
+        reasons.add(
+          'Версия схемы данных (${compatibility.storeSchemaVersion}) новее поддерживаемой (${compatibility.currentSchemaVersion})',
+        );
+      }
+      if (compatibility.appVersionTooNew) {
+        reasons.add(
+          'Store был обновлён в версии приложения ${compatibility.storeAppVersion}, а текущая версия приложения ${compatibility.currentAppVersion}',
+        );
+      }
+
+      return DatabaseError.migrationFailed(
+        code: 'DB_STORE_VERSION_TOO_NEW',
+        message:
+            'Открытие невозможно: ${reasons.join('. ')}. Используйте более новую версию приложения.',
+        data: compatibility.toErrorData(storagePath),
+        timestamp: DateTime.now(),
+      );
+    }
+
+    if (compatibility.requiresMigration && !allowMigration) {
+      return DatabaseError.migrationFailed(
+        code: 'DB_STORE_MIGRATION_REQUIRED',
+        message:
+            'Хранилище требует миграции перед открытием. Сначала создайте backup, затем выполните миграцию на текущие версии приложения и схемы.',
+        data: compatibility.toErrorData(storagePath),
+        timestamp: DateTime.now(),
+      );
+    }
+
+    return null;
+  }
+}
+
+class _StoreOpenCompatibility {
+  const _StoreOpenCompatibility({
+    required this.currentManifestVersion,
+    required this.currentSchemaVersion,
+    required this.currentAppVersion,
+    this.storeManifestVersion,
+    this.storeSchemaVersion,
+    this.storeAppVersion,
+    this.requiresMigration = false,
+    this.manifestVersionTooNew = false,
+    this.schemaVersionTooNew = false,
+    this.appVersionTooNew = false,
+  });
+
+  final int currentManifestVersion;
+  final int? storeManifestVersion;
+  final int currentSchemaVersion;
+  final int? storeSchemaVersion;
+  final String currentAppVersion;
+  final String? storeAppVersion;
+  final bool requiresMigration;
+  final bool manifestVersionTooNew;
+  final bool schemaVersionTooNew;
+  final bool appVersionTooNew;
+
+  bool get blocksOpen =>
+      manifestVersionTooNew || schemaVersionTooNew || appVersionTooNew;
+
+  Map<String, dynamic> toErrorData(String storagePath) {
+    return <String, dynamic>{
+      'path': storagePath,
+      'currentManifestVersion': currentManifestVersion,
+      'storeManifestVersion': storeManifestVersion,
+      'currentSchemaVersion': currentSchemaVersion,
+      'storeSchemaVersion': storeSchemaVersion,
+      'currentAppVersion': currentAppVersion,
+      'storeAppVersion': storeAppVersion,
+      'requiresMigration': requiresMigration,
+      'manifestVersionTooNew': manifestVersionTooNew,
+      'schemaVersionTooNew': schemaVersionTooNew,
+      'appVersionTooNew': appVersionTooNew,
+    };
+  }
+}
+
+int _compareAppVersions(String? left, String? right) {
+  final leftSegments = _parseVersionSegments(left);
+  final rightSegments = _parseVersionSegments(right);
+  final maxLength = leftSegments.length > rightSegments.length
+      ? leftSegments.length
+      : rightSegments.length;
+
+  for (var index = 0; index < maxLength; index++) {
+    final leftValue = index < leftSegments.length ? leftSegments[index] : 0;
+    final rightValue = index < rightSegments.length ? rightSegments[index] : 0;
+    if (leftValue != rightValue) {
+      return leftValue.compareTo(rightValue);
+    }
+  }
+
+  return 0;
+}
+
+List<int> _parseVersionSegments(String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return const <int>[0];
+  }
+
+  final matches = RegExp(r'\d+').allMatches(value);
+  final segments = <int>[];
+  for (final match in matches) {
+    final parsed = int.tryParse(match.group(0) ?? '');
+    if (parsed != null) {
+      segments.add(parsed);
+    }
+  }
+
+  return segments.isEmpty ? const <int>[0] : segments;
 }

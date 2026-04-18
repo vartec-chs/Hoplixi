@@ -131,6 +131,8 @@ class StoreSnapshotManifestBuilder {
     final storeManifest =
         (existingManifest ??
                 StoreManifest.initial(
+                  lastMigrationVersion: MainConstants.databaseSchemaVersion,
+                  appVersion: packageInfo.version,
                   storeUuid: storeInfo.id,
                   storeName: storeInfo.name,
                   updatedAt: storeModifiedAt,
@@ -138,6 +140,8 @@ class StoreSnapshotManifestBuilder {
                 ))
             .copyWith(
               manifestVersion: MainConstants.storeManifestVersion,
+              lastMigrationVersion: MainConstants.databaseSchemaVersion,
+              appVersion: packageInfo.version,
               storeUuid: storeInfo.id,
               storeName: storeInfo.name,
               revision: nextRevision,

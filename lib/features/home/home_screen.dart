@@ -11,6 +11,7 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
 import 'package:hoplixi/db_core/provider/db_history_provider.dart';
 import 'package:hoplixi/db_core/provider/main_store_provider.dart';
+import 'package:hoplixi/db_core/ui/store_open_migration_dialog.dart';
 import 'package:hoplixi/features/about/ui/about_app_modal.dart';
 import 'package:hoplixi/features/password_generator/password_generator_widget.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -139,6 +140,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         if (opened) {
           return;
         }
+
+        if (!mounted) {
+          return;
+        }
+
+        final handled = await promptStoreMigrationAndOpen(
+          context: context,
+          ref: ref,
+          dto: OpenStoreDto(path: normalizedPath, password: savedPassword),
+        );
+        if (handled) {
+          return;
+        }
       }
 
       if (!mounted) {
@@ -196,6 +210,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               }
 
               if (opened) {
+                return;
+              }
+
+              final handled = await promptStoreMigrationAndOpen(
+                context: context,
+                ref: ref,
+                dto: OpenStoreDto(path: dbPath, password: password),
+                onOpened: () async {
+                  Navigator.of(context).pop();
+                },
+              );
+              if (!context.mounted || handled) {
                 return;
               }
 

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/theme/constants.dart';
+import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/db_core/ui/store_open_migration_dialog.dart';
 import 'package:hoplixi/features/password_manager/open_store/providers/open_store_form_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
@@ -55,7 +57,27 @@ class _PasswordFormState extends ConsumerState<PasswordForm> {
 
     if (success && mounted) {
       widget.onSuccess();
+      return;
     }
+
+    if (!mounted) {
+      return;
+    }
+
+    final state = ref.read(openStoreFormProvider).value;
+    final storage = state?.selectedStorage;
+    if (storage == null) {
+      return;
+    }
+
+    await promptStoreMigrationAndOpen(
+      context: context,
+      ref: ref,
+      dto: OpenStoreDto(path: storage.path, password: _passwordController.text),
+      onOpened: () async {
+        widget.onSuccess();
+      },
+    );
   }
 
   @override

@@ -17,6 +17,7 @@ import 'package:hoplixi/db_core/provider/db_history_provider.dart';
 import 'package:hoplixi/db_core/services/db_key_derivation_service.dart';
 import 'package:hoplixi/db_core/services/main_store_backup_service.dart';
 import 'package:hoplixi/db_core/services/main_store_maintenance_service.dart';
+import 'package:hoplixi/db_core/services/store_manifest_service.dart';
 
 enum BackupScope { databaseOnly, encryptedFilesOnly, full }
 
@@ -421,33 +422,10 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       // Вызываем открытие хранилища
       final result = await _manager.openStore(dto);
 
-      return result.fold(
-        (storeInfo) {
-          // Успех - обновляем состояние
-          _setState(
-            DatabaseState(
-              path: _manager.currentStorePath,
-              name: storeInfo.name,
-              status: DatabaseStatus.open,
-              modifiedAt: storeInfo.modifiedAt,
-            ),
-          );
-          _startSnapshotCloseTracking(initialModifiedAt: storeInfo.modifiedAt);
-
-          logInfo('Store opened successfully: ${storeInfo.name}', tag: _logTag);
-          unawaited(_runStartupCleanup());
-          return true;
-        },
-        (error) {
-          // Ошибка - сохраняем в состоянии с автосбросом
-          _setErrorState(
-            DatabaseState(status: DatabaseStatus.error, error: error),
-          );
-
-          logError('Failed to open store: ${error.message}', tag: _logTag);
-          return false;
-        },
-      );
+      return result.fold(_handleOpenStoreSuccess, (error) {
+        _handleOpenStoreFailure(error);
+        return false;
+      });
     } catch (e, stackTrace) {
       logError(
         'Unexpected error opening store: $e',
@@ -456,9 +434,8 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       );
 
       _setErrorState(
-        DatabaseState(
-          status: DatabaseStatus.error,
-          error: DatabaseError.unknown(
+        _buildOpenFailureState(
+          DatabaseError.unknown(
             message: 'Неожиданная ошибка при открытии хранилища: $e',
             timestamp: DateTime.now(),
             stackTrace: stackTrace,
@@ -471,6 +448,73 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       ref.read(mainStoreOpeningOverlayProvider.notifier).hide();
 
       // Освобождаем блокировку в любом случае
+      _releaseLock();
+    }
+  }
+
+  Future<bool> backupAndMigrateStore(
+    OpenStoreDto dto, {
+    String? outputDirPath,
+    int maxBackupsPerStore = 10,
+  }) async {
+    ref.read(mainStoreOpeningOverlayProvider.notifier).show();
+    await _acquireLock();
+
+    try {
+      logInfo(
+        'Creating backup and migrating store at: ${dto.path}',
+        tag: _logTag,
+      );
+
+      _setState(
+        _currentState.copyWith(status: DatabaseStatus.loading, error: null),
+      );
+
+      final actualStoragePath = await _manager.resolveStoragePath(dto.path);
+      final manifest = await StoreManifestService.readFrom(actualStoragePath);
+      final storeName = manifest?.storeName.trim().isNotEmpty == true
+          ? manifest!.storeName
+          : _currentState.name ?? 'store';
+
+      final backupData = await _backupService.createBackup(
+        storeDirPath: actualStoragePath,
+        storeName: storeName,
+        includeDatabase: true,
+        includeEncryptedFiles: true,
+        attachmentsPath: _maintenanceService.getAttachmentsPath(
+          actualStoragePath,
+        ),
+        outputDirPath: outputDirPath,
+        periodic: false,
+        maxBackupsPerStore: maxBackupsPerStore,
+      );
+
+      logInfo(
+        'Backup created before migration: ${backupData.backupPath}',
+        tag: _logTag,
+      );
+
+      final result = await _manager.openStore(dto, allowMigration: true);
+      return result.fold(_handleOpenStoreSuccess, (error) {
+        _handleOpenStoreFailure(error);
+        return false;
+      });
+    } catch (e, stackTrace) {
+      logError(
+        'Failed to backup and migrate store: $e',
+        stackTrace: stackTrace,
+        tag: _logTag,
+      );
+
+      final error = DatabaseError.archiveFailed(
+        message: 'Не удалось создать backup перед миграцией: $e',
+        timestamp: DateTime.now(),
+        stackTrace: stackTrace,
+      );
+      _setErrorState(_buildOpenFailureState(error));
+      return false;
+    } finally {
+      ref.read(mainStoreOpeningOverlayProvider.notifier).hide();
       _releaseLock();
     }
   }
@@ -1138,6 +1182,35 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   void clearError() {
     _cancelErrorResetTimer();
     _setState(_currentState.copyWith(error: null));
+  }
+
+  bool _handleOpenStoreSuccess(StoreInfoDto storeInfo) {
+    _setState(
+      DatabaseState(
+        path: _manager.currentStorePath,
+        name: storeInfo.name,
+        status: DatabaseStatus.open,
+        modifiedAt: storeInfo.modifiedAt,
+      ),
+    );
+    _startSnapshotCloseTracking(initialModifiedAt: storeInfo.modifiedAt);
+
+    logInfo('Store opened successfully: ${storeInfo.name}', tag: _logTag);
+    unawaited(_runStartupCleanup());
+    return true;
+  }
+
+  void _handleOpenStoreFailure(DatabaseError error) {
+    _setErrorState(_buildOpenFailureState(error));
+    logError('Failed to open store: ${error.message}', tag: _logTag);
+  }
+
+  DatabaseState _buildOpenFailureState(DatabaseError error) {
+    if (_manager.isStoreOpen) {
+      return _currentState.copyWith(status: DatabaseStatus.open, error: error);
+    }
+
+    return DatabaseState(status: DatabaseStatus.error, error: error);
   }
 
   /// Get Current MainStoreManager

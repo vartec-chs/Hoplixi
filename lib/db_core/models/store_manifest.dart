@@ -183,6 +183,8 @@ sealed class StoreManifestContent with _$StoreManifestContent {
 sealed class StoreManifest with _$StoreManifest {
   const factory StoreManifest({
     @Default(MainConstants.storeManifestVersion) int manifestVersion,
+    int? lastMigrationVersion,
+    String? appVersion,
     required String storeUuid,
     required String storeName,
     required int revision,
@@ -199,6 +201,8 @@ sealed class StoreManifest with _$StoreManifest {
   const StoreManifest._();
 
   factory StoreManifest.initial({
+    required int lastMigrationVersion,
+    required String appVersion,
     required String storeUuid,
     required String storeName,
     required DateTime updatedAt,
@@ -206,6 +210,8 @@ sealed class StoreManifest with _$StoreManifest {
     StoreKeyConfig? keyConfig,
   }) {
     return StoreManifest(
+      lastMigrationVersion: lastMigrationVersion,
+      appVersion: appVersion,
       storeUuid: storeUuid,
       storeName: storeName,
       revision: 0,
@@ -227,6 +233,8 @@ sealed class StoreManifest with _$StoreManifest {
       final lastModified = _toInt(json['lastModified']);
       return StoreManifest(
         manifestVersion: MainConstants.storeManifestVersion,
+        lastMigrationVersion: null,
+        appVersion: null,
         storeUuid: (json['storeId'] as String?)?.trim() ?? '',
         storeName: (json['storeName'] as String?)?.trim() ?? '',
         revision: 0,
@@ -245,11 +253,29 @@ sealed class StoreManifest with _$StoreManifest {
       );
     }
 
+    final parsedLastModifiedBy = json['lastModifiedBy'] is Map<String, dynamic>
+        ? StoreManifestLastModifiedBy.fromJson(
+            json['lastModifiedBy'] as Map<String, dynamic>,
+          )
+        : const StoreManifestLastModifiedBy(
+            deviceId: '',
+            clientInstanceId: '',
+            appVersion: '',
+          );
+
     return StoreManifest(
       manifestVersion: _toInt(
         json['manifestVersion'],
         fallback: MainConstants.storeManifestVersion,
       ),
+      lastMigrationVersion:
+          _tryToNullableInt(json['lastMigrationVersion']) ??
+          _tryToNullableInt(json['schemaVersion']),
+      appVersion:
+          (json['appVersion'] as String?)?.trim() ??
+          (parsedLastModifiedBy.appVersion.isEmpty
+              ? null
+              : parsedLastModifiedBy.appVersion),
       storeUuid: (json['storeUuid'] as String?)?.trim() ?? '',
       storeName: (json['storeName'] as String?)?.trim() ?? '',
       revision: _toInt(json['revision']),
@@ -259,15 +285,7 @@ sealed class StoreManifest with _$StoreManifest {
       snapshotId: (json['snapshotId'] as String?)?.trim() ?? '',
       baseRevision: _tryToNullableInt(json['baseRevision']),
       baseSnapshotId: (json['baseSnapshotId'] as String?)?.trim(),
-      lastModifiedBy: json['lastModifiedBy'] is Map<String, dynamic>
-          ? StoreManifestLastModifiedBy.fromJson(
-              json['lastModifiedBy'] as Map<String, dynamic>,
-            )
-          : const StoreManifestLastModifiedBy(
-              deviceId: '',
-              clientInstanceId: '',
-              appVersion: '',
-            ),
+      lastModifiedBy: parsedLastModifiedBy,
       sync: json['sync'] is Map<String, dynamic>
           ? StoreManifestSyncMetadata.fromJson(
               json['sync'] as Map<String, dynamic>,
@@ -287,6 +305,8 @@ sealed class StoreManifest with _$StoreManifest {
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'manifestVersion': manifestVersion,
+      'lastMigrationVersion': lastMigrationVersion,
+      'appVersion': appVersion,
       'storeUuid': storeUuid,
       'storeName': storeName,
       'revision': revision,

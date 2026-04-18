@@ -60,6 +60,11 @@ class MainStoreBackupService {
       );
     }
 
+    await _copyStoreMetadataFiles(
+      sourceStoreDir: Directory(storeDirPath),
+      backupDir: backupDir,
+    );
+
     final manifestFile = File(p.join(backupDir.path, 'backup_manifest.json'));
     await manifestFile.writeAsString(
       jsonEncode({
@@ -117,6 +122,23 @@ class MainStoreBackupService {
           destination: Directory(targetPath),
         );
       }
+    }
+  }
+
+  Future<void> _copyStoreMetadataFiles({
+    required Directory sourceStoreDir,
+    required Directory backupDir,
+  }) async {
+    if (!await sourceStoreDir.exists()) {
+      return;
+    }
+
+    await for (final entity in sourceStoreDir.list(recursive: false)) {
+      if (entity is! File || !entity.path.endsWith('.json')) {
+        continue;
+      }
+
+      await entity.copy(p.join(backupDir.path, p.basename(entity.path)));
     }
   }
 

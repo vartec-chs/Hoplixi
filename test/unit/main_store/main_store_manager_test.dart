@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:device_info_plus_platform_interface/device_info_plus_platform_interface.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/db_core/main_store_manager.dart';
 import 'package:hoplixi/db_core/models/db_ciphers.dart';
 import 'package:hoplixi/db_core/models/db_history_model.dart';
@@ -227,6 +228,8 @@ void main() {
 
       final manifest = await StoreManifestService.readFrom(storeDir.path);
       expect(manifest, isNotNull);
+      expect(manifest?.lastMigrationVersion, 2);
+      expect(manifest?.appVersion, '1.0.0');
       expect(manifest?.keyConfig?.argon2Salt, isNotEmpty);
       expect(manifest?.keyConfig?.useDeviceKey, isFalse);
       expect(manifest?.keyConfig?.cipher, DBCipher.chacha20);
@@ -306,6 +309,99 @@ void main() {
         result.exceptionOrNull()?.message,
         contains('Хранилище уже открыто'),
       );
+    });
+  });
+
+  group('MainStoreManager.openStore compatibility', () {
+    test(
+      'requires migration before opening store with older manifest metadata',
+      () async {
+        final dto = const CreateStoreDto(
+          name: 'Migrating Store',
+          path: '',
+          cipher: DBCipher.chacha20,
+          password: 'pass',
+        );
+
+        final createResult = await manager.createStore(dto);
+        expect(createResult.isSuccess(), isTrue);
+
+        final storeDir = manager.currentStorePath!;
+        final originalManifest = await StoreManifestService.readFrom(storeDir);
+        expect(originalManifest, isNotNull);
+
+        await manager.closeStore();
+
+        await StoreManifestService.writeTo(
+          storeDir,
+          originalManifest!.copyWith(
+            manifestVersion: MainConstants.storeManifestVersion,
+            lastMigrationVersion: MainConstants.databaseSchemaVersion - 1,
+            appVersion: '0.9.0',
+          ),
+        );
+
+        final openResult = await manager.openStore(
+          OpenStoreDto(path: storeDir, password: 'pass'),
+        );
+
+        expect(openResult.isError(), isTrue);
+        final error = openResult.exceptionOrNull();
+        expect(error?.code, 'DB_STORE_MIGRATION_REQUIRED');
+
+        final migratedOpenResult = await manager.openStore(
+          OpenStoreDto(path: storeDir, password: 'pass'),
+          allowMigration: true,
+        );
+        expect(
+          migratedOpenResult.isSuccess(),
+          isTrue,
+          reason: migratedOpenResult.exceptionOrNull()?.message,
+        );
+
+        final migratedManifest = await StoreManifestService.readFrom(storeDir);
+        expect(
+          migratedManifest?.lastMigrationVersion,
+          MainConstants.databaseSchemaVersion,
+        );
+        expect(migratedManifest?.appVersion, '1.0.0');
+      },
+    );
+
+    test('blocks opening store created by newer manifest version', () async {
+      final dto = const CreateStoreDto(
+        name: 'Future Store',
+        path: '',
+        cipher: DBCipher.chacha20,
+        password: 'pass',
+      );
+
+      final createResult = await manager.createStore(dto);
+      expect(createResult.isSuccess(), isTrue);
+
+      final storeDir = manager.currentStorePath!;
+      final originalManifest = await StoreManifestService.readFrom(storeDir);
+      expect(originalManifest, isNotNull);
+
+      await manager.closeStore();
+
+      await StoreManifestService.writeTo(
+        storeDir,
+        originalManifest!.copyWith(
+          manifestVersion: MainConstants.storeManifestVersion + 1,
+          lastMigrationVersion: MainConstants.databaseSchemaVersion + 1,
+          appVersion: '9.9.9',
+        ),
+      );
+
+      final openResult = await manager.openStore(
+        OpenStoreDto(path: storeDir, password: 'pass'),
+      );
+
+      expect(openResult.isError(), isTrue);
+      final error = openResult.exceptionOrNull();
+      expect(error?.code, 'DB_STORE_VERSION_TOO_NEW');
+      expect(manager.isStoreOpen, isFalse);
     });
   });
 }

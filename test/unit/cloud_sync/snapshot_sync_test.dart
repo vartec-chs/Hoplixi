@@ -163,6 +163,8 @@ void main() {
       expect(snapshot.attachmentsManifest.files.first.fileName, 'file-1.enc');
       expect(snapshot.storeManifest.content.attachments.count, 1);
       expect(snapshot.storeManifest.revision, 1);
+      expect(snapshot.storeManifest.lastMigrationVersion, 2);
+      expect(snapshot.storeManifest.appVersion, '1.0.0');
       expect(snapshot.storeManifest.keyConfig?.argon2Salt, 'salt');
       expect(File('${storeDir.path}/store_manifest.json').existsSync(), isTrue);
       expect(

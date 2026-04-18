@@ -12,6 +12,7 @@ import 'package:hoplixi/db_core/models/store_manifest.dart';
 import 'package:hoplixi/db_core/provider/db_history_provider.dart';
 import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 import 'package:hoplixi/db_core/services/store_manifest_service.dart';
+import 'package:hoplixi/db_core/ui/store_open_migration_dialog.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
@@ -704,8 +705,10 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
       usedManualPassword = true;
     }
 
+    final resolvedPassword = password;
+
     final success = await notifier.openStore(
-      OpenStoreDto(path: entry.path, password: password),
+      OpenStoreDto(path: entry.path, password: resolvedPassword),
     );
 
     if (success) {
@@ -722,6 +725,31 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
         }
       }
     } else {
+      final handled = await promptStoreMigrationAndOpen(
+        context: context,
+        ref: ref,
+        dto: OpenStoreDto(path: entry.path, password: resolvedPassword),
+        onOpened: () async {
+          await attemptLimiter.reset(entry.path);
+
+          if (shouldSavePassword && resolvedPassword.isNotEmpty) {
+            final freshEntry = await historyService.getByPath(entry.path);
+            if (freshEntry != null) {
+              final updatedEntry = freshEntry.copyWith(savePassword: true);
+              await historyService.update(updatedEntry);
+              await historyService.setSavedPasswordByPath(
+                entry.path,
+                resolvedPassword,
+              );
+              ref.invalidate(recentDatabaseProvider);
+            }
+          }
+        },
+      );
+      if (handled) {
+        return;
+      }
+
       final state = ref.read(mainStoreProvider);
       var errorMessage =
           state.value?.error?.message ?? 'Не удалось открыть базу данных';
