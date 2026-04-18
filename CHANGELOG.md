@@ -139,6 +139,10 @@
   `OpenStoreScreen`, быстрый вход из `RecentDatabaseCard` и открытие БД по
   launch-path показывают пользователю диалог с предложением создать backup и
   выполнить миграцию.
+- Исправлено сравнение `appVersion` в `MainStoreCompatibilityService`: суффикс
+  build metadata (`+buildNumber`) больше не влияет на решение о миграции, чтобы
+  одинаковая версия приложения с другим номером сборки не считалась
+  несовместимой.
 
 ### docs (agent)
 

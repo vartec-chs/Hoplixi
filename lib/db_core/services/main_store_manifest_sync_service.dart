@@ -35,7 +35,11 @@ class MainStoreManifestSyncService {
     final existingManifest = await StoreManifestService.readFrom(storagePath);
     final deviceInfo = await logger_models.DeviceInfo.collect();
     final packageInfo = await PackageInfo.fromPlatform();
-    final currentAppVersion = packageInfo.version;
+    final currentAppVersion =
+        packageInfo.version +
+        (packageInfo.buildNumber.isNotEmpty
+            ? '+${packageInfo.buildNumber}'
+            : '');
     const currentMigrationVersion = MainConstants.databaseSchemaVersion;
     final lastModifiedBy = StoreManifestLastModifiedBy(
       deviceId: deviceInfo.deviceId,

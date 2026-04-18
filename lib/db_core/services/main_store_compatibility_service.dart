@@ -10,7 +10,11 @@ class MainStoreCompatibilityService {
     StoreManifest? manifest,
   ) async {
     final packageInfo = await PackageInfo.fromPlatform();
-    final currentAppVersion = packageInfo.version;
+    final currentAppVersion =
+        packageInfo.version +
+        (packageInfo.buildNumber.isNotEmpty
+            ? '+${packageInfo.buildNumber}'
+            : '');
     const currentManifestVersion = MainConstants.storeManifestVersion;
     const currentSchemaVersion = MainConstants.databaseSchemaVersion;
 
@@ -175,7 +179,9 @@ List<int> _parseVersionSegments(String? value) {
     return const <int>[0];
   }
 
-  final matches = RegExp(r'\d+').allMatches(value);
+  // Build metadata ("+<build>") does not affect semantic version precedence.
+  final normalizedValue = _normalizeComparableVersion(value);
+  final matches = RegExp(r'\d+').allMatches(normalizedValue);
   final segments = <int>[];
   for (final match in matches) {
     final parsed = int.tryParse(match.group(0) ?? '');
@@ -185,4 +191,8 @@ List<int> _parseVersionSegments(String? value) {
   }
 
   return segments.isEmpty ? const <int>[0] : segments;
+}
+
+String _normalizeComparableVersion(String value) {
+  return value.trim().split('+').first.trim();
 }
