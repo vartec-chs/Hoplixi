@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 2026-04-18
+## 2026-04-18 1.2.0
 
 ### component_showcase
 
@@ -148,6 +148,12 @@
 
 - В `AGENT.md` добавлено упоминание гайда `docs-ai/db-migrations.md` как
   основного источника по реализации версионированных миграций `MainStore`.
+
+### docs (release)
+
+- Добавлен файл релиз-описания для GitHub Release:
+  `docs/release-notes/v1.2.0-github-release.md` на основе изменений версии
+  1.2.0.
 
 ### category_manager
 
