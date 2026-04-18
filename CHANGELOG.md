@@ -83,6 +83,40 @@
   миграций (создание `migration_v{N}`, регистрация в раннере, расширение
   runtime-контекста и проверка перед merge).
 
+### db_core (main_store_manager)
+
+- Файл `lib/db_core/main_store_manager.dart` очищен и упрощён: логика проверки
+  совместимости версий/миграции вынесена в `MainStoreCompatibilityService`, а
+  сборка и запись `store_manifest.json` — в `MainStoreManifestSyncService`.
+- `MainStoreManager` оставлен как оркестратор жизненного цикла стора без
+  изменения публичного API (`createStore/openStore/closeStore/updateStore`).
+- Добавлены экспорты новых сервисов в `lib/db_core/services/index.dart`.
+
+### db_core (store manifest compatibility)
+
+- В `store_manifest.json` добавлены явные top-level поля
+  `lastMigrationVersion` и `appVersion`; версия схемы манифеста повышена до `2`,
+  чтобы отдельно отслеживать совместимость данных, миграций и версии
+  приложения.
+- При открытии стора добавлена обязательная проверка совместимости между
+  `manifestVersion`, `lastMigrationVersion`, `appVersion` из манифеста и
+  текущими `storeManifestVersion`, `databaseSchemaVersion` и версией
+  приложения.
+- Если хранилище было подготовлено более старой версией приложения/схемы,
+  открытие теперь переводится в сценарий `backup -> migrate -> open`: сначала
+  создаётся резервная копия, затем выполняется миграция манифеста и только
+  после этого стор открывается.
+- Если `manifestVersion`, версия схемы данных или версия приложения в
+  `store_manifest.json` новее текущего клиента, открытие явно блокируется как
+  несовместимое вместо попытки открыть такой стор.
+- Backup перед миграцией расширен: вместе с БД и зашифрованными вложениями
+  теперь копируются JSON-метаданные стора (`store_manifest.json` и другие
+  служебные `.json`-файлы директории хранилища).
+- Сценарий предложения миграции подключен в UI открытия стора:
+  `OpenStoreScreen`, быстрый вход из `RecentDatabaseCard` и открытие БД по
+  launch-path показывают пользователю диалог с предложением создать backup и
+  выполнить миграцию.
+
 ### docs (agent)
 
 - В `AGENT.md` добавлено упоминание гайда `docs-ai/db-migrations.md` как
