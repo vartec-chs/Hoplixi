@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/db_core/models/dto/index.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 
 class WifiListCard extends ConsumerStatefulWidget {
   const WifiListCard({
@@ -81,6 +80,8 @@ class _WifiListCardState extends ConsumerState<WifiListCard> {
       subtitle: subtitleParts.join(' • '),
       trailingSubtitle: wifi.priority == null ? null : 'prio ${wifi.priority}',
       fallbackIcon: Icons.wifi,
+      iconSource: wifi.iconSource,
+      iconValue: wifi.iconValue,
       category: wifi.category,
       description: wifi.description,
       tags: wifi.tags,

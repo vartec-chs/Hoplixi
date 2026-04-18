@@ -39,14 +39,28 @@
   контент страниц снова оборачивается в конечную высоту внутри модалки, чтобы
   `IconPackPickerIconPage` не получал unbounded height и не падал с
   `RenderFlex children have non-zero flex but incoming height constraints are unbounded`.
-- Второй шаг picker переведен на `SliverWoltModalSheetPage`: экран выбора
-  иконок теперь использует один sliver-scroll контейнер на уровне Wolt, из-за
-  чего пропал второй вложенный скролл поверх сетки иконок.
+- Второй шаг picker переведен на `SliverWoltModalSheetPage`: экран выбора иконок
+  теперь использует один sliver-scroll контейнер на уровне Wolt, из-за чего
+  пропал второй вложенный скролл поверх сетки иконок.
 - Файл `icon_pack_picker_modal.dart` декомпозирован: логика оркестрации модалки
   оставлена в основном файле, а UI-части вынесены в отдельные виджеты внутри
   `lib/features/icon_packs/picker/widgets/` без использования `part`-файлов.
 - Добавлены отдельные файлы для страницы выбора пака, страницы выбора иконки,
   карточки иконки/SVG-превью и общих empty/error состояний для picker-модалки.
+
+### password_manager (icons migration)
+
+- Для сущностей API key, SSH key, bank card, Wi-Fi, loyalty card и OTP завершено
+  сквозное подключение item-иконок через поля `iconSource`/ `iconValue`:
+  обновлены DTO карточек, маппинг в filter DAO, отображение в list/grid
+  карточках, формы (state/provider/UI) и восстановление из истории.
+
+### db_core (history triggers)
+
+- Исправлены SQL-шаблоны history-триггеров в
+  `lib/db_core/triggers/*_triggers.dart`: убраны ошибочные лишние запятые в
+  списках колонок `vault_item_history` после добавления
+  `icon_source`/`icon_value`.
 
 ## 2026-04-16
 

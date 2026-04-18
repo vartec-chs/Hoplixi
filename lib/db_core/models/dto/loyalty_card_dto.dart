@@ -101,6 +101,8 @@ sealed class LoyaltyCardCardDto
   const factory LoyaltyCardCardDto({
     required String id,
     required String name,
+    String? iconSource,
+    String? iconValue,
     required String programName,
     String? cardNumber,
     String? holderName,

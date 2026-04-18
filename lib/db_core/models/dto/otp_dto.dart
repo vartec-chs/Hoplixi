@@ -65,6 +65,8 @@ sealed class GetOtpDto with _$GetOtpDto {
 sealed class OtpCardDto with _$OtpCardDto implements BaseCardDto {
   const factory OtpCardDto({
     required String id,
+    String? iconSource,
+    String? iconValue,
     String? issuer, // Сервис
     String? accountName, // Имя аккаунта
     required String type,

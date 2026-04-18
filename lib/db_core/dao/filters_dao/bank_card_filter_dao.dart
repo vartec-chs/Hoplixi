@@ -52,6 +52,8 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
       return BankCardCardDto(
         id: item.id,
         name: item.name,
+        iconSource: item.iconSource,
+        iconValue: item.iconValue,
         cardholderName: card.cardholderName,
         cardNumber: card.cardNumber,
         expiryMonth: card.expiryMonth,

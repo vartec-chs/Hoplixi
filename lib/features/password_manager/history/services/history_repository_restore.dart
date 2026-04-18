@@ -26,6 +26,12 @@ extension _HistoryRepositoryRestore on HistoryRepository {
     _HistorySnapshot snapshot, {
     required bool recreate,
   }) async {
+    final historyRow = await (store.select(
+      store.vaultItemHistory,
+    )..where((tbl) => tbl.id.equals(snapshot.revisionId))).getSingleOrNull();
+    final iconSource = historyRow?.iconSource;
+    final iconValue = historyRow?.iconValue;
+
     if (recreate) {
       await store
           .into(store.vaultItems)
@@ -36,6 +42,8 @@ extension _HistoryRepositoryRestore on HistoryRepository {
               name: snapshot.title,
               description: Value(snapshot.description),
               categoryId: Value(snapshot.categoryId),
+              iconSource: Value(iconSource),
+              iconValue: Value(iconValue),
               usedCount: Value(snapshot.usedCount),
               isFavorite: Value(snapshot.isFavorite),
               isArchived: Value(snapshot.isArchived),
@@ -57,6 +65,8 @@ extension _HistoryRepositoryRestore on HistoryRepository {
         name: Value(snapshot.title),
         description: Value(snapshot.description),
         categoryId: Value(snapshot.categoryId),
+        iconSource: Value(iconSource),
+        iconValue: Value(iconValue),
         usedCount: Value(snapshot.usedCount),
         isFavorite: Value(snapshot.isFavorite),
         isArchived: Value(snapshot.isArchived),

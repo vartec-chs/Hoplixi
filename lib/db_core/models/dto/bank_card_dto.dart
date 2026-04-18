@@ -71,6 +71,8 @@ sealed class BankCardCardDto with _$BankCardCardDto implements BaseCardDto {
   const factory BankCardCardDto({
     required String id,
     required String name,
+    String? iconSource,
+    String? iconValue,
     required String cardholderName,
     required String cardNumber,
     required String expiryMonth,

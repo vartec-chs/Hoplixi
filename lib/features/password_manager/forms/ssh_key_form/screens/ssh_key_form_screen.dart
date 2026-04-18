@@ -2,14 +2,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/db_core/models/dto/icon_ref_dto.dart';
+import 'package:hoplixi/db_core/models/enums/entity_types.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_button.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/db_core/models/enums/entity_types.dart';
-import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_editor.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/shared/widgets/icon_source_picker_button.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../providers/ssh_key_form_provider.dart';
@@ -217,6 +219,16 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                     prefixIcon: const Icon(LucideIcons.info),
                   ),
                   onChanged: notifier.setUsage,
+                ),
+                const SizedBox(height: 12),
+                IconSourcePickerButton(
+                  iconRef: IconRefDto.fromFields(
+                    iconSource: state.iconSource,
+                    iconValue: state.iconValue,
+                  ),
+                  fallbackIcon: Icons.key,
+                  title: 'Иконка записи',
+                  onChanged: notifier.setIconRef,
                 ),
                 const SizedBox(height: 12),
                 CategoryPickerField(

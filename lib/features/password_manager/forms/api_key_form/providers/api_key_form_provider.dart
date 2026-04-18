@@ -1,9 +1,9 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/db_core/models/dto/index.dart';
+import 'package:hoplixi/db_core/provider/dao_providers.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/db_core/models/dto/index.dart';
-import 'package:hoplixi/db_core/provider/dao_providers.dart';
 import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
@@ -54,6 +54,8 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
       expiresAt: details.expiresAt,
       noteId: item.noteId,
       categoryId: item.categoryId,
+      iconSource: item.iconSource,
+      iconValue: item.iconValue,
       tagIds: tagIds,
       tagNames: tags.map((tag) => tag.name).toList(),
       customFields: customFields,
@@ -110,6 +112,15 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
     );
   }
 
+  void setIconRef(IconRefDto? iconRef) {
+    _update(
+      (s) => s.copyWith(
+        iconSource: iconRef?.sourceValue,
+        iconValue: iconRef?.value,
+      ),
+    );
+  }
+
   void setTags(List<String> tagIds, List<String> tagNames) {
     _update((s) => s.copyWith(tagIds: tagIds, tagNames: tagNames));
   }
@@ -123,7 +134,8 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
   }
 
   String? _validateService(String value) {
-    if (value.trim().isEmpty) return t.dashboard_forms.validation_required_service;
+    if (value.trim().isEmpty)
+      return t.dashboard_forms.validation_required_service;
     return null;
   }
 
@@ -198,6 +210,14 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
           current.editingApiKeyId!,
           current.customFields,
         );
+        final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+        await vaultItemDao.setIconRef(
+          current.editingApiKeyId!,
+          IconRefDto.fromFields(
+            iconSource: current.iconSource,
+            iconValue: current.iconValue,
+          ),
+        );
 
         ref
             .read(dataRefreshTriggerProvider.notifier)
@@ -224,6 +244,14 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
         );
 
         await saveCustomFields(ref, id, current.customFields);
+        final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+        await vaultItemDao.setIconRef(
+          id,
+          IconRefDto.fromFields(
+            iconSource: current.iconSource,
+            iconValue: current.iconValue,
+          ),
+        );
 
         ref
             .read(dataRefreshTriggerProvider.notifier)

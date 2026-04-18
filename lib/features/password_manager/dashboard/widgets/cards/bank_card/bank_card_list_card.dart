@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/db_core/models/dto/index.dart';
-import 'package:hoplixi/db_core/provider/dao_providers.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 
 class BankCardListCard extends ConsumerStatefulWidget {
   final BankCardCardDto bankCard;
@@ -114,6 +112,8 @@ class _BankCardListCardState extends ConsumerState<BankCardListCard> {
       subtitle: '${_maskCardNumber(card.cardNumber)} • ${card.cardholderName}',
       trailingSubtitle: '${card.expiryMonth}/${card.expiryYear}',
       fallbackIcon: Icons.credit_card,
+      iconSource: card.iconSource,
+      iconValue: card.iconValue,
       category: card.category,
       tags: card.tags,
       usedCount: card.usedCount,

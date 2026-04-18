@@ -33,6 +33,8 @@ sealed class BankCardFormState with _$BankCardFormState {
     // Связи
     String? categoryId,
     String? categoryName,
+    String? iconSource,
+    String? iconValue,
     @Default([]) List<String> tagIds,
     @Default([]) List<String> tagNames,
     @Default([]) List<CustomFieldEntry> customFields,

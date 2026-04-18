@@ -34,7 +34,10 @@ const List<String> customFieldsHistoryCreateTriggers = [
     BEGIN
       INSERT INTO vault_item_history (
         id, item_id, type, name, description, category_id, category_name,
-        action, used_count, is_favorite, is_archived, is_pinned, is_deleted,
+        icon_source,
+        icon_value,
+        action,
+used_count, is_favorite, is_archived, is_pinned, is_deleted,
         recent_score, last_used_at, original_created_at, original_modified_at, action_at
       )
       SELECT
@@ -44,7 +47,9 @@ const List<String> customFieldsHistoryCreateTriggers = [
           substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
         v.id, v.type, v.name, v.description, v.category_id,
         (SELECT name FROM categories WHERE id = v.category_id),
-        'modified',
+v.icon_source,
+v.icon_value,
+'modified',
         v.used_count, v.is_favorite, v.is_archived, v.is_pinned, v.is_deleted,
         v.recent_score, v.last_used_at, v.created_at, v.modified_at,
         strftime('%s', 'now')
@@ -82,7 +87,10 @@ const List<String> customFieldsHistoryCreateTriggers = [
     BEGIN
       INSERT INTO vault_item_history (
         id, item_id, type, name, description, category_id, category_name,
-        action, used_count, is_favorite, is_archived, is_pinned, is_deleted,
+        icon_source,
+        icon_value,
+        action,
+used_count, is_favorite, is_archived, is_pinned, is_deleted,
         recent_score, last_used_at, original_created_at, original_modified_at, action_at
       )
       SELECT
@@ -92,7 +100,9 @@ const List<String> customFieldsHistoryCreateTriggers = [
           substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
         v.id, v.type, v.name, v.description, v.category_id,
         (SELECT name FROM categories WHERE id = v.category_id),
-        'modified',
+v.icon_source,
+v.icon_value,
+'modified',
         v.used_count, v.is_favorite, v.is_archived, v.is_pinned, v.is_deleted,
         v.recent_score, v.last_used_at, v.created_at, v.modified_at,
         strftime('%s', 'now')
@@ -131,7 +141,10 @@ const List<String> customFieldsHistoryCreateTriggers = [
     BEGIN
       INSERT INTO vault_item_history (
         id, item_id, type, name, description, category_id, category_name,
-        action, used_count, is_favorite, is_archived, is_pinned, is_deleted,
+        icon_source,
+        icon_value,
+        action,
+used_count, is_favorite, is_archived, is_pinned, is_deleted,
         recent_score, last_used_at, original_created_at, original_modified_at, action_at
       )
       SELECT
@@ -141,7 +154,9 @@ const List<String> customFieldsHistoryCreateTriggers = [
           substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
         v.id, v.type, v.name, v.description, v.category_id,
         (SELECT name FROM categories WHERE id = v.category_id),
-        'modified',
+v.icon_source,
+v.icon_value,
+'modified',
         v.used_count, v.is_favorite, v.is_archived, v.is_pinned, v.is_deleted,
         v.recent_score, v.last_used_at, v.created_at, v.modified_at,
         strftime('%s', 'now')

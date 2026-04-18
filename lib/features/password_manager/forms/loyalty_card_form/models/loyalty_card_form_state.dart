@@ -24,6 +24,8 @@ sealed class LoyaltyCardFormState with _$LoyaltyCardFormState {
     String? noteId,
     String? categoryId,
     String? categoryName,
+    String? iconSource,
+    String? iconValue,
     @Default([]) List<String> tagIds,
     @Default([]) List<String> tagNames,
     @Default([]) List<CustomFieldEntry> customFields,

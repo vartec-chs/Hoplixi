@@ -64,6 +64,8 @@ sealed class WifiCardDto with _$WifiCardDto implements BaseCardDto {
   const factory WifiCardDto({
     required String id,
     required String name,
+    String? iconSource,
+    String? iconValue,
     required String ssid,
     String? security,
     required bool hidden,

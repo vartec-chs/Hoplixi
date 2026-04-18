@@ -1,10 +1,9 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/db_core/models/dto/index.dart';
+import 'package:hoplixi/db_core/provider/dao_providers.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/db_core/models/dto/index.dart';
-import 'package:hoplixi/db_core/provider/dao_providers.dart';
-
 import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
@@ -51,6 +50,8 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
       addedToAgent: ssh.addedToAgent,
       noteId: item.noteId,
       categoryId: item.categoryId,
+      iconSource: item.iconSource,
+      iconValue: item.iconValue,
       tagIds: tagIds,
       tagNames: tags.map((tag) => tag.name).toList(),
       customFields: customFields,
@@ -66,21 +67,27 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
   void setName(String value) => _update(
     (s) => s.copyWith(
       name: value,
-      nameError: value.trim().isEmpty ? t.dashboard_forms.validation_required_name : null,
+      nameError: value.trim().isEmpty
+          ? t.dashboard_forms.validation_required_name
+          : null,
     ),
   );
 
   void setPublicKey(String value) => _update(
     (s) => s.copyWith(
       publicKey: value,
-      publicKeyError: value.trim().isEmpty ? t.dashboard_forms.validation_required_public_key : null,
+      publicKeyError: value.trim().isEmpty
+          ? t.dashboard_forms.validation_required_public_key
+          : null,
     ),
   );
 
   void setPrivateKey(String value) => _update(
     (s) => s.copyWith(
       privateKey: value,
-      privateKeyError: value.trim().isEmpty ? t.dashboard_forms.validation_required_private_key : null,
+      privateKeyError: value.trim().isEmpty
+          ? t.dashboard_forms.validation_required_private_key
+          : null,
     ),
   );
 
@@ -97,6 +104,12 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
   void setCategory(String? categoryId, String? categoryName) => _update(
     (s) => s.copyWith(categoryId: categoryId, categoryName: categoryName),
   );
+
+  void setIconRef(IconRefDto? iconRef) => _update(
+    (s) =>
+        s.copyWith(iconSource: iconRef?.sourceValue, iconValue: iconRef?.value),
+  );
+
   void setTags(List<String> tagIds, List<String> tagNames) =>
       _update((s) => s.copyWith(tagIds: tagIds, tagNames: tagNames));
 
@@ -107,7 +120,8 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
   bool validate() {
     final current = _current;
     final nameError = current.name.trim().isEmpty
-        ? t.dashboard_forms.validation_required_name : null;
+        ? t.dashboard_forms.validation_required_name
+        : null;
     final publicKeyError = current.publicKey.trim().isEmpty
         ? t.dashboard_forms.validation_required_public_key
         : null;
@@ -169,6 +183,14 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
           current.editingSshKeyId!,
           current.customFields,
         );
+        final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+        await vaultItemDao.setIconRef(
+          current.editingSshKeyId!,
+          IconRefDto.fromFields(
+            iconSource: current.iconSource,
+            iconValue: current.iconValue,
+          ),
+        );
 
         ref
             .read(dataRefreshTriggerProvider.notifier)
@@ -193,8 +215,15 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
           ),
         );
 
-
         await saveCustomFields(ref, id, current.customFields);
+        final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+        await vaultItemDao.setIconRef(
+          id,
+          IconRefDto.fromFields(
+            iconSource: current.iconSource,
+            iconValue: current.iconValue,
+          ),
+        );
         ref
             .read(dataRefreshTriggerProvider.notifier)
             .triggerEntityAdd(EntityType.sshKey, entityId: id);
@@ -210,4 +239,3 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
-

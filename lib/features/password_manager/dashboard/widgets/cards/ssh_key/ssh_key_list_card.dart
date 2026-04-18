@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/db_core/models/dto/index.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 
 class SshKeyListCard extends ConsumerStatefulWidget {
   const SshKeyListCard({
@@ -80,6 +79,8 @@ class _SshKeyListCardState extends ConsumerState<SshKeyListCard> {
       subtitle: subtitle.isEmpty ? null : subtitle,
       trailingSubtitle: sshKey.fingerprint,
       fallbackIcon: Icons.key,
+      iconSource: sshKey.iconSource,
+      iconValue: sshKey.iconValue,
       category: sshKey.category,
       description: sshKey.description,
       tags: sshKey.tags,

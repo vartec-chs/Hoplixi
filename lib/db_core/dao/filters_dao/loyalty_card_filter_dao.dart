@@ -55,6 +55,8 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
       return LoyaltyCardCardDto(
         id: item.id,
         name: item.name,
+        iconSource: item.iconSource,
+        iconValue: item.iconValue,
         programName: loyalty.programName,
         cardNumber: loyalty.cardNumber,
         holderName: loyalty.holderName,

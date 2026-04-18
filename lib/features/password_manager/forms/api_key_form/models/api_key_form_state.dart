@@ -19,6 +19,8 @@ sealed class ApiKeyFormState with _$ApiKeyFormState {
     String? noteName,
     String? categoryId,
     String? categoryName,
+    String? iconSource,
+    String? iconValue,
     @Default([]) List<String> tagIds,
     @Default([]) List<String> tagNames,
     @Default([]) List<CustomFieldEntry> customFields,

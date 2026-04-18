@@ -1,10 +1,9 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/db_core/models/dto/index.dart';
+import 'package:hoplixi/db_core/provider/dao_providers.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/db_core/models/dto/index.dart';
-import 'package:hoplixi/db_core/provider/dao_providers.dart';
-
 import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
@@ -54,6 +53,8 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
       description: item.description ?? '',
       noteId: item.noteId,
       categoryId: item.categoryId,
+      iconSource: item.iconSource,
+      iconValue: item.iconValue,
       tagIds: tagIds,
       tagNames: tags.map((t) => t.name).toList(),
       customFields: customFields,
@@ -69,14 +70,18 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
   void setName(String value) => _update(
     (s) => s.copyWith(
       name: value,
-      nameError: value.trim().isEmpty ? t.dashboard_forms.validation_required_name : null,
+      nameError: value.trim().isEmpty
+          ? t.dashboard_forms.validation_required_name
+          : null,
     ),
   );
 
   void setSsid(String value) => _update(
     (s) => s.copyWith(
       ssid: value,
-      ssidError: value.trim().isEmpty ? t.dashboard_forms.validation_required_ssid : null,
+      ssidError: value.trim().isEmpty
+          ? t.dashboard_forms.validation_required_ssid
+          : null,
     ),
   );
 
@@ -89,8 +94,8 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
         ssid: normalized,
         nameError: shouldFillName
             ? (normalized.isEmpty
-                ? t.dashboard_forms.validation_required_name
-                : null)
+                  ? t.dashboard_forms.validation_required_name
+                  : null)
             : s.nameError,
         ssidError: normalized.isEmpty
             ? t.dashboard_forms.validation_required_ssid
@@ -112,7 +117,8 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
   void setPriority(String value) {
     final v = value.trim();
     final err = v.isEmpty || int.tryParse(v) != null
-        ? null : t.dashboard_forms.validation_must_be_integer;
+        ? null
+        : t.dashboard_forms.validation_must_be_integer;
     _update((s) => s.copyWith(priority: value, priorityError: err));
   }
 
@@ -125,6 +131,12 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
   void setCategory(String? categoryId, String? categoryName) => _update(
     (s) => s.copyWith(categoryId: categoryId, categoryName: categoryName),
   );
+
+  void setIconRef(IconRefDto? iconRef) => _update(
+    (s) =>
+        s.copyWith(iconSource: iconRef?.sourceValue, iconValue: iconRef?.value),
+  );
+
   void setTags(List<String> tagIds, List<String> tagNames) =>
       _update((s) => s.copyWith(tagIds: tagIds, tagNames: tagNames));
 
@@ -135,14 +147,16 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
   bool validate() {
     final current = _current;
     final nameError = current.name.trim().isEmpty
-        ? t.dashboard_forms.validation_required_name : null;
+        ? t.dashboard_forms.validation_required_name
+        : null;
     final ssidError = current.ssid.trim().isEmpty
         ? t.dashboard_forms.validation_required_ssid
         : null;
     final priorityError =
         current.priority.trim().isEmpty ||
             int.tryParse(current.priority.trim()) != null
-        ? null : t.dashboard_forms.validation_must_be_integer;
+        ? null
+        : t.dashboard_forms.validation_must_be_integer;
 
     _update(
       (s) => s.copyWith(
@@ -202,6 +216,14 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
           current.editingWifiId!,
           current.customFields,
         );
+        final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+        await vaultItemDao.setIconRef(
+          current.editingWifiId!,
+          IconRefDto.fromFields(
+            iconSource: current.iconSource,
+            iconValue: current.iconValue,
+          ),
+        );
 
         ref
             .read(dataRefreshTriggerProvider.notifier)
@@ -231,8 +253,15 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
           ),
         );
 
-
         await saveCustomFields(ref, id, current.customFields);
+        final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+        await vaultItemDao.setIconRef(
+          id,
+          IconRefDto.fromFields(
+            iconSource: current.iconSource,
+            iconValue: current.iconValue,
+          ),
+        );
         ref
             .read(dataRefreshTriggerProvider.notifier)
             .triggerEntityAdd(EntityType.wifi, entityId: id);
@@ -248,4 +277,3 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
-

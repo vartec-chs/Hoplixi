@@ -68,6 +68,8 @@ sealed class SshKeyCardDto with _$SshKeyCardDto implements BaseCardDto {
   const factory SshKeyCardDto({
     required String id,
     required String name,
+    String? iconSource,
+    String? iconValue,
     required String publicKey,
     String? keyType,
     int? keySize,

@@ -50,6 +50,8 @@ class WifiFilterDao extends DatabaseAccessor<MainStore>
       return WifiCardDto(
         id: item.id,
         name: item.name,
+        iconSource: item.iconSource,
+        iconValue: item.iconValue,
         ssid: wifi.ssid,
         security: wifi.security,
         hidden: wifi.hidden,

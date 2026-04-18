@@ -50,6 +50,8 @@ class SshKeyFilterDao extends DatabaseAccessor<MainStore>
       return SshKeyCardDto(
         id: item.id,
         name: item.name,
+        iconSource: item.iconSource,
+        iconValue: item.iconValue,
         publicKey: ssh.publicKey,
         keyType: ssh.keyType,
         keySize: ssh.keySize,

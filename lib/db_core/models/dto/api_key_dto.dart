@@ -63,6 +63,8 @@ sealed class ApiKeyCardDto with _$ApiKeyCardDto implements BaseCardDto {
     required String id,
     required String name,
     required String service,
+    String? iconSource,
+    String? iconValue,
     String? maskedKey,
     String? tokenType,
     String? environment,

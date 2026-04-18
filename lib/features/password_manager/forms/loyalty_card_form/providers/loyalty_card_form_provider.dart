@@ -1,9 +1,10 @@
 ﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
+import 'package:hoplixi/db_core/models/dto/icon_ref_dto.dart';
 import 'package:hoplixi/db_core/models/dto/loyalty_card_dto.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
@@ -67,6 +68,8 @@ class LoyaltyCardFormNotifier extends Notifier<LoyaltyCardFormState> {
         noteId: vault.noteId,
         categoryId: vault.categoryId,
         categoryName: categoryName,
+        iconSource: vault.iconSource,
+        iconValue: vault.iconValue,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
         customFields: customFields,
@@ -137,6 +140,13 @@ class LoyaltyCardFormNotifier extends Notifier<LoyaltyCardFormState> {
 
   void setCategory(String? categoryId, String? categoryName) {
     state = state.copyWith(categoryId: categoryId, categoryName: categoryName);
+  }
+
+  void setIconRef(IconRefDto? iconRef) {
+    state = state.copyWith(
+      iconSource: iconRef?.sourceValue,
+      iconValue: iconRef?.value,
+    );
   }
 
   void setTags(List<String> tagIds, List<String> tagNames) {
@@ -269,6 +279,14 @@ class LoyaltyCardFormNotifier extends Notifier<LoyaltyCardFormState> {
           state.editingLoyaltyCardId!,
           state.customFields,
         );
+        final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+        await vaultItemDao.setIconRef(
+          state.editingLoyaltyCardId!,
+          IconRefDto.fromFields(
+            iconSource: state.iconSource,
+            iconValue: state.iconValue,
+          ),
+        );
 
         ref
             .read(dataRefreshTriggerProvider.notifier)
@@ -314,6 +332,14 @@ class LoyaltyCardFormNotifier extends Notifier<LoyaltyCardFormState> {
 
         final loyaltyCardId = await dao.createLoyaltyCard(dto);
         await saveCustomFields(ref, loyaltyCardId, state.customFields);
+        final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+        await vaultItemDao.setIconRef(
+          loyaltyCardId,
+          IconRefDto.fromFields(
+            iconSource: state.iconSource,
+            iconValue: state.iconValue,
+          ),
+        );
         ref
             .read(dataRefreshTriggerProvider.notifier)
             .triggerEntityAdd(EntityType.loyaltyCard, entityId: loyaltyCardId);

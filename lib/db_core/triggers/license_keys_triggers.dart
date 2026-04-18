@@ -18,13 +18,18 @@ const List<String> licenseKeysHistoryCreateTriggers = [
     BEGIN
       INSERT INTO vault_item_history (
         id, item_id, type, name, description, category_id, category_name,
-        action, used_count, is_favorite, is_archived, is_pinned, is_deleted,
+        icon_source,
+        icon_value,
+        action,
+used_count, is_favorite, is_archived, is_pinned, is_deleted,
         recent_score, last_used_at, original_created_at, original_modified_at, action_at
       ) VALUES (
         lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
         OLD.id, OLD.type, OLD.name, OLD.description, OLD.category_id,
         (SELECT name FROM categories WHERE id = OLD.category_id),
-        'modified', OLD.used_count, OLD.is_favorite, OLD.is_archived,
+OLD.icon_source,
+OLD.icon_value,
+'modified', OLD.used_count, OLD.is_favorite, OLD.is_archived,
         OLD.is_pinned, OLD.is_deleted, OLD.recent_score, OLD.last_used_at,
         OLD.created_at, OLD.modified_at, strftime('%s','now')
       );
@@ -64,14 +69,19 @@ const List<String> licenseKeysHistoryCreateTriggers = [
     BEGIN
       INSERT INTO vault_item_history (
         id, item_id, type, name, description, category_id, category_name,
-        action, used_count, is_favorite, is_archived, is_pinned, is_deleted,
+        icon_source,
+        icon_value,
+        action,
+used_count, is_favorite, is_archived, is_pinned, is_deleted,
         recent_score, last_used_at, original_created_at, original_modified_at, action_at
       )
       SELECT
         lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
         v.id, v.type, v.name, v.description, v.category_id,
         (SELECT name FROM categories WHERE id = v.category_id),
-        'modified', v.used_count, v.is_favorite, v.is_archived, v.is_pinned,
+v.icon_source,
+v.icon_value,
+'modified', v.used_count, v.is_favorite, v.is_archived, v.is_pinned,
         v.is_deleted, v.recent_score, v.last_used_at, v.created_at,
         v.modified_at, strftime('%s','now')
       FROM vault_items v
@@ -98,13 +108,18 @@ const List<String> licenseKeysHistoryCreateTriggers = [
     BEGIN
       INSERT INTO vault_item_history (
         id, item_id, type, name, description, category_id, category_name,
-        action, used_count, is_favorite, is_archived, is_pinned, is_deleted,
+        icon_source,
+        icon_value,
+        action,
+used_count, is_favorite, is_archived, is_pinned, is_deleted,
         recent_score, last_used_at, original_created_at, original_modified_at, action_at
       ) VALUES (
         lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
         OLD.id, OLD.type, OLD.name, OLD.description, OLD.category_id,
         (SELECT name FROM categories WHERE id = OLD.category_id),
-        'deleted', OLD.used_count, OLD.is_favorite, OLD.is_archived,
+OLD.icon_source,
+OLD.icon_value,
+'deleted', OLD.used_count, OLD.is_favorite, OLD.is_archived,
         OLD.is_pinned, OLD.is_deleted, OLD.recent_score, OLD.last_used_at,
         OLD.created_at, OLD.modified_at, strftime('%s','now')
       );

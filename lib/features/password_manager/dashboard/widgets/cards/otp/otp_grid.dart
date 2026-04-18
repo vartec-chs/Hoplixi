@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/db_core/models/dto/index.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:otp/otp.dart';
 
@@ -84,6 +83,8 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard> {
       title: title,
       subtitle: subtitle,
       fallbackIcon: Icons.vpn_key,
+      iconSource: otp.iconSource,
+      iconValue: otp.iconValue,
       category: otp.category,
       tags: otp.tags,
       usedCount: otp.usedCount,

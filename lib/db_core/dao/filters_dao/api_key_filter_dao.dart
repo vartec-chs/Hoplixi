@@ -51,6 +51,8 @@ class ApiKeyFilterDao extends DatabaseAccessor<MainStore>
         id: item.id,
         name: item.name,
         service: api.service,
+        iconSource: item.iconSource,
+        iconValue: item.iconValue,
         maskedKey: api.maskedKey,
         tokenType: api.tokenType,
         environment: api.environment,

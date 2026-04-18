@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/smart_converter_base.dart';
+import 'package:hoplixi/db_core/models/dto/icon_ref_dto.dart';
 import 'package:hoplixi/db_core/models/dto/otp_dto.dart';
 import 'package:hoplixi/db_core/models/enums/entity_types.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
@@ -76,6 +77,8 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
         period: otpItem.period,
         counter: otpItem.counter,
         categoryId: vault.categoryId,
+        iconSource: vault.iconSource,
+        iconValue: vault.iconValue,
         passwordId: otpItem.passwordItemId,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
@@ -175,6 +178,13 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
   /// Обновить категорию
   void setCategory(String? categoryId, String? categoryName) {
     state = state.copyWith(categoryId: categoryId, categoryName: categoryName);
+  }
+
+  void setIconRef(IconRefDto? iconRef) {
+    state = state.copyWith(
+      iconSource: iconRef?.sourceValue,
+      iconValue: iconRef?.value,
+    );
   }
 
   /// Обновить теги
@@ -286,6 +296,13 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
 
         if (success) {
           final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+          await vaultItemDao.setIconRef(
+            state.editingOtpId!,
+            IconRefDto.fromFields(
+              iconSource: state.iconSource,
+              iconValue: state.iconValue,
+            ),
+          );
           await vaultItemDao.syncTags(state.editingOtpId!, state.tagIds);
           await saveCustomFields(ref, state.editingOtpId!, state.customFields);
 
@@ -332,6 +349,14 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
         final otpId = await dao.createOtp(dto);
 
         await saveCustomFields(ref, otpId, state.customFields);
+        final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+        await vaultItemDao.setIconRef(
+          otpId,
+          IconRefDto.fromFields(
+            iconSource: state.iconSource,
+            iconValue: state.iconValue,
+          ),
+        );
 
         logInfo('OTP created: $otpId', tag: _logTag);
         state = state.copyWith(isSaving: false, isSaved: true);

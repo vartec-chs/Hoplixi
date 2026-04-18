@@ -50,6 +50,8 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
 
       return OtpCardDto(
         id: item.id,
+        iconSource: item.iconSource,
+        iconValue: item.iconValue,
         issuer: otp.issuer,
         accountName: otp.accountName,
         type: otp.type.name,

@@ -1,10 +1,8 @@
 ﻿import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/db_core/models/dto/loyalty_card_dto.dart';
-import 'package:hoplixi/db_core/provider/dao_providers.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 
 class LoyaltyCardListCard extends ConsumerStatefulWidget {
   const LoyaltyCardListCard({
@@ -84,6 +82,8 @@ class _LoyaltyCardListCardState extends ConsumerState<LoyaltyCardListCard> {
           : card.programName,
       trailingSubtitle: trailingSubtitle,
       fallbackIcon: Icons.loyalty,
+      iconSource: card.iconSource,
+      iconValue: card.iconValue,
       category: card.category,
       tags: card.tags,
       usedCount: card.usedCount,

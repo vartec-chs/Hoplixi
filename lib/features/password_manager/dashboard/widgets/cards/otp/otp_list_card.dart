@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/db_core/models/dto/index.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:otp/otp.dart';
 
 class TotpListCard extends ConsumerStatefulWidget {
@@ -244,6 +244,8 @@ class _TotpListCardState extends ConsumerState<TotpListCard> {
       title: title,
       subtitle: subtitle,
       fallbackIcon: Icons.vpn_key,
+      iconSource: otp.iconSource,
+      iconValue: otp.iconValue,
       category: otp.category,
       tags: otp.tags,
       usedCount: otp.usedCount,

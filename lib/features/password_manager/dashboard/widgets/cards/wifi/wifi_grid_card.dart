@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/db_core/models/dto/index.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 class WifiGridCard extends ConsumerStatefulWidget {
@@ -65,6 +64,8 @@ class _WifiGridCardState extends ConsumerState<WifiGridCard> {
       title: wifi.name,
       subtitle: subtitle,
       fallbackIcon: Icons.wifi,
+      iconSource: wifi.iconSource,
+      iconValue: wifi.iconValue,
       category: wifi.category,
       tags: wifi.tags,
       usedCount: wifi.usedCount,

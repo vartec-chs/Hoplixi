@@ -1,10 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/db_core/models/dto/bank_card_dto.dart';
+import 'package:hoplixi/db_core/models/dto/icon_ref_dto.dart';
 import 'package:hoplixi/db_core/models/enums/index.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
@@ -68,6 +69,8 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
         cardType: cardItem.cardType?.value,
         cardNetwork: cardItem.cardNetwork?.value,
         categoryId: vault.categoryId,
+        iconSource: vault.iconSource,
+        iconValue: vault.iconValue,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
         customFields: customFields,
@@ -164,6 +167,13 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
   /// Обновить категорию
   void setCategory(String? categoryId, String? categoryName) {
     state = state.copyWith(categoryId: categoryId, categoryName: categoryName);
+  }
+
+  void setIconRef(IconRefDto? iconRef) {
+    state = state.copyWith(
+      iconSource: iconRef?.sourceValue,
+      iconValue: iconRef?.value,
+    );
   }
 
   /// Обновить теги
@@ -319,6 +329,13 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
 
         if (success) {
           final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+          await vaultItemDao.setIconRef(
+            state.editingBankCardId!,
+            IconRefDto.fromFields(
+              iconSource: state.iconSource,
+              iconValue: state.iconValue,
+            ),
+          );
           await vaultItemDao.syncTags(state.editingBankCardId!, state.tagIds);
           await saveCustomFields(
             ref,
@@ -379,9 +396,17 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
 
         final bankCardId = await dao.createBankCard(dto);
 
+        final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+        await vaultItemDao.setIconRef(
+          bankCardId,
+          IconRefDto.fromFields(
+            iconSource: state.iconSource,
+            iconValue: state.iconValue,
+          ),
+        );
+
         // Синхронизация тегов для новой карты
         if (state.tagIds.isNotEmpty) {
-          final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
           await vaultItemDao.syncTags(bankCardId, state.tagIds);
         }
 

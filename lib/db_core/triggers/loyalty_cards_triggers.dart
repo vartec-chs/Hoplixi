@@ -1,4 +1,4 @@
-﻿const List<String> loyaltyCardsHistoryCreateTriggers = [
+const List<String> loyaltyCardsHistoryCreateTriggers = [
   '''
     CREATE TRIGGER IF NOT EXISTS loyalty_card_update_history
     AFTER UPDATE ON vault_items
@@ -17,7 +17,10 @@
     BEGIN
       INSERT INTO vault_item_history (
         id, item_id, type, name, description, category_id, category_name,
-        action, used_count, is_favorite, is_archived, is_pinned, is_deleted,
+        icon_source,
+        icon_value,
+        action,
+used_count, is_favorite, is_archived, is_pinned, is_deleted,
         recent_score, last_used_at, original_created_at, original_modified_at, action_at
       ) VALUES (
         lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
@@ -27,7 +30,9 @@
         OLD.description,
         OLD.category_id,
         (SELECT name FROM categories WHERE id = OLD.category_id),
-        'modified',
+OLD.icon_source,
+OLD.icon_value,
+'modified',
         OLD.used_count,
         OLD.is_favorite,
         OLD.is_archived,
@@ -80,7 +85,10 @@
     BEGIN
       INSERT INTO vault_item_history (
         id, item_id, type, name, description, category_id, category_name,
-        action, used_count, is_favorite, is_archived, is_pinned, is_deleted,
+        icon_source,
+        icon_value,
+        action,
+used_count, is_favorite, is_archived, is_pinned, is_deleted,
         recent_score, last_used_at, original_created_at, original_modified_at, action_at
       )
       SELECT
@@ -91,7 +99,9 @@
         v.description,
         v.category_id,
         (SELECT name FROM categories WHERE id = v.category_id),
-        'modified',
+v.icon_source,
+v.icon_value,
+'modified',
         v.used_count,
         v.is_favorite,
         v.is_archived,
@@ -132,7 +142,10 @@
     BEGIN
       INSERT INTO vault_item_history (
         id, item_id, type, name, description, category_id, category_name,
-        action, used_count, is_favorite, is_archived, is_pinned, is_deleted,
+        icon_source,
+        icon_value,
+        action,
+used_count, is_favorite, is_archived, is_pinned, is_deleted,
         recent_score, last_used_at, original_created_at, original_modified_at, action_at
       ) VALUES (
         lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
@@ -142,7 +155,9 @@
         OLD.description,
         OLD.category_id,
         (SELECT name FROM categories WHERE id = OLD.category_id),
-        'deleted',
+OLD.icon_source,
+OLD.icon_value,
+'deleted',
         OLD.used_count,
         OLD.is_favorite,
         OLD.is_archived,
