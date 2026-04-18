@@ -21,6 +21,11 @@ import 'package:hoplixi/features/password_manager/pickers/tags_picker/widgets/ta
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 
+part 'dashboard_home_screen/list_sync.dart';
+part 'dashboard_home_screen/bulk_actions.dart';
+part 'dashboard_home_screen/dialogs.dart';
+part 'dashboard_home_screen/build_helpers.dart';
+
 /// Длительность анимации для элементов списка.
 const kAnimationDuration = Duration(milliseconds: 180);
 
@@ -66,260 +71,23 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
   /// Защита от повторных bulk-операций.
   bool _isApplyingBulkAction = false;
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Lifecycle
-  // ─────────────────────────────────────────────────────────────────────────
-
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController()..addListener(_onScroll);
+    _dashboardHomeInitState(this);
   }
 
   @override
   void dispose() {
-    _loadMoreDebounce?.cancel();
-    _scrollController.dispose();
+    _dashboardHomeDispose(this);
     super.dispose();
   }
 
   @override
   void didUpdateWidget(covariant DashboardHomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // При смене entityType — сбрасываем список и синхронизируем
-    if (oldWidget.entityType != widget.entityType) {
-      _resetList();
-      // Отложенная синхронизация с новым провайдером
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final items =
-            ref.read(paginatedListProvider(widget.entityType)).value?.items ??
-            [];
-        _syncItems(items);
-      });
-    }
+    _dashboardHomeDidUpdateWidget(this, oldWidget);
   }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // Scroll & Pagination
-  // ─────────────────────────────────────────────────────────────────────────
-
-  void _onScroll() {
-    if (!_scrollController.hasClients) return;
-    final pos = _scrollController.position;
-    if (pos.pixels >= pos.maxScrollExtent - _kScrollThreshold) {
-      _tryLoadMore();
-    }
-  }
-
-  void _tryLoadMore() {
-    if (_loadMoreDebounce?.isActive ?? false) return;
-    _loadMoreDebounce = Timer(const Duration(milliseconds: 100), () {
-      final state = ref.read(paginatedListProvider(widget.entityType)).value;
-      if (state != null &&
-          !state.isLoadingMore &&
-          state.hasMore &&
-          !state.isLoading) {
-        ref.read(paginatedListProvider(widget.entityType).notifier).loadMore();
-      }
-    });
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // List synchronization
-  // ─────────────────────────────────────────────────────────────────────────
-
-  /// Синхронизирует [_displayedItems] с новым списком из провайдера.
-  void _syncItems(List<BaseCardDto> newItems) {
-    if (!mounted) return;
-
-    final viewMode = ref.read(currentViewModeProvider);
-    final listState = _listKey.currentState;
-    final gridState = _gridKey.currentState;
-
-    // Если анимированный список ещё не готов — просто копируем данные
-    final animationReady = viewMode == ViewMode.list
-        ? listState != null
-        : gridState != null;
-
-    if (!animationReady) {
-      setState(() => _displayedItems = List.of(newItems));
-      return;
-    }
-
-    if (!_shouldAnimateItems(newItems)) {
-      _replaceItemsWithoutAnimation(newItems);
-      return;
-    }
-
-    _performDiff(newItems, viewMode, listState, gridState);
-  }
-
-  bool _shouldAnimateItems(List<BaseCardDto> newItems) {
-    final totalItems = newItems.length > _displayedItems.length
-        ? newItems.length
-        : _displayedItems.length;
-    return totalItems <= kDashboardAnimatedItemsThreshold;
-  }
-
-  void _replaceItemsWithoutAnimation(List<BaseCardDto> newItems) {
-    setState(() {
-      _displayedItems = List.of(newItems);
-      _isClearing = false;
-      _listKey = GlobalKey<SliverAnimatedListState>();
-      _gridKey = GlobalKey<SliverAnimatedGridState>();
-    });
-  }
-
-  /// Выполняет diff между [_displayedItems] и [newItems] с анимациями.
-  void _performDiff(
-    List<BaseCardDto> newItems,
-    ViewMode viewMode,
-    SliverAnimatedListState? listState,
-    SliverAnimatedGridState? gridState,
-  ) {
-    final newIds = newItems.map((e) => e.id).toSet();
-    var didMutate = false;
-
-    // 1. Удаление (с конца, чтобы не сбивать индексы)
-    for (var i = _displayedItems.length - 1; i >= 0; i--) {
-      final item = _displayedItems[i];
-      if (!newIds.contains(item.id)) {
-        _displayedItems.removeAt(i);
-        didMutate = true;
-        _animateRemove(i, item, viewMode, listState, gridState);
-      }
-    }
-
-    // Если после удаления список опустел — показываем состояние «очистка»
-    if (didMutate && newItems.isEmpty) {
-      _isClearing = true;
-      Timer(kAnimationDuration, () {
-        if (mounted) setState(() => _isClearing = false);
-      });
-    }
-
-    // 2. Вставка / обновление
-    final indexById = <String, int>{
-      for (var i = 0; i < _displayedItems.length; i++) _displayedItems[i].id: i,
-    };
-
-    for (var i = 0; i < newItems.length; i++) {
-      final newItem = newItems[i];
-      final id = newItem.id;
-
-      if (i < _displayedItems.length && _displayedItems[i].id == id) {
-        // Элемент на месте — проверяем, изменились ли данные
-        if (_displayedItems[i] != newItem) {
-          _displayedItems[i] = newItem;
-          didMutate = true;
-        }
-        indexById[id] = i;
-        continue;
-      }
-
-      final existingIndex = indexById[id];
-      if (existingIndex != null && existingIndex >= i) {
-        // Перемещение: убираем со старого места и вставляем на новое
-        final moved = _displayedItems.removeAt(existingIndex);
-        _animateRemove(existingIndex, moved, viewMode, listState, gridState);
-        _displayedItems.insert(i, newItem);
-        _animateInsert(i, viewMode, listState, gridState);
-        // Пересчитываем карту после сдвига
-        for (var j = i; j < _displayedItems.length; j++) {
-          indexById[_displayedItems[j].id] = j;
-        }
-        didMutate = true;
-      } else if (existingIndex == null) {
-        // Новый элемент
-        _displayedItems.insert(i, newItem);
-        _animateInsert(i, viewMode, listState, gridState);
-        // Сдвигаем индексы
-        for (var j = i; j < _displayedItems.length; j++) {
-          indexById[_displayedItems[j].id] = j;
-        }
-        didMutate = true;
-      }
-    }
-
-    if (didMutate) setState(() {});
-  }
-
-  void _animateInsert(
-    int index,
-    ViewMode viewMode,
-    SliverAnimatedListState? listState,
-    SliverAnimatedGridState? gridState,
-  ) {
-    if (viewMode == ViewMode.list) {
-      listState?.insertItem(index, duration: kAnimationDuration);
-    } else {
-      gridState?.insertItem(index, duration: kAnimationDuration);
-    }
-  }
-
-  void _animateRemove(
-    int index,
-    BaseCardDto item,
-    ViewMode viewMode,
-    SliverAnimatedListState? listState,
-    SliverAnimatedGridState? gridState,
-  ) {
-    Widget builder(BuildContext ctx, Animation<double> anim) {
-      return DashboardHomeBuilders.buildRemovedItem(
-        context: ctx,
-        ref: ref,
-        entityType: widget.entityType,
-        item: item,
-        animation: anim,
-        viewMode: viewMode,
-        callbacks: _callbacks,
-      );
-    }
-
-    if (viewMode == ViewMode.list) {
-      listState?.removeItem(index, builder, duration: kAnimationDuration);
-    } else {
-      gridState?.removeItem(index, builder, duration: kAnimationDuration);
-    }
-  }
-
-  /// Локальное удаление элемента (для Dismissible — без анимации sliver).
-  void _removeItemLocally(String id) {
-    setState(() {
-      _displayedItems.removeWhere((e) => e.id == id);
-      _selectedIds.remove(id);
-      if (_selectedIds.isEmpty) {
-        _isBulkMode = false;
-      }
-    });
-  }
-
-  /// Сброс списка при смене entityType / viewMode.
-  void _resetList() {
-    _scrollToTopSafe();
-    setState(() {
-      _displayedItems = [];
-      _isClearing = false;
-      _isBulkMode = false;
-      _selectedIds.clear();
-      _listKey = GlobalKey<SliverAnimatedListState>();
-      _gridKey = GlobalKey<SliverAnimatedGridState>();
-    });
-  }
-
-  void _scrollToTopSafe() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scrollController.hasClients) return;
-      final pos = _scrollController.position;
-      if (pos.hasContentDimensions && pos.pixels != 0) {
-        _scrollController.jumpTo(0);
-      }
-    });
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // Callbacks
-  // ─────────────────────────────────────────────────────────────────────────
 
   DashboardCardCallbacks get _callbacks =>
       DashboardCardCallbacks.fromRefWithLocalRemove(
@@ -332,278 +100,6 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
       .where((item) => _selectedIds.contains(item.id))
       .toList(growable: false);
 
-  void _openItemView(String id) {
-    final viewPath = AppRoutesPaths.dashboardEntityView(widget.entityType, id);
-    if (GoRouter.of(context).state.matchedLocation != viewPath) {
-      context.push(viewPath);
-    }
-  }
-
-  void _enterBulkMode(String id) {
-    setState(() {
-      _isBulkMode = true;
-      _selectedIds.add(id);
-    });
-  }
-
-  void _toggleSelection(String id) {
-    setState(() {
-      if (_selectedIds.contains(id)) {
-        _selectedIds.remove(id);
-      } else {
-        _selectedIds.add(id);
-      }
-      _isBulkMode = _selectedIds.isNotEmpty;
-    });
-  }
-
-  void _handleItemLongPress(String id) {
-    if (_isBulkMode) {
-      _toggleSelection(id);
-      return;
-    }
-
-    _enterBulkMode(id);
-  }
-
-  void _exitBulkMode() {
-    if (!_isBulkMode && _selectedIds.isEmpty) {
-      return;
-    }
-
-    setState(() {
-      _isBulkMode = false;
-      _selectedIds.clear();
-    });
-  }
-
-  void _pruneSelection(List<BaseCardDto> items) {
-    if (_selectedIds.isEmpty) {
-      return;
-    }
-
-    final validIds = items.map((item) => item.id).toSet();
-    final nextSelected = _selectedIds.intersection(validIds);
-
-    if (nextSelected.length == _selectedIds.length) {
-      return;
-    }
-
-    setState(() {
-      _selectedIds
-        ..clear()
-        ..addAll(nextSelected);
-      _isBulkMode = _selectedIds.isNotEmpty;
-    });
-  }
-
-  Future<void> _runBulkAction({
-    required Future<void> Function(
-      PaginatedListNotifier notifier,
-      List<String> ids,
-    )
-    action,
-    required String successTitle,
-  }) async {
-    if (_selectedIds.isEmpty || _isApplyingBulkAction) {
-      return;
-    }
-
-    final notifier = ref.read(
-      paginatedListProvider(widget.entityType).notifier,
-    );
-    final selectedIds = _selectedIds.toList(growable: false);
-
-    setState(() => _isApplyingBulkAction = true);
-
-    try {
-      await action(notifier, selectedIds);
-      if (!mounted) {
-        return;
-      }
-      _exitBulkMode();
-      Toaster.success(title: successTitle);
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-      Toaster.error(title: 'Не удалось выполнить массовое действие');
-    } finally {
-      if (mounted) {
-        setState(() => _isApplyingBulkAction = false);
-      }
-    }
-  }
-
-  Future<void> _showBulkDeleteDialog() async {
-    if (_selectedIds.isEmpty || _isApplyingBulkAction) {
-      return;
-    }
-
-    final selectedItems = _selectedItems;
-    final isPermanentDelete =
-        selectedItems.isNotEmpty &&
-        selectedItems.every((item) => item.isDeleted);
-
-    final shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(
-            isPermanentDelete ? 'Удалить навсегда?' : 'Удалить элементы?',
-          ),
-          content: Text(
-            isPermanentDelete
-                ? 'Будет безвозвратно удалено элементов: ${selectedItems.length}.'
-                : 'Будет перемещено в удалённые элементов: ${selectedItems.length}.',
-          ),
-          actions: [
-            SmoothButton(
-              type: SmoothButtonType.text,
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              label: 'Отмена',
-            ),
-            SmoothButton(
-              variant: SmoothButtonVariant.error,
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              label: isPermanentDelete ? 'Удалить навсегда' : 'Удалить',
-            ),
-          ],
-        );
-      },
-    );
-
-    if (shouldDelete != true) {
-      return;
-    }
-
-    await _runBulkAction(
-      action: (notifier, ids) =>
-          notifier.bulkDelete(ids, permanently: isPermanentDelete),
-      successTitle: isPermanentDelete
-          ? 'Элементы удалены навсегда'
-          : 'Элементы перемещены в удалённые',
-    );
-  }
-
-  Future<void> _showBulkAssignCategoryDialog() async {
-    if (_selectedIds.isEmpty || _isApplyingBulkAction) {
-      return;
-    }
-
-    String? selectedCategoryId;
-    String? selectedCategoryName;
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (dialogContext, setDialogState) {
-            return AlertDialog(
-              title: const Text('Назначить категорию'),
-              content: SizedBox(
-                height: 54,
-                child: CategoryPickerField(
-                  selectedCategoryId: selectedCategoryId,
-                  selectedCategoryName: selectedCategoryName,
-                  filterByType: [
-                    widget.entityType.toCategoryType(),
-                    CategoryType.mixed,
-                  ],
-                  onCategorySelected: (categoryId, categoryName) {
-                    setDialogState(() {
-                      selectedCategoryId = categoryId;
-                      selectedCategoryName = categoryName;
-                    });
-                  },
-                ),
-              ),
-              actions: [
-                SmoothButton(
-                  type: SmoothButtonType.text,
-                  onPressed: () => Navigator.of(dialogContext).pop(false),
-                  label: 'Отмена',
-                ),
-                SmoothButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(true),
-                  label: 'Применить',
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-
-    if (confirmed != true) {
-      return;
-    }
-
-    await _runBulkAction(
-      action: (notifier, ids) =>
-          notifier.bulkAssignCategory(ids, selectedCategoryId),
-      successTitle: selectedCategoryId == null
-          ? 'Категория очищена'
-          : 'Категория назначена',
-    );
-  }
-
-  Future<void> _showBulkAssignTagsDialog() async {
-    if (_selectedIds.isEmpty || _isApplyingBulkAction) {
-      return;
-    }
-
-    List<String> selectedTagIds = <String>[];
-    List<String> selectedTagNames = <String>[];
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (dialogContext, setDialogState) {
-            return AlertDialog(
-              title: const Text('Назначить теги'),
-              content: SizedBox(
-                height: 54,
-                child: TagPickerField(
-                  selectedTagIds: selectedTagIds,
-                  selectedTagNames: selectedTagNames,
-                  filterByType: [widget.entityType.toTagType(), TagType.mixed],
-                  onTagsSelected: (tagIds, tagNames) {
-                    setDialogState(() {
-                      selectedTagIds = List<String>.from(tagIds);
-                      selectedTagNames = List<String>.from(tagNames);
-                    });
-                  },
-                ),
-              ),
-              actions: [
-                SmoothButton(
-                  type: SmoothButtonType.text,
-                  onPressed: () => Navigator.of(dialogContext).pop(false),
-                  label: 'Отмена',
-                ),
-                SmoothButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(true),
-                  label: 'Применить',
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-
-    if (confirmed != true) {
-      return;
-    }
-
-    await _runBulkAction(
-      action: (notifier, ids) => notifier.bulkAssignTags(ids, selectedTagIds),
-      successTitle: selectedTagIds.isEmpty ? 'Теги очищены' : 'Теги обновлены',
-    );
-  }
-
   bool get _shouldArchiveSelection =>
       _selectedItems.any((item) => !item.isArchived);
 
@@ -612,247 +108,111 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
 
   bool get _shouldPinSelection => _selectedItems.any((item) => !item.isPinned);
 
-  Future<void> _applyBulkArchive() async {
-    if (_selectedIds.isEmpty || _isApplyingBulkAction) {
-      return;
-    }
+  void _updateState(VoidCallback fn) => setState(fn);
 
-    final shouldArchive = _shouldArchiveSelection;
+  void _onScroll() => _dashboardHomeOnScroll(this);
 
-    await _runBulkAction(
-      action: (notifier, ids) => notifier.bulkSetArchive(ids, shouldArchive),
-      successTitle: shouldArchive
-          ? 'Элементы перенесены в архив'
-          : 'Элементы извлечены из архива',
-    );
-  }
+  void _tryLoadMore() => _dashboardHomeTryLoadMore(this);
 
-  Future<void> _applyBulkFavorite() async {
-    if (_selectedIds.isEmpty || _isApplyingBulkAction) {
-      return;
-    }
+  void _syncItems(List<BaseCardDto> newItems) =>
+      _dashboardHomeSyncItems(this, newItems);
 
-    final shouldFavorite = _shouldFavoriteSelection;
+  bool _shouldAnimateItems(List<BaseCardDto> newItems) =>
+      _dashboardHomeShouldAnimateItems(this, newItems);
 
-    await _runBulkAction(
-      action: (notifier, ids) => notifier.bulkSetFavorite(ids, shouldFavorite),
-      successTitle: shouldFavorite
-          ? 'Элементы добавлены в избранное'
-          : 'Элементы удалены из избранного',
-    );
-  }
+  void _replaceItemsWithoutAnimation(List<BaseCardDto> newItems) =>
+      _dashboardHomeReplaceItemsWithoutAnimation(this, newItems);
 
-  Future<void> _applyBulkPin() async {
-    if (_selectedIds.isEmpty || _isApplyingBulkAction) {
-      return;
-    }
+  void _performDiff(
+    List<BaseCardDto> newItems,
+    ViewMode viewMode,
+    SliverAnimatedListState? listState,
+    SliverAnimatedGridState? gridState,
+  ) =>
+      _dashboardHomePerformDiff(this, newItems, viewMode, listState, gridState);
 
-    final shouldPin = _shouldPinSelection;
+  void _animateInsert(
+    int index,
+    ViewMode viewMode,
+    SliverAnimatedListState? listState,
+    SliverAnimatedGridState? gridState,
+  ) => _dashboardHomeAnimateInsert(this, index, viewMode, listState, gridState);
 
-    await _runBulkAction(
-      action: (notifier, ids) => notifier.bulkSetPin(ids, shouldPin),
-      successTitle: shouldPin ? 'Элементы закреплены' : 'Элементы откреплены',
-    );
-  }
+  void _animateRemove(
+    int index,
+    BaseCardDto item,
+    ViewMode viewMode,
+    SliverAnimatedListState? listState,
+    SliverAnimatedGridState? gridState,
+  ) => _dashboardHomeAnimateRemove(
+    this,
+    index,
+    item,
+    viewMode,
+    listState,
+    gridState,
+  );
 
-  Future<void> _closeDatabase() async {
-    final success = await ref.read(mainStoreProvider.notifier).closeStore();
-    if (success) {
-      if (mounted) {
-        Toaster.info(title: 'База данных закрыта', description: '');
-      }
-    }
-  }
+  void _removeItemLocally(String id) =>
+      _dashboardHomeRemoveItemLocally(this, id);
 
-  void _showCloseDatabaseDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Закрыть базу данных?'),
-          content: const Text('Вы уверены, что хотите закрыть базу данных?'),
-          actions: <Widget>[
-            SmoothButton(
-              label: 'Нет',
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              variant: .normal,
-              size: .small,
-              type: .text,
-            ),
-            SmoothButton(
-              label: 'Да',
-              onPressed: () async {
-                Navigator.of(context).pop();
-                await _closeDatabase();
-                if (context.mounted) {
-                  context.go(AppRoutesPaths.home);
-                }
-              },
-              variant: .error,
-              size: .small,
-            ),
-          ],
-        );
-      },
-    );
-  }
+  void _resetList() => _dashboardHomeResetList(this);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Build
-  // ─────────────────────────────────────────────────────────────────────────
+  void _scrollToTopSafe() => _dashboardHomeScrollToTopSafe(this);
+
+  void _openItemView(String id) => _dashboardHomeOpenItemView(this, id);
+
+  void _enterBulkMode(String id) => _dashboardHomeEnterBulkMode(this, id);
+
+  void _toggleSelection(String id) => _dashboardHomeToggleSelection(this, id);
+
+  void _handleItemLongPress(String id) =>
+      _dashboardHomeHandleItemLongPress(this, id);
+
+  void _exitBulkMode() => _dashboardHomeExitBulkMode(this);
+
+  void _pruneSelection(List<BaseCardDto> items) =>
+      _dashboardHomePruneSelection(this, items);
+
+  Future<void> _runBulkAction({
+    required Future<void> Function(
+      PaginatedListNotifier notifier,
+      List<String> ids,
+    )
+    action,
+    required String successTitle,
+  }) => _dashboardHomeRunBulkAction(
+    this,
+    action: action,
+    successTitle: successTitle,
+  );
+
+  Future<void> _showBulkDeleteDialog() =>
+      _dashboardHomeShowBulkDeleteDialog(this);
+
+  Future<void> _showBulkAssignCategoryDialog() =>
+      _dashboardHomeShowBulkAssignCategoryDialog(this);
+
+  Future<void> _showBulkAssignTagsDialog() =>
+      _dashboardHomeShowBulkAssignTagsDialog(this);
+
+  Future<void> _applyBulkArchive() => _dashboardHomeApplyBulkArchive(this);
+
+  Future<void> _applyBulkFavorite() => _dashboardHomeApplyBulkFavorite(this);
+
+  Future<void> _applyBulkPin() => _dashboardHomeApplyBulkPin(this);
+
+  Future<void> _closeDatabase() => _dashboardHomeCloseDatabase(this);
+
+  void _showCloseDatabaseDialog() =>
+      _dashboardHomeShowCloseDatabaseDialog(this);
 
   @override
-  Widget build(BuildContext context) {
-    final viewMode = ref.watch(currentViewModeProvider);
-    final asyncValue = ref.watch(paginatedListProvider(widget.entityType));
-    Future.microtask(() {
-      ref.read(baseFilterProvider.notifier).setEntityType(widget.entityType.id);
-    });
-
-    final disableAppBarMenu = MediaQuery.of(context).size.width <= 700;
-
-    // Начальная синхронизация при первом построении
-    if (_isFirstBuild) {
-      _isFirstBuild = false;
-      asyncValue.whenData((state) {
-        // Синхронизируем сразу после первого build frame
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _displayedItems.isEmpty && state.items.isNotEmpty) {
-            _syncItems(state.items);
-          }
-        });
-      });
-    }
-
-    // ref.listen должен быть в build — согласно документации Riverpod
-    ref.listen<AsyncValue<DashboardListState<BaseCardDto>>>(
-      paginatedListProvider(widget.entityType),
-      (prev, next) {
-        next.whenData((state) {
-          // Синхронизация после построения кадра
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _syncItems(state.items);
-            _pruneSelection(state.items);
-          });
-        });
-      },
-    );
-
-    // Сброс при смене viewMode (ключи list/grid несовместимы)
-    ref.listen<ViewMode>(currentViewModeProvider, (prev, next) {
-      if (prev != null && prev != next) {
-        _resetList();
-        // После сброса подгружаем текущие данные
-        final items = asyncValue.value?.items ?? [];
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _syncItems(items);
-        });
-      }
-    });
-
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (bool didPop, dynamic result) {
-        if (!didPop) {
-          if (_isBulkMode) {
-            _exitBulkMode();
-            return;
-          }
-          _showCloseDatabaseDialog();
-        }
-      },
-      child: Scaffold(
-        body: RefreshIndicator(
-          onRefresh: () => ref
-              .read(paginatedListProvider(widget.entityType).notifier)
-              .refresh(),
-          child: CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              DashboardSliverAppBar(
-                entityType: widget.entityType,
-                expandedHeight: 176.0,
-                collapsedHeight: 60.0,
-                pinned: true,
-                floating: false,
-                snap: false,
-                showEntityTypeSelector: true,
-                onMenuPressed: !disableAppBarMenu
-                    ? null
-                    : () {
-                        final scope = DashboardDrawerScope.of(context);
-                        if (scope != null) {
-                          scope.openDrawer();
-                        } else {
-                          Scaffold.of(context).openDrawer();
-                        }
-                      },
-              ),
-              SliverToBoxAdapter(
-                child: DashboardListToolBar(
-                  entityType: widget.entityType,
-                  viewMode: viewMode,
-                  listState: asyncValue,
-                  isBulkMode: _isBulkMode,
-                  selectedCount: _selectedIds.length,
-                  onExitBulkMode: _isApplyingBulkAction ? null : _exitBulkMode,
-                  onBulkDelete: _isApplyingBulkAction
-                      ? null
-                      : _showBulkDeleteDialog,
-                  onBulkFavorite: _isApplyingBulkAction
-                      ? null
-                      : _applyBulkFavorite,
-                  bulkFavoriteLabel: _shouldFavoriteSelection
-                      ? 'В избранное'
-                      : 'Убрать из избранного',
-                  onBulkPin: _isApplyingBulkAction ? null : _applyBulkPin,
-                  bulkPinLabel: _shouldPinSelection ? 'Закрепить' : 'Открепить',
-                  onBulkArchive: _isApplyingBulkAction
-                      ? null
-                      : _applyBulkArchive,
-                  bulkArchiveLabel: _shouldArchiveSelection
-                      ? 'В архив'
-                      : 'Из архива',
-                  onBulkAssignCategory: _isApplyingBulkAction
-                      ? null
-                      : _showBulkAssignCategoryDialog,
-                  onBulkAssignTags: _isApplyingBulkAction
-                      ? null
-                      : _showBulkAssignTagsDialog,
-                ),
-              ),
-              _buildContentSliver(asyncValue, viewMode),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) =>
+      _buildDashboardHomeScreen(this, context);
 
   Widget _buildContentSliver(
     AsyncValue<DashboardListState<BaseCardDto>> asyncValue,
     ViewMode viewMode,
-  ) {
-    return DashboardHomeBuilders.buildContentSliver(
-      context: context,
-      ref: ref,
-      entityType: widget.entityType,
-      viewMode: viewMode,
-      asyncValue: asyncValue,
-      displayedItems: _displayedItems,
-      isClearing: _isClearing,
-      listKey: _listKey,
-      gridKey: _gridKey,
-      callbacks: _callbacks,
-      isBulkMode: _isBulkMode,
-      selectedIds: _selectedIds,
-      onItemTap: _toggleSelection,
-      onItemLongPress: _handleItemLongPress,
-      onOpenView: _openItemView,
-      onInvalidate: () =>
-          ref.invalidate(paginatedListProvider(widget.entityType)),
-    );
-  }
+  ) => _buildDashboardHomeContentSliver(this, asyncValue, viewMode);
 }
