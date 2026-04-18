@@ -222,7 +222,12 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
                   if (ext != null)
                     _info(theme, LucideIcons.fileType, 'Расширение', '.$ext'),
                   if (_categoryName != null)
-                    _info(theme, LucideIcons.folder, 'Категория', _categoryName!),
+                    _info(
+                      theme,
+                      LucideIcons.folder,
+                      'Категория',
+                      _categoryName!,
+                    ),
                   if (_tagNames.isNotEmpty) _tags(theme),
                   if (_file!.$1.description?.isNotEmpty ?? false)
                     _info(

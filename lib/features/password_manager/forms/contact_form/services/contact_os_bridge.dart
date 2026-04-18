@@ -115,7 +115,9 @@ class ContactOsBridge {
 
     return Name(
       first: parts.first,
-      middle: parts.length > 2 ? parts.sublist(1, parts.length - 1).join(' ') : null,
+      middle: parts.length > 2
+          ? parts.sublist(1, parts.length - 1).join(' ')
+          : null,
       last: parts.last,
     );
   }
@@ -134,7 +136,8 @@ class ContactOsBridge {
   }
 
   static String contactIdentity(Contact contact) {
-    final primaryValue = normalize(firstOrNull(contact.phones)?.number) ??
+    final primaryValue =
+        normalize(firstOrNull(contact.phones)?.number) ??
         normalize(firstOrNull(contact.emails)?.address) ??
         resolveName(contact);
 
@@ -204,5 +207,3 @@ class ContactOsBridge {
     return values.isEmpty ? null : values.first;
   }
 }
-
-

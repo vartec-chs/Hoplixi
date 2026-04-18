@@ -68,9 +68,7 @@ class AttachmentsManifest {
                 .whereType<Map>()
                 .map(
                   (entry) => AttachmentManifestEntry.fromJson(
-                    entry.map(
-                      (key, value) => MapEntry(key.toString(), value),
-                    ),
+                    entry.map((key, value) => MapEntry(key.toString(), value)),
                   ),
                 )
                 .toList(growable: false)

@@ -33,7 +33,8 @@ class IconPackManifest {
       displayName: json['displayName'] as String? ?? '',
       sourceArchiveName: json['sourceArchiveName'] as String? ?? '',
       importedAt: DateTime.parse(
-        json['importedAt'] as String? ?? DateTime.fromMillisecondsSinceEpoch(0).toIso8601String(),
+        json['importedAt'] as String? ??
+            DateTime.fromMillisecondsSinceEpoch(0).toIso8601String(),
       ),
       iconCount: json['iconCount'] as int? ?? 0,
     );

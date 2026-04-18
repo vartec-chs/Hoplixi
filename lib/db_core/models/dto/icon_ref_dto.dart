@@ -45,10 +45,7 @@ class IconRefDto {
     return null;
   }
 
-  Map<String, dynamic> toJson() => {
-    'source': source.value,
-    'value': value,
-  };
+  Map<String, dynamic> toJson() => {'source': source.value, 'value': value};
 
   String get sourceValue => source.value;
 

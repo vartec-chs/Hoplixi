@@ -141,7 +141,9 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
             padding: const EdgeInsets.only(left: 8),
             child: IconButton(
               icon: const Icon(Icons.close),
-              tooltip: MaterialLocalizations.of(modalContext).closeButtonTooltip,
+              tooltip: MaterialLocalizations.of(
+                modalContext,
+              ).closeButtonTooltip,
               onPressed: () => Navigator.of(modalContext).pop(),
             ),
           ),

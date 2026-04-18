@@ -84,7 +84,9 @@ extension _HistoryRepositoryLoadersPrimary on HistoryRepository {
     return result;
   }
 
-  Future<List<HistoryCustomFieldValue>> _loadLiveCustomFields(String itemId) async {
+  Future<List<HistoryCustomFieldValue>> _loadLiveCustomFields(
+    String itemId,
+  ) async {
     final rows = await store.customFieldDao.getByItemId(itemId);
     return rows
         .map(
@@ -201,17 +203,20 @@ extension _HistoryRepositoryLoadersPrimary on HistoryRepository {
   }
 
   Future<List<_HistorySnapshot>> _loadPasswordHistory(String id) async {
-    final query = store.select(store.vaultItemHistory).join([
-      innerJoin(
-        store.passwordHistory,
-        store.passwordHistory.historyId.equalsExp(store.vaultItemHistory.id),
-      ),
-    ])
-      ..where(
-        store.vaultItemHistory.itemId.equals(id) &
-            store.vaultItemHistory.type.equalsValue(VaultItemType.password),
-      )
-      ..orderBy([OrderingTerm.desc(store.vaultItemHistory.actionAt)]);
+    final query =
+        store.select(store.vaultItemHistory).join([
+            innerJoin(
+              store.passwordHistory,
+              store.passwordHistory.historyId.equalsExp(
+                store.vaultItemHistory.id,
+              ),
+            ),
+          ])
+          ..where(
+            store.vaultItemHistory.itemId.equals(id) &
+                store.vaultItemHistory.type.equalsValue(VaultItemType.password),
+          )
+          ..orderBy([OrderingTerm.desc(store.vaultItemHistory.actionAt)]);
     final rows = await query.get();
     final historyFields = await _loadHistoryCustomFields(
       rows.map((row) => row.readTable(store.vaultItemHistory).id),
@@ -307,17 +312,18 @@ extension _HistoryRepositoryLoadersPrimary on HistoryRepository {
   }
 
   Future<List<_HistorySnapshot>> _loadNoteHistory(String id) async {
-    final query = store.select(store.vaultItemHistory).join([
-      innerJoin(
-        store.noteHistory,
-        store.noteHistory.historyId.equalsExp(store.vaultItemHistory.id),
-      ),
-    ])
-      ..where(
-        store.vaultItemHistory.itemId.equals(id) &
-            store.vaultItemHistory.type.equalsValue(VaultItemType.note),
-      )
-      ..orderBy([OrderingTerm.desc(store.vaultItemHistory.actionAt)]);
+    final query =
+        store.select(store.vaultItemHistory).join([
+            innerJoin(
+              store.noteHistory,
+              store.noteHistory.historyId.equalsExp(store.vaultItemHistory.id),
+            ),
+          ])
+          ..where(
+            store.vaultItemHistory.itemId.equals(id) &
+                store.vaultItemHistory.type.equalsValue(VaultItemType.note),
+          )
+          ..orderBy([OrderingTerm.desc(store.vaultItemHistory.actionAt)]);
     final rows = await query.get();
     final historyFields = await _loadHistoryCustomFields(
       rows.map((row) => row.readTable(store.vaultItemHistory).id),
@@ -403,7 +409,12 @@ extension _HistoryRepositoryLoadersPrimaryMore on HistoryRepository {
         'accountNumber': item.accountNumber,
         'routingNumber': item.routingNumber,
       },
-      sensitiveKeys: const {'cardNumber', 'cvv', 'accountNumber', 'routingNumber'},
+      sensitiveKeys: const {
+        'cardNumber',
+        'cvv',
+        'accountNumber',
+        'routingNumber',
+      },
       usedCount: vault.usedCount,
       isFavorite: vault.isFavorite,
       isArchived: vault.isArchived,
@@ -420,17 +431,20 @@ extension _HistoryRepositoryLoadersPrimaryMore on HistoryRepository {
   }
 
   Future<List<_HistorySnapshot>> _loadBankCardHistory(String id) async {
-    final query = store.select(store.vaultItemHistory).join([
-      innerJoin(
-        store.bankCardHistory,
-        store.bankCardHistory.historyId.equalsExp(store.vaultItemHistory.id),
-      ),
-    ])
-      ..where(
-        store.vaultItemHistory.itemId.equals(id) &
-            store.vaultItemHistory.type.equalsValue(VaultItemType.bankCard),
-      )
-      ..orderBy([OrderingTerm.desc(store.vaultItemHistory.actionAt)]);
+    final query =
+        store.select(store.vaultItemHistory).join([
+            innerJoin(
+              store.bankCardHistory,
+              store.bankCardHistory.historyId.equalsExp(
+                store.vaultItemHistory.id,
+              ),
+            ),
+          ])
+          ..where(
+            store.vaultItemHistory.itemId.equals(id) &
+                store.vaultItemHistory.type.equalsValue(VaultItemType.bankCard),
+          )
+          ..orderBy([OrderingTerm.desc(store.vaultItemHistory.actionAt)]);
     final rows = await query.get();
     final historyFields = await _loadHistoryCustomFields(
       rows.map((row) => row.readTable(store.vaultItemHistory).id),
@@ -469,7 +483,12 @@ extension _HistoryRepositoryLoadersPrimaryMore on HistoryRepository {
           'accountNumber': item.accountNumber,
           'routingNumber': item.routingNumber,
         },
-        sensitiveKeys: const {'cardNumber', 'cvv', 'accountNumber', 'routingNumber'},
+        sensitiveKeys: const {
+          'cardNumber',
+          'cvv',
+          'accountNumber',
+          'routingNumber',
+        },
         usedCount: vault.usedCount,
         isFavorite: vault.isFavorite,
         isArchived: vault.isArchived,
@@ -538,17 +557,18 @@ extension _HistoryRepositoryLoadersPrimaryMore on HistoryRepository {
   }
 
   Future<List<_HistorySnapshot>> _loadFileHistory(String id) async {
-    final query = store.select(store.vaultItemHistory).join([
-      leftOuterJoin(
-        store.fileHistory,
-        store.fileHistory.historyId.equalsExp(store.vaultItemHistory.id),
-      ),
-    ])
-      ..where(
-        store.vaultItemHistory.itemId.equals(id) &
-            store.vaultItemHistory.type.equalsValue(VaultItemType.file),
-      )
-      ..orderBy([OrderingTerm.desc(store.vaultItemHistory.actionAt)]);
+    final query =
+        store.select(store.vaultItemHistory).join([
+            leftOuterJoin(
+              store.fileHistory,
+              store.fileHistory.historyId.equalsExp(store.vaultItemHistory.id),
+            ),
+          ])
+          ..where(
+            store.vaultItemHistory.itemId.equals(id) &
+                store.vaultItemHistory.type.equalsValue(VaultItemType.file),
+          )
+          ..orderBy([OrderingTerm.desc(store.vaultItemHistory.actionAt)]);
     final rows = await query.get();
     final historyFields = await _loadHistoryCustomFields(
       rows.map((row) => row.readTable(store.vaultItemHistory).id),
@@ -561,7 +581,9 @@ extension _HistoryRepositoryLoadersPrimaryMore on HistoryRepository {
           ? null
           : await store.fileDao.getFileMetadataById(item!.metadataId!);
       final canRestore =
-          item?.metadataId != null && metadata != null && metadata.filePath != null
+          item?.metadataId != null &&
+              metadata != null &&
+              metadata.filePath != null
           ? await File(metadata.filePath!).exists()
           : false;
       snapshots.add(
@@ -668,17 +690,18 @@ extension _HistoryRepositoryLoadersPrimaryMore on HistoryRepository {
   }
 
   Future<List<_HistorySnapshot>> _loadOtpHistory(String id) async {
-    final query = store.select(store.vaultItemHistory).join([
-      innerJoin(
-        store.otpHistory,
-        store.otpHistory.historyId.equalsExp(store.vaultItemHistory.id),
-      ),
-    ])
-      ..where(
-        store.vaultItemHistory.itemId.equals(id) &
-            store.vaultItemHistory.type.equalsValue(VaultItemType.otp),
-      )
-      ..orderBy([OrderingTerm.desc(store.vaultItemHistory.actionAt)]);
+    final query =
+        store.select(store.vaultItemHistory).join([
+            innerJoin(
+              store.otpHistory,
+              store.otpHistory.historyId.equalsExp(store.vaultItemHistory.id),
+            ),
+          ])
+          ..where(
+            store.vaultItemHistory.itemId.equals(id) &
+                store.vaultItemHistory.type.equalsValue(VaultItemType.otp),
+          )
+          ..orderBy([OrderingTerm.desc(store.vaultItemHistory.actionAt)]);
     final rows = await query.get();
     final historyFields = await _loadHistoryCustomFields(
       rows.map((row) => row.readTable(store.vaultItemHistory).id),
@@ -774,23 +797,29 @@ extension _HistoryRepositoryLoadersPrimaryMore on HistoryRepository {
       originalCreatedAt: vault.createdAt,
       originalModifiedAt: vault.modifiedAt,
       customFields: customFields,
-      restoreWarnings: [..._genericWarnings(), t.history.document_partial_restore],
+      restoreWarnings: [
+        ..._genericWarnings(),
+        t.history.document_partial_restore,
+      ],
       isRestorable: true,
     );
   }
 
   Future<List<_HistorySnapshot>> _loadDocumentHistory(String id) async {
-    final query = store.select(store.vaultItemHistory).join([
-      innerJoin(
-        store.documentHistory,
-        store.documentHistory.historyId.equalsExp(store.vaultItemHistory.id),
-      ),
-    ])
-      ..where(
-        store.vaultItemHistory.itemId.equals(id) &
-            store.vaultItemHistory.type.equalsValue(VaultItemType.document),
-      )
-      ..orderBy([OrderingTerm.desc(store.vaultItemHistory.actionAt)]);
+    final query =
+        store.select(store.vaultItemHistory).join([
+            innerJoin(
+              store.documentHistory,
+              store.documentHistory.historyId.equalsExp(
+                store.vaultItemHistory.id,
+              ),
+            ),
+          ])
+          ..where(
+            store.vaultItemHistory.itemId.equals(id) &
+                store.vaultItemHistory.type.equalsValue(VaultItemType.document),
+          )
+          ..orderBy([OrderingTerm.desc(store.vaultItemHistory.actionAt)]);
     final rows = await query.get();
     final historyFields = await _loadHistoryCustomFields(
       rows.map((row) => row.readTable(store.vaultItemHistory).id),
@@ -833,7 +862,10 @@ extension _HistoryRepositoryLoadersPrimaryMore on HistoryRepository {
         originalCreatedAt: vault.originalCreatedAt,
         originalModifiedAt: vault.originalModifiedAt,
         customFields: historyFields[vault.id] ?? const [],
-        restoreWarnings: [..._genericWarnings(), t.history.document_partial_restore],
+        restoreWarnings: [
+          ..._genericWarnings(),
+          t.history.document_partial_restore,
+        ],
         isRestorable: true,
       );
     }).toList();

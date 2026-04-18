@@ -18,6 +18,7 @@ class CertificateGridCard extends ConsumerStatefulWidget {
     this.onToggleArchive,
     this.onDelete,
     this.onRestore,
+    this.onOpenView,
   });
 
   final CertificateCardDto certificate;
@@ -26,6 +27,7 @@ class CertificateGridCard extends ConsumerStatefulWidget {
   final VoidCallback? onToggleArchive;
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
+  final VoidCallback? onOpenView;
 
   @override
   ConsumerState<CertificateGridCard> createState() =>
@@ -83,6 +85,7 @@ class _CertificateGridCardState extends ConsumerState<CertificateGridCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onEdit: () {
         context.push(
           AppRoutesPaths.dashboardEntityEdit(

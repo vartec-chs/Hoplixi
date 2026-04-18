@@ -35,11 +35,39 @@ class VaultItemDao extends DatabaseAccessor<MainStore>
     return result > 0;
   }
 
+  /// Массово выставить флаг избранного.
+  Future<int> bulkSetFavorite(List<String> ids, bool isFavorite) async {
+    if (ids.isEmpty) {
+      return 0;
+    }
+
+    return (update(vaultItems)..where((v) => v.id.isIn(ids))).write(
+      VaultItemsCompanion(
+        isFavorite: Value(isFavorite),
+        modifiedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
   /// Переключить закрепление
   Future<bool> togglePin(String id, bool isPinned) async {
     final result = await (update(vaultItems)..where((v) => v.id.equals(id)))
         .write(VaultItemsCompanion(isPinned: Value(isPinned)));
     return result > 0;
+  }
+
+  /// Массово выставить закрепление.
+  Future<int> bulkSetPin(List<String> ids, bool isPinned) async {
+    if (ids.isEmpty) {
+      return 0;
+    }
+
+    return (update(vaultItems)..where((v) => v.id.isIn(ids))).write(
+      VaultItemsCompanion(
+        isPinned: Value(isPinned),
+        modifiedAt: Value(DateTime.now()),
+      ),
+    );
   }
 
   /// Переключить архивирование
@@ -49,11 +77,36 @@ class VaultItemDao extends DatabaseAccessor<MainStore>
     return result > 0;
   }
 
+  /// Массово выставить архивный статус.
+  Future<int> bulkSetArchive(List<String> ids, bool isArchived) async {
+    if (ids.isEmpty) {
+      return 0;
+    }
+
+    return (update(vaultItems)..where((v) => v.id.isIn(ids))).write(
+      VaultItemsCompanion(
+        isArchived: Value(isArchived),
+        modifiedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
   /// Мягкое удаление
   Future<bool> softDelete(String id) async {
     final result = await (update(vaultItems)..where((v) => v.id.equals(id)))
         .write(const VaultItemsCompanion(isDeleted: Value(true)));
     return result > 0;
+  }
+
+  /// Массовое мягкое удаление.
+  Future<int> bulkSoftDelete(List<String> ids) async {
+    if (ids.isEmpty) {
+      return 0;
+    }
+
+    return (update(vaultItems)..where((v) => v.id.isIn(ids))).write(
+      const VaultItemsCompanion(isDeleted: Value(true)),
+    );
   }
 
   /// Восстановить из удалённых
@@ -73,6 +126,20 @@ class VaultItemDao extends DatabaseAccessor<MainStore>
           ),
         );
     return result > 0;
+  }
+
+  /// Массовая смена категории.
+  Future<int> bulkSetCategory(List<String> ids, String? categoryId) async {
+    if (ids.isEmpty) {
+      return 0;
+    }
+
+    return (update(vaultItems)..where((v) => v.id.isIn(ids))).write(
+      VaultItemsCompanion(
+        categoryId: Value(categoryId),
+        modifiedAt: Value(DateTime.now()),
+      ),
+    );
   }
 
   /// Полное удаление (CASCADE удалит type-specific)
@@ -131,26 +198,43 @@ class VaultItemDao extends DatabaseAccessor<MainStore>
   /// Синхронизировать теги элемента (diff-based)
   Future<void> syncTags(String itemId, List<String> tagIds) async {
     await db.transaction(() async {
-      final existing = await (select(
-        itemTags,
-      )..where((t) => t.itemId.equals(itemId))).get();
-      final existingIds = existing.map((r) => r.tagId).toSet();
-      final newIds = tagIds.toSet();
+      await _syncTagsInternal(itemId, tagIds);
+    });
+  }
 
-      final toDelete = existingIds.difference(newIds);
-      if (toDelete.isNotEmpty) {
-        await (delete(
-          itemTags,
-        )..where((t) => t.itemId.equals(itemId) & t.tagId.isIn(toDelete))).go();
-      }
+  /// Массовая синхронизация тегов для нескольких элементов.
+  Future<void> bulkSyncTags(List<String> ids, List<String> tagIds) async {
+    if (ids.isEmpty) {
+      return;
+    }
 
-      final toInsert = newIds.difference(existingIds);
-      for (final tagId in toInsert) {
-        await into(
-          itemTags,
-        ).insert(ItemTagsCompanion.insert(itemId: itemId, tagId: tagId));
+    await db.transaction(() async {
+      for (final itemId in ids) {
+        await _syncTagsInternal(itemId, tagIds);
       }
     });
+  }
+
+  Future<void> _syncTagsInternal(String itemId, List<String> tagIds) async {
+    final existing = await (select(
+      itemTags,
+    )..where((t) => t.itemId.equals(itemId))).get();
+    final existingIds = existing.map((r) => r.tagId).toSet();
+    final newIds = tagIds.toSet();
+
+    final toDelete = existingIds.difference(newIds);
+    if (toDelete.isNotEmpty) {
+      await (delete(
+        itemTags,
+      )..where((t) => t.itemId.equals(itemId) & t.tagId.isIn(toDelete))).go();
+    }
+
+    final toInsert = newIds.difference(existingIds);
+    for (final tagId in toInsert) {
+      await into(
+        itemTags,
+      ).insert(ItemTagsCompanion.insert(itemId: itemId, tagId: tagId));
+    }
   }
 
   Future<List<LinkedVaultItemCardDto>> searchLinkableItems({

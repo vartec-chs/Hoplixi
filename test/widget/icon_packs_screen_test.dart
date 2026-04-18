@@ -19,9 +19,7 @@ void main() {
     tempDir = await Directory.systemTemp.createTemp('icon_packs_screen_test_');
     service = IconPackCatalogService(rootPath: tempDir.path);
     container = ProviderContainer(
-      overrides: [
-        iconPackCatalogServiceProvider.overrideWithValue(service),
-      ],
+      overrides: [iconPackCatalogServiceProvider.overrideWithValue(service)],
     );
   });
 
@@ -47,11 +45,13 @@ void main() {
     );
     await tester.pump();
 
-    container.read(iconPacksNotifierProvider.notifier).setImportDraft(
-      sourcePath: archiveFile.path,
-      sourceType: IconPackImportSourceType.archive,
-      displayName: 'Demo Pack',
-    );
+    container
+        .read(iconPacksNotifierProvider.notifier)
+        .setImportDraft(
+          sourcePath: archiveFile.path,
+          sourceType: IconPackImportSourceType.archive,
+          displayName: 'Demo Pack',
+        );
     await tester.pump();
 
     expect(find.text('Demo Pack'), findsOneWidget);
@@ -86,11 +86,13 @@ void main() {
     );
     await tester.pump();
 
-    container.read(iconPacksNotifierProvider.notifier).setImportDraft(
-      sourcePath: archiveFile.path,
-      sourceType: IconPackImportSourceType.archive,
-      displayName: 'Duplicate Pack',
-    );
+    container
+        .read(iconPacksNotifierProvider.notifier)
+        .setImportDraft(
+          sourcePath: archiveFile.path,
+          sourceType: IconPackImportSourceType.archive,
+          displayName: 'Duplicate Pack',
+        );
     await tester.pump();
 
     await tester.tap(find.widgetWithText(FilledButton, 'Импортировать'));
@@ -104,8 +106,9 @@ void main() {
 
   testWidgets('imports selected folder and refreshes list', (tester) async {
     final sourceDirectory = Directory(p.join(tempDir.path, 'folder-import'));
-    await Directory(p.join(sourceDirectory.path, 'folder-import', 'icons'))
-        .create(recursive: true);
+    await Directory(
+      p.join(sourceDirectory.path, 'folder-import', 'icons'),
+    ).create(recursive: true);
     await File(
       p.join(sourceDirectory.path, 'folder-import', 'icons', 'github.svg'),
     ).writeAsString('<svg>github-folder</svg>');
@@ -118,11 +121,13 @@ void main() {
     );
     await tester.pump();
 
-    container.read(iconPacksNotifierProvider.notifier).setImportDraft(
-      sourcePath: sourceDirectory.path,
-      sourceType: IconPackImportSourceType.directory,
-      displayName: 'Folder Import',
-    );
+    container
+        .read(iconPacksNotifierProvider.notifier)
+        .setImportDraft(
+          sourcePath: sourceDirectory.path,
+          sourceType: IconPackImportSourceType.directory,
+          displayName: 'Folder Import',
+        );
     await tester.pump();
 
     expect(find.text('Источник: папка'), findsOneWidget);

@@ -41,4 +41,3 @@ const List<String> vaultItemsTimestampDropTriggers = [
   'DROP TRIGGER IF EXISTS insert_vault_items_timestamps;',
   'DROP TRIGGER IF EXISTS update_vault_items_modified_at;',
 ];
-

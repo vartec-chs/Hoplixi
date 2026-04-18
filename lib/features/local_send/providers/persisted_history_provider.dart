@@ -4,9 +4,10 @@ import 'package:hoplixi/features/local_send/services/local_send_history_service.
 
 /// Провайдер для управления персистентной историей обменов.
 final persistedHistoryProvider =
-    AsyncNotifierProvider.autoDispose<PersistedHistoryNotifier, List<HistoryItem>>(
-      PersistedHistoryNotifier.new,
-    );
+    AsyncNotifierProvider.autoDispose<
+      PersistedHistoryNotifier,
+      List<HistoryItem>
+    >(PersistedHistoryNotifier.new);
 
 class PersistedHistoryNotifier extends AsyncNotifier<List<HistoryItem>> {
   @override

@@ -16,6 +16,7 @@ class CertificateListCard extends ConsumerStatefulWidget {
     this.onDelete,
     this.onRestore,
     this.onOpenHistory,
+    this.onOpenView,
   });
 
   final CertificateCardDto certificate;
@@ -25,6 +26,7 @@ class CertificateListCard extends ConsumerStatefulWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
   final VoidCallback? onOpenHistory;
+  final VoidCallback? onOpenView;
 
   @override
   ConsumerState<CertificateListCard> createState() =>
@@ -140,6 +142,7 @@ class _CertificateListCardState extends ConsumerState<CertificateListCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onOpenHistory: widget.onOpenHistory,
       copyActions: _buildCopyActions(),
     );

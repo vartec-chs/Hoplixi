@@ -35,7 +35,7 @@ class RecoveryCodesHistoryDao extends DatabaseAccessor<MainStore>
       where =
           where &
           (vaultItemHistory.name.like(q) |
-            recoveryCodesHistory.displayHint.like(q));
+              recoveryCodesHistory.displayHint.like(q));
     }
 
     query
@@ -70,7 +70,7 @@ class RecoveryCodesHistoryDao extends DatabaseAccessor<MainStore>
       final q = '%$searchQuery%';
       query.where(
         vaultItemHistory.name.like(q) |
-        recoveryCodesHistory.displayHint.like(q),
+            recoveryCodesHistory.displayHint.like(q),
       );
     }
 
@@ -79,7 +79,9 @@ class RecoveryCodesHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<int> deleteRecoveryCodesHistoryById(String historyId) {
-    return (delete(vaultItemHistory)..where((h) => h.id.equals(historyId))).go();
+    return (delete(
+      vaultItemHistory,
+    )..where((h) => h.id.equals(historyId))).go();
   }
 
   Future<int> deleteRecoveryCodesHistoryByRecoveryCodesId(

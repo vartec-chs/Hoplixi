@@ -14,12 +14,10 @@ const Duration _kSearchDebounce = Duration(milliseconds: 300);
 
 /// Провайдер для управления состоянием фильтра в drawer
 /// Family по EntityType для правильной фильтрации по типу
-final drawerFilterProvider =
-    AsyncNotifierProvider.autoDispose.family<
-      DrawerFilterNotifier,
-      DrawerFilterState,
-      EntityType
-    >(DrawerFilterNotifier.new);
+final drawerFilterProvider = AsyncNotifierProvider.autoDispose
+    .family<DrawerFilterNotifier, DrawerFilterState, EntityType>(
+      DrawerFilterNotifier.new,
+    );
 
 class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
   static const String _logTag = 'DrawerFilterNotifier';

@@ -156,10 +156,7 @@ class IconPacksNotifier extends Notifier<IconPacksState> {
             'Пак "${importedPack.displayName}" успешно импортирован.',
       );
     } on IconPackCatalogException catch (error) {
-      state = state.copyWith(
-        isImporting: false,
-        errorMessage: error.message,
-      );
+      state = state.copyWith(isImporting: false, errorMessage: error.message);
     } catch (error, stackTrace) {
       logError(
         'Failed to import selected icon pack: $error',

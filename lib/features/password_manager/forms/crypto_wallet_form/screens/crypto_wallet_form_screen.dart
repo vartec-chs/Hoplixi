@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
@@ -280,7 +280,8 @@ class _CryptoWalletFormScreenState
                   controller: _derivationSchemeController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.derivation_scheme_label,
+                    labelText:
+                        context.t.dashboard_forms.derivation_scheme_label,
                     prefixIcon: const Icon(LucideIcons.settings),
                   ),
                   onChanged: notifier.setDerivationScheme,

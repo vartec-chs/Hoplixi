@@ -119,6 +119,11 @@ class DashboardHomeBuilders {
     required GlobalKey<SliverAnimatedListState> listKey,
     required GlobalKey<SliverAnimatedGridState> gridKey,
     required DashboardCardCallbacks callbacks,
+    required bool isBulkMode,
+    required Set<String> selectedIds,
+    required void Function(String id) onItemTap,
+    required void Function(String id) onItemLongPress,
+    required void Function(String id) onOpenView,
     required VoidCallback onInvalidate,
   }) {
     final hasDisplayedItems = displayedItems.isNotEmpty;
@@ -135,6 +140,11 @@ class DashboardHomeBuilders {
         listKey: listKey,
         gridKey: gridKey,
         callbacks: callbacks,
+        isBulkMode: isBulkMode,
+        selectedIds: selectedIds,
+        onItemTap: onItemTap,
+        onItemLongPress: onItemLongPress,
+        onOpenView: onOpenView,
       );
     }
 
@@ -160,6 +170,11 @@ class DashboardHomeBuilders {
           listKey: listKey,
           gridKey: gridKey,
           callbacks: callbacks,
+          isBulkMode: isBulkMode,
+          selectedIds: selectedIds,
+          onItemTap: onItemTap,
+          onItemLongPress: onItemLongPress,
+          onOpenView: onOpenView,
         ),
         SliverAnimatedSwitcher(
           duration: kStatusSwitchDuration,
@@ -233,6 +248,11 @@ class DashboardHomeBuilders {
     required GlobalKey<SliverAnimatedListState> listKey,
     required GlobalKey<SliverAnimatedGridState> gridKey,
     required DashboardCardCallbacks callbacks,
+    required bool isBulkMode,
+    required Set<String> selectedIds,
+    required void Function(String id) onItemTap,
+    required void Function(String id) onItemLongPress,
+    required void Function(String id) onOpenView,
     Key? key,
   }) {
     final hasMore = state?.hasMore ?? false;
@@ -250,6 +270,11 @@ class DashboardHomeBuilders {
                   entityType: entityType,
                   viewMode: viewMode,
                   callbacks: callbacks,
+                  isBulkMode: isBulkMode,
+                  selectedIds: selectedIds,
+                  onItemTap: onItemTap,
+                  onItemLongPress: onItemLongPress,
+                  onOpenView: onOpenView,
                 )
               : _buildSliverList(
                   displayedItems: displayedItems,
@@ -258,6 +283,11 @@ class DashboardHomeBuilders {
                   entityType: entityType,
                   viewMode: viewMode,
                   callbacks: callbacks,
+                  isBulkMode: isBulkMode,
+                  selectedIds: selectedIds,
+                  onItemTap: onItemTap,
+                  onItemLongPress: onItemLongPress,
+                  onOpenView: onOpenView,
                 ))
         : (useAnimatedSliver
               ? _buildSliverAnimatedGrid(
@@ -268,6 +298,11 @@ class DashboardHomeBuilders {
                   entityType: entityType,
                   viewMode: viewMode,
                   callbacks: callbacks,
+                  isBulkMode: isBulkMode,
+                  selectedIds: selectedIds,
+                  onItemTap: onItemTap,
+                  onItemLongPress: onItemLongPress,
+                  onOpenView: onOpenView,
                 )
               : _buildSliverGrid(
                   displayedItems: displayedItems,
@@ -276,6 +311,11 @@ class DashboardHomeBuilders {
                   entityType: entityType,
                   viewMode: viewMode,
                   callbacks: callbacks,
+                  isBulkMode: isBulkMode,
+                  selectedIds: selectedIds,
+                  onItemTap: onItemTap,
+                  onItemLongPress: onItemLongPress,
+                  onOpenView: onOpenView,
                 ));
 
     return SliverMainAxisGroup(
@@ -300,6 +340,11 @@ class DashboardHomeBuilders {
     required EntityType entityType,
     required ViewMode viewMode,
     required DashboardCardCallbacks callbacks,
+    required bool isBulkMode,
+    required Set<String> selectedIds,
+    required void Function(String id) onItemTap,
+    required void Function(String id) onItemLongPress,
+    required void Function(String id) onOpenView,
   }) {
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -316,6 +361,11 @@ class DashboardHomeBuilders {
             viewMode: viewMode,
             entityType: entityType,
             callbacks: callbacks,
+            isBulkMode: isBulkMode,
+            selectedIds: selectedIds,
+            onItemTap: onItemTap,
+            onItemLongPress: onItemLongPress,
+            onOpenView: onOpenView,
           );
         },
       ),
@@ -330,6 +380,11 @@ class DashboardHomeBuilders {
     required EntityType entityType,
     required ViewMode viewMode,
     required DashboardCardCallbacks callbacks,
+    required bool isBulkMode,
+    required Set<String> selectedIds,
+    required void Function(String id) onItemTap,
+    required void Function(String id) onItemLongPress,
+    required void Function(String id) onOpenView,
   }) {
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -352,6 +407,11 @@ class DashboardHomeBuilders {
             viewMode: viewMode,
             entityType: entityType,
             callbacks: callbacks,
+            isBulkMode: isBulkMode,
+            selectedIds: selectedIds,
+            onItemTap: onItemTap,
+            onItemLongPress: onItemLongPress,
+            onOpenView: onOpenView,
           );
         },
       ),
@@ -365,6 +425,11 @@ class DashboardHomeBuilders {
     required EntityType entityType,
     required ViewMode viewMode,
     required DashboardCardCallbacks callbacks,
+    required bool isBulkMode,
+    required Set<String> selectedIds,
+    required void Function(String id) onItemTap,
+    required void Function(String id) onItemLongPress,
+    required void Function(String id) onOpenView,
   }) {
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -381,6 +446,11 @@ class DashboardHomeBuilders {
             viewMode: viewMode,
             entityType: entityType,
             callbacks: callbacks,
+            isBulkMode: isBulkMode,
+            selectedIds: selectedIds,
+            onItemTap: onItemTap,
+            onItemLongPress: onItemLongPress,
+            onOpenView: onOpenView,
           );
         }, childCount: displayedItems.length),
       ),
@@ -394,6 +464,11 @@ class DashboardHomeBuilders {
     required EntityType entityType,
     required ViewMode viewMode,
     required DashboardCardCallbacks callbacks,
+    required bool isBulkMode,
+    required Set<String> selectedIds,
+    required void Function(String id) onItemTap,
+    required void Function(String id) onItemLongPress,
+    required void Function(String id) onOpenView,
   }) {
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -416,6 +491,11 @@ class DashboardHomeBuilders {
             viewMode: viewMode,
             entityType: entityType,
             callbacks: callbacks,
+            isBulkMode: isBulkMode,
+            selectedIds: selectedIds,
+            onItemTap: onItemTap,
+            onItemLongPress: onItemLongPress,
+            onOpenView: onOpenView,
           );
         }, childCount: displayedItems.length),
       ),
@@ -435,6 +515,11 @@ class DashboardHomeBuilders {
     required ViewMode viewMode,
     required EntityType entityType,
     required DashboardCardCallbacks callbacks,
+    required bool isBulkMode,
+    required Set<String> selectedIds,
+    required void Function(String id) onItemTap,
+    required void Function(String id) onItemLongPress,
+    required void Function(String id) onOpenView,
   }) {
     final card = viewMode == ViewMode.list
         ? buildListCardFor(
@@ -443,6 +528,11 @@ class DashboardHomeBuilders {
             type: entityType,
             item: item,
             callbacks: callbacks,
+            isBulkMode: isBulkMode,
+            isSelected: selectedIds.contains(item.id),
+            onItemTap: onItemTap,
+            onItemLongPress: onItemLongPress,
+            onOpenView: onOpenView,
           )
         : buildGridCardFor(
             context: context,
@@ -450,6 +540,11 @@ class DashboardHomeBuilders {
             type: entityType,
             item: item,
             callbacks: callbacks,
+            isBulkMode: isBulkMode,
+            isSelected: selectedIds.contains(item.id),
+            onItemTap: onItemTap,
+            onItemLongPress: onItemLongPress,
+            onOpenView: onOpenView,
           );
 
     return FadeScaleTransition(
@@ -474,6 +569,11 @@ class DashboardHomeBuilders {
     required ViewMode viewMode,
     required EntityType entityType,
     required DashboardCardCallbacks callbacks,
+    required bool isBulkMode,
+    required Set<String> selectedIds,
+    required void Function(String id) onItemTap,
+    required void Function(String id) onItemLongPress,
+    required void Function(String id) onOpenView,
   }) {
     final card = viewMode == ViewMode.list
         ? buildListCardFor(
@@ -482,6 +582,11 @@ class DashboardHomeBuilders {
             type: entityType,
             item: item,
             callbacks: callbacks,
+            isBulkMode: isBulkMode,
+            isSelected: selectedIds.contains(item.id),
+            onItemTap: onItemTap,
+            onItemLongPress: onItemLongPress,
+            onOpenView: onOpenView,
           )
         : buildGridCardFor(
             context: context,
@@ -489,6 +594,11 @@ class DashboardHomeBuilders {
             type: entityType,
             item: item,
             callbacks: callbacks,
+            isBulkMode: isBulkMode,
+            isSelected: selectedIds.contains(item.id),
+            onItemTap: onItemTap,
+            onItemLongPress: onItemLongPress,
+            onOpenView: onOpenView,
           );
 
     return Padding(
@@ -514,6 +624,11 @@ class DashboardHomeBuilders {
             type: entityType,
             item: item,
             callbacks: callbacks,
+            isBulkMode: false,
+            isSelected: false,
+            onItemTap: (_) {},
+            onItemLongPress: (_) {},
+            onOpenView: (_) {},
             isDismissible: false,
           )
         : buildGridCardFor(
@@ -522,11 +637,100 @@ class DashboardHomeBuilders {
             type: entityType,
             item: item,
             callbacks: callbacks,
+            isBulkMode: false,
+            isSelected: false,
+            onItemTap: (_) {},
+            onItemLongPress: (_) {},
+            onOpenView: (_) {},
           );
 
     return FadeTransition(
       opacity: animation,
       child: SizeTransition(sizeFactor: animation, child: card),
+    );
+  }
+
+  static Widget _wrapInteractiveCard({
+    required BuildContext context,
+    required Widget child,
+    required String itemId,
+    required bool isBulkMode,
+    required bool isSelected,
+    required void Function(String id) onItemTap,
+    required void Function(String id) onItemLongPress,
+  }) {
+    final radius = BorderRadius.circular(16);
+    final theme = Theme.of(context);
+
+    if (isBulkMode) {
+      return Stack(
+        children: [
+          IgnorePointer(ignoring: true, child: child),
+          Positioned.fill(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: radius,
+                onTap: () => onItemTap(itemId),
+                onLongPress: () => onItemLongPress(itemId),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: AnimatedContainer(
+                duration: kStatusSwitchDuration,
+                decoration: BoxDecoration(
+                  borderRadius: radius,
+                  border: Border.all(
+                    color: isSelected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.outline.withValues(alpha: 0.25),
+                    width: isSelected ? 2 : 1,
+                  ),
+                  color: isSelected
+                      ? theme.colorScheme.primary.withValues(alpha: 0.08)
+                      : Colors.transparent,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 12,
+            left: 12,
+            child: IgnorePointer(
+              child: AnimatedContainer(
+                duration: kStatusSwitchDuration,
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.surfaceContainerHighest,
+                  border: Border.all(
+                    color: isSelected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.outline.withValues(alpha: 0.35),
+                  ),
+                ),
+                child: Icon(
+                  isSelected ? Icons.check : Icons.circle_outlined,
+                  size: 14,
+                  color: isSelected
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return GestureDetector(
+      onLongPress: () => onItemLongPress(itemId),
+      child: child,
     );
   }
 
@@ -645,6 +849,11 @@ class DashboardHomeBuilders {
     required EntityType type,
     required BaseCardDto item,
     required DashboardCardCallbacks callbacks,
+    required bool isBulkMode,
+    required bool isSelected,
+    required void Function(String id) onItemTap,
+    required void Function(String id) onItemLongPress,
+    required void Function(String id) onOpenView,
     bool isDismissible = true,
   }) {
     final noCorrectType = Text(
@@ -665,6 +874,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
           onOpenHistory: () {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -690,6 +900,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
           onOpenHistory: () {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -715,6 +926,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
           onOpenHistory: () => {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -741,6 +953,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
           onDecrypt: () => showFileDecryptModal(context, item),
           onOpenHistory: () => {
             if (location !=
@@ -768,6 +981,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
           onOpenHistory: () => {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -794,6 +1008,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
           onDecrypt: () => showDocumentDecryptModal(context, item),
           onOpenHistory: () => {
             if (location !=
@@ -821,6 +1036,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
           onOpenHistory: () {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -846,6 +1062,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
           onOpenHistory: () {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -871,6 +1088,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
           onOpenHistory: () {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -896,6 +1114,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
           onOpenHistory: () {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -921,6 +1140,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
           onOpenHistory: () {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -946,6 +1166,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
           onOpenHistory: () {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -971,6 +1192,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
           onOpenHistory: () {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -996,6 +1218,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
           onOpenHistory: () {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -1021,6 +1244,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
           onOpenHistory: () {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -1046,6 +1270,7 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
           onOpenHistory: () {
             if (location !=
                 AppRoutesPaths.dashboardHistoryWithParams(
@@ -1064,15 +1289,14 @@ class DashboardHomeBuilders {
         break;
     }
 
-    // Обертка для долгого нажатия -> открытие view
-    final wrappedCard = GestureDetector(
-      onLongPress: () {
-        final viewPath = AppRoutesPaths.dashboardEntityView(type, item.id);
-        if (GoRouter.of(context).state.matchedLocation != viewPath) {
-          context.push(viewPath);
-        }
-      },
+    final wrappedCard = _wrapInteractiveCard(
+      context: context,
       child: card,
+      itemId: item.id,
+      isBulkMode: isBulkMode,
+      isSelected: isSelected,
+      onItemTap: onItemTap,
+      onItemLongPress: onItemLongPress,
     );
 
     if (!isDismissible) return wrappedCard;
@@ -1348,6 +1572,11 @@ class DashboardHomeBuilders {
     required EntityType type,
     required BaseCardDto item,
     required DashboardCardCallbacks callbacks,
+    required bool isBulkMode,
+    required bool isSelected,
+    required void Function(String id) onItemTap,
+    required void Function(String id) onItemLongPress,
+    required void Function(String id) onOpenView,
   }) {
     final noCorrectType = Text(
       'No correct type for $type',
@@ -1365,7 +1594,9 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
         );
+        break;
       case EntityType.note:
         if (item is! NoteCardDto) return noCorrectType;
         card = NoteGridCard(
@@ -1375,7 +1606,9 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
         );
+        break;
       case EntityType.bankCard:
         if (item is! BankCardCardDto) return noCorrectType;
         card = BankCardGridCard(
@@ -1385,7 +1618,9 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
         );
+        break;
       case EntityType.file:
         if (item is! FileCardDto) return noCorrectType;
         card = FileGridCard(
@@ -1396,7 +1631,9 @@ class DashboardHomeBuilders {
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
           onDecrypt: () => showFileDecryptModal(context, item),
+          onOpenView: () => onOpenView(item.id),
         );
+        break;
       case EntityType.otp:
         if (item is! OtpCardDto) return noCorrectType;
         card = TotpGridCard(
@@ -1406,7 +1643,9 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
         );
+        break;
       case EntityType.document:
         if (item is! DocumentCardDto) return noCorrectType;
         card = DocumentGridCard(
@@ -1417,7 +1656,9 @@ class DashboardHomeBuilders {
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
           onDecrypt: () => showDocumentDecryptModal(context, item),
+          onOpenView: () => onOpenView(item.id),
         );
+        break;
       case EntityType.apiKey:
         if (item is! ApiKeyCardDto) return noCorrectType;
         card = ApiKeyGridCard(
@@ -1427,7 +1668,9 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
         );
+        break;
       case EntityType.contact:
         if (item is! ContactCardDto) return noCorrectType;
         card = ContactGridCard(
@@ -1437,7 +1680,9 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
         );
+        break;
       case EntityType.sshKey:
         if (item is! SshKeyCardDto) return noCorrectType;
         card = SshKeyGridCard(
@@ -1447,7 +1692,9 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
         );
+        break;
       case EntityType.certificate:
         if (item is! CertificateCardDto) return noCorrectType;
         card = CertificateGridCard(
@@ -1457,7 +1704,9 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
         );
+        break;
       case EntityType.cryptoWallet:
         if (item is! CryptoWalletCardDto) return noCorrectType;
         card = CryptoWalletGridCard(
@@ -1467,7 +1716,9 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
         );
+        break;
       case EntityType.wifi:
         if (item is! WifiCardDto) return noCorrectType;
         card = WifiGridCard(
@@ -1477,7 +1728,9 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
         );
+        break;
       case EntityType.identity:
         if (item is! IdentityCardDto) return noCorrectType;
         card = IdentityGridCard(
@@ -1487,7 +1740,9 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
         );
+        break;
       case EntityType.licenseKey:
         if (item is! LicenseKeyCardDto) return noCorrectType;
         card = LicenseKeyGridCard(
@@ -1497,7 +1752,9 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
         );
+        break;
       case EntityType.recoveryCodes:
         if (item is! RecoveryCodesCardDto) return noCorrectType;
         card = RecoveryCodesGridCard(
@@ -1507,7 +1764,9 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
         );
+        break;
       case EntityType.loyaltyCard:
         if (item is! LoyaltyCardCardDto) return noCorrectType;
         card = LoyaltyCardGridCard(
@@ -1517,18 +1776,19 @@ class DashboardHomeBuilders {
           onToggleArchive: () => callbacks.onToggleArchive(item.id),
           onDelete: () => callbacks.onDelete(item.id, item.isDeleted),
           onRestore: () => callbacks.onRestore(item.id),
+          onOpenView: () => onOpenView(item.id),
         );
+        break;
     }
 
-    // Обёртка для долгого нажатия -> открытие view
-    return GestureDetector(
-      onLongPress: () {
-        final viewPath = AppRoutesPaths.dashboardEntityView(type, item.id);
-        if (GoRouter.of(context).state.matchedLocation != viewPath) {
-          context.push(viewPath);
-        }
-      },
+    return _wrapInteractiveCard(
+      context: context,
       child: card,
+      itemId: item.id,
+      isBulkMode: isBulkMode,
+      isSelected: isSelected,
+      onItemTap: onItemTap,
+      onItemLongPress: onItemLongPress,
     );
   }
 }

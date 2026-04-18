@@ -18,6 +18,7 @@ class NoteListCard extends ConsumerStatefulWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
   final VoidCallback? onOpenHistory;
+  final VoidCallback? onOpenView;
 
   const NoteListCard({
     super.key,
@@ -29,6 +30,7 @@ class NoteListCard extends ConsumerStatefulWidget {
     this.onDelete,
     this.onRestore,
     this.onOpenHistory,
+    this.onOpenView,
   });
 
   @override
@@ -77,6 +79,7 @@ class _NoteListCardState extends ConsumerState<NoteListCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onOpenHistory: widget.onOpenHistory,
       copyActions: [
         CardActionItem(

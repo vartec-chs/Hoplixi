@@ -253,7 +253,12 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
                     _otp!.$2.algorithm.name,
                   ),
                   if (_categoryName != null)
-                    _info(theme, LucideIcons.folder, 'Категория', _categoryName!),
+                    _info(
+                      theme,
+                      LucideIcons.folder,
+                      'Категория',
+                      _categoryName!,
+                    ),
                   if (_tagNames.isNotEmpty) _tags(theme),
                   CustomFieldsViewSection(itemId: widget.otpId),
                   const SizedBox(height: 24),

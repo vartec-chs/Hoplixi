@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
@@ -154,7 +154,8 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
   }
 
   String? _validateName(String value) {
-    if (value.trim().isEmpty) return t.dashboard_forms.validation_required_contact_name;
+    if (value.trim().isEmpty)
+      return t.dashboard_forms.validation_required_contact_name;
     return null;
   }
 
@@ -244,7 +245,6 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
             tagsIds: current.tagIds,
           ),
         );
-
 
         await saveCustomFields(ref, id, current.customFields);
         ref

@@ -360,8 +360,8 @@ String _getTagTypeLabel(TagType type) {
       return 'Лицензии';
     case TagType.recoveryCodes:
       return 'Коды восстановления';
-      case TagType.loyaltyCard:
-        return 'Карты лояльности';
+    case TagType.loyaltyCard:
+      return 'Карты лояльности';
     case TagType.mixed:
       return 'Смешанная';
   }

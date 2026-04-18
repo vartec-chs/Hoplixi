@@ -15,6 +15,7 @@ class WifiListCard extends ConsumerStatefulWidget {
     this.onDelete,
     this.onRestore,
     this.onOpenHistory,
+    this.onOpenView,
   });
 
   final WifiCardDto wifi;
@@ -24,6 +25,7 @@ class WifiListCard extends ConsumerStatefulWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
   final VoidCallback? onOpenHistory;
+  final VoidCallback? onOpenView;
 
   @override
   ConsumerState<WifiListCard> createState() => _WifiListCardState();
@@ -96,6 +98,7 @@ class _WifiListCardState extends ConsumerState<WifiListCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onOpenHistory: widget.onOpenHistory,
       copyActions: [
         CardActionItem(

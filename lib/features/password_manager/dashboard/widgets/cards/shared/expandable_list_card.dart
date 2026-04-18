@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/db_core/models/dto/index.dart';
 import 'package:hoplixi/db_core/models/dto/tag_dto.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/shared/widgets/icon_ref_preview.dart';
 
 class ExpandableListCard extends StatefulWidget {
@@ -30,6 +30,7 @@ class ExpandableListCard extends StatefulWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
   final VoidCallback? onOpenHistory;
+  final VoidCallback? onOpenView;
 
   final List<CardActionItem> copyActions;
   final Widget? customExpandedContent;
@@ -60,6 +61,7 @@ class ExpandableListCard extends StatefulWidget {
     this.onDelete,
     this.onRestore,
     this.onOpenHistory,
+    this.onOpenView,
     required this.copyActions,
     this.customExpandedContent,
     this.onExpandedChanged,
@@ -176,10 +178,11 @@ class _ExpandableListCardState extends State<ExpandableListCard>
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: IconRefPreview(
-                  iconRef: IconRefDto.fromFields(
-                    iconSource: widget.iconSource,
-                    iconValue: widget.iconValue,
-                  ) ??
+                  iconRef:
+                      IconRefDto.fromFields(
+                        iconSource: widget.iconSource,
+                        iconValue: widget.iconValue,
+                      ) ??
                       widget.category?.effectiveIconRef,
                   fallbackIcon: widget.fallbackIcon,
                   size: 22,
@@ -249,6 +252,27 @@ class _ExpandableListCardState extends State<ExpandableListCard>
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        AnimatedBuilder(
+          animation: _iconsAnimation,
+          builder: (context, child) {
+            return IgnorePointer(
+              ignoring: _iconsAnimation.value == 0,
+              child: SizeTransition(
+                sizeFactor: _iconsAnimation,
+                axis: Axis.horizontal,
+                child: Opacity(opacity: _iconsAnimation.value, child: child),
+              ),
+            );
+          },
+          child: widget.onOpenView != null
+              ? IconButton(
+                  icon: const Icon(Icons.visibility_outlined, size: 18),
+                  onPressed: widget.onOpenView,
+                  tooltip: 'Открыть',
+                )
+              : const SizedBox.shrink(),
+        ),
+
         if (!widget.isDeleted) ...[
           AnimatedBuilder(
             animation: _iconsAnimation,

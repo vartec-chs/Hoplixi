@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/db_core/models/dto/loyalty_card_dto.dart';
@@ -14,6 +14,7 @@ class LoyaltyCardGridCard extends ConsumerStatefulWidget {
     this.onToggleArchive,
     this.onDelete,
     this.onRestore,
+    this.onOpenView,
   });
 
   final LoyaltyCardCardDto loyaltyCard;
@@ -23,6 +24,7 @@ class LoyaltyCardGridCard extends ConsumerStatefulWidget {
   final VoidCallback? onToggleArchive;
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
+  final VoidCallback? onOpenView;
 
   @override
   ConsumerState<LoyaltyCardGridCard> createState() =>
@@ -93,6 +95,7 @@ class _LoyaltyCardGridCardState extends ConsumerState<LoyaltyCardGridCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       copyActions: [
         CardActionItem(
           label: 'Номер',

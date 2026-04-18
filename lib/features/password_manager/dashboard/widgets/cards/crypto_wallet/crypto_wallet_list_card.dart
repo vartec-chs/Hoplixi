@@ -16,6 +16,7 @@ class CryptoWalletListCard extends ConsumerStatefulWidget {
     this.onDelete,
     this.onRestore,
     this.onOpenHistory,
+    this.onOpenView,
   });
 
   final CryptoWalletCardDto wallet;
@@ -25,6 +26,7 @@ class CryptoWalletListCard extends ConsumerStatefulWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
   final VoidCallback? onOpenHistory;
+  final VoidCallback? onOpenView;
 
   @override
   ConsumerState<CryptoWalletListCard> createState() =>
@@ -128,6 +130,7 @@ class _CryptoWalletListCardState extends ConsumerState<CryptoWalletListCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onOpenHistory: widget.onOpenHistory,
       copyActions: _buildCopyActions(),
     );

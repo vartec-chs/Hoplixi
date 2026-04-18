@@ -16,6 +16,7 @@ class ApiKeyGridCard extends ConsumerStatefulWidget {
   final VoidCallback? onToggleArchive;
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
+  final VoidCallback? onOpenView;
 
   const ApiKeyGridCard({
     super.key,
@@ -26,6 +27,7 @@ class ApiKeyGridCard extends ConsumerStatefulWidget {
     this.onToggleArchive,
     this.onDelete,
     this.onRestore,
+    this.onOpenView,
   });
 
   @override
@@ -96,6 +98,7 @@ class _ApiKeyGridCardState extends ConsumerState<ApiKeyGridCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onEdit: () {
         context.push(
           AppRoutesPaths.dashboardEntityEdit(EntityType.apiKey, apiKey.id),

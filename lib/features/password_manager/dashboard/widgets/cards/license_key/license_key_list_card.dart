@@ -16,6 +16,7 @@ class LicenseKeyListCard extends ConsumerStatefulWidget {
     this.onDelete,
     this.onRestore,
     this.onOpenHistory,
+    this.onOpenView,
   });
 
   final LicenseKeyCardDto license;
@@ -25,6 +26,7 @@ class LicenseKeyListCard extends ConsumerStatefulWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
   final VoidCallback? onOpenHistory;
+  final VoidCallback? onOpenView;
 
   @override
   ConsumerState<LicenseKeyListCard> createState() => _LicenseKeyListCardState();
@@ -85,6 +87,7 @@ class _LicenseKeyListCardState extends ConsumerState<LicenseKeyListCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onOpenHistory: widget.onOpenHistory,
       copyActions: [
         CardActionItem(

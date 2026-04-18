@@ -978,6 +978,163 @@ class PaginatedListNotifier
     }
   }
 
+  Future<void> bulkDelete(List<String> ids, {required bool permanently}) async {
+    if (_isUnsupportedEntity || ids.isEmpty) return;
+
+    if (permanently) {
+      for (final id in ids) {
+        await permanentDelete(id);
+      }
+      return;
+    }
+
+    final cur = state.value;
+    if (cur != null) {
+      state = AsyncValue.data(cur.copyWith(isLoading: true));
+    }
+
+    try {
+      final dao = await ref.read(vaultItemDaoProvider.future);
+      await dao.bulkSoftDelete(ids);
+      await refresh();
+      ref
+          .read(dataRefreshTriggerProvider.notifier)
+          .triggerEntityUpdate(entityType);
+    } catch (e) {
+      if (cur != null) {
+        state = AsyncValue.data(
+          cur.copyWith(isLoading: false, error: e.toString()),
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> bulkAssignCategory(List<String> ids, String? categoryId) async {
+    if (_isUnsupportedEntity || ids.isEmpty) return;
+
+    final cur = state.value;
+    if (cur != null) {
+      state = AsyncValue.data(cur.copyWith(isLoading: true));
+    }
+
+    try {
+      final dao = await ref.read(vaultItemDaoProvider.future);
+      await dao.bulkSetCategory(ids, categoryId);
+      await refresh();
+      ref
+          .read(dataRefreshTriggerProvider.notifier)
+          .triggerEntityUpdate(entityType);
+    } catch (e) {
+      if (cur != null) {
+        state = AsyncValue.data(
+          cur.copyWith(isLoading: false, error: e.toString()),
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> bulkAssignTags(List<String> ids, List<String> tagIds) async {
+    if (_isUnsupportedEntity || ids.isEmpty) return;
+
+    final cur = state.value;
+    if (cur != null) {
+      state = AsyncValue.data(cur.copyWith(isLoading: true));
+    }
+
+    try {
+      final dao = await ref.read(vaultItemDaoProvider.future);
+      await dao.bulkSyncTags(ids, tagIds);
+      await refresh();
+      ref
+          .read(dataRefreshTriggerProvider.notifier)
+          .triggerEntityUpdate(entityType);
+    } catch (e) {
+      if (cur != null) {
+        state = AsyncValue.data(
+          cur.copyWith(isLoading: false, error: e.toString()),
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> bulkSetArchive(List<String> ids, bool isArchived) async {
+    if (_isUnsupportedEntity || ids.isEmpty) return;
+
+    final cur = state.value;
+    if (cur != null) {
+      state = AsyncValue.data(cur.copyWith(isLoading: true));
+    }
+
+    try {
+      final dao = await ref.read(vaultItemDaoProvider.future);
+      await dao.bulkSetArchive(ids, isArchived);
+      await refresh();
+      ref
+          .read(dataRefreshTriggerProvider.notifier)
+          .triggerEntityUpdate(entityType);
+    } catch (e) {
+      if (cur != null) {
+        state = AsyncValue.data(
+          cur.copyWith(isLoading: false, error: e.toString()),
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> bulkSetFavorite(List<String> ids, bool isFavorite) async {
+    if (_isUnsupportedEntity || ids.isEmpty) return;
+
+    final cur = state.value;
+    if (cur != null) {
+      state = AsyncValue.data(cur.copyWith(isLoading: true));
+    }
+
+    try {
+      final dao = await ref.read(vaultItemDaoProvider.future);
+      await dao.bulkSetFavorite(ids, isFavorite);
+      await refresh();
+      ref
+          .read(dataRefreshTriggerProvider.notifier)
+          .triggerEntityUpdate(entityType);
+    } catch (e) {
+      if (cur != null) {
+        state = AsyncValue.data(
+          cur.copyWith(isLoading: false, error: e.toString()),
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> bulkSetPin(List<String> ids, bool isPinned) async {
+    if (_isUnsupportedEntity || ids.isEmpty) return;
+
+    final cur = state.value;
+    if (cur != null) {
+      state = AsyncValue.data(cur.copyWith(isLoading: true));
+    }
+
+    try {
+      final dao = await ref.read(vaultItemDaoProvider.future);
+      await dao.bulkSetPin(ids, isPinned);
+      await refresh();
+      ref
+          .read(dataRefreshTriggerProvider.notifier)
+          .triggerEntityUpdate(entityType);
+    } catch (e) {
+      if (cur != null) {
+        state = AsyncValue.data(
+          cur.copyWith(isLoading: false, error: e.toString()),
+        );
+      }
+      rethrow;
+    }
+  }
+
   Future<void> restoreFromDeleted(String id) async {
     if (_isUnsupportedEntity) return;
     final cur = state.value;

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
@@ -72,7 +72,10 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
         _description = item.description;
       });
     } catch (e) {
-      Toaster.error(title: context.t.dashboard_forms.common_load_error, description: '$e');
+      Toaster.error(
+        title: context.t.dashboard_forms.common_load_error,
+        description: '$e',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -111,7 +114,10 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
                 children: [
                   Text(_name, style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 12),
-                  ListTile(title: Text(l10n.product_label), subtitle: Text(_product)),
+                  ListTile(
+                    title: Text(l10n.product_label),
+                    subtitle: Text(_product),
+                  ),
                   ListTile(
                     title: Text(l10n.license_key_label),
                     subtitle: SelectableText(_licenseKey),
@@ -145,7 +151,10 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
                       subtitle: Text(_purchaseFrom!),
                     ),
                   if (_orderId?.isNotEmpty == true)
-                    ListTile(title: Text(l10n.order_id_label), subtitle: Text(_orderId!)),
+                    ListTile(
+                      title: Text(l10n.order_id_label),
+                      subtitle: Text(_orderId!),
+                    ),
                   if (_licenseFileId?.isNotEmpty == true)
                     ListTile(
                       title: Text(l10n.license_file_id_label),

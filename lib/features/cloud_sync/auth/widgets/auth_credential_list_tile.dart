@@ -84,7 +84,9 @@ class AuthCredentialListTile extends StatelessWidget {
                             ),
                             const SizedBox(width: 8),
                             _Badge(
-                              label: entry.isBuiltin ? builtinLabel : customLabel,
+                              label: entry.isBuiltin
+                                  ? builtinLabel
+                                  : customLabel,
                               accent: entry.isBuiltin,
                             ),
                           ],
@@ -105,7 +107,9 @@ class AuthCredentialListTile extends StatelessWidget {
                           runSpacing: 8,
                           children: [
                             _SupportChip(
-                              label: option.isSupported ? 'Supported' : 'Unsupported',
+                              label: option.isSupported
+                                  ? 'Supported'
+                                  : 'Unsupported',
                               isEnabled: option.isSupported,
                             ),
                             _SupportChip(
@@ -121,7 +125,9 @@ class AuthCredentialListTile extends StatelessWidget {
                             width: double.infinity,
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: colorScheme.errorContainer.withOpacity(0.55),
+                              color: colorScheme.errorContainer.withOpacity(
+                                0.55,
+                              ),
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
                                 color: colorScheme.error.withOpacity(0.2),
@@ -174,11 +180,11 @@ class _Badge extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: accent
-                  ? colorScheme.onPrimaryContainer
-                  : colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w700,
-            ),
+          color: accent
+              ? colorScheme.onPrimaryContainer
+              : colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -220,11 +226,11 @@ class _SupportChip extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: isEnabled
-                  ? colorScheme.onSecondaryContainer
-                  : colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
+          color: isEnabled
+              ? colorScheme.onSecondaryContainer
+              : colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

@@ -1,4 +1,3 @@
-
 import 'package:drift/drift.dart';
 import 'package:hoplixi/db_core/main_store.dart';
 import 'package:hoplixi/db_core/models/dto/otp_dto.dart';

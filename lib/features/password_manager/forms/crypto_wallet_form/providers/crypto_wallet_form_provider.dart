@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
@@ -74,13 +74,17 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
   void setName(String v) => _update(
     (s) => s.copyWith(
       name: v,
-      nameError: v.trim().isEmpty ? t.dashboard_forms.validation_required_name : null,
+      nameError: v.trim().isEmpty
+          ? t.dashboard_forms.validation_required_name
+          : null,
     ),
   );
   void setWalletType(String v) => _update(
     (s) => s.copyWith(
       walletType: v,
-      walletTypeError: v.trim().isEmpty ? t.dashboard_forms.validation_required_wallet_type : null,
+      walletTypeError: v.trim().isEmpty
+          ? t.dashboard_forms.validation_required_wallet_type
+          : null,
     ),
   );
   void setMnemonic(String v) => _update((s) => s.copyWith(mnemonic: v));
@@ -110,8 +114,12 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
 
   bool validate() {
     final c = _current;
-    final nameError = c.name.trim().isEmpty ? t.dashboard_forms.validation_required_name : null;
-    final walletTypeError = c.walletType.trim().isEmpty ? t.dashboard_forms.validation_required_wallet_type : null;
+    final nameError = c.name.trim().isEmpty
+        ? t.dashboard_forms.validation_required_name
+        : null;
+    final walletTypeError = c.walletType.trim().isEmpty
+        ? t.dashboard_forms.validation_required_wallet_type
+        : null;
 
     _update(
       (s) => s.copyWith(nameError: nameError, walletTypeError: walletTypeError),
@@ -161,11 +169,7 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
           return false;
         }
 
-        await saveCustomFields(
-          ref,
-          c.editingCryptoWalletId!,
-          c.customFields,
-        );
+        await saveCustomFields(ref, c.editingCryptoWalletId!, c.customFields);
 
         ref
             .read(dataRefreshTriggerProvider.notifier)
@@ -195,7 +199,6 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
           ),
         );
 
-
         await saveCustomFields(ref, id, c.customFields);
         ref
             .read(dataRefreshTriggerProvider.notifier)
@@ -212,4 +215,3 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
-

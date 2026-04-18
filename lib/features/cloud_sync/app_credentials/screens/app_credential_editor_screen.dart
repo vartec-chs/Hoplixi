@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/cloud_sync/app_credentials/models/app_credential_entry.dart';
@@ -66,10 +66,7 @@ class _AppCredentialEditorScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  l10n.provider_label,
-                  style: theme.textTheme.titleSmall,
-                ),
+                Text(l10n.provider_label, style: theme.textTheme.titleSmall),
                 const SizedBox(height: 8),
                 CloudSyncProviderSelector(
                   value: _formData.provider,
@@ -159,25 +156,26 @@ class _AppCredentialEditorScreenState
                   onChanged: (value) {
                     _formData = _formData.copyWith(clientSecret: value);
                   },
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: l10n.client_secret_field_label,
-                    hintText: l10n.client_secret_field_hint,
-                    helperText: l10n.client_secret_helper,
-                  ).copyWith(
-                    suffixIcon: IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _obscureClientSecret = !_obscureClientSecret;
-                        });
-                      },
-                      icon: Icon(
-                        _obscureClientSecret
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
+                  decoration:
+                      primaryInputDecoration(
+                        context,
+                        labelText: l10n.client_secret_field_label,
+                        hintText: l10n.client_secret_field_hint,
+                        helperText: l10n.client_secret_helper,
+                      ).copyWith(
+                        suffixIcon: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _obscureClientSecret = !_obscureClientSecret;
+                            });
+                          },
+                          icon: Icon(
+                            _obscureClientSecret
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
                 ),
                 const SizedBox(height: 24),
                 Row(

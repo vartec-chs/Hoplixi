@@ -29,6 +29,7 @@ class BaseGridCard extends StatefulWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
   final VoidCallback? onEdit;
+  final VoidCallback? onOpenView;
 
   final List<CardActionItem> copyActions;
 
@@ -55,6 +56,7 @@ class BaseGridCard extends StatefulWidget {
     this.onDelete,
     this.onRestore,
     this.onEdit,
+    this.onOpenView,
     required this.copyActions,
   });
 
@@ -134,10 +136,11 @@ class _BaseGridCardState extends State<BaseGridCard>
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: IconRefPreview(
-                              iconRef: IconRefDto.fromFields(
-                                iconSource: widget.iconSource,
-                                iconValue: widget.iconValue,
-                              ) ??
+                              iconRef:
+                                  IconRefDto.fromFields(
+                                    iconSource: widget.iconSource,
+                                    iconValue: widget.iconValue,
+                                  ) ??
                                   widget.category?.effectiveIconRef,
                               fallbackIcon: widget.fallbackIcon,
                               size: isMobile ? 16 : 20,
@@ -156,6 +159,17 @@ class _BaseGridCardState extends State<BaseGridCard>
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          if (widget.onOpenView != null)
+                            IconButton(
+                              icon: const Icon(
+                                Icons.visibility_outlined,
+                                size: 18,
+                              ),
+                              onPressed: widget.onOpenView,
+                              tooltip: 'Открыть',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
                           if (!isMobile) const Spacer(),
                           if (!widget.isDeleted)
                             FadeTransition(

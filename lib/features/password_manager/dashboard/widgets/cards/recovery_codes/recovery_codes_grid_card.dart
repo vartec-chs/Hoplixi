@@ -18,6 +18,7 @@ class RecoveryCodesGridCard extends ConsumerStatefulWidget {
     this.onToggleArchive,
     this.onDelete,
     this.onRestore,
+    this.onOpenView,
   });
 
   final RecoveryCodesCardDto recoveryCodes;
@@ -26,6 +27,7 @@ class RecoveryCodesGridCard extends ConsumerStatefulWidget {
   final VoidCallback? onToggleArchive;
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
+  final VoidCallback? onOpenView;
 
   @override
   ConsumerState<RecoveryCodesGridCard> createState() =>
@@ -61,7 +63,8 @@ class _RecoveryCodesGridCardState extends ConsumerState<RecoveryCodesGridCard> {
 
     return BaseGridCard(
       title: recoveryCodes.name,
-      subtitle: '$usedCount / $codesCount • ${recoveryCodes.oneTime == true ? 'one-time' : 'multi-use'}',
+      subtitle:
+          '$usedCount / $codesCount • ${recoveryCodes.oneTime == true ? 'one-time' : 'multi-use'}',
       fallbackIcon: Icons.security,
       category: recoveryCodes.category,
       tags: recoveryCodes.tags,
@@ -75,6 +78,7 @@ class _RecoveryCodesGridCardState extends ConsumerState<RecoveryCodesGridCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onEdit: () {
         context.push(
           AppRoutesPaths.dashboardEntityEdit(
@@ -93,7 +97,6 @@ class _RecoveryCodesGridCardState extends ConsumerState<RecoveryCodesGridCard> {
             isSuccess: _hintCopied,
           ),
       ],
-      
     );
   }
 }

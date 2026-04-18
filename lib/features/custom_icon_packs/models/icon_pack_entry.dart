@@ -44,7 +44,8 @@ class IconPackEntry {
       relativePath: json['relativePath'] as String? ?? '',
       svgPath: json['svgPath'] as String? ?? '',
       importedAt: DateTime.parse(
-        json['importedAt'] as String? ?? DateTime.fromMillisecondsSinceEpoch(0).toIso8601String(),
+        json['importedAt'] as String? ??
+            DateTime.fromMillisecondsSinceEpoch(0).toIso8601String(),
       ),
     );
   }

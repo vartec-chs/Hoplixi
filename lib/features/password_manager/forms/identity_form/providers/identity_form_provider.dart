@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
@@ -217,11 +217,7 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
           return false;
         }
 
-        await saveCustomFields(
-          ref,
-          c.editingIdentityId!,
-          c.customFields,
-        );
+        await saveCustomFields(ref, c.editingIdentityId!, c.customFields);
 
         ref
             .read(dataRefreshTriggerProvider.notifier)
@@ -252,7 +248,6 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
             tagsIds: c.tagIds,
           ),
         );
-
 
         await saveCustomFields(ref, id, c.customFields);
         ref

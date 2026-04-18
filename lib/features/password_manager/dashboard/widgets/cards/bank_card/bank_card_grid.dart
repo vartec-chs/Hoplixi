@@ -12,6 +12,7 @@ class BankCardGridCard extends ConsumerStatefulWidget {
   final VoidCallback? onToggleArchive;
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
+  final VoidCallback? onOpenView;
 
   const BankCardGridCard({
     super.key,
@@ -22,6 +23,7 @@ class BankCardGridCard extends ConsumerStatefulWidget {
     this.onToggleArchive,
     this.onDelete,
     this.onRestore,
+    this.onOpenView,
   });
 
   @override
@@ -94,6 +96,7 @@ class _BankCardGridCardState extends ConsumerState<BankCardGridCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       copyActions: [
         CardActionItem(
           label: 'Номер',

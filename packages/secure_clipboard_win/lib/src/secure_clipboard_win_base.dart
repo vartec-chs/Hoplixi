@@ -7,10 +7,7 @@ import 'package:ffi/ffi.dart';
 import 'package:win32/win32.dart';
 
 Never _throwWindowsError(String operation, WIN32_ERROR error) {
-  throw WindowsException(
-    error.toHRESULT(),
-    message: '$operation failed',
-  );
+  throw WindowsException(error.toHRESULT(), message: '$operation failed');
 }
 
 void _throwIfError(String operation, WIN32_ERROR error) {
@@ -95,8 +92,7 @@ void _withOpenClipboard(void Function() action) {
 }
 
 void _writeUtf16UnitsToGlobalMemory(HGLOBAL memory, Uint16List units) {
-  final locked =
-      _checkPointer('GlobalLock', GlobalLock(memory)).cast<Uint16>();
+  final locked = _checkPointer('GlobalLock', GlobalLock(memory)).cast<Uint16>();
   try {
     for (var i = 0; i < units.length; i++) {
       locked[i] = units[i];
@@ -108,8 +104,7 @@ void _writeUtf16UnitsToGlobalMemory(HGLOBAL memory, Uint16List units) {
 }
 
 void _writeDwordZeroToGlobalMemory(HGLOBAL memory) {
-  final locked =
-      _checkPointer('GlobalLock', GlobalLock(memory)).cast<Uint32>();
+  final locked = _checkPointer('GlobalLock', GlobalLock(memory)).cast<Uint32>();
   try {
     locked.value = 0;
   } finally {

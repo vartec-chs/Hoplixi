@@ -18,6 +18,7 @@ class TotpListCard extends ConsumerStatefulWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
   final VoidCallback? onOpenHistory;
+  final VoidCallback? onOpenView;
 
   const TotpListCard({
     super.key,
@@ -29,6 +30,7 @@ class TotpListCard extends ConsumerStatefulWidget {
     this.onDelete,
     this.onRestore,
     this.onOpenHistory,
+    this.onOpenView,
   });
 
   @override
@@ -259,6 +261,7 @@ class _TotpListCardState extends ConsumerState<TotpListCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onOpenHistory: widget.onOpenHistory,
       onExpandedChanged: _onExpandedChanged,
       customExpandedContent: _buildTotpSection(Theme.of(context)),

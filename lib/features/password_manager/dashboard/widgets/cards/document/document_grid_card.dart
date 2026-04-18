@@ -15,6 +15,7 @@ class DocumentGridCard extends ConsumerStatefulWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
   final VoidCallback? onDecrypt;
+  final VoidCallback? onOpenView;
 
   const DocumentGridCard({
     super.key,
@@ -26,6 +27,7 @@ class DocumentGridCard extends ConsumerStatefulWidget {
     this.onDelete,
     this.onRestore,
     this.onDecrypt,
+    this.onOpenView,
   });
 
   @override
@@ -73,6 +75,7 @@ class _DocumentGridCardState extends ConsumerState<DocumentGridCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       copyActions: [
         if (widget.onDecrypt != null)
           CardActionItem(

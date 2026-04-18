@@ -12,6 +12,7 @@ class ContactListCard extends StatelessWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
   final VoidCallback? onOpenHistory;
+  final VoidCallback? onOpenView;
 
   const ContactListCard({
     super.key,
@@ -22,6 +23,7 @@ class ContactListCard extends StatelessWidget {
     this.onDelete,
     this.onRestore,
     this.onOpenHistory,
+    this.onOpenView,
   });
 
   Future<void> _copyPhone() async {
@@ -69,6 +71,7 @@ class ContactListCard extends StatelessWidget {
       onToggleArchive: onToggleArchive,
       onDelete: onDelete,
       onRestore: onRestore,
+      onOpenView: onOpenView,
       onOpenHistory: onOpenHistory,
       copyActions: [
         CardActionItem(

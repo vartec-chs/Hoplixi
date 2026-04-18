@@ -17,6 +17,7 @@ class SshKeyGridCard extends ConsumerStatefulWidget {
     this.onToggleArchive,
     this.onDelete,
     this.onRestore,
+    this.onOpenView,
   });
 
   final SshKeyCardDto sshKey;
@@ -25,6 +26,7 @@ class SshKeyGridCard extends ConsumerStatefulWidget {
   final VoidCallback? onToggleArchive;
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
+  final VoidCallback? onOpenView;
 
   @override
   ConsumerState<SshKeyGridCard> createState() => _SshKeyGridCardState();
@@ -78,6 +80,7 @@ class _SshKeyGridCardState extends ConsumerState<SshKeyGridCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onEdit: () {
         context.push(
           AppRoutesPaths.dashboardEntityEdit(EntityType.sshKey, sshKey.id),

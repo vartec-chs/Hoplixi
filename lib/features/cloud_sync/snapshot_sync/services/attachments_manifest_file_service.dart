@@ -9,7 +9,8 @@ class AttachmentsManifestFileService {
 
   const AttachmentsManifestFileService._();
 
-  static String manifestFilePath(String storageDir) => p.join(storageDir, fileName);
+  static String manifestFilePath(String storageDir) =>
+      p.join(storageDir, fileName);
 
   static Future<void> writeTo(
     String storageDir,

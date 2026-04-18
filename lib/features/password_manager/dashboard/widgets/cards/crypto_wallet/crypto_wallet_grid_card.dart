@@ -18,6 +18,7 @@ class CryptoWalletGridCard extends ConsumerStatefulWidget {
     this.onToggleArchive,
     this.onDelete,
     this.onRestore,
+    this.onOpenView,
   });
 
   final CryptoWalletCardDto wallet;
@@ -26,6 +27,7 @@ class CryptoWalletGridCard extends ConsumerStatefulWidget {
   final VoidCallback? onToggleArchive;
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
+  final VoidCallback? onOpenView;
 
   @override
   ConsumerState<CryptoWalletGridCard> createState() =>
@@ -78,6 +80,7 @@ class _CryptoWalletGridCardState extends ConsumerState<CryptoWalletGridCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onEdit: () {
         context.push(
           AppRoutesPaths.dashboardEntityEdit(

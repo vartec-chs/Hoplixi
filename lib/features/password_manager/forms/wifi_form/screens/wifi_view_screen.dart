@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -72,7 +72,10 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
         _description = item.description;
       });
     } catch (e) {
-      Toaster.error(title: context.t.dashboard_forms.common_load_error, description: '$e');
+      Toaster.error(
+        title: context.t.dashboard_forms.common_load_error,
+        description: '$e',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -89,7 +92,9 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
       final value = await dao.getPasswordFieldById(widget.wifiId);
       if (value == null || value.isEmpty) {
         Toaster.warning(
-          title: context.t.dashboard_forms.common_field_missing(Field: context.t.dashboard_forms.wifi_password_label),
+          title: context.t.dashboard_forms.common_field_missing(
+            Field: context.t.dashboard_forms.wifi_password_label,
+          ),
         );
         return;
       }
@@ -99,8 +104,8 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
       });
     } catch (e) {
       Toaster.error(
-        title: context.t.dashboard_forms.common_error_getting_field(Field: 
-          context.t.dashboard_forms.wifi_password_label,
+        title: context.t.dashboard_forms.common_error_getting_field(
+          Field: context.t.dashboard_forms.wifi_password_label,
         ),
         description: '$e',
       );
@@ -109,11 +114,15 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
 
   Future<void> _copyText(String title, String? value) async {
     if (value == null || value.isEmpty) {
-      Toaster.warning(title: context.t.dashboard_forms.common_field_empty(Field: title));
+      Toaster.warning(
+        title: context.t.dashboard_forms.common_field_empty(Field: title),
+      );
       return;
     }
     await Clipboard.setData(ClipboardData(text: value));
-    Toaster.success(title: context.t.dashboard_forms.common_field_copied(Field: title));
+    Toaster.success(
+      title: context.t.dashboard_forms.common_field_copied(Field: title),
+    );
   }
 
   Future<String?> _loadPasswordForConnection() async {
@@ -149,10 +158,7 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
       return;
     }
 
-    Toaster.success(
-      title: l10n.network_label,
-      description: ssid,
-    );
+    Toaster.success(title: l10n.network_label, description: ssid);
   }
 
   @override
@@ -171,7 +177,10 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
           IconButton(
             tooltip: l10n.edit,
             onPressed: () => context.push(
-              AppRoutesPaths.dashboardEntityEdit(EntityType.wifi, widget.wifiId),
+              AppRoutesPaths.dashboardEntityEdit(
+                EntityType.wifi,
+                widget.wifiId,
+              ),
             ),
             icon: const Icon(Icons.edit),
           ),
@@ -200,7 +209,9 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
                         IconButton(
                           onPressed: _revealPassword,
                           icon: Icon(
-                            _showPassword ? Icons.visibility_off : Icons.visibility,
+                            _showPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                           ),
                         ),
                         IconButton(
@@ -212,19 +223,34 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
                     ),
                   ),
                   if (_security?.isNotEmpty == true)
-                    ListTile(title: Text(l10n.wifi_security_label), subtitle: Text(_security!)),
+                    ListTile(
+                      title: Text(l10n.wifi_security_label),
+                      subtitle: Text(_security!),
+                    ),
                   ListTile(
                     title: Text(l10n.wifi_hidden_network_label),
                     subtitle: Text(_hidden ? l10n.common_yes : l10n.common_no),
                   ),
                   if (_eapMethod?.isNotEmpty == true)
-                    ListTile(title: Text(l10n.wifi_eap_method_label), subtitle: Text(_eapMethod!)),
+                    ListTile(
+                      title: Text(l10n.wifi_eap_method_label),
+                      subtitle: Text(_eapMethod!),
+                    ),
                   if (_username?.isNotEmpty == true)
-                    ListTile(title: Text(l10n.wifi_username_label), subtitle: Text(_username!)),
+                    ListTile(
+                      title: Text(l10n.wifi_username_label),
+                      subtitle: Text(_username!),
+                    ),
                   if (_identity?.isNotEmpty == true)
-                    ListTile(title: Text(l10n.wifi_identity_label), subtitle: Text(_identity!)),
+                    ListTile(
+                      title: Text(l10n.wifi_identity_label),
+                      subtitle: Text(_identity!),
+                    ),
                   if (_domain?.isNotEmpty == true)
-                    ListTile(title: Text(l10n.wifi_domain_label), subtitle: Text(_domain!)),
+                    ListTile(
+                      title: Text(l10n.wifi_domain_label),
+                      subtitle: Text(_domain!),
+                    ),
                   if (_lastConnectedBssid?.isNotEmpty == true)
                     ListTile(
                       title: Text(l10n.wifi_last_connected_bssid_label),

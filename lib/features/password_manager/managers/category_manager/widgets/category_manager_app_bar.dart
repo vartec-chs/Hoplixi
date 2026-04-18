@@ -73,7 +73,9 @@ class _CategoryManagerAppBarState extends ConsumerState<CategoryManagerAppBar> {
                           tooltip: 'Очистить поиск',
                           onPressed: () {
                             _searchController.clear();
-                            ref.read(categoryFilterProvider.notifier).updateQuery('');
+                            ref
+                                .read(categoryFilterProvider.notifier)
+                                .updateQuery('');
                             setState(() {});
                           },
                           icon: const Icon(Icons.close_rounded),

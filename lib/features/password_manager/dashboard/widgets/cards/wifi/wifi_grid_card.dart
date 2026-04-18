@@ -17,6 +17,7 @@ class WifiGridCard extends ConsumerStatefulWidget {
     this.onToggleArchive,
     this.onDelete,
     this.onRestore,
+    this.onOpenView,
   });
 
   final WifiCardDto wifi;
@@ -25,6 +26,7 @@ class WifiGridCard extends ConsumerStatefulWidget {
   final VoidCallback? onToggleArchive;
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
+  final VoidCallback? onOpenView;
 
   @override
   ConsumerState<WifiGridCard> createState() => _WifiGridCardState();
@@ -78,6 +80,7 @@ class _WifiGridCardState extends ConsumerState<WifiGridCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onEdit: () {
         context.push(
           AppRoutesPaths.dashboardEntityEdit(EntityType.wifi, wifi.id),

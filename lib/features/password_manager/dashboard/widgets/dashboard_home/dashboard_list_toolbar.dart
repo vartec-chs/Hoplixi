@@ -6,6 +6,7 @@ import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/list_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/current_view_mode_provider.dart';
+import 'package:hoplixi/shared/ui/button.dart';
 
 class DashboardListToolBar extends ConsumerStatefulWidget {
   const DashboardListToolBar({
@@ -13,11 +14,35 @@ class DashboardListToolBar extends ConsumerStatefulWidget {
     required this.entityType,
     required this.viewMode,
     required this.listState,
+    this.isBulkMode = false,
+    this.selectedCount = 0,
+    this.onExitBulkMode,
+    this.onBulkDelete,
+    this.onBulkFavorite,
+    this.bulkFavoriteLabel = 'В избранное',
+    this.onBulkPin,
+    this.bulkPinLabel = 'Закрепить',
+    this.onBulkArchive,
+    this.bulkArchiveLabel = 'В архив',
+    this.onBulkAssignCategory,
+    this.onBulkAssignTags,
   });
 
   final EntityType entityType;
   final ViewMode viewMode;
   final AsyncValue<DashboardListState<dynamic>> listState;
+  final bool isBulkMode;
+  final int selectedCount;
+  final VoidCallback? onExitBulkMode;
+  final VoidCallback? onBulkDelete;
+  final VoidCallback? onBulkFavorite;
+  final String bulkFavoriteLabel;
+  final VoidCallback? onBulkPin;
+  final String bulkPinLabel;
+  final VoidCallback? onBulkArchive;
+  final String bulkArchiveLabel;
+  final VoidCallback? onBulkAssignCategory;
+  final VoidCallback? onBulkAssignTags;
 
   @override
   ConsumerState<DashboardListToolBar> createState() =>
@@ -129,13 +154,14 @@ class _DashboardListToolBarState extends ConsumerState<DashboardListToolBar> {
             'На маленьких экранах карточки могут быть менее удобны и не выполнять полный функционал. Продолжить?',
           ),
           actions: [
-            TextButton(
+            SmoothButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Отмена'),
+              label: 'Отмена',
+              type: SmoothButtonType.text,
             ),
-            FilledButton(
+            SmoothButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Продолжить'),
+              label: 'Продолжить',
             ),
           ],
         );
@@ -147,6 +173,206 @@ class _DashboardListToolBarState extends ConsumerState<DashboardListToolBar> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.isBulkMode) {
+      final isSmallScreen =
+          MediaQuery.sizeOf(context).width < MainConstants.kMobileBreakpoint;
+
+      if (isSmallScreen) {
+        return Padding(
+          padding: const EdgeInsets.only(
+            left: 12,
+            right: 12,
+            top: 8,
+            bottom: 4,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Выбрано: ${widget.selectedCount}',
+                  style: Theme.of(context).textTheme.titleMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              SmoothButton(
+                onPressed: widget.onExitBulkMode,
+                label: 'Отмена',
+                type: SmoothButtonType.text,
+                size: .preMedium,
+              ),
+              PopupMenuButton<_BulkMenuAction>(
+                tooltip: 'Массовые действия',
+                borderRadius: BorderRadius.circular(16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                onSelected: (action) {
+                  switch (action) {
+                    case _BulkMenuAction.favorite:
+                      widget.onBulkFavorite?.call();
+                    case _BulkMenuAction.pin:
+                      widget.onBulkPin?.call();
+                    case _BulkMenuAction.archive:
+                      widget.onBulkArchive?.call();
+                    case _BulkMenuAction.category:
+                      widget.onBulkAssignCategory?.call();
+                    case _BulkMenuAction.tags:
+                      widget.onBulkAssignTags?.call();
+                    case _BulkMenuAction.delete:
+                      widget.onBulkDelete?.call();
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem<_BulkMenuAction>(
+                    value: _BulkMenuAction.favorite,
+                    enabled: widget.onBulkFavorite != null,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.star_border, size: 18),
+                        const SizedBox(width: 8),
+                        Text(widget.bulkFavoriteLabel),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<_BulkMenuAction>(
+                    value: _BulkMenuAction.pin,
+                    enabled: widget.onBulkPin != null,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.push_pin_outlined, size: 18),
+                        const SizedBox(width: 8),
+                        Text(widget.bulkPinLabel),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<_BulkMenuAction>(
+                    value: _BulkMenuAction.archive,
+                    enabled: widget.onBulkArchive != null,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.archive_outlined, size: 18),
+                        const SizedBox(width: 8),
+                        Text(widget.bulkArchiveLabel),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<_BulkMenuAction>(
+                    value: _BulkMenuAction.category,
+                    enabled: widget.onBulkAssignCategory != null,
+                    child: const Row(
+                      children: [
+                        Icon(Icons.category_outlined, size: 18),
+                        SizedBox(width: 8),
+                        Text('Категория'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<_BulkMenuAction>(
+                    value: _BulkMenuAction.tags,
+                    enabled: widget.onBulkAssignTags != null,
+                    child: const Row(
+                      children: [
+                        Icon(Icons.sell_outlined, size: 18),
+                        SizedBox(width: 8),
+                        Text('Теги'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<_BulkMenuAction>(
+                    value: _BulkMenuAction.delete,
+                    enabled: widget.onBulkDelete != null,
+                    child: const Row(
+                      children: [
+                        Icon(Icons.delete_outline, size: 18),
+                        SizedBox(width: 8),
+                        Text('Удалить'),
+                      ],
+                    ),
+                  ),
+                ],
+                child: const Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Icon(Icons.more_vert),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+
+      return Padding(
+        padding: const EdgeInsets.only(left: 12, right: 12, top: 8, bottom: 4),
+        child: Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            Text(
+              'Выбрано: ${widget.selectedCount}',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                SmoothButton(
+                  onPressed: widget.onBulkFavorite,
+                  icon: const Icon(Icons.star_border),
+                  label: widget.bulkFavoriteLabel,
+                  type: .outlined,
+                  size: .preMedium,
+                ),
+                SmoothButton(
+                  onPressed: widget.onBulkPin,
+                  icon: const Icon(Icons.push_pin_outlined),
+                  label: widget.bulkPinLabel,
+                  type: .outlined,
+                  size: .preMedium,
+                ),
+                SmoothButton(
+                  onPressed: widget.onBulkArchive,
+                  icon: const Icon(Icons.archive_outlined),
+                  label: widget.bulkArchiveLabel,
+                  type: .outlined,
+                  size: .preMedium,
+                ),
+                SmoothButton(
+                  onPressed: widget.onBulkAssignCategory,
+                  icon: const Icon(Icons.category_outlined),
+                  label: 'Категория',
+                  type: .outlined,
+                  size: .preMedium,
+                ),
+                SmoothButton(
+                  onPressed: widget.onBulkAssignTags,
+                  icon: const Icon(Icons.sell_outlined),
+                  label: 'Теги',
+                  type: .outlined,
+                  size: .preMedium,
+                ),
+                SmoothButton(
+                  onPressed: widget.onBulkDelete,
+                  icon: const Icon(Icons.delete_outline),
+                  label: 'Удалить',
+                  type: .outlined,
+                  variant: .error,
+                  size: .preMedium,
+                ),
+                SmoothButton(
+                  onPressed: widget.onExitBulkMode,
+                  label: 'Отмена',
+                  type: SmoothButtonType.text,
+                  size: .preMedium,
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
     // Используем кешированное значение если оно есть и не показываем индикатор
     final isSmallScreen =
         MediaQuery.sizeOf(context).width < MainConstants.kMobileBreakpoint;
@@ -228,3 +454,5 @@ class _DashboardListToolBarState extends ConsumerState<DashboardListToolBar> {
     );
   }
 }
+
+enum _BulkMenuAction { favorite, pin, archive, category, tags, delete }

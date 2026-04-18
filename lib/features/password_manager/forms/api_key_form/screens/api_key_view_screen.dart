@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -59,7 +59,10 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
         _revoked = details.revoked;
       });
     } catch (e) {
-      Toaster.error(title: context.t.dashboard_forms.api_key_load_error, description: '$e');
+      Toaster.error(
+        title: context.t.dashboard_forms.api_key_load_error,
+        description: '$e',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -83,7 +86,10 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
         _revealingKey = true;
       });
     } catch (e) {
-      Toaster.error(title: context.t.dashboard_forms.api_key_get_key_error, description: '$e');
+      Toaster.error(
+        title: context.t.dashboard_forms.api_key_get_key_error,
+        description: '$e',
+      );
     }
   }
 
@@ -123,7 +129,10 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
                 children: [
                   Text(_name, style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 8),
-                  Text(_service, style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    _service,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                   const SizedBox(height: 16),
                   ListTile(
                     contentPadding: EdgeInsets.zero,

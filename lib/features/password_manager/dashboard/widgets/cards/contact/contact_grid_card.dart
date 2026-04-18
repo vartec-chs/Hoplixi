@@ -15,6 +15,7 @@ class ContactGridCard extends StatelessWidget {
   final VoidCallback? onToggleArchive;
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
+  final VoidCallback? onOpenView;
 
   const ContactGridCard({
     super.key,
@@ -25,6 +26,7 @@ class ContactGridCard extends StatelessWidget {
     this.onToggleArchive,
     this.onDelete,
     this.onRestore,
+    this.onOpenView,
   });
 
   Future<void> _copyPhone() async {
@@ -71,6 +73,7 @@ class ContactGridCard extends StatelessWidget {
       onToggleArchive: onToggleArchive,
       onDelete: onDelete,
       onRestore: onRestore,
+      onOpenView: onOpenView,
       onEdit: () {
         context.push(
           AppRoutesPaths.dashboardEntityEdit(EntityType.contact, contact.id),

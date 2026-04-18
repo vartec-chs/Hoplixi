@@ -112,7 +112,10 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
 
     if (oldWidget.selectedCategoryId != widget.selectedCategoryId ||
         oldWidget.selectedCategoryName != widget.selectedCategoryName ||
-        !_listEquals(oldWidget.selectedCategoryIds, widget.selectedCategoryIds) ||
+        !_listEquals(
+          oldWidget.selectedCategoryIds,
+          widget.selectedCategoryIds,
+        ) ||
         !_listEquals(
           oldWidget.selectedCategoryNames,
           widget.selectedCategoryNames,

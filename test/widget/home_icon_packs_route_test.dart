@@ -17,9 +17,7 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          recentDatabaseProvider.overrideWith((ref) async => null),
-        ],
+        overrides: [recentDatabaseProvider.overrideWith((ref) async => null)],
         child: MaterialApp.router(routerConfig: router),
       ),
     );

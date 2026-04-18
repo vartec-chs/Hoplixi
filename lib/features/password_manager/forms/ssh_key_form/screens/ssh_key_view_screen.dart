@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -59,7 +59,10 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
         _addedToAgent = ssh.addedToAgent;
       });
     } catch (e) {
-      Toaster.error(title: context.t.dashboard_forms.common_load_error, description: '$e');
+      Toaster.error(
+        title: context.t.dashboard_forms.common_load_error,
+        description: '$e',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -76,7 +79,9 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
       final value = await dao.getPrivateKeyFieldById(widget.sshKeyId);
       if (value == null) {
         Toaster.error(
-          title: context.t.dashboard_forms.common_error_getting_field(Field: context.t.dashboard_forms.private_key_label),
+          title: context.t.dashboard_forms.common_error_getting_field(
+            Field: context.t.dashboard_forms.private_key_label,
+          ),
         );
         return;
       }
@@ -86,7 +91,9 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
       });
     } catch (e) {
       Toaster.error(
-        title: context.t.dashboard_forms.common_error_getting_field(Field: context.t.dashboard_forms.private_key_label),
+        title: context.t.dashboard_forms.common_error_getting_field(
+          Field: context.t.dashboard_forms.private_key_label,
+        ),
         description: '$e',
       );
     }
@@ -95,12 +102,16 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
   Future<void> _copyPrivateKey() async {
     final value = _privateKey;
     if (value == null || value.isEmpty) {
-      Toaster.warning(title: context.t.dashboard_forms.reveal_private_key_first);
+      Toaster.warning(
+        title: context.t.dashboard_forms.reveal_private_key_first,
+      );
       return;
     }
     await Clipboard.setData(ClipboardData(text: value));
     Toaster.success(
-      title: context.t.dashboard_forms.common_field_copied(Field: context.t.dashboard_forms.private_key_label),
+      title: context.t.dashboard_forms.common_field_copied(
+        Field: context.t.dashboard_forms.private_key_label,
+      ),
     );
   }
 
@@ -115,7 +126,10 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
           IconButton(
             tooltip: l10n.edit,
             onPressed: () => context.push(
-              AppRoutesPaths.dashboardEntityEdit(EntityType.sshKey, widget.sshKeyId),
+              AppRoutesPaths.dashboardEntityEdit(
+                EntityType.sshKey,
+                widget.sshKeyId,
+              ),
             ),
             icon: const Icon(Icons.edit),
           ),
@@ -145,7 +159,9 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
                         IconButton(
                           onPressed: _revealPrivateKey,
                           icon: Icon(
-                            _showPrivateKey ? Icons.visibility_off : Icons.visibility,
+                            _showPrivateKey
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                           ),
                         ),
                         IconButton(
@@ -156,14 +172,20 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
                     ),
                   ),
                   if (_keyType?.isNotEmpty == true)
-                    ListTile(title: Text(l10n.key_type_label), subtitle: Text(_keyType!)),
+                    ListTile(
+                      title: Text(l10n.key_type_label),
+                      subtitle: Text(_keyType!),
+                    ),
                   if (_fingerprint?.isNotEmpty == true)
                     ListTile(
                       title: Text(l10n.fingerprint_label),
                       subtitle: Text(_fingerprint!),
                     ),
                   if (_usage?.isNotEmpty == true)
-                    ListTile(title: Text(l10n.usage_label), subtitle: Text(_usage!)),
+                    ListTile(
+                      title: Text(l10n.usage_label),
+                      subtitle: Text(_usage!),
+                    ),
                   ListTile(
                     title: Text(l10n.added_to_ssh_agent_label),
                     subtitle: Text(

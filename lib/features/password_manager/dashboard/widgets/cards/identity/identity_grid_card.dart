@@ -18,6 +18,7 @@ class IdentityGridCard extends ConsumerStatefulWidget {
     this.onToggleArchive,
     this.onDelete,
     this.onRestore,
+    this.onOpenView,
   });
 
   final IdentityCardDto identity;
@@ -26,6 +27,7 @@ class IdentityGridCard extends ConsumerStatefulWidget {
   final VoidCallback? onToggleArchive;
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
+  final VoidCallback? onOpenView;
 
   @override
   ConsumerState<IdentityGridCard> createState() => _IdentityGridCardState();
@@ -77,6 +79,7 @@ class _IdentityGridCardState extends ConsumerState<IdentityGridCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onEdit: () {
         context.push(
           AppRoutesPaths.dashboardEntityEdit(EntityType.identity, identity.id),

@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
@@ -78,17 +78,24 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
   String? _intError(String value) {
     final v = value.trim();
     if (v.isEmpty) return null;
-    return int.tryParse(v) == null ? t.dashboard_forms.validation_must_be_integer : null;
+    return int.tryParse(v) == null
+        ? t.dashboard_forms.validation_must_be_integer
+        : null;
   }
 
   String? _dateError(String value) {
     final v = value.trim();
     if (v.isEmpty) return null;
-    return DateTime.tryParse(v) == null ? t.dashboard_forms.validation_invalid_iso8601 : null;
+    return DateTime.tryParse(v) == null
+        ? t.dashboard_forms.validation_invalid_iso8601
+        : null;
   }
 
   void setName(String v) => _update(
-    (s) => s.copyWith(name: v, nameError: _required(v, t.dashboard_forms.validation_required_name)),
+    (s) => s.copyWith(
+      name: v,
+      nameError: _required(v, t.dashboard_forms.validation_required_name),
+    ),
   );
   void setProduct(String v) => _update(
     (s) => s.copyWith(
@@ -99,7 +106,10 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
   void setLicenseKey(String v) => _update(
     (s) => s.copyWith(
       licenseKey: v,
-      licenseKeyError: _required(v, t.dashboard_forms.validation_required_license_key),
+      licenseKeyError: _required(
+        v,
+        t.dashboard_forms.validation_required_license_key,
+      ),
     ),
   );
   void setLicenseType(String v) => _update((s) => s.copyWith(licenseType: v));
@@ -136,9 +146,18 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
 
   bool validate() {
     final c = _current;
-    final nameError = _required(c.name, t.dashboard_forms.validation_required_name);
-    final productError = _required(c.product, t.dashboard_forms.validation_required_product);
-    final licenseKeyError = _required(c.licenseKey, t.dashboard_forms.validation_required_license_key);
+    final nameError = _required(
+      c.name,
+      t.dashboard_forms.validation_required_name,
+    );
+    final productError = _required(
+      c.product,
+      t.dashboard_forms.validation_required_product,
+    );
+    final licenseKeyError = _required(
+      c.licenseKey,
+      t.dashboard_forms.validation_required_license_key,
+    );
     final seatsError = _intError(c.seats);
     final maxActivationsError = _intError(c.maxActivations);
     final activatedOnError = _dateError(c.activatedOn);
@@ -223,11 +242,7 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
           return false;
         }
 
-        await saveCustomFields(
-          ref,
-          c.editingLicenseKeyId!,
-          c.customFields,
-        );
+        await saveCustomFields(ref, c.editingLicenseKeyId!, c.customFields);
 
         ref
             .read(dataRefreshTriggerProvider.notifier)
@@ -258,7 +273,6 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
           ),
         );
 
-
         await saveCustomFields(ref, id, c.customFields);
         ref
             .read(dataRefreshTriggerProvider.notifier)
@@ -275,4 +289,3 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
-

@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
@@ -85,7 +85,9 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
   void setName(String value) => _update(
     (s) => s.copyWith(
       name: value,
-      nameError: value.trim().isEmpty ? t.dashboard_forms.validation_required_name : null,
+      nameError: value.trim().isEmpty
+          ? t.dashboard_forms.validation_required_name
+          : null,
     ),
   );
 
@@ -217,11 +219,7 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
           return false;
         }
 
-        await saveCustomFields(
-          ref,
-          c.editingRecoveryCodesId!,
-          c.customFields,
-        );
+        await saveCustomFields(ref, c.editingRecoveryCodesId!, c.customFields);
 
         ref
             .read(dataRefreshTriggerProvider.notifier)
@@ -243,7 +241,6 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
             tagsIds: c.tagIds,
           ),
         );
-
 
         await saveCustomFields(ref, id, c.customFields);
         ref

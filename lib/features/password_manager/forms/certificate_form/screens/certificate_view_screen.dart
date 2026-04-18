@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -68,7 +68,10 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
         _autoRenew = cert.autoRenew;
       });
     } catch (e) {
-      Toaster.error(title: context.t.dashboard_forms.common_load_error, description: '$e');
+      Toaster.error(
+        title: context.t.dashboard_forms.common_load_error,
+        description: '$e',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -85,7 +88,9 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
       final value = await dao.getPrivateKeyFieldById(widget.certificateId);
       if (value == null || value.isEmpty) {
         Toaster.warning(
-          title: context.t.dashboard_forms.common_field_missing(Field: context.t.dashboard_forms.private_key_label),
+          title: context.t.dashboard_forms.common_field_missing(
+            Field: context.t.dashboard_forms.private_key_label,
+          ),
         );
         return;
       }
@@ -95,7 +100,9 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
       });
     } catch (e) {
       Toaster.error(
-        title: context.t.dashboard_forms.common_error_getting_field(Field: context.t.dashboard_forms.private_key_label),
+        title: context.t.dashboard_forms.common_error_getting_field(
+          Field: context.t.dashboard_forms.private_key_label,
+        ),
         description: '$e',
       );
     }
@@ -112,7 +119,9 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
       final value = await dao.getPasswordForPfxFieldById(widget.certificateId);
       if (value == null || value.isEmpty) {
         Toaster.warning(
-          title: context.t.dashboard_forms.common_field_missing(Field: context.t.dashboard_forms.pfx_password_label),
+          title: context.t.dashboard_forms.common_field_missing(
+            Field: context.t.dashboard_forms.pfx_password_label,
+          ),
         );
         return;
       }
@@ -122,7 +131,9 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
       });
     } catch (e) {
       Toaster.error(
-        title: context.t.dashboard_forms.common_error_getting_field(Field: context.t.dashboard_forms.pfx_password_label),
+        title: context.t.dashboard_forms.common_error_getting_field(
+          Field: context.t.dashboard_forms.pfx_password_label,
+        ),
         description: '$e',
       );
     }
@@ -130,11 +141,15 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
 
   Future<void> _copyText(String title, String? value) async {
     if (value == null || value.isEmpty) {
-      Toaster.warning(title: context.t.dashboard_forms.common_field_empty(Field: title));
+      Toaster.warning(
+        title: context.t.dashboard_forms.common_field_empty(Field: title),
+      );
       return;
     }
     await Clipboard.setData(ClipboardData(text: value));
-    Toaster.success(title: context.t.dashboard_forms.common_field_copied(Field: title));
+    Toaster.success(
+      title: context.t.dashboard_forms.common_field_copied(Field: title),
+    );
   }
 
   @override
@@ -170,8 +185,10 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
                     title: Text(l10n.certificate_pem_label),
                     subtitle: SelectableText(_certificatePem),
                     trailing: IconButton(
-                      onPressed: () =>
-                          _copyText(l10n.certificate_pem_label, _certificatePem),
+                      onPressed: () => _copyText(
+                        l10n.certificate_pem_label,
+                        _certificatePem,
+                      ),
                       icon: const Icon(Icons.copy),
                     ),
                   ),
@@ -189,7 +206,9 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
                         IconButton(
                           onPressed: _revealPrivateKey,
                           icon: Icon(
-                            _showPrivateKey ? Icons.visibility_off : Icons.visibility,
+                            _showPrivateKey
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                           ),
                         ),
                         IconButton(
@@ -214,7 +233,9 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
                         IconButton(
                           onPressed: _revealPfxPassword,
                           icon: Icon(
-                            _showPfxPassword ? Icons.visibility_off : Icons.visibility,
+                            _showPfxPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                           ),
                         ),
                         IconButton(
@@ -226,9 +247,15 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
                     ),
                   ),
                   if (_issuer?.isNotEmpty == true)
-                    ListTile(title: Text(l10n.issuer_label), subtitle: Text(_issuer!)),
+                    ListTile(
+                      title: Text(l10n.issuer_label),
+                      subtitle: Text(_issuer!),
+                    ),
                   if (_subject?.isNotEmpty == true)
-                    ListTile(title: Text(l10n.subject_label), subtitle: Text(_subject!)),
+                    ListTile(
+                      title: Text(l10n.subject_label),
+                      subtitle: Text(_subject!),
+                    ),
                   if (_serialNumber?.isNotEmpty == true)
                     ListTile(
                       title: Text(l10n.serial_number_label),
@@ -240,13 +267,20 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
                       subtitle: Text(_fingerprint!),
                     ),
                   if (_ocspUrl?.isNotEmpty == true)
-                    ListTile(title: Text(l10n.ocsp_url_label), subtitle: Text(_ocspUrl!)),
+                    ListTile(
+                      title: Text(l10n.ocsp_url_label),
+                      subtitle: Text(_ocspUrl!),
+                    ),
                   if (_crlUrl?.isNotEmpty == true)
-                    ListTile(title: Text(l10n.crl_url_label), subtitle: Text(_crlUrl!)),
+                    ListTile(
+                      title: Text(l10n.crl_url_label),
+                      subtitle: Text(_crlUrl!),
+                    ),
                   ListTile(
                     title: Text(l10n.auto_renew_label),
-                    subtitle:
-                        Text(_autoRenew ? l10n.common_enabled : l10n.common_disabled),
+                    subtitle: Text(
+                      _autoRenew ? l10n.common_enabled : l10n.common_disabled,
+                    ),
                   ),
                   if (_description?.isNotEmpty == true)
                     ListTile(

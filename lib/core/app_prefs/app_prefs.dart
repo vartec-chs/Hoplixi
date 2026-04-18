@@ -35,5 +35,3 @@ class BiometricAuthPolicy implements PreferenceWritePolicy {
     }
   }
 }
-
-

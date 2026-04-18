@@ -17,6 +17,7 @@ class FileGridCard extends ConsumerStatefulWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
   final VoidCallback? onDecrypt;
+  final VoidCallback? onOpenView;
 
   const FileGridCard({
     super.key,
@@ -28,6 +29,7 @@ class FileGridCard extends ConsumerStatefulWidget {
     this.onDelete,
     this.onRestore,
     this.onDecrypt,
+    this.onOpenView,
   });
 
   @override
@@ -64,6 +66,7 @@ class _FileGridCardState extends ConsumerState<FileGridCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onEdit: () {
         context.push(
           AppRoutesPaths.dashboardEntityEdit(EntityType.file, file.id),

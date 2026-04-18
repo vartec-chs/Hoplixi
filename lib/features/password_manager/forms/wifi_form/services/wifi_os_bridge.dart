@@ -148,5 +148,3 @@ class WifiOsBridge {
     return OpWifiUtilsError.permissionRequired;
   }
 }
-
-

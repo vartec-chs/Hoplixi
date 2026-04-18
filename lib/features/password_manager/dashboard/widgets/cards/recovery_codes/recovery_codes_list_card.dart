@@ -16,6 +16,7 @@ class RecoveryCodesListCard extends ConsumerStatefulWidget {
     this.onDelete,
     this.onRestore,
     this.onOpenHistory,
+    this.onOpenView,
   });
 
   final RecoveryCodesCardDto recoveryCodes;
@@ -25,6 +26,7 @@ class RecoveryCodesListCard extends ConsumerStatefulWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
   final VoidCallback? onOpenHistory;
+  final VoidCallback? onOpenView;
 
   @override
   ConsumerState<RecoveryCodesListCard> createState() =>
@@ -81,6 +83,7 @@ class _RecoveryCodesListCardState extends ConsumerState<RecoveryCodesListCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onOpenHistory: widget.onOpenHistory,
       copyActions: [
         if ((recoveryCodes.displayHint ?? '').isNotEmpty)

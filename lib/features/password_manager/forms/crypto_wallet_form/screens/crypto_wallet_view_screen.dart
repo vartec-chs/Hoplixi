@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -73,7 +73,10 @@ class _CryptoWalletViewScreenState
         _watchOnly = wallet.watchOnly;
       });
     } catch (e) {
-      Toaster.error(title: context.t.dashboard_forms.common_load_error, description: '$e');
+      Toaster.error(
+        title: context.t.dashboard_forms.common_load_error,
+        description: '$e',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -90,7 +93,9 @@ class _CryptoWalletViewScreenState
       final value = await dao.getMnemonicFieldById(widget.cryptoWalletId);
       if (value == null || value.isEmpty) {
         Toaster.warning(
-          title: context.t.dashboard_forms.common_field_missing(Field: context.t.dashboard_forms.mnemonic_label),
+          title: context.t.dashboard_forms.common_field_missing(
+            Field: context.t.dashboard_forms.mnemonic_label,
+          ),
         );
         return;
       }
@@ -100,7 +105,9 @@ class _CryptoWalletViewScreenState
       });
     } catch (e) {
       Toaster.error(
-        title: context.t.dashboard_forms.common_error_getting_field(Field: context.t.dashboard_forms.mnemonic_label),
+        title: context.t.dashboard_forms.common_error_getting_field(
+          Field: context.t.dashboard_forms.mnemonic_label,
+        ),
         description: '$e',
       );
     }
@@ -117,7 +124,9 @@ class _CryptoWalletViewScreenState
       final value = await dao.getPrivateKeyFieldById(widget.cryptoWalletId);
       if (value == null || value.isEmpty) {
         Toaster.warning(
-          title: context.t.dashboard_forms.common_field_missing(Field: context.t.dashboard_forms.private_key_label),
+          title: context.t.dashboard_forms.common_field_missing(
+            Field: context.t.dashboard_forms.private_key_label,
+          ),
         );
         return;
       }
@@ -127,7 +136,9 @@ class _CryptoWalletViewScreenState
       });
     } catch (e) {
       Toaster.error(
-        title: context.t.dashboard_forms.common_error_getting_field(Field: context.t.dashboard_forms.private_key_label),
+        title: context.t.dashboard_forms.common_error_getting_field(
+          Field: context.t.dashboard_forms.private_key_label,
+        ),
         description: '$e',
       );
     }
@@ -144,7 +155,9 @@ class _CryptoWalletViewScreenState
       final value = await dao.getXprvFieldById(widget.cryptoWalletId);
       if (value == null || value.isEmpty) {
         Toaster.warning(
-          title: context.t.dashboard_forms.common_field_missing(Field: context.t.dashboard_forms.xprv_label),
+          title: context.t.dashboard_forms.common_field_missing(
+            Field: context.t.dashboard_forms.xprv_label,
+          ),
         );
         return;
       }
@@ -154,7 +167,9 @@ class _CryptoWalletViewScreenState
       });
     } catch (e) {
       Toaster.error(
-        title: context.t.dashboard_forms.common_error_getting_field(Field: context.t.dashboard_forms.xprv_label),
+        title: context.t.dashboard_forms.common_error_getting_field(
+          Field: context.t.dashboard_forms.xprv_label,
+        ),
         description: '$e',
       );
     }
@@ -162,11 +177,15 @@ class _CryptoWalletViewScreenState
 
   Future<void> _copyText(String title, String? value) async {
     if (value == null || value.isEmpty) {
-      Toaster.warning(title: context.t.dashboard_forms.common_field_empty(Field: title));
+      Toaster.warning(
+        title: context.t.dashboard_forms.common_field_empty(Field: title),
+      );
       return;
     }
     await Clipboard.setData(ClipboardData(text: value));
-    Toaster.success(title: context.t.dashboard_forms.common_field_copied(Field: title));
+    Toaster.success(
+      title: context.t.dashboard_forms.common_field_copied(Field: title),
+    );
   }
 
   Widget _buildSensitiveTile({
@@ -179,7 +198,9 @@ class _CryptoWalletViewScreenState
       contentPadding: EdgeInsets.zero,
       title: Text(title),
       subtitle: SelectableText(
-        isVisible ? (value ?? '') : context.t.dashboard_forms.common_press_visibility_to_load,
+        isVisible
+            ? (value ?? '')
+            : context.t.dashboard_forms.common_press_visibility_to_load,
       ),
       trailing: Wrap(
         spacing: 4,
@@ -259,7 +280,10 @@ class _CryptoWalletViewScreenState
                       ),
                     ),
                   if (_network?.isNotEmpty == true)
-                    ListTile(title: Text(l10n.network_label), subtitle: Text(_network!)),
+                    ListTile(
+                      title: Text(l10n.network_label),
+                      subtitle: Text(_network!),
+                    ),
                   if (_derivationPath?.isNotEmpty == true)
                     ListTile(
                       title: Text(l10n.derivation_path_label),
@@ -282,8 +306,9 @@ class _CryptoWalletViewScreenState
                     ),
                   ListTile(
                     title: Text(l10n.watch_only_label),
-                    subtitle:
-                        Text(_watchOnly ? l10n.common_enabled : l10n.common_disabled),
+                    subtitle: Text(
+                      _watchOnly ? l10n.common_enabled : l10n.common_disabled,
+                    ),
                   ),
                   if (_description?.isNotEmpty == true)
                     ListTile(

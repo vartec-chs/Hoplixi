@@ -14,6 +14,7 @@ class ApiKeyListCard extends ConsumerStatefulWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
   final VoidCallback? onOpenHistory;
+  final VoidCallback? onOpenView;
 
   const ApiKeyListCard({
     super.key,
@@ -24,6 +25,7 @@ class ApiKeyListCard extends ConsumerStatefulWidget {
     this.onDelete,
     this.onRestore,
     this.onOpenHistory,
+    this.onOpenView,
   });
 
   @override
@@ -138,6 +140,7 @@ class _ApiKeyListCardState extends ConsumerState<ApiKeyListCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onOpenHistory: widget.onOpenHistory,
       customExpandedContent: _buildExpirySection(
         Theme.of(context),

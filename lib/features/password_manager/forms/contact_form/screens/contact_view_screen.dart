@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -66,7 +66,10 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
         _isEmergencyContact = details.isEmergencyContact;
       });
     } catch (e) {
-      Toaster.error(title: context.t.dashboard_forms.common_load_error, description: '$e');
+      Toaster.error(
+        title: context.t.dashboard_forms.common_load_error,
+        description: '$e',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -74,11 +77,15 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
 
   Future<void> _copyValue(String? value, String label) async {
     if (value == null || value.isEmpty) {
-      Toaster.warning(title: context.t.dashboard_forms.common_field_missing(Field: label));
+      Toaster.warning(
+        title: context.t.dashboard_forms.common_field_missing(Field: label),
+      );
       return;
     }
     await Clipboard.setData(ClipboardData(text: value));
-    Toaster.success(title: context.t.dashboard_forms.common_field_copied(Field: label));
+    Toaster.success(
+      title: context.t.dashboard_forms.common_field_copied(Field: label),
+    );
   }
 
   String _formatDate(DateTime value) {

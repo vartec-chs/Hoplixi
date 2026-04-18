@@ -18,6 +18,7 @@ class FileListCard extends ConsumerStatefulWidget {
   final VoidCallback? onRestore;
   final VoidCallback? onDecrypt;
   final VoidCallback? onOpenHistory;
+  final VoidCallback? onOpenView;
 
   const FileListCard({
     super.key,
@@ -30,6 +31,7 @@ class FileListCard extends ConsumerStatefulWidget {
     this.onRestore,
     this.onDecrypt,
     this.onOpenHistory,
+    this.onOpenView,
   });
 
   @override
@@ -66,6 +68,7 @@ class _FileListCardState extends ConsumerState<FileListCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onOpenHistory: widget.onOpenHistory,
       copyActions: [
         if (widget.onDecrypt != null)

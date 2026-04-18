@@ -15,6 +15,7 @@ class SshKeyListCard extends ConsumerStatefulWidget {
     this.onDelete,
     this.onRestore,
     this.onOpenHistory,
+    this.onOpenView,
   });
 
   final SshKeyCardDto sshKey;
@@ -24,6 +25,7 @@ class SshKeyListCard extends ConsumerStatefulWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
   final VoidCallback? onOpenHistory;
+  final VoidCallback? onOpenView;
 
   @override
   ConsumerState<SshKeyListCard> createState() => _SshKeyListCardState();
@@ -95,6 +97,7 @@ class _SshKeyListCardState extends ConsumerState<SshKeyListCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onOpenHistory: widget.onOpenHistory,
       copyActions: [
         CardActionItem(

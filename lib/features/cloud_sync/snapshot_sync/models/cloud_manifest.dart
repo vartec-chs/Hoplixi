@@ -75,16 +75,13 @@ class CloudManifest {
     final rawStores = json['stores'];
     return CloudManifest(
       version: _toInt(json['version'], fallback: 1),
-      updatedAt:
-          _tryParseDateTime(json['updatedAt']) ?? DateTime.now().toUtc(),
+      updatedAt: _tryParseDateTime(json['updatedAt']) ?? DateTime.now().toUtc(),
       stores: rawStores is List
           ? rawStores
                 .whereType<Map>()
                 .map(
                   (entry) => CloudManifestStoreEntry.fromJson(
-                    entry.map(
-                      (key, value) => MapEntry(key.toString(), value),
-                    ),
+                    entry.map((key, value) => MapEntry(key.toString(), value)),
                   ),
                 )
                 .toList(growable: false)

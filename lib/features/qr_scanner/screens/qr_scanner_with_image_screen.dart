@@ -644,10 +644,7 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
       );
 
       if (result != null) {
-        logInfo(
-          'Code decoded [${result.formatName}]',
-          tag: _logTag,
-        );
+        logInfo('Code decoded [${result.formatName}]', tag: _logTag);
       } else {
         logInfo('Code not found in image', tag: _logTag);
       }

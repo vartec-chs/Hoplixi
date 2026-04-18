@@ -4,7 +4,7 @@ import 'package:hoplixi/core/theme/colors.dart';
 
 enum SmoothButtonType { text, filled, tonal, outlined, dashed }
 
-enum SmoothButtonSize { small, medium, large }
+enum SmoothButtonSize { small, preMedium, medium, large }
 
 enum SmoothButtonIconPosition { start, end }
 
@@ -55,8 +55,9 @@ class SmoothButton extends StatelessWidget {
     switch (size) {
       case SmoothButtonSize.small:
         return 14;
-      case SmoothButtonSize.medium:
+      case SmoothButtonSize.medium || SmoothButtonSize.preMedium:
         return 16;
+
       case SmoothButtonSize.large:
         return 18;
     }
@@ -66,6 +67,8 @@ class SmoothButton extends StatelessWidget {
     switch (size) {
       case SmoothButtonSize.small:
         return const EdgeInsets.symmetric(horizontal: 16, vertical: 12);
+      case SmoothButtonSize.preMedium:
+        return const EdgeInsets.symmetric(horizontal: 18, vertical: 14);
       case SmoothButtonSize.medium:
         return const EdgeInsets.symmetric(horizontal: 22, vertical: 18);
       case SmoothButtonSize.large:

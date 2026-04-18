@@ -18,6 +18,7 @@ class LicenseKeyGridCard extends ConsumerStatefulWidget {
     this.onToggleArchive,
     this.onDelete,
     this.onRestore,
+    this.onOpenView,
   });
 
   final LicenseKeyCardDto license;
@@ -26,6 +27,7 @@ class LicenseKeyGridCard extends ConsumerStatefulWidget {
   final VoidCallback? onToggleArchive;
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
+  final VoidCallback? onOpenView;
 
   @override
   ConsumerState<LicenseKeyGridCard> createState() => _LicenseKeyGridCardState();
@@ -77,6 +79,7 @@ class _LicenseKeyGridCardState extends ConsumerState<LicenseKeyGridCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onEdit: () {
         context.push(
           AppRoutesPaths.dashboardEntityEdit(EntityType.licenseKey, license.id),

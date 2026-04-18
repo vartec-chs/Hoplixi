@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
@@ -72,13 +72,17 @@ class CertificateFormNotifier extends AsyncNotifier<CertificateFormState> {
   void setName(String v) => _update(
     (s) => s.copyWith(
       name: v,
-      nameError: v.trim().isEmpty ? t.dashboard_forms.validation_required_name : null,
+      nameError: v.trim().isEmpty
+          ? t.dashboard_forms.validation_required_name
+          : null,
     ),
   );
   void setCertificatePem(String v) => _update(
     (s) => s.copyWith(
       certificatePem: v,
-      certificatePemError: v.trim().isEmpty ? t.dashboard_forms.validation_required_certificate_pem : null,
+      certificatePemError: v.trim().isEmpty
+          ? t.dashboard_forms.validation_required_certificate_pem
+          : null,
     ),
   );
   void setPrivateKey(String v) => _update((s) => s.copyWith(privateKey: v));
@@ -103,8 +107,12 @@ class CertificateFormNotifier extends AsyncNotifier<CertificateFormState> {
 
   bool validate() {
     final c = _current;
-    final nameError = c.name.trim().isEmpty ? t.dashboard_forms.validation_required_name : null;
-    final certificatePemError = c.certificatePem.trim().isEmpty ? t.dashboard_forms.validation_required_certificate_pem : null;
+    final nameError = c.name.trim().isEmpty
+        ? t.dashboard_forms.validation_required_name
+        : null;
+    final certificatePemError = c.certificatePem.trim().isEmpty
+        ? t.dashboard_forms.validation_required_certificate_pem
+        : null;
 
     _update(
       (s) => s.copyWith(
@@ -155,11 +163,7 @@ class CertificateFormNotifier extends AsyncNotifier<CertificateFormState> {
           return false;
         }
 
-        await saveCustomFields(
-          ref,
-          c.editingCertificateId!,
-          c.customFields,
-        );
+        await saveCustomFields(ref, c.editingCertificateId!, c.customFields);
 
         ref
             .read(dataRefreshTriggerProvider.notifier)
@@ -187,7 +191,6 @@ class CertificateFormNotifier extends AsyncNotifier<CertificateFormState> {
           ),
         );
 
-
         await saveCustomFields(ref, id, c.customFields);
         ref
             .read(dataRefreshTriggerProvider.notifier)
@@ -204,4 +207,3 @@ class CertificateFormNotifier extends AsyncNotifier<CertificateFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
-

@@ -19,6 +19,7 @@ class PasswordListCard extends ConsumerStatefulWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
   final VoidCallback? onOpenHistory;
+  final VoidCallback? onOpenView;
 
   const PasswordListCard({
     super.key,
@@ -30,6 +31,7 @@ class PasswordListCard extends ConsumerStatefulWidget {
     this.onDelete,
     this.onRestore,
     this.onOpenHistory,
+    this.onOpenView,
   });
 
   @override
@@ -314,6 +316,7 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onOpenHistory: widget.onOpenHistory,
       onExpandedChanged: _onExpandedChanged,
       customExpandedContent: _buildTotpSection(Theme.of(context)),

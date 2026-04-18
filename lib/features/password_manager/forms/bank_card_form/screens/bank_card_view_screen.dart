@@ -129,7 +129,8 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
                     child: CreditCardWidget(
                       cardNumber: _formatCardNumber(_bankCard!.$2.cardNumber),
                       expiryDate: _getExpiryDate(),
-                      cardHolderName: _bankCard!.$2.cardholderName.toUpperCase(),
+                      cardHolderName: _bankCard!.$2.cardholderName
+                          .toUpperCase(),
                       cvvCode: _bankCard?.$2.cvv ?? '',
                       showBackView: _showBackView,
                       onCreditCardWidgetChange: (_) {},
@@ -201,7 +202,12 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
                       _bankCard!.$2.bankName!,
                     ),
                   if (_categoryName != null)
-                    _info(theme, LucideIcons.folder, 'Категория', _categoryName!),
+                    _info(
+                      theme,
+                      LucideIcons.folder,
+                      'Категория',
+                      _categoryName!,
+                    ),
                   if (_tagNames.isNotEmpty) _tags(theme),
                   if (_bankCard!.$1.description?.isNotEmpty ?? false)
                     _info(
