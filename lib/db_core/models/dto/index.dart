@@ -18,6 +18,7 @@ export 'document_history_dto.dart';
 export 'file_dto.dart';
 export 'file_history_dto.dart';
 export 'icon_dto.dart';
+export 'icon_ref_dto.dart';
 export 'identity_dto.dart';
 export 'identity_history_dto.dart';
 export 'license_key_dto.dart';

@@ -55,6 +55,8 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
         login: pw.login,
         email: pw.email,
         url: pw.url,
+        iconSource: item.iconSource,
+        iconValue: item.iconValue,
         isArchived: item.isArchived,
         description: item.description,
         isDeleted: item.isDeleted,
@@ -65,6 +67,8 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
                 type: category.type.name,
                 color: category.color,
                 iconId: category.iconId,
+                iconSource: category.iconSource,
+                iconValue: category.iconValue,
               )
             : null,
         isFavorite: item.isFavorite,

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/db_core/models/dto/icon_ref_dto.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/db_core/models/dto/password_dto.dart';
@@ -65,6 +66,8 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
         description: vault.description ?? '',
         noteId: vault.noteId,
         categoryId: vault.categoryId,
+        iconSource: vault.iconSource,
+        iconValue: vault.iconValue,
         expireAt: pwItem.expireAt,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
@@ -141,6 +144,13 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
   /// Обновить категорию
   void setCategory(String? categoryId, String? categoryName) {
     state = state.copyWith(categoryId: categoryId, categoryName: categoryName);
+  }
+
+  void setIconRef(IconRefDto? iconRef) {
+    state = state.copyWith(
+      iconSource: iconRef?.sourceValue,
+      iconValue: iconRef?.value,
+    );
   }
 
   /// Обновить теги
@@ -279,6 +289,13 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
 
         if (success) {
           final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+          await vaultItemDao.setIconRef(
+            state.editingPasswordId!,
+            IconRefDto.fromFields(
+              iconSource: state.iconSource,
+              iconValue: state.iconValue,
+            ),
+          );
           await vaultItemDao.syncTags(state.editingPasswordId!, state.tagIds);
           await _updateOtpLink(state.editingPasswordId!);
           await saveCustomFields(
@@ -325,6 +342,14 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
         );
 
         final passwordId = await dao.createPassword(dto);
+        final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+        await vaultItemDao.setIconRef(
+          passwordId,
+          IconRefDto.fromFields(
+            iconSource: state.iconSource,
+            iconValue: state.iconValue,
+          ),
+        );
         await _updateOtpLink(passwordId);
         await saveCustomFields(ref, passwordId, state.customFields);
 

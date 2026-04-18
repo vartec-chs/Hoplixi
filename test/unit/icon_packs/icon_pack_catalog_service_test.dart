@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hoplixi/features/icon_packs/services/icon_pack_catalog_service.dart';
+import 'package:hoplixi/features/custom_icon_packs/services/icon_pack_catalog_service.dart';
 import 'package:path/path.dart' as p;
 
 void main() {

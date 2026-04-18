@@ -50,7 +50,7 @@ class _FileGridCardState extends ConsumerState<FileGridCard> {
       title: file.name,
       subtitle:
           '${file.fileName ?? ''} • ${_formatFileSize(file.fileSize ?? 0)}',
-      icon: Icons.insert_drive_file,
+      fallbackIcon: Icons.insert_drive_file,
       category: file.category,
       tags: file.tags,
       usedCount: file.usedCount,

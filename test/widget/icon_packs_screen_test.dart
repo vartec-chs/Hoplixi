@@ -4,10 +4,10 @@ import 'package:archive/archive.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hoplixi/features/icon_packs/models/icon_packs_state.dart';
-import 'package:hoplixi/features/icon_packs/providers/icon_packs_provider.dart';
-import 'package:hoplixi/features/icon_packs/screens/icon_packs_screen.dart';
-import 'package:hoplixi/features/icon_packs/services/icon_pack_catalog_service.dart';
+import 'package:hoplixi/features/custom_icon_packs/models/icon_packs_state.dart';
+import 'package:hoplixi/features/custom_icon_packs/providers/icon_packs_provider.dart';
+import 'package:hoplixi/features/custom_icon_packs/screens/icon_packs_screen.dart';
+import 'package:hoplixi/features/custom_icon_packs/services/icon_pack_catalog_service.dart';
 import 'package:path/path.dart' as p;
 
 void main() {

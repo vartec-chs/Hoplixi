@@ -60,7 +60,9 @@ class _NoteListCardState extends ConsumerState<NoteListCard> {
     return ExpandableListCard(
       title: note.title,
       subtitle: note.description,
-      icon: Icons.note,
+      fallbackIcon: Icons.note,
+      iconSource: note.iconSource,
+      iconValue: note.iconValue,
       category: note.category,
       description: note.description,
       tags: note.tags,

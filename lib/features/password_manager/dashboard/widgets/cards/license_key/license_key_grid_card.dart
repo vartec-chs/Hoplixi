@@ -62,7 +62,7 @@ class _LicenseKeyGridCardState extends ConsumerState<LicenseKeyGridCard> {
     return BaseGridCard(
       title: license.name,
       subtitle: '${license.product} • ${license.licenseType ?? 'license'}',
-      icon: Icons.workspace_premium,
+      fallbackIcon: Icons.workspace_premium,
       category: license.category,
       tags: license.tags,
       usedCount: license.usedCount,

@@ -3,11 +3,14 @@ import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/db_core/models/dto/index.dart';
 import 'package:hoplixi/db_core/models/dto/tag_dto.dart';
+import 'package:hoplixi/shared/widgets/icon_ref_preview.dart';
 
 class BaseGridCard extends StatefulWidget {
   final String title;
   final String? subtitle;
-  final IconData icon;
+  final IconData fallbackIcon;
+  final String? iconSource;
+  final String? iconValue;
   final CategoryInCardDto? category;
   final List<TagInCardDto>? tags;
   final int usedCount;
@@ -33,7 +36,9 @@ class BaseGridCard extends StatefulWidget {
     super.key,
     required this.title,
     this.subtitle,
-    required this.icon,
+    required this.fallbackIcon,
+    this.iconSource,
+    this.iconValue,
     this.category,
     this.tags,
     required this.usedCount,
@@ -128,8 +133,13 @@ class _BaseGridCardState extends State<BaseGridCard>
                               color: theme.colorScheme.primaryContainer,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Icon(
-                              widget.icon,
+                            child: IconRefPreview(
+                              iconRef: IconRefDto.fromFields(
+                                iconSource: widget.iconSource,
+                                iconValue: widget.iconValue,
+                              ) ??
+                                  widget.category?.effectiveIconRef,
+                              fallbackIcon: widget.fallbackIcon,
                               size: isMobile ? 16 : 20,
                               color: theme.colorScheme.onPrimaryContainer,
                             ),

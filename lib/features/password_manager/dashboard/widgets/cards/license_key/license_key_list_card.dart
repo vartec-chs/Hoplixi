@@ -68,7 +68,7 @@ class _LicenseKeyListCardState extends ConsumerState<LicenseKeyListCard> {
       title: license.name,
       subtitle: subtitleParts.join(' • '),
       trailingSubtitle: license.orderId,
-      icon: Icons.workspace_premium,
+      fallbackIcon: Icons.workspace_premium,
       category: license.category,
       description: license.description,
       tags: license.tags,

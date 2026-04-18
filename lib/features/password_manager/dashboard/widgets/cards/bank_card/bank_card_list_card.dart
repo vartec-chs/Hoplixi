@@ -113,7 +113,7 @@ class _BankCardListCardState extends ConsumerState<BankCardListCard> {
       title: card.name,
       subtitle: '${_maskCardNumber(card.cardNumber)} • ${card.cardholderName}',
       trailingSubtitle: '${card.expiryMonth}/${card.expiryYear}',
-      icon: Icons.credit_card,
+      fallbackIcon: Icons.credit_card,
       category: card.category,
       tags: card.tags,
       usedCount: card.usedCount,

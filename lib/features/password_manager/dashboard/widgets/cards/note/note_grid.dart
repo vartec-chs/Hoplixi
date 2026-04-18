@@ -58,7 +58,9 @@ class _NoteGridCardState extends ConsumerState<NoteGridCard> {
     return BaseGridCard(
       title: note.title,
       subtitle: note.description,
-      icon: Icons.note,
+      fallbackIcon: Icons.note,
+      iconSource: note.iconSource,
+      iconValue: note.iconValue,
       category: note.category,
       tags: note.tags,
       usedCount: note.usedCount,

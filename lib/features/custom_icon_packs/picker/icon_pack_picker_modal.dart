@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/features/icon_packs/models/icon_pack_summary.dart';
-import 'package:hoplixi/features/icon_packs/picker/widgets/icon_pack_picker_empty_states.dart';
-import 'package:hoplixi/features/icon_packs/picker/widgets/icon_pack_picker_icon_page.dart';
-import 'package:hoplixi/features/icon_packs/picker/widgets/icon_pack_picker_pack_page.dart';
-import 'package:hoplixi/features/icon_packs/providers/icon_packs_provider.dart';
+import 'package:hoplixi/features/custom_icon_packs/models/icon_pack_summary.dart';
+import 'package:hoplixi/features/custom_icon_packs/picker/widgets/icon_pack_picker_empty_states.dart';
+import 'package:hoplixi/features/custom_icon_packs/picker/widgets/icon_pack_picker_icon_page.dart';
+import 'package:hoplixi/features/custom_icon_packs/picker/widgets/icon_pack_picker_pack_page.dart';
+import 'package:hoplixi/features/custom_icon_packs/providers/icon_packs_provider.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 Future<String?> showIconPackPickerModal(

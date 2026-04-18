@@ -64,7 +64,7 @@ class _WifiGridCardState extends ConsumerState<WifiGridCard> {
     return BaseGridCard(
       title: wifi.name,
       subtitle: subtitle,
-      icon: Icons.wifi,
+      fallbackIcon: Icons.wifi,
       category: wifi.category,
       tags: wifi.tags,
       usedCount: wifi.usedCount,

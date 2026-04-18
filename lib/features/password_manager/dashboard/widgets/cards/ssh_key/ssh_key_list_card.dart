@@ -79,7 +79,7 @@ class _SshKeyListCardState extends ConsumerState<SshKeyListCard> {
       title: sshKey.name,
       subtitle: subtitle.isEmpty ? null : subtitle,
       trailingSubtitle: sshKey.fingerprint,
-      icon: Icons.key,
+      fallbackIcon: Icons.key,
       category: sshKey.category,
       description: sshKey.description,
       tags: sshKey.tags,

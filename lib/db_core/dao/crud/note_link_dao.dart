@@ -429,6 +429,8 @@ class NoteLinkDao extends DatabaseAccessor<MainStore> with _$NoteLinkDaoMixin {
               type: category.type.name,
               color: category.color,
               iconId: category.iconId,
+              iconSource: category.iconSource,
+              iconValue: category.iconValue,
             )
           : null,
       tags: tagsMap[item.id] ?? const <TagInCardDto>[],

@@ -37,6 +37,8 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
       type: c.type.value,
       color: c.color,
       iconId: c.iconId,
+      iconSource: c.iconSource,
+      iconValue: c.iconValue,
       parentId: c.parentId,
       itemsCount: itemsCount,
     );
@@ -139,6 +141,8 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
           type: entry.type.value,
           color: entry.color,
           iconId: entry.iconId,
+          iconSource: entry.iconSource,
+          iconValue: entry.iconValue,
           parentId: entry.parentId,
           itemsCount: itemCounts[entry.id] ?? 0,
         ),
@@ -371,6 +375,8 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
         description: Value(dto.description),
         color: Value(dto.color ?? 'FFFFFF'),
         iconId: Value(dto.iconId),
+        iconSource: Value(dto.iconSource),
+        iconValue: Value(dto.iconValue),
         parentId: Value(dto.parentId),
       ),
     );
@@ -386,6 +392,12 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
           : const Value.absent(),
       color: dto.color != null ? Value(dto.color!) : const Value.absent(),
       iconId: dto.iconId != null ? Value(dto.iconId) : const Value.absent(),
+      iconSource: dto.iconSource != null
+          ? Value(dto.iconSource)
+          : const Value.absent(),
+      iconValue: dto.iconValue != null
+          ? Value(dto.iconValue)
+          : const Value.absent(),
       parentId: dto.parentId,
       modifiedAt: Value(DateTime.now()),
     );
@@ -463,9 +475,21 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
     }
     if (filter.hasIcon != null) {
       if (filter.hasIcon!) {
-        query = query..where((c) => c.iconId.isNotNull());
+        query = query
+          ..where(
+            (c) =>
+                c.iconValue.isNotNull() |
+                c.iconSource.isNotNull() |
+                c.iconId.isNotNull(),
+          );
       } else {
-        query = query..where((c) => c.iconId.isNull());
+        query = query
+          ..where(
+            (c) =>
+                c.iconValue.isNull() &
+                c.iconSource.isNull() &
+                c.iconId.isNull(),
+          );
       }
     }
     if (filter.hasDescription != null) {

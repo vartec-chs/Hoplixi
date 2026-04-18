@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/icon_packs/models/icon_pack_summary.dart';
-import 'package:hoplixi/features/icon_packs/models/icon_packs_state.dart';
-import 'package:hoplixi/features/icon_packs/providers/icon_packs_provider.dart';
-import 'package:hoplixi/features/icon_packs/services/icon_pack_catalog_service.dart';
+import 'package:hoplixi/features/custom_icon_packs/models/icon_pack_summary.dart';
+import 'package:hoplixi/features/custom_icon_packs/models/icon_packs_state.dart';
+import 'package:hoplixi/features/custom_icon_packs/providers/icon_packs_provider.dart';
+import 'package:hoplixi/features/custom_icon_packs/services/icon_pack_catalog_service.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:intl/intl.dart';

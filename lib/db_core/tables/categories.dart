@@ -15,6 +15,8 @@ class Categories extends Table {
     #id,
     onDelete: KeyAction.setNull,
   )(); // Foreign key to icons table
+  TextColumn get iconSource => text().nullable()();
+  TextColumn get iconValue => text().nullable()();
   TextColumn get color =>
       text().withDefault(const Constant('FFFFFF'))(); // Hex color code
   TextColumn get type =>

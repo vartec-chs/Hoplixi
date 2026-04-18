@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/features/icon_packs/models/icon_pack_summary.dart';
-import 'package:hoplixi/features/icon_packs/picker/widgets/icon_pack_picker_empty_states.dart';
+import 'package:hoplixi/features/custom_icon_packs/models/icon_pack_summary.dart';
+import 'package:hoplixi/features/custom_icon_packs/picker/widgets/icon_pack_picker_empty_states.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 

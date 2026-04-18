@@ -66,7 +66,7 @@ class _RecoveryCodesListCardState extends ConsumerState<RecoveryCodesListCard> {
       trailingSubtitle: recoveryCodes.oneTime == true
           ? 'one-time'
           : 'multi-use',
-      icon: Icons.security,
+      fallbackIcon: Icons.security,
       category: recoveryCodes.category,
       description: recoveryCodes.description,
       tags: recoveryCodes.tags,

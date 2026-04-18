@@ -78,7 +78,7 @@ class _BankCardGridCardState extends ConsumerState<BankCardGridCard> {
     return BaseGridCard(
       title: card.name,
       subtitle: '${_maskCardNumber(card.cardNumber)} • ${card.cardholderName}',
-      icon: Icons.credit_card,
+      fallbackIcon: Icons.credit_card,
       category: card.category,
       tags: card.tags,
       usedCount: card.usedCount,

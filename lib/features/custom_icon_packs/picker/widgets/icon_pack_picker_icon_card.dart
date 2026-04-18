@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:hoplixi/features/icon_packs/models/icon_pack_entry.dart';
-import 'package:hoplixi/features/icon_packs/providers/icon_packs_provider.dart';
+import 'package:hoplixi/features/custom_icon_packs/models/icon_pack_entry.dart';
+import 'package:hoplixi/features/custom_icon_packs/providers/icon_packs_provider.dart';
 
 class IconPackPickerIconCard extends StatelessWidget {
   const IconPackPickerIconCard({

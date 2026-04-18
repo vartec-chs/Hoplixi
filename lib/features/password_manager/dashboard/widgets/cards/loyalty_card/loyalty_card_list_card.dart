@@ -83,7 +83,7 @@ class _LoyaltyCardListCardState extends ConsumerState<LoyaltyCardListCard> {
           ? '${card.programName}  •  ${_maskCardNumber(card.cardNumber!)}'
           : card.programName,
       trailingSubtitle: trailingSubtitle,
-      icon: Icons.loyalty,
+      fallbackIcon: Icons.loyalty,
       category: card.category,
       tags: card.tags,
       usedCount: card.usedCount,

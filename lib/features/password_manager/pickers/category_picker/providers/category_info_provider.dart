@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/db_core/models/dto/category_dto.dart';
+import 'package:hoplixi/db_core/models/dto/icon_ref_dto.dart';
 import 'package:hoplixi/db_core/models/enums/index.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
 
@@ -10,6 +11,8 @@ class CategoryBasicInfo {
   final String type;
   final String? color;
   final String? iconId;
+  final String? iconSource;
+  final String? iconValue;
 
   const CategoryBasicInfo({
     required this.id,
@@ -17,6 +20,8 @@ class CategoryBasicInfo {
     required this.type,
     this.color,
     this.iconId,
+    this.iconSource,
+    this.iconValue,
   });
 
   factory CategoryBasicInfo.fromCategoryCard(CategoryCardDto dto) {
@@ -26,8 +31,16 @@ class CategoryBasicInfo {
       type: dto.type,
       color: dto.color,
       iconId: dto.iconId,
+      iconSource: dto.iconSource,
+      iconValue: dto.iconValue,
     );
   }
+
+  IconRefDto? get effectiveIconRef => IconRefDto.fromFields(
+    iconSource: iconSource,
+    iconValue: iconValue,
+    legacyIconId: iconId,
+  );
 }
 
 /// Провайдер для получения базовой информации о категории по ID
@@ -50,6 +63,8 @@ final categoryInfoProvider = FutureProvider.autoDispose
           type: category.type.value,
           color: category.color,
           iconId: category.iconId,
+          iconSource: category.iconSource,
+          iconValue: category.iconValue,
         );
       } catch (e) {
         return null;
@@ -77,6 +92,8 @@ final categoriesInfoProvider = FutureProvider.autoDispose
                 type: category.type.value,
                 color: category.color,
                 iconId: category.iconId,
+                iconSource: category.iconSource,
+                iconValue: category.iconValue,
               ),
             );
           }

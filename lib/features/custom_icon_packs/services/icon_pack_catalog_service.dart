@@ -6,9 +6,9 @@ import 'dart:math';
 import 'package:archive/archive.dart';
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/logger/index.dart';
-import 'package:hoplixi/features/icon_packs/models/icon_pack_entry.dart';
-import 'package:hoplixi/features/icon_packs/models/icon_pack_manifest.dart';
-import 'package:hoplixi/features/icon_packs/models/icon_pack_summary.dart';
+import 'package:hoplixi/features/custom_icon_packs/models/icon_pack_entry.dart';
+import 'package:hoplixi/features/custom_icon_packs/models/icon_pack_manifest.dart';
+import 'package:hoplixi/features/custom_icon_packs/models/icon_pack_summary.dart';
 import 'package:path/path.dart' as p;
 
 typedef IconPackImportProgress =

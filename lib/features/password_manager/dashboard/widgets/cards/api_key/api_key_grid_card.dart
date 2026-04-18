@@ -79,7 +79,7 @@ class _ApiKeyGridCardState extends ConsumerState<ApiKeyGridCard> {
     return BaseGridCard(
       title: apiKey.name,
       subtitle: subtitleParts.join(' • '),
-      icon: Icons.api,
+      fallbackIcon: Icons.api,
       category: apiKey.category,
       tags: apiKey.tags,
       usedCount: apiKey.usedCount,

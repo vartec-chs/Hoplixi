@@ -151,29 +151,38 @@ class MainStore extends _$MainStore {
           tag: '${_logTag}Migration',
         );
 
-        logWarning(
-          'Development migration strategy: full schema recreation',
-          tag: '${_logTag}Migration',
-        );
+        var currentVersion = from;
 
-        await customStatement('PRAGMA foreign_keys = OFF');
-
-        final tableRows = await customSelect(
-          "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
-        ).get();
-
-        for (final row in tableRows) {
-          final name = row.read<String>('name');
-          if (name.isEmpty) continue;
-          final escapedName = name.replaceAll('"', '""');
-          await customStatement('DROP TABLE IF EXISTS "$escapedName"');
+        if (currentVersion < 2) {
+          await _migrateToV2(m);
+          currentVersion = 2;
         }
 
-        await customStatement('PRAGMA foreign_keys = ON');
+        if (currentVersion < to) {
+          logWarning(
+            'Falling back to development migration strategy for remaining versions',
+            tag: '${_logTag}Migration',
+          );
 
-        await m.createAll();
-        await _installIndexes();
-        await _installHistoryTriggers();
+          await customStatement('PRAGMA foreign_keys = OFF');
+
+          final tableRows = await customSelect(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
+          ).get();
+
+          for (final row in tableRows) {
+            final name = row.read<String>('name');
+            if (name.isEmpty) continue;
+            final escapedName = name.replaceAll('"', '""');
+            await customStatement('DROP TABLE IF EXISTS "$escapedName"');
+          }
+
+          await customStatement('PRAGMA foreign_keys = ON');
+
+          await m.createAll();
+          await _installIndexes();
+          await _installHistoryTriggers();
+        }
 
         logInfo('Migration completed', tag: '${_logTag}Migration');
       },
@@ -330,6 +339,32 @@ class MainStore extends _$MainStore {
       );
       rethrow;
     }
+  }
+
+  Future<void> _migrateToV2(Migrator m) async {
+    logInfo('Running migration to schema version 2', tag: '${_logTag}Migration');
+
+    await m.addColumn(categories, categories.iconSource);
+    await m.addColumn(categories, categories.iconValue);
+    await m.addColumn(vaultItems, vaultItems.iconSource);
+    await m.addColumn(vaultItems, vaultItems.iconValue);
+    await m.addColumn(vaultItemHistory, vaultItemHistory.iconSource);
+    await m.addColumn(vaultItemHistory, vaultItemHistory.iconValue);
+
+    await customStatement(
+      '''
+      UPDATE categories
+      SET icon_source = 'db',
+          icon_value = icon_id
+      WHERE icon_id IS NOT NULL
+        AND TRIM(icon_id) != ''
+        AND (icon_source IS NULL OR TRIM(icon_source) = '')
+        AND (icon_value IS NULL OR TRIM(icon_value) = '')
+      ''',
+    );
+
+    await _installHistoryTriggers();
+    logInfo('Schema version 2 migration completed', tag: '${_logTag}Migration');
   }
 
   /// Создание индексов для оптимизации запросов.

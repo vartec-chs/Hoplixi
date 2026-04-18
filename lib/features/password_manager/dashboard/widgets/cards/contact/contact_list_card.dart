@@ -54,7 +54,7 @@ class ContactListCard extends StatelessWidget {
     return ExpandableListCard(
       title: contact.name,
       subtitle: subtitleParts.join(' • '),
-      icon: Icons.contact_phone,
+      fallbackIcon: Icons.contact_phone,
       category: contact.category,
       description: contact.description,
       tags: contact.tags,

@@ -57,7 +57,7 @@ class ContactGridCard extends StatelessWidget {
     return BaseGridCard(
       title: contact.name,
       subtitle: subtitleParts.join(' • '),
-      icon: Icons.contact_phone,
+      fallbackIcon: Icons.contact_phone,
       category: contact.category,
       tags: contact.tags,
       usedCount: contact.usedCount,

@@ -62,7 +62,7 @@ class _RecoveryCodesGridCardState extends ConsumerState<RecoveryCodesGridCard> {
     return BaseGridCard(
       title: recoveryCodes.name,
       subtitle: '$usedCount / $codesCount • ${recoveryCodes.oneTime == true ? 'one-time' : 'multi-use'}',
-      icon: Icons.security,
+      fallbackIcon: Icons.security,
       category: recoveryCodes.category,
       tags: recoveryCodes.tags,
       usedCount: recoveryCodes.usedCount,

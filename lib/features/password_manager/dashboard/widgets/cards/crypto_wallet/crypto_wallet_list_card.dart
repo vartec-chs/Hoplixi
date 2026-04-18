@@ -113,7 +113,7 @@ class _CryptoWalletListCardState extends ConsumerState<CryptoWalletListCard> {
       title: wallet.name,
       subtitle: subtitleParts.join(' • '),
       trailingSubtitle: wallet.hardwareDevice,
-      icon: Icons.currency_bitcoin,
+      fallbackIcon: Icons.currency_bitcoin,
       category: wallet.category,
       description: wallet.description,
       tags: wallet.tags,

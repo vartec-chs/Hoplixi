@@ -2,6 +2,7 @@ import 'dart:math' show exp;
 
 import 'package:drift/drift.dart';
 import 'package:hoplixi/db_core/models/dto/category_dto.dart';
+import 'package:hoplixi/db_core/models/dto/icon_ref_dto.dart';
 import 'package:hoplixi/db_core/models/dto/linked_vault_item_card_dto.dart';
 import 'package:hoplixi/db_core/models/dto/tag_dto.dart';
 import 'package:hoplixi/db_core/main_store.dart';
@@ -59,6 +60,18 @@ class VaultItemDao extends DatabaseAccessor<MainStore>
   Future<bool> restoreFromDeleted(String id) async {
     final result = await (update(vaultItems)..where((v) => v.id.equals(id)))
         .write(const VaultItemsCompanion(isDeleted: Value(false)));
+    return result > 0;
+  }
+
+  Future<bool> setIconRef(String id, IconRefDto? iconRef) async {
+    final result = await (update(vaultItems)..where((v) => v.id.equals(id)))
+        .write(
+          VaultItemsCompanion(
+            iconSource: Value(iconRef?.sourceValue),
+            iconValue: Value(iconRef?.value),
+            modifiedAt: Value(DateTime.now()),
+          ),
+        );
     return result > 0;
   }
 
@@ -202,6 +215,8 @@ class VaultItemDao extends DatabaseAccessor<MainStore>
                 type: category.type.name,
                 color: category.color,
                 iconId: category.iconId,
+                iconSource: category.iconSource,
+                iconValue: category.iconValue,
               )
             : null,
         tags: tagsMap[item.id] ?? const <TagInCardDto>[],

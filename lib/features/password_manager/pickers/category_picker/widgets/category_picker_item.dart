@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/db_core/models/dto/category_dto.dart';
+import 'package:hoplixi/shared/widgets/icon_ref_preview.dart';
 
 /// Элемент списка категорий в пикере.
 ///
@@ -72,7 +73,7 @@ class CategoryPickerItem extends StatelessWidget {
               const SizedBox(width: 12),
 
               // Иконка категории (если есть)
-              if (category.iconId != null) ...[
+              if (category.effectiveIconRef != null) ...[
                 Container(
                   width: 40,
                   height: 40,
@@ -80,10 +81,11 @@ class CategoryPickerItem extends StatelessWidget {
                     color: categoryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(
-                    Icons.category_outlined,
-                    color: categoryColor,
+                  child: IconRefPreview(
+                    iconRef: category.effectiveIconRef,
+                    fallbackIcon: Icons.category_outlined,
                     size: 20,
+                    color: categoryColor,
                   ),
                 ),
                 const SizedBox(width: 12),

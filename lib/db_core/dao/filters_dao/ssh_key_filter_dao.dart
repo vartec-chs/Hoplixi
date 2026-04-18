@@ -65,6 +65,8 @@ class SshKeyFilterDao extends DatabaseAccessor<MainStore>
                 type: category.type.name,
                 color: category.color,
                 iconId: category.iconId,
+                iconSource: category.iconSource,
+                iconValue: category.iconValue,
               )
             : null,
         tags: tagsMap[item.id] ?? [],

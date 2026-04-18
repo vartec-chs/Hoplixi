@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/db_core/models/dto/category_dto.dart';
+import 'package:hoplixi/shared/widgets/icon_ref_preview.dart';
 
 /// Современная карточка категории с градиентным фоном и анимациями.
 ///
@@ -246,8 +247,13 @@ class _CategoryCardState extends State<CategoryCard>
         ],
       ),
       child: Center(
-        child: widget.category.iconId != null
-            ? Icon(Icons.folder, color: baseColor, size: 26)
+        child: widget.category.effectiveIconRef != null
+            ? IconRefPreview(
+                iconRef: widget.category.effectiveIconRef,
+                fallbackIcon: Icons.folder,
+                size: 26,
+                color: baseColor,
+              )
             : Text(
                 widget.category.name.isNotEmpty
                     ? widget.category.name[0].toUpperCase()

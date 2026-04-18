@@ -4,16 +4,17 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/db_core/models/dto/icon_ref_dto.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_field.dart';
-import 'package:hoplixi/features/password_manager/pickers/icon_picker/icon_picker_button.dart';
 import 'package:hoplixi/db_core/models/dto/category_dto.dart';
 import 'package:hoplixi/db_core/models/enums/entity_types.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/shared/widgets/icon_source_picker_button.dart';
 
 /// Экран для создания/редактирования категории
 class CategoryFormScreen extends ConsumerStatefulWidget {
@@ -37,7 +38,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
   late String _name;
   String? _description;
   Color? _selectedColor;
-  String? _iconId;
+  IconRefDto? _iconRef;
   late CategoryType _selectedType;
   String? _parentId;
   String? _parentName;
@@ -69,7 +70,11 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
           setState(() {
             _name = category.name;
             _description = category.description;
-            _iconId = category.iconId;
+            _iconRef = IconRefDto.fromFields(
+              iconSource: category.iconSource,
+              iconValue: category.iconValue,
+              legacyIconId: category.iconId,
+            );
             _selectedType = category.type;
             _parentId = category.parentId;
             _parentName = parentName;
@@ -95,7 +100,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
     } else {
       _name = '';
       _description = null;
-      _iconId = null;
+      _iconRef = null;
       _selectedColor = null;
       _parentId = null;
       _parentName = null;
@@ -249,16 +254,18 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                 children: [
                   // Выбор иконки
                   Center(
-                    child: IconPickerButton(
-                      selectedIconId: _iconId,
-                      onBeforeOpenPicker: _handleBeforeIconPickerOpen,
-                      onIconSelected: (id) {
+                    child: IconSourcePickerButton(
+                      iconRef: _iconRef,
+                      fallbackIcon: Icons.folder_outlined,
+                      title: 'Иконка категории',
+                      subtitle:
+                          'Выберите пользовательскую иконку или SVG из импортированного пака.',
+                      onBeforeOpenDbPicker: _handleBeforeIconPickerOpen,
+                      onChanged: (iconRef) {
                         setState(() {
-                          _iconId = id;
+                          _iconRef = iconRef;
                         });
                       },
-                      size: 120,
-                      hintText: 'Выбрать иконку\n(необязательно)',
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -414,7 +421,9 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
           name: _name.trim(),
           description: _description,
           color: colorHex,
-          iconId: _iconId,
+          iconId: null,
+          iconSource: _iconRef?.sourceValue,
+          iconValue: _iconRef?.value,
           parentId: Value(_parentId),
         );
 
@@ -435,7 +444,9 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
           type: _selectedType.value,
           description: _description,
           color: colorHex,
-          iconId: _iconId,
+          iconId: null,
+          iconSource: _iconRef?.sourceValue,
+          iconValue: _iconRef?.value,
           parentId: _parentId,
         );
 

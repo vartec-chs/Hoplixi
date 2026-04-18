@@ -68,7 +68,7 @@ class _CertificateGridCardState extends ConsumerState<CertificateGridCard> {
     return BaseGridCard(
       title: certificate.name,
       subtitle: certificate.issuer ?? certificate.subject,
-      icon: Icons.verified,
+      fallbackIcon: Icons.verified,
       category: certificate.category,
       tags: certificate.tags,
       usedCount: certificate.usedCount,

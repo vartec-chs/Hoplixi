@@ -62,7 +62,7 @@ class _IdentityGridCardState extends ConsumerState<IdentityGridCard> {
     return BaseGridCard(
       title: identity.name,
       subtitle: '${identity.idType} • ${identity.idNumber}',
-      icon: Icons.badge,
+      fallbackIcon: Icons.badge,
       category: identity.category,
       tags: identity.tags,
       usedCount: identity.usedCount,

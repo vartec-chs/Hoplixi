@@ -93,7 +93,9 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard> {
     return BaseGridCard(
       title: password.name,
       subtitle: displayLogin ?? (hostUrl.isEmpty ? null : hostUrl),
-      icon: Icons.lock,
+      fallbackIcon: Icons.lock,
+      iconSource: password.iconSource,
+      iconValue: password.iconValue,
       category: password.category,
       tags: password.tags,
       usedCount: password.usedCount,

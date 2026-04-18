@@ -243,7 +243,7 @@ class _TotpListCardState extends ConsumerState<TotpListCard> {
     return ExpandableListCard(
       title: title,
       subtitle: subtitle,
-      icon: Icons.vpn_key,
+      fallbackIcon: Icons.vpn_key,
       category: otp.category,
       tags: otp.tags,
       usedCount: otp.usedCount,

@@ -33,6 +33,12 @@ class VaultItemHistory extends Table {
   /// Имя категории на момент действия
   TextColumn get categoryName => text().nullable()();
 
+  /// Источник иконки элемента на момент действия
+  TextColumn get iconSource => text().nullable()();
+
+  /// Значение иконки элемента на момент действия
+  TextColumn get iconValue => text().nullable()();
+
   /// Действие (created / modified / deleted)
   TextColumn get action => textEnum<ActionInHistory>()();
 

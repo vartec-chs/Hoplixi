@@ -123,7 +123,7 @@ class _CertificateListCardState extends ConsumerState<CertificateListCard> {
       title: certificate.name,
       subtitle: subtitleParts.isEmpty ? null : subtitleParts.join(' • '),
       trailingSubtitle: certificate.fingerprint,
-      icon: Icons.verified,
+      fallbackIcon: Icons.verified,
       category: certificate.category,
       description: certificate.description,
       tags: certificate.tags,

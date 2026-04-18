@@ -65,7 +65,7 @@ class _CryptoWalletGridCardState extends ConsumerState<CryptoWalletGridCard> {
     return BaseGridCard(
       title: wallet.name,
       subtitle: subtitle,
-      icon: Icons.currency_bitcoin,
+      fallbackIcon: Icons.currency_bitcoin,
       category: wallet.category,
       tags: wallet.tags,
       usedCount: wallet.usedCount,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/db_core/models/dto/icon_ref_dto.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/db_core/models/enums/entity_types.dart';
@@ -7,6 +8,7 @@ import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/modal_sheet_close_button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_editor.dart';
+import 'package:hoplixi/shared/widgets/icon_source_picker_button.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 import '../providers/note_form_provider.dart';
@@ -186,6 +188,17 @@ class _NoteMetadataFormState extends ConsumerState<_NoteMetadataForm> {
                   .read(noteFormProvider.notifier)
                   .setCategory(categoryId, categoryName);
             },
+          ),
+          const SizedBox(height: 16),
+
+          IconSourcePickerButton(
+            iconRef: IconRefDto.fromFields(
+              iconSource: state.iconSource,
+              iconValue: state.iconValue,
+            ),
+            fallbackIcon: Icons.note_alt_outlined,
+            title: 'Иконка записи',
+            onChanged: ref.read(noteFormProvider.notifier).setIconRef,
           ),
           const SizedBox(height: 16),
 

@@ -47,6 +47,8 @@ class NoteFilterDao extends DatabaseAccessor<MainStore>
         id: item.id,
         title: item.name,
         description: item.description,
+        iconSource: item.iconSource,
+        iconValue: item.iconValue,
         category: category != null
             ? CategoryInCardDto(
                 id: category.id,
@@ -54,6 +56,8 @@ class NoteFilterDao extends DatabaseAccessor<MainStore>
                 type: category.type.name,
                 color: category.color,
                 iconId: category.iconId,
+                iconSource: category.iconSource,
+                iconValue: category.iconValue,
               )
             : null,
         isFavorite: item.isFavorite,

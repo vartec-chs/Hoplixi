@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/home/home_screen.dart';
 import 'package:hoplixi/features/home/providers/recent_database_provider.dart';
-import 'package:hoplixi/features/icon_packs/screens/icon_packs_screen.dart';
+import 'package:hoplixi/features/custom_icon_packs/screens/icon_packs_screen.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/routing/routes.dart';
 

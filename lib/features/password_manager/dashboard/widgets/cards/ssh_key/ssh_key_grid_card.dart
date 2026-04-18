@@ -64,7 +64,7 @@ class _SshKeyGridCardState extends ConsumerState<SshKeyGridCard> {
     return BaseGridCard(
       title: sshKey.name,
       subtitle: subtitle.isEmpty ? null : subtitle,
-      icon: Icons.key,
+      fallbackIcon: Icons.key,
       category: sshKey.category,
       tags: sshKey.tags,
       usedCount: sshKey.usedCount,

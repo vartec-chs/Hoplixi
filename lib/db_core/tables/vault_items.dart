@@ -34,6 +34,12 @@ class VaultItems extends Table {
   /// Ссылка на связанную заметку
   TextColumn get noteId => text().nullable()();
 
+  /// Источник иконки элемента
+  TextColumn get iconSource => text().nullable()();
+
+  /// Значение ссылки на иконку
+  TextColumn get iconValue => text().nullable()();
+
   /// Количество использований
   IntColumn get usedCount => integer().withDefault(const Constant(0))();
 

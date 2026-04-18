@@ -1,8 +1,8 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/index.dart';
-import 'package:hoplixi/features/icon_packs/models/icon_packs_state.dart';
-import 'package:hoplixi/features/icon_packs/services/icon_pack_catalog_service.dart';
+import 'package:hoplixi/features/custom_icon_packs/models/icon_packs_state.dart';
+import 'package:hoplixi/features/custom_icon_packs/services/icon_pack_catalog_service.dart';
 
 final iconPackCatalogServiceProvider = Provider<IconPackCatalogService>((ref) {
   return const IconPackCatalogService();

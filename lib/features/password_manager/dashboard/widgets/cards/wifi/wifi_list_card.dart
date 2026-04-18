@@ -80,7 +80,7 @@ class _WifiListCardState extends ConsumerState<WifiListCard> {
       title: wifi.name,
       subtitle: subtitleParts.join(' • '),
       trailingSubtitle: wifi.priority == null ? null : 'prio ${wifi.priority}',
-      icon: Icons.wifi,
+      fallbackIcon: Icons.wifi,
       category: wifi.category,
       description: wifi.description,
       tags: wifi.tags,

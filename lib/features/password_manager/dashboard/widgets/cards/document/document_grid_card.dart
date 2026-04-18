@@ -59,7 +59,7 @@ class _DocumentGridCardState extends ConsumerState<DocumentGridCard> {
     return BaseGridCard(
       title: title,
       subtitle: '$typeLabel • ${document.pageCount} стр.',
-      icon: Icons.description,
+      fallbackIcon: Icons.description,
       category: document.category,
       tags: document.tags,
       usedCount: document.usedCount,

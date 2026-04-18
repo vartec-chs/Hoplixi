@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/db_core/models/dto/index.dart';
 import 'package:hoplixi/db_core/models/dto/tag_dto.dart';
+import 'package:hoplixi/shared/widgets/icon_ref_preview.dart';
 
 class ExpandableListCard extends StatefulWidget {
   final String title;
   final String? subtitle;
   final String? trailingSubtitle;
-  final IconData icon;
+  final IconData fallbackIcon;
+  final String? iconSource;
+  final String? iconValue;
   final CategoryInCardDto? category;
   final String? description;
   final List<TagInCardDto>? tags;
@@ -37,7 +40,9 @@ class ExpandableListCard extends StatefulWidget {
     required this.title,
     this.subtitle,
     this.trailingSubtitle,
-    required this.icon,
+    required this.fallbackIcon,
+    this.iconSource,
+    this.iconValue,
     this.category,
     this.description,
     this.tags,
@@ -170,7 +175,16 @@ class _ExpandableListCardState extends State<ExpandableListCard>
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(widget.icon, color: theme.colorScheme.onSurface),
+                child: IconRefPreview(
+                  iconRef: IconRefDto.fromFields(
+                    iconSource: widget.iconSource,
+                    iconValue: widget.iconValue,
+                  ) ??
+                      widget.category?.effectiveIconRef,
+                  fallbackIcon: widget.fallbackIcon,
+                  size: 22,
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
               const SizedBox(width: 6),
               Expanded(

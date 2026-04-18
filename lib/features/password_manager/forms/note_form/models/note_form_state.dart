@@ -29,6 +29,8 @@ sealed class NoteFormState with _$NoteFormState {
     // Связи
     String? categoryId,
     String? categoryName,
+    String? iconSource,
+    String? iconValue,
     @Default([]) List<String> tagIds,
     @Default([]) List<String> tagNames,
     @Default([]) List<CustomFieldEntry> customFields,

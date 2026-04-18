@@ -62,7 +62,7 @@ class _DocumentListCardState extends ConsumerState<DocumentListCard> {
       title: title,
       subtitle: typeLabel,
       trailingSubtitle: '${document.pageCount} стр.',
-      icon: Icons.description,
+      fallbackIcon: Icons.description,
       category: document.category,
       description: document.description,
       tags: document.tags,

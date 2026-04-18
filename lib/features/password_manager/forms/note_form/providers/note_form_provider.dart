@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/db_core/models/dto/icon_ref_dto.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/db_core/models/dto/note_dto.dart';
@@ -62,6 +63,8 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
         deltaJson: noteItem.deltaJson,
         description: vault.description ?? '',
         categoryId: vault.categoryId,
+        iconSource: vault.iconSource,
+        iconValue: vault.iconValue,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
         customFields: customFields,
@@ -185,6 +188,14 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
     );
   }
 
+  void setIconRef(IconRefDto? iconRef) {
+    state = state.copyWith(
+      iconSource: iconRef?.sourceValue,
+      iconValue: iconRef?.value,
+      hasUnsavedChanges: true,
+    );
+  }
+
   /// Обновить теги
   void setTags(List<String> tagIds, List<String> tagNames) {
     state = state.copyWith(
@@ -257,6 +268,13 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
         if (success) {
           // Синхронизация тегов
           final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+          await vaultItemDao.setIconRef(
+            state.editingNoteId!,
+            IconRefDto.fromFields(
+              iconSource: state.iconSource,
+              iconValue: state.iconValue,
+            ),
+          );
           await vaultItemDao.syncTags(state.editingNoteId!, state.tagIds);
 
           await saveCustomFields(ref, state.editingNoteId!, state.customFields);
@@ -299,6 +317,14 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
         );
 
         final noteId = await dao.createNote(dto);
+        final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
+        await vaultItemDao.setIconRef(
+          noteId,
+          IconRefDto.fromFields(
+            iconSource: state.iconSource,
+            iconValue: state.iconValue,
+          ),
+        );
 
         await saveCustomFields(ref, noteId, state.customFields);
 

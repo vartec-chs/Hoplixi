@@ -122,7 +122,7 @@ class _ApiKeyListCardState extends ConsumerState<ApiKeyListCard> {
     return ExpandableListCard(
       title: apiKey.name,
       subtitle: subtitleParts.join(' • '),
-      icon: Icons.api,
+      fallbackIcon: Icons.api,
       category: apiKey.category,
       description: apiKey.description,
       tags: apiKey.tags,

@@ -69,7 +69,7 @@ class _IdentityListCardState extends ConsumerState<IdentityListCard> {
       title: identity.name,
       subtitle: subtitleParts.join(' • '),
       trailingSubtitle: identity.fullName,
-      icon: Icons.badge,
+      fallbackIcon: Icons.badge,
       category: identity.category,
       description: identity.description,
       tags: identity.tags,
