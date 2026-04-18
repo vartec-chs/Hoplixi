@@ -1,11 +1,10 @@
 ; Пользовательский шаблон Inno Setup для Windows EXE.
 
-#define MyAppName "Hoplixi"
-#define MyAppVersion "1.0.0"
-#define MyAppBuild "1"
-#define MyAppPublisher "Hoplixi"
-#define MyAppExeName "Hoplixi.exe"
-#define MyAppId "c6d1c972-acc4-46af-996d-936b9a1f43d8"
+#define MyAppName "{{DISPLAY_NAME}}"
+#define MyAppVersion "{{APP_VERSION}}"
+#define MyAppPublisher "{{PUBLISHER}}"
+#define MyAppExeName "{{EXECUTABLE_NAME}}"
+#define MyAppId "{{APP_ID}}"
 #define ProjectRoot "..\\.."
 
 #define MyFileExt ".hplxdb"
@@ -15,14 +14,14 @@
 AppId={#MyAppId}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
-AppVerName={#MyAppName} {#MyAppVersion} (build {#MyAppBuild})
+AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 SetupIconFile={#ProjectRoot}\\windows\\runner\\resources\\app_icon.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 OutputDir=.
-OutputBaseFilename=HoplixiSetup-{#MyAppVersion}-build-{#MyAppBuild}
+OutputBaseFilename=HoplixiSetup-{#MyAppVersion}
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
