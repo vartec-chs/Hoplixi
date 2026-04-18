@@ -12,6 +12,9 @@
 - В `component_showcase` добавлен отдельный demo-экран для `Icon Pack Picker` с
   показом прямого вызова `showIconPackPickerModal(...)` и готового
   `IconPackPickerButton` с SVG-превью выбранной иконки.
+- В `ButtonShowcaseScreen` расширен раздел `Button Variants`: для каждого
+  демонстрируемого варианта добавлены состояния `Default`, `Disabled` и
+  `Loading`.
 
 ### icon_packs
 
@@ -73,6 +76,12 @@
 
 - В `IconSourcePickerButton` кнопка очистки выбора иконки перенесена из нижнего
   ряда действий в `IconButton` в правом верхнем углу карточки.
+
+### shared_ui
+
+- В `SmoothButton` исправлены цвета для `disabled`-состояния у variant-кнопок
+  (foreground/background/border стали state-aware) и добавлен явный цвет
+  `CircularProgressIndicator` в режиме `loading`.
 
 ## 2026-04-16
 

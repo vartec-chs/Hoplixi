@@ -131,39 +131,44 @@ class ButtonShowcaseScreen extends StatelessWidget {
           context,
           title: 'Button Variants',
           children: [
-            SmoothButton(
-              label: 'Normal Filled',
+            Text(
+              'Filled Variants',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            _buildVariantStateDemo(
+              context,
+              title: 'Normal Filled',
+              type: SmoothButtonType.filled,
               variant: SmoothButtonVariant.normal,
-              type: SmoothButtonType.filled,
-              onPressed: () {},
             ),
             const SizedBox(height: 12),
-            SmoothButton(
-              label: 'Error Filled',
+            _buildVariantStateDemo(
+              context,
+              title: 'Error Filled',
+              type: SmoothButtonType.filled,
               variant: SmoothButtonVariant.error,
-              type: SmoothButtonType.filled,
-              onPressed: () {},
             ),
             const SizedBox(height: 12),
-            SmoothButton(
-              label: 'Warning Filled',
+            _buildVariantStateDemo(
+              context,
+              title: 'Warning Filled',
+              type: SmoothButtonType.filled,
               variant: SmoothButtonVariant.warning,
-              type: SmoothButtonType.filled,
-              onPressed: () {},
             ),
             const SizedBox(height: 12),
-            SmoothButton(
-              label: 'Info Filled',
+            _buildVariantStateDemo(
+              context,
+              title: 'Info Filled',
+              type: SmoothButtonType.filled,
               variant: SmoothButtonVariant.info,
-              type: SmoothButtonType.filled,
-              onPressed: () {},
             ),
             const SizedBox(height: 12),
-            SmoothButton(
-              label: 'Success Filled',
-              variant: SmoothButtonVariant.success,
+            _buildVariantStateDemo(
+              context,
+              title: 'Success Filled',
               type: SmoothButtonType.filled,
-              onPressed: () {},
+              variant: SmoothButtonVariant.success,
             ),
             const SizedBox(height: 24),
             Text(
@@ -171,25 +176,25 @@ class ButtonShowcaseScreen extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 12),
-            SmoothButton(
-              label: 'Error Tonal',
+            _buildVariantStateDemo(
+              context,
+              title: 'Error Tonal',
+              type: SmoothButtonType.tonal,
               variant: SmoothButtonVariant.error,
-              type: SmoothButtonType.tonal,
-              onPressed: () {},
             ),
             const SizedBox(height: 12),
-            SmoothButton(
-              label: 'Warning Tonal',
+            _buildVariantStateDemo(
+              context,
+              title: 'Warning Tonal',
+              type: SmoothButtonType.tonal,
               variant: SmoothButtonVariant.warning,
-              type: SmoothButtonType.tonal,
-              onPressed: () {},
             ),
             const SizedBox(height: 12),
-            SmoothButton(
-              label: 'Success Tonal',
-              variant: SmoothButtonVariant.success,
+            _buildVariantStateDemo(
+              context,
+              title: 'Success Tonal',
               type: SmoothButtonType.tonal,
-              onPressed: () {},
+              variant: SmoothButtonVariant.success,
             ),
             const SizedBox(height: 24),
             Text(
@@ -197,32 +202,32 @@ class ButtonShowcaseScreen extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 12),
-            SmoothButton(
-              label: 'Error Outlined',
-              variant: SmoothButtonVariant.error,
+            _buildVariantStateDemo(
+              context,
+              title: 'Error Outlined',
               type: SmoothButtonType.outlined,
-              onPressed: () {},
-            ),
-            const SizedBox(height: 12),
-            SmoothButton(
-              label: 'Success Outlined',
-              variant: SmoothButtonVariant.success,
-              type: SmoothButtonType.outlined,
-              onPressed: () {},
-            ),
-            const SizedBox(height: 12),
-            SmoothButton(
-              label: 'Error Dashed',
               variant: SmoothButtonVariant.error,
-              type: SmoothButtonType.dashed,
-              onPressed: () {},
             ),
             const SizedBox(height: 12),
-            SmoothButton(
-              label: 'Success Dashed',
+            _buildVariantStateDemo(
+              context,
+              title: 'Success Outlined',
+              type: SmoothButtonType.outlined,
               variant: SmoothButtonVariant.success,
+            ),
+            const SizedBox(height: 12),
+            _buildVariantStateDemo(
+              context,
+              title: 'Error Dashed',
               type: SmoothButtonType.dashed,
-              onPressed: () {},
+              variant: SmoothButtonVariant.error,
+            ),
+            const SizedBox(height: 12),
+            _buildVariantStateDemo(
+              context,
+              title: 'Success Dashed',
+              type: SmoothButtonType.dashed,
+              variant: SmoothButtonVariant.success,
             ),
             const SizedBox(height: 24),
             Text(
@@ -230,18 +235,18 @@ class ButtonShowcaseScreen extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 12),
-            SmoothButton(
-              label: 'Error Text',
-              variant: SmoothButtonVariant.error,
+            _buildVariantStateDemo(
+              context,
+              title: 'Error Text',
               type: SmoothButtonType.text,
-              onPressed: () {},
+              variant: SmoothButtonVariant.error,
             ),
             const SizedBox(height: 12),
-            SmoothButton(
-              label: 'Success Text',
-              variant: SmoothButtonVariant.success,
+            _buildVariantStateDemo(
+              context,
+              title: 'Success Text',
               type: SmoothButtonType.text,
-              onPressed: () {},
+              variant: SmoothButtonVariant.success,
             ),
           ],
         ),
@@ -267,6 +272,66 @@ class ButtonShowcaseScreen extends StatelessWidget {
         const SizedBox(height: 16),
         ...children,
       ],
+    );
+  }
+
+  Widget _buildVariantStateDemo(
+    BuildContext context, {
+    required String title,
+    required SmoothButtonType type,
+    required SmoothButtonVariant variant,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _buildStateButton(
+              label: 'Default',
+              type: type,
+              variant: variant,
+              onPressed: () {},
+            ),
+            _buildStateButton(
+              label: 'Disabled',
+              type: type,
+              variant: variant,
+              onPressed: null,
+            ),
+            _buildStateButton(
+              label: 'Loading',
+              type: type,
+              variant: variant,
+              onPressed: () {},
+              loading: true,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStateButton({
+    required String label,
+    required SmoothButtonType type,
+    required SmoothButtonVariant variant,
+    required VoidCallback? onPressed,
+    bool loading = false,
+  }) {
+    return SizedBox(
+      width: 170,
+      child: SmoothButton(
+        label: label,
+        type: type,
+        variant: variant,
+        loading: loading,
+        isFullWidth: true,
+        onPressed: onPressed,
+      ),
     );
   }
 }

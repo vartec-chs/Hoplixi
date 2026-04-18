@@ -86,11 +86,46 @@ class SmoothButton extends StatelessWidget {
       case SmoothButtonVariant.info:
         return Colors.blueAccent.shade700; // Яркий синий
       case SmoothButtonVariant.success:
-        return Colors.greenAccent.shade700; // Яркий зелёный
+        return Colors.green.shade700; // Яркий зелёный
     }
   }
 
-  Widget _buildChild() {
+  Color _disabledForegroundColor(BuildContext context) {
+    return Theme.of(context).colorScheme.onSurface.withOpacity(0.38);
+  }
+
+  Color _disabledBackgroundColor(BuildContext context) {
+    return Theme.of(context).colorScheme.onSurface.withOpacity(0.12);
+  }
+
+  Color _loadingIndicatorColor(BuildContext context) {
+    if (onPressed == null && !loading) {
+      return _disabledForegroundColor(context);
+    }
+
+    final theme = Theme.of(context);
+    final variantColor = _getVariantColor(context);
+
+    if (variant != SmoothButtonVariant.normal) {
+      if (type == SmoothButtonType.filled) {
+        return theme.colorScheme.onPrimary;
+      }
+      return variantColor;
+    }
+
+    switch (type) {
+      case SmoothButtonType.filled:
+        return theme.colorScheme.onPrimary;
+      case SmoothButtonType.tonal:
+        return theme.colorScheme.onSecondaryContainer;
+      case SmoothButtonType.outlined:
+      case SmoothButtonType.dashed:
+      case SmoothButtonType.text:
+        return theme.colorScheme.primary;
+    }
+  }
+
+  Widget _buildChild(BuildContext context) {
     final textWidget = Text(
       label,
       maxLines: 1,
@@ -99,6 +134,7 @@ class SmoothButton extends StatelessWidget {
       style: TextStyle(
         fontSize: _fontSize,
         fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+        color: loading ? _loadingIndicatorColor(context) : null,
       ),
     );
 
@@ -109,7 +145,10 @@ class SmoothButton extends StatelessWidget {
           SizedBox(
             width: _fontSize,
             height: _fontSize,
-            child: const CircularProgressIndicator(strokeWidth: 2),
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: _loadingIndicatorColor(context),
+            ),
           ),
           const SizedBox(width: 8),
           Flexible(child: textWidget),
@@ -135,9 +174,11 @@ class SmoothButton extends StatelessWidget {
   }
 
   Widget _buildButton(BuildContext context) {
-    final buttonChild = _buildChild();
+    final buttonChild = _buildChild(context);
     final variantColor = _getVariantColor(context);
     final theme = Theme.of(context);
+    final disabledForegroundColor = _disabledForegroundColor(context);
+    final disabledBackgroundColor = _disabledBackgroundColor(context);
 
     final effectiveStyle = (style ?? const ButtonStyle()).copyWith(
       padding: WidgetStateProperty.all(_padding),
@@ -149,34 +190,75 @@ class SmoothButton extends StatelessWidget {
       switch (type) {
         case SmoothButtonType.filled:
           styledWithVariant = effectiveStyle.copyWith(
-            backgroundColor: WidgetStateProperty.all(variantColor),
+            backgroundColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.disabled)) {
+                return disabledBackgroundColor;
+              }
+              return variantColor;
+            }),
+            foregroundColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.disabled)) {
+                return disabledForegroundColor;
+              }
+              return theme.colorScheme.onPrimary;
+            }),
           );
           break;
         case SmoothButtonType.tonal:
           styledWithVariant = effectiveStyle.copyWith(
-            backgroundColor: WidgetStateProperty.all(
-              variantColor.withOpacity(0.2),
-            ),
-            foregroundColor: WidgetStateProperty.all(variantColor),
+            backgroundColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.disabled)) {
+                return disabledBackgroundColor;
+              }
+              return variantColor.withOpacity(0.2);
+            }),
+            foregroundColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.disabled)) {
+                return disabledForegroundColor;
+              }
+              return variantColor;
+            }),
           );
           break;
         case SmoothButtonType.outlined:
           styledWithVariant = effectiveStyle.copyWith(
-            side: WidgetStateProperty.all(
-              BorderSide(color: variantColor, width: 1),
-            ),
-            overlayColor: WidgetStateProperty.all(
-              variantColor.withOpacity(0.1),
-            ),
-            foregroundColor: WidgetStateProperty.all(variantColor),
+            side: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.disabled)) {
+                return BorderSide(
+                  color: theme.colorScheme.onSurface.withOpacity(0.12),
+                  width: 1,
+                );
+              }
+              return BorderSide(color: variantColor, width: 1);
+            }),
+            overlayColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.disabled)) {
+                return Colors.transparent;
+              }
+              return variantColor.withOpacity(0.1);
+            }),
+            foregroundColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.disabled)) {
+                return disabledForegroundColor;
+              }
+              return variantColor;
+            }),
           );
           break;
         case SmoothButtonType.text || SmoothButtonType.dashed:
           styledWithVariant = effectiveStyle.copyWith(
-            foregroundColor: WidgetStateProperty.all(variantColor),
-            overlayColor: WidgetStateProperty.all(
-              variantColor.withOpacity(0.1),
-            ),
+            foregroundColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.disabled)) {
+                return disabledForegroundColor;
+              }
+              return variantColor;
+            }),
+            overlayColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.disabled)) {
+                return Colors.transparent;
+              }
+              return variantColor.withOpacity(0.1);
+            }),
           );
           break;
       }
@@ -243,14 +325,21 @@ class SmoothButton extends StatelessWidget {
 
           clipBehavior: clipBehavior,
           style: styledWithVariant.copyWith(
-            side: WidgetStateProperty.all(
-              BorderSide(
+            side: WidgetStateProperty.resolveWith((states) {
+              final defaultBorderColor = theme.colorScheme.onSurface
+                  .withOpacity(0.12);
+
+              if (states.contains(WidgetState.disabled)) {
+                return BorderSide(color: defaultBorderColor, width: 1.5);
+              }
+
+              return BorderSide(
                 color: variant == SmoothButtonVariant.normal
-                    ? Theme.of(context).colorScheme.onSurface.withOpacity(0.12)
+                    ? defaultBorderColor
                     : variantColor,
                 width: 1.5,
-              ),
-            ),
+              );
+            }),
           ),
           child: buttonChild,
         );
@@ -258,8 +347,10 @@ class SmoothButton extends StatelessWidget {
       case SmoothButtonType.dashed:
         // DottedBorder paints a dashed border around the child. Wrap the
         // interactive TextButton inside so we keep focus/hover behavior.
-        final dashColor = variant == SmoothButtonVariant.normal
-            ? Theme.of(context).colorScheme.onSurface.withOpacity(0.12)
+        final isActuallyDisabled = onPressed == null && !loading;
+        final dashColor =
+            isActuallyDisabled || variant == SmoothButtonVariant.normal
+            ? theme.colorScheme.onSurface.withOpacity(0.12)
             : variantColor;
 
         final button = TextButton(
