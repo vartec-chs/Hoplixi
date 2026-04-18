@@ -155,6 +155,12 @@
   `docs/release-notes/v1.2.0-github-release.md` на основе изменений версии
   1.2.0.
 
+### docs (readme)
+
+- README обновлён под релиз 1.2.0: добавлен блок с ключевыми нововведениями,
+  ссылками на changelog/release notes и уточнением структуры
+  `store_manifest.json` и сценария миграции `backup -> migrate -> open`.
+
 ### category_manager
 
 - В `CategoryManagerScreen` добавлен скролл для всей формы: контент обернут в
