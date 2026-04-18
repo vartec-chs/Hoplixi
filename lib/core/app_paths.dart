@@ -23,6 +23,7 @@ class AppPaths {
   static Future<String> get localSendPath async => await _getLocalSendPath();
   static Future<String> get passwordGeneratorProfilesFilePath async =>
       await _getPasswordGeneratorProfilesFilePath();
+  static Future<String> get iconPacksPath async => await _getIconPacksPath();
 
   static Future<String> get backupsPath async => await _getBackupsPath();
 
@@ -128,6 +129,19 @@ Future<String> _getPasswordGeneratorProfilesFilePath() async {
   }
 
   return p.join(directory.path, 'password_generator_profiles.json');
+}
+
+/// User icon packs storage path.
+Future<String> _getIconPacksPath() async {
+  final appDir = await _getAppPath();
+  final basePath = p.join(appDir.path, 'icon_packs');
+
+  final directory = Directory(basePath);
+  if (!await directory.exists()) {
+    await directory.create(recursive: true);
+  }
+
+  return basePath;
 }
 
 /// LocalSend data directory

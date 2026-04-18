@@ -22,6 +22,7 @@ class AppRoutesPaths {
   static const String lockStore = '/lock-store';
   static const String closeStoreSync = '/close-store-sync';
   static const String archiveStore = '/archive-store';
+  static const String iconPacks = '/icon-packs';
   static const String oauthApps = '/oauth-apps';
   static const String oauthTokens = '/oauth-tokens';
   static const String oauthLogin = '/oauth-login';

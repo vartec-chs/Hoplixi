@@ -634,6 +634,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ),
 
       ActionItem(
+        icon: LucideIcons.image,
+        label: 'Паки иконок',
+        description: 'Импорт и каталог пользовательских SVG-паков',
+        onTap: () => context.push(AppRoutesPaths.iconPacks),
+      ),
+
+      ActionItem(
         icon: LucideIcons.cloud,
         label: 'Cloud Sync',
         description: 'Полигон для авторизации, OAuth credentials и токенов.',
