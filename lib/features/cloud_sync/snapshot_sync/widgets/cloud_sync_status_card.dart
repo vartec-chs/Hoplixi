@@ -220,7 +220,7 @@ class _StatusMetricCard extends StatelessWidget {
 
     return Container(
       constraints: const BoxConstraints(minWidth: 170),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),

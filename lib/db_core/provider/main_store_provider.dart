@@ -3,13 +3,6 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/setup/di_init.dart';
-import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
-import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_exception.dart';
-import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
-import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
-import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
-import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/db_core/main_store.dart';
 import 'package:hoplixi/db_core/main_store_manager.dart';
 import 'package:hoplixi/db_core/models/db_errors.dart';
@@ -20,6 +13,13 @@ import 'package:hoplixi/db_core/services/db_key_derivation_service.dart';
 import 'package:hoplixi/db_core/services/main_store_backup_service.dart';
 import 'package:hoplixi/db_core/services/main_store_maintenance_service.dart';
 import 'package:hoplixi/db_core/services/store_manifest_service.dart';
+import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
+import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_exception.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
+import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
+import 'package:hoplixi/setup/di_init.dart';
 
 enum BackupScope { databaseOnly, encryptedFilesOnly, full }
 
@@ -133,6 +133,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   int _periodicBackupMaxPerStore = 10;
   DateTime? _openedStoreModifiedAt;
   bool _forceSnapshotUploadOnClose = false;
+  bool _pendingSnapshotUploadPromptOnClose = false;
   Completer<bool>? _closeStoreUploadDecision;
 
   /// Completer для блокировки параллельных операций (защита от race condition)
@@ -717,6 +718,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     final currentModifiedAt = storeInfo.modifiedAt.toUtc();
     final hasLogicalChanges =
         _forceSnapshotUploadOnClose ||
+        _pendingSnapshotUploadPromptOnClose ||
         _openedStoreModifiedAt == null ||
         !_openedStoreModifiedAt!.isAtSameMomentAs(currentModifiedAt);
 
@@ -728,6 +730,8 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
           'storePath': storePath,
           'openedStoreModifiedAt': _openedStoreModifiedAt?.toIso8601String(),
           'currentStoreModifiedAt': currentModifiedAt.toIso8601String(),
+          'pendingSnapshotUploadPromptOnClose':
+              _pendingSnapshotUploadPromptOnClose,
         },
       );
       return;
@@ -768,31 +772,6 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
 
       switch (status.compareResult) {
         case StoreVersionCompareResult.remoteMissing:
-          await onCloseFlowRequired?.call();
-          final result = await ref
-              .read(closeStoreSnapshotSyncCoordinatorProvider)
-              .syncBeforeClose(
-                status: status,
-                storePath: storePath,
-                storeInfo: storeInfo,
-                binding: binding,
-                token: token,
-                onStatusChanged: (nextState) {
-                  ref
-                      .read(closeStoreSyncStatusProvider.notifier)
-                      .setStatus(nextState);
-                },
-              );
-          _forceSnapshotUploadOnClose = false;
-          logInfo(
-            'Snapshot sync before close completed.',
-            tag: _logTag,
-            data: <String, dynamic>{
-              'storeUuid': storeInfo.id,
-              'resultType': result.type.name,
-            },
-          );
-          break;
         case StoreVersionCompareResult.localNewer:
           final shouldUpload = await _promptCloseStoreUploadDecision(
             status,
@@ -824,6 +803,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
                 },
               );
           _forceSnapshotUploadOnClose = false;
+          _pendingSnapshotUploadPromptOnClose = false;
           logInfo(
             'Snapshot sync before close completed.',
             tag: _logTag,
@@ -835,6 +815,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
           break;
         case StoreVersionCompareResult.same:
           _forceSnapshotUploadOnClose = false;
+          _pendingSnapshotUploadPromptOnClose = false;
           logDebug(
             'Skipping snapshot upload before close because local and remote versions match.',
             tag: _logTag,
@@ -954,6 +935,30 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       return;
     }
     decision.complete(shouldUpload);
+  }
+
+  void markSnapshotUploadOnCloseRequired() {
+    _forceSnapshotUploadOnClose = true;
+  }
+
+  void syncPendingSnapshotUploadPrompt({
+    required String? storeUuid,
+    required bool hasBinding,
+    required StoreVersionCompareResult? compareResult,
+  }) {
+    final currentPath = _manager.currentStorePath;
+    final currentState = _currentState;
+    final isCurrentStore =
+        storeUuid != null &&
+        currentPath != null &&
+        currentState.isOpen &&
+        currentState.path == currentPath;
+
+    _pendingSnapshotUploadPromptOnClose =
+        isCurrentStore &&
+        hasBinding &&
+        (compareResult == StoreVersionCompareResult.remoteMissing ||
+            compareResult == StoreVersionCompareResult.localNewer);
   }
 
   /// Разблокировать хранилище
@@ -1375,11 +1380,13 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   }) {
     _openedStoreModifiedAt = initialModifiedAt.toUtc();
     _forceSnapshotUploadOnClose = forceUpload;
+    _pendingSnapshotUploadPromptOnClose = false;
   }
 
   void _resetSnapshotCloseTracking() {
     _openedStoreModifiedAt = null;
     _forceSnapshotUploadOnClose = false;
+    _pendingSnapshotUploadPromptOnClose = false;
   }
 
   /// Получить MainStoreManager по готовности

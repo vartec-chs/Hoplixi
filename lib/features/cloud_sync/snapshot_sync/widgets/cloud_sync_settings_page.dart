@@ -60,7 +60,7 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Синхронизация с облаком (beta)',
+                  'Синхронизация с облаком',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -72,11 +72,13 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
                       : 'Сначала авторизуйте облачный аккаунт, затем привяжите текущее хранилище. После подключения появятся действия для первой синхронизации.',
                 ),
                 const SizedBox(height: 12),
-                _ConnectionSummaryCard(
-                  status: status,
-                  token: status.token ?? selectedToken,
-                ),
-                const SizedBox(height: 12),
+                if (status.binding == null) ...[
+                  _ConnectionSummaryCard(
+                    status: status,
+                    token: status.token ?? selectedToken,
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 if (!isConnected) ...[
                   _buildSetupFlow(
                     context,
@@ -257,6 +259,15 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
           const SizedBox(height: 12),
         ],
         _StepCard(
+          step: 'Состояние',
+          title: 'Текущий статус синхронизации',
+          description:
+              'Проверьте ревизии и решите, какое действие нужно дальше.',
+          child: CloudSyncStatusCard(status: status, token: selectedToken),
+        ),
+        const SizedBox(height: 12),
+
+        _StepCard(
           step: 'Подключено',
           title: 'Хранилище привязано к облаку',
           description: _statusDescription(status),
@@ -315,14 +326,6 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
               ),
             ],
           ),
-        ),
-        const SizedBox(height: 12),
-        _StepCard(
-          step: 'Состояние',
-          title: 'Текущий статус синхронизации',
-          description:
-              'Проверьте ревизии и решите, какое действие нужно дальше.',
-          child: CloudSyncStatusCard(status: status, token: selectedToken),
         ),
       ],
     );

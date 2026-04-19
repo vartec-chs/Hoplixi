@@ -25,6 +25,31 @@
   dashboard при проверке cloud sync и после завершения проверки, потому что
   виджет больше не теряет remembered binding при переходе
   `AsyncData -> AsyncLoading -> AsyncData`.
+- Для сценария `close store` расширен prompt перед upload: теперь экран
+  закрытия спрашивает про отправку не только при `localNewer`, но и сразу после
+  первого подключения cloud sync, когда `remoteMissing` означает, что
+  облачная snapshot-версия ещё не была создана.
+- Исправлен показ `close-store-sync`: при входе в сценарий закрытия с cloud
+  sync экран теперь открывается напрямую через роутер сразу после перевода
+  `mainStoreProvider` в `DatabaseStatus.closingSync`, а не зависит только от
+  последующего `redirect`.
+- Роутер `close-store-sync` теперь реагирует не только на
+  `DatabaseStatus.closingSync`, но и на `closeStoreSyncStatusProvider`, чтобы
+  экран закрытия и prompt на upload не терялись, если переходное состояние
+  `closingSync` прошло слишком быстро.
+- В `closeStore()` initial upload больше не пропускается только из-за
+  неизменённого `StoreMeta.modifiedAt`: если текущий sync-статус уже показывает
+  `remoteMissing` или `localNewer`, сценарий закрытия всё равно открывает prompt
+  и не закрывает хранилище молча.
+- Убран прямой вызов `GoRouter` из `main_store_provider`: показ
+  `close-store-sync` снова целиком управляется через router listeners, чтобы
+  runtime-ошибка навигации внутри provider не маскировалась под failed cloud
+  upload при закрытии хранилища.
+- Устранён `CircularDependencyError` между `mainStoreProvider` и
+  `currentStoreSyncProvider`: `closeStore()` больше не читает
+  `currentStoreSyncProvider`, а pending-close флаг синхронизируется в
+  `mainStoreProvider` из `current_store_sync_provider` через отдельный метод без
+  циклической зависимости Riverpod.
 - В `CloudSyncSettingsPage` блок статуса синхронизации вынесен в отдельный файл
   `cloud_sync_status_card.dart` (без `part`), а UI карточки сделан более живым:
   добавлены цветовой статус-баннер с иконкой, информационные чипы и выделенные

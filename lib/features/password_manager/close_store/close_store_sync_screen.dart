@@ -19,10 +19,43 @@ class _CloseStoreSyncScreenState extends ConsumerState<CloseStoreSyncScreen> {
 
   bool _shouldAskAboutUpload(StoreSyncStatus? status) {
     return status != null &&
-        status.compareResult == StoreVersionCompareResult.localNewer &&
+        (status.compareResult == StoreVersionCompareResult.localNewer ||
+            status.compareResult == StoreVersionCompareResult.remoteMissing) &&
         !status.isSyncInProgress &&
         status.syncProgress == null &&
         !status.requiresUnlockToApply;
+  }
+
+  String _uploadDecisionDescription(StoreSyncStatus? status) {
+    return switch (status?.compareResult) {
+      StoreVersionCompareResult.remoteMissing =>
+        'Cloud sync уже подключён, но облачная snapshot-версия для этого хранилища ещё не создана. Перед закрытием выберите, нужно ли сначала отправить текущую локальную версию в облако.',
+      StoreVersionCompareResult.localNewer =>
+        'Локальная snapshot-версия новее облачной. Перед закрытием выберите, нужно ли отправить обновлённую версию в облако.',
+      _ =>
+        'Идёт синхронизация изменений перед закрытием. Это окно закроется автоматически.',
+    };
+  }
+
+  String _uploadDecisionCardTitle(StoreSyncStatus? status) {
+    return switch (status?.compareResult) {
+      StoreVersionCompareResult.remoteMissing =>
+        'Создать первую облачную версию?',
+      StoreVersionCompareResult.localNewer =>
+        'Отправить новую облачную версию?',
+      _ => 'Отправить изменения в облако?',
+    };
+  }
+
+  String _uploadDecisionCardText(StoreSyncStatus? status) {
+    return switch (status?.compareResult) {
+      StoreVersionCompareResult.remoteMissing =>
+        'Если пропустить отправку, синхронизация останется подключённой, но в облаке пока не будет snapshot этого хранилища.',
+      StoreVersionCompareResult.localNewer =>
+        'Если пропустить отправку, хранилище закроется сразу, а облачная версия останется старой.',
+      _ =>
+        'Если пропустить отправку, хранилище закроется сразу без обновления облачной версии.',
+    };
   }
 
   Future<void> _resolveUploadDecision(bool shouldUpload) async {
@@ -77,7 +110,7 @@ class _CloseStoreSyncScreenState extends ConsumerState<CloseStoreSyncScreen> {
                   const SizedBox(height: 8),
                   Text(
                     shouldAskAboutUpload
-                        ? 'Локальная snapshot-версия новее облачной. Перед закрытием выберите, нужно ли отправить обновлённую версию в облако.'
+                        ? _uploadDecisionDescription(syncStatus)
                         : requiresUnlockToApply
                         ? 'Удалённый snapshot уже применён локально. Экран закроется автоматически после завершения сценария закрытия.'
                         : 'Идёт синхронизация изменений перед закрытием. Это окно закроется автоматически.',
@@ -112,6 +145,8 @@ class _CloseStoreSyncScreenState extends ConsumerState<CloseStoreSyncScreen> {
                   const SizedBox(height: 28),
                   if (shouldAskAboutUpload)
                     _CloseStoreUploadDecisionCard(
+                      title: _uploadDecisionCardTitle(syncStatus),
+                      description: _uploadDecisionCardText(syncStatus),
                       isLoading: _isResolvingDecision,
                       onUploadAndClose: () => _resolveUploadDecision(true),
                       onCloseWithoutUpload: () => _resolveUploadDecision(false),
@@ -134,11 +169,15 @@ class _CloseStoreSyncScreenState extends ConsumerState<CloseStoreSyncScreen> {
 
 class _CloseStoreUploadDecisionCard extends StatelessWidget {
   const _CloseStoreUploadDecisionCard({
+    required this.title,
+    required this.description,
     required this.isLoading,
     required this.onUploadAndClose,
     required this.onCloseWithoutUpload,
   });
 
+  final String title;
+  final String description;
   final bool isLoading;
   final VoidCallback onUploadAndClose;
   final VoidCallback onCloseWithoutUpload;
@@ -152,7 +191,7 @@ class _CloseStoreUploadDecisionCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Отправить новую облачную версию?',
+              title,
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -160,7 +199,7 @@ class _CloseStoreUploadDecisionCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Если пропустить отправку, хранилище закроется сразу, а облачная версия останется старой.',
+              description,
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),

@@ -88,7 +88,9 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
   @override
   Future<StoreSyncStatus> build() async {
     final storeState = await ref.watch(mainStoreProvider.future);
-    return _loadCurrentStatus(storeState, useWatch: true);
+    final status = await _loadCurrentStatus(storeState, useWatch: true);
+    _syncCloseStoreUploadPromptRequirement(status);
+    return status;
   }
 
   Future<void> loadStatus({bool rethrowOnError = false}) async {
@@ -97,7 +99,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     try {
       final storeState = await ref.read(mainStoreProvider.future);
       final next = await _loadCurrentStatus(storeState, useWatch: false);
-      state = AsyncData(next);
+      _setSyncState(next);
     } catch (error, stackTrace) {
       if (previous != null) {
         state = AsyncData(previous);
@@ -136,6 +138,13 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
         storeUuid: storeUuid,
       );
       await loadStatus(rethrowOnError: true);
+      if (state.value?.compareResult ==
+          StoreVersionCompareResult.remoteMissing) {
+        ref
+            .read(mainStoreProvider.notifier)
+            .markSnapshotUploadOnCloseRequired();
+      }
+      _syncCloseStoreUploadPromptRequirement(state.value);
     } catch (error, stackTrace) {
       _reportManualReauthIfNeeded(
         error,
@@ -146,16 +155,15 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       );
       if (_canKeepBindingAfterConnectProbeError(error) &&
           savedBinding != null) {
-        state = AsyncData(
-          current.copyWith(
-            binding: savedBinding,
-            token: token,
-            clearRemoteManifest: true,
-            clearPendingConflict: true,
-            compareResult: StoreVersionCompareResult.remoteMissing,
-            lastResultType: SnapshotSyncResultType.idle,
-          ),
+        final next = current.copyWith(
+          binding: savedBinding,
+          token: token,
+          clearRemoteManifest: true,
+          clearPendingConflict: true,
+          compareResult: StoreVersionCompareResult.remoteMissing,
+          lastResultType: SnapshotSyncResultType.idle,
         );
+        _setSyncState(next);
         return;
       }
       if (current.binding != null) {
@@ -167,7 +175,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       } else {
         await bindingService.deleteBinding(storeUuid);
       }
-      state = AsyncData(current);
+      _setSyncState(current);
       Error.throwWithStackTrace(error, stackTrace);
     }
   }
@@ -189,7 +197,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     }
 
     await ref.read(storeSyncBindingServiceProvider).deleteBinding(storeUuid);
-    state = AsyncData(
+    _setSyncState(
       current.copyWith(
         clearBinding: true,
         clearToken: true,
@@ -199,6 +207,21 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       ),
     );
     await loadStatus();
+  }
+
+  void _syncCloseStoreUploadPromptRequirement(StoreSyncStatus? status) {
+    ref
+        .read(mainStoreProvider.notifier)
+        .syncPendingSnapshotUploadPrompt(
+          storeUuid: status?.storeUuid,
+          hasBinding: status?.binding != null,
+          compareResult: status?.compareResult,
+        );
+  }
+
+  void _setSyncState(StoreSyncStatus next) {
+    state = AsyncData(next);
+    _syncCloseStoreUploadPromptRequirement(next);
   }
 
   Future<void> syncNow() async {
@@ -222,7 +245,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     final syncService = ref.read(snapshotSyncServiceProvider);
 
     if (current.compareResult == StoreVersionCompareResult.conflict) {
-      state = AsyncData(
+      _setSyncState(
         current.copyWith(
           pendingConflict:
               current.pendingConflict ??
@@ -251,7 +274,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
         syncProgress: _initialDownloadProgress(),
         isSyncInProgress: true,
       );
-      state = AsyncData(downloadInProgressState);
+      _setSyncState(downloadInProgressState);
       try {
         await ref
             .read(mainStoreProvider.notifier)
@@ -269,7 +292,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
           token: token,
           storePath: storePath,
         );
-        state = AsyncData(
+        _setSyncState(
           _buildLockedDownloadedStatus(
             current: current,
             binding: binding,
@@ -280,7 +303,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
         );
         return;
       } catch (error, stackTrace) {
-        state = AsyncData(
+        _setSyncState(
           downloadInProgressState.copyWith(
             isApplyingRemoteUpdate: false,
             clearSyncProgress: true,
@@ -308,7 +331,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     );
 
     if (result.type == SnapshotSyncResultType.conflict) {
-      state = AsyncData(
+      _setSyncState(
         current.copyWith(
           localManifest: result.localManifest,
           remoteManifest: result.remoteManifest,
@@ -322,7 +345,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       return;
     }
 
-    state = AsyncData(
+    _setSyncState(
       await _reloadStatusWithoutLoading(
         lastResultType: result.type,
         clearPendingConflict: true,
@@ -346,7 +369,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
           binding: binding,
           token: token,
           onStatusChanged: (nextState) {
-            state = AsyncData(nextState);
+            _setSyncState(nextState);
           },
         );
   }
@@ -400,13 +423,13 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
             isSyncInProgress: false,
           );
     if (requiresUnlock) {
-      state = AsyncData(progressBaseState);
+      _setSyncState(progressBaseState);
       try {
         await ref
             .read(mainStoreProvider.notifier)
             .lockStore(skipSnapshotSync: true);
       } catch (error, stackTrace) {
-        state = AsyncData(
+        _setSyncState(
           progressBaseState.copyWith(
             isApplyingRemoteUpdate: false,
             clearSyncProgress: true,
@@ -432,7 +455,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     );
 
     if (requiresUnlock) {
-      state = AsyncData(
+      _setSyncState(
         _buildLockedDownloadedStatus(
           current: current,
           binding: binding,
@@ -444,7 +467,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       return;
     }
 
-    state = AsyncData(
+    _setSyncState(
       await _reloadStatusWithoutLoading(
         lastResultType: result.type,
         clearPendingConflict: true,
@@ -459,7 +482,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     SnapshotSyncResult? result;
     await for (final event in stream) {
       if (event is SnapshotSyncProgressUpdate) {
-        state = AsyncData(
+        _setSyncState(
           baseState.copyWith(
             syncProgress: event.progress,
             isSyncInProgress: true,

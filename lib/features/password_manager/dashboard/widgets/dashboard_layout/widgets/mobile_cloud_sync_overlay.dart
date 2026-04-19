@@ -15,7 +15,7 @@ class MobileCloudSyncOverlay extends ConsumerStatefulWidget {
 
 class _MobileCloudSyncOverlayState
     extends ConsumerState<MobileCloudSyncOverlay> {
-  static const _initialHintDuration = Duration(milliseconds: 1200);
+  static const _initialHintDuration = Duration(milliseconds: 0);
 
   bool _showInitialCheckHint = false;
   bool _handledInitialSnapshot = false;
