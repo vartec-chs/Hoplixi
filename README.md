@@ -346,20 +346,20 @@ lib/
 ```text
 store_name/
 │   store_manifest.json
+│   attachments_manifest.json
 │   store_name.hplxdb
 ├───attachments_decrypted/
 └───attachments/
 ```
 
-store_key.json - содержит salt, флаг useDeviceKey и выбранный cipher для
-генерации ключа и корректного открытия хранилища (структура данных перенесена в
-store_manifest.json). store_manifest.json - содержит метаданные хранилища
-(`storeUuid`, `storeName`, `updatedAt`), параметры совместимости версий
-(`manifestVersion`, `lastMigrationVersion`, `appVersion`) и конфигурацию ключа
-(`keyConfig`, включая выбранный cipher). store_name.hplxdb - зашифрованная база
-данных SQLite3 Multiple Ciphers. attachments_decrypted/ - временная папка для
-расшифрованных файлов (может не существовать). attachments/ - папка для
-зашифрованных файлов.
+store_manifest.json - содержит метаданные хранилища (`storeUuid`, `storeName`,
+`updatedAt`), параметры совместимости версий (`manifestVersion`,
+`lastMigrationVersion`, `appVersion`) и конфигурацию ключа (`keyConfig`, включая
+salt, флаг useDeviceKey и выбранный cipher). attachments_manifest.json -
+манифест вложений для sync-слоя (`revision`, `filesHash`, список файлов вложений
+и их метаданных). store_name.hplxdb - зашифрованная база данных SQLite3 Multiple
+Ciphers. attachments_decrypted/ - временная папка для расшифрованных файлов
+(может не существовать). attachments/ - папка для зашифрованных файлов.
 
 Примечание по миграции:
 

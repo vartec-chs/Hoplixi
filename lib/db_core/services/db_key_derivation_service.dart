@@ -24,7 +24,8 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 /// ### Важно: salt хранится снаружи зашифрованной БД
 ///
 /// Argon2-соль необходима для открытия БД, поэтому она сохраняется
-/// в открытом JSON-файле [StoreKeyConfig] рядом с файлом `.db`.
+/// в `store_manifest.json` (поле `keyConfig`, модель [StoreKeyConfig])
+/// рядом с файлом `.db`.
 /// Это стандартная практика для зашифрованных баз данных.
 class DbKeyDerivationService {
   static const String _logTag = 'DbKeyDerivationService';
@@ -54,7 +55,7 @@ class DbKeyDerivationService {
   ///
   /// [password]     — мастер-пароль пользователя
   /// [salt]         — Argon2-соль (base64), уникальная для каждого хранилища.
-  ///                  Хранится в [StoreKeyConfig] рядом с файлом БД.
+  ///                  Хранится в `store_manifest.json` внутри [StoreKeyConfig].
   /// [useDeviceKey] — привязать ключ к устройству через HKDF.
   ///
   /// Возвращает строку в формате `x'<64-символьный hex>'`,
