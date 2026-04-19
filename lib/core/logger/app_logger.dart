@@ -10,6 +10,13 @@ import 'package:hoplixi/core/logger/models.dart';
 import 'package:logger/logger.dart';
 
 class AppLogger {
+  static final RegExp _authorizationHeaderPattern = RegExp(
+    r'(?im)^(\s*authorization:\s*)(.+)$',
+  );
+  static final RegExp _jsonSecretPattern = RegExp(
+    r'(?i)("?(?:access_token|refresh_token|client_secret|authorization)"?\s*:\s*"?)([^",\r\n}]+)',
+  );
+
   static AppLogger? _instance;
   static AppLogger get instance => _instance ??= AppLogger._();
 
@@ -29,8 +36,20 @@ class AppLogger {
 
   void Function(Object object) dioLogPrint({String? tag}) {
     return (object) {
-      debug(object.toString(), tag: tag);
+      debug(_sanitizeDioLogMessage(object.toString()), tag: tag);
     };
+  }
+
+  String _sanitizeDioLogMessage(String message) {
+    var sanitized = message.replaceAllMapped(
+      _authorizationHeaderPattern,
+      (match) => '${match.group(1)}<redacted>',
+    );
+    sanitized = sanitized.replaceAllMapped(
+      _jsonSecretPattern,
+      (match) => '${match.group(1)}<redacted>',
+    );
+    return sanitized;
   }
 
   Future<void> initialize({

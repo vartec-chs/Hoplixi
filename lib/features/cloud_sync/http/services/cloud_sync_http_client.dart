@@ -641,6 +641,16 @@ class _CloudSyncAuthInterceptor extends QueuedInterceptor {
       final response = await _retryDio.fetch<dynamic>(retried);
       handler.resolve(response);
     } catch (error, stackTrace) {
+      if (error is DioException &&
+          !_isRefreshableUnauthorizedResponse(
+            provider: _provider,
+            statusCode: error.response?.statusCode,
+            responseData: error.response?.data,
+          )) {
+        handler.reject(error);
+        return;
+      }
+
       final cloudError = error is CloudSyncHttpException
           ? error
           : error is DioException &&
@@ -683,13 +693,15 @@ class _CloudSyncAuthInterceptor extends QueuedInterceptor {
       );
 
       handler.reject(
-        DioException(
-          requestOptions: err.requestOptions,
-          response: err.response,
-          type: DioExceptionType.badResponse,
-          error: cloudError,
-          stackTrace: stackTrace,
-        ),
+        error is DioException
+            ? _wrapAsDioException(error, cloudError)
+            : DioException(
+                requestOptions: err.requestOptions,
+                response: err.response,
+                type: DioExceptionType.badResponse,
+                error: cloudError,
+                stackTrace: stackTrace,
+              ),
       );
     }
   }

@@ -2,6 +2,16 @@
 
 ## 2026-04-19
 
+### cloud_sync
+
+- Исправлена обработка retry в `CloudSyncAuthInterceptor`: ответы вроде
+  Dropbox `409 path/conflict/folder` после успешного refresh больше не
+  маскируются под `Failed to refresh OAuth token`, а доходят до storage-слоя как
+  обычные API-ошибки.
+- В `AppLogger.dioLogPrint()` добавлено редактирование чувствительных полей
+  (`Authorization`, `access_token`, `refresh_token`, `client_secret`), чтобы
+  OAuth-секреты не попадали в debug-логи cloud sync.
+
 ### docs (agent)
 
 - Полностью реструктурирован `AGENTS.md`: файл сокращен до компактного
