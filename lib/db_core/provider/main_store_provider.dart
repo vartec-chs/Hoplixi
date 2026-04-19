@@ -5,9 +5,11 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
+import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_exception.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
+import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/db_core/main_store.dart';
 import 'package:hoplixi/db_core/main_store_manager.dart';
 import 'package:hoplixi/db_core/models/db_errors.dart';
@@ -131,6 +133,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   int _periodicBackupMaxPerStore = 10;
   DateTime? _openedStoreModifiedAt;
   bool _forceSnapshotUploadOnClose = false;
+  Completer<bool>? _closeStoreUploadDecision;
 
   /// Completer для блокировки параллельных операций (защита от race condition)
   Completer<void>? _operationLock;
@@ -539,16 +542,31 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       openStateBeforeClose = _currentState;
       final decryptedPathBeforeClose = await getDecryptedAttachmentsPath();
 
-      await _tryUploadSnapshotBeforeClose(
-        onSyncStart: () {
-          _setState(
-            openStateBeforeClose!.copyWith(
-              status: DatabaseStatus.closingSync,
-              error: null,
-            ),
-          );
-        },
-      );
+      try {
+        await _tryUploadSnapshotBeforeClose(
+          onCloseFlowRequired: () {
+            _setState(
+              openStateBeforeClose!.copyWith(
+                status: DatabaseStatus.closingSync,
+                error: null,
+              ),
+            );
+          },
+        );
+      } catch (error, stackTrace) {
+        final closeSyncError = _buildCloseSyncFailure(
+          error,
+          stackTrace: stackTrace,
+        );
+        _setState(
+          openStateBeforeClose!.copyWith(
+            status: DatabaseStatus.open,
+            error: closeSyncError,
+          ),
+        );
+        ref.read(closeStoreSyncStatusProvider.notifier).clear();
+        return false;
+      }
 
       // Вызываем закрытие хранилища
       final result = await _manager.closeStore();
@@ -686,60 +704,58 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   }
 
   Future<void> _tryUploadSnapshotBeforeClose({
-    FutureOr<void> Function()? onSyncStart,
+    FutureOr<void> Function()? onCloseFlowRequired,
   }) async {
+    final storePath = _manager.currentStorePath;
+    if (storePath == null || storePath.isEmpty || !_manager.isStoreOpen) {
+      return;
+    }
+    final storeInfoResult = await _manager.getStoreInfo();
+    final storeInfo = storeInfoResult.fold((info) => info, (error) {
+      throw error;
+    });
+    final currentModifiedAt = storeInfo.modifiedAt.toUtc();
+    final hasLogicalChanges =
+        _forceSnapshotUploadOnClose ||
+        _openedStoreModifiedAt == null ||
+        !_openedStoreModifiedAt!.isAtSameMomentAs(currentModifiedAt);
+
+    if (!hasLogicalChanges) {
+      logDebug(
+        'Skipping snapshot sync before close because StoreMeta.modifiedAt did not change during the current session.',
+        tag: _logTag,
+        data: <String, dynamic>{
+          'storePath': storePath,
+          'openedStoreModifiedAt': _openedStoreModifiedAt?.toIso8601String(),
+          'currentStoreModifiedAt': currentModifiedAt.toIso8601String(),
+        },
+      );
+      return;
+    }
+
+    final binding = await ref
+        .read(storeSyncBindingServiceProvider)
+        .getByStoreUuid(storeInfo.id);
+    if (binding == null) {
+      return;
+    }
+
+    final token = await ref
+        .read(authTokensProvider.notifier)
+        .getTokenById(binding.tokenId);
+    if (token == null) {
+      logWarning(
+        'Skipping snapshot sync before close because token binding is stale.',
+        tag: _logTag,
+        data: <String, dynamic>{
+          'storeUuid': storeInfo.id,
+          'tokenId': binding.tokenId,
+        },
+      );
+      return;
+    }
+
     try {
-      final storePath = _manager.currentStorePath;
-      if (storePath == null || storePath.isEmpty || !_manager.isStoreOpen) {
-        return;
-      }
-      final storeInfoResult = await _manager.getStoreInfo();
-      final storeInfo = storeInfoResult.fold((info) => info, (error) {
-        throw error;
-      });
-      final currentModifiedAt = storeInfo.modifiedAt.toUtc();
-      final hasLogicalChanges =
-          _forceSnapshotUploadOnClose ||
-          _openedStoreModifiedAt == null ||
-          !_openedStoreModifiedAt!.isAtSameMomentAs(currentModifiedAt);
-
-      if (!hasLogicalChanges) {
-        logDebug(
-          'Skipping snapshot sync before close because StoreMeta.modifiedAt did not change during the current session.',
-          tag: _logTag,
-          data: <String, dynamic>{
-            'storePath': storePath,
-            'openedStoreModifiedAt': _openedStoreModifiedAt?.toIso8601String(),
-            'currentStoreModifiedAt': currentModifiedAt.toIso8601String(),
-          },
-        );
-        return;
-      }
-
-      final binding = await ref
-          .read(storeSyncBindingServiceProvider)
-          .getByStoreUuid(storeInfo.id);
-      if (binding == null) {
-        return;
-      }
-
-      await onSyncStart?.call();
-
-      final token = await ref
-          .read(authTokensProvider.notifier)
-          .getTokenById(binding.tokenId);
-      if (token == null) {
-        logWarning(
-          'Skipping snapshot sync before close because token binding is stale.',
-          tag: _logTag,
-          data: <String, dynamic>{
-            'storeUuid': storeInfo.id,
-            'tokenId': binding.tokenId,
-          },
-        );
-        return;
-      }
-
       final syncService = ref.read(snapshotSyncServiceProvider);
       final status = await syncService.loadStatus(
         storePath: storePath,
@@ -752,7 +768,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
 
       switch (status.compareResult) {
         case StoreVersionCompareResult.remoteMissing:
-        case StoreVersionCompareResult.localNewer:
+          await onCloseFlowRequired?.call();
           final result = await ref
               .read(closeStoreSnapshotSyncCoordinatorProvider)
               .syncBeforeClose(
@@ -767,6 +783,47 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
                       .setStatus(nextState);
                 },
               );
+          _forceSnapshotUploadOnClose = false;
+          logInfo(
+            'Snapshot sync before close completed.',
+            tag: _logTag,
+            data: <String, dynamic>{
+              'storeUuid': storeInfo.id,
+              'resultType': result.type.name,
+            },
+          );
+          break;
+        case StoreVersionCompareResult.localNewer:
+          final shouldUpload = await _promptCloseStoreUploadDecision(
+            status,
+            onCloseFlowRequired: onCloseFlowRequired,
+          );
+          if (!shouldUpload) {
+            ref.read(closeStoreSyncStatusProvider.notifier).clear();
+            logInfo(
+              'Skipping snapshot upload before close by user choice.',
+              tag: _logTag,
+              data: <String, dynamic>{'storeUuid': storeInfo.id},
+            );
+            break;
+          }
+
+          await onCloseFlowRequired?.call();
+          final result = await ref
+              .read(closeStoreSnapshotSyncCoordinatorProvider)
+              .syncBeforeClose(
+                status: status,
+                storePath: storePath,
+                storeInfo: storeInfo,
+                binding: binding,
+                token: token,
+                onStatusChanged: (nextState) {
+                  ref
+                      .read(closeStoreSyncStatusProvider.notifier)
+                      .setStatus(nextState);
+                },
+              );
+          _forceSnapshotUploadOnClose = false;
           logInfo(
             'Snapshot sync before close completed.',
             tag: _logTag,
@@ -777,6 +834,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
           );
           break;
         case StoreVersionCompareResult.same:
+          _forceSnapshotUploadOnClose = false;
           logDebug(
             'Skipping snapshot upload before close because local and remote versions match.',
             tag: _logTag,
@@ -796,13 +854,106 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
           );
           break;
       }
-    } catch (e, stackTrace) {
+    } catch (error, stackTrace) {
+      _forceSnapshotUploadOnClose = true;
       logError(
-        'Snapshot sync before close failed: $e',
+        'Snapshot sync before close failed: $error',
         stackTrace: stackTrace,
         tag: _logTag,
       );
+      Error.throwWithStackTrace(error, stackTrace);
     }
+  }
+
+  DatabaseError _buildCloseSyncFailure(
+    Object error, {
+    required StackTrace stackTrace,
+  }) {
+    final message = _formatCloseSyncFailureMessage(error);
+    return DatabaseError.connectionFailed(
+      code: 'DB_CLOSE_SYNC_FAILED',
+      message: message,
+      data: <String, dynamic>{
+        'stage': 'close_store_snapshot_sync',
+        'errorType': error.runtimeType.toString(),
+      },
+      stackTrace: stackTrace,
+      timestamp: DateTime.now(),
+    );
+  }
+
+  String _formatCloseSyncFailureMessage(Object error) {
+    if (error case CloudStorageException(:final type, :final message)) {
+      return switch (type) {
+        CloudStorageExceptionType.network =>
+          'Не удалось отправить изменения в облако из-за проблем с интернет-соединением. Хранилище осталось открытым.',
+        CloudStorageExceptionType.timeout =>
+          'Не удалось отправить изменения в облако: сервер не ответил вовремя. Хранилище осталось открытым.',
+        CloudStorageExceptionType.unauthorized =>
+          'Не удалось отправить изменения в облако: требуется повторно подключить аккаунт синхронизации. Хранилище осталось открытым.',
+        _ when message.trim().isNotEmpty =>
+          'Не удалось отправить изменения в облако перед закрытием. $message Хранилище осталось открытым.',
+        _ =>
+          'Не удалось отправить изменения в облако перед закрытием. Хранилище осталось открытым.',
+      };
+    }
+
+    if (error case CloudSyncHttpException(:final type)) {
+      return switch (type) {
+        CloudSyncHttpExceptionType.network =>
+          'Не удалось отправить изменения в облако из-за проблем с интернет-соединением. Хранилище осталось открытым.',
+        CloudSyncHttpExceptionType.timeout =>
+          'Не удалось отправить изменения в облако: сервер не ответил вовремя. Хранилище осталось открытым.',
+        CloudSyncHttpExceptionType.refreshFailed ||
+        CloudSyncHttpExceptionType.unauthorized =>
+          'Не удалось отправить изменения в облако: требуется повторно подключить аккаунт синхронизации. Хранилище осталось открытым.',
+        _ =>
+          'Не удалось отправить изменения в облако перед закрытием. Хранилище осталось открытым.',
+      };
+    }
+
+    if (error case DatabaseError(:final message)) {
+      return 'Не удалось завершить синхронизацию перед закрытием. $message';
+    }
+
+    return 'Не удалось отправить изменения в облако перед закрытием. Хранилище осталось открытым.';
+  }
+
+  Future<bool> _promptCloseStoreUploadDecision(
+    StoreSyncStatus status, {
+    FutureOr<void> Function()? onCloseFlowRequired,
+  }) async {
+    await onCloseFlowRequired?.call();
+    ref
+        .read(closeStoreSyncStatusProvider.notifier)
+        .setStatus(
+          status.copyWith(
+            clearSyncProgress: true,
+            isSyncInProgress: false,
+            lastResultType: SnapshotSyncResultType.idle,
+          ),
+        );
+
+    final existing = _closeStoreUploadDecision;
+    if (existing != null) {
+      return existing.future;
+    }
+
+    final completer = Completer<bool>();
+    _closeStoreUploadDecision = completer;
+    return completer.future.whenComplete(() {
+      if (identical(_closeStoreUploadDecision, completer)) {
+        _closeStoreUploadDecision = null;
+      }
+    });
+  }
+
+  void resolveCloseStoreUploadDecision(bool shouldUpload) {
+    final decision = _closeStoreUploadDecision;
+    if (decision == null || decision.isCompleted) {
+      return;
+    }
+    decision.complete(shouldUpload);
   }
 
   /// Разблокировать хранилище

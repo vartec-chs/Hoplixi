@@ -202,7 +202,7 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
 
   Future<void> _applyBulkPin() => _dashboardHomeApplyBulkPin(this);
 
-  Future<void> _closeDatabase() => _dashboardHomeCloseDatabase(this);
+  Future<bool> _closeDatabase() => _dashboardHomeCloseDatabase(this);
 
   void _showCloseDatabaseDialog() =>
       _dashboardHomeShowCloseDatabaseDialog(this);

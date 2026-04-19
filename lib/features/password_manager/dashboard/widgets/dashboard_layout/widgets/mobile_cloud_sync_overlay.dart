@@ -134,6 +134,7 @@ class _MobileCloudSyncOverlayState
         !(status!.isSyncInProgress && status.syncProgress != null);
     if (finishedCheckWithBoundStore ||
         swappedToBoundStoreWithoutVisibleLoading) {
+      _rememberStoreContext(status);
       _showHintTemporarily();
       return;
     }
@@ -165,18 +166,33 @@ class _MobileCloudSyncOverlayState
     bool allowEphemeralCheckHint = false,
   }) {
     final status = syncState.hasValue ? syncState.requireValue : null;
-    final nextStoreKey = status?.storeUuid ?? status?.storePath;
+    final nextStoreKey = _storeKeyOf(status);
     final storeChanged =
-        nextStoreKey != null && nextStoreKey != _currentStoreKey;
-    if (nextStoreKey != _currentStoreKey) {
+        !syncState.isLoading &&
+        nextStoreKey != null &&
+        nextStoreKey != _currentStoreKey;
+    final shouldClearStoreContext =
+        !syncState.isLoading &&
+        _currentStoreKey != null &&
+        nextStoreKey == null;
+
+    if (storeChanged || shouldClearStoreContext) {
       _currentStoreKey = nextStoreKey;
       _hideTimer?.cancel();
       _showInitialCheckHint = false;
       _currentStoreHasCloudSyncBinding = false;
     }
 
-    if (status?.binding != null) {
-      _currentStoreHasCloudSyncBinding = true;
+    if (nextStoreKey != null) {
+      _currentStoreKey = nextStoreKey;
+    }
+
+    if (syncState.isLoading) {
+      if (status?.binding != null) {
+        _currentStoreHasCloudSyncBinding = true;
+      }
+    } else {
+      _currentStoreHasCloudSyncBinding = status?.binding != null;
     }
 
     if (syncState.isLoading && _currentStoreHasCloudSyncBinding) {
@@ -222,6 +238,16 @@ class _MobileCloudSyncOverlayState
 
   String? _storeKeyOf(StoreSyncStatus? status) {
     return status?.storeUuid ?? status?.storePath;
+  }
+
+  void _rememberStoreContext(StoreSyncStatus? status) {
+    final storeKey = _storeKeyOf(status);
+    if (storeKey != null) {
+      _currentStoreKey = storeKey;
+    }
+    if (status?.binding != null) {
+      _currentStoreHasCloudSyncBinding = true;
+    }
   }
 
   String? _messageForState(AsyncValue<StoreSyncStatus> syncState) {

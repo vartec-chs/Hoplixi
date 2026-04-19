@@ -177,13 +177,22 @@ Future<void> _dashboardHomeShowBulkAssignTagsDialog(
   );
 }
 
-Future<void> _dashboardHomeCloseDatabase(
+Future<bool> _dashboardHomeCloseDatabase(
   _DashboardHomeScreenState state,
 ) async {
   final success = await state.ref.read(mainStoreProvider.notifier).closeStore();
   if (success && state.mounted) {
     Toaster.info(title: 'База данных закрыта', description: '');
+    return true;
   }
+
+  if (state.mounted) {
+    final errorMessage =
+        state.ref.read(mainStoreProvider).value?.error?.message ??
+        'Не удалось закрыть хранилище.';
+    Toaster.error(title: 'Закрытие хранилища', description: errorMessage);
+  }
+  return false;
 }
 
 void _dashboardHomeShowCloseDatabaseDialog(_DashboardHomeScreenState state) {
@@ -207,8 +216,8 @@ void _dashboardHomeShowCloseDatabaseDialog(_DashboardHomeScreenState state) {
             label: 'Да',
             onPressed: () async {
               Navigator.of(context).pop();
-              await state._closeDatabase();
-              if (context.mounted) {
+              final success = await state._closeDatabase();
+              if (success && context.mounted) {
                 context.go(AppRoutesPaths.home);
               }
             },

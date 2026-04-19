@@ -4,13 +4,34 @@
 
 ### cloud_sync
 
-- Исправлена обработка retry в `CloudSyncAuthInterceptor`: ответы вроде
-  Dropbox `409 path/conflict/folder` после успешного refresh больше не
-  маскируются под `Failed to refresh OAuth token`, а доходят до storage-слоя как
-  обычные API-ошибки.
+- Исправлена обработка retry в `CloudSyncAuthInterceptor`: ответы вроде Dropbox
+  `409 path/conflict/folder` после успешного refresh больше не маскируются под
+  `Failed to refresh OAuth token`, а доходят до storage-слоя как обычные
+  API-ошибки.
 - В `AppLogger.dioLogPrint()` добавлено редактирование чувствительных полей
   (`Authorization`, `access_token`, `refresh_token`, `client_secret`), чтобы
   OAuth-секреты не попадали в debug-логи cloud sync.
+- Исправлен сценарий `close store + cloud sync`: если отправка snapshot перед
+  закрытием падает из-за сети/таймаута/авторизации, хранилище больше не
+  закрывается молча, ошибка сохраняется в `mainStoreProvider`, показывается в
+  UI, а следующий `closeStore()` повторно пытается отправить локально более
+  новую версию в облако.
+- Убрана безусловная навигация на `home` после failed close из dashboard-диалога
+  закрытия хранилища.
+- Для сценария `close store` добавлен явный выбор при `localNewer`: экран
+  закрытия теперь спрашивает, нужно ли сначала отправить локально более новую
+  snapshot-версию в облако, и только после выбора продолжает закрытие.
+- Исправлен `MobileCloudSyncOverlay`: overlay снова показывается на мобильном
+  dashboard при проверке cloud sync и после завершения проверки, потому что
+  виджет больше не теряет remembered binding при переходе
+  `AsyncData -> AsyncLoading -> AsyncData`.
+- В `CloudSyncSettingsPage` блок статуса синхронизации вынесен в отдельный файл
+  `cloud_sync_status_card.dart` (без `part`), а UI карточки сделан более живым:
+  добавлены цветовой статус-баннер с иконкой, информационные чипы и выделенные
+  метрики ревизий/времени синхронизации.
+- В `CloudSyncStatusCard` исправлена типизация метрик ревизии: значения
+  `localManifest/remoteManifest.revision` теперь конвертируются в `String`,
+  чтобы исключить ошибку `Object` -> `String` при передаче в UI.
 
 ### docs (agent)
 
@@ -25,6 +46,8 @@
 - В `AGENTS.md` добавлен явный приоритет MCP-инструментов: Dart/Flutter MCP для
   Flutter/Dart операций (включая форматирование вместо CLI-команд) и Serena MCP
   для семантического поиска/навигации/рефакторинга.
+- В `AGENTS.md` уточнено правило форматирования: вместо CLI-команд `dart format`
+  и `flutter format` нужно использовать MCP formatter tools.
 - В `AGENTS.md` добавлено правило для Rust: использовать `rust-mcp-server` для
   семантической навигации, рефакторинга и Rust-aware операций вместо generic
   shell-подхода, когда MCP доступен.

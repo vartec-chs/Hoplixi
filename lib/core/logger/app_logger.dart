@@ -11,10 +11,13 @@ import 'package:logger/logger.dart';
 
 class AppLogger {
   static final RegExp _authorizationHeaderPattern = RegExp(
-    r'(?im)^(\s*authorization:\s*)(.+)$',
+    r'^(\s*authorization:\s*)(.+)$',
+    caseSensitive: false,
+    multiLine: true,
   );
   static final RegExp _jsonSecretPattern = RegExp(
-    r'(?i)("?(?:access_token|refresh_token|client_secret|authorization)"?\s*:\s*"?)([^",\r\n}]+)',
+    r'("?(?:access_token|refresh_token|client_secret|authorization)"?\s*:\s*"?)([^",\r\n}]+)',
+    caseSensitive: false,
   );
 
   static AppLogger? _instance;

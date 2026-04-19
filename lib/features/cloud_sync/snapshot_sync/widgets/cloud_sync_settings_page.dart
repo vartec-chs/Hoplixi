@@ -8,6 +8,7 @@ import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_pr
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/cloud_sync_status_card.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/snapshot_sync_progress_card.dart';
 import 'package:hoplixi/features/password_manager/store_settings/providers/store_settings_modal_provider.dart';
 import 'package:hoplixi/global_key.dart';
@@ -262,11 +263,11 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ?primaryAction,
+              if (primaryAction != null) primaryAction,
               if (primaryAction != null) const SizedBox(height: 12),
-              Wrap(
+              Row(
                 spacing: 12,
-                runSpacing: 12,
+                // runSpacing: 12,
                 children: [
                   SmoothButton(
                     label: 'Обновить статус',
@@ -282,32 +283,35 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
                                 .loadStatus(),
                           ),
                   ),
-                  SmoothButton(
-                    label: 'Переподключить аккаунт',
-                    type: SmoothButtonType.outlined,
-                    onPressed: effectiveProvider == null
-                        ? null
-                        : () => _authorizeAccount(
-                            context,
-                            provider: effectiveProvider,
-                          ),
-                  ),
-                  SmoothButton(
-                    label: 'Отключить',
-                    type: SmoothButtonType.outlined,
-                    variant: SmoothButtonVariant.warning,
-                    loading: _pendingActionKey == 'disconnect',
-                    onPressed:
-                        _pendingActionKey != null || status.isSyncInProgress
-                        ? null
-                        : () => _runAction(
-                            'disconnect',
-                            () => ref
-                                .read(currentStoreSyncProvider.notifier)
-                                .disconnect(),
-                          ),
+
+                  Expanded(
+                    child: SmoothButton(
+                      label: 'Переподключить аккаунт',
+                      type: SmoothButtonType.outlined,
+                      onPressed: effectiveProvider == null
+                          ? null
+                          : () => _authorizeAccount(
+                              context,
+                              provider: effectiveProvider,
+                            ),
+                    ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 12),
+              SmoothButton(
+                label: 'Отключить',
+                type: SmoothButtonType.outlined,
+                variant: SmoothButtonVariant.error,
+                loading: _pendingActionKey == 'disconnect',
+                onPressed: _pendingActionKey != null || status.isSyncInProgress
+                    ? null
+                    : () => _runAction(
+                        'disconnect',
+                        () => ref
+                            .read(currentStoreSyncProvider.notifier)
+                            .disconnect(),
+                      ),
               ),
             ],
           ),
@@ -318,7 +322,7 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
           title: 'Текущий статус синхронизации',
           description:
               'Проверьте ревизии и решите, какое действие нужно дальше.',
-          child: _StatusCard(status: status, token: selectedToken),
+          child: CloudSyncStatusCard(status: status, token: selectedToken),
         ),
       ],
     );
@@ -622,71 +626,6 @@ class _StepCard extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class _StatusCard extends StatelessWidget {
-  const _StatusCard({required this.status, required this.token});
-
-  final StoreSyncStatus status;
-  final AuthTokenEntry? token;
-
-  @override
-  Widget build(BuildContext context) {
-    final localManifest = status.localManifest;
-    final remoteManifest = status.remoteManifest;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Хранилище: ${status.storeName ?? '—'}'),
-        const SizedBox(height: 8),
-        Text(
-          'Провайдер: ${status.binding?.provider.metadata.displayName ?? '—'}',
-        ),
-        Text('Аккаунт: ${token?.displayLabel ?? '—'}'),
-        const SizedBox(height: 12),
-        Text('Локальная ревизия: ${localManifest?.revision ?? '—'}'),
-        Text('Удалённая ревизия: ${remoteManifest?.revision ?? '—'}'),
-        Text('Состояние: ${_compareResultLabel(status)}'),
-        Text(
-          'Последняя успешная синхронизация: ${_formatSyncTime(localManifest?.sync?.syncedAt)}',
-        ),
-        if (status.remoteCheckSkippedOffline) ...[
-          const SizedBox(height: 8),
-          const Text(
-            'Нет доступа к интернету. Автоматическая проверка новой удалённой версии была пропущена.',
-          ),
-        ],
-        if (status.requiresUnlockToApply) ...[
-          const SizedBox(height: 8),
-          const Text(
-            'Удалённый snapshot уже записан локально. Разблокируйте хранилище, чтобы продолжить работу.',
-          ),
-        ],
-      ],
-    );
-  }
-
-  String _compareResultLabel(StoreSyncStatus status) {
-    if (status.remoteCheckSkippedOffline) {
-      return 'Проверка недоступна: нет интернета';
-    }
-    return switch (status.compareResult) {
-      StoreVersionCompareResult.differentStore => 'Несоответствие хранилища',
-      StoreVersionCompareResult.same => 'Версии совпадают',
-      StoreVersionCompareResult.localNewer => 'Локальная версия новее',
-      StoreVersionCompareResult.remoteNewer => 'Удалённая версия новее',
-      StoreVersionCompareResult.conflict => 'Конфликт версий',
-      StoreVersionCompareResult.remoteMissing => 'Удалённой версии ещё нет',
-    };
-  }
-
-  String _formatSyncTime(DateTime? value) {
-    if (value == null) {
-      return '—';
-    }
-    return value.toLocal().toIso8601String();
   }
 }
 

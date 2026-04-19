@@ -1,20 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/db_core/provider/main_store_provider.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/snapshot_sync_progress_card.dart';
-import 'package:hoplixi/db_core/provider/main_store_provider.dart';
+import 'package:hoplixi/shared/ui/button.dart';
 
-class CloseStoreSyncScreen extends ConsumerWidget {
+class CloseStoreSyncScreen extends ConsumerStatefulWidget {
   const CloseStoreSyncScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CloseStoreSyncScreen> createState() =>
+      _CloseStoreSyncScreenState();
+}
+
+class _CloseStoreSyncScreenState extends ConsumerState<CloseStoreSyncScreen> {
+  bool _isResolvingDecision = false;
+
+  bool _shouldAskAboutUpload(StoreSyncStatus? status) {
+    return status != null &&
+        status.compareResult == StoreVersionCompareResult.localNewer &&
+        !status.isSyncInProgress &&
+        status.syncProgress == null &&
+        !status.requiresUnlockToApply;
+  }
+
+  Future<void> _resolveUploadDecision(bool shouldUpload) async {
+    if (_isResolvingDecision) {
+      return;
+    }
+
+    setState(() {
+      _isResolvingDecision = true;
+    });
+    ref
+        .read(mainStoreProvider.notifier)
+        .resolveCloseStoreUploadDecision(shouldUpload);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final dbState = ref.watch(mainStoreProvider).value;
     final syncStatus =
         ref.watch(closeStoreSyncStatusProvider) ??
         ref.watch(currentStoreSyncProvider).value;
     final syncProgress = syncStatus?.syncProgress;
     final requiresUnlockToApply = syncStatus?.requiresUnlockToApply ?? false;
+    final shouldAskAboutUpload = _shouldAskAboutUpload(syncStatus);
     final theme = Theme.of(context);
 
     return PopScope(
@@ -44,7 +76,9 @@ class CloseStoreSyncScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    requiresUnlockToApply
+                    shouldAskAboutUpload
+                        ? 'Локальная snapshot-версия новее облачной. Перед закрытием выберите, нужно ли отправить обновлённую версию в облако.'
+                        : requiresUnlockToApply
                         ? 'Удалённый snapshot уже применён локально. Экран закроется автоматически после завершения сценария закрытия.'
                         : 'Идёт синхронизация изменений перед закрытием. Это окно закроется автоматически.',
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -76,7 +110,13 @@ class CloseStoreSyncScreen extends ConsumerWidget {
                     ),
                   ],
                   const SizedBox(height: 28),
-                  if (syncProgress != null)
+                  if (shouldAskAboutUpload)
+                    _CloseStoreUploadDecisionCard(
+                      isLoading: _isResolvingDecision,
+                      onUploadAndClose: () => _resolveUploadDecision(true),
+                      onCloseWithoutUpload: () => _resolveUploadDecision(false),
+                    )
+                  else if (syncProgress != null)
                     SnapshotSyncProgressCard(progress: syncProgress)
                   else if (requiresUnlockToApply)
                     const SnapshotSyncPendingApplyCard()
@@ -86,6 +126,57 @@ class CloseStoreSyncScreen extends ConsumerWidget {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CloseStoreUploadDecisionCard extends StatelessWidget {
+  const _CloseStoreUploadDecisionCard({
+    required this.isLoading,
+    required this.onUploadAndClose,
+    required this.onCloseWithoutUpload,
+  });
+
+  final bool isLoading;
+  final VoidCallback onUploadAndClose;
+  final VoidCallback onCloseWithoutUpload;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Отправить новую облачную версию?',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Если пропустить отправку, хранилище закроется сразу, а облачная версия останется старой.',
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            SmoothButton(
+              label: 'Отправить и закрыть',
+              loading: isLoading,
+              onPressed: isLoading ? null : onUploadAndClose,
+            ),
+            const SizedBox(height: 10),
+            SmoothButton(
+              label: 'Закрыть без отправки',
+              type: SmoothButtonType.outlined,
+              onPressed: isLoading ? null : onCloseWithoutUpload,
+            ),
+          ],
         ),
       ),
     );

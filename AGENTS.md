@@ -29,7 +29,8 @@ context.
 - Do not use `@riverpod` code generation in this project.
 - For DB domain flows, keep `AsyncResult<T, DatabaseError>` patterns.
 - Prefer Dart/Flutter MCP tools over shell commands for Flutter/Dart workflows
-  (for example: use MCP formatter tools instead of `flutter format`).
+  (for example: use MCP formatter tools instead of CLI commands like
+  `dart format` / `flutter format`).
 - Prefer Serena MCP tools for semantic symbol/code navigation and refactoring
   instead of plain text search when semantic accuracy matters.
 - Prefer `rust-mcp-server` tools for Rust workflows (semantic navigation,
