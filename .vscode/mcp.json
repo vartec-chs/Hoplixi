@@ -1,0 +1,10 @@
+{
+	"servers": {
+		"rust-mcp": {
+			"type": "stdio",
+			"command": "C:\\Users\\Vartec\\.cargo\\bin\\rust-mcp-server.exe",
+			"args": []
+		}
+	},
+	"inputs": []
+}
