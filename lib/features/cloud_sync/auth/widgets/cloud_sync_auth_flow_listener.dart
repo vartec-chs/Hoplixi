@@ -169,7 +169,7 @@ class _CloudSyncAuthFlowListenerState
 
       await showStoreSettingsModal(
         dialogContext,
-        ref,
+        
         initialPageIndex: initialPageIndex,
       );
     });

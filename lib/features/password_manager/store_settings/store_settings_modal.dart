@@ -12,12 +12,13 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 /// Возвращает `true` если настройки были сохранены, `false` если отменены
 Future<bool?> showStoreSettingsModal(
   BuildContext context,
-  WidgetRef ref, {
+   {
   int initialPageIndex = 0,
 }) async {
-  ref.read(pendingStoreSettingsModalPageProvider.notifier).clear();
+  final container = ProviderScope.containerOf(context, listen: false);
+  container.read(pendingStoreSettingsModalPageProvider.notifier).clear();
   final pageIndexNotifier = ValueNotifier<int>(initialPageIndex);
-  ref.read(isStoreSettingsModalOpenProvider.notifier).setOpen(true);
+  container.read(isStoreSettingsModalOpenProvider.notifier).setOpen(true);
 
   try {
     return await WoltModalSheet.show<bool>(
@@ -36,6 +37,8 @@ Future<bool?> showStoreSettingsModal(
               builder: (context) {
                 return Text(
                   'Настройки хранилища',
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
@@ -177,6 +180,7 @@ Future<bool?> showStoreSettingsModal(
       },
     );
   } finally {
-    ref.read(isStoreSettingsModalOpenProvider.notifier).setOpen(false);
+    container.read(isStoreSettingsModalOpenProvider.notifier).setOpen(false);
+    pageIndexNotifier.dispose();
   }
 }

@@ -132,7 +132,7 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
       'DashboardSliverAppBar: Открытие модального окна настроек хранилища',
     );
 
-    showStoreSettingsModal(context, ref);
+    showStoreSettingsModal(context);
   }
 
   String _getSearchHint(EntityType entityType) {

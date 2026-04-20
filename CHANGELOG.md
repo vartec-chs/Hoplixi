@@ -16,6 +16,18 @@
   `StoreSyncStatus`, close-flow теперь переиспользует его `remoteManifest` и
   пересчитывает только локальный snapshot; повторный сетевой `loadStatus()`
   остаётся только fallback для offline-skipped/отсутствующего кеша.
+- Fake-модульность через `part` заменена на явные standalone-компоненты:
+  добавлены `main_store_runtime_provider.dart`,
+  `main_store_backup_controller.dart`, `main_store_storage_controller.dart` и
+  `main_store_close_sync_controller.dart`, а `MainStoreAsyncNotifier` превращён
+  в тонкий session/lifecycle facade.
+- `mainStoreManagerProvider` больше не зависит от внутренних геттеров notifier-а
+  и строится через `mainStoreRuntimeProvider` + текущее `DatabaseState`, что
+  убирает протекание manager-деталей наружу из session-слоя.
+- Для новой композиции добавлены unit-тесты на backup-controller и wiring
+  `mainStoreManagerProvider`, а существующие widget-тесты экранов
+  `close_store_sync` и `lock_store` подтверждают сохранение текущего UI
+  поведения.
 
 ### cloud_sync / settings
 
@@ -42,6 +54,16 @@
   `internetConnectionProvider.hasInternetAccess`: при включённой авто-отправке и
   отсутствии сети cloud upload перед закрытием пропускается сразу, без ожидания
   таймаутов сетевого запроса.
+
+### password_manager / store_settings
+
+- Исправлен `StateError` при закрытии модального окна настроек хранилища:
+  `showStoreSettingsModal(...)` больше не использует `WidgetRef` после `await`
+  (и потенциального unmount виджета), вместо этого состояние провайдеров
+  обновляется через заранее полученный `ProviderContainer`.
+- В `showStoreSettingsModal(...)` добавлен `dispose()` для
+  `ValueNotifier<int> pageIndexNotifier`, чтобы корректно освобождать ресурсы
+  после закрытия модалки.
 
 ## 2026-04-19
 
