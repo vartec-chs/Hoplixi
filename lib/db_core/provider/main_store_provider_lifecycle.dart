@@ -231,18 +231,32 @@ Future<bool> _closeStoreImpl(MainStoreAsyncNotifier notifier) async {
         },
       );
     } catch (error, stackTrace) {
-      final closeSyncError = notifier._buildCloseSyncFailure(
-        error,
-        stackTrace: stackTrace,
-      );
-      notifier._setState(
-        openStateBeforeClose.copyWith(
-          status: DatabaseStatus.open,
-          error: closeSyncError,
-        ),
-      );
-      notifier._ref.read(closeStoreSyncStatusProvider.notifier).clear();
-      return false;
+      final canCloseWithoutSync = await notifier
+          ._shouldAllowCloseWithoutSyncFailure(error);
+      if (canCloseWithoutSync) {
+        logWarning(
+          'Snapshot sync before close failed in auto-upload mode due to recoverable network error. Closing store without cloud upload.',
+          tag: MainStoreAsyncNotifier._logTag,
+          data: <String, dynamic>{
+            'errorType': error.runtimeType.toString(),
+            'error': error.toString(),
+          },
+        );
+        notifier._ref.read(closeStoreSyncStatusProvider.notifier).clear();
+      } else {
+        final closeSyncError = notifier._buildCloseSyncFailure(
+          error,
+          stackTrace: stackTrace,
+        );
+        notifier._setState(
+          openStateBeforeClose.copyWith(
+            status: DatabaseStatus.open,
+            error: closeSyncError,
+          ),
+        );
+        notifier._ref.read(closeStoreSyncStatusProvider.notifier).clear();
+        return false;
+      }
     }
 
     final result = await notifier._manager.closeStore();

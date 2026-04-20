@@ -5,6 +5,12 @@
 1. Failed to create Dropbox folder. Cause:
    {"error":{".tag":"expired_access_token"},"error_summary":"expired_access_token/"}
 
+## Рефакторинг
+
+- Полный ревакторинх cloud sync части, с целью упростить код и улучшить
+  обработку ошибок.
+- Полный рефакторинг db_core части.
+
 ## Доработки 1.1.1
 
 1. ~~Добавить версию последней миграции для стора и версию приложения в

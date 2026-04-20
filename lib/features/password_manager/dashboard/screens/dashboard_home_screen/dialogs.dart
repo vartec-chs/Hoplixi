@@ -181,8 +181,7 @@ Future<bool> _dashboardHomeCloseDatabase(
   _DashboardHomeScreenState state,
 ) async {
   final success = await state.ref.read(mainStoreProvider.notifier).closeStore();
-  if (success && state.mounted) {
-    Toaster.info(title: 'База данных закрыта', description: '');
+  if (success) {
     return true;
   }
 
@@ -193,6 +192,77 @@ Future<bool> _dashboardHomeCloseDatabase(
     Toaster.error(title: 'Закрытие хранилища', description: errorMessage);
   }
   return false;
+}
+
+Future<bool> _dashboardHomeCloseDatabaseWithOverlay(
+  _DashboardHomeScreenState state,
+) async {
+  final rootNavigator = Navigator.of(state.context, rootNavigator: true);
+  var isOverlayVisible = true;
+
+  unawaited(
+    showDialog<void>(
+      context: state.context,
+      barrierDismissible: false,
+      useRootNavigator: true,
+      builder: (_) => const _CloseStoreProgressOverlay(),
+    ).whenComplete(() {
+      isOverlayVisible = false;
+    }),
+  );
+
+  try {
+    return await _dashboardHomeCloseDatabase(state);
+  } finally {
+    if (isOverlayVisible && rootNavigator.mounted) {
+      rootNavigator.pop();
+    }
+  }
+}
+
+class _CloseStoreProgressOverlay extends StatelessWidget {
+  const _CloseStoreProgressOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return PopScope(
+      canPop: false,
+      child: Material(
+        color: Colors.black45,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 320),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator.adaptive(),
+                    const SizedBox(height: 14),
+                    Text(
+                      'Закрываем хранилище...',
+                      style: theme.textTheme.titleMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Если синхронизация подключена, сначала проверим статус.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 void _dashboardHomeShowCloseDatabaseDialog(_DashboardHomeScreenState state) {
@@ -216,9 +286,11 @@ void _dashboardHomeShowCloseDatabaseDialog(_DashboardHomeScreenState state) {
             label: 'Да',
             onPressed: () async {
               Navigator.of(context).pop();
-              final success = await state._closeDatabase();
-              if (success && context.mounted) {
-                context.go(AppRoutesPaths.home);
+              final success = await _dashboardHomeCloseDatabaseWithOverlay(
+                state,
+              );
+              if (success && state.mounted) {
+                state.context.go(AppRoutesPaths.home);
               }
             },
             variant: .error,

@@ -255,6 +255,9 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   String _formatCloseSyncFailureMessage(Object error) =>
       _formatCloseSyncFailureMessageImpl(error);
 
+  Future<bool> _shouldAllowCloseWithoutSyncFailure(Object error) =>
+      _shouldAllowCloseWithoutSyncFailureImpl(this, error);
+
   Future<bool> _promptCloseStoreUploadDecision(
     StoreSyncStatus status, {
     FutureOr<void> Function()? onCloseFlowRequired,

@@ -70,6 +70,20 @@ Future<void> _tryUploadSnapshotBeforeCloseImpl(
     return;
   }
 
+  final autoUploadEnabled = await getIt<PreferencesService>().settingsPrefs
+      .getAutoUploadSnapshotOnCloseEnabled();
+  if (autoUploadEnabled) {
+    final hasInternetAccess = await _hasInternetAccessForCloseSync(notifier);
+    if (!hasInternetAccess) {
+      logWarning(
+        'Skipping snapshot upload before close because device has no internet access and auto-upload is enabled.',
+        tag: MainStoreAsyncNotifier._logTag,
+        data: <String, dynamic>{'storeUuid': storeInfo.id, 'tokenId': token.id},
+      );
+      return;
+    }
+  }
+
   try {
     final syncService = notifier._ref.read(snapshotSyncServiceProvider);
     final status = cachedStatus != null
@@ -252,6 +266,31 @@ String _formatCloseSyncFailureMessageImpl(Object error) {
   return 'Не удалось отправить изменения в облако перед закрытием. Хранилище осталось открытым.';
 }
 
+Future<bool> _shouldAllowCloseWithoutSyncFailureImpl(
+  MainStoreAsyncNotifier notifier,
+  Object error,
+) async {
+  final autoUploadEnabled = await getIt<PreferencesService>().settingsPrefs
+      .getAutoUploadSnapshotOnCloseEnabled();
+  if (!autoUploadEnabled) {
+    return false;
+  }
+
+  return switch (error) {
+    CloudStorageException(:final type)
+        when type == CloudStorageExceptionType.network ||
+            type == CloudStorageExceptionType.timeout ||
+            type == CloudStorageExceptionType.cancelled =>
+      true,
+    CloudSyncHttpException(:final type)
+        when type == CloudSyncHttpExceptionType.network ||
+            type == CloudSyncHttpExceptionType.timeout ||
+            type == CloudSyncHttpExceptionType.cancelled =>
+      true,
+    _ => false,
+  };
+}
+
 Future<bool> _promptCloseStoreUploadDecisionImpl(
   MainStoreAsyncNotifier notifier,
   StoreSyncStatus status, {
@@ -357,4 +396,16 @@ void _resetSnapshotCloseTrackingImpl(MainStoreAsyncNotifier notifier) {
   notifier._openedStoreModifiedAt = null;
   notifier._forceSnapshotUploadOnClose = false;
   notifier._pendingSnapshotUploadPromptOnClose = false;
+}
+
+Future<bool> _hasInternetAccessForCloseSync(
+  MainStoreAsyncNotifier notifier,
+) async {
+  try {
+    return await notifier._ref
+        .read(internetConnectionProvider)
+        .hasInternetAccess;
+  } catch (_) {
+    return false;
+  }
 }
