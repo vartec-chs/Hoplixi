@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 2026-04-20
+
+### db_core (main_store_provider)
+
+- `lib/db_core/provider/main_store_provider.dart` декомпозирован на отдельные
+  модули библиотеки (`backup`, `lifecycle`, `snapshot_sync`, `storage`) без
+  изменения публичного API `mainStoreProvider` / `MainStoreAsyncNotifier`.
+- В корневом файле провайдера оставлен только entrypoint библиотеки, общее
+  состояние/таймеры и короткие delegating-методы, чтобы lifecycle стора,
+  backup-логика, cloud close-sync и storage-операции больше не были смешаны в
+  одном 1400+ строковом файле.
+
 ## 2026-04-19
 
 ### cloud_sync
