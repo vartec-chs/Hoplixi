@@ -2,7 +2,7 @@ name: hoplixi
 description: 'Password manager application'
 publish_to: 'none'
 
-version: 1.2.0+2
+version: 1.2.1+2
 
 environment:
   sdk: '^3.11.4'

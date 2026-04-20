@@ -2,8 +2,8 @@
 
 ## Баги на момент версии 1.2.0
 
-1. Failed to create Dropbox folder. Cause:
-   {"error":{".tag":"expired_access_token"},"error_summary":"expired_access_token/"}
+1. ~~Failed to create Dropbox folder. Cause:
+   {"error":{".tag":"expired_access_token"},"error_summary":"expired_access_token/"}~~
 
 ## Рефакторинг
 
