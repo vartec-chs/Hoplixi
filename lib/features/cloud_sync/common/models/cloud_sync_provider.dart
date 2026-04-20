@@ -68,7 +68,7 @@ extension CloudSyncProviderX on CloudSyncProvider {
     return switch (this) {
       CloudSyncProvider.dropbox => const CloudSyncProviderMetadata(
         displayName: 'Dropbox',
-        icon: Icons.cloud_circle_outlined,
+        icon: Icons.cloud,
         authorizationEndpoint: 'https://www.dropbox.com/oauth2/authorize',
         tokenEndpoint: 'https://api.dropboxapi.com/oauth2/token',
         supportsDesktopAuth: true,

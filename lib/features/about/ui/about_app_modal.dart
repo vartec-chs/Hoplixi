@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/ui/button.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 Future<void> showAppAboutModal(BuildContext context) async {
@@ -74,17 +75,19 @@ Future<void> showAppAboutModal(BuildContext context) async {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        TextButton(
+                        SmoothButton(
                           onPressed: () {
                             Navigator.of(dialogContext).pop();
                             context.push(AppRoutesPaths.aboutLicenses);
                           },
-                          child: const Text('Лицензии'),
+                          label: 'Лицензии',
+                          type: SmoothButtonType.outlined,
                         ),
                         const SizedBox(width: 8),
-                        FilledButton(
+                        SmoothButton(
                           onPressed: () => Navigator.of(dialogContext).pop(),
-                          child: const Text('Закрыть'),
+                          label: 'Закрыть',
+                          type: SmoothButtonType.filled,
                         ),
                       ],
                     ),

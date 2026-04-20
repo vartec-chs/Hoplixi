@@ -26,6 +26,7 @@ import 'package:hoplixi/features/password_manager/open_store/services/store_pass
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:typed_prefs/typed_prefs.dart';
 
 final _recentDatabaseManifestProvider = FutureProvider.family
@@ -184,7 +185,7 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
                 label: isLoading ? 'Открытие...' : 'Открыть',
                 type: SmoothButtonType.filled,
                 isFullWidth: true,
-                icon: const Icon(CupertinoIcons.arrow_right_circle),
+                icon: const Icon(LucideIcons.folderOpen),
                 loading: isLoading,
                 onPressed: isLoading
                     ? null
