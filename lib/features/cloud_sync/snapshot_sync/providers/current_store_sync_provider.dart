@@ -21,7 +21,25 @@ final closeStoreSyncStatusProvider =
       CloseStoreSyncStatusNotifier.new,
     );
 
+final currentStoreSyncSnapshotProvider =
+    NotifierProvider<CurrentStoreSyncSnapshotNotifier, StoreSyncStatus?>(
+      CurrentStoreSyncSnapshotNotifier.new,
+    );
+
 class CloseStoreSyncStatusNotifier extends Notifier<StoreSyncStatus?> {
+  @override
+  StoreSyncStatus? build() => null;
+
+  void setStatus(StoreSyncStatus? nextStatus) {
+    state = nextStatus;
+  }
+
+  void clear() {
+    state = null;
+  }
+}
+
+class CurrentStoreSyncSnapshotNotifier extends Notifier<StoreSyncStatus?> {
   @override
   StoreSyncStatus? build() => null;
 
@@ -89,6 +107,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
   Future<StoreSyncStatus> build() async {
     final storeState = await ref.watch(mainStoreProvider.future);
     final status = await _loadCurrentStatus(storeState, useWatch: true);
+    _publishSyncSnapshot(status);
     _syncCloseStoreUploadPromptRequirement(status);
     return status;
   }
@@ -221,7 +240,12 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
 
   void _setSyncState(StoreSyncStatus next) {
     state = AsyncData(next);
+    _publishSyncSnapshot(next);
     _syncCloseStoreUploadPromptRequirement(next);
+  }
+
+  void _publishSyncSnapshot(StoreSyncStatus next) {
+    ref.read(currentStoreSyncSnapshotProvider.notifier).setStatus(next);
   }
 
   Future<void> syncNow() async {

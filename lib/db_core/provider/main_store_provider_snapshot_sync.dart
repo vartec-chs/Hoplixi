@@ -38,16 +38,26 @@ Future<void> _tryUploadSnapshotBeforeCloseImpl(
     return;
   }
 
-  final binding = await notifier._ref
-      .read(storeSyncBindingServiceProvider)
-      .getByStoreUuid(storeInfo.id);
+  final cachedStatus = _getReusableCloseStoreSyncStatus(
+    notifier,
+    storePath: storePath,
+    storeInfo: storeInfo,
+  );
+
+  final binding =
+      cachedStatus?.binding ??
+      await notifier._ref
+          .read(storeSyncBindingServiceProvider)
+          .getByStoreUuid(storeInfo.id);
   if (binding == null) {
     return;
   }
 
-  final token = await notifier._ref
-      .read(authTokensProvider.notifier)
-      .getTokenById(binding.tokenId);
+  final token =
+      cachedStatus?.token ??
+      await notifier._ref
+          .read(authTokensProvider.notifier)
+          .getTokenById(binding.tokenId);
   if (token == null) {
     logWarning(
       'Skipping snapshot sync before close because token binding is stale.',
@@ -62,14 +72,25 @@ Future<void> _tryUploadSnapshotBeforeCloseImpl(
 
   try {
     final syncService = notifier._ref.read(snapshotSyncServiceProvider);
-    final status = await syncService.loadStatus(
-      storePath: storePath,
-      storeInfo: storeInfo,
-      binding: binding,
-      token: token,
-      persistLocalSnapshot: true,
-      allowLocalRevisionBump: true,
-    );
+    final status = cachedStatus != null
+        ? await syncService.rebuildStatusWithKnownRemote(
+            storePath: storePath,
+            storeInfo: storeInfo,
+            binding: binding,
+            token: token,
+            remoteManifest: cachedStatus.remoteManifest,
+            persistLocalSnapshot: true,
+            allowLocalRevisionBump: true,
+            remoteCheckSkippedOffline: false,
+          )
+        : await syncService.loadStatus(
+            storePath: storePath,
+            storeInfo: storeInfo,
+            binding: binding,
+            token: token,
+            persistLocalSnapshot: true,
+            allowLocalRevisionBump: true,
+          );
 
     switch (status.compareResult) {
       case StoreVersionCompareResult.remoteMissing:
@@ -145,6 +166,35 @@ Future<void> _tryUploadSnapshotBeforeCloseImpl(
     );
     Error.throwWithStackTrace(error, stackTrace);
   }
+}
+
+StoreSyncStatus? _getReusableCloseStoreSyncStatus(
+  MainStoreAsyncNotifier notifier, {
+  required String storePath,
+  required StoreInfoDto storeInfo,
+}) {
+  final status = notifier._ref.read(currentStoreSyncSnapshotProvider);
+  if (status == null) {
+    return null;
+  }
+
+  final hasSameStoreIdentity =
+      status.isStoreOpen &&
+      status.storePath == storePath &&
+      status.storeUuid == storeInfo.id;
+  if (!hasSameStoreIdentity) {
+    return null;
+  }
+
+  if (status.binding == null || status.token == null) {
+    return null;
+  }
+
+  if (status.remoteCheckSkippedOffline || status.isSyncInProgress) {
+    return null;
+  }
+
+  return status;
 }
 
 DatabaseError _buildCloseSyncFailureImpl(

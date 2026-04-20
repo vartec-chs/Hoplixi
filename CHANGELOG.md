@@ -11,6 +11,11 @@
   состояние/таймеры и короткие delegating-методы, чтобы lifecycle стора,
   backup-логика, cloud close-sync и storage-операции больше не были смешаны в
   одном 1400+ строковом файле.
+- В `closeStore()` убран обязательный preflight remote status-check перед
+  закрытием: если `currentStoreSyncProvider` уже загрузил актуальный
+  `StoreSyncStatus`, close-flow теперь переиспользует его `remoteManifest` и
+  пересчитывает только локальный snapshot; повторный сетевой `loadStatus()`
+  остаётся только fallback для offline-skipped/отсутствующего кеша.
 
 ## 2026-04-19
 

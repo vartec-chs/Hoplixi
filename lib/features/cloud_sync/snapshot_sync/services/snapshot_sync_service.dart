@@ -93,6 +93,34 @@ class SnapshotSyncService {
     );
   }
 
+  Future<StoreSyncStatus> rebuildStatusWithKnownRemote({
+    required String storePath,
+    required StoreInfoDto storeInfo,
+    required StoreManifest? remoteManifest,
+    StoreSyncBinding? binding,
+    AuthTokenEntry? token,
+    bool persistLocalSnapshot = false,
+    bool allowLocalRevisionBump = false,
+    bool remoteCheckSkippedOffline = false,
+  }) async {
+    final localSnapshot = await _buildLocalSnapshot(
+      storePath: storePath,
+      storeInfo: storeInfo,
+      persist: persistLocalSnapshot,
+      allowRevisionBump: allowLocalRevisionBump,
+    );
+
+    return _buildStoreSyncStatus(
+      storePath: storePath,
+      storeInfo: storeInfo,
+      binding: binding,
+      token: token,
+      localManifest: localSnapshot.storeManifest,
+      remoteManifest: remoteManifest,
+      remoteCheckSkippedOffline: remoteCheckSkippedOffline,
+    );
+  }
+
   Future<LocalStoreSnapshot> _buildLocalSnapshot({
     required String storePath,
     required StoreInfoDto storeInfo,
