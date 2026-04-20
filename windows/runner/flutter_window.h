@@ -28,6 +28,9 @@ class FlutterWindow : public Win32Window {
 
   // The Flutter instance hosted by this window.
   std::unique_ptr<flutter::FlutterViewController> flutter_controller_;
+
+  // Registered message id for requesting existing instance to show window.
+  UINT show_window_message_id_ = 0;
 };
 
 #endif  // RUNNER_FLUTTER_WINDOW_H_
