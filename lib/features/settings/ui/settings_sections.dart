@@ -260,18 +260,30 @@ class SyncSettingsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final autoSyncEnabled = ref.watch(autoSyncEnabledProvider).value ?? false;
+    final autoUploadSnapshotOnCloseEnabled =
+        ref.watch(autoUploadSnapshotOnCloseEnabledProvider).value ?? false;
     final lastSyncTime = ref.watch(lastSyncTimeProvider).value;
 
     return SettingsSectionCard(
       title: 'Синхронизация',
       children: [
+        // SettingsSwitchTile(
+        //   title: 'Автоматическая синхронизация',
+        //   subtitle: 'Синхронизировать данные автоматически',
+        //   leading: const Icon(Icons.sync),
+        //   value: autoSyncEnabled,
+        //   onChanged: (value) => getIt<PreferencesService>().settingsPrefs
+        //       .setAutoSyncEnabled(value),
+        // ),
+        // const Divider(height: 1),
         SettingsSwitchTile(
-          title: 'Автоматическая синхронизация',
-          subtitle: 'Синхронизировать данные автоматически',
-          leading: const Icon(Icons.sync),
-          value: autoSyncEnabled,
+          title: 'Авто-отправка при закрытии',
+          subtitle:
+              'Если локальная версия новее, отправлять snapshot в облако без подтверждения',
+          leading: const Icon(Icons.cloud_upload_outlined),
+          value: autoUploadSnapshotOnCloseEnabled,
           onChanged: (value) => getIt<PreferencesService>().settingsPrefs
-              .setAutoSyncEnabled(value),
+              .setAutoUploadSnapshotOnCloseEnabled(value),
         ),
         if (lastSyncTime != null) ...[
           const Divider(height: 1),

@@ -20,6 +20,9 @@ class SettingsPrefs {
   static const autoSyncEnabled = PrefKey<bool>();
 
   @Pref(defaultValue: false)
+  static const autoUploadSnapshotOnCloseEnabled = PrefKey<bool>();
+
+  @Pref(defaultValue: false)
   static const autoBackupEnabled = PrefKey<bool>();
 
   static const backupPath = PrefKey<String>();

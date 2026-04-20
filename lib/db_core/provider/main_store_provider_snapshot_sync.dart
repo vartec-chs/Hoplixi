@@ -257,6 +257,36 @@ Future<bool> _promptCloseStoreUploadDecisionImpl(
   StoreSyncStatus status, {
   FutureOr<void> Function()? onCloseFlowRequired,
 }) async {
+  final existing = notifier._closeStoreUploadDecision;
+  if (existing != null) {
+    return existing.future;
+  }
+
+  final shouldAutoUpload = await getIt<PreferencesService>().settingsPrefs
+      .getAutoUploadSnapshotOnCloseEnabled();
+  if (shouldAutoUpload) {
+    if (onCloseFlowRequired != null) {
+      notifier._ref
+          .read(closeStoreSyncStatusProvider.notifier)
+          .setStatus(
+            status.copyWith(
+              clearSyncProgress: true,
+              isSyncInProgress: true,
+              lastResultType: SnapshotSyncResultType.idle,
+            ),
+          );
+    }
+    logInfo(
+      'Skipping close-store snapshot upload prompt because auto-upload setting is enabled.',
+      tag: MainStoreAsyncNotifier._logTag,
+      data: <String, dynamic>{
+        'storeUuid': status.storeUuid,
+        'compareResult': status.compareResult.name,
+      },
+    );
+    return true;
+  }
+
   await onCloseFlowRequired?.call();
   notifier._ref
       .read(closeStoreSyncStatusProvider.notifier)
@@ -267,11 +297,6 @@ Future<bool> _promptCloseStoreUploadDecisionImpl(
           lastResultType: SnapshotSyncResultType.idle,
         ),
       );
-
-  final existing = notifier._closeStoreUploadDecision;
-  if (existing != null) {
-    return existing.future;
-  }
 
   final completer = Completer<bool>();
   notifier._closeStoreUploadDecision = completer;

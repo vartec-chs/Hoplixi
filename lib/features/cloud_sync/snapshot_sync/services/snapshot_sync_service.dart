@@ -1,6 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:hoplixi/db_core/models/db_errors.dart';
+import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/db_core/models/store_manifest.dart';
+import 'package:hoplixi/db_core/services/main_store_storage_service.dart';
+import 'package:hoplixi/db_core/services/store_manifest_service.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/attachments_manifest.dart';
@@ -11,11 +16,6 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_repository.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/store_snapshot_manifest_builder.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
-import 'package:hoplixi/db_core/models/db_errors.dart';
-import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
-import 'package:hoplixi/db_core/models/store_manifest.dart';
-import 'package:hoplixi/db_core/services/main_store_storage_service.dart';
-import 'package:hoplixi/db_core/services/store_manifest_service.dart';
 
 enum SnapshotConflictResolution { uploadLocal, downloadRemote }
 
@@ -796,7 +796,7 @@ class SnapshotSyncService {
           ? 'Загрузка в облако'
           : 'Скачивание из облака',
       description: direction == SnapshotSyncTransferDirection.upload
-          ? 'Передаём базу данных и ключ шифрования.'
+          ? 'Передаём базу данных.'
           : 'Скачиваем основные файлы хранилища.',
       transferProgress: transferProgress,
     );

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/db_core/main_store.dart';
 import 'package:hoplixi/db_core/main_store_manager.dart';
@@ -20,6 +21,7 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_stor
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/setup/di_init.dart';
+import 'package:typed_prefs/typed_prefs.dart';
 
 part 'main_store_provider_backup.dart';
 part 'main_store_provider_lifecycle.dart';

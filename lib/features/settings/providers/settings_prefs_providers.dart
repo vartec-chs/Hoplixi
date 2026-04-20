@@ -32,6 +32,11 @@ final autoSyncEnabledProvider = StreamProvider<bool>(
   (ref) => getIt<PreferencesService>().settingsPrefs.watchAutoSyncEnabled(),
 );
 
+final autoUploadSnapshotOnCloseEnabledProvider = StreamProvider<bool>(
+  (ref) => getIt<PreferencesService>().settingsPrefs
+      .watchAutoUploadSnapshotOnCloseEnabled(),
+);
+
 final lastSyncTimeProvider = StreamProvider<int?>(
   (ref) => getIt<PreferencesService>().systemPrefs.watchLastSyncTime(),
 );
