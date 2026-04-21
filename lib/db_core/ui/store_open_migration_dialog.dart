@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/db_core/models/db_errors.dart';
 import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/db_core/provider/main_store_backup_orchestrator_provider.dart';
 import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 
@@ -50,7 +51,7 @@ Future<bool> promptStoreMigrationAndOpen({
   }
 
   final success = await ref
-      .read(mainStoreProvider.notifier)
+      .read(mainStoreBackupOrchestratorProvider)
       .backupAndMigrateStore(dto);
   if (!context.mounted) {
     return true;

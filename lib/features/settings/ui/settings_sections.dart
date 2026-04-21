@@ -5,6 +5,7 @@ import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/services/services.dart';
 import 'package:hoplixi/core/theme/theme_switcher.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/db_core/provider/main_store_backup_orchestrator_provider.dart';
 import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 import 'package:hoplixi/features/settings/providers/settings_prefs_providers.dart';
 import 'package:hoplixi/features/settings/ui/widgets/settings_section_card.dart';
@@ -346,7 +347,7 @@ class BackupSettingsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mainStoreNotifier = ref.read(mainStoreProvider.notifier);
+    final backupOrchestrator = ref.read(mainStoreBackupOrchestratorProvider);
 
     final autoBackupEnabled =
         ref.watch(autoBackupEnabledProvider).value ?? false;
@@ -370,7 +371,7 @@ class BackupSettingsSection extends ConsumerWidget {
                 .setAutoBackupEnabled(value);
 
             if (value) {
-              mainStoreNotifier.startPeriodicBackup(
+              await backupOrchestrator.startPeriodicBackup(
                 interval: Duration(minutes: backupIntervalMinutes),
                 scope: backupScope,
                 outputDirPath: backupPath,
@@ -379,7 +380,7 @@ class BackupSettingsSection extends ConsumerWidget {
               );
               Toaster.success(title: 'Автобэкап включен');
             } else {
-              mainStoreNotifier.stopPeriodicBackup();
+              backupOrchestrator.stopPeriodicBackup();
               Toaster.info(title: 'Автобэкап остановлен');
             }
           },
@@ -392,7 +393,7 @@ class BackupSettingsSection extends ConsumerWidget {
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
           onTap: () => _showBackupScopeDialog(
             context,
-            mainStoreNotifier,
+            backupOrchestrator,
             backupScope,
             autoBackupEnabled,
             backupIntervalMinutes,
@@ -408,7 +409,7 @@ class BackupSettingsSection extends ConsumerWidget {
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
           onTap: () => _showBackupIntervalDialog(
             context,
-            mainStoreNotifier,
+            backupOrchestrator,
             backupIntervalMinutes,
             autoBackupEnabled,
             backupScope,
@@ -424,7 +425,7 @@ class BackupSettingsSection extends ConsumerWidget {
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
           onTap: () => _showBackupMaxCountDialog(
             context,
-            mainStoreNotifier,
+            backupOrchestrator,
             backupMaxPerStore,
             autoBackupEnabled,
             backupIntervalMinutes,
@@ -467,12 +468,12 @@ class BackupSettingsSection extends ConsumerWidget {
 
   Future<void> _runManualBackup(
     BuildContext context,
-    MainStoreAsyncNotifier mainStoreNotifier,
+    MainStoreBackupOrchestrator backupOrchestrator,
     BackupScope scope,
     String? backupPath,
     int backupMaxPerStore,
   ) async {
-    final result = await mainStoreNotifier.createBackup(
+    final result = await backupOrchestrator.createBackup(
       scope: scope,
       outputDirPath: backupPath,
       periodic: false,
@@ -492,7 +493,7 @@ class BackupSettingsSection extends ConsumerWidget {
 
   Future<void> _showBackupScopeDialog(
     BuildContext context,
-    MainStoreAsyncNotifier mainStoreNotifier,
+    MainStoreBackupOrchestrator backupOrchestrator,
     BackupScope currentScope,
     bool autoBackupEnabled,
     int backupIntervalMinutes,
@@ -524,7 +525,7 @@ class BackupSettingsSection extends ConsumerWidget {
     await getIt<PreferencesService>().settingsPrefs.setBackupScope(result.name);
 
     if (autoBackupEnabled) {
-      mainStoreNotifier.startPeriodicBackup(
+      await backupOrchestrator.startPeriodicBackup(
         interval: Duration(minutes: backupIntervalMinutes),
         scope: result,
         outputDirPath: backupPath,
@@ -536,7 +537,7 @@ class BackupSettingsSection extends ConsumerWidget {
 
   Future<void> _showBackupIntervalDialog(
     BuildContext context,
-    MainStoreAsyncNotifier mainStoreNotifier,
+    MainStoreBackupOrchestrator backupOrchestrator,
     int currentIntervalMinutes,
     bool autoBackupEnabled,
     BackupScope backupScope,
@@ -570,7 +571,7 @@ class BackupSettingsSection extends ConsumerWidget {
     );
 
     if (autoBackupEnabled) {
-      mainStoreNotifier.startPeriodicBackup(
+      await backupOrchestrator.startPeriodicBackup(
         interval: Duration(minutes: result),
         scope: backupScope,
         outputDirPath: backupPath,
@@ -582,7 +583,7 @@ class BackupSettingsSection extends ConsumerWidget {
 
   Future<void> _showBackupMaxCountDialog(
     BuildContext context,
-    MainStoreAsyncNotifier mainStoreNotifier,
+    MainStoreBackupOrchestrator backupOrchestrator,
     int currentMaxCount,
     bool autoBackupEnabled,
     int backupIntervalMinutes,
@@ -616,7 +617,7 @@ class BackupSettingsSection extends ConsumerWidget {
     );
 
     if (autoBackupEnabled) {
-      mainStoreNotifier.startPeriodicBackup(
+      await backupOrchestrator.startPeriodicBackup(
         interval: Duration(minutes: backupIntervalMinutes),
         scope: backupScope,
         outputDirPath: backupPath,
@@ -628,7 +629,7 @@ class BackupSettingsSection extends ConsumerWidget {
 
   Future<void> _showBackupPathDialog(
     BuildContext context,
-    MainStoreAsyncNotifier mainStoreNotifier,
+    MainStoreBackupOrchestrator backupOrchestrator,
     bool autoBackupEnabled,
     int backupIntervalMinutes,
     BackupScope backupScope,
@@ -672,7 +673,7 @@ class BackupSettingsSection extends ConsumerWidget {
       await getIt<PreferencesService>().settingsPrefs.setBackupPath(result);
 
       if (autoBackupEnabled) {
-        mainStoreNotifier.startPeriodicBackup(
+        await backupOrchestrator.startPeriodicBackup(
           interval: Duration(minutes: backupIntervalMinutes),
           scope: backupScope,
           outputDirPath: result,

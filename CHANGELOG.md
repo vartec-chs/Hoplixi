@@ -1,5 +1,34 @@
 # CHANGELOG
 
+## 2026-04-21
+
+### db_core (backup isolation)
+
+- Backup-логика полностью вынесена из `MainStoreAsyncNotifier` в отдельный
+  orchestration-слой
+  `lib/db_core/provider/main_store_backup_orchestrator_provider.dart`.
+- В `MainStoreAsyncNotifier` удалены backup-методы и backup-controller
+  зависимости (`createBackup`, `startPeriodicBackup`, `stopPeriodicBackup`,
+  `isPeriodicBackupActive`, `backupAndMigrateStore`), чтобы notifier больше не
+  зависел от backup-потока.
+- Добавлены `openStoreWithMigration(...)` и `setOpenFailure(...)` как
+  backup-agnostic API для сценариев миграции/ошибок открытия без возврата
+  backup-логики в notifier.
+- UI и sync-слои переведены на новый backup provider: `settings_sections.dart`,
+  `titlebar.dart`, `dashboard_drawer.dart`,
+  `cloud_sync_snapshot_sync_listener.dart`, `store_open_migration_dialog.dart`.
+
+### docs-ai
+
+- Добавлен подробный технический разбор связей и зависимостей
+  `MainStoreAsyncNotifier` в `docs-ai/main-store-async-notifier-analysis.md`:
+  карта используемых сервисов/контроллеров/провайдеров, внутренняя call-graph
+  логика, и матрица зависимостей по каждому публичному и приватному методу.
+- В `docs-ai/main-store-async-notifier-analysis.md` добавлена отдельная секция
+  «Методы, использующие одинаковые сервисы» с группировкой
+  `сервис -> список методов`, чтобы быстро находить повторяющиеся зависимости
+  (например, для backup/storage/close-sync сценариев).
+
 ## 2026-04-20
 
 ### db_core (main_store_provider)

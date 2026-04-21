@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/setup/di_init.dart';
+import 'package:hoplixi/db_core/provider/main_store_backup_orchestrator_provider.dart';
+import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/providers/drawer_category_filter_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/providers/drawer_tag_filter_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/widgets/category_section.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/widgets/tag_section.dart';
-import 'package:hoplixi/db_core/provider/main_store_provider.dart';
+import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/widgets/close_database_button.dart';
 import 'package:typed_prefs/typed_prefs.dart';
@@ -62,7 +63,7 @@ class _DashboardDrawerContentState
     final scope = _parseBackupScope(scopeRaw);
 
     final result = await ref
-        .read(mainStoreProvider.notifier)
+        .read(mainStoreBackupOrchestratorProvider)
         .createBackup(
           scope: scope,
           outputDirPath: backupPath,

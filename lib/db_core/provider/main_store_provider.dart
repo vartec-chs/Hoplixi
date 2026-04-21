@@ -7,13 +7,10 @@ import 'package:hoplixi/db_core/main_store_manager.dart';
 import 'package:hoplixi/db_core/models/db_errors.dart';
 import 'package:hoplixi/db_core/models/db_state.dart';
 import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
-import 'package:hoplixi/db_core/provider/main_store_backup_controller.dart';
-import 'package:hoplixi/db_core/provider/main_store_backup_models.dart';
 import 'package:hoplixi/db_core/provider/main_store_close_sync_controller.dart';
 import 'package:hoplixi/db_core/provider/main_store_runtime_provider.dart';
 import 'package:hoplixi/db_core/provider/main_store_session_contract.dart';
 import 'package:hoplixi/db_core/provider/main_store_storage_controller.dart';
-import 'package:hoplixi/db_core/services/store_manifest_service.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 
@@ -71,7 +68,6 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   static const Duration _errorResetDelay = Duration(seconds: 10);
 
   late final MainStoreRuntime _runtime;
-  late final MainStoreBackupController _backupController;
   late final MainStoreStorageController _storageController;
   late final MainStoreCloseSyncController _closeSyncController;
 
@@ -133,7 +129,6 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     logInfo('MainStoreAsyncNotifier initialized', tag: _logTag);
 
     _runtime = await ref.read(mainStoreRuntimeProvider.future);
-    _backupController = ref.read(mainStoreBackupControllerProvider);
     _storageController = ref.read(mainStoreStorageControllerProvider);
     _closeSyncController = ref.read(mainStoreCloseSyncControllerProvider);
 
@@ -143,48 +138,6 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
 
     return const DatabaseState(status: DatabaseStatus.idle);
   }
-
-  Future<BackupResult?> createBackup({
-    BackupScope scope = BackupScope.full,
-    String? outputDirPath,
-    bool periodic = false,
-    int maxBackupsPerStore = 10,
-  }) {
-    return _backupController.createBackup(
-      state: _currentState,
-      runtime: _runtime,
-      scope: scope,
-      outputDirPath: outputDirPath,
-      periodic: periodic,
-      maxBackupsPerStore: maxBackupsPerStore,
-      logTag: _logTag,
-    );
-  }
-
-  void startPeriodicBackup({
-    required Duration interval,
-    BackupScope scope = BackupScope.full,
-    String? outputDirPath,
-    bool runImmediately = false,
-    int maxBackupsPerStore = 10,
-  }) {
-    _backupController.startPeriodicBackup(
-      interval: interval,
-      scope: scope,
-      outputDirPath: outputDirPath,
-      runImmediately: runImmediately,
-      maxBackupsPerStore: maxBackupsPerStore,
-      readState: () => _currentState,
-      readRuntime: () => _runtime,
-      logTag: _logTag,
-    );
-  }
-
-  void stopPeriodicBackup() {
-    _backupController.stopPeriodicBackup(logTag: _logTag);
-  }
-
-  bool get isPeriodicBackupActive => _backupController.isPeriodicBackupActive;
 
   Future<bool> createStore(CreateStoreDto dto) async {
     await _acquireLock();
@@ -252,8 +205,29 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     }
   }
 
-  Future<bool> openStore(OpenStoreDto dto) async {
-    _ref.read(mainStoreOpeningOverlayProvider.notifier).show();
+  Future<bool> openStore(OpenStoreDto dto) {
+    return _openStore(dto, allowMigration: false, manageOverlay: true);
+  }
+
+  Future<bool> openStoreWithMigration(
+    OpenStoreDto dto, {
+    bool manageOverlay = true,
+  }) {
+    return _openStore(dto, allowMigration: true, manageOverlay: manageOverlay);
+  }
+
+  void setOpenFailure(DatabaseError error) {
+    _setErrorState(_buildOpenFailureState(error));
+  }
+
+  Future<bool> _openStore(
+    OpenStoreDto dto, {
+    required bool allowMigration,
+    required bool manageOverlay,
+  }) async {
+    if (manageOverlay) {
+      _ref.read(mainStoreOpeningOverlayProvider.notifier).show();
+    }
     await _acquireLock();
 
     try {
@@ -263,7 +237,10 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         _currentState.copyWith(status: DatabaseStatus.loading, error: null),
       );
 
-      final result = await _runtime.manager.openStore(dto);
+      final result = await _runtime.manager.openStore(
+        dto,
+        allowMigration: allowMigration,
+      );
 
       return result.fold(_handleOpenStoreSuccess, (error) {
         _handleOpenStoreFailure(error);
@@ -287,79 +264,9 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       );
       return false;
     } finally {
-      _ref.read(mainStoreOpeningOverlayProvider.notifier).hide();
-      _releaseLock();
-    }
-  }
-
-  Future<bool> backupAndMigrateStore(
-    OpenStoreDto dto, {
-    String? outputDirPath,
-    int maxBackupsPerStore = 10,
-  }) async {
-    _ref.read(mainStoreOpeningOverlayProvider.notifier).show();
-    await _acquireLock();
-
-    try {
-      logInfo(
-        'Creating backup and migrating store at: ${dto.path}',
-        tag: _logTag,
-      );
-
-      _setState(
-        _currentState.copyWith(status: DatabaseStatus.loading, error: null),
-      );
-
-      final actualStoragePath = await _runtime.manager.resolveStoragePath(
-        dto.path,
-      );
-      final manifest = await StoreManifestService.readFrom(actualStoragePath);
-      final storeName = manifest?.storeName.trim().isNotEmpty == true
-          ? manifest!.storeName
-          : _currentState.name ?? 'store';
-
-      final backupData = await _runtime.backupService.createBackup(
-        storeDirPath: actualStoragePath,
-        storeName: storeName,
-        includeDatabase: true,
-        includeEncryptedFiles: true,
-        attachmentsPath: _runtime.maintenanceService.getAttachmentsPath(
-          actualStoragePath,
-        ),
-        outputDirPath: outputDirPath,
-        periodic: false,
-        maxBackupsPerStore: maxBackupsPerStore,
-      );
-
-      logInfo(
-        'Backup created before migration: ${backupData.backupPath}',
-        tag: _logTag,
-      );
-
-      final result = await _runtime.manager.openStore(
-        dto,
-        allowMigration: true,
-      );
-      return result.fold(_handleOpenStoreSuccess, (error) {
-        _handleOpenStoreFailure(error);
-        return false;
-      });
-    } catch (error, stackTrace) {
-      logError(
-        'Failed to backup and migrate store: $error',
-        stackTrace: stackTrace,
-        tag: _logTag,
-      );
-
-      final dbError = DatabaseError.archiveFailed(
-        message: 'Не удалось создать backup перед миграцией: $error',
-        timestamp: DateTime.now(),
-        stackTrace: stackTrace,
-      );
-      _setErrorState(_buildOpenFailureState(dbError));
-      return false;
-    } finally {
-      _ref.read(mainStoreOpeningOverlayProvider.notifier).hide();
+      if (manageOverlay) {
+        _ref.read(mainStoreOpeningOverlayProvider.notifier).hide();
+      }
       _releaseLock();
     }
   }
