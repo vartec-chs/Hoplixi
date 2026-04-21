@@ -11,6 +11,7 @@ import 'package:hoplixi/db_core/provider/main_store_close_sync_controller.dart';
 import 'package:hoplixi/db_core/provider/main_store_runtime_provider.dart';
 import 'package:hoplixi/db_core/provider/main_store_session_contract.dart';
 import 'package:hoplixi/db_core/provider/main_store_storage_controller.dart';
+import 'package:hoplixi/db_core/services/main_store_maintenance_service.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 
@@ -53,7 +54,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   static const Duration _errorResetDelay = Duration(seconds: 10);
 
   late final MainStoreManager _manager;
-  late final MainStoreRuntime _runtime;
+  late final MainStoreMaintenanceService _maintenanceService;
   late final MainStoreStorageController _storageController;
   late final MainStoreCloseSyncController _closeSyncController;
 
@@ -115,7 +116,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     logInfo('MainStoreAsyncNotifier initialized', tag: _logTag);
 
     _manager = await ref.read(mainStoreManagerRuntimeProvider.future);
-    _runtime = await ref.read(mainStoreRuntimeProvider.future);
+    _maintenanceService = ref.read(mainStoreMaintenanceServiceProvider);
     _storageController = ref.read(mainStoreStorageControllerProvider);
     _closeSyncController = ref.read(mainStoreCloseSyncControllerProvider);
 
@@ -275,7 +276,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
           .getDecryptedAttachmentsPath(
             state: _currentState,
             manager: _manager,
-            runtime: _runtime,
+            maintenanceService: _maintenanceService,
             logTag: _logTag,
           );
 
@@ -340,7 +341,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       }
 
       await _storageController.cleanupDecryptedAttachments(
-        runtime: _runtime,
+        maintenanceService: _maintenanceService,
         dirPath: decryptedPathBeforeClose,
       );
       _closeSyncController.resetTracking();
@@ -390,11 +391,11 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     final currentName = _currentState.name;
     final decryptedPathBeforeLock = await _storageController
         .getDecryptedAttachmentsPath(
-            state: _currentState,
-            manager: _manager,
-            runtime: _runtime,
-            logTag: _logTag,
-          );
+          state: _currentState,
+          manager: _manager,
+          maintenanceService: _maintenanceService,
+          logTag: _logTag,
+        );
 
     if (!skipSnapshotSync) {
       await _tryUploadSnapshotBeforeClose();
@@ -410,7 +411,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     });
 
     await _storageController.cleanupDecryptedAttachments(
-      runtime: _runtime,
+      maintenanceService: _maintenanceService,
       dirPath: decryptedPathBeforeLock,
     );
     _closeSyncController.resetTracking();
@@ -576,7 +577,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     final success = await _storageController.deleteStore(
       ref: ref,
       manager: _manager,
-      runtime: _runtime,
+      maintenanceService: _maintenanceService,
       session: _sessionBridge,
       path: path,
       deleteFromDisk: deleteFromDisk,
@@ -595,7 +596,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     final success = await _storageController.deleteStoreFromDisk(
       ref: ref,
       manager: _manager,
-      runtime: _runtime,
+      maintenanceService: _maintenanceService,
       session: _sessionBridge,
       path: path,
       logTag: _logTag,
@@ -611,7 +612,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     return _storageController.getAttachmentsPath(
       state: _currentState,
       manager: _manager,
-      runtime: _runtime,
+      maintenanceService: _maintenanceService,
       logTag: _logTag,
     );
   }
@@ -620,7 +621,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     return _storageController.getDecryptedAttachmentsPath(
       state: _currentState,
       manager: _manager,
-      runtime: _runtime,
+      maintenanceService: _maintenanceService,
       logTag: _logTag,
     );
   }
@@ -629,7 +630,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     return _storageController.createSubfolder(
       state: _currentState,
       manager: _manager,
-      runtime: _runtime,
+      maintenanceService: _maintenanceService,
       folderName: folderName,
       logTag: _logTag,
     );
@@ -672,7 +673,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   Future<void> _runStartupCleanup() {
     return _storageController.runStartupCleanup(
       manager: _manager,
-      runtime: _runtime,
+      maintenanceService: _maintenanceService,
       logTag: _logTag,
     );
   }

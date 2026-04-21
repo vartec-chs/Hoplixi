@@ -4,8 +4,8 @@ import 'package:hoplixi/db_core/main_store_manager.dart';
 import 'package:hoplixi/db_core/models/db_errors.dart';
 import 'package:hoplixi/db_core/models/db_state.dart';
 import 'package:hoplixi/db_core/provider/db_history_provider.dart';
-import 'package:hoplixi/db_core/provider/main_store_runtime_provider.dart';
 import 'package:hoplixi/db_core/provider/main_store_session_contract.dart';
+import 'package:hoplixi/db_core/services/main_store_maintenance_service.dart';
 
 final mainStoreStorageControllerProvider = Provider<MainStoreStorageController>(
   (ref) => const MainStoreStorageController(),
@@ -16,7 +16,7 @@ class MainStoreStorageController {
 
   Future<void> runStartupCleanup({
     required MainStoreManager manager,
-    required MainStoreRuntime runtime,
+    required MainStoreMaintenanceService maintenanceService,
     required String logTag,
   }) async {
     try {
@@ -30,7 +30,7 @@ class MainStoreStorageController {
         return;
       }
 
-      await runtime.maintenanceService.runStartupCleanup(
+      await maintenanceService.runStartupCleanup(
         store: store,
         storePath: storePath,
       );
@@ -46,7 +46,7 @@ class MainStoreStorageController {
   Future<bool> deleteStore({
     required Ref ref,
     required MainStoreManager manager,
-    required MainStoreRuntime runtime,
+    required MainStoreMaintenanceService maintenanceService,
     required MainStoreSessionBridge session,
     required String path,
     required bool deleteFromDisk,
@@ -69,9 +69,8 @@ class MainStoreStorageController {
       final dbHistoryService = await ref.read(dbHistoryProvider.future);
       await dbHistoryService.deleteByPath(path);
 
-      if (deleteFromDisk &&
-          await runtime.maintenanceService.storageDirectoryExists(path)) {
-        await runtime.maintenanceService.deleteStorageDirectory(path);
+      if (deleteFromDisk && await maintenanceService.storageDirectoryExists(path)) {
+        await maintenanceService.deleteStorageDirectory(path);
       }
 
       session.setState(const DatabaseState(status: DatabaseStatus.idle));
@@ -101,7 +100,7 @@ class MainStoreStorageController {
   Future<bool> deleteStoreFromDisk({
     required Ref ref,
     required MainStoreManager manager,
-    required MainStoreRuntime runtime,
+    required MainStoreMaintenanceService maintenanceService,
     required MainStoreSessionBridge session,
     required String path,
     required String logTag,
@@ -120,7 +119,7 @@ class MainStoreStorageController {
         await manager.closeStore();
       }
 
-      if (!await runtime.maintenanceService.storageDirectoryExists(path)) {
+      if (!await maintenanceService.storageDirectoryExists(path)) {
         session.setErrorState(
           DatabaseState(
             status: DatabaseStatus.error,
@@ -134,7 +133,7 @@ class MainStoreStorageController {
         return false;
       }
 
-      await runtime.maintenanceService.deleteStorageDirectory(path);
+      await maintenanceService.deleteStorageDirectory(path);
 
       final dbHistoryService = await ref.read(dbHistoryProvider.future);
       final historyDeleted = await dbHistoryService.deleteByPath(path);
@@ -172,7 +171,7 @@ class MainStoreStorageController {
   Future<String?> getAttachmentsPath({
     required DatabaseState state,
     required MainStoreManager manager,
-    required MainStoreRuntime runtime,
+    required MainStoreMaintenanceService maintenanceService,
     required String logTag,
   }) async {
     try {
@@ -193,7 +192,7 @@ class MainStoreStorageController {
         return null;
       }
 
-      return runtime.maintenanceService.getAttachmentsPath(storePath);
+      return maintenanceService.getAttachmentsPath(storePath);
     } catch (error, stackTrace) {
       logError(
         'Unexpected error getting attachments path: $error',
@@ -207,7 +206,7 @@ class MainStoreStorageController {
   Future<String?> getDecryptedAttachmentsPath({
     required DatabaseState state,
     required MainStoreManager manager,
-    required MainStoreRuntime runtime,
+    required MainStoreMaintenanceService maintenanceService,
     required String logTag,
   }) async {
     try {
@@ -228,7 +227,7 @@ class MainStoreStorageController {
         return null;
       }
 
-      return runtime.maintenanceService.getDecryptedAttachmentsPath(storePath);
+      return maintenanceService.getDecryptedAttachmentsPath(storePath);
     } catch (error, stackTrace) {
       logError(
         'Unexpected error getting decrypted attachments path: $error',
@@ -242,7 +241,7 @@ class MainStoreStorageController {
   Future<String?> createSubfolder({
     required DatabaseState state,
     required MainStoreManager manager,
-    required MainStoreRuntime runtime,
+    required MainStoreMaintenanceService maintenanceService,
     required String folderName,
     required String logTag,
   }) async {
@@ -258,7 +257,7 @@ class MainStoreStorageController {
         return null;
       }
 
-      final path = await runtime.maintenanceService.createSubfolder(
+      final path = await maintenanceService.createSubfolder(
         storePath: storePath,
         folderName: folderName,
       );
@@ -276,9 +275,9 @@ class MainStoreStorageController {
   }
 
   Future<void> cleanupDecryptedAttachments({
-    required MainStoreRuntime runtime,
+    required MainStoreMaintenanceService maintenanceService,
     required String? dirPath,
   }) {
-    return runtime.maintenanceService.cleanupDecryptedAttachmentsDir(dirPath);
+    return maintenanceService.cleanupDecryptedAttachmentsDir(dirPath);
   }
 }

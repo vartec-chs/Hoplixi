@@ -8,6 +8,7 @@ import 'package:hoplixi/db_core/provider/main_store_backup_controller.dart';
 import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 import 'package:hoplixi/db_core/provider/main_store_runtime_provider.dart';
 import 'package:hoplixi/db_core/services/main_store_backup_service.dart';
+import 'package:hoplixi/db_core/services/main_store_maintenance_service.dart';
 import 'package:hoplixi/db_core/services/store_manifest_service.dart';
 
 final mainStoreBackupOrchestratorProvider =
@@ -35,7 +36,7 @@ class MainStoreBackupOrchestrator {
   final MainStoreBackupController _backupController;
 
   MainStoreManager? _managerCache;
-  MainStoreRuntime? _runtimeCache;
+  MainStoreMaintenanceService? _maintenanceServiceCache;
 
   bool get isPeriodicBackupActive => _backupController.isPeriodicBackupActive;
 
@@ -45,12 +46,10 @@ class MainStoreBackupOrchestrator {
     bool periodic = false,
     int maxBackupsPerStore = 10,
   }) async {
-    final runtime = await _readRuntime();
-
     return _backupController.createBackup(
       state: _readCurrentState(),
       manager: await _readManager(),
-      runtime: runtime,
+      maintenanceService: await _readMaintenanceService(),
       scope: scope,
       outputDirPath: outputDirPath,
       periodic: periodic,
@@ -67,7 +66,7 @@ class MainStoreBackupOrchestrator {
     int maxBackupsPerStore = 10,
   }) async {
     final manager = await _readManager();
-    final runtime = await _readRuntime();
+    final maintenanceService = await _readMaintenanceService();
 
     _backupController.startPeriodicBackup(
       interval: interval,
@@ -77,7 +76,7 @@ class MainStoreBackupOrchestrator {
       maxBackupsPerStore: maxBackupsPerStore,
       readState: _readCurrentState,
       readManager: () => manager,
-      readRuntime: () => runtime,
+      readMaintenanceService: () => maintenanceService,
       logTag: _logTag,
     );
   }
@@ -99,8 +98,8 @@ class MainStoreBackupOrchestrator {
         tag: _logTag,
       );
 
-      final runtime = await _readRuntime();
       final manager = await _readManager();
+      final maintenanceService = await _readMaintenanceService();
       final actualStoragePath = await manager.resolveStoragePath(dto.path);
 
       final manifest = await StoreManifestService.readFrom(actualStoragePath);
@@ -114,9 +113,7 @@ class MainStoreBackupOrchestrator {
         storeName: storeName,
         includeDatabase: true,
         includeEncryptedFiles: true,
-        attachmentsPath: runtime.maintenanceService.getAttachmentsPath(
-          actualStoragePath,
-        ),
+        attachmentsPath: maintenanceService.getAttachmentsPath(actualStoragePath),
         outputDirPath: outputDirPath,
         periodic: false,
         maxBackupsPerStore: maxBackupsPerStore,
@@ -150,15 +147,15 @@ class MainStoreBackupOrchestrator {
     return asyncState.value ?? const DatabaseState(status: DatabaseStatus.idle);
   }
 
-  Future<MainStoreRuntime> _readRuntime() async {
-    final cached = _runtimeCache;
+  Future<MainStoreMaintenanceService> _readMaintenanceService() async {
+    final cached = _maintenanceServiceCache;
     if (cached != null) {
       return cached;
     }
 
-    final runtime = await _ref.read(mainStoreRuntimeProvider.future);
-    _runtimeCache = runtime;
-    return runtime;
+    final maintenanceService = _ref.read(mainStoreMaintenanceServiceProvider);
+    _maintenanceServiceCache = maintenanceService;
+    return maintenanceService;
   }
 
   Future<MainStoreManager> _readManager() async {

@@ -26,6 +26,10 @@
 - `MainStoreBackupService` также вынесен из `MainStoreRuntime` в отдельный
   `mainStoreBackupServiceProvider`; backup-поток теперь получает сервис
   напрямую, а runtime оставлен только для maintenance-зависимостей.
+- `MainStoreMaintenanceService` вынесен из `MainStoreRuntime` в отдельный
+  `mainStoreMaintenanceServiceProvider`; после этого `MainStoreRuntime` и
+  `mainStoreRuntimeProvider` полностью удалены, а storage-операции получают
+  maintenance-сервис напрямую.
 
 ### db_core (backup isolation)
 

@@ -8,6 +8,7 @@ import 'package:hoplixi/db_core/provider/main_store_backup_models.dart';
 import 'package:hoplixi/db_core/provider/main_store_runtime_provider.dart';
 import 'package:hoplixi/db_core/provider/main_store_storage_controller.dart';
 import 'package:hoplixi/db_core/services/main_store_backup_service.dart';
+import 'package:hoplixi/db_core/services/main_store_maintenance_service.dart';
 
 final mainStoreBackupControllerProvider = Provider<MainStoreBackupController>((
   ref,
@@ -41,7 +42,7 @@ class MainStoreBackupController {
   Future<BackupResult?> createBackup({
     required DatabaseState state,
     required MainStoreManager manager,
-    required MainStoreRuntime runtime,
+    required MainStoreMaintenanceService maintenanceService,
     required BackupScope scope,
     required bool periodic,
     required int maxBackupsPerStore,
@@ -65,7 +66,7 @@ class MainStoreBackupController {
           ? await _storageController.getAttachmentsPath(
               state: state,
               manager: manager,
-              runtime: runtime,
+              maintenanceService: maintenanceService,
               logTag: logTag,
             )
           : null;
@@ -112,7 +113,7 @@ class MainStoreBackupController {
     required int maxBackupsPerStore,
     required DatabaseState Function() readState,
     required MainStoreManager Function() readManager,
-    required MainStoreRuntime Function() readRuntime,
+    required MainStoreMaintenanceService Function() readMaintenanceService,
     required String logTag,
     String? outputDirPath,
   }) {
@@ -135,7 +136,7 @@ class MainStoreBackupController {
         _runPeriodicBackupTick(
           readState: readState,
           readManager: readManager,
-          readRuntime: readRuntime,
+          readMaintenanceService: readMaintenanceService,
           logTag: logTag,
         ),
       );
@@ -146,7 +147,7 @@ class MainStoreBackupController {
         _runPeriodicBackupTick(
           readState: readState,
           readManager: readManager,
-          readRuntime: readRuntime,
+          readMaintenanceService: readMaintenanceService,
           logTag: logTag,
         ),
       );
@@ -170,7 +171,7 @@ class MainStoreBackupController {
   Future<void> _runPeriodicBackupTick({
     required DatabaseState Function() readState,
     required MainStoreManager Function() readManager,
-    required MainStoreRuntime Function() readRuntime,
+    required MainStoreMaintenanceService Function() readMaintenanceService,
     required String logTag,
   }) async {
     final state = readState();
@@ -181,7 +182,7 @@ class MainStoreBackupController {
     await createBackup(
       state: state,
       manager: readManager(),
-      runtime: readRuntime(),
+      maintenanceService: readMaintenanceService(),
       scope: _periodicBackupScope,
       outputDirPath: _periodicBackupOutputDirPath,
       periodic: true,

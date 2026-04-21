@@ -8,14 +8,6 @@ import 'package:hoplixi/db_core/services/main_store_backup_service.dart';
 import 'package:hoplixi/db_core/services/main_store_maintenance_service.dart';
 import 'package:hoplixi/setup/di_init.dart';
 
-class MainStoreRuntime {
-  const MainStoreRuntime({
-    required this.maintenanceService,
-  });
-
-  final MainStoreMaintenanceService maintenanceService;
-}
-
 final mainStoreManagerRuntimeProvider = FutureProvider<MainStoreManager>((
   ref,
 ) async {
@@ -28,15 +20,14 @@ final mainStoreBackupServiceProvider = Provider<MainStoreBackupService>((ref) {
   return MainStoreBackupService();
 });
 
-final mainStoreRuntimeProvider = FutureProvider<MainStoreRuntime>((ref) async {
-  ref.onDispose(() {
-    logInfo(
-      'Освобождение ресурсов mainStoreRuntimeProvider',
-      tag: 'MainStoreRuntimeProvider',
-    );
-  });
+final mainStoreMaintenanceServiceProvider =
+    Provider<MainStoreMaintenanceService>((ref) {
+      ref.onDispose(() {
+        logInfo(
+          'Освобождение ресурсов mainStoreMaintenanceServiceProvider',
+          tag: 'MainStoreMaintenanceServiceProvider',
+        );
+      });
 
-  return MainStoreRuntime(
-    maintenanceService: MainStoreMaintenanceService(),
-  );
-});
+      return MainStoreMaintenanceService();
+    });
