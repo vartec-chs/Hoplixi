@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/db_core/migrations/main_store_migration_types.dart';
-import 'package:hoplixi/db_core/migrations/versions/migration_v2.dart';
+import 'package:hoplixi/db_core/db/migrations/main_store_migration_types.dart';
+import 'package:hoplixi/db_core/db/migrations/versions/migration_v2.dart';
 
 final Map<int, MainStoreMigration> _mainStoreMigrationsByVersion = {
   2: migrateToV2,

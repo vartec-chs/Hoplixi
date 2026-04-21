@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/db_core/migrations/main_store_migration_types.dart';
+import 'package:hoplixi/db_core/db/migrations/main_store_migration_types.dart';
 
 Future<void> migrateToV2(
   Migrator migrator,
