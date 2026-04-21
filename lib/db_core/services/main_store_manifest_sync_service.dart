@@ -1,6 +1,6 @@
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/models.dart' as logger_models;
-import 'package:hoplixi/db_core/main_store.dart';
+import 'package:hoplixi/db_core/db/main_store.dart';
 import 'package:hoplixi/db_core/models/db_ciphers.dart';
 import 'package:hoplixi/db_core/models/db_errors.dart';
 import 'package:hoplixi/db_core/models/store_key_config.dart';

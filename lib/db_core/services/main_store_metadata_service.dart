@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:cryptography/cryptography.dart';
 import 'package:drift/drift.dart';
-import 'package:hoplixi/db_core/main_store.dart';
+import 'package:hoplixi/db_core/db/main_store.dart';
 import 'package:hoplixi/db_core/models/db_errors.dart';
 import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
 import 'package:result_dart/result_dart.dart';

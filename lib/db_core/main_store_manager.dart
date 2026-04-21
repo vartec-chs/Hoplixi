@@ -1,6 +1,6 @@
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/db_core/main_store.dart';
+import 'package:hoplixi/db_core/db/main_store.dart';
 import 'package:hoplixi/db_core/models/db_ciphers.dart';
 import 'package:hoplixi/db_core/models/db_errors.dart';
 import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';

@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:hoplixi/db_core/dao/index.dart';
-import 'package:hoplixi/db_core/main_store.dart';
+import 'package:hoplixi/db_core/db/dao/index.dart';
+import 'package:hoplixi/db_core/db/main_store.dart';
 import 'package:hoplixi/db_core/services/other/file_storage_service.dart';
 import 'package:hoplixi/db_core/services/main_store_storage_service.dart';
 import 'package:hoplixi/db_core/services/store_cleanup_service.dart';

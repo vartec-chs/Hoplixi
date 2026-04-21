@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/db_core/main_store.dart';
+import 'package:hoplixi/db_core/db/main_store.dart';
 import 'package:hoplixi/db_core/models/dto/document_dto.dart';
 import 'package:hoplixi/db_core/services/other/file_storage_service.dart';
 import 'package:uuid/uuid.dart';

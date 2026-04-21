@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/pickers/document_picker/models/document_picker_models.dart';
-import 'package:hoplixi/db_core/dao/index.dart';
+import 'package:hoplixi/db_core/db/dao/index.dart';
 import 'package:hoplixi/db_core/models/filter/base_filter.dart';
 import 'package:hoplixi/db_core/models/filter/documents_filter.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';

@@ -4,7 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/db_core/main_store.dart';
+import 'package:hoplixi/db_core/db/main_store.dart';
 import 'package:hoplixi/db_core/models/dto/file_dto.dart';
 import 'package:hoplixi/db_core/models/store_settings_keys.dart';
 import 'package:hoplixi/rust/api/crypt_api.dart' as crypt;

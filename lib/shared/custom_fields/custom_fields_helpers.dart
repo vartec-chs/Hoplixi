@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/db_core/dao/index.dart';
+import 'package:hoplixi/db_core/db/dao/index.dart';
 import 'package:hoplixi/db_core/provider/dao_providers.dart';
 import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 

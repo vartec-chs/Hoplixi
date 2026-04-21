@@ -1,5 +1,5 @@
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/db_core/dao/index.dart';
+import 'package:hoplixi/db_core/db/dao/index.dart';
 import 'package:hoplixi/db_core/models/store_settings_keys.dart';
 import 'package:hoplixi/db_core/services/other/file_storage_service.dart';
 

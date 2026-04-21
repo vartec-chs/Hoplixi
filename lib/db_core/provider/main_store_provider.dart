@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/db_core/main_store.dart';
+import 'package:hoplixi/db_core/db/main_store.dart';
 import 'package:hoplixi/db_core/main_store_manager.dart';
 import 'package:hoplixi/db_core/models/db_errors.dart';
 import 'package:hoplixi/db_core/models/db_state.dart';
@@ -232,10 +232,30 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         allowMigration: allowMigration,
       );
 
-      return result.fold(_handleOpenStoreSuccess, (error) {
-        _handleOpenStoreFailure(error);
-        return false;
-      });
+      return result.fold(
+        (storeInfo) {
+          _setState(
+            DatabaseState(
+              path: _manager.currentStorePath,
+              name: storeInfo.name,
+              status: DatabaseStatus.open,
+              modifiedAt: storeInfo.modifiedAt,
+            ),
+          );
+          _closeSyncController.startTracking(
+            initialModifiedAt: storeInfo.modifiedAt,
+          );
+
+          logInfo('Store opened successfully: ${storeInfo.name}', tag: _logTag);
+          unawaited(_runStartupCleanup());
+          return true;
+        },
+        (error) {
+          _setErrorState(_buildOpenFailureState(error));
+          logError('Failed to open store: ${error.message}', tag: _logTag);
+          return false;
+        },
+      );
     } catch (error, stackTrace) {
       logError(
         'Unexpected error opening store: $error',
@@ -639,27 +659,6 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   void clearError() {
     _cancelErrorResetTimer();
     _setState(_currentState.copyWith(error: null));
-  }
-
-  bool _handleOpenStoreSuccess(StoreInfoDto storeInfo) {
-    _setState(
-      DatabaseState(
-        path: _manager.currentStorePath,
-        name: storeInfo.name,
-        status: DatabaseStatus.open,
-        modifiedAt: storeInfo.modifiedAt,
-      ),
-    );
-    _closeSyncController.startTracking(initialModifiedAt: storeInfo.modifiedAt);
-
-    logInfo('Store opened successfully: ${storeInfo.name}', tag: _logTag);
-    unawaited(_runStartupCleanup());
-    return true;
-  }
-
-  void _handleOpenStoreFailure(DatabaseError error) {
-    _setErrorState(_buildOpenFailureState(error));
-    logError('Failed to open store: ${error.message}', tag: _logTag);
   }
 
   DatabaseState _buildOpenFailureState(DatabaseError error) {

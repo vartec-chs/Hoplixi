@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/db_core/main_store.dart';
+import 'package:hoplixi/db_core/db/main_store.dart';
 import 'package:hoplixi/db_core/models/db_errors.dart';
 import 'package:riverpod/riverpod.dart';
 
-import '../dao/index.dart';
+import '../db/dao/index.dart';
 import 'main_store_provider.dart';
 
 typedef _DaoFactory<TDao> = TDao Function(MainStore store);

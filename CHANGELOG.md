@@ -30,6 +30,9 @@
   `mainStoreMaintenanceServiceProvider`; после этого `MainStoreRuntime` и
   `mainStoreRuntimeProvider` полностью удалены, а storage-операции получают
   maintenance-сервис напрямую.
+- В `MainStoreAsyncNotifier` удалены приватные helpers
+  `_handleOpenStoreSuccess` / `_handleOpenStoreFailure`: open-flow теперь
+  замкнут локально внутри `_openStore()`, без лишнего прыжка по файлу.
 
 ### db_core (backup isolation)
 
