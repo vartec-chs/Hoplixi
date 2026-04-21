@@ -2,6 +2,18 @@
 
 ## 2026-04-21
 
+### db_core (opening state)
+
+- Удалён отдельный `mainStoreOpeningOverlayProvider`: глобальный overlay
+  открытия хранилища теперь определяется напрямую по `DatabaseState`, а не по
+  побочному boolean-провайдеру.
+- В `DatabaseStatus` добавлено явное состояние `opening`; `MainStoreAsyncNotifier`
+  переводит хранилище в него в начале `openStore(...)`, а migration-flow
+  использует тот же статус уже на этапе `backup -> migrate -> open`.
+- Обновлены потребители UI-состояния открытия: `AppRuntimeWrapper`,
+  `RecentDatabaseCard` и status bar теперь различают `opening` и обычный
+  `loading`.
+
 ### db_core (backup isolation)
 
 - Backup-логика полностью вынесена из `MainStoreAsyncNotifier` в отдельный

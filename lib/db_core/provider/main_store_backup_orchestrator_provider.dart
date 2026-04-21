@@ -81,7 +81,7 @@ class MainStoreBackupOrchestrator {
     String? outputDirPath,
     int maxBackupsPerStore = 10,
   }) async {
-    _ref.read(mainStoreOpeningOverlayProvider.notifier).show();
+    _ref.read(mainStoreProvider.notifier).markOpeningStarted(path: dto.path);
 
     try {
       logInfo(
@@ -118,9 +118,7 @@ class MainStoreBackupOrchestrator {
         tag: _logTag,
       );
 
-      return _ref
-          .read(mainStoreProvider.notifier)
-          .openStoreWithMigration(dto, manageOverlay: false);
+      return _ref.read(mainStoreProvider.notifier).openStoreWithMigration(dto);
     } catch (error, stackTrace) {
       logError(
         'Failed to backup and migrate store: $error',
@@ -135,8 +133,6 @@ class MainStoreBackupOrchestrator {
       );
       _ref.read(mainStoreProvider.notifier).setOpenFailure(dbError);
       return false;
-    } finally {
-      _ref.read(mainStoreOpeningOverlayProvider.notifier).hide();
     }
   }
 

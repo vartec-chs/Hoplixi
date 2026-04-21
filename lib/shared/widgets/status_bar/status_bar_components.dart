@@ -91,6 +91,16 @@ class _DatabaseStatusWidget extends ConsumerWidget {
           );
         }
 
+        if (state.isOpening) {
+          return _buildStatusChip(
+            context,
+            icon: Icons.folder_open,
+            label: 'Открытие...',
+            color: Colors.blue,
+            tooltip: state.path,
+          );
+        }
+
         if (state.isLoading) {
           return _buildStatusChip(
             context,

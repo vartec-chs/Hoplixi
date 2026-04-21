@@ -217,10 +217,16 @@ class _AppRuntimeWrapperState extends ConsumerState<AppRuntimeWrapper> {
 
   @override
   Widget build(BuildContext context) {
+    final isStoreOpeningOverlayVisible = ref.watch(
+      mainStoreProvider.select(
+        (asyncState) => asyncState.value?.isOpening ?? false,
+      ),
+    );
+
     return AppBootstrap(
       initialThemeModeFuture: _initialThemeModeFuture,
       router: ref.watch(routerProvider),
-      isStoreOpeningOverlayVisible: ref.watch(mainStoreOpeningOverlayProvider),
+      isStoreOpeningOverlayVisible: isStoreOpeningOverlayVisible,
     );
   }
 }

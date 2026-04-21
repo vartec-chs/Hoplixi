@@ -21,20 +21,6 @@ final mainStoreProvider =
       MainStoreAsyncNotifier.new,
     );
 
-final mainStoreOpeningOverlayProvider =
-    NotifierProvider<MainStoreOpeningOverlayNotifier, bool>(
-      MainStoreOpeningOverlayNotifier.new,
-    );
-
-class MainStoreOpeningOverlayNotifier extends Notifier<bool> {
-  @override
-  bool build() => false;
-
-  void show() => state = true;
-
-  void hide() => state = false;
-}
-
 final mainStoreStateProvider = FutureProvider<DatabaseState>((ref) async {
   return ref.watch(mainStoreProvider.future);
 });
@@ -206,36 +192,38 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   }
 
   Future<bool> openStore(OpenStoreDto dto) {
-    return _openStore(dto, allowMigration: false, manageOverlay: true);
+    return _openStore(dto, allowMigration: false);
   }
 
-  Future<bool> openStoreWithMigration(
-    OpenStoreDto dto, {
-    bool manageOverlay = true,
-  }) {
-    return _openStore(dto, allowMigration: true, manageOverlay: manageOverlay);
+  Future<bool> openStoreWithMigration(OpenStoreDto dto) {
+    return _openStore(dto, allowMigration: true);
   }
 
   void setOpenFailure(DatabaseError error) {
     _setErrorState(_buildOpenFailureState(error));
   }
 
+  void markOpeningStarted({String? path, String? name}) {
+    _setState(
+      _currentState.copyWith(
+        path: path ?? _currentState.path,
+        name: name ?? _currentState.name,
+        status: DatabaseStatus.opening,
+        error: null,
+      ),
+    );
+  }
+
   Future<bool> _openStore(
     OpenStoreDto dto, {
     required bool allowMigration,
-    required bool manageOverlay,
   }) async {
-    if (manageOverlay) {
-      _ref.read(mainStoreOpeningOverlayProvider.notifier).show();
-    }
     await _acquireLock();
 
     try {
       logInfo('Opening store at: ${dto.path}', tag: _logTag);
 
-      _setState(
-        _currentState.copyWith(status: DatabaseStatus.loading, error: null),
-      );
+      markOpeningStarted(path: dto.path);
 
       final result = await _runtime.manager.openStore(
         dto,
@@ -264,9 +252,6 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       );
       return false;
     } finally {
-      if (manageOverlay) {
-        _ref.read(mainStoreOpeningOverlayProvider.notifier).hide();
-      }
       _releaseLock();
     }
   }

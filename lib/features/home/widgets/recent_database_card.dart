@@ -65,7 +65,7 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
     final manifestAsync = ref.watch(
       _recentDatabaseManifestProvider(entry.path),
     );
-    final isLoading = dbStateAsync.value?.isLoading ?? false;
+    final isOpening = dbStateAsync.value?.isOpening ?? false;
     final syncProvider = manifestAsync.maybeWhen(
       data: (manifest) => manifest?.sync?.provider,
       orElse: () => null,
@@ -171,23 +171,23 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
                 type: SmoothButtonType.outlined,
                 isFullWidth: true,
                 icon: Icon(syncProvider.metadata.icon),
-                loading: _isCheckingCloudVersion,
-                onPressed: (isLoading || _isCheckingCloudVersion)
-                    ? null
-                    : () => _checkCloudVersion(context, entry),
-              ),
+                 loading: _isCheckingCloudVersion,
+                 onPressed: (isOpening || _isCheckingCloudVersion)
+                     ? null
+                     : () => _checkCloudVersion(context, entry),
+               ),
               const SizedBox(height: 12),
             ],
             if (_isCheckingCloudVersion)
               _buildCloudSyncProgressPanel(context)
             else
               SmoothButton(
-                label: isLoading ? 'Открытие...' : 'Открыть',
+                label: isOpening ? 'Открытие...' : 'Открыть',
                 type: SmoothButtonType.filled,
                 isFullWidth: true,
                 icon: const Icon(LucideIcons.folderOpen),
-                loading: isLoading,
-                onPressed: isLoading
+                loading: isOpening,
+                onPressed: isOpening
                     ? null
                     : () => _openDatabase(context, ref, entry),
               ),
