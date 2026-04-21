@@ -7,11 +7,13 @@ import 'package:hoplixi/db_core/models/db_state.dart';
 import 'package:hoplixi/db_core/provider/main_store_backup_models.dart';
 import 'package:hoplixi/db_core/provider/main_store_runtime_provider.dart';
 import 'package:hoplixi/db_core/provider/main_store_storage_controller.dart';
+import 'package:hoplixi/db_core/services/main_store_backup_service.dart';
 
 final mainStoreBackupControllerProvider = Provider<MainStoreBackupController>((
   ref,
 ) {
   final controller = MainStoreBackupController(
+    backupService: ref.read(mainStoreBackupServiceProvider),
     storageController: ref.read(mainStoreStorageControllerProvider),
   );
   ref.onDispose(controller.dispose);
@@ -20,9 +22,12 @@ final mainStoreBackupControllerProvider = Provider<MainStoreBackupController>((
 
 class MainStoreBackupController {
   MainStoreBackupController({
+    required MainStoreBackupService backupService,
     required MainStoreStorageController storageController,
-  }) : _storageController = storageController;
+  }) : _backupService = backupService,
+       _storageController = storageController;
 
+  final MainStoreBackupService _backupService;
   final MainStoreStorageController _storageController;
 
   Timer? _periodicBackupTimer;
@@ -65,7 +70,7 @@ class MainStoreBackupController {
             )
           : null;
 
-      final backupData = await runtime.backupService.createBackup(
+      final backupData = await _backupService.createBackup(
         storeDirPath: storeDirPath,
         storeName: state.name ?? 'store',
         includeDatabase:

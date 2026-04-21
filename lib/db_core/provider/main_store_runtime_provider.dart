@@ -10,11 +10,9 @@ import 'package:hoplixi/setup/di_init.dart';
 
 class MainStoreRuntime {
   const MainStoreRuntime({
-    required this.backupService,
     required this.maintenanceService,
   });
 
-  final MainStoreBackupService backupService;
   final MainStoreMaintenanceService maintenanceService;
 }
 
@@ -26,6 +24,10 @@ final mainStoreManagerRuntimeProvider = FutureProvider<MainStoreManager>((
   return MainStoreManager(dbHistoryService, keyService);
 });
 
+final mainStoreBackupServiceProvider = Provider<MainStoreBackupService>((ref) {
+  return MainStoreBackupService();
+});
+
 final mainStoreRuntimeProvider = FutureProvider<MainStoreRuntime>((ref) async {
   ref.onDispose(() {
     logInfo(
@@ -35,7 +37,6 @@ final mainStoreRuntimeProvider = FutureProvider<MainStoreRuntime>((ref) async {
   });
 
   return MainStoreRuntime(
-    backupService: MainStoreBackupService(),
     maintenanceService: MainStoreMaintenanceService(),
   );
 });

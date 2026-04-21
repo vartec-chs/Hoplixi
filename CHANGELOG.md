@@ -23,6 +23,9 @@
   `MainStoreBackupController`, `MainStoreBackupOrchestrator` и
   `MainStoreCloseSyncController` переведены на явные зависимости
   `manager + runtime`, без доступа к manager через `runtime.manager`.
+- `MainStoreBackupService` также вынесен из `MainStoreRuntime` в отдельный
+  `mainStoreBackupServiceProvider`; backup-поток теперь получает сервис
+  напрямую, а runtime оставлен только для maintenance-зависимостей.
 
 ### db_core (backup isolation)
 

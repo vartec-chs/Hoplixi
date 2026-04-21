@@ -7,11 +7,13 @@ import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
 import 'package:hoplixi/db_core/provider/main_store_backup_controller.dart';
 import 'package:hoplixi/db_core/provider/main_store_provider.dart';
 import 'package:hoplixi/db_core/provider/main_store_runtime_provider.dart';
+import 'package:hoplixi/db_core/services/main_store_backup_service.dart';
 import 'package:hoplixi/db_core/services/store_manifest_service.dart';
 
 final mainStoreBackupOrchestratorProvider =
     Provider<MainStoreBackupOrchestrator>(
       (ref) => MainStoreBackupOrchestrator(
+        backupService: ref.read(mainStoreBackupServiceProvider),
         ref: ref,
         backupController: ref.read(mainStoreBackupControllerProvider),
       ),
@@ -19,13 +21,16 @@ final mainStoreBackupOrchestratorProvider =
 
 class MainStoreBackupOrchestrator {
   MainStoreBackupOrchestrator({
+    required MainStoreBackupService backupService,
     required Ref ref,
     required MainStoreBackupController backupController,
-  }) : _ref = ref,
+  }) : _backupService = backupService,
+       _ref = ref,
        _backupController = backupController;
 
   static const String _logTag = 'MainStoreBackupOrchestrator';
 
+  final MainStoreBackupService _backupService;
   final Ref _ref;
   final MainStoreBackupController _backupController;
 
@@ -104,7 +109,7 @@ class MainStoreBackupOrchestrator {
           ? manifest!.storeName
           : state.name ?? 'store';
 
-      final backupData = await runtime.backupService.createBackup(
+      final backupData = await _backupService.createBackup(
         storeDirPath: actualStoragePath,
         storeName: storeName,
         includeDatabase: true,
