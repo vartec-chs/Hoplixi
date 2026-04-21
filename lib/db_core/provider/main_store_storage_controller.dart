@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/db_core/main_store_manager.dart';
 import 'package:hoplixi/db_core/models/db_errors.dart';
 import 'package:hoplixi/db_core/models/db_state.dart';
 import 'package:hoplixi/db_core/provider/db_history_provider.dart';
@@ -14,16 +15,17 @@ class MainStoreStorageController {
   const MainStoreStorageController();
 
   Future<void> runStartupCleanup({
+    required MainStoreManager manager,
     required MainStoreRuntime runtime,
     required String logTag,
   }) async {
     try {
-      final store = runtime.manager.currentStore;
+      final store = manager.currentStore;
       if (store == null) {
         return;
       }
 
-      final storePath = runtime.manager.currentStorePath;
+      final storePath = manager.currentStorePath;
       if (storePath == null || storePath.isEmpty) {
         return;
       }
@@ -43,6 +45,7 @@ class MainStoreStorageController {
 
   Future<bool> deleteStore({
     required Ref ref,
+    required MainStoreManager manager,
     required MainStoreRuntime runtime,
     required MainStoreSessionBridge session,
     required String path,
@@ -59,9 +62,8 @@ class MainStoreStorageController {
         ),
       );
 
-      if (runtime.manager.currentStorePath == path &&
-          runtime.manager.isStoreOpen) {
-        await runtime.manager.closeStore();
+      if (manager.currentStorePath == path && manager.isStoreOpen) {
+        await manager.closeStore();
       }
 
       final dbHistoryService = await ref.read(dbHistoryProvider.future);
@@ -98,6 +100,7 @@ class MainStoreStorageController {
 
   Future<bool> deleteStoreFromDisk({
     required Ref ref,
+    required MainStoreManager manager,
     required MainStoreRuntime runtime,
     required MainStoreSessionBridge session,
     required String path,
@@ -113,9 +116,8 @@ class MainStoreStorageController {
         ),
       );
 
-      if (runtime.manager.currentStorePath == path &&
-          runtime.manager.isStoreOpen) {
-        await runtime.manager.closeStore();
+      if (manager.currentStorePath == path && manager.isStoreOpen) {
+        await manager.closeStore();
       }
 
       if (!await runtime.maintenanceService.storageDirectoryExists(path)) {
@@ -169,6 +171,7 @@ class MainStoreStorageController {
 
   Future<String?> getAttachmentsPath({
     required DatabaseState state,
+    required MainStoreManager manager,
     required MainStoreRuntime runtime,
     required String logTag,
   }) async {
@@ -181,7 +184,7 @@ class MainStoreStorageController {
         return null;
       }
 
-      final storePath = runtime.manager.currentStorePath;
+      final storePath = manager.currentStorePath;
       if (storePath == null || storePath.isEmpty) {
         logError(
           'Failed to get attachments path: store path is null',
@@ -203,6 +206,7 @@ class MainStoreStorageController {
 
   Future<String?> getDecryptedAttachmentsPath({
     required DatabaseState state,
+    required MainStoreManager manager,
     required MainStoreRuntime runtime,
     required String logTag,
   }) async {
@@ -215,7 +219,7 @@ class MainStoreStorageController {
         return null;
       }
 
-      final storePath = runtime.manager.currentStorePath;
+      final storePath = manager.currentStorePath;
       if (storePath == null || storePath.isEmpty) {
         logError(
           'Failed to get decrypted attachments path: store path is null',
@@ -237,6 +241,7 @@ class MainStoreStorageController {
 
   Future<String?> createSubfolder({
     required DatabaseState state,
+    required MainStoreManager manager,
     required MainStoreRuntime runtime,
     required String folderName,
     required String logTag,
@@ -247,7 +252,7 @@ class MainStoreStorageController {
         return null;
       }
 
-      final storePath = runtime.manager.currentStorePath;
+      final storePath = manager.currentStorePath;
       if (storePath == null || storePath.isEmpty) {
         logError('Failed to create subfolder: store path is null', tag: logTag);
         return null;

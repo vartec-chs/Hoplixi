@@ -31,8 +31,7 @@ final mainStoreManagerProvider = FutureProvider<MainStoreManager?>((ref) async {
     return null;
   }
 
-  final runtime = await ref.watch(mainStoreRuntimeProvider.future);
-  return runtime.manager;
+  return ref.watch(mainStoreManagerRuntimeProvider.future);
 });
 
 final dataUpdateStreamProvider = Provider<Stream<void>>((ref) {
@@ -53,6 +52,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   static const String _logTag = 'MainStoreAsyncNotifier';
   static const Duration _errorResetDelay = Duration(seconds: 10);
 
+  late final MainStoreManager _manager;
   late final MainStoreRuntime _runtime;
   late final MainStoreStorageController _storageController;
   late final MainStoreCloseSyncController _closeSyncController;
@@ -114,6 +114,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   Future<DatabaseState> build() async {
     logInfo('MainStoreAsyncNotifier initialized', tag: _logTag);
 
+    _manager = await ref.read(mainStoreManagerRuntimeProvider.future);
     _runtime = await ref.read(mainStoreRuntimeProvider.future);
     _storageController = ref.read(mainStoreStorageControllerProvider);
     _closeSyncController = ref.read(mainStoreCloseSyncControllerProvider);
@@ -135,13 +136,13 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         _currentState.copyWith(status: DatabaseStatus.loading, error: null),
       );
 
-      final result = await _runtime.manager.createStore(dto);
+      final result = await _manager.createStore(dto);
 
       return result.fold(
         (storeInfo) {
           _setState(
             DatabaseState(
-              path: _runtime.manager.currentStorePath,
+              path: _manager.currentStorePath,
               name: storeInfo.name,
               status: DatabaseStatus.open,
               modifiedAt: storeInfo.modifiedAt,
@@ -225,7 +226,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
 
       markOpeningStarted(path: dto.path);
 
-      final result = await _runtime.manager.openStore(
+      final result = await _manager.openStore(
         dto,
         allowMigration: allowMigration,
       );
@@ -273,6 +274,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
       final decryptedPathBeforeClose = await _storageController
           .getDecryptedAttachmentsPath(
             state: _currentState,
+            manager: _manager,
             runtime: _runtime,
             logTag: _logTag,
           );
@@ -318,7 +320,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         }
       }
 
-      final result = await _runtime.manager.closeStore();
+      final result = await _manager.closeStore();
 
       final isClosed = result.fold((_) => true, (error) {
         _setState(
@@ -388,16 +390,17 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     final currentName = _currentState.name;
     final decryptedPathBeforeLock = await _storageController
         .getDecryptedAttachmentsPath(
-          state: _currentState,
-          runtime: _runtime,
-          logTag: _logTag,
-        );
+            state: _currentState,
+            manager: _manager,
+            runtime: _runtime,
+            logTag: _logTag,
+          );
 
     if (!skipSnapshotSync) {
       await _tryUploadSnapshotBeforeClose();
     }
 
-    final closeResult = await _runtime.manager.closeStore();
+    final closeResult = await _manager.closeStore();
     closeResult.fold((_) => null, (error) {
       logError(
         'Failed to close store during lock: ${error.message}',
@@ -457,9 +460,9 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         return false;
       }
 
-      await _runtime.manager.closeStore();
+      await _manager.closeStore();
 
-      final result = await _runtime.manager.openStore(
+      final result = await _manager.openStore(
         OpenStoreDto(path: currentPath, password: password),
       );
 
@@ -522,7 +525,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
         _currentState.copyWith(status: DatabaseStatus.loading, error: null),
       );
 
-      final result = await _runtime.manager.updateStore(dto);
+      final result = await _manager.updateStore(dto);
 
       return result.fold(
         (storeInfo) {
@@ -569,10 +572,10 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
 
   Future<bool> deleteStore(String path, {bool deleteFromDisk = true}) async {
     final deletedCurrentStore =
-        _runtime.manager.currentStorePath == path &&
-        _runtime.manager.isStoreOpen;
+        _manager.currentStorePath == path && _manager.isStoreOpen;
     final success = await _storageController.deleteStore(
       ref: ref,
+      manager: _manager,
       runtime: _runtime,
       session: _sessionBridge,
       path: path,
@@ -588,10 +591,10 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
 
   Future<bool> deleteStoreFromDisk(String path) async {
     final deletedCurrentStore =
-        _runtime.manager.currentStorePath == path &&
-        _runtime.manager.isStoreOpen;
+        _manager.currentStorePath == path && _manager.isStoreOpen;
     final success = await _storageController.deleteStoreFromDisk(
       ref: ref,
+      manager: _manager,
       runtime: _runtime,
       session: _sessionBridge,
       path: path,
@@ -607,6 +610,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   Future<String?> getAttachmentsPath() {
     return _storageController.getAttachmentsPath(
       state: _currentState,
+      manager: _manager,
       runtime: _runtime,
       logTag: _logTag,
     );
@@ -615,6 +619,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   Future<String?> getDecryptedAttachmentsPath() {
     return _storageController.getDecryptedAttachmentsPath(
       state: _currentState,
+      manager: _manager,
       runtime: _runtime,
       logTag: _logTag,
     );
@@ -623,6 +628,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   Future<String?> createSubfolder(String folderName) {
     return _storageController.createSubfolder(
       state: _currentState,
+      manager: _manager,
       runtime: _runtime,
       folderName: folderName,
       logTag: _logTag,
@@ -637,7 +643,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   bool _handleOpenStoreSuccess(StoreInfoDto storeInfo) {
     _setState(
       DatabaseState(
-        path: _runtime.manager.currentStorePath,
+        path: _manager.currentStorePath,
         name: storeInfo.name,
         status: DatabaseStatus.open,
         modifiedAt: storeInfo.modifiedAt,
@@ -656,7 +662,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   }
 
   DatabaseState _buildOpenFailureState(DatabaseError error) {
-    if (_runtime.manager.isStoreOpen) {
+    if (_manager.isStoreOpen) {
       return _currentState.copyWith(status: DatabaseStatus.open, error: error);
     }
 
@@ -665,6 +671,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
 
   Future<void> _runStartupCleanup() {
     return _storageController.runStartupCleanup(
+      manager: _manager,
       runtime: _runtime,
       logTag: _logTag,
     );
@@ -674,8 +681,7 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
     FutureOr<void> Function()? onCloseFlowRequired,
   }) {
     return _closeSyncController.tryUploadSnapshotBeforeClose(
-      runtime: _runtime,
-      session: _sessionBridge,
+      manager: _manager,
       logTag: _logTag,
       onCloseFlowRequired: onCloseFlowRequired,
     );
@@ -725,17 +731,17 @@ class MainStoreAsyncNotifier extends AsyncNotifier<DatabaseState> {
   }) {
     _closeSyncController.syncPendingSnapshotUploadPrompt(
       currentState: _currentState,
-      currentStorePath: _runtime.manager.currentStorePath,
+      currentStorePath: _manager.currentStorePath,
       storeUuid: storeUuid,
       hasBinding: hasBinding,
       compareResult: compareResult,
     );
   }
 
-  MainStoreManager? get currentMainStoreManager => _runtime.manager;
+  MainStoreManager? get currentMainStoreManager => _manager;
 
   MainStore get currentDatabase {
-    final db = _runtime.manager.currentStore;
+    final db = _manager.currentStore;
     if (db == null) {
       logError(
         'Попытка доступа к базе данных, когда она не открыта',

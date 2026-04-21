@@ -10,21 +10,23 @@ import 'package:hoplixi/setup/di_init.dart';
 
 class MainStoreRuntime {
   const MainStoreRuntime({
-    required this.manager,
     required this.backupService,
     required this.maintenanceService,
   });
 
-  final MainStoreManager manager;
   final MainStoreBackupService backupService;
   final MainStoreMaintenanceService maintenanceService;
 }
 
-final mainStoreRuntimeProvider = FutureProvider<MainStoreRuntime>((ref) async {
+final mainStoreManagerRuntimeProvider = FutureProvider<MainStoreManager>((
+  ref,
+) async {
   final dbHistoryService = await ref.read(dbHistoryProvider.future);
   final keyService = DbKeyDerivationService(getIt<FlutterSecureStorage>());
-  final manager = MainStoreManager(dbHistoryService, keyService);
+  return MainStoreManager(dbHistoryService, keyService);
+});
 
+final mainStoreRuntimeProvider = FutureProvider<MainStoreRuntime>((ref) async {
   ref.onDispose(() {
     logInfo(
       'Освобождение ресурсов mainStoreRuntimeProvider',
@@ -33,7 +35,6 @@ final mainStoreRuntimeProvider = FutureProvider<MainStoreRuntime>((ref) async {
   });
 
   return MainStoreRuntime(
-    manager: manager,
     backupService: MainStoreBackupService(),
     maintenanceService: MainStoreMaintenanceService(),
   );

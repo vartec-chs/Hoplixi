@@ -3,11 +3,10 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/db_core/main_store_manager.dart';
 import 'package:hoplixi/db_core/models/db_errors.dart';
 import 'package:hoplixi/db_core/models/db_state.dart';
 import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
-import 'package:hoplixi/db_core/provider/main_store_runtime_provider.dart';
-import 'package:hoplixi/db_core/provider/main_store_session_contract.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
 import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_exception.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
@@ -35,19 +34,16 @@ class MainStoreCloseSyncController {
   Completer<bool>? _closeStoreUploadDecision;
 
   Future<void> tryUploadSnapshotBeforeClose({
-    required MainStoreRuntime runtime,
-    required MainStoreSessionBridge session,
+    required MainStoreManager manager,
     required String logTag,
     FutureOr<void> Function()? onCloseFlowRequired,
   }) async {
-    final storePath = runtime.manager.currentStorePath;
-    if (storePath == null ||
-        storePath.isEmpty ||
-        !runtime.manager.isStoreOpen) {
+    final storePath = manager.currentStorePath;
+    if (storePath == null || storePath.isEmpty || !manager.isStoreOpen) {
       return;
     }
 
-    final storeInfoResult = await runtime.manager.getStoreInfo();
+    final storeInfoResult = await manager.getStoreInfo();
     final storeInfo = storeInfoResult.fold(
       (info) => info,
       (error) => throw error,

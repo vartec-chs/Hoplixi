@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/db_core/main_store_manager.dart';
 import 'package:hoplixi/db_core/models/db_errors.dart';
 import 'package:hoplixi/db_core/models/db_state.dart';
 import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
@@ -28,6 +29,7 @@ class MainStoreBackupOrchestrator {
   final Ref _ref;
   final MainStoreBackupController _backupController;
 
+  MainStoreManager? _managerCache;
   MainStoreRuntime? _runtimeCache;
 
   bool get isPeriodicBackupActive => _backupController.isPeriodicBackupActive;
@@ -42,6 +44,7 @@ class MainStoreBackupOrchestrator {
 
     return _backupController.createBackup(
       state: _readCurrentState(),
+      manager: await _readManager(),
       runtime: runtime,
       scope: scope,
       outputDirPath: outputDirPath,
@@ -58,6 +61,7 @@ class MainStoreBackupOrchestrator {
     bool runImmediately = false,
     int maxBackupsPerStore = 10,
   }) async {
+    final manager = await _readManager();
     final runtime = await _readRuntime();
 
     _backupController.startPeriodicBackup(
@@ -67,6 +71,7 @@ class MainStoreBackupOrchestrator {
       runImmediately: runImmediately,
       maxBackupsPerStore: maxBackupsPerStore,
       readState: _readCurrentState,
+      readManager: () => manager,
       readRuntime: () => runtime,
       logTag: _logTag,
     );
@@ -90,9 +95,8 @@ class MainStoreBackupOrchestrator {
       );
 
       final runtime = await _readRuntime();
-      final actualStoragePath = await runtime.manager.resolveStoragePath(
-        dto.path,
-      );
+      final manager = await _readManager();
+      final actualStoragePath = await manager.resolveStoragePath(dto.path);
 
       final manifest = await StoreManifestService.readFrom(actualStoragePath);
       final state = await _ref.read(mainStoreProvider.future);
@@ -150,5 +154,16 @@ class MainStoreBackupOrchestrator {
     final runtime = await _ref.read(mainStoreRuntimeProvider.future);
     _runtimeCache = runtime;
     return runtime;
+  }
+
+  Future<MainStoreManager> _readManager() async {
+    final cached = _managerCache;
+    if (cached != null) {
+      return cached;
+    }
+
+    final manager = await _ref.read(mainStoreManagerRuntimeProvider.future);
+    _managerCache = manager;
+    return manager;
   }
 }

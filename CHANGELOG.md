@@ -14,6 +14,16 @@
   `RecentDatabaseCard` и status bar теперь различают `opening` и обычный
   `loading`.
 
+### db_core (runtime split)
+
+- `MainStoreManager` вынесен из `MainStoreRuntime` в отдельный
+  `mainStoreManagerRuntimeProvider`, чтобы runtime больше не смешивал manager и
+  service-зависимости в одном объекте.
+- `MainStoreAsyncNotifier`, `MainStoreStorageController`,
+  `MainStoreBackupController`, `MainStoreBackupOrchestrator` и
+  `MainStoreCloseSyncController` переведены на явные зависимости
+  `manager + runtime`, без доступа к manager через `runtime.manager`.
+
 ### db_core (backup isolation)
 
 - Backup-логика полностью вынесена из `MainStoreAsyncNotifier` в отдельный

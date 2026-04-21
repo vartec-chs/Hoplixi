@@ -2,10 +2,11 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/db_core/main_store_manager.dart';
+import 'package:hoplixi/db_core/models/db_state.dart';
 import 'package:hoplixi/db_core/provider/main_store_backup_models.dart';
 import 'package:hoplixi/db_core/provider/main_store_runtime_provider.dart';
 import 'package:hoplixi/db_core/provider/main_store_storage_controller.dart';
-import 'package:hoplixi/db_core/models/db_state.dart';
 
 final mainStoreBackupControllerProvider = Provider<MainStoreBackupController>((
   ref,
@@ -34,6 +35,7 @@ class MainStoreBackupController {
 
   Future<BackupResult?> createBackup({
     required DatabaseState state,
+    required MainStoreManager manager,
     required MainStoreRuntime runtime,
     required BackupScope scope,
     required bool periodic,
@@ -47,7 +49,7 @@ class MainStoreBackupController {
         return null;
       }
 
-      final storeDirPath = state.path ?? runtime.manager.currentStorePath;
+      final storeDirPath = state.path ?? manager.currentStorePath;
       if (storeDirPath == null || storeDirPath.isEmpty) {
         logError('Store path is null, backup aborted', tag: logTag);
         return null;
@@ -57,6 +59,7 @@ class MainStoreBackupController {
           scope == BackupScope.encryptedFilesOnly || scope == BackupScope.full
           ? await _storageController.getAttachmentsPath(
               state: state,
+              manager: manager,
               runtime: runtime,
               logTag: logTag,
             )
@@ -103,6 +106,7 @@ class MainStoreBackupController {
     required bool runImmediately,
     required int maxBackupsPerStore,
     required DatabaseState Function() readState,
+    required MainStoreManager Function() readManager,
     required MainStoreRuntime Function() readRuntime,
     required String logTag,
     String? outputDirPath,
@@ -125,6 +129,7 @@ class MainStoreBackupController {
       unawaited(
         _runPeriodicBackupTick(
           readState: readState,
+          readManager: readManager,
           readRuntime: readRuntime,
           logTag: logTag,
         ),
@@ -135,6 +140,7 @@ class MainStoreBackupController {
       unawaited(
         _runPeriodicBackupTick(
           readState: readState,
+          readManager: readManager,
           readRuntime: readRuntime,
           logTag: logTag,
         ),
@@ -158,6 +164,7 @@ class MainStoreBackupController {
 
   Future<void> _runPeriodicBackupTick({
     required DatabaseState Function() readState,
+    required MainStoreManager Function() readManager,
     required MainStoreRuntime Function() readRuntime,
     required String logTag,
   }) async {
@@ -168,6 +175,7 @@ class MainStoreBackupController {
 
     await createBackup(
       state: state,
+      manager: readManager(),
       runtime: readRuntime(),
       scope: _periodicBackupScope,
       outputDirPath: _periodicBackupOutputDirPath,
