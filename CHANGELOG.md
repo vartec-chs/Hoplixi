@@ -2,6 +2,26 @@
 
 ## 2026-04-25
 
+### db_core (usecases utils)
+
+- Общий обработчик ошибок `_handleError` вынесен из `create_main_store.dart` и
+  `open_main_store.dart` в `lib/main_db/new/usecases/utils/error_handling.dart`.
+- `CreateMainStore` и `OpenMainStore` переведены на общий helper
+  `handleMainStoreUseCaseError(...)` без изменения сценариев обработки ошибок.
+
+### db_core (compatibility model)
+
+- `StoreOpenCompatibility` вынесен из
+  `lib/main_db/new/services/main_store_compatibility_service/main_store_compatibility_service.dart`
+  в отдельную модель
+  `lib/main_db/new/services/main_store_compatibility_service/model/store_open_compatibility.dart`.
+
+### core/errors (main db codes)
+
+- В `MainDatabaseErrorCode` добавлены коды `DB_STORE_MIGRATION_REQUIRED` и
+  `DB_STORE_VERSION_TOO_NEW` для явного различения сценариев обязательной
+  миграции и слишком новой версии хранилища.
+
 ### db_core (history provider)
 
 - Добавлен провайдер `dbHistoryProvider` для new-ветки в
@@ -21,6 +41,18 @@
 
 ### db_core (new main store factory)
 
+- Добавлен use case `OpenMainStore` для new-ветки: открытие стора вынесено из
+  будущего `MainStoreService` в отдельный слой с чтением `store_manifest.json`,
+  деривацией ключа, подключением `MainStore`, fallback-подбором `DBCipher` и
+  возвратом `Session`.
+- В new-ветку добавлен `MainStoreCompatibilityService` на `AppError`: проверяет
+  `manifestVersion`, `lastMigrationVersion` и `appVersion`, блокирует слишком
+  новые хранилища и явно сообщает о требуемой миграции.
+- `MainStoreFileService` получил `resolveExistingStoragePath(...)`, чтобы
+  `openStore` принимал как директорию хранилища, так и прямой путь к файлу БД.
+- `MainStoreService.openStore(...)` подключён к `OpenMainStore` и после
+  успешного открытия создаёт или обновляет запись `DatabaseHistoryService`;
+  ошибка history логируется warning и не отменяет открытую сессию.
 - Поток создания нового стора вынесен из `MainStoreFactory` в use case
   `CreateMainStore` (`lib/main_db/new/usecases/create_main_store.dart`) с единым
   входом `call(...)`; `MainStoreService` теперь зависит от use case.
@@ -64,6 +96,9 @@
   один раз из уже нормализованного имени, backup-имя для папок без БД больше не
   берётся из raw `storeName`, а cleanup директории выполняется даже если
   закрытие частично созданного `MainStore` завершилось ошибкой.
+- `CreateMainStore.normalizeStorageName(...)` теперь отсекает имена, которые
+  могут превратиться в некорректный путь (`.`, `..`, имена только из точек и
+  Windows-reserved имена вроде `CON`, `NUL`, `COM1`, `LPT1`).
 
 ### db_core (store cleanup)
 

@@ -10,6 +10,8 @@ enum MainDatabaseErrorCode {
   queryFailed('DB_QUERY_FAILED'),
   recordNotFound('DB_RECORD_NOT_FOUND'),
   migrationFailed('DB_MIGRATION_FAILED'),
+  storeMigrationRequired('DB_STORE_MIGRATION_REQUIRED'),
+  storeVersionTooNew('DB_STORE_VERSION_TOO_NEW'),
   corrupted('DB_CORRUPTED'),
   encryptionFailed('DB_ENCRYPTION_FAILED'),
   decryptionFailed('DB_DECRYPTION_FAILED'),

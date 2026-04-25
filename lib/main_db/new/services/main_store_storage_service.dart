@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:hoplixi/core/constants/main_constants.dart';
+import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/index.dart';
 import 'package:path/path.dart' as p;
 
@@ -26,6 +27,35 @@ class MainStoreFileService {
 
   Future<void> deleteStorageDirectory(String path) async {
     await Directory(path).delete(recursive: true);
+  }
+
+  Future<String> resolveExistingStoragePath(String path) async {
+    final normalizedPath = path.trim();
+    if (normalizedPath.isEmpty) {
+      throw AppError.validation(
+        code: ValidationErrorCode.invalidInput,
+        message: 'Путь к хранилищу не указан',
+        timestamp: DateTime.now(),
+      );
+    }
+
+    final storageDir = Directory(normalizedPath);
+    if (await storageDir.exists()) {
+      return storageDir.path;
+    }
+
+    final dbFile = File(normalizedPath);
+    if (await dbFile.exists() &&
+        normalizedPath.endsWith(MainConstants.dbExtension)) {
+      return p.dirname(dbFile.path);
+    }
+
+    throw AppError.mainDatabase(
+      code: MainDatabaseErrorCode.recordNotFound,
+      message: 'Директория хранилища или файл БД не найдены',
+      data: {'path': normalizedPath},
+      timestamp: DateTime.now(),
+    );
   }
 
   Future<String?> findDatabaseFile(String storagePath) async {

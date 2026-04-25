@@ -18,6 +18,7 @@ import 'package:hoplixi/main_db/new/services/main_store_connection_service.dart'
 import 'package:hoplixi/main_db/new/services/main_store_storage_service.dart';
 import 'package:hoplixi/main_db/new/services/store_manifest_service/model/store_manifest.dart';
 import 'package:hoplixi/main_db/new/services/store_manifest_service/store_manifest_service.dart';
+import 'package:hoplixi/main_db/new/usecases/utils/error_handling.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as p;
@@ -31,6 +32,30 @@ typedef Session = ({
 
 class CreateMainStore {
   static const String _logTag = 'CreateMainStore';
+  static const Set<String> _reservedWindowsNames = {
+    'con',
+    'prn',
+    'aux',
+    'nul',
+    'com1',
+    'com2',
+    'com3',
+    'com4',
+    'com5',
+    'com6',
+    'com7',
+    'com8',
+    'com9',
+    'lpt1',
+    'lpt2',
+    'lpt3',
+    'lpt4',
+    'lpt5',
+    'lpt6',
+    'lpt7',
+    'lpt8',
+    'lpt9',
+  };
 
   final MainStoreConnectionService _connectionService;
   final DbKeyDerivationService _keyService;
@@ -146,7 +171,7 @@ class CreateMainStore {
       await _closeCreatedStore(store);
       await _cleanupCreatedStorage(createdStorageDir);
 
-      return _handleError(
+      return handleMainStoreUseCaseError(
         message: 'Failed to create store',
         error: error,
         stackTrace: stackTrace,
@@ -172,8 +197,12 @@ class CreateMainStore {
     var normalized = name.trim();
     normalized = normalized.replaceAll(RegExp(r'\s+'), '_');
     normalized = normalized.replaceAll(RegExp(r'[<>:"/\\|?*]'), '');
+    normalized = normalized.replaceAll(RegExp(r'^\.+|\.+$'), '');
 
-    if (normalized.isEmpty) {
+    if (normalized.isEmpty ||
+        normalized == '.' ||
+        normalized == '..' ||
+        _reservedWindowsNames.contains(normalized.toLowerCase())) {
       throw AppError.validation(
         code: ValidationErrorCode.invalidInput,
         message: 'Имя хранилища содержит только недопустимые символы',
@@ -339,27 +368,4 @@ class CreateMainStore {
       List<int>.generate(count, (_) => random.nextInt(256)),
     );
   }
-}
-
-Failure<S, AppError> _handleError<S extends Object>({
-  required String message,
-  required Object error,
-  required StackTrace stackTrace,
-  required String tag,
-}) {
-  logError(message, error: error, stackTrace: stackTrace, tag: tag);
-
-  if (error is AppError) {
-    return Failure<S, AppError>(error);
-  }
-
-  return Failure<S, AppError>(
-    AppError.mainDatabase(
-      code: MainDatabaseErrorCode.unknown,
-      message: message,
-      stackTrace: stackTrace,
-      data: {'exception': error.toString()},
-      timestamp: DateTime.now(),
-    ),
-  );
 }
