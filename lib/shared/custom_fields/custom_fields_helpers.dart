@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/db_core/db/dao/index.dart';
-import 'package:hoplixi/db_core/old/provider/dao_providers.dart';
+import 'package:hoplixi/main_db/core/dao/index.dart';
+import 'package:hoplixi/main_db/old/provider/dao_providers.dart';
 import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 
 /// Загрузить кастомные поля vault-элемента из БД.

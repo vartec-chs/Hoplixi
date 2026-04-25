@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/db_core/old/models/filter/index.dart';
+import 'package:hoplixi/main_db/core/models/filter/index.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/filter_sections/controller_sync.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 

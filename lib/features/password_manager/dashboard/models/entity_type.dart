@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/db_core/old/models/enums/entity_types.dart';
+import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 
 enum EntityType {
   password('passwords', 'Пароли', Icons.lock),

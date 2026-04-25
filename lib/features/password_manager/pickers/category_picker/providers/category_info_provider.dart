@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/db_core/old/models/dto/category_dto.dart';
-import 'package:hoplixi/db_core/old/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/db_core/old/models/enums/index.dart';
-import 'package:hoplixi/db_core/old/provider/dao_providers.dart';
+import 'package:hoplixi/main_db/core/models/dto/category_dto.dart';
+import 'package:hoplixi/main_db/core/models/dto/icon_ref_dto.dart';
+import 'package:hoplixi/main_db/core/models/enums/index.dart';
+import 'package:hoplixi/main_db/old/provider/dao_providers.dart';
 
 /// Базовая информация о категории для отображения в полях
 class CategoryBasicInfo {

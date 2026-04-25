@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
-import 'package:hoplixi/db_core/old/models/dto/tag_dto.dart';
-import 'package:hoplixi/db_core/old/models/enums/entity_types.dart';
-import 'package:hoplixi/db_core/old/provider/dao_providers.dart';
+import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
+import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
+import 'package:hoplixi/main_db/old/provider/dao_providers.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 

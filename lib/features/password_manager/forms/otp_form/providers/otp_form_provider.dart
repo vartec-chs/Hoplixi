@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/smart_converter_base.dart';
-import 'package:hoplixi/db_core/old/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/db_core/old/models/dto/otp_dto.dart';
-import 'package:hoplixi/db_core/old/models/enums/entity_types.dart';
-import 'package:hoplixi/db_core/old/provider/dao_providers.dart';
+import 'package:hoplixi/main_db/core/models/dto/icon_ref_dto.dart';
+import 'package:hoplixi/main_db/core/models/dto/otp_dto.dart';
+import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
+import 'package:hoplixi/main_db/old/provider/dao_providers.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/forms/otp_form/utils/otp_uri_parser.dart';

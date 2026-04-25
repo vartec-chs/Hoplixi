@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/db_core/old/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/db_core/old/models/enums/entity_types.dart';
+import 'package:hoplixi/main_db/core/models/dto/icon_ref_dto.dart';
+import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';

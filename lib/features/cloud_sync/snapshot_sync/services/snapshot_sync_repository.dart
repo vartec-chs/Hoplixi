@@ -13,7 +13,7 @@ import 'package:hoplixi/features/cloud_sync/storage/models/cloud_resource.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_resource_ref.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/features/cloud_sync/storage/services/cloud_storage_repository.dart';
-import 'package:hoplixi/db_core/old/models/store_manifest.dart';
+import 'package:hoplixi/main_db/old/models/store_manifest.dart';
 
 class RemoteStoreLayout {
   const RemoteStoreLayout({

@@ -1,7 +1,7 @@
 ﻿import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/db_core/old/models/filter/loyalty_cards_filter.dart';
+import 'package:hoplixi/main_db/core/models/filter/loyalty_cards_filter.dart';
 
 import 'base_filter_provider.dart';
 

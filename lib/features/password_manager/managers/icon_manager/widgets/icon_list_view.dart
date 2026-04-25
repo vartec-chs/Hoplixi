@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/db_core/db/main_store.dart';
-import 'package:hoplixi/db_core/old/models/dto/icon_dto.dart';
-import 'package:hoplixi/db_core/old/models/enums/entity_types.dart';
+import 'package:hoplixi/main_db/core/main_store.dart';
+import 'package:hoplixi/main_db/core/models/dto/icon_dto.dart';
+import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 
 import '../provider/icon_list_provider.dart';
 import 'icon_card.dart';

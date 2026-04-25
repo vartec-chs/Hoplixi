@@ -5,10 +5,10 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:hoplixi/core/logger/models.dart' as logger_models;
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/store_snapshot_manifest_builder.dart';
-import 'package:hoplixi/db_core/old/models/dto/main_store_dto.dart';
-import 'package:hoplixi/db_core/old/models/store_manifest.dart';
-import 'package:hoplixi/db_core/old/models/store_key_config.dart';
-import 'package:hoplixi/db_core/old/services/store_manifest_service.dart';
+import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/main_db/old/models/store_manifest.dart';
+import 'package:hoplixi/main_db/old/models/store_key_config.dart';
+import 'package:hoplixi/main_db/old/services/store_manifest_service.dart';
 
 void main() {
   group('StoreManifest.fromJson', () {

@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/cloud_sync/auth/providers/auth_flow_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
-import 'package:hoplixi/db_core/old/models/db_state.dart';
-import 'package:hoplixi/db_core/old/provider/main_store_provider.dart';
+import 'package:hoplixi/main_db/old/models/db_state.dart';
+import 'package:hoplixi/main_db/old/provider/main_store_provider.dart';
 
 final routerRefreshNotifierProvider =
     NotifierProvider<RouterRefreshNotifier, int>(() => RouterRefreshNotifier());

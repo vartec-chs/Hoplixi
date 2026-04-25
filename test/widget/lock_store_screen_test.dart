@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/password_manager/lock_store/lock_store_screen.dart';
-import 'package:hoplixi/db_core/old/models/db_state.dart';
-import 'package:hoplixi/db_core/old/provider/main_store_provider.dart';
+import 'package:hoplixi/main_db/old/models/db_state.dart';
+import 'package:hoplixi/main_db/old/provider/main_store_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 
 void main() {

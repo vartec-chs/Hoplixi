@@ -7,7 +7,7 @@ import 'package:hoplixi/features/password_manager/pickers/category_picker/catego
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/db_core/old/models/enums/entity_types.dart';
+import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_editor.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';

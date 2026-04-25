@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/db_core/old/models/dto/file_dto.dart';
+import 'package:hoplixi/main_db/core/models/dto/file_dto.dart';
 
 /// Форматирует размер файла в байтах в читаемую строку
 String _formatFileSize(int bytes) {

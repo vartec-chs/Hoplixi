@@ -19,10 +19,10 @@ import 'package:hoplixi/features/cloud_sync/storage/models/cloud_resource_kind.d
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_resource_ref.dart';
 import 'package:hoplixi/features/cloud_sync/storage/services/cloud_storage_provider.dart';
 import 'package:hoplixi/features/cloud_sync/storage/services/cloud_storage_repository.dart';
-import 'package:hoplixi/db_core/old/models/dto/main_store_dto.dart';
-import 'package:hoplixi/db_core/old/models/store_manifest.dart';
-import 'package:hoplixi/db_core/old/models/store_key_config.dart';
-import 'package:hoplixi/db_core/old/services/store_manifest_service.dart';
+import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/main_db/old/models/store_manifest.dart';
+import 'package:hoplixi/main_db/old/models/store_key_config.dart';
+import 'package:hoplixi/main_db/old/services/store_manifest_service.dart';
 import 'package:path/path.dart' as p;
 
 void main() {

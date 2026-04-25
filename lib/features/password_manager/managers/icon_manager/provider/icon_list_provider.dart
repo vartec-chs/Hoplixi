@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/db_core/db/main_store.dart';
-import 'package:hoplixi/db_core/old/provider/dao_providers.dart';
+import 'package:hoplixi/main_db/core/main_store.dart';
+import 'package:hoplixi/main_db/old/provider/dao_providers.dart';
 
 import '../../providers/manager_refresh_trigger_provider.dart';
 import '../models/icon_pagination_state.dart';

@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/archive_storage/models/archive_state.dart';
-import 'package:hoplixi/db_core/old/models/store_folder_info.dart';
-import 'package:hoplixi/db_core/old/provider/archive_provider.dart';
+import 'package:hoplixi/main_db/old/models/store_folder_info.dart';
+import 'package:hoplixi/main_db/old/provider/archive_provider.dart';
 import 'package:path/path.dart' as p;
 
 /// Провайдер для управления состоянием экрана архивации

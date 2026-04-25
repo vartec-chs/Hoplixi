@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/db_core/old/models/db_state.dart';
-import 'package:hoplixi/db_core/old/models/dto/main_store_dto.dart';
-import 'package:hoplixi/db_core/old/provider/main_store_provider.dart';
+import 'package:hoplixi/main_db/old/models/db_state.dart';
+import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/main_db/old/provider/main_store_provider.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';

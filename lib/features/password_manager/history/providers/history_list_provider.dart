@@ -4,7 +4,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/history/models/history_item.dart';
 import 'package:hoplixi/features/password_manager/history/models/history_list_state.dart';
 import 'package:hoplixi/features/password_manager/history/providers/history_search_provider.dart';
-import 'package:hoplixi/db_core/old/provider/dao_providers.dart';
+import 'package:hoplixi/main_db/old/provider/dao_providers.dart';
 
 /// Константа размера страницы для пагинации истории
 const int kHistoryPageSize = 20;

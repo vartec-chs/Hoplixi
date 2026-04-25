@@ -3,9 +3,9 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:hoplixi/db_core/old/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/db_core/old/models/enums/index.dart';
-import 'package:hoplixi/db_core/old/provider/dao_providers.dart';
+import 'package:hoplixi/main_db/core/models/dto/icon_ref_dto.dart';
+import 'package:hoplixi/main_db/core/models/enums/index.dart';
+import 'package:hoplixi/main_db/old/provider/dao_providers.dart';
 import 'package:hoplixi/features/custom_icon_packs/providers/icon_packs_provider.dart';
 
 class IconRefPreview extends ConsumerStatefulWidget {

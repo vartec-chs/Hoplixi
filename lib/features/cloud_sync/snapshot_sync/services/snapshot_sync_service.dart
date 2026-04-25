@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:hoplixi/db_core/old/models/db_errors.dart';
-import 'package:hoplixi/db_core/old/models/dto/main_store_dto.dart';
-import 'package:hoplixi/db_core/old/models/store_manifest.dart';
-import 'package:hoplixi/db_core/old/services/main_store_storage_service.dart';
-import 'package:hoplixi/db_core/old/services/store_manifest_service.dart';
+import 'package:hoplixi/main_db/old/models/db_errors.dart';
+import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/main_db/old/models/store_manifest.dart';
+import 'package:hoplixi/main_db/old/services/main_store_storage_service.dart';
+import 'package:hoplixi/main_db/old/services/store_manifest_service.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/attachments_manifest.dart';

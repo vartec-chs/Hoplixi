@@ -1,8 +1,8 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/db_core/old/models/store_settings_keys.dart';
-import 'package:hoplixi/db_core/old/provider/dao_providers.dart';
+import 'package:hoplixi/main_db/old/models/store_settings_keys.dart';
+import 'package:hoplixi/main_db/old/provider/dao_providers.dart';
 
 Future<bool> copyCardValue({
   required WidgetRef ref,

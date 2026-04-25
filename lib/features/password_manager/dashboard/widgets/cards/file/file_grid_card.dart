@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
-import 'package:hoplixi/db_core/old/models/dto/file_dto.dart';
+import 'package:hoplixi/main_db/core/models/dto/file_dto.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 class FileGridCard extends ConsumerStatefulWidget {

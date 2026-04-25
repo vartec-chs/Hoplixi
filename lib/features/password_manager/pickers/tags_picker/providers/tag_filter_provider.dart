@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/db_core/old/models/enums/index.dart';
-import 'package:hoplixi/db_core/old/models/filter/tags_filter.dart';
+import 'package:hoplixi/main_db/core/models/enums/index.dart';
+import 'package:hoplixi/main_db/core/models/filter/tags_filter.dart';
 
 /// Провайдер для управления состоянием фильтра тегов
 final tagPickerFilterProvider =

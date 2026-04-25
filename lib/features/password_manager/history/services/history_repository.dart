@@ -5,9 +5,9 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/history/models/history_v2_models.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/db_core/db/main_store.dart';
-import 'package:hoplixi/db_core/old/models/dto/custom_field_dto.dart';
-import 'package:hoplixi/db_core/old/models/enums/index.dart';
+import 'package:hoplixi/main_db/core/main_store.dart';
+import 'package:hoplixi/main_db/core/models/dto/custom_field_dto.dart';
+import 'package:hoplixi/main_db/core/models/enums/index.dart';
 
 part 'history_repository_loaders_primary.dart';
 part 'history_repository_loaders_secondary.dart';

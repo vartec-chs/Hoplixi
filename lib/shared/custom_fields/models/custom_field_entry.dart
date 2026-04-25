@@ -1,6 +1,6 @@
-import 'package:hoplixi/db_core/db/main_store.dart';
-import 'package:hoplixi/db_core/old/models/dto/custom_field_dto.dart';
-import 'package:hoplixi/db_core/old/models/enums/entity_types.dart';
+import 'package:hoplixi/main_db/core/main_store.dart';
+import 'package:hoplixi/main_db/core/models/dto/custom_field_dto.dart';
+import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 
 /// UI-модель кастомного поля для использования в формах.
 /// Не зависит от кодогенерации — простой иммутабельный Dart-класс.

@@ -7,8 +7,8 @@ import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.da
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/cloud_sync_settings_page.dart';
-import 'package:hoplixi/db_core/old/models/store_manifest.dart';
-import 'package:hoplixi/db_core/old/models/store_key_config.dart';
+import 'package:hoplixi/main_db/old/models/store_manifest.dart';
+import 'package:hoplixi/main_db/old/models/store_key_config.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 
 void main() {

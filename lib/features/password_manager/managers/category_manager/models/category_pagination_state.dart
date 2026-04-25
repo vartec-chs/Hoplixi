@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hoplixi/db_core/old/models/dto/category_dto.dart';
+import 'package:hoplixi/main_db/core/models/dto/category_dto.dart';
 
 part 'category_pagination_state.freezed.dart';
 

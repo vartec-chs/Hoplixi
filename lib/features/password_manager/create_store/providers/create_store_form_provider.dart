@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/db_core/old/models/db_ciphers.dart';
+import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
 import 'package:hoplixi/features/password_manager/create_store/models/create_store_state.dart';
 
 /// Провайдер для управления состоянием формы создания хранилища

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/db_core/old/models/dto/category_dto.dart';
+import 'package:hoplixi/main_db/core/models/dto/category_dto.dart';
 import 'package:hoplixi/shared/widgets/icon_ref_preview.dart';
 
 /// Современная карточка категории с градиентным фоном и анимациями.
