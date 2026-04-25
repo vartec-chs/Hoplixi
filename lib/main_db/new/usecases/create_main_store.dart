@@ -323,6 +323,7 @@ class CreateMainStore {
     }
   }
 
+  // TODO: temporary method
   String _hashPassword(String password, String salt) {
     final bytes = utf8.encode(password + salt);
     return sha512.convert(bytes).toString();
