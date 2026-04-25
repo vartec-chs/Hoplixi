@@ -5,27 +5,31 @@ import 'package:hoplixi/main_db/new/services/db_history_services/db_history_serv
 import 'package:hoplixi/main_db/new/usecases/close_main_store.dart';
 import 'package:hoplixi/main_db/new/usecases/create_main_store.dart';
 import 'package:hoplixi/main_db/new/usecases/open_main_store.dart';
+import 'package:hoplixi/main_db/new/usecases/update_main_store.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:synchronized/synchronized.dart';
 
-class MainStoreManager {
-  static const String _logTag = 'MainStoreManager';
+class MainStoreService  {
+  static const String _logTag = 'MainStoreService';
 
   final Lock _lock = Lock();
   final DatabaseHistoryService _dbHistoryService;
   final CreateMainStore _createMainStore;
   final OpenMainStore _openMainStore;
   final CloseMainStore _closeMainStore;
+  final UpdateMainStore _updateMainStore;
 
-  MainStoreManager({
+  MainStoreService({
     required DatabaseHistoryService dbHistoryService,
     CreateMainStore? createMainStore,
     OpenMainStore? openMainStore,
     CloseMainStore? closeMainStore,
+    UpdateMainStore? updateMainStore,
   }) : _dbHistoryService = dbHistoryService,
        _createMainStore = createMainStore ?? CreateMainStore(),
        _openMainStore = openMainStore ?? OpenMainStore(),
-       _closeMainStore = closeMainStore ?? CloseMainStore();
+       _closeMainStore = closeMainStore ?? CloseMainStore(),
+       _updateMainStore = updateMainStore ?? UpdateMainStore();
 
   AsyncResultDart<Session, AppError> createStore(
     CreateStoreDto dto,
@@ -127,11 +131,61 @@ class MainStoreManager {
   }
 
   AsyncResultDart<StoreInfoDto, AppError> updateStore(
-    String storeId,
+    Session session,
     UpdateStoreDto dto,
   ) async {
-    throw UnimplementedError(
-      'MainStoreManagerV2.updateStore is not implemented yet',
-    );
+    return _lock.synchronized(() async {
+      final result = await _updateMainStore(session: session, dto: dto);
+      if (result.isError()) {
+        return Failure(result.exceptionOrNull()!);
+      }
+
+      final storeInfo = result.getOrThrow();
+      try {
+        final historyEntry = await _dbHistoryService.getByPath(
+          session.storeDirectoryPath,
+        );
+        if (historyEntry != null) {
+          final shouldSavePassword =
+              dto.saveMasterPassword ?? historyEntry.savePassword;
+
+          await _dbHistoryService.update(
+            historyEntry.copyWith(
+              name: dto.name ?? historyEntry.name,
+              description: dto.description ?? historyEntry.description,
+              savePassword: shouldSavePassword,
+            ),
+          );
+
+          if (dto.saveMasterPassword == false) {
+            await _dbHistoryService.setSavedPasswordByPath(
+              session.storeDirectoryPath,
+              null,
+            );
+          } else if (dto.password != null && shouldSavePassword) {
+            await _dbHistoryService.setSavedPasswordByPath(
+              session.storeDirectoryPath,
+              dto.password,
+            );
+          }
+
+          logInfo('Updated history entry for store', tag: _logTag);
+        }
+
+        return Success(storeInfo);
+      } catch (error, stackTrace) {
+        logWarning(
+          'Failed to update history entry for store',
+          tag: _logTag,
+          data: {
+            'storeId': session.info.id,
+            'storePath': session.storeDirectoryPath,
+            'error': error.toString(),
+            'stackTrace': stackTrace.toString(),
+          },
+        );
+        return Success(storeInfo);
+      }
+    });
   }
 }

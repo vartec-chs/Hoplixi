@@ -2,6 +2,15 @@
 
 ## 2026-04-25
 
+### db_core (update store usecase)
+
+- Реализован новый use case `lib/main_db/new/usecases/update_main_store.dart`
+  для обновления metadata хранилища в открытой `Session` (имя, описание,
+  хеш/соль пароля).
+- `MainStoreManager` в new-ветке переведён на `UpdateMainStore`:
+  `updateStore(...)` больше не `UnimplementedError` и выполняет синхронизацию
+  истории (`DatabaseHistoryService`) по аналогии с old-реализацией.
+
 ### db_core (usecases utils)
 
 - Общий обработчик ошибок `_handleError` вынесен из `create_main_store.dart` и
@@ -57,8 +66,8 @@
   `MainStoreManager.closeStore(...)` принимает `Session` явно и не хранит
   состояние открытого стора внутри manager.
 - `MainStoreManager` оставлен stateless-оркестратором use case’ов:
-  `createStore/openStore` возвращают `Session`, а владение текущей сессией
-  будет вынесено в отдельный provider.
+  `createStore/openStore` возвращают `Session`, а владение текущей сессией будет
+  вынесено в отдельный provider.
 - Поток создания нового стора вынесен из `MainStoreFactory` в use case
   `CreateMainStore` (`lib/main_db/new/usecases/create_main_store.dart`) с единым
   входом `call(...)`; `MainStoreService` теперь зависит от use case.
