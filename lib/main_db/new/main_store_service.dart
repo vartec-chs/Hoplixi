@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:drift/native.dart';
@@ -15,8 +14,8 @@ import 'package:hoplixi/main_db/new/models/db_ciphers.dart';
 import 'package:hoplixi/main_db/new/models/dto/main_db_dto.dart';
 import 'package:path/path.dart' as p;
 import 'package:result_dart/result_dart.dart';
-import 'package:synchronized/synchronized.dart';
 import 'package:sqlite3/sqlite3.dart';
+import 'package:synchronized/synchronized.dart';
 
 typedef Session = ({MainStore store, StoreInfoDto info});
 
