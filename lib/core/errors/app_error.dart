@@ -69,6 +69,18 @@ sealed class AppError with _$AppError implements Exception {
     DateTime? timestamp,
   }) = AuthAppError;
 
+  const factory AppError.archive({
+    @JsonKey(unknownEnumValue: ArchiveErrorCode.unknown)
+    required ArchiveErrorCode code,
+    required String message,
+    @Default(<String, dynamic>{}) Map<String, dynamic> data,
+    String? debugMessage,
+    @JsonKey(includeFromJson: false, includeToJson: false) Object? cause,
+    @JsonKey(includeFromJson: false, includeToJson: false)
+    StackTrace? stackTrace,
+    DateTime? timestamp,
+  }) = ArchiveAppError;
+
   const factory AppError.unknown({
     @Default('UNKNOWN_ERROR') String code,
     @Default('Произошла неизвестная ошибка') String message,
@@ -102,6 +114,9 @@ sealed class AppError with _$AppError implements Exception {
             code.value,
     auth: (code, message, data, debugMessage, cause, stackTrace, timestamp) =>
         code.value,
+    archive:
+        (code, message, data, debugMessage, cause, stackTrace, timestamp) =>
+            code.value,
     unknown:
         (code, message, data, debugMessage, cause, stackTrace, timestamp) =>
             code,
@@ -129,6 +144,11 @@ sealed class AppError with _$AppError implements Exception {
 
   bool get isAuth => maybeWhen(
     auth: (_, __, ___, ____, _____, ______, _______) => true,
+    orElse: () => false,
+  );
+
+  bool get isArchive => maybeWhen(
+    archive: (_, __, ___, ____, _____, ______, _______) => true,
     orElse: () => false,
   );
 

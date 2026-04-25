@@ -2,12 +2,50 @@
 
 ## 2026-04-25
 
+### db_core (store cleanup)
+
+- `PerformStoreCleanup.call(...)` теперь возвращает структурированный
+  `StoreCleanupResult` вместо `Future<void>`: вызывающий код получает явный
+  статус сценария (`completed`, `skippedByInterval`, `failed`) и детали
+  выполнения (параметры cleanup history, число удалённых orphaned-файлов, текст
+  ошибки при падении).
+- В `PerformStoreCleanup` и `StoreCleanupResult` магические числовые литералы
+  (дефолты интервала/лимитов и служебный `0`) вынесены в `static const` поля,
+  чтобы упростить поддержку и исключить дублирование чисел в коде.
+
+### db_core (archive service)
+
+- В `lib/db_core/new/services/archive_service/archive_service.dart` служебные
+  модели изолятов (`ArchiveParams`, `UnarchiveParams`, `ArchiveProgressMessage`,
+  `ArchiveIsolateResult`) вынесены в отдельную папку
+  `lib/db_core/new/services/archive_service/models`, добавлен barrel-export
+  `models/models.dart`, а `ArchiveService` переведён на импорт этих моделей.
+- В `lib/db_core/new/services/archive_service/archive_service.dart` тип ошибок в
+  `ResultDart` заменён с `DatabaseError` на `AppError`, а все `Failure` ветки
+  переведены на `AppError.fileSystem` / `AppError.archive` (включая конвертацию
+  исключений через `toFileSystemAppError`).
+
+### core/errors
+
+- Добавлен новый тип ошибок архивации: `ArchiveErrorCode` в
+  `lib/core/errors/error_enums/archive_errors.dart` и новый вариант
+  `AppError.archive(...)` в `lib/core/errors/app_error.dart`.
+- Обновлены экспорты `error_enums.dart` и сгенерированные файлы
+  `app_error.freezed.dart`/`app_error.g.dart` для сериализации и union-case
+  архивации.
+- Extension `FileErrorToAppErrorExtension` для конвертации базовых файловых
+  ошибок (`FileSystemException`, `IOException`, `Object`) в
+  `AppError.fileSystem` вынесен в отдельную папку расширений:
+  `lib/core/errors/extensions/file_error_to_app_error_extension.dart`.
+- Добавлен barrel-export `lib/core/errors/extensions/extensions.dart` и
+  подключение расширений через `lib/core/errors/errors.dart`.
+
 ### db_core (new main store service)
 
 - `MainStoreService.createStore(...)` в новой DB-ветке переписан как
   низкоуровневое создание стора: подготовка директории, создание encrypted
-  `MainStore`, первичная запись `store_meta` через DAO и возврат открытой
-  сессии без подключения history/manifest/runtime-сервисов.
+  `MainStore`, первичная запись `store_meta` через DAO и возврат открытой сессии
+  без подключения history/manifest/runtime-сервисов.
 
 ## 2026-04-21
 
@@ -16,9 +54,10 @@
 - Удалён отдельный `mainStoreOpeningOverlayProvider`: глобальный overlay
   открытия хранилища теперь определяется напрямую по `DatabaseState`, а не по
   побочному boolean-провайдеру.
-- В `DatabaseStatus` добавлено явное состояние `opening`; `MainStoreAsyncNotifier`
-  переводит хранилище в него в начале `openStore(...)`, а migration-flow
-  использует тот же статус уже на этапе `backup -> migrate -> open`.
+- В `DatabaseStatus` добавлено явное состояние `opening`;
+  `MainStoreAsyncNotifier` переводит хранилище в него в начале `openStore(...)`,
+  а migration-flow использует тот же статус уже на этапе
+  `backup -> migrate -> open`.
 - Обновлены потребители UI-состояния открытия: `AppRuntimeWrapper`,
   `RecentDatabaseCard` и status bar теперь различают `opening` и обычный
   `loading`.
@@ -39,9 +78,9 @@
   `mainStoreMaintenanceServiceProvider`; после этого `MainStoreRuntime` и
   `mainStoreRuntimeProvider` полностью удалены, а storage-операции получают
   maintenance-сервис напрямую.
-- В `MainStoreAsyncNotifier` удалены приватные helpers
-  `_handleOpenStoreSuccess` / `_handleOpenStoreFailure`: open-flow теперь
-  замкнут локально внутри `_openStore()`, без лишнего прыжка по файлу.
+- В `MainStoreAsyncNotifier` удалены приватные helpers `_handleOpenStoreSuccess`
+  / `_handleOpenStoreFailure`: open-flow теперь замкнут локально внутри
+  `_openStore()`, без лишнего прыжка по файлу.
 
 ### db_core (backup isolation)
 
