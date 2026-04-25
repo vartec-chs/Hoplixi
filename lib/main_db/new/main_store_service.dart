@@ -11,20 +11,19 @@ class MainStoreService {
 
   final Lock _lock = Lock();
   final DatabaseHistoryService _dbHistoryService;
-  final CreateMainStore _createMainStore;
 
   MainStoreService({
     required DatabaseHistoryService dbHistoryService,
     CreateMainStore? createMainStore,
-  }) : _dbHistoryService = dbHistoryService,
-       _createMainStore = createMainStore ?? CreateMainStore();
+  }) : _dbHistoryService = dbHistoryService;
 
   AsyncResultDart<Session, AppError> createStore(
     CreateStoreDto dto,
     String masterPassword,
   ) async {
     return _lock.synchronized(() async {
-      final result = await _createMainStore(
+      final createMainStore = CreateMainStore();
+      final result = await createMainStore(
         dto: dto,
         masterPassword: masterPassword,
       );

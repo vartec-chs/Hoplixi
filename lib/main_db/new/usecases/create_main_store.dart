@@ -54,8 +54,11 @@ class CreateMainStore {
 
     try {
       final storagePath = await resolveBaseStoragePath(dto);
-      final storageDirPath = await resolveStorageDirectoryPath(dto);
       final normalizedName = normalizeStorageName(dto.name);
+      final storageDirPath = _buildStorageDirectoryPath(
+        baseStoragePath: storagePath,
+        normalizedName: normalizedName,
+      );
       final storageDir = Directory(storageDirPath);
 
       if (await storageDir.exists()) {
@@ -73,7 +76,7 @@ class CreateMainStore {
 
         await _moveDirectoryWithoutDatabase(
           baseStoragePath: storagePath,
-          storeName: dto.name,
+          normalizedStoreName: normalizedName,
           storageDir: storageDir,
         );
       }
@@ -140,7 +143,7 @@ class CreateMainStore {
         storeDirectoryPath: storageDir.path,
       ));
     } catch (error, stackTrace) {
-      await store?.close();
+      await _closeCreatedStore(store);
       await _cleanupCreatedStorage(createdStorageDir);
 
       return _handleError(
@@ -158,7 +161,11 @@ class CreateMainStore {
 
   Future<String> resolveStorageDirectoryPath(CreateStoreDto dto) async {
     final storagePath = await resolveBaseStoragePath(dto);
-    return p.join(storagePath, normalizeStorageName(dto.name));
+    final normalizedName = normalizeStorageName(dto.name);
+    return _buildStorageDirectoryPath(
+      baseStoragePath: storagePath,
+      normalizedName: normalizedName,
+    );
   }
 
   String normalizeStorageName(String name) {
@@ -217,11 +224,10 @@ class CreateMainStore {
 
   Future<void> _moveDirectoryWithoutDatabase({
     required String baseStoragePath,
-    required String storeName,
+    required String normalizedStoreName,
     required Directory storageDir,
   }) async {
-    final noSpacesName = storeName.replaceAll(RegExp(r'\s+'), '');
-    final backupName = 'do_not_contain_db_file_$noSpacesName';
+    final backupName = 'do_not_contain_db_file_$normalizedStoreName';
     var backupPath = p.join(baseStoragePath, backupName);
 
     var backupDir = Directory(backupPath);
@@ -234,6 +240,29 @@ class CreateMainStore {
 
     await storageDir.rename(backupPath);
     logInfo('Renamed directory without db file to: $backupPath', tag: _logTag);
+  }
+
+  String _buildStorageDirectoryPath({
+    required String baseStoragePath,
+    required String normalizedName,
+  }) {
+    return p.join(baseStoragePath, normalizedName);
+  }
+
+  Future<void> _closeCreatedStore(MainStore? store) async {
+    if (store == null) {
+      return;
+    }
+
+    try {
+      await store.close();
+    } catch (error, stackTrace) {
+      logWarning(
+        'Failed to close store after createStore error',
+        tag: _logTag,
+        data: {'error': error.toString(), 'stackTrace': stackTrace.toString()},
+      );
+    }
   }
 
   Future<void> _cleanupCreatedStorage(Directory? createdStorageDir) async {
