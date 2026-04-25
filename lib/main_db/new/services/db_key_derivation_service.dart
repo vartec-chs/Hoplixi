@@ -36,9 +36,11 @@ class DbKeyDerivationService {
   static const int argon2Iterations = 3;
   static const int argon2Parallelism = 1;
   static const int _keyLength = 32; // 256 бит
+  static const int saltLength = 32; // 256 бит
 
   // --- Хранилище ключа устройства ---
   static const String _deviceKeyStorageKey = 'hoplixi_db_device_secret_v1';
+  static const int _deviceSecretLength = 32; // 256 бит
 
   // --- Info-строка для HKDF (контекст деривации) ---
   static const String _hkdfInfo = 'hoplixi-SQLite3 Multiple Ciphers-v1';
@@ -110,7 +112,7 @@ class DbKeyDerivationService {
 
   /// Генерация новой Argon2-соли в виде Base64-строки.
   static String generateSalt() {
-    return base64UrlEncode(generateSecureRandomBytes(32));
+    return base64UrlEncode(generateSecureRandomBytes(saltLength));
   }
 
   /// Генерация криптографически безопасных случайных байт.
@@ -182,7 +184,7 @@ class DbKeyDerivationService {
     }
 
     logInfo('Generating new device secret', tag: _logTag);
-    final secret = generateSecureRandomBytes(32);
+    final secret = generateSecureRandomBytes(_deviceSecretLength);
     await _secureStorage.write(
       key: _deviceKeyStorageKey,
       value: base64Encode(secret),

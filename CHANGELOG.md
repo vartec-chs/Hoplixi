@@ -2,6 +2,55 @@
 
 ## 2026-04-25
 
+### db_core (history provider)
+
+- Добавлен провайдер `dbHistoryProvider` для new-ветки в
+  `lib/main_db/new/providers/db_history_provider.dart`: создаёт
+  `DatabaseHistoryService`, вызывает `initialize()` и возвращает готовый инстанс
+  через `FutureProvider`.
+- Добавлен barrel-export `lib/main_db/new/providers/index.dart` для
+  централизованного импорта провайдеров new-ветки.
+
+### db_core (main store provider)
+
+- Добавлен `mainStoreServiceProvider` в
+  `lib/main_db/new/providers/main_store_service_provider.dart`: провайдер
+  ожидает `dbHistoryProvider`, после чего создаёт `MainStoreService` с
+  инициализированным `DatabaseHistoryService`.
+- Обновлён экспорт new-провайдеров в `lib/main_db/new/providers/index.dart`.
+
+### db_core (new main store factory)
+
+- Поток создания нового стора вынесен из `MainStoreFactory` в use case
+  `CreateMainStore` (`lib/main_db/new/usecases/create_main_store.dart`) с единым
+  входом `call(...)`; `MainStoreService` теперь зависит от use case.
+- `main_store_factory.dart` оставлен как временная совместимая обёртка над
+  `CreateMainStore` для старых импортов.
+- Низкоуровневый поток `createStore(...)` в новой DB-ветке перенесён из
+  `MainStoreService` в `MainStoreFactory`: подготовка директории, создание
+  encrypted `MainStore`, запись `store_meta`, cleanup при ошибках и возврат
+  `Session`.
+- `MainStoreService` оставлен тонкой оболочкой над `MainStoreFactory` с
+  синхронизацией через `Lock` и делегированием вспомогательных методов путей.
+- `MainStoreFactory` теперь использует существующий `MainStoreConnectionService`
+  для создания encrypted `MainStore`, без дублирования setup
+  SQLite/PRAGMA/cipher в factory.
+- `MainStoreConnectionService` переведён с `DatabaseError` на `AppError`;
+  временный маппинг ошибок подключения в `MainStoreFactory` удалён.
+- Логирование в `MainStoreConnectionService` переведено с `debugPrint` на
+  проектные `logInfo/logWarning/logError`.
+- `MainStoreFactory.createStore(...)` снова использует Argon2/HKDF-деривацию
+  через `DbKeyDerivationService`: генерирует `argon2Salt`, передаёт в SQLite
+  derived `pragmaKey` вместо master password и пишет `keyConfig` в
+  `store_manifest.json`.
+- В `DbKeyDerivationService` сохранён размер соли как в старой реализации:
+  `saltLength = 32` (256 бит).
+- `MainStoreService.createStore(...)` после успешного `CreateMainStore` создаёт
+  запись в `DatabaseHistoryService` с путём стора, id, именем, описанием и
+  опционально сохранённым master password.
+- Для записи history используется фактический `session.storeDirectoryPath`,
+  возвращённый `CreateMainStore`, без повторного вычисления пути в сервисе.
+
 ### db_core (store cleanup)
 
 - `PerformStoreCleanup.call(...)` теперь возвращает структурированный

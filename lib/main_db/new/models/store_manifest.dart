@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
-import 'package:hoplixi/main_db/new/models/store_key_config.dart';
+import 'package:hoplixi/main_db/old/models/store_key_config.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 
 part 'store_manifest.freezed.dart';
@@ -207,7 +207,7 @@ sealed class StoreManifest with _$StoreManifest {
     required String storeName,
     required DateTime updatedAt,
     required StoreManifestLastModifiedBy lastModifiedBy,
-    required StoreKeyConfig keyConfig,
+    StoreKeyConfig? keyConfig,
   }) {
     return StoreManifest(
       lastMigrationVersion: lastMigrationVersion,

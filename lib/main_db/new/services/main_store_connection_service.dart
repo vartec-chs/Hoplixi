@@ -2,11 +2,11 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:drift/native.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:hoplixi/core/errors/errors.dart';
+import 'package:hoplixi/core/logger/index.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
-import 'package:hoplixi/main_db/old/models/db_errors.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:sqlite3/sqlite3.dart';
 
@@ -14,14 +14,14 @@ import 'package:sqlite3/sqlite3.dart';
 class MainStoreConnectionService {
   static const String _logTag = 'MainStoreConnectionService';
 
-  AsyncResultDart<MainStore, DatabaseError> createDatabaseConnection(
+  AsyncResultDart<MainStore, AppError> createDatabaseConnection(
     String dbFilePath,
     String pragmaKey, {
     DBCipher cipher = DBCipher.chacha20,
     bool isDatabaseCreation = false,
   }) async {
     try {
-      debugPrint('[$_logTag] Creating database connection');
+      logInfo('Creating database connection', tag: _logTag);
       final token = RootIsolateToken.instance!;
 
       final executor = NativeDatabase.createInBackground(
@@ -87,13 +87,19 @@ class MainStoreConnectionService {
 
       try {
         await database.customSelect('SELECT 1;').getSingle();
-        debugPrint('[$_logTag] Database connection established');
+        logInfo('Database connection established', tag: _logTag);
       } catch (e) {
         await database.close();
-        debugPrint('[$_logTag] Failed to verify database connection: $e');
+        logWarning(
+          'Failed to verify database connection',
+          tag: _logTag,
+          data: {'error': e.toString()},
+        );
         return Failure(
-          DatabaseError.invalidPassword(
+          AppError.mainDatabase(
+            code: MainDatabaseErrorCode.invalidPassword,
             message: 'Неверный пароль или поврежденная база данных (error: $e)',
+            cause: e,
             timestamp: DateTime.now(),
           ),
         );
@@ -101,13 +107,19 @@ class MainStoreConnectionService {
 
       return Success(database);
     } catch (e, stackTrace) {
-      debugPrint('[$_logTag] Failed to create database connection: $e');
-      debugPrint('[$_logTag] StackTrace: $stackTrace');
+      logError(
+        'Failed to create database connection',
+        error: e,
+        stackTrace: stackTrace,
+        tag: _logTag,
+      );
       return Failure(
-        DatabaseError.connectionFailed(
+        AppError.mainDatabase(
+          code: MainDatabaseErrorCode.connectionFailed,
           message: 'Не удалось подключиться к базе данных: $e',
-          timestamp: DateTime.now(),
+          cause: e,
           stackTrace: stackTrace,
+          timestamp: DateTime.now(),
         ),
       );
     }
@@ -131,12 +143,14 @@ class MainStoreConnectionService {
       if (currentCipher != null && currentCipher.isNotEmpty) {
         final cipherDescription =
             dbCipherDescriptions[currentCipher] ?? 'Unknown cipher';
-        debugPrint(
-          '[$_logTag] Current connection cipher before apply: $currentCipher ($cipherDescription)',
+        logInfo(
+          'Current connection cipher before apply: $currentCipher ($cipherDescription)',
+          tag: _logTag,
         );
       } else {
-        debugPrint(
-          '[$_logTag] Current connection cipher before apply: not set',
+        logInfo(
+          'Current connection cipher before apply: not set',
+          tag: _logTag,
         );
       }
 
@@ -150,12 +164,14 @@ class MainStoreConnectionService {
       final requestedDescription =
           dbCipherDescriptions[requestedCipherName] ?? 'Unknown cipher';
       if (isDatabaseCreation) {
-        debugPrint(
-          '[$_logTag] Database cipher was set to $requestedCipherName ($requestedDescription) for creation.',
+        logInfo(
+          'Database cipher was set to $requestedCipherName ($requestedDescription) for creation.',
+          tag: _logTag,
         );
       } else {
-        debugPrint(
-          '[$_logTag] Applied requested cipher for opening connection: $requestedCipherName ($requestedDescription).',
+        logInfo(
+          'Applied requested cipher for opening connection: $requestedCipherName ($requestedDescription).',
+          tag: _logTag,
         );
       }
 
@@ -165,15 +181,25 @@ class MainStoreConnectionService {
           : null;
 
       if (appliedCipher != requestedCipherName) {
-        debugPrint(
-          '[$_logTag] Requested cipher was not applied. Requested: $requestedCipherName, actual: ${appliedCipher ?? 'unknown'}',
+        logWarning(
+          'Requested cipher was not applied',
+          tag: _logTag,
+          data: {
+            'requestedCipher': requestedCipherName,
+            'appliedCipher': appliedCipher ?? 'unknown',
+          },
         );
         return false;
       }
 
       return true;
-    } catch (e) {
-      debugPrint('[$_logTag] Failed to check or set cipher: $e');
+    } catch (e, stackTrace) {
+      logError(
+        'Failed to check or set cipher',
+        error: e,
+        stackTrace: stackTrace,
+        tag: _logTag,
+      );
       return false;
     }
   }
