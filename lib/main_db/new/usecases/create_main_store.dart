@@ -15,6 +15,7 @@ import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:hoplixi/main_db/new/models/store_key_config.dart';
 import 'package:hoplixi/main_db/new/services/db_key_derivation_service.dart';
 import 'package:hoplixi/main_db/new/services/main_store_connection_service.dart';
+import 'package:hoplixi/main_db/new/services/main_store_storage_service.dart';
 import 'package:hoplixi/main_db/new/services/store_manifest_service/model/store_manifest.dart';
 import 'package:hoplixi/main_db/new/services/store_manifest_service/store_manifest_service.dart';
 import 'package:hoplixi/setup/di_init.dart';
@@ -31,18 +32,18 @@ typedef Session = ({
 class CreateMainStore {
   static const String _logTag = 'CreateMainStore';
 
-  static const String attachmentsFolder = 'attachments';
-  static const String decryptedAttachmentsFolder = 'attachments_decrypted';
-
   final MainStoreConnectionService _connectionService;
   final DbKeyDerivationService _keyService;
+  final MainStoreFileService _storageService;
 
   CreateMainStore({
     MainStoreConnectionService? connectionService,
     DbKeyDerivationService? keyService,
+    MainStoreFileService? storageService,
   }) : _connectionService = connectionService ?? MainStoreConnectionService(),
        _keyService =
-           keyService ?? DbKeyDerivationService(getIt<FlutterSecureStorage>());
+           keyService ?? DbKeyDerivationService(getIt<FlutterSecureStorage>()),
+       _storageService = storageService ?? const MainStoreFileService();
 
   AsyncResultDart<Session, AppError> call({
     required CreateStoreDto dto,
@@ -58,7 +59,9 @@ class CreateMainStore {
       final storageDir = Directory(storageDirPath);
 
       if (await storageDir.exists()) {
-        final existingDbFile = await findDatabaseFile(storageDir.path);
+        final existingDbFile = await _storageService.findDatabaseFile(
+          storageDir.path,
+        );
         if (existingDbFile != null) {
           throw AppError.validation(
             code: ValidationErrorCode.alreadyExists,
@@ -80,7 +83,7 @@ class CreateMainStore {
       logInfo('Created storage directory: ${storageDir.path}', tag: _logTag);
 
       await Directory(
-        getAttachmentsPath(storageDir.path),
+        _storageService.getAttachmentsPath(storageDir.path),
       ).create(recursive: true);
       logInfo('Created attachments directory', tag: _logTag);
 
@@ -149,22 +152,6 @@ class CreateMainStore {
     }
   }
 
-  String getAttachmentsPath(String storePath) {
-    return p.join(storePath, attachmentsFolder);
-  }
-
-  String getDecryptedAttachmentsPath(String storePath) {
-    return p.join(storePath, decryptedAttachmentsFolder);
-  }
-
-  Future<bool> storageDirectoryExists(String path) {
-    return Directory(path).exists();
-  }
-
-  Future<void> deleteStorageDirectory(String path) async {
-    await Directory(path).delete(recursive: true);
-  }
-
   Future<String> resolveBaseStoragePath(CreateStoreDto dto) async {
     return dto.path.trim().isEmpty ? AppPaths.appStoragesPath : dto.path.trim();
   }
@@ -189,29 +176,6 @@ class CreateMainStore {
     }
 
     return normalized;
-  }
-
-  Future<String?> findDatabaseFile(String storagePath) async {
-    try {
-      final dir = Directory(storagePath);
-      final files = await dir.list().toList();
-
-      for (final file in files) {
-        if (file is File && file.path.endsWith(MainConstants.dbExtension)) {
-          return file.path;
-        }
-      }
-
-      return null;
-    } catch (error, stackTrace) {
-      logError(
-        'Failed to find database file',
-        error: error,
-        stackTrace: stackTrace,
-        tag: _logTag,
-      );
-      return null;
-    }
   }
 
   Future<StoreInfoDto> _createStoreMetadata({
@@ -278,7 +242,7 @@ class CreateMainStore {
     }
 
     try {
-      await deleteStorageDirectory(createdStorageDir.path);
+      await _storageService.deleteStorageDirectory(createdStorageDir.path);
     } catch (error, stackTrace) {
       logWarning(
         'Failed to clean up storage directory after createStore error',

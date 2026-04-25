@@ -53,6 +53,13 @@
 - Ошибка записи в `DatabaseHistoryService` больше не делает `createStore(...)`
   неуспешным: созданная сессия возвращается как `Success(session)`, а сбой
   history логируется как warning.
+- Методы путей и операций директории стора (`getAttachmentsPath`,
+  `getDecryptedAttachmentsPath`, `storageDirectoryExists`,
+  `deleteStorageDirectory`) вынесены из `CreateMainStore` в отдельный
+  `MainStoreFileService`.
+- Поиск файла базы (`findDatabaseFile`) также перенесён в
+  `MainStoreFileService`; `CreateMainStore` использует сервис вместо
+  собственного метода.
 
 ### db_core (store cleanup)
 

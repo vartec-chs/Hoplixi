@@ -77,20 +77,4 @@ class MainStoreService {
       'MainStoreManagerV2.updateStore is not implemented yet',
     );
   }
-
-  String getAttachmentsPath(String storePath) {
-    return _createMainStore.getAttachmentsPath(storePath);
-  }
-
-  String getDecryptedAttachmentsPath(String storePath) {
-    return _createMainStore.getDecryptedAttachmentsPath(storePath);
-  }
-
-  Future<bool> storageDirectoryExists(String path) {
-    return _createMainStore.storageDirectoryExists(path);
-  }
-
-  Future<void> deleteStorageDirectory(String path) {
-    return _createMainStore.deleteStorageDirectory(path);
-  }
 }
