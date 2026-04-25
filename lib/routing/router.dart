@@ -9,7 +9,7 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_stor
 import 'package:hoplixi/features/local_send/providers/transfer_provider.dart';
 import 'package:hoplixi/features/setup/providers/setup_completed_provider.dart';
 import 'package:hoplixi/global_key.dart';
-import 'package:hoplixi/db_core/provider/main_store_provider.dart';
+import 'package:hoplixi/db_core/old/provider/main_store_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/routing/router_refresh_provider.dart';
 import 'package:hoplixi/routing/routes.dart';

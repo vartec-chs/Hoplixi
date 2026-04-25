@@ -3,8 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:hoplixi/db_core/models/enums/index.dart';
-import 'package:hoplixi/db_core/provider/dao_providers.dart';
+import 'package:hoplixi/db_core/old/models/enums/index.dart';
+import 'package:hoplixi/db_core/old/provider/dao_providers.dart';
 
 import 'widgets/icon_picker_modal.dart';
 

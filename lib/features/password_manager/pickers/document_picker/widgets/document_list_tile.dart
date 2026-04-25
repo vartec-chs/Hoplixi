@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/db_core/models/dto/document_dto.dart';
+import 'package:hoplixi/db_core/old/models/dto/document_dto.dart';
 
 /// Элемент списка документов в пикере
 class DocumentListTile extends StatelessWidget {

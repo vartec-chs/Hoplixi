@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/db_core/models/dto/tag_dto.dart';
-import 'package:hoplixi/db_core/models/enums/index.dart';
-import 'package:hoplixi/db_core/provider/dao_providers.dart';
+import 'package:hoplixi/db_core/old/models/dto/tag_dto.dart';
+import 'package:hoplixi/db_core/old/models/enums/index.dart';
+import 'package:hoplixi/db_core/old/provider/dao_providers.dart';
 
 import '../models/tag_pagination_state.dart';
 import 'tag_filter_provider.dart';

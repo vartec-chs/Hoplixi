@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/index.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/db_core/models/graph_data.dart';
-import 'package:hoplixi/db_core/provider/dao_providers.dart';
+import 'package:hoplixi/db_core/old/models/graph_data.dart';
+import 'package:hoplixi/db_core/old/provider/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 final _notesGraphDataProvider = FutureProvider.autoDispose<GraphData>((

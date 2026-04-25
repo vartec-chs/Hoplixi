@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/db_core/provider/archive_provider.dart';
-import 'package:hoplixi/db_core/services/other/archive_service.dart';
+import 'package:hoplixi/db_core/old/provider/archive_provider.dart';
+import 'package:hoplixi/db_core/old/services/other/archive_service.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 

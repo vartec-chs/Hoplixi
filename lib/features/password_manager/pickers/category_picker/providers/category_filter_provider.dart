@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/index.dart';
-import 'package:hoplixi/db_core/models/enums/index.dart';
-import 'package:hoplixi/db_core/models/filter/categories_filter.dart';
+import 'package:hoplixi/db_core/old/models/enums/index.dart';
+import 'package:hoplixi/db_core/old/models/filter/categories_filter.dart';
 
 /// Провайдер для управления состоянием фильтра категорий
 final categoryPickerFilterProvider =

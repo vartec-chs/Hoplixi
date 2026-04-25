@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 2026-04-25
+
+### db_core (new main store service)
+
+- `MainStoreService.createStore(...)` в новой DB-ветке переписан как
+  низкоуровневое создание стора: подготовка директории, создание encrypted
+  `MainStore`, первичная запись `store_meta` через DAO и возврат открытой
+  сессии без подключения history/manifest/runtime-сервисов.
+
 ## 2026-04-21
 
 ### db_core (opening state)

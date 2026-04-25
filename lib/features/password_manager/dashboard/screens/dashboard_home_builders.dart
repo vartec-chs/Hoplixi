@@ -2,7 +2,7 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hoplixi/db_core/models/dto/index.dart';
+import 'package:hoplixi/db_core/old/models/dto/index.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/list_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/current_view_mode_provider.dart';

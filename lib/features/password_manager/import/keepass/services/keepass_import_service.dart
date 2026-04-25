@@ -7,13 +7,13 @@ import 'package:hoplixi/db_core/db/dao/crud/note_dao.dart';
 import 'package:hoplixi/db_core/db/dao/crud/otp_dao.dart';
 import 'package:hoplixi/db_core/db/dao/crud/password_dao.dart';
 import 'package:hoplixi/db_core/db/dao/crud/tag_dao.dart';
-import 'package:hoplixi/db_core/models/dto/category_dto.dart';
-import 'package:hoplixi/db_core/models/dto/custom_field_dto.dart';
-import 'package:hoplixi/db_core/models/dto/note_dto.dart';
-import 'package:hoplixi/db_core/models/dto/otp_dto.dart';
-import 'package:hoplixi/db_core/models/dto/password_dto.dart';
-import 'package:hoplixi/db_core/models/dto/tag_dto.dart';
-import 'package:hoplixi/db_core/models/enums/entity_types.dart';
+import 'package:hoplixi/db_core/old/models/dto/category_dto.dart';
+import 'package:hoplixi/db_core/old/models/dto/custom_field_dto.dart';
+import 'package:hoplixi/db_core/old/models/dto/note_dto.dart';
+import 'package:hoplixi/db_core/old/models/dto/otp_dto.dart';
+import 'package:hoplixi/db_core/old/models/dto/password_dto.dart';
+import 'package:hoplixi/db_core/old/models/dto/tag_dto.dart';
+import 'package:hoplixi/db_core/old/models/enums/entity_types.dart';
 import 'package:hoplixi/rust/api/keepass_api.dart';
 
 class KeepassImportExecutionOptions {

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/db_core/models/filter/index.dart';
+import 'package:hoplixi/db_core/old/models/filter/index.dart';
 
 import 'base_filter_provider.dart';
 

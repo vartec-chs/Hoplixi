@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hoplixi/db_core/models/dto/category_dto.dart';
-import 'package:hoplixi/db_core/models/dto/tag_dto.dart';
+import 'package:hoplixi/db_core/old/models/dto/category_dto.dart';
+import 'package:hoplixi/db_core/old/models/dto/tag_dto.dart';
 
 part 'drawer_filter_state.freezed.dart';
 part 'drawer_filter_state.g.dart';

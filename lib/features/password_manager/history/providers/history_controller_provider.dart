@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/history/models/history_v2_models.dart';
 import 'package:hoplixi/features/password_manager/history/services/history_repository.dart';
-import 'package:hoplixi/db_core/provider/main_store_provider.dart';
+import 'package:hoplixi/db_core/old/provider/main_store_provider.dart';
 
 final historyControllerProvider =
     AsyncNotifierProvider.family<

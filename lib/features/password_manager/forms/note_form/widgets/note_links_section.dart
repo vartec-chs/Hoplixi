@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/forms/note_form/providers/note_form_provider.dart';
-import 'package:hoplixi/db_core/models/dto/linked_vault_item_card_dto.dart';
-import 'package:hoplixi/db_core/provider/dao_providers.dart';
+import 'package:hoplixi/db_core/old/models/dto/linked_vault_item_card_dto.dart';
+import 'package:hoplixi/db_core/old/provider/dao_providers.dart';
 
 /// Секция для отображения связей заметки с vault items.
 class NoteLinksSection extends ConsumerWidget {

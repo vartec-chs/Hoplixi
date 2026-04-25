@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/index.dart';
-import 'package:hoplixi/db_core/models/dto/category_dto.dart';
-import 'package:hoplixi/db_core/models/enums/index.dart';
-import 'package:hoplixi/db_core/provider/dao_providers.dart';
+import 'package:hoplixi/db_core/old/models/dto/category_dto.dart';
+import 'package:hoplixi/db_core/old/models/enums/index.dart';
+import 'package:hoplixi/db_core/old/provider/dao_providers.dart';
 
 import '../models/category_pagination_state.dart';
 import 'category_filter_provider.dart';

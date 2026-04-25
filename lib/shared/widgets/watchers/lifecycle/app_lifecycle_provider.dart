@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/db_core/provider/main_store_provider.dart';
+import 'package:hoplixi/db_core/old/provider/main_store_provider.dart';
 
 class AppLifecycleNotifier extends Notifier<AppLifecycleState> {
   static const String _logTag = 'AppLifecycle';

@@ -1,10 +1,10 @@
 import 'dart:math' show exp;
 
 import 'package:drift/drift.dart';
-import 'package:hoplixi/db_core/models/dto/category_dto.dart';
-import 'package:hoplixi/db_core/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/db_core/models/dto/linked_vault_item_card_dto.dart';
-import 'package:hoplixi/db_core/models/dto/tag_dto.dart';
+import 'package:hoplixi/db_core/old/models/dto/category_dto.dart';
+import 'package:hoplixi/db_core/old/models/dto/icon_ref_dto.dart';
+import 'package:hoplixi/db_core/old/models/dto/linked_vault_item_card_dto.dart';
+import 'package:hoplixi/db_core/old/models/dto/tag_dto.dart';
 import 'package:hoplixi/db_core/db/main_store.dart';
 import 'package:hoplixi/db_core/db/tables/item_tags.dart';
 import 'package:hoplixi/db_core/db/tables/vault_items.dart';

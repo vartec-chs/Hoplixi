@@ -1,8 +1,8 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/db_core/db/main_store.dart';
-import 'package:hoplixi/db_core/models/dto/icon_dto.dart';
-import 'package:hoplixi/db_core/models/enums/index.dart';
-import 'package:hoplixi/db_core/models/filter/icons_filter.dart';
+import 'package:hoplixi/db_core/old/models/dto/icon_dto.dart';
+import 'package:hoplixi/db_core/old/models/enums/index.dart';
+import 'package:hoplixi/db_core/old/models/filter/icons_filter.dart';
 import 'package:hoplixi/db_core/db/tables/icons.dart';
 import 'package:uuid/uuid.dart';
 

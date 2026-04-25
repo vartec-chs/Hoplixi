@@ -1,11 +1,11 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/db_core/db/dao/filters_dao/filter.dart';
 import 'package:hoplixi/db_core/db/main_store.dart';
-import 'package:hoplixi/db_core/models/dto/category_dto.dart';
-import 'package:hoplixi/db_core/models/dto/document_dto.dart';
-import 'package:hoplixi/db_core/models/dto/tag_dto.dart';
-import 'package:hoplixi/db_core/models/filter/base_filter.dart';
-import 'package:hoplixi/db_core/models/filter/documents_filter.dart';
+import 'package:hoplixi/db_core/old/models/dto/category_dto.dart';
+import 'package:hoplixi/db_core/old/models/dto/document_dto.dart';
+import 'package:hoplixi/db_core/old/models/dto/tag_dto.dart';
+import 'package:hoplixi/db_core/old/models/filter/base_filter.dart';
+import 'package:hoplixi/db_core/old/models/filter/documents_filter.dart';
 import 'package:hoplixi/db_core/db/tables/categories.dart';
 import 'package:hoplixi/db_core/db/tables/document_items.dart';
 import 'package:hoplixi/db_core/db/tables/item_tags.dart';

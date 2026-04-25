@@ -1,10 +1,10 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/core/logger/index.dart';
 import 'package:hoplixi/db_core/db/main_store.dart';
-import 'package:hoplixi/db_core/models/dto/index.dart';
-import 'package:hoplixi/db_core/models/enums/entity_types.dart';
-import 'package:hoplixi/db_core/models/dto/tag_dto.dart';
-import 'package:hoplixi/db_core/models/graph_data.dart';
+import 'package:hoplixi/db_core/old/models/dto/index.dart';
+import 'package:hoplixi/db_core/old/models/enums/entity_types.dart';
+import 'package:hoplixi/db_core/old/models/dto/tag_dto.dart';
+import 'package:hoplixi/db_core/old/models/graph_data.dart';
 import 'package:hoplixi/shared/utils/vault_link_utils.dart';
 import 'package:hoplixi/db_core/db/tables/categories.dart';
 import 'package:hoplixi/db_core/db/tables/item_tags.dart';

@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/models.dart' as logger_models;
-import 'package:hoplixi/db_core/models/dto/main_store_dto.dart';
-import 'package:hoplixi/db_core/models/store_manifest.dart';
-import 'package:hoplixi/db_core/services/main_store_storage_service.dart';
-import 'package:hoplixi/db_core/services/store_manifest_service.dart';
+import 'package:hoplixi/db_core/old/models/dto/main_store_dto.dart';
+import 'package:hoplixi/db_core/old/models/store_manifest.dart';
+import 'package:hoplixi/db_core/old/services/main_store_storage_service.dart';
+import 'package:hoplixi/db_core/old/services/store_manifest_service.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/attachments_manifest.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/attachments_manifest_file_service.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_hash_service.dart';

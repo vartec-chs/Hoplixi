@@ -1,9 +1,9 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/db_core/db/main_store.dart';
-import 'package:hoplixi/db_core/models/dto/category_dto.dart';
-import 'package:hoplixi/db_core/models/dto/category_tree_node.dart';
-import 'package:hoplixi/db_core/models/enums/index.dart';
-import 'package:hoplixi/db_core/models/filter/categories_filter.dart';
+import 'package:hoplixi/db_core/old/models/dto/category_dto.dart';
+import 'package:hoplixi/db_core/old/models/dto/category_tree_node.dart';
+import 'package:hoplixi/db_core/old/models/enums/index.dart';
+import 'package:hoplixi/db_core/old/models/filter/categories_filter.dart';
 import 'package:hoplixi/db_core/db/tables/categories.dart';
 import 'package:uuid/uuid.dart';
 

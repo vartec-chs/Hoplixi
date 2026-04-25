@@ -1,8 +1,8 @@
 ﻿import 'package:drift/drift.dart';
 import 'package:hoplixi/db_core/db/main_store.dart';
-import 'package:hoplixi/db_core/models/base_main_entity_dao.dart';
-import 'package:hoplixi/db_core/models/dto/loyalty_card_dto.dart';
-import 'package:hoplixi/db_core/models/enums/index.dart';
+import 'package:hoplixi/db_core/old/models/base_main_entity_dao.dart';
+import 'package:hoplixi/db_core/old/models/dto/loyalty_card_dto.dart';
+import 'package:hoplixi/db_core/old/models/enums/index.dart';
 import 'package:hoplixi/db_core/db/tables/loyalty_card_items.dart';
 import 'package:hoplixi/db_core/db/tables/vault_items.dart';
 import 'package:uuid/uuid.dart';

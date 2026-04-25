@@ -1,8 +1,8 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/db_core/db/main_store.dart';
-import 'package:hoplixi/db_core/models/base_main_entity_dao.dart';
-import 'package:hoplixi/db_core/models/dto/recovery_codes_dto.dart';
-import 'package:hoplixi/db_core/models/enums/index.dart';
+import 'package:hoplixi/db_core/old/models/base_main_entity_dao.dart';
+import 'package:hoplixi/db_core/old/models/dto/recovery_codes_dto.dart';
+import 'package:hoplixi/db_core/old/models/enums/index.dart';
 import 'package:hoplixi/db_core/db/tables/recovery_codes.dart';
 import 'package:hoplixi/db_core/db/tables/recovery_codes_items.dart';
 import 'package:hoplixi/db_core/db/tables/vault_items.dart';

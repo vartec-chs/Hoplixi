@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/db_core/models/dto/icon_ref_dto.dart';
+import 'package:hoplixi/db_core/old/models/dto/icon_ref_dto.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
-import 'package:hoplixi/db_core/models/enums/entity_types.dart';
+import 'package:hoplixi/db_core/old/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/modal_sheet_close_button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';

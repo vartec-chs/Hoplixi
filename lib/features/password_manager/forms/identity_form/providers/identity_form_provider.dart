@@ -2,8 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/db_core/models/dto/index.dart';
-import 'package:hoplixi/db_core/provider/dao_providers.dart';
+import 'package:hoplixi/db_core/old/models/dto/index.dart';
+import 'package:hoplixi/db_core/old/provider/dao_providers.dart';
 
 import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';

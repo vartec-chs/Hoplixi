@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/models/note_picker_models.dart';
-import 'package:hoplixi/db_core/models/filter/base_filter.dart';
-import 'package:hoplixi/db_core/models/filter/notes_filter.dart';
-import 'package:hoplixi/db_core/provider/main_store_provider.dart';
+import 'package:hoplixi/db_core/old/models/filter/base_filter.dart';
+import 'package:hoplixi/db_core/old/models/filter/notes_filter.dart';
+import 'package:hoplixi/db_core/old/provider/main_store_provider.dart';
 
 const int pageSize = 20;
 

@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/db_core/models/enums/index.dart';
+import 'package:hoplixi/db_core/old/models/enums/index.dart';
 
 import 'vault_items.dart';
 

@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hoplixi/db_core/models/dto/icon_dto.dart';
+import 'package:hoplixi/db_core/old/models/dto/icon_dto.dart';
 
 part 'icon_picker_state.freezed.dart';
 

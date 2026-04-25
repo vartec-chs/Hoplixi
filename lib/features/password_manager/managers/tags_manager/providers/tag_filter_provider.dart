@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
-import 'package:hoplixi/db_core/models/enums/index.dart';
-import 'package:hoplixi/db_core/models/filter/tags_filter.dart';
+import 'package:hoplixi/db_core/old/models/enums/index.dart';
+import 'package:hoplixi/db_core/old/models/filter/tags_filter.dart';
 
 /// Провайдер для управления состоянием фильтра тегов
 final tagFilterProvider = NotifierProvider<TagFilterNotifier, TagsFilter>(

@@ -1,4 +1,4 @@
-import 'package:hoplixi/db_core/models/dto/index.dart';
+import 'package:hoplixi/db_core/old/models/dto/index.dart';
 
 /// Общий контракт для DAO, возвращающих отфильтрованные DTO и их количество.
 abstract class FilterDao<TFilter, TDto extends BaseCardDto> {

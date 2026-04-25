@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/db_core/models/dto/note_dto.dart';
+import 'package:hoplixi/db_core/old/models/dto/note_dto.dart';
 
 /// Элемент списка заметок
 class NoteListTile extends StatelessWidget {
