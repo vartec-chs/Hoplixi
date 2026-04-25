@@ -8,6 +8,7 @@ enum ValidationErrorCode {
   tooLong('VALIDATION_TOO_LONG'),
   invalidFormat('VALIDATION_INVALID_FORMAT'),
   outOfRange('VALIDATION_OUT_OF_RANGE'),
+  alreadyExists('VALIDATION_ALREADY_EXISTS'),
   unknown('VALIDATION_UNKNOWN');
 
   final String value;

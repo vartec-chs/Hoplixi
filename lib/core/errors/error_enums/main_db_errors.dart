@@ -5,6 +5,7 @@ enum MainDatabaseErrorCode {
   invalidPassword('DB_INVALID_PASSWORD'),
   notInitialized('DB_NOT_INITIALIZED'),
   alreadyInitialized('DB_ALREADY_INITIALIZED'),
+  alreadyOpen('DB_STORE_ALREADY_OPEN'),
   connectionFailed('DB_CONNECTION_FAILED'),
   queryFailed('DB_QUERY_FAILED'),
   recordNotFound('DB_RECORD_NOT_FOUND'),
