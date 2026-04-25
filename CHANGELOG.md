@@ -50,6 +50,9 @@
   опционально сохранённым master password.
 - Для записи history используется фактический `session.storeDirectoryPath`,
   возвращённый `CreateMainStore`, без повторного вычисления пути в сервисе.
+- Ошибка записи в `DatabaseHistoryService` больше не делает `createStore(...)`
+  неуспешным: созданная сессия возвращается как `Success(session)`, а сбой
+  history логируется как warning.
 
 ### db_core (store cleanup)
 

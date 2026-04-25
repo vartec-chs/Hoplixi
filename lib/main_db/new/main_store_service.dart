@@ -45,22 +45,17 @@ class MainStoreService {
         logInfo('Created history entry for new store', tag: _logTag);
         return Success(session);
       } catch (error, stackTrace) {
-        await session.store.close();
-        logError(
+        logWarning(
           'Failed to create history entry for new store',
-          error: error,
-          stackTrace: stackTrace,
           tag: _logTag,
+          data: {
+            'storeId': session.info.id,
+            'storePath': session.storeDirectoryPath,
+            'error': error.toString(),
+            'stackTrace': stackTrace.toString(),
+          },
         );
-        return Failure(
-          AppError.mainDatabase(
-            code: MainDatabaseErrorCode.queryFailed,
-            message: 'Не удалось добавить хранилище в историю: $error',
-            cause: error,
-            stackTrace: stackTrace,
-            timestamp: DateTime.now(),
-          ),
-        );
+        return Success(session);
       }
     });
   }
