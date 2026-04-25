@@ -53,6 +53,12 @@
 - `MainStoreService.openStore(...)` подключён к `OpenMainStore` и после
   успешного открытия создаёт или обновляет запись `DatabaseHistoryService`;
   ошибка history логируется warning и не отменяет открытую сессию.
+- Добавлен use case `CloseMainStore` для закрытия `MainStore`; новый
+  `MainStoreManager.closeStore(...)` принимает `Session` явно и не хранит
+  состояние открытого стора внутри manager.
+- `MainStoreManager` оставлен stateless-оркестратором use case’ов:
+  `createStore/openStore` возвращают `Session`, а владение текущей сессией
+  будет вынесено в отдельный provider.
 - Поток создания нового стора вынесен из `MainStoreFactory` в use case
   `CreateMainStore` (`lib/main_db/new/usecases/create_main_store.dart`) с единым
   входом `call(...)`; `MainStoreService` теперь зависит от use case.

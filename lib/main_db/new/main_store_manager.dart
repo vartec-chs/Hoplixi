@@ -2,26 +2,30 @@ import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/index.dart' hide Session;
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:hoplixi/main_db/new/services/db_history_services/db_history_services.dart';
+import 'package:hoplixi/main_db/new/usecases/close_main_store.dart';
 import 'package:hoplixi/main_db/new/usecases/create_main_store.dart';
 import 'package:hoplixi/main_db/new/usecases/open_main_store.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:synchronized/synchronized.dart';
 
 class MainStoreManager {
-  static const String _logTag = 'MainStoreService';
+  static const String _logTag = 'MainStoreManager';
 
   final Lock _lock = Lock();
   final DatabaseHistoryService _dbHistoryService;
   final CreateMainStore _createMainStore;
   final OpenMainStore _openMainStore;
+  final CloseMainStore _closeMainStore;
 
   MainStoreManager({
     required DatabaseHistoryService dbHistoryService,
     CreateMainStore? createMainStore,
     OpenMainStore? openMainStore,
+    CloseMainStore? closeMainStore,
   }) : _dbHistoryService = dbHistoryService,
        _createMainStore = createMainStore ?? CreateMainStore(),
-       _openMainStore = openMainStore ?? OpenMainStore();
+       _openMainStore = openMainStore ?? OpenMainStore(),
+       _closeMainStore = closeMainStore ?? CloseMainStore();
 
   AsyncResultDart<Session, AppError> createStore(
     CreateStoreDto dto,
@@ -116,6 +120,10 @@ class MainStoreManager {
         return Success(session);
       }
     });
+  }
+
+  AsyncResultDart<Unit, AppError> closeStore(Session session) async {
+    return _lock.synchronized(() => _closeMainStore(session: session));
   }
 
   AsyncResultDart<StoreInfoDto, AppError> updateStore(
