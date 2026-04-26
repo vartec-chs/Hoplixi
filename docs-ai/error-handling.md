@@ -28,8 +28,9 @@ generic parameters they accept.
   functions. Не нужно писать `Future<ResultDart<...>>` вручную, просто
   используйте `AsyncResultDart`.
 
-These types should be used when you want explicit, typed error values (for
-example `AuthError`, `ValidationError`, `NetworkError`).
+These types should be used when you want explicit, typed error values (in this
+project: `AppError`, for example `AppError.auth`, `AppError.validation`,
+`AppError.network`).
 
 ### Short-hand types (single generic parameter)
 
@@ -64,16 +65,16 @@ layer.
 
 1. **Return `ResultDart` / `AsyncResultDart` from business-layer APIs.** Make
    success/failure explicit in the function signature.
-2. **Prefer typed errors for domain logic.** Use `ResultDart<S, MyError>` where
-   `MyError` is an enum/sealed class describing failure kinds.
+2. **Prefer typed errors for domain logic.** In this project, default to
+   `ResultDart<S, AppError>` / `AsyncResultDart<S, AppError>`.
 3. **Leave `try/catch` to adapter layers** (network, platform interop) that
-   convert exceptions to typed failures.
+   convert exceptions to `Failure(AppError...)`.
 4. **UI and state layers should use `fold`** or mapping helpers to convert
    results into `LoadedState` / `ErrorState` values.
 5. **Centralize error enrichment and logging.** Use `mapError` in a single place
    to produce user-facing errors.
 6. **Avoid `throw` inside business logic.** Convert thrown exceptions at the
-   boundary to `Failure(...)`.
+   boundary to `Failure(AppError...)`.
 
 ---
 
@@ -179,8 +180,8 @@ Future<dynamic> loadProductsToState() async {
 - Use `Result<S>` / `AsyncResult<S>` when you prefer **concise signatures** and
   an unspecified/default error type is acceptable.
 
-Common pattern: adapters convert raw exceptions into domain-specific error
-types; domain logic exposes those error types via `ResultDart`.
+Common pattern: adapters convert raw exceptions into `AppError`; domain logic
+exposes those error values via `ResultDart`.
 
 ---
 
@@ -227,28 +228,41 @@ Adopt `result_dart` when you want:
 ---
 
 **Guideline:** Avoid throwing from business logic; always return `Success(...)`
-or `Failure(...)`. This keeps control flow explicit and simplifies agent
+or `Failure(AppError...)`. This keeps control flow explicit and simplifies agent
 behaviour when composing steps.
 
-## Custom error type
+## Project error model (`AppError`)
+
+Use the existing shared error model in `lib/core/errors/app_error.dart`. Prefer
+`AppError` variants over introducing ad-hoc custom error classes.
 
 ```dart
-import 'package:freezed_annotation/freezed_annotation.dart';
+ResultDart<User, AppError> validateInput(String username) {
+  if (username.trim().isEmpty) {
+    return Failure(
+      AppError.validation(
+        code: ValidationErrorCode.unknown,
+        message: 'Username is required',
+      ),
+    );
+  }
 
-part 'db_errors.freezed.dart';
+  return Success(User(username: username));
+}
 
-@freezed
-abstract class DatabaseError with _$DatabaseError implements Exception {
-  const DatabaseError._();
-
-  const factory DatabaseError.invalidPassword({
-    @Default('DB_INVALID_PASSWORD') String code,
-    @Default('Неверный пароль для базы данных') String message,
-    Map<String, dynamic>? data,
-    @JsonKey(includeToJson: true) StackTrace? stackTrace,
-    @JsonKey(includeToJson: true) DateTime? timestamp,
-  }) = InvalidPasswordError;
-
-	...and so on for other error types
+AsyncResultDart<FileData, AppError> loadFile(String path) async {
+  try {
+    final bytes = await readBytes(path);
+    return Success(FileData(bytes));
+  } catch (e, st) {
+    return Failure(
+      AppError.fileSystem(
+        code: FileSystemErrorCode.unknown,
+        message: 'Failed to read file',
+        cause: e,
+        stackTrace: st,
+      ),
+    );
+  }
 }
 ```

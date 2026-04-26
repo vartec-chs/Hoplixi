@@ -8,10 +8,11 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/errors/errors.dart';
-import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/core/logger/index.dart' hide Session;
 import 'package:hoplixi/core/logger/models.dart' as logger_models;
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
+import 'package:hoplixi/main_db/new/models/session.dart';
 import 'package:hoplixi/main_db/new/models/store_key_config.dart';
 import 'package:hoplixi/main_db/new/services/db_key_derivation_service.dart';
 import 'package:hoplixi/main_db/new/services/main_store_connection_service.dart';
@@ -24,11 +25,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as p;
 import 'package:result_dart/result_dart.dart';
 
-typedef Session = ({
-  MainStore store,
-  StoreInfoDto info,
-  String storeDirectoryPath,
-});
 
 class CreateMainStore {
   static const String _logTag = 'CreateMainStore';

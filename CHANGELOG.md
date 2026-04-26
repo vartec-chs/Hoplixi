@@ -1,5 +1,43 @@
 # CHANGELOG
 
+## 2026-04-26
+
+### db_core (new main store manager)
+
+- Добавлен `mainStoreManagerStateProvider` для new-ветки:
+  `AsyncNotifierProvider<MainStoreManagerNotifier, DatabaseState>` управляет
+  состоянием `create/open/close/update` поверх `MainStoreManager` без
+  дополнительного lock-слоя.
+- В `lib/main_db/new/main_store_manager.dart` возвращено stateful-поведение
+  manager как в old-версии: добавлены поля текущего стора (`MainStore`) и
+  текущей `Session`, а также геттеры
+  `isStoreOpen/currentStore/currentSession/currentStorePath`.
+- В `createStore(...)` и `openStore(...)` текущая сессия теперь сохраняется в
+  менеджере после успешного открытия.
+- В `closeStore(...)` текущий state очищается после успешного закрытия
+  соответствующей сессии; в `updateStore(...)` обновляется `currentSession.info`
+  для активного стора.
+- `closeStore(...)` теперь закрывает именно текущий активный стор из state
+  менеджера (`currentSession`), а при передаче неактивной сессии логирует
+  warning и всё равно закрывает активную.
+- В `MainStoreManager.closeStore(...)` (new-ветка) удалён параметр `session`:
+  метод закрывает только текущую активную `currentSession` из внутреннего
+  состояния менеджера.
+
+### docs (agents / errors)
+
+- Обновлён `AGENTS.md` под новую систему ошибок: правило для доменных/DB-flow
+  переведено с `DatabaseError` на типизированные результаты с `AppError`
+  (`ResultDart<T, AppError>` / `AsyncResultDart<T, AppError>`).
+- В `AGENTS.md` добавлено явное требование не бросать исключения в
+  business/domain-слое и конвертировать boundary-исключения в
+  `Failure(AppError...)`.
+- В done criteria `AGENTS.md` уточнено, что явная обработка ошибок должна идти
+  через typed results и `AppError` mapping.
+- `docs-ai/error-handling.md` синхронизирован с новой моделью ошибок:
+  рекомендации и guideline закрепляют `Failure(AppError...)`, а устаревший
+  пример `DatabaseError` заменён на секцию про проектный `AppError`.
+
 ## 2026-04-25
 
 ### db_core (update store usecase)

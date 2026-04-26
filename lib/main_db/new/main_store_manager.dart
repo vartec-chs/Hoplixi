@@ -1,6 +1,8 @@
 import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/index.dart' hide Session;
+import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
+import 'package:hoplixi/main_db/new/models/session.dart';
 import 'package:hoplixi/main_db/new/services/db_history_services/db_history_services.dart';
 import 'package:hoplixi/main_db/new/usecases/close_main_store.dart';
 import 'package:hoplixi/main_db/new/usecases/create_main_store.dart';
@@ -9,8 +11,8 @@ import 'package:hoplixi/main_db/new/usecases/update_main_store.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:synchronized/synchronized.dart';
 
-class MainStoreService  {
-  static const String _logTag = 'MainStoreService';
+class MainStoreManager {
+  static const String _logTag = 'MainStoreManager';
 
   final Lock _lock = Lock();
   final DatabaseHistoryService _dbHistoryService;
@@ -19,7 +21,10 @@ class MainStoreService  {
   final CloseMainStore _closeMainStore;
   final UpdateMainStore _updateMainStore;
 
-  MainStoreService({
+  MainStore? _currentStore;
+  Session? _currentSession;
+
+  MainStoreManager({
     required DatabaseHistoryService dbHistoryService,
     CreateMainStore? createMainStore,
     OpenMainStore? openMainStore,
@@ -30,6 +35,35 @@ class MainStoreService  {
        _openMainStore = openMainStore ?? OpenMainStore(),
        _closeMainStore = closeMainStore ?? CloseMainStore(),
        _updateMainStore = updateMainStore ?? UpdateMainStore();
+
+  bool get isStoreOpen => _currentStore != null && _currentSession != null;
+
+  MainStore? get currentStore =>
+      _currentStore; // Предоставляет доступ к текущему открытому MainStore, или null если БД не открыта
+
+  Session? get currentSession =>
+      _currentSession; // Предоставляет доступ к текущей сессии, которая включает MainStore, информацию о хранилище и путь к директории. Может быть null, если БД не открыта
+
+  String? get currentStorePath => _currentSession?.storeDirectoryPath;
+
+  void _setCurrentSession(Session session) {
+    _currentStore = session.store;
+    _currentSession = session;
+  }
+
+  void _clearCurrentSessionIfMatches(Session session) {
+    if (_currentSession == null) {
+      return;
+    }
+
+    final isSameStorePath =
+        _currentSession!.storeDirectoryPath == session.storeDirectoryPath;
+    final isSameStoreInstance = identical(_currentStore, session.store);
+    if (isSameStorePath || isSameStoreInstance) {
+      _currentStore = null;
+      _currentSession = null;
+    }
+  }
 
   AsyncResultDart<Session, AppError> createStore(
     CreateStoreDto dto,
@@ -45,6 +79,7 @@ class MainStoreService  {
       }
 
       final session = result.getOrThrow();
+      _setCurrentSession(session);
       try {
         await _dbHistoryService.create(
           path: session.storeDirectoryPath,
@@ -88,6 +123,7 @@ class MainStoreService  {
       }
 
       final session = result.getOrThrow();
+      _setCurrentSession(session);
       try {
         final existingHistory = await _dbHistoryService.getByPath(
           session.storeDirectoryPath,
@@ -126,8 +162,26 @@ class MainStoreService  {
     });
   }
 
-  AsyncResultDart<Unit, AppError> closeStore(Session session) async {
-    return _lock.synchronized(() => _closeMainStore(session: session));
+  AsyncResultDart<Unit, AppError> closeStore() async {
+    return _lock.synchronized(() async {
+      final sessionToClose = _currentSession;
+      if (sessionToClose == null) {
+        return Failure(
+          AppError.mainDatabase(
+            code: MainDatabaseErrorCode.notInitialized,
+            message: 'Хранилище не открыто',
+            timestamp: DateTime.now(),
+          ),
+        );
+      }
+
+      final result = await _closeMainStore(session: sessionToClose);
+      if (result.isSuccess()) {
+        _clearCurrentSessionIfMatches(sessionToClose);
+      }
+
+      return result;
+    });
   }
 
   AsyncResultDart<StoreInfoDto, AppError> updateStore(
@@ -141,6 +195,14 @@ class MainStoreService  {
       }
 
       final storeInfo = result.getOrThrow();
+      if (_currentSession?.storeDirectoryPath == session.storeDirectoryPath) {
+        _setCurrentSession((
+          store: session.store,
+          info: storeInfo,
+          storeDirectoryPath: session.storeDirectoryPath,
+        ));
+      }
+
       try {
         final historyEntry = await _dbHistoryService.getByPath(
           session.storeDirectoryPath,

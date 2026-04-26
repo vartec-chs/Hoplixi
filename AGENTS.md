@@ -27,7 +27,10 @@ context.
 - Use project logging (`logInfo/logWarning/logError/...`), not `print()`.
 - Use Riverpod 3+ patterns; do not use deprecated providers.
 - Do not use `@riverpod` code generation in this project.
-- For DB domain flows, keep `AsyncResult<T, DatabaseError>` patterns.
+- For DB and domain flows, keep typed result patterns with `AppError`
+  (`ResultDart<T, AppError>` / `AsyncResultDart<T, AppError>`).
+- Avoid throwing from business/domain logic; convert boundary exceptions to
+  `Failure(AppError...)`.
 - Prefer Dart/Flutter MCP tools over shell commands for Flutter/Dart workflows
   (for example: use MCP formatter tools instead of CLI commands like
   `dart format` / `flutter format`).
@@ -87,5 +90,6 @@ Never override project rules with generic recommendations.
 
 - Implementation follows task-specific docs and project rules.
 - No sensitive data exposure introduced.
-- Errors are handled explicitly (UI and domain layers).
+- Errors are handled explicitly via typed results and `AppError` mapping (UI and
+  domain layers).
 - Changes are reflected in `CHANGELOG.md`.

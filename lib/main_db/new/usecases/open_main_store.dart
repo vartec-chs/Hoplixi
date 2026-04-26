@@ -5,6 +5,7 @@ import 'package:hoplixi/core/logger/index.dart' hide Session;
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
+import 'package:hoplixi/main_db/new/models/session.dart';
 import 'package:hoplixi/main_db/new/models/store_key_config.dart';
 import 'package:hoplixi/main_db/new/services/db_key_derivation_service.dart';
 import 'package:hoplixi/main_db/new/services/main_store_compatibility_service/main_store_compatibility_service.dart';
@@ -13,8 +14,6 @@ import 'package:hoplixi/main_db/new/services/main_store_connection_service.dart'
 import 'package:hoplixi/main_db/new/services/main_store_storage_service.dart';
 import 'package:hoplixi/main_db/new/services/store_manifest_service/model/store_manifest.dart';
 import 'package:hoplixi/main_db/new/services/store_manifest_service/store_manifest_service.dart';
-import 'package:hoplixi/main_db/new/usecases/create_main_store.dart'
-    show Session;
 import 'package:hoplixi/main_db/new/usecases/utils/error_handling.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:result_dart/result_dart.dart';
