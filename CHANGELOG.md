@@ -4,12 +4,19 @@
 
 ### db_core (new main store manager)
 
+- Добавлен `closeSyncTrackingProvider` для new-ветки: Riverpod-state для
+  отслеживания `openedModifiedAt`, `forceUpload` и pending close-sync prompt.
+- `CloseSyncTrackingState` оставлен простым immutable state-контейнером, вся
+  логика изменения close-sync tracking перенесена в notifier.
+- `MainStoreManagerNotifier` теперь стартует close-sync tracking после успешного
+  `create/open` и сбрасывает его при закрытии/reset состояния.
 - Добавлен `mainStoreManagerStateProvider` для new-ветки:
   `AsyncNotifierProvider<MainStoreManagerNotifier, DatabaseState>` управляет
   состоянием `create/open/close/update` поверх `MainStoreManager` без
   дополнительного lock-слоя.
 - `MainStoreManager.openStore(...)` в new-ветке теперь после успешного открытия
-  запускает стартовую очистку хранилища через `unawaited(...)`, как old-provider.
+  запускает стартовую очистку хранилища через `unawaited(...)`, как
+  old-provider.
 - В `lib/main_db/new/main_store_manager.dart` возвращено stateful-поведение
   manager как в old-версии: добавлены поля текущего стора (`MainStore`) и
   текущей `Session`, а также геттеры
@@ -25,6 +32,9 @@
 - В `MainStoreManager.closeStore(...)` (new-ветка) удалён параметр `session`:
   метод закрывает только текущую активную `currentSession` из внутреннего
   состояния менеджера.
+- В `MainStoreManager` (new-ветка) добавлен метод
+  `getStoreMeta(MainStore database)` для чтения `StoreMeta` с явным
+  `AppError.mainDatabase`-маппингом (`recordNotFound` / `queryFailed`).
 
 ### docs (agents / errors)
 

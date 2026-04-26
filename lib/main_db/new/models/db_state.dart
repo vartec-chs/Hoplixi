@@ -10,7 +10,8 @@ enum DatabaseStatus {
   open, // База данных успешно открыта, активная сессия существует
   locked, // База данных заблокирована сессия уничтожена, требуется повторная аутентификация для открытия
   loading, // Процесс загрузки данных из базы данных (асинхронный)
-  closingSync, // Процесс синхронизации cloud sync при закрытии базы данных (асинхронный)
+  closing, // Процесс закрытия базы данных (асинхронный)
+  closingWithCloudSync, // Процесс синхронизации cloud sync при закрытии базы данных (асинхронный)
   closed, // База данных закрыта, сессия уничтожена
   error, // Произошла ошибка при открытии, загрузке или синхронизации базы данных
 }
@@ -34,6 +35,8 @@ sealed class DatabaseState with _$DatabaseState {
   bool get isClosed => status == DatabaseStatus.closed;
   bool get isLocked => status == DatabaseStatus.locked;
   bool get isLoading => status == DatabaseStatus.loading;
-  bool get isClosingSync => status == DatabaseStatus.closingSync;
+  bool get isClosing => status == DatabaseStatus.closing;
+  bool get isClosingWithCloudSync =>
+      status == DatabaseStatus.closingWithCloudSync;
   bool get hasError => status == DatabaseStatus.error;
 }

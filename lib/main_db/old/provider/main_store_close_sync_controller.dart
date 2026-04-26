@@ -33,6 +33,7 @@ class MainStoreCloseSyncController {
   bool _pendingSnapshotUploadPromptOnClose = false;
   Completer<bool>? _closeStoreUploadDecision;
 
+  // 
   Future<void> tryUploadSnapshotBeforeClose({
     required MainStoreManager manager,
     required String logTag,

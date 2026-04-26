@@ -166,7 +166,7 @@ class MainStoreManager {
         );
       }
 
-      unawaited(_runStartupCleanup(session));
+      unawaited(runStartupCleanup(session));
       return Success(session);
     });
   }
@@ -260,7 +260,37 @@ class MainStoreManager {
     });
   }
 
-  Future<void> _runStartupCleanup(Session session) async {
+  AsyncResultDart<StoreMeta, AppError> getStoreMeta(MainStore database) async {
+    return _lock.synchronized(() async {
+      try {
+        final meta = await database.storeMetaDao.getStoreMeta();
+
+        if (meta == null) {
+          return Failure(
+            AppError.mainDatabase(
+              code: MainDatabaseErrorCode.recordNotFound,
+              message: 'Метаданные хранилища не найдены',
+              timestamp: DateTime.now(),
+            ),
+          );
+        }
+
+        return Success(meta);
+      } catch (error, stackTrace) {
+        return Failure(
+          AppError.mainDatabase(
+            code: MainDatabaseErrorCode.queryFailed,
+            message: 'Не удалось получить метаданные хранилища: $error',
+            cause: error,
+            stackTrace: stackTrace,
+            timestamp: DateTime.now(),
+          ),
+        );
+      }
+    });
+  }
+
+  Future<void> runStartupCleanup(Session session) async {
     try {
       final attachmentsPath = _storageService.getAttachmentsPath(
         session.storeDirectoryPath,

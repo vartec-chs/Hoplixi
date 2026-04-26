@@ -7,6 +7,7 @@ import 'package:hoplixi/main_db/new/models/session.dart';
 import 'package:riverpod/riverpod.dart';
 
 import '../main_store_manager.dart';
+import 'close_sync_tracking_provider.dart';
 import 'db_history_provider.dart';
 
 final mainStoreManagerProvider = FutureProvider<MainStoreManager>((ref) async {
@@ -58,7 +59,7 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
 
       return result.fold(
         (session) {
-          _setOpenedSession(session);
+          _setOpenedSession(session, forceUpload: true);
           logInfo('Store created', tag: _logTag, data: {'id': session.info.id});
           return true;
         },
@@ -78,7 +79,22 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
     }
   }
 
-  Future<bool> openStore(
+  Future<bool> openStore(OpenStoreDto dto, {String? masterPassword}) async {
+    return _openStore(dto, masterPassword: masterPassword);
+  }
+
+  Future<bool> openStoreWithMigration(
+    OpenStoreDto dto, {
+    String? masterPassword,
+  }) async {
+    return _openStore(
+      dto,
+      masterPassword: masterPassword,
+      allowMigration: true,
+    );
+  }
+
+  Future<bool> _openStore(
     OpenStoreDto dto, {
     String? masterPassword,
     bool allowMigration = false,
@@ -95,7 +111,7 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
 
       return result.fold(
         (session) {
-          _setOpenedSession(session);
+          _setOpenedSession(session, forceUpload: allowMigration);
           logInfo('Store opened', tag: _logTag, data: {'id': session.info.id});
           return true;
         },
@@ -126,13 +142,15 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
 
       final stateBeforeClose = _currentState;
       logInfo('Closing store', tag: _logTag);
-      _setState(stateBeforeClose.copyWith(status: DatabaseStatus.closingSync));
+      _setState(stateBeforeClose.copyWith(status: DatabaseStatus.closing));
 
       final result = await _manager.closeStore();
       return result.fold(
         (_) {
+          ref.read(closeSyncTrackingProvider.notifier).reset();
           _setState(const DatabaseState(status: DatabaseStatus.closed));
           logInfo('Store closed', tag: _logTag);
+          _setState(const DatabaseState(status: DatabaseStatus.idle));
           return true;
         },
         (error) {
@@ -208,6 +226,7 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
   }
 
   void resetState() {
+    ref.read(closeSyncTrackingProvider.notifier).reset();
     _setState(const DatabaseState(status: DatabaseStatus.closed));
   }
 
@@ -215,7 +234,10 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
     state = AsyncData(newState);
   }
 
-  void _setOpenedSession(Session session) {
+  void _setOpenedSession(Session session, {bool forceUpload = false}) {
+    ref
+        .read(closeSyncTrackingProvider.notifier)
+        .start(session.info.modifiedAt, forceUpload: forceUpload);
     _setState(_stateFromSession(session));
   }
 
