@@ -8,6 +8,8 @@
   `AsyncNotifierProvider<MainStoreManagerNotifier, DatabaseState>` управляет
   состоянием `create/open/close/update` поверх `MainStoreManager` без
   дополнительного lock-слоя.
+- `MainStoreManager.openStore(...)` в new-ветке теперь после успешного открытия
+  запускает стартовую очистку хранилища через `unawaited(...)`, как old-provider.
 - В `lib/main_db/new/main_store_manager.dart` возвращено stateful-поведение
   manager как в old-версии: добавлены поля текущего стора (`MainStore`) и
   текущей `Session`, а также геттеры

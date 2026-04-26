@@ -1,13 +1,19 @@
+import 'dart:async';
+
 import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/index.dart' hide Session;
+import 'package:hoplixi/main_db/core/dao/index.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:hoplixi/main_db/new/models/session.dart';
 import 'package:hoplixi/main_db/new/services/db_history_services/db_history_services.dart';
+import 'package:hoplixi/main_db/new/services/main_store_storage_service.dart';
 import 'package:hoplixi/main_db/new/usecases/close_main_store.dart';
 import 'package:hoplixi/main_db/new/usecases/create_main_store.dart';
 import 'package:hoplixi/main_db/new/usecases/open_main_store.dart';
+import 'package:hoplixi/main_db/new/usecases/perform_store_cleanup.dart';
 import 'package:hoplixi/main_db/new/usecases/update_main_store.dart';
+import 'package:hoplixi/main_db/old/services/other/file_storage_service.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:synchronized/synchronized.dart';
 
@@ -20,6 +26,7 @@ class MainStoreManager {
   final OpenMainStore _openMainStore;
   final CloseMainStore _closeMainStore;
   final UpdateMainStore _updateMainStore;
+  final MainStoreFileService _storageService;
 
   MainStore? _currentStore;
   Session? _currentSession;
@@ -30,11 +37,13 @@ class MainStoreManager {
     OpenMainStore? openMainStore,
     CloseMainStore? closeMainStore,
     UpdateMainStore? updateMainStore,
+    MainStoreFileService? storageService,
   }) : _dbHistoryService = dbHistoryService,
        _createMainStore = createMainStore ?? CreateMainStore(),
        _openMainStore = openMainStore ?? OpenMainStore(),
        _closeMainStore = closeMainStore ?? CloseMainStore(),
-       _updateMainStore = updateMainStore ?? UpdateMainStore();
+       _updateMainStore = updateMainStore ?? UpdateMainStore(),
+       _storageService = storageService ?? const MainStoreFileService();
 
   bool get isStoreOpen => _currentStore != null && _currentSession != null;
 
@@ -144,8 +153,6 @@ class MainStoreManager {
           );
           logInfo('Updated existing history entry', tag: _logTag);
         }
-
-        return Success(session);
       } catch (error, stackTrace) {
         logWarning(
           'Failed to update history entry for opened store',
@@ -157,8 +164,10 @@ class MainStoreManager {
             'stackTrace': stackTrace.toString(),
           },
         );
-        return Success(session);
       }
+
+      unawaited(_runStartupCleanup(session));
+      return Success(session);
     });
   }
 
@@ -249,5 +258,44 @@ class MainStoreManager {
         return Success(storeInfo);
       }
     });
+  }
+
+  Future<void> _runStartupCleanup(Session session) async {
+    try {
+      final attachmentsPath = _storageService.getAttachmentsPath(
+        session.storeDirectoryPath,
+      );
+      final decryptedAttachmentsPath = _storageService
+          .getDecryptedAttachmentsPath(session.storeDirectoryPath);
+      final fileStorageService = FileStorageService(
+        session.store,
+        attachmentsPath,
+        decryptedAttachmentsPath,
+      );
+      final cleanup = PerformStoreCleanup(
+        StoreSettingsDao(session.store),
+        fileStorageService,
+      );
+      final result = await cleanup();
+      if (result.isSuccess) {
+        logInfo('Startup cleanup completed: ${result.message}', tag: _logTag);
+      } else {
+        logWarning(
+          'Startup cleanup failed: ${result.errorMessage ?? result.message}',
+          tag: _logTag,
+        );
+      }
+    } catch (error, stackTrace) {
+      logWarning(
+        'Unexpected startup cleanup error',
+        tag: _logTag,
+        data: {
+          'storeId': session.info.id,
+          'storePath': session.storeDirectoryPath,
+          'error': error.toString(),
+          'stackTrace': stackTrace.toString(),
+        },
+      );
+    }
   }
 }

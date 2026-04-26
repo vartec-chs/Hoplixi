@@ -39,7 +39,7 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
     _manager = manager;
 
     return _stateFromManager(manager) ??
-        const DatabaseState(status: DatabaseStatus.closed);
+        const DatabaseState(status: DatabaseStatus.idle);
   }
 
   Future<bool> createStore(CreateStoreDto dto, {String? masterPassword}) async {
