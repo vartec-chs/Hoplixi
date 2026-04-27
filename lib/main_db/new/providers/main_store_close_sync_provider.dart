@@ -32,7 +32,7 @@ class MainStoreCloseSyncNotifier
     extends AsyncNotifier<MainStoreCloseSyncState> {
   static const String _logTag = 'MainStoreCloseSyncNotifier';
 
-  _PreparedCloseSyncUpload? _preparedUpload;
+  Completer<bool>? _closeStoreUploadDecision;
 
   MainStoreCloseSyncState get _current =>
       state.value ?? const MainStoreCloseSyncState();
@@ -42,17 +42,15 @@ class MainStoreCloseSyncNotifier
 
   @override
   Future<MainStoreCloseSyncState> build() async {
-    ref.onDispose(() {
-      _preparedUpload = null;
-    });
+    ref.onDispose(_completePendingDecisionAsSkipped);
     return const MainStoreCloseSyncState();
   }
 
-  AsyncResultDart<CloseSyncStep, AppError> prepareUploadAfterClose({
+  AsyncResultDart<MainStoreCloseSyncOutcome, AppError>
+  uploadSnapshotAfterClose({
     required StoreInfoDto storeInfo,
     required String currentStorePath,
   }) async {
-    _preparedUpload = null;
     _setState(
       const MainStoreCloseSyncState(phase: MainStoreCloseSyncPhase.checking),
     );
@@ -86,7 +84,7 @@ class MainStoreCloseSyncNotifier
             'pendingSnapshotUploadPromptOnClose': tracking.pendingPrompt,
           },
         );
-        return Success(CloseSyncFinished(outcome));
+        return Success(outcome);
       }
 
       final cachedStatus = _service.reusableStatus(
@@ -105,7 +103,7 @@ class MainStoreCloseSyncNotifier
           MainStoreCloseSyncOutcomeType.noBinding,
         );
         _completeWithOutcome(outcome);
-        return Success(CloseSyncFinished(outcome));
+        return Success(outcome);
       }
 
       final token =
@@ -126,7 +124,7 @@ class MainStoreCloseSyncNotifier
           MainStoreCloseSyncOutcomeType.staleTokenBinding,
         );
         _completeWithOutcome(outcome);
-        return Success(CloseSyncFinished(outcome));
+        return Success(outcome);
       }
 
       final autoUploadEnabled = await _isAutoUploadEnabled();
@@ -143,7 +141,7 @@ class MainStoreCloseSyncNotifier
           MainStoreCloseSyncOutcomeType.offlineAutoUpload,
         );
         _completeWithOutcome(outcome);
-        return Success(CloseSyncFinished(outcome));
+        return Success(outcome);
       }
 
       final status = await _loadStatus(
@@ -155,14 +153,14 @@ class MainStoreCloseSyncNotifier
 
       return switch (status.compareResult) {
         StoreVersionCompareResult.remoteMissing ||
-        StoreVersionCompareResult.localNewer => _prepareDecisionOrAutoUpload(
+        StoreVersionCompareResult.localNewer => await _uploadIfAllowed(
           status: status,
           context: context,
           binding: binding,
           token: token,
           autoUploadEnabled: autoUploadEnabled,
         ),
-        StoreVersionCompareResult.same => _finishStep(
+        StoreVersionCompareResult.same => _completeWithOutcome(
           _service.skipped(MainStoreCloseSyncOutcomeType.alreadySynced),
           logMessage:
               'Skipping snapshot upload after close because local and remote versions match.',
@@ -170,7 +168,7 @@ class MainStoreCloseSyncNotifier
         ),
         StoreVersionCompareResult.remoteNewer ||
         StoreVersionCompareResult.conflict ||
-        StoreVersionCompareResult.differentStore => _finishStep(
+        StoreVersionCompareResult.differentStore => _completeWithOutcome(
           _service.skipped(
             MainStoreCloseSyncOutcomeType.manualResolutionRequired,
           ),
@@ -211,59 +209,12 @@ class MainStoreCloseSyncNotifier
     );
   }
 
-  AsyncResultDart<MainStoreCloseSyncOutcome, AppError>
-  continueUploadAfterDecision({required bool shouldUpload}) async {
-    final prepared = _preparedUpload;
-    if (prepared == null) {
-      final error = AppError.mainDatabase(
-        code: MainDatabaseErrorCode.notInitialized,
-        message: 'Нет подготовленного close-sync решения',
-        timestamp: DateTime.now(),
-      );
-      _setState(
-        _current.copyWith(phase: MainStoreCloseSyncPhase.failed, error: error),
-      );
-      return Failure(error);
-    }
-
-    if (!shouldUpload) {
-      _preparedUpload = null;
-      clearPublishedStatus();
-      logInfo(
-        'Skipping snapshot upload after close by user choice.',
-        tag: _logTag,
-        data: <String, dynamic>{'storeUuid': prepared.context.storeInfo.id},
-      );
-      return _completeWithOutcome(
-        _service.skipped(MainStoreCloseSyncOutcomeType.skippedByUser),
-      );
-    }
-
-    try {
-      return await _uploadPreparedStatus(prepared);
-    } catch (error, stackTrace) {
-      final closeSyncError = _service.buildCloseSyncFailure(
-        error,
-        stackTrace: stackTrace,
-      );
-      logError(
-        'Snapshot sync after close failed: $error',
-        stackTrace: stackTrace,
-        tag: _logTag,
-      );
-      ref.read(closeSyncTrackingProvider.notifier).markUploadRequired();
-      _setState(
-        _current.copyWith(
-          phase: MainStoreCloseSyncPhase.failed,
-          error: closeSyncError,
-        ),
-      );
-      return Failure(closeSyncError);
-    }
-  }
-
   void resolveUploadDecision(bool shouldUpload) {
-    unawaited(continueUploadAfterDecision(shouldUpload: shouldUpload));
+    final decision = _closeStoreUploadDecision;
+    if (decision == null || decision.isCompleted) {
+      return;
+    }
+    decision.complete(shouldUpload);
   }
 
   void resolveCloseStoreUploadDecision(bool shouldUpload) {
@@ -300,7 +251,7 @@ class MainStoreCloseSyncNotifier
   }
 
   void reset() {
-    _preparedUpload = null;
+    _completePendingDecisionAsSkipped();
     ref.read(closeStoreSyncStatusProvider.notifier).clear();
     _setState(const MainStoreCloseSyncState());
   }
@@ -340,65 +291,36 @@ class MainStoreCloseSyncNotifier
     );
   }
 
-  AsyncResultDart<CloseSyncStep, AppError> _prepareDecisionOrAutoUpload({
+  AsyncResultDart<MainStoreCloseSyncOutcome, AppError> _uploadIfAllowed({
     required StoreSyncStatus status,
     required _CloseSyncContext context,
     required StoreSyncBinding binding,
     required AuthTokenEntry token,
     required bool autoUploadEnabled,
   }) async {
-    final prepared = _PreparedCloseSyncUpload(
+    final shouldUpload = await _resolveUploadDecision(
       status: status,
-      context: context,
-      binding: binding,
-      token: token,
+      autoUploadEnabled: autoUploadEnabled,
     );
 
-    if (!autoUploadEnabled) {
-      _preparedUpload = prepared;
-      ref.read(closeSyncTrackingProvider.notifier).setPendingPrompt(true);
-      final promptStatus = _service.closePromptStatus(status);
-      _publishStatus(
-        promptStatus,
-        phase: MainStoreCloseSyncPhase.waitingForDecision,
+    if (!shouldUpload) {
+      clearPublishedStatus();
+      logInfo(
+        'Skipping snapshot upload after close by user choice.',
+        tag: _logTag,
+        data: <String, dynamic>{'storeUuid': context.storeInfo.id},
       );
-      return Success(CloseSyncDecisionRequired(promptStatus));
+      return _completeWithOutcome(
+        _service.skipped(MainStoreCloseSyncOutcomeType.skippedByUser),
+      );
     }
 
-    _preparedUpload = prepared;
-    final outcome = await _uploadPreparedStatus(prepared);
-    return outcome.fold<ResultDart<CloseSyncStep, AppError>>(
-      (value) => Success(CloseSyncFinished(value)),
-      (error) => Failure(error),
-    );
-  }
-
-  AsyncResultDart<CloseSyncStep, AppError> _finishStep(
-    MainStoreCloseSyncOutcome outcome, {
-    String? logMessage,
-    Map<String, dynamic>? logData,
-    bool warning = false,
-  }) async {
-    _completeWithOutcome(
-      outcome,
-      logMessage: logMessage,
-      logData: logData,
-      warning: warning,
-    );
-    return Success(CloseSyncFinished(outcome));
-  }
-
-  AsyncResultDart<MainStoreCloseSyncOutcome, AppError> _uploadPreparedStatus(
-    _PreparedCloseSyncUpload prepared,
-  ) async {
-    _preparedUpload = null;
-
     final baseStatus = _service.closeSyncBaseStatus(
-      status: prepared.status,
-      storePath: prepared.context.storePath,
-      storeInfo: prepared.context.storeInfo,
-      binding: prepared.binding,
-      token: prepared.token,
+      status: status,
+      storePath: context.storePath,
+      storeInfo: context.storeInfo,
+      binding: binding,
+      token: token,
     );
     _publishStatus(baseStatus, phase: MainStoreCloseSyncPhase.syncing);
 
@@ -408,9 +330,9 @@ class MainStoreCloseSyncNotifier
         stream: ref
             .read(snapshotSyncServiceProvider)
             .syncWithProgress(
-              storePath: prepared.context.storePath,
-              storeInfo: prepared.context.storeInfo,
-              binding: prepared.binding,
+              storePath: context.storePath,
+              storeInfo: context.storeInfo,
+              binding: binding,
             ),
       );
 
@@ -429,7 +351,7 @@ class MainStoreCloseSyncNotifier
         'Snapshot sync after close completed.',
         tag: _logTag,
         data: <String, dynamic>{
-          'storeUuid': prepared.context.storeInfo.id,
+          'storeUuid': context.storeInfo.id,
           'resultType': result.type.name,
         },
       );
@@ -437,13 +359,49 @@ class MainStoreCloseSyncNotifier
     } catch (error, stackTrace) {
       _reportManualReauthIfNeeded(
         error,
-        binding: prepared.binding,
-        token: prepared.token,
-        storeUuid: prepared.binding.storeUuid,
-        storePath: prepared.context.storePath,
+        binding: binding,
+        token: token,
+        storeUuid: binding.storeUuid,
+        storePath: context.storePath,
       );
       Error.throwWithStackTrace(error, stackTrace);
     }
+  }
+
+  Future<bool> _resolveUploadDecision({
+    required StoreSyncStatus status,
+    required bool autoUploadEnabled,
+  }) async {
+    final existing = _closeStoreUploadDecision;
+    if (existing != null) {
+      return existing.future;
+    }
+
+    if (autoUploadEnabled) {
+      logInfo(
+        'Skipping close-store snapshot upload prompt because auto-upload setting is enabled.',
+        tag: _logTag,
+        data: <String, dynamic>{
+          'storeUuid': status.storeUuid,
+          'compareResult': status.compareResult.name,
+        },
+      );
+      return true;
+    }
+
+    ref.read(closeSyncTrackingProvider.notifier).setPendingPrompt(true);
+    _publishStatus(
+      _service.closePromptStatus(status),
+      phase: MainStoreCloseSyncPhase.waitingForDecision,
+    );
+
+    final completer = Completer<bool>();
+    _closeStoreUploadDecision = completer;
+    return completer.future.whenComplete(() {
+      if (identical(_closeStoreUploadDecision, completer)) {
+        _closeStoreUploadDecision = null;
+      }
+    });
   }
 
   Future<SnapshotSyncResult> _consumeProgressStream({
@@ -520,6 +478,14 @@ class MainStoreCloseSyncNotifier
 
   void _setState(MainStoreCloseSyncState nextState) {
     state = AsyncData(nextState);
+  }
+
+  void _completePendingDecisionAsSkipped() {
+    final decision = _closeStoreUploadDecision;
+    if (decision != null && !decision.isCompleted) {
+      decision.complete(false);
+    }
+    _closeStoreUploadDecision = null;
   }
 
   Future<bool> _isAutoUploadEnabled() {
@@ -599,18 +565,4 @@ class _CloseSyncContext {
 
   final String storePath;
   final StoreInfoDto storeInfo;
-}
-
-class _PreparedCloseSyncUpload {
-  const _PreparedCloseSyncUpload({
-    required this.status,
-    required this.context,
-    required this.binding,
-    required this.token,
-  });
-
-  final StoreSyncStatus status;
-  final _CloseSyncContext context;
-  final StoreSyncBinding binding;
-  final AuthTokenEntry token;
 }

@@ -26,11 +26,10 @@
 - Из close-sync service API удалены callback-параметры для prompt/progress
   flow; решение пользователя и progress теперь проходят через state
   `mainStoreCloseSyncProvider`.
-- `MainStoreCloseSyncNotifier` переведён на двухшаговый after-close flow:
-  `prepareUploadAfterClose(...)` возвращает `CloseSyncFinished` или
-  `CloseSyncDecisionRequired`, а пользовательское решение продолжает flow через
-  `continueUploadAfterDecision(...)` без `Completer`.
-- `MainStoreCloseSyncNotifier.prepareUploadAfterClose(...)` не принимает
+- `MainStoreCloseSyncNotifier.uploadSnapshotAfterClose(...)` ждёт решение
+  пользователя через внутренний `Completer`, публикуя
+  `MainStoreCloseSyncPhase.waitingForDecision` для UI.
+- `MainStoreCloseSyncNotifier.uploadSnapshotAfterClose(...)` не принимает
   `logTag` и не импортирует manager-provider; manager передаёт только уже
   прочитанные `StoreInfoDto` и путь текущего хранилища.
 - В new `MainStoreManager` добавлен `getStoreInfo()` с `AppError` mapping для
