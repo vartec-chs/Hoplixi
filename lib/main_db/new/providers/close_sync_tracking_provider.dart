@@ -26,6 +26,7 @@ class CloseSyncTrackingNotifier extends Notifier<CloseSyncTrackingState> {
     return CloseSyncTrackingState();
   }
 
+  // 
   bool hasLogicalChanges(DateTime currentModifiedAt) {
     return state.forceUpload ||
         state.pendingPrompt ||
