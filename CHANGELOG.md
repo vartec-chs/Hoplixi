@@ -10,6 +10,11 @@
   `_lock.synchronized()` для предотвращения race conditions при одновременных
   вызовах из разных потоков/async-контекстов.
 
+### db_core (dao providers)
+
+- `dao_providers.dart` переведён на `AppError.mainDatabase(...)` для сценария,
+  когда хранилище не открыто, и убран лишний неиспользуемый `manager`.
+
 ### db_core (main store manager)
 
 - `MainStoreManager.createStore()` и `MainStoreManager.openStore()` теперь
