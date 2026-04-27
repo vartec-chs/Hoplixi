@@ -74,11 +74,40 @@ class MainStoreManager {
     }
   }
 
+  bool _isCurrentStorePath(String storePath) {
+    return _currentSession?.storeDirectoryPath == storePath;
+  }
+
+  Future<ResultDart<Unit, AppError>> _closeCurrentSession() async {
+    final sessionToClose = _currentSession;
+    if (sessionToClose == null) {
+      return Failure(
+        AppError.mainDatabase(
+          code: MainDatabaseErrorCode.notInitialized,
+          message: 'Хранилище не открыто',
+          timestamp: DateTime.now(),
+        ),
+      );
+    }
+
+    final result = await _closeMainStore(session: sessionToClose);
+    if (result.isSuccess()) {
+      _clearCurrentSessionIfMatches(sessionToClose);
+    }
+
+    return result;
+  }
+
   AsyncResultDart<Session, AppError> createStore(
     CreateStoreDto dto,
     String masterPassword,
   ) async {
     return _lock.synchronized(() async {
+      // Close any previously opened store
+      if (_currentSession != null) {
+        await _closeCurrentSession();
+      }
+
       final result = await _createMainStore(
         dto: dto,
         masterPassword: masterPassword,
@@ -99,7 +128,6 @@ class MainStoreManager {
           savePassword: dto.saveMasterPassword,
         );
         logInfo('Created history entry for new store', tag: _logTag);
-        return Success(session);
       } catch (error, stackTrace) {
         logWarning(
           'Failed to create history entry for new store',
@@ -111,8 +139,10 @@ class MainStoreManager {
             'stackTrace': stackTrace.toString(),
           },
         );
-        return Success(session);
       }
+
+      unawaited(runStartupCleanup(session));
+      return Success(session);
     });
   }
 
@@ -122,6 +152,11 @@ class MainStoreManager {
     bool allowMigration = false,
   }) async {
     return _lock.synchronized(() async {
+      // Close any previously opened store
+      if (_currentSession != null) {
+        await _closeCurrentSession();
+      }
+
       final result = await _openMainStore(
         dto: dto,
         masterPassword: masterPassword,
@@ -173,8 +208,116 @@ class MainStoreManager {
 
   AsyncResultDart<Unit, AppError> closeStore() async {
     return _lock.synchronized(() async {
-      final sessionToClose = _currentSession;
-      if (sessionToClose == null) {
+      return _closeCurrentSession();
+    });
+  }
+
+  AsyncResultDart<Unit, AppError> deleteStore(
+    String path, {
+    bool deleteFromDisk = true,
+  }) async {
+    return _lock.synchronized(() async {
+      try {
+        final normalizedPath = path.trim();
+        if (normalizedPath.isEmpty) {
+          return Failure(
+            AppError.validation(
+              code: ValidationErrorCode.invalidInput,
+              message: 'Путь к хранилищу не указан',
+              timestamp: DateTime.now(),
+            ),
+          );
+        }
+
+        final storePath = await _resolveDeleteStorePath(
+          normalizedPath,
+          requireExistingStorage: false,
+        );
+
+        if (_isCurrentStorePath(storePath)) {
+          final closeResult = await _closeCurrentSession();
+          if (closeResult.isError()) {
+            return Failure(closeResult.exceptionOrNull()!);
+          }
+        }
+
+        await _deleteHistoryEntries(normalizedPath, storePath);
+
+        if (deleteFromDisk &&
+            await _storageService.storageDirectoryExists(storePath)) {
+          await _storageService.deleteStorageDirectory(storePath);
+        }
+
+        logInfo('Store deleted successfully', tag: _logTag);
+        return const Success(unit);
+      } catch (error, stackTrace) {
+        return _mapDeleteFailure(
+          error,
+          stackTrace: stackTrace,
+          message: 'Не удалось удалить хранилище',
+        );
+      }
+    });
+  }
+
+  AsyncResultDart<Unit, AppError> deleteStoreFromDisk(String path) async {
+    return _lock.synchronized(() async {
+      try {
+        final normalizedPath = path.trim();
+        if (normalizedPath.isEmpty) {
+          return Failure(
+            AppError.validation(
+              code: ValidationErrorCode.invalidInput,
+              message: 'Путь к хранилищу не указан',
+              timestamp: DateTime.now(),
+            ),
+          );
+        }
+
+        final storePath = await _resolveDeleteStorePath(
+          normalizedPath,
+          requireExistingStorage: true,
+        );
+
+        if (_isCurrentStorePath(storePath)) {
+          final closeResult = await _closeCurrentSession();
+          if (closeResult.isError()) {
+            return Failure(closeResult.exceptionOrNull()!);
+          }
+        }
+
+        if (!await _storageService.storageDirectoryExists(storePath)) {
+          return Failure(
+            AppError.mainDatabase(
+              code: MainDatabaseErrorCode.recordNotFound,
+              message: 'Директория хранилища не найдена',
+              data: <String, dynamic>{'path': storePath},
+              timestamp: DateTime.now(),
+            ),
+          );
+        }
+
+        await _storageService.deleteStorageDirectory(storePath);
+        await _deleteHistoryEntries(normalizedPath, storePath);
+
+        logInfo('Store deleted from disk successfully', tag: _logTag);
+        return const Success(unit);
+      } catch (error, stackTrace) {
+        return _mapDeleteFailure(
+          error,
+          stackTrace: stackTrace,
+          message: 'Не удалось удалить хранилище с диска',
+        );
+      }
+    });
+  }
+
+  AsyncResultDart<StoreInfoDto, AppError> updateStore(
+    UpdateStoreDto dto,
+  ) async {
+    return _lock.synchronized(() async {
+      final session = _currentSession;
+      if (session == null) {
         return Failure(
           AppError.mainDatabase(
             code: MainDatabaseErrorCode.notInitialized,
@@ -184,20 +327,6 @@ class MainStoreManager {
         );
       }
 
-      final result = await _closeMainStore(session: sessionToClose);
-      if (result.isSuccess()) {
-        _clearCurrentSessionIfMatches(sessionToClose);
-      }
-
-      return result;
-    });
-  }
-
-  AsyncResultDart<StoreInfoDto, AppError> updateStore(
-    Session session,
-    UpdateStoreDto dto,
-  ) async {
-    return _lock.synchronized(() async {
       final result = await _updateMainStore(session: session, dto: dto);
       if (result.isError()) {
         return Failure(result.exceptionOrNull()!);
@@ -260,36 +389,6 @@ class MainStoreManager {
     });
   }
 
-  AsyncResultDart<StoreMeta, AppError> getStoreMeta(MainStore database) async {
-    return _lock.synchronized(() async {
-      try {
-        final meta = await database.storeMetaDao.getStoreMeta();
-
-        if (meta == null) {
-          return Failure(
-            AppError.mainDatabase(
-              code: MainDatabaseErrorCode.recordNotFound,
-              message: 'Метаданные хранилища не найдены',
-              timestamp: DateTime.now(),
-            ),
-          );
-        }
-
-        return Success(meta);
-      } catch (error, stackTrace) {
-        return Failure(
-          AppError.mainDatabase(
-            code: MainDatabaseErrorCode.queryFailed,
-            message: 'Не удалось получить метаданные хранилища: $error',
-            cause: error,
-            stackTrace: stackTrace,
-            timestamp: DateTime.now(),
-          ),
-        );
-      }
-    });
-  }
-
   AsyncResultDart<StoreInfoDto, AppError> getStoreInfo() async {
     return _lock.synchronized(() async {
       final currentStore = _currentStore;
@@ -341,7 +440,13 @@ class MainStoreManager {
     });
   }
 
-  Future<void> runStartupCleanup(Session session) async {
+  Future<void> runStartupCleanup([Session? targetSession]) async {
+    final session = targetSession ?? _currentSession;
+    if (session == null) {
+      logWarning('Cannot run startup cleanup: no active session', tag: _logTag);
+      return;
+    }
+
     try {
       final attachmentsPath = _storageService.getAttachmentsPath(
         session.storeDirectoryPath,
@@ -378,5 +483,49 @@ class MainStoreManager {
         },
       );
     }
+  }
+
+  Future<String> _resolveDeleteStorePath(
+    String path, {
+    required bool requireExistingStorage,
+  }) async {
+    try {
+      return await _storageService.resolveExistingStoragePath(path);
+    } catch (_) {
+      if (requireExistingStorage) {
+        rethrow;
+      }
+      return path;
+    }
+  }
+
+  Future<void> _deleteHistoryEntries(
+    String originalPath,
+    String storePath,
+  ) async {
+    await _dbHistoryService.deleteByPath(storePath);
+    if (originalPath != storePath) {
+      await _dbHistoryService.deleteByPath(originalPath);
+    }
+  }
+
+  ResultDart<Unit, AppError> _mapDeleteFailure(
+    Object error, {
+    required StackTrace stackTrace,
+    required String message,
+  }) {
+    if (error is AppError) {
+      return Failure(error);
+    }
+
+    return Failure(
+      AppError.mainDatabase(
+        code: MainDatabaseErrorCode.unknown,
+        message: message,
+        cause: error,
+        stackTrace: stackTrace,
+        timestamp: DateTime.now(),
+      ),
+    );
   }
 }

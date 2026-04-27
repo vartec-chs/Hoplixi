@@ -1,5 +1,31 @@
 # CHANGELOG
 
+## 2026-04-27
+
+### db_core (main store manager notifier)
+
+- Добавлена синхронизация на уровне `MainStoreManagerNotifier`: все
+  state-changing операции (`createStore`, `openStore`, `closeStore`,
+  `lockStore`, `unlockStore`, `deleteStore`, `updateStore`) обёрнуты в
+  `_lock.synchronized()` для предотвращения race conditions при одновременных
+  вызовах из разных потоков/async-контекстов.
+
+### db_core (main store manager)
+
+- `MainStoreManager.createStore()` и `MainStoreManager.openStore()` теперь
+  закрывают ранее открытое хранилище перед открытием нового, чтобы избежать
+  утечек ресурсов и конфликтов при переключении между хранилищами.
+
+### docs (db_core)
+
+- Добавлен `docs-ai/new-main-store-missing-old-api.md` со списком old API,
+  который ещё не перенесён или не выставлен в new main store manager/provider.
+
+### cloud_sync (snapshot sync)
+
+- Добавлены doc-комментарии к `StoreVersionCompareResult` и `SnapshotSyncStage`
+  в модели snapshot sync, а также пояснения к каждому значению enum.
+
 ## 2026-04-26
 
 ### db_core (new main store manager)
@@ -10,6 +36,15 @@
   если `closeSyncTrackingProvider` фиксирует логические изменения текущего
   `StoreMeta.modifiedAt`; прогресс, prompt и ошибка синхронизации вынесены в
   отдельный `mainStoreCloseSyncProvider`.
+- В new `MainStoreManagerNotifier` реализованы `lockStore(...)` и
+  `unlockStore(...)`: lock закрывает текущую сессию с сохранением path/info в
+  `DatabaseStatus.locked`, unlock повторно открывает store и заново стартует
+  close-sync tracking.
+- В new `MainStoreManager` / `MainStoreManagerNotifier` реализованы
+  `deleteStore(...)` и `deleteStoreFromDisk(...)` с закрытием активной сессии,
+  удалением history entry и опциональным удалением директории store.
+- `MainStoreManager` в new-ветке теперь сам владеет startup cleanup после
+  create/open, а provider больше не запускает cleanup повторно при unlock.
 - Порядок закрытия в new-ветке изменён на after-close sync:
   `MainStoreManagerNotifier` сначала успешно закрывает store и выставляет
   `DatabaseStatus.closed`, затем запускает snapshot upload и переводит state в
@@ -23,8 +58,8 @@
   `providers/main_store_close_sync_provider.dart`; сервис больше не зависит от
   `Ref`, а provider получает данные store от manager, сам читает
   binding/token/status и обновляет state.
-- Из close-sync service API удалены callback-параметры для prompt/progress
-  flow; решение пользователя и progress теперь проходят через state
+- Из close-sync service API удалены callback-параметры для prompt/progress flow;
+  решение пользователя и progress теперь проходят через state
   `mainStoreCloseSyncProvider`.
 - `MainStoreCloseSyncNotifier.uploadSnapshotAfterClose(...)` ждёт решение
   пользователя через внутренний `Completer`, публикуя

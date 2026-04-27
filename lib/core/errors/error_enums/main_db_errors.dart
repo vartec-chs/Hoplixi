@@ -17,6 +17,7 @@ enum MainDatabaseErrorCode {
   decryptionFailed('DB_DECRYPTION_FAILED'),
   transactionFailed('DB_TRANSACTION_FAILED'),
   validationError('DB_VALIDATION_ERROR'),
+  deleteFailed('DB_DELETE_FAILED'),
   unknown('DB_UNKNOWN_ERROR');
 
   final String value;

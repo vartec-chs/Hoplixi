@@ -2,23 +2,47 @@ import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 import 'package:hoplixi/main_db/old/models/store_manifest.dart';
 
+/// Результат сравнения локального и удалённого манифестов при snapshot sync.
 enum StoreVersionCompareResult {
+  /// Локальный и удалённый манифест относятся к разным хранилищам.
   differentStore,
+
+  /// Манифесты совпадают.
   same,
+
+  /// Локальная версия новее удалённой.
   localNewer,
+
+  /// Удалённая версия новее локальной.
   remoteNewer,
+
+  /// Версии расходятся, и автоматическое сравнение не даёт однозначного ответа.
   conflict,
+
+  /// Удалённый манифест отсутствует.
   remoteMissing,
 }
 
 enum SnapshotSyncResultType { idle, noChanges, uploaded, downloaded, conflict }
 
+/// Текущий этап выполнения snapshot sync.
 enum SnapshotSyncStage {
+  /// Подготовка локального snapshot перед синхронизацией.
   preparingLocalSnapshot,
+
+  /// Проверка версии на удалённой стороне.
   checkingRemoteVersion,
+
+  /// Передача основных файлов хранилища.
   transferringPrimaryFiles,
+
+  /// Синхронизация вложений и дополнительных файлов.
   syncingAttachments,
+
+  /// Обновление метаданных после передачи данных.
   updatingMetadata,
+
+  /// Синхронизация завершена.
   completed,
 }
 
