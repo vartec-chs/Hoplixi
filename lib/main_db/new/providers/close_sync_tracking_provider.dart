@@ -18,6 +18,14 @@ class CloseSyncTrackingState {
   forceUpload; // Флаг, указывающий, что при закрытии хранилища необходимо загрузить снимок, даже если время модификации не изменилось (например, после успешной загрузки снимка, требующей повторного закрытия)
   final bool
   pendingPrompt; // Флаг, указывающий, что при попытке закрытия хранилища уже отображается запрос на загрузку снимка, чтобы предотвратить показ нескольких запросов при повторных попытках закрытия без изменения состояния
+
+  bool hasLogicalChanges(DateTime currentModifiedAt) {
+    final currentModifiedAtUtc = currentModifiedAt.toUtc();
+    return forceUpload ||
+        pendingPrompt ||
+        openedModifiedAt == null ||
+        !openedModifiedAt!.isAtSameMomentAs(currentModifiedAtUtc);
+  }
 }
 
 class CloseSyncTrackingNotifier extends Notifier<CloseSyncTrackingState> {
@@ -26,12 +34,8 @@ class CloseSyncTrackingNotifier extends Notifier<CloseSyncTrackingState> {
     return CloseSyncTrackingState();
   }
 
-  // 
   bool hasLogicalChanges(DateTime currentModifiedAt) {
-    return state.forceUpload ||
-        state.pendingPrompt ||
-        state.openedModifiedAt == null ||
-        !state.openedModifiedAt!.isAtSameMomentAs(currentModifiedAt.toUtc());
+    return state.hasLogicalChanges(currentModifiedAt);
   }
 
   void start(DateTime initialModifiedAt, {bool forceUpload = false}) {

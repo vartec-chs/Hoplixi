@@ -4,6 +4,7 @@ import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:hoplixi/main_db/new/models/db_state.dart';
 import 'package:hoplixi/main_db/new/models/session.dart';
+import 'package:hoplixi/main_db/new/services/main_store_close_sync_controller.dart';
 import 'package:riverpod/riverpod.dart';
 
 import '../main_store_manager.dart';
@@ -142,11 +143,81 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
 
       final stateBeforeClose = _currentState;
       logInfo('Closing store', tag: _logTag);
-      _setState(stateBeforeClose.copyWith(status: DatabaseStatus.closing));
+
+      final storePath = _manager.currentStorePath;
+      if (storePath == null || storePath.isEmpty) {
+        final error = _notInitializedError(
+          'Путь открытого хранилища недоступен',
+        );
+        _setState(
+          stateBeforeClose.copyWith(status: DatabaseStatus.open, error: error),
+        );
+        logWarning('Current store path is unavailable', tag: _logTag);
+        return false;
+      }
+
+      final storeInfoResult = await _manager.getStoreInfo();
+      if (storeInfoResult.isError()) {
+        final error = storeInfoResult.exceptionOrNull()!;
+        _setState(
+          stateBeforeClose.copyWith(status: DatabaseStatus.open, error: error),
+        );
+        logError(
+          'Failed to read store info before close: ${error.message}',
+          tag: _logTag,
+        );
+        return false;
+      }
+
+      final storeInfo = storeInfoResult.getOrThrow();
+      final tracking = ref.read(closeSyncTrackingProvider);
+      if (tracking.hasLogicalChanges(storeInfo.modifiedAt)) {
+        final closeSyncNotifier = ref.read(mainStoreCloseSyncProvider.notifier);
+
+        final syncResult = await closeSyncNotifier.tryUploadSnapshotBeforeClose(
+          storeInfo: storeInfo,
+          currentStorePath: storePath,
+          logTag: _logTag,
+        );
+
+        if (syncResult.isError()) {
+          final error = syncResult.exceptionOrNull()!;
+          final canCloseWithoutSync = await closeSyncNotifier
+              .shouldAllowCloseWithoutSyncFailure(error);
+          if (!canCloseWithoutSync) {
+            _setState(
+              stateBeforeClose.copyWith(
+                status: DatabaseStatus.open,
+                error: error,
+              ),
+            );
+            logError(
+              'Failed to sync store before close: ${error.message}',
+              tag: _logTag,
+            );
+            return false;
+          }
+
+          closeSyncNotifier.clearPublishedStatus();
+          logWarning(
+            'Snapshot sync before close failed in auto-upload mode due to recoverable network error. Closing store without cloud upload.',
+            tag: _logTag,
+            data: <String, dynamic>{
+              'errorType': error.runtimeType.toString(),
+              'error': error.toString(),
+            },
+          );
+        }
+      }
+
+      _setState(
+        stateBeforeClose.copyWith(status: DatabaseStatus.closing, error: null),
+      );
 
       final result = await _manager.closeStore();
       return result.fold(
         (_) {
+          ref.read(mainStoreCloseSyncProvider.notifier).clearPublishedStatus();
           ref.read(closeSyncTrackingProvider.notifier).reset();
           _setState(const DatabaseState(status: DatabaseStatus.closed));
           logInfo('Store closed', tag: _logTag);
@@ -160,11 +231,13 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
               error: error,
             ),
           );
+          ref.read(mainStoreCloseSyncProvider.notifier).clearPublishedStatus();
           logError('Failed to close store: ${error.message}', tag: _logTag);
           return false;
         },
       );
     } catch (error, stackTrace) {
+      ref.read(mainStoreCloseSyncProvider.notifier).clearPublishedStatus();
       _setUnexpectedErrorState(
         error,
         stackTrace,

@@ -4,6 +4,17 @@
 
 ### db_core (new main store manager)
 
+- `DatabaseStatus.closingWithCloudSync` удалён из new-ветки: cloud-sync close
+  flow больше не хранится в состоянии БД.
+- `MainStoreManagerNotifier.closeStore()` теперь запускает close-sync только
+  если `closeSyncTrackingProvider` фиксирует логические изменения текущего
+  `StoreMeta.modifiedAt`; прогресс, prompt и ошибка синхронизации вынесены в
+  отдельный `mainStoreCloseSyncProvider`.
+- `mainStoreCloseSyncController.dart` в new-ветке переписан в service +
+  `AsyncNotifier` state machine для close-sync (`checking`,
+  `waitingForDecision`, `syncing`, `completed`, `skipped`, `failed`).
+- В new `MainStoreManager` добавлен `getStoreInfo()` с `AppError` mapping для
+  чтения актуального `StoreMeta` перед close-sync проверкой.
 - Добавлен `closeSyncTrackingProvider` для new-ветки: Riverpod-state для
   отслеживания `openedModifiedAt`, `forceUpload` и pending close-sync prompt.
 - `CloseSyncTrackingState` оставлен простым immutable state-контейнером, вся

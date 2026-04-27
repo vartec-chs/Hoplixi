@@ -290,6 +290,57 @@ class MainStoreManager {
     });
   }
 
+  AsyncResultDart<StoreInfoDto, AppError> getStoreInfo() async {
+    return _lock.synchronized(() async {
+      final currentStore = _currentStore;
+      if (currentStore == null) {
+        return Failure(
+          AppError.mainDatabase(
+            code: MainDatabaseErrorCode.notInitialized,
+            message: 'Хранилище не открыто',
+            timestamp: DateTime.now(),
+          ),
+        );
+      }
+
+      try {
+        final meta = await currentStore.storeMetaDao.getStoreMeta();
+
+        if (meta == null) {
+          return Failure(
+            AppError.mainDatabase(
+              code: MainDatabaseErrorCode.recordNotFound,
+              message: 'Метаданные хранилища не найдены',
+              timestamp: DateTime.now(),
+            ),
+          );
+        }
+
+        return Success(
+          StoreInfoDto(
+            id: meta.id,
+            name: meta.name,
+            description: meta.description,
+            createdAt: meta.createdAt,
+            modifiedAt: meta.modifiedAt,
+            lastOpenedAt: meta.lastOpenedAt,
+            version: meta.version,
+          ),
+        );
+      } catch (error, stackTrace) {
+        return Failure(
+          AppError.mainDatabase(
+            code: MainDatabaseErrorCode.queryFailed,
+            message: 'Не удалось получить информацию о хранилище: $error',
+            cause: error,
+            stackTrace: stackTrace,
+            timestamp: DateTime.now(),
+          ),
+        );
+      }
+    });
+  }
+
   Future<void> runStartupCleanup(Session session) async {
     try {
       final attachmentsPath = _storageService.getAttachmentsPath(
