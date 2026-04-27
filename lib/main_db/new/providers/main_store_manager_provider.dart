@@ -3,8 +3,10 @@ import 'package:hoplixi/core/logger/index.dart' hide Session;
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:hoplixi/main_db/new/models/db_state.dart';
+import 'package:hoplixi/main_db/new/models/main_store_close_sync_state.dart';
 import 'package:hoplixi/main_db/new/models/session.dart';
 import 'package:hoplixi/main_db/new/providers/main_store_close_sync_provider.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:riverpod/riverpod.dart';
 
 import '../main_store_manager.dart';
@@ -37,6 +39,19 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
 
   @override
   Future<DatabaseState> build() async {
+    ref.listen<AsyncValue<MainStoreCloseSyncState>>(
+      mainStoreCloseSyncProvider,
+      (previous, next) {
+        final closeSyncState = next.value;
+        if (closeSyncState == null || !_isTerminalCloseSync(closeSyncState)) {
+          return;
+        }
+        if (_currentState.isClosed) {
+          _finalizeClosedStoreAfterCloseSync();
+        }
+      },
+    );
+
     final manager = await ref.watch(mainStoreManagerProvider.future);
     _manager = manager;
 
@@ -199,7 +214,7 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
         final closeSyncNotifier = ref.read(
           mainStoreCloseSyncProvider.notifier,
         );
-        final syncResult = await closeSyncNotifier.uploadSnapshotAfterClose(
+        final syncResult = await closeSyncNotifier.prepareUploadAfterClose(
           storeInfo: storeInfo,
           currentStorePath: storePath,
         );
@@ -215,12 +230,20 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
               'errorType': error.runtimeType.toString(),
             },
           );
+          _finalizeClosedStoreAfterCloseSync();
+          return true;
         }
+
+        final step = syncResult.getOrThrow();
+        if (step is CloseSyncDecisionRequired) {
+          return true;
+        }
+
+        _finalizeClosedStoreAfterCloseSync();
+        return true;
       }
 
-      ref.read(mainStoreCloseSyncProvider.notifier).clearPublishedStatus();
-      ref.read(closeSyncTrackingProvider.notifier).reset();
-      _setState(const DatabaseState(status: DatabaseStatus.idle));
+      _finalizeClosedStoreAfterCloseSync();
       return true;
     } catch (error, stackTrace) {
       ref.read(mainStoreCloseSyncProvider.notifier).clearPublishedStatus();
@@ -291,6 +314,18 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
 
   void _setState(DatabaseState newState) {
     state = AsyncData(newState);
+  }
+
+  bool _isTerminalCloseSync(MainStoreCloseSyncState closeSyncState) {
+    return closeSyncState.phase == MainStoreCloseSyncPhase.completed ||
+        closeSyncState.phase == MainStoreCloseSyncPhase.skipped ||
+        closeSyncState.phase == MainStoreCloseSyncPhase.failed;
+  }
+
+  void _finalizeClosedStoreAfterCloseSync() {
+    _setState(const DatabaseState(status: DatabaseStatus.idle));
+    ref.read(closeSyncTrackingProvider.notifier).reset();
+    ref.read(mainStoreCloseSyncProvider.notifier).clearPublishedStatus();
   }
 
   void _setOpenedSession(Session session, {bool forceUpload = false}) {

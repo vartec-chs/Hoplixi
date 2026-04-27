@@ -35,6 +35,22 @@ class MainStoreCloseSyncOutcome {
       type == MainStoreCloseSyncOutcomeType.alreadySynced;
 }
 
+sealed class CloseSyncStep {
+  const CloseSyncStep();
+}
+
+class CloseSyncFinished extends CloseSyncStep {
+  const CloseSyncFinished(this.outcome);
+
+  final MainStoreCloseSyncOutcome outcome;
+}
+
+class CloseSyncDecisionRequired extends CloseSyncStep {
+  const CloseSyncDecisionRequired(this.status);
+
+  final StoreSyncStatus status;
+}
+
 class MainStoreCloseSyncState {
   const MainStoreCloseSyncState({
     this.phase = MainStoreCloseSyncPhase.idle,

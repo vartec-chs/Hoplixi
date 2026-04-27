@@ -21,13 +21,18 @@
   `models/main_store_close_sync_state.dart`,
   `services/main_store_close_sync_service.dart` и
   `providers/main_store_close_sync_provider.dart`; сервис больше не зависит от
-  `Ref`, а provider сам читает manager/binding/token/status и обновляет state.
+  `Ref`, а provider получает данные store от manager, сам читает
+  binding/token/status и обновляет state.
 - Из close-sync service API удалены callback-параметры для prompt/progress
   flow; решение пользователя и progress теперь проходят через state
   `mainStoreCloseSyncProvider`.
-- `MainStoreCloseSyncNotifier.uploadSnapshotAfterClose(...)` больше не
-  принимает `logTag` и не импортирует manager-provider; manager передаёт только
-  уже прочитанные `StoreInfoDto` и путь текущего хранилища.
+- `MainStoreCloseSyncNotifier` переведён на двухшаговый after-close flow:
+  `prepareUploadAfterClose(...)` возвращает `CloseSyncFinished` или
+  `CloseSyncDecisionRequired`, а пользовательское решение продолжает flow через
+  `continueUploadAfterDecision(...)` без `Completer`.
+- `MainStoreCloseSyncNotifier.prepareUploadAfterClose(...)` не принимает
+  `logTag` и не импортирует manager-provider; manager передаёт только уже
+  прочитанные `StoreInfoDto` и путь текущего хранилища.
 - В new `MainStoreManager` добавлен `getStoreInfo()` с `AppError` mapping для
   чтения актуального `StoreMeta` перед close-sync проверкой.
 - Добавлен `closeSyncTrackingProvider` для new-ветки: Riverpod-state для

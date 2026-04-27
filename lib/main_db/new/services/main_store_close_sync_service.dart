@@ -59,14 +59,6 @@ class MainStoreCloseSyncService {
     );
   }
 
-  StoreSyncStatus closeAutoUploadStatus(StoreSyncStatus status) {
-    return status.copyWith(
-      clearSyncProgress: true,
-      isSyncInProgress: true,
-      lastResultType: SnapshotSyncResultType.idle,
-    );
-  }
-
   StoreSyncStatus closeSyncBaseStatus({
     required StoreSyncStatus status,
     required String storePath,
