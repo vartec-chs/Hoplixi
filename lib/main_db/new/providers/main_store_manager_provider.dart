@@ -4,7 +4,7 @@ import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:hoplixi/main_db/new/models/db_state.dart';
 import 'package:hoplixi/main_db/new/models/session.dart';
-import 'package:hoplixi/main_db/new/services/main_store_close_sync_controller.dart';
+import 'package:hoplixi/main_db/new/providers/main_store_close_sync_provider.dart';
 import 'package:riverpod/riverpod.dart';
 
 import '../main_store_manager.dart';
@@ -170,72 +170,58 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
       }
 
       final storeInfo = storeInfoResult.getOrThrow();
-      final tracking = ref.read(closeSyncTrackingProvider);
-      if (tracking.hasLogicalChanges(storeInfo.modifiedAt)) {
-        final closeSyncNotifier = ref.read(mainStoreCloseSyncProvider.notifier);
-
-        final syncResult = await closeSyncNotifier.tryUploadSnapshotBeforeClose(
-          storeInfo: storeInfo,
-          currentStorePath: storePath,
-          logTag: _logTag,
-        );
-
-        if (syncResult.isError()) {
-          final error = syncResult.exceptionOrNull()!;
-          final canCloseWithoutSync = await closeSyncNotifier
-              .shouldAllowCloseWithoutSyncFailure(error);
-          if (!canCloseWithoutSync) {
-            _setState(
-              stateBeforeClose.copyWith(
-                status: DatabaseStatus.open,
-                error: error,
-              ),
-            );
-            logError(
-              'Failed to sync store before close: ${error.message}',
-              tag: _logTag,
-            );
-            return false;
-          }
-
-          closeSyncNotifier.clearPublishedStatus();
-          logWarning(
-            'Snapshot sync before close failed in auto-upload mode due to recoverable network error. Closing store without cloud upload.',
-            tag: _logTag,
-            data: <String, dynamic>{
-              'errorType': error.runtimeType.toString(),
-              'error': error.toString(),
-            },
-          );
-        }
-      }
+      final shouldSyncAfterClose = ref
+          .read(closeSyncTrackingProvider)
+          .hasLogicalChanges(storeInfo.modifiedAt);
 
       _setState(
         stateBeforeClose.copyWith(status: DatabaseStatus.closing, error: null),
       );
 
       final result = await _manager.closeStore();
-      return result.fold(
-        (_) {
-          ref.read(mainStoreCloseSyncProvider.notifier).clearPublishedStatus();
-          ref.read(closeSyncTrackingProvider.notifier).reset();
-          _setState(const DatabaseState(status: DatabaseStatus.closed));
-          logInfo('Store closed', tag: _logTag);
-          _setState(const DatabaseState(status: DatabaseStatus.idle));
-          return true;
-        },
-        (error) {
-          _setState(
-            stateBeforeClose.copyWith(
-              status: DatabaseStatus.open,
-              error: error,
-            ),
+      if (result.isError()) {
+        final error = result.exceptionOrNull()!;
+        _setState(
+          stateBeforeClose.copyWith(
+            status: DatabaseStatus.open,
+            error: error,
+          ),
+        );
+        ref.read(mainStoreCloseSyncProvider.notifier).clearPublishedStatus();
+        logError('Failed to close store: ${error.message}', tag: _logTag);
+        return false;
+      }
+
+      _setState(const DatabaseState(status: DatabaseStatus.closed));
+      logInfo('Store closed', tag: _logTag);
+
+      if (shouldSyncAfterClose) {
+        final closeSyncNotifier = ref.read(
+          mainStoreCloseSyncProvider.notifier,
+        );
+        final syncResult = await closeSyncNotifier.uploadSnapshotAfterClose(
+          storeInfo: storeInfo,
+          currentStorePath: storePath,
+        );
+
+        if (syncResult.isError()) {
+          final error = syncResult.exceptionOrNull()!;
+          logError(
+            'Snapshot sync after close failed: ${error.message}',
+            tag: _logTag,
+            data: <String, dynamic>{
+              'storeUuid': storeInfo.id,
+              'storePath': storePath,
+              'errorType': error.runtimeType.toString(),
+            },
           );
-          ref.read(mainStoreCloseSyncProvider.notifier).clearPublishedStatus();
-          logError('Failed to close store: ${error.message}', tag: _logTag);
-          return false;
-        },
-      );
+        }
+      }
+
+      ref.read(mainStoreCloseSyncProvider.notifier).clearPublishedStatus();
+      ref.read(closeSyncTrackingProvider.notifier).reset();
+      _setState(const DatabaseState(status: DatabaseStatus.idle));
+      return true;
     } catch (error, stackTrace) {
       ref.read(mainStoreCloseSyncProvider.notifier).clearPublishedStatus();
       _setUnexpectedErrorState(
