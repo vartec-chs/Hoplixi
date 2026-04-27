@@ -7,6 +7,30 @@ import 'package:path/path.dart' as p;
 
 class MainStoreFileService {
   static const String _logTag = 'MainStoreFileService';
+  static const Set<String> _reservedWindowsNames = {
+    'con',
+    'prn',
+    'aux',
+    'nul',
+    'com1',
+    'com2',
+    'com3',
+    'com4',
+    'com5',
+    'com6',
+    'com7',
+    'com8',
+    'com9',
+    'lpt1',
+    'lpt2',
+    'lpt3',
+    'lpt4',
+    'lpt5',
+    'lpt6',
+    'lpt7',
+    'lpt8',
+    'lpt9',
+  };
 
   static const String attachmentsFolder = 'attachments';
   static const String decryptedAttachmentsFolder = 'attachments_decrypted';
@@ -19,6 +43,52 @@ class MainStoreFileService {
 
   String getDecryptedAttachmentsPath(String storePath) {
     return p.join(storePath, decryptedAttachmentsFolder);
+  }
+
+  String getDatabaseFilePath(String storePath, String normalizedName) {
+    return p.join(storePath, '$normalizedName${MainConstants.dbExtension}');
+  }
+
+  Future<({String normalizedName, Directory storageDir})>
+  prepareNewStorageDirectory({
+    required String baseStoragePath,
+    required String storeName,
+  }) async {
+    final normalizedName = normalizeStorageName(storeName);
+    final normalizedBasePath = baseStoragePath.trim();
+    if (normalizedBasePath.isEmpty) {
+      throw AppError.validation(
+        code: ValidationErrorCode.invalidInput,
+        message: 'Базовый путь хранилищ не указан',
+        timestamp: DateTime.now(),
+      );
+    }
+
+    final storageDir = Directory(p.join(normalizedBasePath, normalizedName));
+    if (await storageDir.exists()) {
+      final existingDbFile = await findDatabaseFile(storageDir.path);
+      if (existingDbFile != null) {
+        throw AppError.validation(
+          code: ValidationErrorCode.alreadyExists,
+          message: 'Хранилище с таким именем уже существует',
+          data: {'path': storageDir.path},
+          timestamp: DateTime.now(),
+        );
+      }
+
+      await _moveDirectoryWithoutDatabase(
+        baseStoragePath: normalizedBasePath,
+        normalizedStoreName: normalizedName,
+        storageDir: storageDir,
+      );
+    }
+
+    await storageDir.create(recursive: true);
+    await Directory(getAttachmentsPath(storageDir.path)).create(
+      recursive: true,
+    );
+
+    return (normalizedName: normalizedName, storageDir: storageDir);
   }
 
   Future<String> createSubfolder({
@@ -36,7 +106,9 @@ class MainStoreFileService {
       );
     }
 
-    final directory = Directory(p.join(normalizedStorePath, normalizedFolderName));
+    final directory = Directory(
+      p.join(normalizedStorePath, normalizedFolderName),
+    );
     if (!await directory.exists()) {
       await directory.create(recursive: true);
     }
@@ -101,5 +173,49 @@ class MainStoreFileService {
       );
       return null;
     }
+  }
+
+  String normalizeStorageName(String name) {
+    var normalized = name.trim();
+    normalized = normalized.replaceAll(RegExp(r'\s+'), '_');
+    normalized = normalized.replaceAll(RegExp(r'[<>:"/\\|?*]'), '');
+    normalized = normalized.replaceAll(RegExp(r'^\.+|\.+$'), '');
+
+    if (normalized.isEmpty ||
+        normalized == '.' ||
+        normalized == '..' ||
+        _reservedWindowsNames.contains(normalized.toLowerCase())) {
+      throw AppError.validation(
+        code: ValidationErrorCode.invalidInput,
+        message: 'Имя хранилища содержит только недопустимые символы',
+        data: {'originalName': name},
+        timestamp: DateTime.now(),
+      );
+    }
+
+    return normalized;
+  }
+
+  Future<void> _moveDirectoryWithoutDatabase({
+    required String baseStoragePath,
+    required String normalizedStoreName,
+    required Directory storageDir,
+  }) async {
+    final backupName = 'do_not_contain_db_file_$normalizedStoreName';
+    var backupPath = p.join(baseStoragePath, backupName);
+
+    var backupDir = Directory(backupPath);
+    var counter = 1;
+    while (await backupDir.exists()) {
+      backupPath = p.join(baseStoragePath, '${backupName}_$counter');
+      backupDir = Directory(backupPath);
+      counter++;
+    }
+
+    await storageDir.rename(backupPath);
+    logInfo(
+      'Renamed directory without db file to: $backupPath',
+      tag: _logTag,
+    );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hoplixi/main_db/old/models/db_errors.dart';
-import 'package:hoplixi/main_db/old/models/store_folder_info.dart';
+import 'package:hoplixi/core/errors/errors.dart';
+import 'package:hoplixi/main_db/new/models/store_folder_info.dart';
+
 
 part 'archive_state.freezed.dart';
 
@@ -33,7 +34,7 @@ sealed class ArchiveScreenState with _$ArchiveScreenState {
     @Default(false) bool isArchiving,
 
     /// Ошибка архивации
-    DatabaseError? error,
+    AppError? error,
 
     /// Путь к архиву для импорта
     String? importPath,

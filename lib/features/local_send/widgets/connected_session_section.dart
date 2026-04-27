@@ -16,7 +16,7 @@ import 'package:hoplixi/features/local_send/widgets/import_cloud_sync_tokens_dia
 import 'package:hoplixi/features/local_send/widgets/import_store_archive_dialog.dart';
 import 'package:hoplixi/features/local_send/widgets/send_cloud_sync_tokens_dialog.dart';
 import 'package:hoplixi/features/local_send/widgets/send_store_dialog.dart';
-import 'package:hoplixi/main_db/old/services/other/archive_service.dart';
+import 'package:hoplixi/main_db/new/services/archive_service/archive_service.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:open_file/open_file.dart' as open_file;

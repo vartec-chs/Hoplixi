@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 2026-04-28
+
+### cloud_sync (snapshot sync)
+
+- `SnapshotSyncService` и `StoreSnapshotManifestBuilder` переведены с
+  удалённого `MainStoreStorageService` на new `MainStoreFileService`.
+- В `MainStoreFileService` добавлены helpers для snapshot sync import-flow:
+  построение пути файла БД, подготовка уникальной директории импорта и
+  нормализация имени хранилища.
+
 ## 2026-04-27
 
 ### db_core (new main store UI migration)
@@ -28,6 +38,17 @@
 
 - `dao_providers.dart` переведён на `AppError.mainDatabase(...)` для сценария,
   когда хранилище не открыто, и убран лишний неиспользуемый `manager`.
+
+### db_core (main store metadata)
+
+- `MainStoreMetadataService` переведён с `DatabaseError` на `AppError` для
+  сценариев `recordNotFound`, `queryFailed` и `updateFailed`.
+
+### archive_storage (import ui)
+
+- `ImportTab` теперь определяет неверный пароль через `AppError.archive` и
+  `ArchiveErrorCode.invalidPassword` вместо legacy
+  `ArchiveInvalidPasswordError`.
 
 ### db_core (main store manager)
 

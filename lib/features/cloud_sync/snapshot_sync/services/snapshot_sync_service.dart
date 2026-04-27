@@ -1,11 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:hoplixi/main_db/old/models/db_errors.dart';
-import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
-import 'package:hoplixi/main_db/old/models/store_manifest.dart';
-import 'package:hoplixi/main_db/old/services/main_store_storage_service.dart';
-import 'package:hoplixi/main_db/old/services/store_manifest_service.dart';
+import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/attachments_manifest.dart';
@@ -16,6 +12,10 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_repository.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/store_snapshot_manifest_builder.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
+import 'package:hoplixi/main_db/core/models/dto/index.dart';
+import 'package:hoplixi/main_db/new/services/main_store_storage_service.dart';
+import 'package:hoplixi/main_db/new/services/store_manifest_service/model/store_manifest.dart';
+import 'package:hoplixi/main_db/new/services/store_manifest_service/store_manifest_service.dart';
 
 enum SnapshotConflictResolution { uploadLocal, downloadRemote }
 
@@ -51,7 +51,7 @@ class SnapshotSyncService {
   final SnapshotSyncRepository _repository;
   final StoreSnapshotManifestBuilder _manifestBuilder;
   final SnapshotSyncHashService _hashService;
-  final MainStoreStorageService _storageService = MainStoreStorageService();
+  final MainStoreFileService _storageService = const MainStoreFileService();
 
   Future<void> initializeRemoteLayout({
     required String tokenId,
@@ -947,11 +947,25 @@ class SnapshotSyncService {
           baseStoragePath: baseStoragePath,
           storeName: candidateName,
         );
-      } on ValidationError {
-        continue;
-      } on DatabaseError catch (error) {
+      } on AppError catch (error) {
+        final canTryNextName = error.maybeWhen(
+          validation:
+              (code, message, data, debugMessage, cause, stackTrace, timestamp) {
+                return code == ValidationErrorCode.alreadyExists ||
+                    code == ValidationErrorCode.invalidInput;
+              },
+          orElse: () => false,
+        );
+        if (canTryNextName) {
+          continue;
+        }
+
         throw StateError(
           'Failed to prepare local storage directory for import: ${error.message}',
+        );
+      } catch (error) {
+        throw StateError(
+          'Failed to prepare local storage directory for import: $error',
         );
       }
     }

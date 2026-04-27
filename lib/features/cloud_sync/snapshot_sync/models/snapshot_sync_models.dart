@@ -1,6 +1,6 @@
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
-import 'package:hoplixi/main_db/old/models/store_manifest.dart';
+import 'package:hoplixi/main_db/new/services/store_manifest_service/model/store_manifest.dart';
 
 /// Результат сравнения локального и удалённого манифестов при snapshot sync.
 enum StoreVersionCompareResult {

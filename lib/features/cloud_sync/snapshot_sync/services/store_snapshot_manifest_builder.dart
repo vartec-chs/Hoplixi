@@ -3,9 +3,10 @@ import 'dart:io';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/models.dart' as logger_models;
 import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
-import 'package:hoplixi/main_db/old/models/store_manifest.dart';
-import 'package:hoplixi/main_db/old/services/main_store_storage_service.dart';
-import 'package:hoplixi/main_db/old/services/store_manifest_service.dart';
+import 'package:hoplixi/main_db/new/services/main_store_storage_service.dart';
+import 'package:hoplixi/main_db/new/services/store_manifest_service/model/store_manifest.dart';
+import 'package:hoplixi/main_db/new/services/store_manifest_service/store_manifest_service.dart';
+
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/attachments_manifest.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/attachments_manifest_file_service.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_hash_service.dart';
@@ -40,7 +41,7 @@ class StoreSnapshotManifestBuilder {
   final Uuid _uuid;
   final Future<logger_models.DeviceInfo> Function() _deviceInfoLoader;
   final Future<PackageInfo> Function() _packageInfoLoader;
-  final MainStoreStorageService _storageService = MainStoreStorageService();
+  final MainStoreFileService _storageService = const MainStoreFileService();
 
   Future<LocalStoreSnapshot> buildAndPersist({
     required String storePath,

@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:cryptography/cryptography.dart';
 import 'package:drift/drift.dart';
+import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
-import 'package:hoplixi/main_db/old/models/db_errors.dart';
 import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
@@ -34,7 +34,7 @@ class MainStoreMetadataService {
     );
   }
 
-  AsyncResultDart<StoreInfoDto, DatabaseError> getStoreInfo(
+  AsyncResultDart<StoreInfoDto, AppError> getStoreInfo(
     MainStore database,
   ) async {
     try {
@@ -42,7 +42,8 @@ class MainStoreMetadataService {
       if (metaResult.isError()) {
         return metaResult.fold(
           (_) => Failure(
-            DatabaseError.recordNotFound(
+            AppError.mainDatabase(
+              code: MainDatabaseErrorCode.recordNotFound,
               message: 'Метаданные хранилища не найдены',
               timestamp: DateTime.now(),
             ),
@@ -56,7 +57,8 @@ class MainStoreMetadataService {
       return Success(_toStoreInfoDto(meta));
     } catch (e, stackTrace) {
       return Failure(
-        DatabaseError.queryFailed(
+        AppError.mainDatabase(
+          code: MainDatabaseErrorCode.queryFailed,
           message: 'Не удалось получить информацию о хранилище: $e',
           timestamp: DateTime.now(),
           stackTrace: stackTrace,
@@ -65,7 +67,7 @@ class MainStoreMetadataService {
     }
   }
 
-  AsyncResultDart<StoreInfoDto, DatabaseError> updateStore(
+  AsyncResultDart<StoreInfoDto, AppError> updateStore(
     MainStore database,
     UpdateStoreDto dto,
   ) async {
@@ -74,7 +76,8 @@ class MainStoreMetadataService {
       if (currentMetaResult.isError()) {
         return currentMetaResult.fold(
           (_) => Failure(
-            DatabaseError.recordNotFound(
+            AppError.mainDatabase(
+              code: MainDatabaseErrorCode.recordNotFound,
               message: 'Метаданные хранилища не найдены',
               timestamp: DateTime.now(),
             ),
@@ -109,7 +112,8 @@ class MainStoreMetadataService {
       return Success(_toStoreInfoDto(updatedMeta));
     } catch (e, stackTrace) {
       return Failure(
-        DatabaseError.updateFailed(
+        AppError.mainDatabase(
+          code: MainDatabaseErrorCode.updateFailed,
           message: 'Не удалось обновить хранилище: $e',
           timestamp: DateTime.now(),
           stackTrace: stackTrace,
@@ -118,15 +122,14 @@ class MainStoreMetadataService {
     }
   }
 
-  AsyncResultDart<StoreMeta, DatabaseError> getStoreMeta(
-    MainStore database,
-  ) async {
+  AsyncResultDart<StoreMeta, AppError> getStoreMeta(MainStore database) async {
     try {
       final meta = await database.storeMetaDao.getStoreMeta();
 
       if (meta == null) {
         return Failure(
-          DatabaseError.recordNotFound(
+          AppError.mainDatabase(
+            code: MainDatabaseErrorCode.recordNotFound,
             message: 'Метаданные хранилища не найдены',
             timestamp: DateTime.now(),
           ),
@@ -136,7 +139,8 @@ class MainStoreMetadataService {
       return Success(meta);
     } catch (e, stackTrace) {
       return Failure(
-        DatabaseError.queryFailed(
+        AppError.mainDatabase(
+          code: MainDatabaseErrorCode.queryFailed,
           message: 'Не удалось получить метаданные хранилища: $e',
           timestamp: DateTime.now(),
           stackTrace: stackTrace,
