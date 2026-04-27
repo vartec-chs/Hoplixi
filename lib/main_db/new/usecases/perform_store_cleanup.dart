@@ -1,7 +1,7 @@
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_db/core/dao/index.dart';
-import 'package:hoplixi/main_db/old/models/store_settings_keys.dart';
-import 'package:hoplixi/main_db/old/services/other/file_storage_service.dart';
+import 'package:hoplixi/main_db/new/config/store_settings_keys.dart';
+import 'package:hoplixi/main_db/new/services/other/file_storage_service.dart';
 
 enum StoreCleanupStatus { completed, skippedByInterval, failed }
 

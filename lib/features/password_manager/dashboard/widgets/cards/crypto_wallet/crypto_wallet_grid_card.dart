@@ -6,7 +6,7 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
-import 'package:hoplixi/main_db/old/provider/dao_providers.dart';
+import 'package:hoplixi/main_db/new/providers/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 class CryptoWalletGridCard extends ConsumerStatefulWidget {

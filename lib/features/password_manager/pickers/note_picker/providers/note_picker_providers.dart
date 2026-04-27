@@ -3,7 +3,7 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/models/note_picker_models.dart';
 import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
 import 'package:hoplixi/main_db/core/models/filter/notes_filter.dart';
-import 'package:hoplixi/main_db/old/provider/main_store_provider.dart';
+import 'package:hoplixi/main_db/new/providers/main_store_manager_provider.dart';
 
 const int pageSize = 20;
 

@@ -9,7 +9,7 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_db/core/models/dto/icon_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
-import 'package:hoplixi/main_db/old/provider/dao_providers.dart';
+import 'package:hoplixi/main_db/new/providers/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:image/image.dart' as img;
 

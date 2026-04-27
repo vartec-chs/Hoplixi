@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
-import 'package:hoplixi/main_db/old/provider/main_store_provider.dart';
+import 'package:hoplixi/main_db/new/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/shared/widgets/update_marker.dart';
 import 'package:hoplixi/shared/widgets/watchers/lifecycle/auto_lock_provider.dart';
 

@@ -2,6 +2,20 @@
 
 ## 2026-04-27
 
+### db_core (new main store UI migration)
+
+- UI и password-manager провайдеры переключены с old `main_store_provider`,
+  `dao_providers`, `service_providers`, `db_history_provider` и migration dialog
+  на new `lib/main_db/new`.
+- В new main-store добавлены совместимые facade-экспорты и методы для
+  `mainStoreProvider`, `dataUpdateStreamProvider`, backup orchestrator,
+  storage-service providers и путей вложений, чтобы UI работал поверх нового
+  `MainStoreManagerNotifier`.
+- Исправлены diagnostics после переключения на non-null
+  `mainStoreManagerProvider`: удалены лишние null-checks, устаревший
+  `withOpacity`, unused поле автобэкапа и async-gap предупреждения в карточке
+  recent database.
+
 ### db_core (main store manager notifier)
 
 - Добавлена синхронизация на уровне `MainStoreManagerNotifier`: все

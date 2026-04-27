@@ -1,6 +1,6 @@
 import 'package:riverpod/riverpod.dart';
-import 'package:hoplixi/main_db/old/models/db_history_model.dart';
-import 'package:hoplixi/main_db/old/provider/db_history_provider.dart';
+import 'package:hoplixi/main_db/new/services/db_history_services/model/db_history_model.dart';
+import 'package:hoplixi/main_db/new/providers/db_history_provider.dart';
 
 final recentDatabaseProvider = FutureProvider.autoDispose<DatabaseEntry?>((
   ref,

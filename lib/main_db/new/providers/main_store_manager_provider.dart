@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/index.dart' hide Session;
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:hoplixi/main_db/new/models/db_state.dart';
@@ -24,6 +25,28 @@ final mainStoreManagerStateProvider =
       MainStoreManagerNotifier.new,
     );
 
+final mainStoreProvider = mainStoreManagerStateProvider;
+
+final mainStoreStateProvider = FutureProvider<DatabaseState>((ref) async {
+  return ref.watch(mainStoreProvider.future);
+});
+
+final dataUpdateStreamProvider = Provider<Stream<void>>((ref) {
+  final state = ref.watch(mainStoreProvider);
+
+  return state.maybeWhen(
+    data: (dbState) {
+      if (!dbState.isOpen) {
+        return const Stream.empty();
+      }
+
+      final store = ref.read(mainStoreProvider.notifier).currentStore;
+      return store?.watchDataChanged().skip(1) ?? const Stream.empty();
+    },
+    orElse: () => const Stream.empty(),
+  );
+});
+
 class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
   static const String _logTag = 'MainStoreManagerNotifier';
 
@@ -34,8 +57,21 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
       state.value ?? const DatabaseState(status: DatabaseStatus.closed);
 
   MainStoreManager get currentManager => _manager;
+  MainStoreManager? get currentMainStoreManager => _manager;
   MainStore? get currentStore => _manager.currentStore;
   Session? get currentSession => _manager.currentSession;
+  MainStore get currentDatabase {
+    final database = _manager.currentStore;
+    if (database == null) {
+      logError(
+        'Database access requested before store was opened',
+        tag: _logTag,
+        data: <String, dynamic>{'state': state.toString()},
+      );
+      throw StateError('Database must be opened before accessing it');
+    }
+    return database;
+  }
 
   @override
   Future<DatabaseState> build() async {
@@ -554,6 +590,68 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
   void resetState() {
     ref.read(closeSyncTrackingProvider.notifier).reset();
     _setState(const DatabaseState(status: DatabaseStatus.closed));
+  }
+
+  void setOpenFailure(AppError error) {
+    _setState(DatabaseState(status: DatabaseStatus.error, error: error));
+  }
+
+  void markOpeningStarted({String? path, String? name}) {
+    _setState(
+      _currentState.copyWith(
+        path: path ?? _currentState.path,
+        status: DatabaseStatus.opening,
+        error: null,
+      ),
+    );
+  }
+
+  Future<String?> getAttachmentsPath() async {
+    return _manager.getAttachmentsPath();
+  }
+
+  Future<String?> getDecryptedAttachmentsPath() async {
+    return _manager.getDecryptedAttachmentsPath();
+  }
+
+  Future<String?> createSubfolder(String folderName) async {
+    final result = await _manager.createSubfolder(folderName);
+    return result.fold(
+      (path) => path,
+      (error) {
+        _setState(_currentState.copyWith(error: error));
+        logError(
+          'Failed to create store subfolder: ${error.message}',
+          tag: _logTag,
+        );
+        return null;
+      },
+    );
+  }
+
+  void resolveCloseStoreUploadDecision(bool shouldUpload) {
+    ref
+        .read(mainStoreCloseSyncProvider.notifier)
+        .resolveCloseStoreUploadDecision(shouldUpload);
+  }
+
+  void markSnapshotUploadOnCloseRequired() {
+    ref.read(mainStoreCloseSyncProvider.notifier).markSnapshotUploadOnCloseRequired();
+  }
+
+  void syncPendingSnapshotUploadPrompt({
+    required String? storeUuid,
+    required bool hasBinding,
+    required StoreVersionCompareResult? compareResult,
+  }) {
+    ref.read(mainStoreCloseSyncProvider.notifier).syncPendingSnapshotUploadPrompt(
+      isStoreOpen: _currentState.isOpen,
+      currentStorePath: _manager.currentStorePath,
+      storeUuid: storeUuid,
+      statusStorePath: _manager.currentStorePath,
+      hasBinding: hasBinding,
+      compareResult: compareResult,
+    );
   }
 
   void _setState(DatabaseState newState) {

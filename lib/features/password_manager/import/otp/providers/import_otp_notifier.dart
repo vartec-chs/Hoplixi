@@ -10,7 +10,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_db/core/models/dto/otp_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
-import 'package:hoplixi/main_db/old/provider/dao_providers.dart';
+import 'package:hoplixi/main_db/new/providers/dao_providers.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:zxing2/qrcode.dart';
 import 'package:image/image.dart' as img;

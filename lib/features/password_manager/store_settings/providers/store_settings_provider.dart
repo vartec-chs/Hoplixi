@@ -5,14 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
-import 'package:hoplixi/main_db/old/models/store_settings_keys.dart';
-import 'package:hoplixi/main_db/old/provider/dao_providers.dart';
-import 'package:hoplixi/main_db/old/provider/db_history_provider.dart';
-import 'package:hoplixi/main_db/old/provider/main_store_provider.dart';
-import 'package:hoplixi/main_db/old/provider/service_providers.dart';
-import 'package:hoplixi/main_db/old/services/db_key_derivation_service.dart';
+import 'package:hoplixi/main_db/new/config/store_settings_keys.dart';
+import 'package:hoplixi/main_db/new/providers/dao_providers.dart';
+import 'package:hoplixi/main_db/new/providers/db_history_provider.dart';
+import 'package:hoplixi/main_db/new/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/main_db/new/providers/service_providers.dart';
+import 'package:hoplixi/main_db/new/services/db_key_derivation_service.dart';
+import 'package:hoplixi/main_db/new/services/store_manifest_service/store_manifest_service.dart';
 import 'package:hoplixi/setup/di_init.dart';
-import 'package:hoplixi/main_db/old/services/store_manifest_service.dart';
 import 'package:hoplixi/features/password_manager/store_settings/models/store_settings_state.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
@@ -41,12 +41,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
 
       try {
         final manager = await ref.read(mainStoreManagerProvider.future);
-        final db =
-            manager?.currentStore ??
-            ref
-                .read(mainStoreProvider.notifier)
-                .currentMainStoreManager
-                ?.currentStore;
+        final db = manager.currentStore;
         if (db != null) {
           final pragmaRows = await db.customSelect('PRAGMA cipher;').get();
           if (pragmaRows.isNotEmpty) {

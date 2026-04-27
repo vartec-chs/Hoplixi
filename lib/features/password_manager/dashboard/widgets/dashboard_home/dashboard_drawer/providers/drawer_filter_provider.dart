@@ -7,7 +7,7 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_ho
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/base_filter_provider.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_db/core/models/filter/index.dart';
-import 'package:hoplixi/main_db/old/provider/dao_providers.dart';
+import 'package:hoplixi/main_db/new/providers/dao_providers.dart';
 
 const int _kPageSize = 20;
 const Duration _kSearchDebounce = Duration(milliseconds: 300);

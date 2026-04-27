@@ -13,7 +13,7 @@ import 'package:hoplixi/main_db/new/usecases/create_main_store.dart';
 import 'package:hoplixi/main_db/new/usecases/open_main_store.dart';
 import 'package:hoplixi/main_db/new/usecases/perform_store_cleanup.dart';
 import 'package:hoplixi/main_db/new/usecases/update_main_store.dart';
-import 'package:hoplixi/main_db/old/services/other/file_storage_service.dart';
+import 'package:hoplixi/main_db/new/services/other/file_storage_service.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:synchronized/synchronized.dart';
 
@@ -54,6 +54,22 @@ class MainStoreManager {
       _currentSession; // Предоставляет доступ к текущей сессии, которая включает MainStore, информацию о хранилище и путь к директории. Может быть null, если БД не открыта
 
   String? get currentStorePath => _currentSession?.storeDirectoryPath;
+
+  String? getAttachmentsPath() {
+    final storePath = currentStorePath;
+    if (storePath == null || storePath.isEmpty) {
+      return null;
+    }
+    return _storageService.getAttachmentsPath(storePath);
+  }
+
+  String? getDecryptedAttachmentsPath() {
+    final storePath = currentStorePath;
+    if (storePath == null || storePath.isEmpty) {
+      return null;
+    }
+    return _storageService.getDecryptedAttachmentsPath(storePath);
+  }
 
   void _setCurrentSession(Session session) {
     _currentStore = session.store;
@@ -209,6 +225,42 @@ class MainStoreManager {
   AsyncResultDart<Unit, AppError> closeStore() async {
     return _lock.synchronized(() async {
       return _closeCurrentSession();
+    });
+  }
+
+  AsyncResultDart<String, AppError> createSubfolder(String folderName) async {
+    return _lock.synchronized(() async {
+      try {
+        final storePath = currentStorePath;
+        if (storePath == null || storePath.isEmpty) {
+          return Failure(
+            AppError.mainDatabase(
+              code: MainDatabaseErrorCode.notInitialized,
+              message: 'Хранилище не открыто',
+              timestamp: DateTime.now(),
+            ),
+          );
+        }
+
+        final path = await _storageService.createSubfolder(
+          storePath: storePath,
+          folderName: folderName,
+        );
+        return Success(path);
+      } catch (error, stackTrace) {
+        if (error is AppError) {
+          return Failure(error);
+        }
+        return Failure(
+          AppError.fileSystem(
+            code: FileSystemErrorCode.unknown,
+            message: 'Не удалось создать подпапку хранилища',
+            cause: error,
+            stackTrace: stackTrace,
+            timestamp: DateTime.now(),
+          ),
+        );
+      }
     });
   }
 

@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/old/models/db_state.dart';
+import 'package:hoplixi/main_db/new/models/db_state.dart';
 import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
-import 'package:hoplixi/main_db/old/provider/main_store_provider.dart';
+import 'package:hoplixi/main_db/new/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
@@ -259,9 +259,6 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     }
 
     final manager = await ref.read(mainStoreManagerProvider.future);
-    if (manager == null) {
-      throw StateError('Store manager is unavailable.');
-    }
     final storeInfoResult = await manager.getStoreInfo();
     final storeInfo = storeInfoResult.fold(
       (info) => info,
@@ -417,9 +414,6 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     }
 
     final manager = await ref.read(mainStoreManagerProvider.future);
-    if (manager == null) {
-      throw StateError('Store manager is unavailable.');
-    }
     final storeInfoResult = await manager.getStoreInfo();
     final storeInfo = storeInfoResult.fold(
       (info) => info,
@@ -615,9 +609,6 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     final manager = useWatch
         ? await ref.watch(mainStoreManagerProvider.future)
         : await ref.read(mainStoreManagerProvider.future);
-    if (manager == null) {
-      return const StoreSyncStatus(isStoreOpen: false);
-    }
 
     final storeInfoResult = await manager.getStoreInfo();
     final storeInfo = storeInfoResult.fold(

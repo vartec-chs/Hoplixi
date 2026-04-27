@@ -6,7 +6,7 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
-import 'package:hoplixi/main_db/old/provider/main_store_provider.dart';
+import 'package:hoplixi/main_db/new/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/features/password_manager/create_store/models/create_store_state.dart';
 import 'package:hoplixi/features/password_manager/create_store/providers/create_store_form_provider.dart';
 import 'package:hoplixi/features/password_manager/create_store/widgets/step1_name_description.dart';

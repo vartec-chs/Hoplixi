@@ -4,7 +4,7 @@ import 'dart:math' as math;
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:hoplixi/main_db/old/services/store_manifest_service.dart';
+import 'package:hoplixi/main_db/new/services/store_manifest_service/store_manifest_service.dart';
 import 'package:path/path.dart' as p;
 
 const int kStorePasswordAttemptBaseLimit = 5;

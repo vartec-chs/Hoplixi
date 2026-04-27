@@ -6,7 +6,7 @@ import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/file_dto.dart';
-import 'package:hoplixi/main_db/old/models/store_settings_keys.dart';
+import 'package:hoplixi/main_db/new/config/store_settings_keys.dart';
 import 'package:hoplixi/rust/api/crypt_api.dart' as crypt;
 import 'package:mime/mime.dart';
 import 'package:path_provider/path_provider.dart';

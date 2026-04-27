@@ -4,7 +4,7 @@ import 'package:hoplixi/features/password_manager/pickers/document_picker/models
 import 'package:hoplixi/main_db/core/dao/index.dart';
 import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
 import 'package:hoplixi/main_db/core/models/filter/documents_filter.dart';
-import 'package:hoplixi/main_db/old/provider/dao_providers.dart';
+import 'package:hoplixi/main_db/new/providers/dao_providers.dart';
 
 const int _pageSize = 20;
 

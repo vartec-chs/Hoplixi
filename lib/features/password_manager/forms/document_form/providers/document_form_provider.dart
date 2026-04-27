@@ -9,9 +9,9 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_db/core/dao/index.dart';
 import 'package:hoplixi/main_db/core/models/dto/document_dto.dart';
-import 'package:hoplixi/main_db/old/provider/dao_providers.dart';
-import 'package:hoplixi/main_db/old/provider/service_providers.dart';
-import 'package:hoplixi/main_db/old/services/index.dart';
+import 'package:hoplixi/main_db/new/providers/dao_providers.dart';
+import 'package:hoplixi/main_db/new/providers/service_providers.dart';
+import 'package:hoplixi/main_db/new/services/other/document_storage_service.dart';
 import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
 import 'package:mime/mime.dart';

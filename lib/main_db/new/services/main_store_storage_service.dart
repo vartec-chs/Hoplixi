@@ -21,6 +21,28 @@ class MainStoreFileService {
     return p.join(storePath, decryptedAttachmentsFolder);
   }
 
+  Future<String> createSubfolder({
+    required String storePath,
+    required String folderName,
+  }) async {
+    final normalizedStorePath = storePath.trim();
+    final normalizedFolderName = folderName.trim();
+
+    if (normalizedStorePath.isEmpty || normalizedFolderName.isEmpty) {
+      throw AppError.validation(
+        code: ValidationErrorCode.invalidInput,
+        message: 'Путь хранилища или имя папки не указаны',
+        timestamp: DateTime.now(),
+      );
+    }
+
+    final directory = Directory(p.join(normalizedStorePath, normalizedFolderName));
+    if (!await directory.exists()) {
+      await directory.create(recursive: true);
+    }
+    return directory.path;
+  }
+
   Future<bool> storageDirectoryExists(String path) {
     return Directory(path).exists();
   }

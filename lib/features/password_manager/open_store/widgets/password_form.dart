@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/theme/constants.dart';
 import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
-import 'package:hoplixi/main_db/old/ui/store_open_migration_dialog.dart';
+import 'package:hoplixi/main_db/new/ui/store_open_migration_dialog.dart';
 import 'package:hoplixi/features/password_manager/open_store/providers/open_store_form_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';

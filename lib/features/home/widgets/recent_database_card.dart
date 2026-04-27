@@ -6,13 +6,13 @@ import 'package:hoplixi/core/services/local_auth_failure.dart';
 import 'package:hoplixi/core/services/local_auth_service.dart';
 import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/main_db/old/models/db_history_model.dart';
+import 'package:hoplixi/main_db/new/services/db_history_services/model/db_history_model.dart';
 import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
-import 'package:hoplixi/main_db/old/models/store_manifest.dart';
-import 'package:hoplixi/main_db/old/provider/db_history_provider.dart';
-import 'package:hoplixi/main_db/old/provider/main_store_provider.dart';
-import 'package:hoplixi/main_db/old/services/store_manifest_service.dart';
-import 'package:hoplixi/main_db/old/ui/store_open_migration_dialog.dart';
+import 'package:hoplixi/main_db/new/services/store_manifest_service/model/store_manifest.dart';
+import 'package:hoplixi/main_db/new/providers/db_history_provider.dart';
+import 'package:hoplixi/main_db/new/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/main_db/new/services/store_manifest_service/store_manifest_service.dart';
+import 'package:hoplixi/main_db/new/ui/store_open_migration_dialog.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
@@ -138,7 +138,7 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer.withOpacity(0.1),
+                  color: colorScheme.primaryContainer.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
@@ -694,6 +694,8 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
         return;
       }
 
+      if (!context.mounted) return;
+
       // Пароль не сохранен, показываем диалог
       final result = await showDialog<(String, bool)>(
         context: context,
@@ -711,6 +713,8 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
     final success = await notifier.openStore(
       OpenStoreDto(path: entry.path, password: resolvedPassword),
     );
+
+    if (!context.mounted) return;
 
     if (success) {
       await attemptLimiter.reset(entry.path);
