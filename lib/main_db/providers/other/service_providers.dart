@@ -5,7 +5,7 @@ import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/main_db/services/main_store_storage_service.dart';
 import 'package:hoplixi/main_db/services/other/document_storage_service.dart';
 import 'package:hoplixi/main_db/services/other/file_storage_service.dart';
-import 'package:hoplixi/main_db/services/store_cleanup_service.dart';
+import 'package:hoplixi/main_db/usecases/perform_store_cleanup.dart';
 
 final fileStorageServiceProvider = FutureProvider<FileStorageService>((
   ref,
@@ -46,11 +46,11 @@ final documentStorageServiceProvider = FutureProvider<DocumentStorageService>((
   return DocumentStorageService(store, fileStorageService);
 });
 
-final storeCleanupServiceProvider = FutureProvider<StoreCleanupService>((
+final performStoreCleanupProvider = FutureProvider.autoDispose<PerformStoreCleanup>((
   ref,
 ) async {
   final settingsDao = await ref.watch(storeSettingsDaoProvider.future);
   final fileStorageService = await ref.watch(fileStorageServiceProvider.future);
 
-  return StoreCleanupService(settingsDao, fileStorageService);
+  return PerformStoreCleanup(settingsDao, fileStorageService);
 });

@@ -28,6 +28,11 @@
 
 ### db_core (crud dao tuples)
 
+- Старый `StoreCleanupService` удалён; очистка хранилища теперь использует
+  use case `PerformStoreCleanup` и provider `performStoreCleanupProvider`.
+- Startup cleanup при `createStore`/`openStore` остаётся неблокирующим через
+  `unawaited(runStartupCleanup(session))`.
+
 - В `lib/main_db/core/daos/crud` добавлен общий generic alias
   `VaultItemWith<T> = (VaultItemsData, T)`.
 - CRUD-DAO в папке переведены на `VaultItemWith<T>`, чтобы убрать повторение

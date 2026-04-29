@@ -320,10 +320,8 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       }
 
       if (shouldCleanupHistory) {
-        final cleanupService = await ref.read(
-          storeCleanupServiceProvider.future,
-        );
-        await cleanupService.performFullCleanup(ignoreInterval: true);
+        final cleanup = await ref.read(performStoreCleanupProvider.future);
+        await cleanup(ignoreInterval: true);
       }
 
       // Обновляем состояние успешно

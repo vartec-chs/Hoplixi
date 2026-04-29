@@ -88,6 +88,7 @@ class StoreCleanupResult {
 
 /// Сервис для глобальной очистки хранилища (базы данных и файлов)
 class PerformStoreCleanup {
+  static const String _logTag = 'PerformStoreCleanup';
   static const int _defaultCleanupIntervalDays = 7;
   static const int _defaultHistoryLimit = 100;
   static const int _defaultHistoryMaxAgeDays = 30;
@@ -124,7 +125,7 @@ class PerformStoreCleanup {
             if (diff.inDays < intervalDays) {
               final message =
                   'Skip cleanup: interval ($intervalDays days) not reached yet (last cleanup: $lastCleanup).';
-              logInfo(message, tag: 'StoreCleanupService');
+              logInfo(message, tag: _logTag);
               return StoreCleanupResult.skippedByInterval(
                 message: message,
                 intervalDays: intervalDays,
@@ -135,7 +136,7 @@ class PerformStoreCleanup {
         }
       }
 
-      logInfo('Starting full store cleanup...', tag: 'StoreCleanupService');
+      logInfo('Starting full store cleanup...', tag: _logTag);
 
       var historyCleanupPerformed = false;
       var historyWasDisabled = false;
@@ -171,7 +172,7 @@ class PerformStoreCleanup {
         historyCleanupPerformed = true;
         logInfo(
           'History cleanup completed. (limit: $historyLimit, max_age: $historyMaxAgeDays days)',
-          tag: 'StoreCleanupService',
+          tag: _logTag,
         );
       } else {
         // Если история выключена, удаляем всю историю
@@ -183,10 +184,7 @@ class PerformStoreCleanup {
         historyWasDisabled = true;
         historyLimit = _disabledHistoryValue;
         historyMaxAgeDays = _disabledHistoryValue;
-        logInfo(
-          'History disabled. All history records cleared.',
-          tag: 'StoreCleanupService',
-        );
+        logInfo('History disabled. All history records cleared.', tag: _logTag);
       }
 
       // 2. Очистка файлов-сирот
@@ -194,7 +192,7 @@ class PerformStoreCleanup {
           .cleanupOrphanedFiles();
       logInfo(
         'Orphaned files cleanup completed. Deleted $deletedFilesCount files.',
-        tag: 'StoreCleanupService',
+        tag: _logTag,
       );
 
       // Обновляем метку времени последней очистки
@@ -203,10 +201,7 @@ class PerformStoreCleanup {
         DateTime.now().toIso8601String(),
       );
 
-      logInfo(
-        'Full store cleanup finished successfully.',
-        tag: 'StoreCleanupService',
-      );
+      logInfo('Full store cleanup finished successfully.', tag: _logTag);
 
       return StoreCleanupResult.completed(
         message: 'Full store cleanup finished successfully.',
@@ -217,11 +212,7 @@ class PerformStoreCleanup {
         orphanedFilesDeleted: deletedFilesCount,
       );
     } catch (e, s) {
-      logError(
-        'Error during store cleanup: $e',
-        stackTrace: s,
-        tag: 'StoreCleanupService',
-      );
+      logError('Error during store cleanup: $e', stackTrace: s, tag: _logTag);
 
       return StoreCleanupResult.failed(
         message: 'Store cleanup failed.',
