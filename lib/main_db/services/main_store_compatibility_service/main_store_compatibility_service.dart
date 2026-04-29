@@ -115,9 +115,7 @@ class MainStoreCompatibilityService {
 int _compareAppVersions(String? left, String? right) {
   final leftSegments = _parseVersionSegments(left);
   final rightSegments = _parseVersionSegments(right);
-  final maxLength = leftSegments.length > rightSegments.length
-      ? leftSegments.length
-      : rightSegments.length;
+  final maxLength = 2;
 
   for (var index = 0; index < maxLength; index++) {
     final leftValue = index < leftSegments.length ? leftSegments[index] : 0;
@@ -142,6 +140,10 @@ List<int> _parseVersionSegments(String? value) {
     final parsed = int.tryParse(match.group(0) ?? '');
     if (parsed != null) {
       segments.add(parsed);
+    }
+
+    if (segments.length == 2) {
+      break;
     }
   }
 
