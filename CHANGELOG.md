@@ -22,6 +22,9 @@
   snapshot-версий без преждевременного prompt из cached status.
 - Удалён промежуточный `closeStoreSyncStatusProvider`; close-sync dialog теперь
   напрямую читает `mainStoreCloseSyncProvider` как единственный source of truth.
+- `currentStoreSyncSnapshotProvider` переименован в
+  `cachedCurrentStoreSyncStatusProvider`, чтобы явно обозначить кеш последнего
+  sync status открытого store.
 
 ### db_core (crud dao tuples)
 

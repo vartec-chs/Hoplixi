@@ -87,7 +87,7 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
       }
 
       final cachedStatus = _service.reusableStatus(
-        cachedStatus: ref.read(currentStoreSyncSnapshotProvider),
+        cachedStatus: ref.read(cachedCurrentStoreSyncStatusProvider),
         storePath: context.storePath,
         storeInfo: context.storeInfo,
       );
@@ -238,7 +238,7 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
     required String storeUuid,
     required String storePath,
   }) {
-    final status = ref.read(currentStoreSyncSnapshotProvider);
+    final status = ref.read(cachedCurrentStoreSyncStatusProvider);
     final isCurrentStore =
         status?.isStoreOpen == true &&
         status?.storeUuid == storeUuid &&

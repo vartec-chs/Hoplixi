@@ -16,12 +16,12 @@ final currentStoreSyncProvider =
       CurrentStoreSyncNotifier.new,
     );
 
-final currentStoreSyncSnapshotProvider =
-    NotifierProvider<CurrentStoreSyncSnapshotNotifier, StoreSyncStatus?>(
-      CurrentStoreSyncSnapshotNotifier.new,
+final cachedCurrentStoreSyncStatusProvider =
+    NotifierProvider<CachedCurrentStoreSyncStatusNotifier, StoreSyncStatus?>(
+      CachedCurrentStoreSyncStatusNotifier.new,
     );
 
-class CurrentStoreSyncSnapshotNotifier extends Notifier<StoreSyncStatus?> {
+class CachedCurrentStoreSyncStatusNotifier extends Notifier<StoreSyncStatus?> {
   @override
   StoreSyncStatus? build() => null;
 
@@ -90,7 +90,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
   Future<StoreSyncStatus> build() async {
     final storeState = await ref.watch(mainStoreProvider.future);
     final status = await _loadCurrentStatus(storeState, useWatch: true);
-    _publishSyncSnapshot(status);
+    _publishCachedSyncStatus(status);
     _syncCloseStoreUploadPromptRequirement(status);
     return status;
   }
@@ -223,12 +223,12 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
 
   void _setSyncState(StoreSyncStatus next) {
     state = AsyncData(next);
-    _publishSyncSnapshot(next);
+    _publishCachedSyncStatus(next);
     _syncCloseStoreUploadPromptRequirement(next);
   }
 
-  void _publishSyncSnapshot(StoreSyncStatus next) {
-    ref.read(currentStoreSyncSnapshotProvider.notifier).setStatus(next);
+  void _publishCachedSyncStatus(StoreSyncStatus next) {
+    ref.read(cachedCurrentStoreSyncStatusProvider.notifier).setStatus(next);
   }
 
   Future<void> syncNow() async {

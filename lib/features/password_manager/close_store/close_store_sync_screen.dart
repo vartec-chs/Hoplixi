@@ -194,7 +194,7 @@ class _CloseStoreSyncContentState extends ConsumerState<CloseStoreSyncContent>
     final syncStatus = isChecking
         ? null
         : closeSyncStatus ??
-              ref.watch(currentStoreSyncSnapshotProvider) ??
+              ref.watch(cachedCurrentStoreSyncStatusProvider) ??
               ref.watch(currentStoreSyncProvider).value;
     final syncProgress = syncStatus?.syncProgress;
     final requiresUnlockToApply = syncStatus?.requiresUnlockToApply ?? false;
