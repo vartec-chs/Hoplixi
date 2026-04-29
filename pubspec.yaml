@@ -75,7 +75,7 @@ dependencies:
   open_file: ^3.5.11
   watcher: ^1.2.1
   protobuf: ^4.2.0
-  lucide_icons_flutter: ^3.1.12
+  lucide_icons_flutter: ^3.1.13
   flutter_graph_view: ^2.1.0
   flutter_doc_scanner: ^0.0.20
   build_config: ^1.2.0
@@ -98,14 +98,14 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
-  flutter_lucide: ^1.9.0
+  flutter_lucide: ^1.11.0
   sqlite3: ^3.3.1
   go_transitions: ^0.8.3
   mdns_dart: ^2.2.1
   network_info_plus: ^7.0.0
   web_socket_channel: ^3.0.3
   desktop_drop: ^0.7.1
-  flutter_zxing: ^2.2.1
+  flutter_zxing: ^2.3.0
   slang_flutter: ^4.14.0
   slang: ^4.14.0
   connectivity_plus: ^7.1.1
