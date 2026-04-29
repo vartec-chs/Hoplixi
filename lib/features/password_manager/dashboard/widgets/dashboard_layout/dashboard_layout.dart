@@ -5,10 +5,11 @@ import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/screen_protection_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/dashboard_drawer.dart';
+import 'package:hoplixi/features/settings/providers/settings_prefs_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
-import 'dashboard_drawer_scope.dart';
 import 'config/dashboard_layout_constants.dart';
+import 'dashboard_drawer_scope.dart';
 import 'desktop_three_column_layout.dart';
 import 'keyboard_shortcuts.dart';
 import 'widgets/fab_builder.dart';
@@ -16,6 +17,7 @@ import 'widgets/floating_nav_bar.dart';
 import 'widgets/mobile_cloud_sync_overlay.dart';
 
 const List<String> _fullCenterPaths = [AppRoutesPaths.notesGraph];
+const double _floatingNavScrimExtraHeight = 56.0;
 
 class AppNavigationShell extends StatefulWidget {
   final GoRouterState state;
@@ -164,12 +166,15 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
     required String location,
     required int currentIndex,
     required List<NavigationRailDestination> destinations,
+    required bool floatingNavEffectsEnabled,
   }) {
     final showBottomNav = _shouldShowBottomNav(location);
     final showFAB = _shouldShowFAB(location);
     final entityType = EntityType.fromId(entity) ?? EntityType.password;
     final systemPadding = MediaQuery.of(context).viewPadding;
     final navBottom = systemPadding.bottom + 12;
+    final navScrimHeight =
+        navBottom + kFloatingNavBarHeight + _floatingNavScrimExtraHeight;
     final fabBottom = showBottomNav
         ? systemPadding.bottom +
               kFloatingNavBarHeight +
@@ -184,6 +189,21 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
           Positioned.fill(
             child: KeyedSubtree(key: ValueKey(location), child: widget.child),
           ),
+          if (floatingNavEffectsEnabled)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: navScrimHeight,
+              child: IgnorePointer(
+                child: AnimatedOpacity(
+                  opacity: showBottomNav ? 1.0 : 0.0,
+                  duration: kFadeAnimationDuration,
+                  curve: Curves.easeInOut,
+                  child: const _FloatingNavBarScrim(),
+                ),
+              ),
+            ),
           Positioned(
             left: kFloatingNavMarginHorizontal,
             right: kFloatingNavMarginHorizontal,
@@ -205,6 +225,7 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
                     child: FloatingNavBar(
                       destinations: destinations,
                       selectedIndex: currentIndex,
+                      visualEffectsEnabled: floatingNavEffectsEnabled,
                       onItemSelected: (index) =>
                           _onNavItemSelected(context, index, entity),
                     ),
@@ -348,32 +369,58 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
     final isMobile =
         MediaQuery.sizeOf(context).width < MainConstants.kMobileBreakpoint;
 
-    final shell = isMobile
-        ? _buildMobileShell(
-            context,
-            entity: entity,
-            location: location,
-            currentIndex: currentIndex,
-            destinations: destinations,
-          )
-        : _buildDesktopShell(
-            context,
-            entity: entity,
-            location: location,
-            currentIndex: currentIndex,
-            destinations: destinations,
-          );
-
     return Consumer(
       builder: (context, ref, child) {
         ref.watch(dashboardScreenProtectionProvider);
-        return child!;
+        final floatingNavEffectsEnabled =
+            ref.watch(dashboardFloatingNavEffectsEnabledProvider).value ?? true;
+        final shell = isMobile
+            ? _buildMobileShell(
+                context,
+                entity: entity,
+                location: location,
+                currentIndex: currentIndex,
+                destinations: destinations,
+                floatingNavEffectsEnabled: floatingNavEffectsEnabled,
+              )
+            : _buildDesktopShell(
+                context,
+                entity: entity,
+                location: location,
+                currentIndex: currentIndex,
+                destinations: destinations,
+              );
+
+        return Stack(
+          children: [
+            Positioned.fill(child: shell),
+            const Positioned.fill(child: MobileCloudSyncOverlay()),
+          ],
+        );
       },
-      child: Stack(
-        children: [
-          Positioned.fill(child: shell),
-          const Positioned.fill(child: MobileCloudSyncOverlay()),
-        ],
+    );
+  }
+}
+
+class _FloatingNavBarScrim extends StatelessWidget {
+  const _FloatingNavBarScrim();
+
+  @override
+  Widget build(BuildContext context) {
+    final shadowColor = Theme.of(context).primaryColor;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.bottomCenter,
+          end: Alignment.topCenter,
+          colors: [
+            shadowColor.withValues(alpha: 0.24),
+            shadowColor.withValues(alpha: 0.14),
+            shadowColor.withValues(alpha: 0.0),
+          ],
+          stops: const [0.0, 0.5, 1.0],
+        ),
       ),
     );
   }

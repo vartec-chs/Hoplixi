@@ -8,7 +8,13 @@ import 'package:hoplixi/features/password_generator/models/password_generator_pr
 import 'package:hoplixi/features/password_generator/services/password_generator_profile_service.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/password_strength_indicator.dart';
-import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/shared/ui/text_field.dart' hide PasswordField;
+
+import 'widgets/batch_passwords_section.dart';
+import 'widgets/length_slider.dart';
+import 'widgets/option_tile.dart';
+import 'widgets/password_field.dart';
+import 'widgets/profiles_section.dart';
 
 /// Кастомизируемый генератор паролей.
 ///
@@ -74,6 +80,10 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
   late bool _useUppercase;
   late bool _useDigits;
   late bool _useSpecial;
+  late String _lowercaseCharacters;
+  late String _uppercaseCharacters;
+  late String _digitCharacters;
+  late String _specialCharacters;
 
   String _generatedPassword = '';
   List<String> _batchPasswords = const [];
@@ -101,6 +111,10 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
     _useUppercase = widget.initialUseUppercase;
     _useDigits = widget.initialUseDigits;
     _useSpecial = widget.initialUseSpecial;
+    _lowercaseCharacters = _lowercase;
+    _uppercaseCharacters = _uppercase;
+    _digitCharacters = _digits;
+    _specialCharacters = _special;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _generatedPassword.isNotEmpty) {
         return;
@@ -146,16 +160,16 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
   String _buildCharacterPool() {
     final buffer = StringBuffer();
     if (_useLowercase) {
-      buffer.write(_lowercase);
+      buffer.write(_lowercaseCharacters);
     }
     if (_useUppercase) {
-      buffer.write(_uppercase);
+      buffer.write(_uppercaseCharacters);
     }
     if (_useDigits) {
-      buffer.write(_digits);
+      buffer.write(_digitCharacters);
     }
     if (_useSpecial) {
-      buffer.write(_special);
+      buffer.write(_specialCharacters);
     }
     return buffer.toString();
   }
@@ -265,6 +279,10 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
       _useUppercase = profile.useUppercase;
       _useDigits = profile.useDigits;
       _useSpecial = profile.useSpecial;
+      _lowercaseCharacters = profile.lowercaseCharacters ?? _lowercase;
+      _uppercaseCharacters = profile.uppercaseCharacters ?? _uppercase;
+      _digitCharacters = profile.digitCharacters ?? _digits;
+      _specialCharacters = profile.specialCharacters ?? _special;
     });
     unawaited(_profileService.rememberSelectedProfile(profile.id));
     _generate();
@@ -290,6 +308,10 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
         useUppercase: _useUppercase,
         useDigits: _useDigits,
         useSpecial: _useSpecial,
+        lowercaseCharacters: _lowercaseCharacters,
+        uppercaseCharacters: _uppercaseCharacters,
+        digitCharacters: _digitCharacters,
+        specialCharacters: _specialCharacters,
       );
       if (!mounted) {
         return;
@@ -364,6 +386,78 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
     unawaited(_profileService.rememberSelectedProfile(null));
   }
 
+  Future<void> _showCharacterSetEditor({
+    required String title,
+    required String currentValue,
+    required String defaultValue,
+    required ValueChanged<String> onSaved,
+  }) async {
+    final controller = TextEditingController(text: currentValue);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(title),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            maxLines: 4,
+            minLines: 2,
+            decoration: primaryInputDecoration(
+              dialogContext,
+              labelText: 'Набор символов',
+              helperText: 'Дубликаты будут удалены при сохранении',
+            ),
+          ),
+          actions: [
+            SmoothButton(
+              onPressed: () => controller.text = defaultValue,
+              label: 'Сбросить',
+              type: .text,
+            ),
+            SmoothButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              label: 'Отмена',
+              type: .text,
+            ),
+            SmoothButton(
+              onPressed: () => Navigator.pop(dialogContext, controller.text),
+              label: 'Сохранить',
+            ),
+          ],
+        );
+      },
+    );
+    controller.dispose();
+
+    if (result == null) {
+      return;
+    }
+
+    final normalizedValue = _deduplicateCharacters(result);
+    if (normalizedValue.isEmpty) {
+      Toaster.warning(
+        title: 'Генератор',
+        description: 'Набор символов не может быть пустым.',
+      );
+      return;
+    }
+
+    onSaved(normalizedValue);
+    _generate();
+  }
+
+  String _deduplicateCharacters(String value) {
+    final seen = <int>{};
+    final buffer = StringBuffer();
+    for (final codeUnit in value.codeUnits) {
+      if (seen.add(codeUnit)) {
+        buffer.writeCharCode(codeUnit);
+      }
+    }
+    return buffer.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -371,7 +465,7 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _PasswordField(
+          PasswordField(
             password: _generatedPassword,
             copied: _copied,
             placeholder: widget.emptyPlaceholder,
@@ -389,7 +483,7 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
 
           const SizedBox(height: 24),
 
-          _LengthSlider(
+          LengthSlider(
             length: _length,
             minLength: widget.minLength,
             maxLength: widget.maxLength,
@@ -401,7 +495,7 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
 
           const SizedBox(height: 16),
 
-          _BatchPasswordsSection(
+          BatchPasswordsSection(
             selectedCount: _batchSize,
             countOptions: _batchCountOptions,
             passwords: _batchPasswords,
@@ -415,7 +509,7 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
 
           const SizedBox(height: 24),
 
-          _ProfilesSection(
+          ProfilesSection(
             controller: _profileNameController,
             profiles: _profiles,
             selectedProfileId: _selectedProfileId,
@@ -441,37 +535,73 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
 
           const SizedBox(height: 8),
 
-          _OptionTile(
+          OptionTile(
             label: 'Строчные (a-z)',
+            characterSet: _lowercaseCharacters,
             value: _useLowercase,
             onChanged: (value) {
               setState(() => _useLowercase = value);
               _generate();
             },
+            onEditCharacters: () => _showCharacterSetEditor(
+              title: 'Строчные символы',
+              currentValue: _lowercaseCharacters,
+              defaultValue: _lowercase,
+              onSaved: (value) {
+                setState(() => _lowercaseCharacters = value);
+              },
+            ),
           ),
-          _OptionTile(
+          OptionTile(
             label: 'Прописные (A-Z)',
+            characterSet: _uppercaseCharacters,
             value: _useUppercase,
             onChanged: (value) {
               setState(() => _useUppercase = value);
               _generate();
             },
+            onEditCharacters: () => _showCharacterSetEditor(
+              title: 'Прописные символы',
+              currentValue: _uppercaseCharacters,
+              defaultValue: _uppercase,
+              onSaved: (value) {
+                setState(() => _uppercaseCharacters = value);
+              },
+            ),
           ),
-          _OptionTile(
+          OptionTile(
             label: 'Цифры (0-9)',
+            characterSet: _digitCharacters,
             value: _useDigits,
             onChanged: (value) {
               setState(() => _useDigits = value);
               _generate();
             },
+            onEditCharacters: () => _showCharacterSetEditor(
+              title: 'Цифры',
+              currentValue: _digitCharacters,
+              defaultValue: _digits,
+              onSaved: (value) {
+                setState(() => _digitCharacters = value);
+              },
+            ),
           ),
-          _OptionTile(
+          OptionTile(
             label: 'Спецсимволы (!@#\$...)',
+            characterSet: _specialCharacters,
             value: _useSpecial,
             onChanged: (value) {
               setState(() => _useSpecial = value);
               _generate();
             },
+            onEditCharacters: () => _showCharacterSetEditor(
+              title: 'Спецсимволы',
+              currentValue: _specialCharacters,
+              defaultValue: _special,
+              onSaved: (value) {
+                setState(() => _specialCharacters = value);
+              },
+            ),
           ),
 
           if (widget.showSubmitButton) ...[
@@ -490,361 +620,6 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
           ],
         ],
       ),
-    );
-  }
-}
-
-class _ProfilesSection extends StatelessWidget {
-  const _ProfilesSection({
-    required this.controller,
-    required this.profiles,
-    required this.selectedProfileId,
-    required this.isLoading,
-    required this.isSaving,
-    required this.isDeleting,
-    required this.onProfileSelected,
-    required this.onSavePressed,
-    required this.onDeletePressed,
-    required this.onCreateNewPressed,
-  });
-
-  final TextEditingController controller;
-  final List<PasswordGeneratorProfile> profiles;
-  final String? selectedProfileId;
-  final bool isLoading;
-  final bool isSaving;
-  final bool isDeleting;
-  final ValueChanged<String?> onProfileSelected;
-  final VoidCallback onSavePressed;
-  final VoidCallback onDeletePressed;
-  final VoidCallback onCreateNewPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final canSave =
-        !isLoading && !isSaving && controller.text.trim().isNotEmpty;
-    final canDelete = !isLoading && !isDeleting && selectedProfileId != null;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          'Профили генератора',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 12),
-        DropdownButtonFormField<String?>(
-          value: selectedProfileId,
-
-          items: [
-            const DropdownMenuItem<String?>(
-              value: null,
-              child: Text('Новый профиль'),
-            ),
-            ...profiles.map(
-              (profile) => DropdownMenuItem<String?>(
-                value: profile.id,
-                child: Text(profile.name),
-              ),
-            ),
-          ],
-          onChanged: isLoading ? null : onProfileSelected,
-          decoration: primaryInputDecoration(
-            context,
-            labelText: 'Сохранённый профиль',
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: controller,
-          decoration: primaryInputDecoration(
-            context,
-            labelText: 'Имя профиля',
-            suffixIcon: selectedProfileId == null
-                ? null
-                : IconButton(
-                    tooltip: 'Создать новый профиль',
-                    onPressed: onCreateNewPressed,
-                    icon: const Icon(Icons.add_circle_outline),
-                  ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: SmoothButton(
-                onPressed: canSave ? onSavePressed : null,
-                loading: isSaving,
-                icon: const Icon(Icons.save_outlined, size: 18),
-                label: selectedProfileId == null
-                    ? 'Сохранить профиль'
-                    : 'Обновить профиль',
-                type: SmoothButtonType.outlined,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: SmoothButton(
-                onPressed: canDelete ? onDeletePressed : null,
-                loading: isDeleting,
-                icon: const Icon(Icons.delete_outline, size: 18),
-                label: 'Удалить',
-                variant: SmoothButtonVariant.error,
-                type: SmoothButtonType.outlined,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _PasswordField extends StatelessWidget {
-  const _PasswordField({
-    required this.password,
-    required this.copied,
-    required this.placeholder,
-    required this.regenerateTooltip,
-    required this.onCopy,
-    this.onRegenerate,
-  });
-
-  final String password;
-  final bool copied;
-  final String placeholder;
-  final String regenerateTooltip;
-  final VoidCallback onCopy;
-  final VoidCallback? onRegenerate;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          IconButton.filledTonal(
-            onPressed: onRegenerate,
-            icon: const Icon(Icons.refresh, size: 18),
-            tooltip: regenerateTooltip,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SelectableText(
-                password.isEmpty ? placeholder : password,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontFamily: 'monospace',
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          IconButton.filledTonal(
-            onPressed: password.isEmpty ? null : onCopy,
-            icon: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: Icon(
-                copied ? Icons.check : Icons.copy,
-                key: ValueKey(copied),
-                size: 18,
-              ),
-            ),
-            tooltip: copied ? 'Скопировано!' : 'Копировать',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BatchPasswordsSection extends StatelessWidget {
-  const _BatchPasswordsSection({
-    required this.selectedCount,
-    required this.countOptions,
-    required this.passwords,
-    required this.copiedIndex,
-    required this.onCountChanged,
-    required this.onGeneratePressed,
-    required this.onCopyPressed,
-  });
-
-  final int selectedCount;
-  final List<int> countOptions;
-  final List<String> passwords;
-  final int? copiedIndex;
-  final ValueChanged<int> onCountChanged;
-  final VoidCallback onGeneratePressed;
-  final ValueChanged<int> onCopyPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          'Пакетная генерация',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: DropdownButtonFormField<int>(
-                value: selectedCount,
-                decoration: primaryInputDecoration(
-                  context,
-                  labelText: 'Количество паролей',
-                ),
-                items: countOptions
-                    .map(
-                      (count) => DropdownMenuItem<int>(
-                        value: count,
-                        child: Text(count.toString()),
-                      ),
-                    )
-                    .toList(growable: false),
-                onChanged: (value) {
-                  if (value != null) {
-                    onCountChanged(value);
-                  }
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
-            SmoothButton(
-              onPressed: onGeneratePressed,
-              icon: const Icon(Icons.auto_awesome, size: 18),
-              label: 'Сгенерировать',
-              type: SmoothButtonType.outlined,
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (passwords.isEmpty)
-          Text(
-            'Нажмите "Сгенерировать", чтобы получить список паролей.',
-            style: theme.textTheme.bodyMedium,
-          )
-        else
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: passwords.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 8),
-            itemBuilder: (context, index) {
-              final password = passwords[index];
-              final copied = copiedIndex == index;
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: SelectableText(
-                        password,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      tooltip: copied ? 'Скопировано!' : 'Копировать',
-                      onPressed: () => onCopyPressed(index),
-                      icon: Icon(copied ? Icons.check : Icons.copy_outlined),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-      ],
-    );
-  }
-}
-
-class _LengthSlider extends StatelessWidget {
-  const _LengthSlider({
-    required this.length,
-    required this.minLength,
-    required this.maxLength,
-    required this.onChanged,
-  });
-
-  final double length;
-  final int minLength;
-  final int maxLength;
-  final ValueChanged<double> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final totalDivisions = maxLength - minLength;
-
-    return Row(
-      children: [
-        Text('Длина: ${length.round()}', style: theme.textTheme.bodyMedium),
-        Expanded(
-          child: Slider(
-            value: length,
-            min: minLength.toDouble(),
-            max: maxLength.toDouble(),
-            divisions: totalDivisions > 0 ? totalDivisions : null,
-            onChanged: onChanged,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _OptionTile extends StatelessWidget {
-  const _OptionTile({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String label;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return SwitchListTile.adaptive(
-      title: Text(label, style: Theme.of(context).textTheme.bodyMedium),
-      value: value,
-      onChanged: onChanged,
-      contentPadding: EdgeInsets.zero,
-      dense: true,
     );
   }
 }

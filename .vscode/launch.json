@@ -6,8 +6,8 @@
 			"request": "launch",
 			"type": "dart",
 			"flutterMode": "debug",
-			"toolArgs": ["--flavor", "dev"],
-			"program": "lib/main.dart"
+			"program": "lib/main.dart",
+			"args": ["--flavor", "dev"]
 		},
 		{
 			"name": "dev Profile",
@@ -30,8 +30,8 @@
 			"request": "launch",
 			"type": "dart",
 			"flutterMode": "debug",
-			"toolArgs": ["--flavor", "prod"],
-			"program": "lib/main.dart"
+			"program": "lib/main.dart",
+			"args": ["--flavor", "prod"]
 		},
 		{
 			"name": "prod Profile",

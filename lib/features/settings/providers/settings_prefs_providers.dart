@@ -42,6 +42,11 @@ final dashboardAnimationsEnabledProvider = StreamProvider<bool>(
       .watchDashboardAnimationsEnabled(),
 );
 
+final dashboardFloatingNavEffectsEnabledProvider = StreamProvider<bool>(
+  (ref) => getIt<PreferencesService>().settingsPrefs
+      .watchDashboardFloatingNavEffectsEnabled(),
+);
+
 final dashboardAnimatedItemsThresholdProvider = StreamProvider<int>(
   (ref) => getIt<PreferencesService>().settingsPrefs
       .watchDashboardAnimatedItemsThreshold(),

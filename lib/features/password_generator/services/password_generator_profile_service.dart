@@ -53,6 +53,10 @@ class PasswordGeneratorProfileService {
     required bool useUppercase,
     required bool useDigits,
     required bool useSpecial,
+    required String lowercaseCharacters,
+    required String uppercaseCharacters,
+    required String digitCharacters,
+    required String specialCharacters,
   }) async {
     final document = await loadDocument();
     final now = DateTime.now();
@@ -74,6 +78,10 @@ class PasswordGeneratorProfileService {
       useUppercase: useUppercase,
       useDigits: useDigits,
       useSpecial: useSpecial,
+      lowercaseCharacters: lowercaseCharacters,
+      uppercaseCharacters: uppercaseCharacters,
+      digitCharacters: digitCharacters,
+      specialCharacters: specialCharacters,
       createdAt: existingProfile?.createdAt ?? now,
       updatedAt: now,
     );

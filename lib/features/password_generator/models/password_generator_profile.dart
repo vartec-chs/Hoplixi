@@ -13,6 +13,10 @@ sealed class PasswordGeneratorProfile with _$PasswordGeneratorProfile {
     required bool useUppercase,
     required bool useDigits,
     required bool useSpecial,
+    String? lowercaseCharacters,
+    String? uppercaseCharacters,
+    String? digitCharacters,
+    String? specialCharacters,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _PasswordGeneratorProfile;

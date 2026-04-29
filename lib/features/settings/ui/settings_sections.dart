@@ -692,6 +692,8 @@ class DashboardSettingsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboardAnimationsEnabled =
         ref.watch(dashboardAnimationsEnabledProvider).value ?? true;
+    final floatingNavEffectsEnabled =
+        ref.watch(dashboardFloatingNavEffectsEnabledProvider).value ?? true;
     final animatedItemsThreshold =
         ref.watch(dashboardAnimatedItemsThresholdProvider).value ?? 15;
 
@@ -705,6 +707,16 @@ class DashboardSettingsSection extends ConsumerWidget {
           value: dashboardAnimationsEnabled,
           onChanged: (value) => getIt<PreferencesService>().settingsPrefs
               .setDashboardAnimationsEnabled(value),
+        ),
+        const Divider(height: 1),
+        SettingsSwitchTile(
+          title: 'Glass-эффект нижней навигации',
+          subtitle:
+              'Показывать затемнение и стеклянный фон у мобильной навигации',
+          leading: const Icon(Icons.blur_on_outlined),
+          value: floatingNavEffectsEnabled,
+          onChanged: (value) => getIt<PreferencesService>().settingsPrefs
+              .setDashboardFloatingNavEffectsEnabled(value),
         ),
         const Divider(height: 1),
         SettingsTile(

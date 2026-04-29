@@ -25,6 +25,9 @@ class SettingsPrefs {
   @Pref(defaultValue: true)
   static const dashboardAnimationsEnabled = PrefKey<bool>();
 
+  @Pref(defaultValue: true)
+  static const dashboardFloatingNavEffectsEnabled = PrefKey<bool>();
+
   @Pref(defaultValue: 15)
   static const dashboardAnimatedItemsThreshold = PrefKey<int>();
 
