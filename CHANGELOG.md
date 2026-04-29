@@ -2,6 +2,14 @@
 
 ## 2026-04-29
 
+### password_manager (close store sync)
+
+- Close-store snapshot sync больше не редиректит на отдельный route:
+  состояние `closeStoreSyncStatusProvider` отображается глобальным
+  незакрываемым диалогом поверх текущего экрана.
+- Содержимое `CloseStoreSyncScreen` вынесено в общий widget и переиспользуется
+  route-экраном и новым dialog host.
+
 ### db_core (crud dao tuples)
 
 - В `lib/main_db/core/daos/crud` добавлен общий generic alias

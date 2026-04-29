@@ -5,7 +5,6 @@ import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/index.dart';
 import 'package:hoplixi/features/cloud_sync/auth/models/auth_flow_status.dart';
 import 'package:hoplixi/features/cloud_sync/auth/providers/auth_flow_provider.dart';
-import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/local_send/providers/transfer_provider.dart';
 import 'package:hoplixi/features/setup/providers/setup_completed_provider.dart';
 import 'package:hoplixi/global_key.dart';
@@ -62,7 +61,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         return AppRoutesPaths.home;
       }
       final authFlowState = ref.read(authFlowProvider);
-      final closeStoreSyncStatus = ref.read(closeStoreSyncStatusProvider);
       if (authFlowState.status == AuthFlowStatus.inProgress &&
           currentPath != AppRoutesPaths.cloudSyncAuthProgress) {
         return AppRoutesPaths.cloudSyncAuthProgress;
@@ -73,19 +71,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Редирект на dashboard если БД открыта и пользователь на пути создания/открытия БД
       if (dbStateAsync.hasValue) {
         final dbState = dbStateAsync.value!;
-
-        if (closeStoreSyncStatus != null) {
-          if (currentPath != AppRoutesPaths.closeStoreSync) {
-            if (UniversalPlatform.isDesktop) {
-              await WindowManager.instance.setSize(
-                MainConstants.defaultWindowSize,
-              );
-              await WindowManager.instance.center();
-            }
-            return AppRoutesPaths.closeStoreSync;
-          }
-          return null;
-        }
 
         // Если БД заблокирована, редиректим на экран блокировки
         if (dbState.isLocked) {
