@@ -150,15 +150,17 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
     final result = await WifiOsBridge.connect(ssid: ssid, password: password);
     if (!mounted) return;
 
-    if (!result.isSuccess) {
-      Toaster.error(
-        title: l10n.network_label,
-        description: WifiOsBridge.describeError(result.error!),
-      );
-      return;
-    }
-
-    Toaster.success(title: l10n.network_label, description: ssid);
+    result.fold(
+      (_) {
+        Toaster.success(title: l10n.network_label, description: ssid);
+      },
+      (error) {
+        Toaster.error(
+          title: l10n.network_label,
+          description: WifiOsBridge.describeError(error),
+        );
+      },
+    );
   }
 
   @override

@@ -1,11 +1,19 @@
 # CHANGELOG
 
+## 2026-04-29
+
+### password_manager (wifi form)
+
+- `WifiOsBridge` переведён на `AsyncResultDart` из `result_dart`; локальный
+  `WifiOsResult` удалён, а экраны Wi-Fi формы переведены на обработку результата
+  через `fold()`.
+
 ## 2026-04-28
 
 ### cloud_sync (snapshot sync)
 
-- `SnapshotSyncService` и `StoreSnapshotManifestBuilder` переведены с
-  удалённого `MainStoreStorageService` на new `MainStoreFileService`.
+- `SnapshotSyncService` и `StoreSnapshotManifestBuilder` переведены с удалённого
+  `MainStoreStorageService` на new `MainStoreFileService`.
 - В `MainStoreFileService` добавлены helpers для snapshot sync import-flow:
   построение пути файла БД, подготовка уникальной директории импорта и
   нормализация имени хранилища.

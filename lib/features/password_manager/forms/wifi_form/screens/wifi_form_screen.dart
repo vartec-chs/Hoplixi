@@ -2,13 +2,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/main_db/core/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_button.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
+import 'package:hoplixi/main_db/core/models/dto/icon_ref_dto.dart';
+import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_editor.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/widgets/icon_source_picker_button.dart';
@@ -107,19 +107,21 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
     final result = await WifiOsBridge.getCurrentSsid();
     if (!mounted) return;
 
-    if (!result.isSuccess || result.value == null) {
-      Toaster.error(
-        title: l10n.common_load_error,
-        description: WifiOsBridge.describeError(result.error!),
-      );
-      return;
-    }
+    result.fold(
+      (ssid) {
+        ref
+            .read(wifiFormProvider(widget.wifiId).notifier)
+            .applyImportedSsid(ssid);
 
-    ref
-        .read(wifiFormProvider(widget.wifiId).notifier)
-        .applyImportedSsid(result.value!);
-
-    Toaster.success(title: l10n.wifi_ssid_label, description: result.value!);
+        Toaster.success(title: l10n.wifi_ssid_label, description: ssid);
+      },
+      (error) {
+        Toaster.error(
+          title: l10n.common_load_error,
+          description: WifiOsBridge.describeError(error),
+        );
+      },
+    );
   }
 
   Future<void> _exportToWifi(WifiFormState state) async {
@@ -137,15 +139,17 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
     );
     if (!mounted) return;
 
-    if (!result.isSuccess) {
-      Toaster.error(
-        title: l10n.network_label,
-        description: WifiOsBridge.describeError(result.error!),
-      );
-      return;
-    }
-
-    Toaster.success(title: l10n.network_label, description: ssid);
+    result.fold(
+      (_) {
+        Toaster.success(title: l10n.network_label, description: ssid);
+      },
+      (error) {
+        Toaster.error(
+          title: l10n.network_label,
+          description: WifiOsBridge.describeError(error),
+        );
+      },
+    );
   }
 
   @override

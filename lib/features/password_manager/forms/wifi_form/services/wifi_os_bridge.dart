@@ -1,17 +1,7 @@
 import 'package:op_wifi_utils/op_wifi_utils.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:universal_platform/universal_platform.dart';
-
-class WifiOsResult<T> {
-  const WifiOsResult.success(this.value) : error = null;
-
-  const WifiOsResult.failure(this.error) : value = null;
-
-  final T? value;
-  final OpWifiUtilsError? error;
-
-  bool get isSuccess => error == null;
-}
 
 class WifiOsBridge {
   const WifiOsBridge._();
@@ -19,38 +9,38 @@ class WifiOsBridge {
   static bool get supportsWifiConnection =>
       UniversalPlatform.isAndroid || UniversalPlatform.isIOS;
 
-  static Future<WifiOsResult<String>> getCurrentSsid() async {
+  static AsyncResultDart<String, OpWifiUtilsError> getCurrentSsid() async {
     final permissionError = await _ensureLocationPermission();
     if (permissionError != null) {
-      return WifiOsResult.failure(permissionError);
+      return Failure(permissionError);
     }
 
     final result = await OpWifiUtils.getCurrentSsid();
     if (!result.isSuccess) {
-      return WifiOsResult.failure(_extractError(result.error.type));
+      return Failure(_extractError(result.error.type));
     }
 
     final ssid = normalizeSsid(result.data);
     if (ssid == null) {
-      return const WifiOsResult.failure(OpWifiUtilsError.unknownCurrentSsid);
+      return const Failure(OpWifiUtilsError.unknownCurrentSsid);
     }
 
-    return WifiOsResult.success(ssid);
+    return Success(ssid);
   }
 
-  static Future<WifiOsResult<void>> connect({
+  static AsyncResultDart<Unit, OpWifiUtilsError> connect({
     required String ssid,
     String? password,
     bool joinOnce = true,
   }) async {
     final normalizedSsid = normalizeSsid(ssid);
     if (normalizedSsid == null) {
-      return const WifiOsResult.failure(OpWifiUtilsError.ssidMissing);
+      return const Failure(OpWifiUtilsError.ssidMissing);
     }
 
     final permissionError = await _ensureLocationPermission();
     if (permissionError != null) {
-      return WifiOsResult.failure(permissionError);
+      return Failure(permissionError);
     }
 
     final result = await OpWifiUtils.connectToWifi(
@@ -60,10 +50,10 @@ class WifiOsBridge {
     );
 
     if (!result.isSuccess) {
-      return WifiOsResult.failure(_extractError(result.error.type));
+      return Failure(_extractError(result.error.type));
     }
 
-    return const WifiOsResult.success(null);
+    return const Success(unit);
   }
 
   static String? normalizeSsid(String? value) {
