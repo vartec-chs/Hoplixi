@@ -16,6 +16,10 @@
 - `closeStore`/`lockStore` перед закрытием учитывают текущий cached sync
   snapshot: если статус текущего store `localNewer`, close-sync tracking
   принудительно помечается как требующий upload.
+- Close-sync dialog теперь открывается сразу при активной фазе close-sync
+  (`checking`/prompt/upload), а не только после начала публикации upload status.
+- Для фазы `checking` добавлен отдельный контент диалога: показывается проверка
+  snapshot-версий без преждевременного prompt из cached status.
 
 ### db_core (crud dao tuples)
 
@@ -36,6 +40,11 @@
   синхронизация происходит после закрытия БД, и предупреждает, что отказ от
   отправки актуальной версии на разных устройствах может привести к неразрешимым
   конфликтам.
+
+### password_manager (close store sync animation)
+
+- `CloseStoreSyncContent` получил мягкую анимацию появления и плавный
+  `AnimatedSwitcher` для смены состояния внутри экрана закрытия.
 
 ## 2026-04-28
 

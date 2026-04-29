@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/close_sync_state.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/close_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/snapshot_sync_progress_card.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
@@ -31,7 +33,10 @@ class CloseStoreSyncDialogHost extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isVisible = ref.watch(closeStoreSyncStatusProvider) != null;
+    final closeSyncState = ref.watch(mainStoreCloseSyncProvider).value;
+    final isVisible =
+        closeSyncState?.isActive == true ||
+        ref.watch(closeStoreSyncStatusProvider) != null;
 
     return PopScope(
       canPop: !isVisible,
@@ -98,8 +103,34 @@ class CloseStoreSyncContent extends ConsumerStatefulWidget {
       _CloseStoreSyncContentState();
 }
 
-class _CloseStoreSyncContentState extends ConsumerState<CloseStoreSyncContent> {
+class _CloseStoreSyncContentState extends ConsumerState<CloseStoreSyncContent>
+    with SingleTickerProviderStateMixin {
   bool _isResolvingDecision = false;
+  late final AnimationController _animationController;
+  late final Animation<double> _fadeAnimation;
+  late final Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 260),
+    )..forward();
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOut,
+    );
+    _scaleAnimation = Tween<double>(begin: 0.96, end: 1).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   bool _shouldAskAboutUpload(StoreSyncStatus? status) {
     return status != null &&
@@ -158,85 +189,162 @@ class _CloseStoreSyncContentState extends ConsumerState<CloseStoreSyncContent> {
   @override
   Widget build(BuildContext context) {
     final dbState = ref.watch(mainStoreProvider).value;
-    final syncStatus =
-        ref.watch(closeStoreSyncStatusProvider) ??
-        ref.watch(currentStoreSyncProvider).value;
+    final closeSyncState = ref.watch(mainStoreCloseSyncProvider).value;
+    final closeSyncStatus = closeSyncState?.status;
+    final isChecking =
+        closeSyncState?.phase == MainStoreCloseSyncPhase.checking;
+    final syncStatus = isChecking
+        ? null
+        : closeSyncStatus ??
+              ref.watch(closeStoreSyncStatusProvider) ??
+              ref.watch(currentStoreSyncSnapshotProvider) ??
+              ref.watch(currentStoreSyncProvider).value;
     final syncProgress = syncStatus?.syncProgress;
     final requiresUnlockToApply = syncStatus?.requiresUnlockToApply ?? false;
     final shouldAskAboutUpload = _shouldAskAboutUpload(syncStatus);
     final theme = Theme.of(context);
+    final title = isChecking
+        ? 'Проверка синхронизации'
+        : 'Синхронизация после закрытия хранилища';
+    final description = isChecking
+        ? 'Проверяем локальную и облачную snapshot-версии после закрытия хранилища. Не закрывайте приложение до завершения проверки.'
+        : shouldAskAboutUpload
+        ? _uploadDecisionDescription(syncStatus)
+        : requiresUnlockToApply
+        ? 'Удалённый snapshot уже применён локально после закрытия хранилища. Экран закроется автоматически после завершения сценария закрытия.'
+        : 'Идёт финальная синхронизация изменений после закрытия хранилища. Это окно закроется автоматически.';
+    final body = isChecking
+        ? const _CloseStoreCheckingCard(key: ValueKey('checking'))
+        : shouldAskAboutUpload
+        ? _CloseStoreUploadDecisionCard(
+            key: const ValueKey('upload-decision'),
+            title: _uploadDecisionCardTitle(syncStatus),
+            description: _uploadDecisionCardText(syncStatus),
+            isLoading: _isResolvingDecision,
+            onUploadAndClose: () => _resolveUploadDecision(true),
+            onCloseWithoutUpload: () => _resolveUploadDecision(false),
+          )
+        : syncProgress != null
+        ? SnapshotSyncProgressCard(
+            key: const ValueKey('sync-progress'),
+            progress: syncProgress,
+          )
+        : requiresUnlockToApply
+        ? const SnapshotSyncPendingApplyCard(key: ValueKey('pending-apply'))
+        : const Center(
+            key: ValueKey('loading'),
+            child: CircularProgressIndicator(),
+          );
 
-    return SingleChildScrollView(
-      padding: widget.padding,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 480),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Icon(
-              Icons.cloud_sync_outlined,
-              size: 64,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Синхронизация после закрытия хранилища',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              shouldAskAboutUpload
-                  ? _uploadDecisionDescription(syncStatus)
-                  : requiresUnlockToApply
-                  ? 'Удалённый snapshot уже применён локально после закрытия хранилища. Экран закроется автоматически после завершения сценария закрытия.'
-                  : 'Идёт финальная синхронизация изменений после закрытия хранилища. Это окно закроется автоматически.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            if (dbState?.name != null) ...[
-              const SizedBox(height: 20),
-              Text(
-                dbState!.name!,
-                style: theme.textTheme.titleMedium?.copyWith(
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: SingleChildScrollView(
+          padding: widget.padding,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Icon(
+                  Icons.cloud_sync_outlined,
+                  size: 64,
                   color: theme.colorScheme.primary,
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  title,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  description,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                if (dbState?.name != null) ...[
+                  const SizedBox(height: 20),
+                  Text(
+                    dbState!.name!,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+                if (dbState?.path != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    dbState!.path!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+                const SizedBox(height: 28),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  reverseDuration: const Duration(milliseconds: 180),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) {
+                    final offset = Tween<Offset>(
+                      begin: const Offset(0, 0.06),
+                      end: Offset.zero,
+                    ).animate(animation);
+
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(position: offset, child: child),
+                    );
+                  },
+                  child: body,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CloseStoreCheckingCard extends StatelessWidget {
+  const _CloseStoreCheckingCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            const SizedBox.square(
+              dimension: 28,
+              child: CircularProgressIndicator(strokeWidth: 3),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                'Определяем, нужно ли отправить изменения в облако...',
+                style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
-                textAlign: TextAlign.center,
               ),
-            ],
-            if (dbState?.path != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                dbState!.path!,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-            const SizedBox(height: 28),
-            if (shouldAskAboutUpload)
-              _CloseStoreUploadDecisionCard(
-                title: _uploadDecisionCardTitle(syncStatus),
-                description: _uploadDecisionCardText(syncStatus),
-                isLoading: _isResolvingDecision,
-                onUploadAndClose: () => _resolveUploadDecision(true),
-                onCloseWithoutUpload: () => _resolveUploadDecision(false),
-              )
-            else if (syncProgress != null)
-              SnapshotSyncProgressCard(progress: syncProgress)
-            else if (requiresUnlockToApply)
-              const SnapshotSyncPendingApplyCard()
-            else
-              const Center(child: CircularProgressIndicator()),
+            ),
           ],
         ),
       ),
@@ -251,6 +359,7 @@ class _CloseStoreUploadDecisionCard extends StatelessWidget {
     required this.isLoading,
     required this.onUploadAndClose,
     required this.onCloseWithoutUpload,
+    super.key,
   });
 
   final String title;
@@ -262,6 +371,7 @@ class _CloseStoreUploadDecisionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      key: super.key,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
