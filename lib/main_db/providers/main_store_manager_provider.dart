@@ -234,6 +234,12 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
         }
 
         final storeInfo = storeInfoResult.getOrThrow();
+        ref
+            .read(mainStoreCloseSyncProvider.notifier)
+            .markCurrentStoreUploadRequiredIfLocalNewer(
+              storeUuid: storeInfo.id,
+              storePath: storePath,
+            );
         final shouldSyncAfterClose = ref
             .read(closeSyncTrackingProvider)
             .hasLogicalChanges(storeInfo.modifiedAt);
@@ -341,6 +347,14 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
         }
 
         final storeInfo = storeInfoResult.getOrThrow();
+        if (!skipSnapshotSync) {
+          ref
+              .read(mainStoreCloseSyncProvider.notifier)
+              .markCurrentStoreUploadRequiredIfLocalNewer(
+                storeUuid: storeInfo.id,
+                storePath: storePath,
+              );
+        }
         final shouldSyncAfterLock =
             !skipSnapshotSync &&
             ref

@@ -233,6 +233,25 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
         .markUploadRequired(storeUuid: storeUuid, storePath: storePath);
   }
 
+  void markCurrentStoreUploadRequiredIfLocalNewer({
+    required String storeUuid,
+    required String storePath,
+  }) {
+    final status = ref.read(currentStoreSyncSnapshotProvider);
+    final isCurrentStore =
+        status?.isStoreOpen == true &&
+        status?.storeUuid == storeUuid &&
+        status?.storePath == storePath;
+    if (!isCurrentStore ||
+        status?.compareResult != StoreVersionCompareResult.localNewer) {
+      return;
+    }
+
+    ref
+        .read(closeSyncTrackingProvider.notifier)
+        .markUploadRequired(storeUuid: storeUuid, storePath: storePath);
+  }
+
   void syncPendingSnapshotUploadPrompt({
     required bool isStoreOpen,
     required String? currentStorePath,

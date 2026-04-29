@@ -4,14 +4,18 @@
 
 ### password_manager (close store sync)
 
-- Close-store snapshot sync больше не редиректит на отдельный route:
-  состояние `closeStoreSyncStatusProvider` отображается глобальным
-  незакрываемым диалогом поверх текущего экрана.
+- Close-store snapshot sync больше не редиректит на отдельный route: состояние
+  `closeStoreSyncStatusProvider` отображается глобальным незакрываемым диалогом
+  поверх текущего экрана.
 - Содержимое `CloseStoreSyncScreen` вынесено в общий widget и переиспользуется
   route-экраном и новым dialog host.
 - Если пользователь вручную пропускает upload при закрытии, требование upload
   сохраняется для этого же store и prompt снова появляется при следующем
-  закрытии, пока локальная snapshot-версия не будет отправлена или синхронизирована.
+  закрытии, пока локальная snapshot-версия не будет отправлена или
+  синхронизирована.
+- `closeStore`/`lockStore` перед закрытием учитывают текущий cached sync
+  snapshot: если статус текущего store `localNewer`, close-sync tracking
+  принудительно помечается как требующий upload.
 
 ### db_core (crud dao tuples)
 
@@ -25,6 +29,13 @@
 - `WifiOsBridge` переведён на `AsyncResultDart` из `result_dart`; локальный
   `WifiOsResult` удалён, а экраны Wi-Fi формы переведены на обработку результата
   через `fold()`.
+
+### password_manager (close store sync texts)
+
+- Обновлены тексты `CloseStoreSyncContent`: экран явно сообщает, что
+  синхронизация происходит после закрытия БД, и предупреждает, что отказ от
+  отправки актуальной версии на разных устройствах может привести к неразрешимым
+  конфликтам.
 
 ## 2026-04-28
 

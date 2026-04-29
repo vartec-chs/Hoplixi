@@ -113,11 +113,11 @@ class _CloseStoreSyncContentState extends ConsumerState<CloseStoreSyncContent> {
   String _uploadDecisionDescription(StoreSyncStatus? status) {
     return switch (status?.compareResult) {
       StoreVersionCompareResult.remoteMissing =>
-        'Cloud sync уже подключён, но облачная snapshot-версия для этого хранилища ещё не создана. Перед закрытием выберите, нужно ли сначала отправить текущую локальную версию в облако.',
+        'Хранилище уже закрыто, и теперь можно завершить синхронизацию. Облачная snapshot-версия для этого хранилища ещё не создана. Перед завершением выберите, нужно ли сначала отправить текущую локальную версию в облако.',
       StoreVersionCompareResult.localNewer =>
-        'Локальная snapshot-версия новее облачной. Перед закрытием выберите, нужно ли отправить обновлённую версию в облако.',
+        'Хранилище уже закрыто, и локальная snapshot-версия новее облачной. Перед завершением выберите, нужно ли отправить обновлённую версию в облако.',
       _ =>
-        'Идёт синхронизация изменений перед закрытием. Это окно закроется автоматически.',
+        'Хранилище уже закрыто, идёт финальная синхронизация изменений. Это окно закроется автоматически после завершения.',
     };
   }
 
@@ -134,11 +134,11 @@ class _CloseStoreSyncContentState extends ConsumerState<CloseStoreSyncContent> {
   String _uploadDecisionCardText(StoreSyncStatus? status) {
     return switch (status?.compareResult) {
       StoreVersionCompareResult.remoteMissing =>
-        'Если пропустить отправку, синхронизация останется подключённой, но в облаке пока не будет snapshot этого хранилища. Авто-отправку можно включить в разделе "Настройки -> Синхронизация".',
+        'Если пропустить отправку, это хранилище останется без облачной snapshot-версии. При дальнейшем использовании на разных устройствах могут появиться неразрешимые конфликты. Авто-отправку можно включить в разделе "Настройки -> Синхронизация".',
       StoreVersionCompareResult.localNewer =>
-        'Если пропустить отправку, хранилище закроется сразу, а облачная версия останется старой. Авто-отправку можно включить в разделе "Настройки -> Синхронизация".',
+        'Если пропустить отправку, облачная версия останется старой. При дальнейшем использовании на разных устройствах могут появиться неразрешимые конфликты. Авто-отправку можно включить в разделе "Настройки -> Синхронизация".',
       _ =>
-        'Если пропустить отправку, хранилище закроется сразу без обновления облачной версии. Авто-отправку можно включить в разделе "Настройки -> Синхронизация".',
+        'Если пропустить отправку, облако не получит актуальную версию этого хранилища. При дальнейшем использовании на разных устройствах могут появиться неразрешимые конфликты. Авто-отправку можно включить в разделе "Настройки -> Синхронизация".',
     };
   }
 
@@ -181,7 +181,7 @@ class _CloseStoreSyncContentState extends ConsumerState<CloseStoreSyncContent> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Закрытие хранилища',
+              'Синхронизация после закрытия хранилища',
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -192,8 +192,8 @@ class _CloseStoreSyncContentState extends ConsumerState<CloseStoreSyncContent> {
               shouldAskAboutUpload
                   ? _uploadDecisionDescription(syncStatus)
                   : requiresUnlockToApply
-                  ? 'Удалённый snapshot уже применён локально. Экран закроется автоматически после завершения сценария закрытия.'
-                  : 'Идёт синхронизация изменений перед закрытием. Это окно закроется автоматически.',
+                  ? 'Удалённый snapshot уже применён локально после закрытия хранилища. Экран закроется автоматически после завершения сценария закрытия.'
+                  : 'Идёт финальная синхронизация изменений после закрытия хранилища. Это окно закроется автоматически.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -282,13 +282,13 @@ class _CloseStoreUploadDecisionCard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             SmoothButton(
-              label: 'Отправить и закрыть',
+              label: 'Отправить и завершить',
               loading: isLoading,
               onPressed: isLoading ? null : onUploadAndClose,
             ),
             const SizedBox(height: 10),
             SmoothButton(
-              label: 'Закрыть без отправки',
+              label: 'Завершить без отправки',
               type: SmoothButtonType.outlined,
               onPressed: isLoading ? null : onCloseWithoutUpload,
             ),
