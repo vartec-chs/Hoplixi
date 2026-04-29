@@ -27,8 +27,7 @@ class _CloseDatabaseButtonState extends ConsumerState<CloseDatabaseButton> {
     final state = ref.watch(mainStoreProvider);
     final dbState = state.value;
     final isOpen = dbState?.isOpen ?? false;
-    final isClosingSync = dbState?.isClosingSync ?? false;
-    final isBusy = _isClosing || isClosingSync;
+    final isBusy = _isClosing;
 
     if (!isOpen && !isBusy) {
       return const SizedBox.shrink();

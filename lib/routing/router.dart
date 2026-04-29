@@ -74,7 +74,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (dbStateAsync.hasValue) {
         final dbState = dbStateAsync.value!;
 
-        if (dbState.isClosingSync || closeStoreSyncStatus != null) {
+        if (closeStoreSyncStatus != null) {
           if (currentPath != AppRoutesPaths.closeStoreSync) {
             if (UniversalPlatform.isDesktop) {
               await WindowManager.instance.setSize(

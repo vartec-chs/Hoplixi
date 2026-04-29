@@ -35,7 +35,6 @@ sealed class DatabaseState with _$DatabaseState {
   bool get isLocked => status == DatabaseStatus.locked;
   bool get isLoading => status == DatabaseStatus.loading;
   bool get isClosing => status == DatabaseStatus.closing;
-  bool get isClosingSync => false;
   bool get hasError => status == DatabaseStatus.error;
   String? get name => info?.name;
 }
