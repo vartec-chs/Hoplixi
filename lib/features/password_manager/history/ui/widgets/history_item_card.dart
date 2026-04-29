@@ -23,13 +23,14 @@ class HistoryItemCard extends StatelessWidget {
     return Card(
       margin: EdgeInsets.zero,
       elevation: 0,
+      color: colorScheme.surfaceContainerHighest,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         // side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(

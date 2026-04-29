@@ -32,11 +32,18 @@ class HistoryHeroSummaryCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.summary_title, style: theme.textTheme.titleLarge),
+            Text(
+              l10n.summary_title,
+              style: theme.textTheme.titleLarge!.copyWith(
+                color: colorScheme.onPrimaryContainer,
+              ),
+            ),
             const SizedBox(height: 8),
             Text(
               l10n.summary_count(Count: state.totalCount),
-              style: theme.textTheme.bodyLarge,
+              style: theme.textTheme.bodyLarge!.copyWith(
+                color: colorScheme.onPrimaryContainer,
+              ),
             ),
             const SizedBox(height: 14),
             Wrap(

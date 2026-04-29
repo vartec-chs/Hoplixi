@@ -31,15 +31,8 @@ class HistoryTimelineRevisionCard extends StatelessWidget {
       onTap: onTap,
       child: Ink(
         decoration: BoxDecoration(
-          color: isSelected
-              ? colorScheme.secondaryContainer.withValues(alpha: 0.75)
-              : colorScheme.surfaceContainerLow,
+          color: colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: isSelected
-                ? colorScheme.secondary
-                : colorScheme.outlineVariant,
-          ),
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),

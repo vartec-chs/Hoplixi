@@ -65,6 +65,7 @@ class HistoryNarrowLayout extends StatelessWidget {
                 HistoryHeroSummaryCard(state: state),
                 const SizedBox(height: 12),
                 Card(
+                  elevation: 0,
                   child: Padding(
                     padding: const EdgeInsets.all(14),
                     child: Column(

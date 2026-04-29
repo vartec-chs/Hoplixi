@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/history/models/history_v2_models.dart';
@@ -167,67 +168,106 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   Future<void> _showFiltersSheet(HistoryScreenState screenState) async {
     final l10n = context.t.history;
-    await showModalBottomSheet<void>(
+    final hasActiveFilters =
+        screenState.query.actionFilter != HistoryActionFilter.all ||
+        screenState.query.datePreset != HistoryDatePreset.all ||
+        screenState.query.search.isNotEmpty;
+
+    await WoltModalSheet.show<void>(
       context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.action_filter_label,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: HistoryActionFilter.values
-                    .map(
-                      (filter) => ChoiceChip(
-                        label: Text(historyActionFilterLabel(context, filter)),
-                        selected: screenState.query.actionFilter == filter,
-                        onSelected: (_) async {
-                          await ref
-                              .read(historyControllerProvider(_scope).notifier)
-                              .setActionFilter(filter);
-                          if (context.mounted) Navigator.of(context).pop();
-                        },
-                      ),
-                    )
-                    .toList(),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                l10n.date_filter_label,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: HistoryDatePreset.values
-                    .map(
-                      (preset) => ChoiceChip(
-                        label: Text(historyDatePresetLabel(context, preset)),
-                        selected: screenState.query.datePreset == preset,
-                        onSelected: (_) async {
-                          await ref
-                              .read(historyControllerProvider(_scope).notifier)
-                              .setDatePreset(preset);
-                          if (context.mounted) Navigator.of(context).pop();
-                        },
-                      ),
-                    )
-                    .toList(),
-              ),
-              const SizedBox(height: 16),
-              Row(
+      useRootNavigator: true,
+      pageListBuilder: (_) => [
+        WoltModalSheetPage(
+          hasTopBarLayer: true,
+          isTopBarLayerAlwaysVisible: true,
+          forceMaxHeight: true,
+          topBarTitle: const Text('Фильтры'),
+          leadingNavBarWidget: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            child: ModalSheetCloseButton(),
+          ),
+          trailingNavBarWidget: hasActiveFilters
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: TextButton.icon(
+                    onPressed: () async {
+                      final controller = ref.read(
+                        historyControllerProvider(_scope).notifier,
+                      );
+                      _searchController.clear();
+                      await controller.setSearch('');
+                      await controller.setActionFilter(HistoryActionFilter.all);
+                      await controller.setDatePreset(HistoryDatePreset.all);
+                      if (context.mounted) Navigator.of(context).pop();
+                    },
+                    icon: const Icon(Icons.filter_alt_off_outlined),
+                    label: Text(context.t.common.clear),
+                  ),
+                )
+              : null,
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
+                  Text(
+                    l10n.action_filter_label,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: HistoryActionFilter.values
+                        .map(
+                          (filter) => ChoiceChip(
+                            label: Text(
+                              historyActionFilterLabel(context, filter),
+                            ),
+                            selected: screenState.query.actionFilter == filter,
+                            onSelected: (_) async {
+                              await ref
+                                  .read(
+                                    historyControllerProvider(_scope).notifier,
+                                  )
+                                  .setActionFilter(filter);
+                              if (context.mounted) Navigator.of(context).pop();
+                            },
+                          ),
+                        )
+                        .toList(),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    l10n.date_filter_label,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: HistoryDatePreset.values
+                        .map(
+                          (preset) => ChoiceChip(
+                            label: Text(
+                              historyDatePresetLabel(context, preset),
+                            ),
+                            selected: screenState.query.datePreset == preset,
+                            onSelected: (_) async {
+                              await ref
+                                  .read(
+                                    historyControllerProvider(_scope).notifier,
+                                  )
+                                  .setDatePreset(preset);
+                              if (context.mounted) Navigator.of(context).pop();
+                            },
+                          ),
+                        )
+                        .toList(),
+                  ),
+                  const SizedBox(height: 16),
                   TextButton.icon(
                     onPressed: () async {
                       final controller = ref.read(
@@ -242,17 +282,12 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     icon: const Icon(Icons.filter_alt_off_outlined),
                     label: Text(context.t.common.clear),
                   ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(l10n.cancel),
-                  ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -330,7 +365,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.screen_title(Entity: widget.entityType.label)),
-        leading: const ModalSheetCloseButton(),
+        leading: BackButton(onPressed: () => context.pop()),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -339,6 +374,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 ref.read(historyControllerProvider(_scope).notifier).refresh(),
           ),
           PopupMenuButton<_HistoryAppBarAction>(
+        
             onSelected: (action) {
               switch (action) {
                 case _HistoryAppBarAction.clearAllHistory:

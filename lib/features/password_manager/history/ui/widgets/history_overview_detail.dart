@@ -46,6 +46,7 @@ class HistoryDetailPanel extends StatelessWidget {
           const SizedBox(height: 16),
           if (detail.restoreWarnings.isNotEmpty) ...[
             Card(
+              elevation: 0,
               color: theme.colorScheme.surfaceContainerHighest,
               child: Padding(
                 padding: const EdgeInsets.all(12),

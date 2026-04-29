@@ -82,6 +82,10 @@ abstract final class AppTheme {
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
+        
+      ),
+      popupMenuTheme: bs.popupMenuTheme.copyWith(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       // pageTransitionsTheme: pageTransitionsTheme,
       extensions: <ThemeExtension>[
@@ -143,6 +147,9 @@ abstract final class AppTheme {
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
+      ),
+      popupMenuTheme: bs.popupMenuTheme.copyWith(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
 
       // pageTransitionsTheme: pageTransitionsTheme,

@@ -63,7 +63,7 @@ Page<void> buildResponsivePage({
     return MaterialPage<void>(key: state.pageKey, child: child);
   }
 
-  return MaterialPage<void>(key: state.pageKey, child: child);
+  return NoTransitionPage<void>(key: state.pageKey, child: child);
 }
 
 final String _dashboardEntityRoutePattern =
