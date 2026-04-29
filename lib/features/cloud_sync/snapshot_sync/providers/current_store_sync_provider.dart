@@ -16,28 +16,10 @@ final currentStoreSyncProvider =
       CurrentStoreSyncNotifier.new,
     );
 
-final closeStoreSyncStatusProvider =
-    NotifierProvider<CloseStoreSyncStatusNotifier, StoreSyncStatus?>(
-      CloseStoreSyncStatusNotifier.new,
-    );
-
 final currentStoreSyncSnapshotProvider =
     NotifierProvider<CurrentStoreSyncSnapshotNotifier, StoreSyncStatus?>(
       CurrentStoreSyncSnapshotNotifier.new,
     );
-
-class CloseStoreSyncStatusNotifier extends Notifier<StoreSyncStatus?> {
-  @override
-  StoreSyncStatus? build() => null;
-
-  void setStatus(StoreSyncStatus? nextStatus) {
-    state = nextStatus;
-  }
-
-  void clear() {
-    state = null;
-  }
-}
 
 class CurrentStoreSyncSnapshotNotifier extends Notifier<StoreSyncStatus?> {
   @override

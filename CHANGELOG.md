@@ -20,6 +20,8 @@
   (`checking`/prompt/upload), а не только после начала публикации upload status.
 - Для фазы `checking` добавлен отдельный контент диалога: показывается проверка
   snapshot-версий без преждевременного prompt из cached status.
+- Удалён промежуточный `closeStoreSyncStatusProvider`; close-sync dialog теперь
+  напрямую читает `mainStoreCloseSyncProvider` как единственный source of truth.
 
 ### db_core (crud dao tuples)
 

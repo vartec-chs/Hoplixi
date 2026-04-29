@@ -34,9 +34,7 @@ class CloseStoreSyncDialogHost extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final closeSyncState = ref.watch(mainStoreCloseSyncProvider).value;
-    final isVisible =
-        closeSyncState?.isActive == true ||
-        ref.watch(closeStoreSyncStatusProvider) != null;
+    final isVisible = closeSyncState?.isActive == true;
 
     return PopScope(
       canPop: !isVisible,
@@ -196,7 +194,6 @@ class _CloseStoreSyncContentState extends ConsumerState<CloseStoreSyncContent>
     final syncStatus = isChecking
         ? null
         : closeSyncStatus ??
-              ref.watch(closeStoreSyncStatusProvider) ??
               ref.watch(currentStoreSyncSnapshotProvider) ??
               ref.watch(currentStoreSyncProvider).value;
     final syncProgress = syncStatus?.syncProgress;

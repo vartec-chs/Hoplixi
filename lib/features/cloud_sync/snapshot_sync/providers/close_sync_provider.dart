@@ -49,9 +49,10 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
     required StoreInfoDto storeInfo,
     required String currentStorePath,
   }) async {
-    _setState(
-      const MainStoreCloseSyncState(phase: MainStoreCloseSyncPhase.checking),
+    const checkingState = MainStoreCloseSyncState(
+      phase: MainStoreCloseSyncPhase.checking,
     );
+    _setState(checkingState);
 
     try {
       final context = _CloseSyncContext(
@@ -279,12 +280,10 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
 
   void reset() {
     _completePendingDecisionAsSkipped();
-    ref.read(closeStoreSyncStatusProvider.notifier).clear();
     _setState(const MainStoreCloseSyncState());
   }
 
   void clearPublishedStatus() {
-    ref.read(closeStoreSyncStatusProvider.notifier).clear();
     _setState(_current.copyWith(clearStatus: true));
   }
 
@@ -498,7 +497,6 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
     StoreSyncStatus? status, {
     required MainStoreCloseSyncPhase phase,
   }) {
-    ref.read(closeStoreSyncStatusProvider.notifier).setStatus(status);
     _setState(
       _current.copyWith(
         phase: phase,
