@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/dao/filters_dao/filter.dart';
+import 'package:hoplixi/main_db/core/daos/filters_dao/filter.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/category_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/contact_dto.dart';

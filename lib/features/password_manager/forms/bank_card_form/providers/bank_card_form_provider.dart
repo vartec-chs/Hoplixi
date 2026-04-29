@@ -3,7 +3,7 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_db/core/models/dto/bank_card_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/icon_ref_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
-import 'package:hoplixi/main_db/providers/dao_providers.dart';
+import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';

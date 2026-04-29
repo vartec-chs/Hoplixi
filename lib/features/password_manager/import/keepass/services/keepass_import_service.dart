@@ -1,12 +1,12 @@
 import 'dart:convert';
 
 import 'package:hoplixi/core/utils/smart_converter_base.dart';
-import 'package:hoplixi/main_db/core/dao/crud/category_dao.dart';
-import 'package:hoplixi/main_db/core/dao/crud/custom_field_dao.dart';
-import 'package:hoplixi/main_db/core/dao/crud/note_dao.dart';
-import 'package:hoplixi/main_db/core/dao/crud/otp_dao.dart';
-import 'package:hoplixi/main_db/core/dao/crud/password_dao.dart';
-import 'package:hoplixi/main_db/core/dao/crud/tag_dao.dart';
+import 'package:hoplixi/main_db/core/daos/crud/category_dao.dart';
+import 'package:hoplixi/main_db/core/daos/crud/custom_field_dao.dart';
+import 'package:hoplixi/main_db/core/daos/crud/note_dao.dart';
+import 'package:hoplixi/main_db/core/daos/crud/otp_dao.dart';
+import 'package:hoplixi/main_db/core/daos/crud/password_dao.dart';
+import 'package:hoplixi/main_db/core/daos/crud/tag_dao.dart';
 import 'package:hoplixi/main_db/core/models/dto/category_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/custom_field_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/note_dto.dart';

@@ -1,32 +1,32 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/dao/filters_dao/filter.dart';
+import 'package:hoplixi/main_db/core/daos/filters_dao/filter.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/category_dto.dart';
-import 'package:hoplixi/main_db/core/models/dto/otp_dto.dart';
+import 'package:hoplixi/main_db/core/models/dto/password_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
-import 'package:hoplixi/main_db/core/models/filter/otps_filter.dart';
+import 'package:hoplixi/main_db/core/models/filter/passwords_filter.dart';
 import 'package:hoplixi/main_db/core/tables/categories.dart';
 import 'package:hoplixi/main_db/core/tables/item_tags.dart';
 import 'package:hoplixi/main_db/core/tables/note_items.dart';
-import 'package:hoplixi/main_db/core/tables/otp_items.dart';
+import 'package:hoplixi/main_db/core/tables/password_items.dart';
 import 'package:hoplixi/main_db/core/tables/tags.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items.dart';
 
-part 'otp_filter_dao.g.dart';
+part 'password_filter_dao.g.dart';
 
 @DriftAccessor(
-  tables: [VaultItems, OtpItems, Categories, Tags, ItemTags, NoteItems],
+  tables: [VaultItems, PasswordItems, Categories, Tags, ItemTags, NoteItems],
 )
-class OtpFilterDao extends DatabaseAccessor<MainStore>
-    with _$OtpFilterDaoMixin
-    implements FilterDao<OtpsFilter, OtpCardDto> {
-  OtpFilterDao(super.db);
+class PasswordFilterDao extends DatabaseAccessor<MainStore>
+    with _$PasswordFilterDaoMixin
+    implements FilterDao<PasswordsFilter, PasswordCardDto> {
+  PasswordFilterDao(super.db);
 
   @override
-  Future<List<OtpCardDto>> getFiltered(OtpsFilter filter) async {
+  Future<List<PasswordCardDto>> getFiltered(PasswordsFilter filter) async {
     final query = select(vaultItems).join([
-      innerJoin(otpItems, otpItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(passwordItems, passwordItems.itemId.equalsExp(vaultItems.id)),
       leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
@@ -45,18 +45,21 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
 
     return results.map((row) {
       final item = row.readTable(vaultItems);
-      final otp = row.readTable(otpItems);
+      final pw = row.readTable(passwordItems);
       final category = row.readTableOrNull(categories);
+      final itemTags = tagsMap[item.id] ?? [];
 
-      return OtpCardDto(
+      return PasswordCardDto(
         id: item.id,
+        name: item.name,
+        login: pw.login,
+        email: pw.email,
+        url: pw.url,
         iconSource: item.iconSource,
         iconValue: item.iconValue,
-        issuer: otp.issuer,
-        accountName: otp.accountName,
-        type: otp.type.name,
-        digits: otp.digits,
-        period: otp.period,
+        isArchived: item.isArchived,
+        description: item.description,
+        isDeleted: item.isDeleted,
         category: category != null
             ? CategoryInCardDto(
                 id: category.id,
@@ -68,21 +71,21 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
                 iconValue: category.iconValue,
               )
             : null,
-        tags: tagsMap[item.id] ?? [],
         isFavorite: item.isFavorite,
         isPinned: item.isPinned,
-        isArchived: item.isArchived,
-        isDeleted: item.isDeleted,
         usedCount: item.usedCount,
         modifiedAt: item.modifiedAt,
+        createdAt: item.createdAt,
+        tags: itemTags,
+        expireAt: pw.expireAt,
       );
     }).toList();
   }
 
   @override
-  Future<int> countFiltered(OtpsFilter filter) async {
+  Future<int> countFiltered(PasswordsFilter filter) async {
     final query = select(vaultItems).join([
-      innerJoin(otpItems, otpItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(passwordItems, passwordItems.itemId.equalsExp(vaultItems.id)),
       leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
@@ -91,22 +94,29 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
     return results.length;
   }
 
-  Expression<bool> _buildWhereExpression(OtpsFilter filter) {
+  Expression<bool> _buildWhereExpression(PasswordsFilter filter) {
     Expression<bool> expr = const Constant(true);
     expr = expr & _applyBaseFilters(filter.base);
-    expr = expr & _applyOtpSpecificFilters(filter);
+    expr = expr & _applyPasswordSpecificFilters(filter);
     return expr;
   }
 
   Expression<bool> _applyBaseFilters(BaseFilter base) {
     Expression<bool> expr = const Constant(true);
 
+    if (base.isDeleted == null) {
+      expr = expr & vaultItems.isDeleted.equals(false);
+    }
+
     if (base.query.isNotEmpty) {
       final q = base.query.toLowerCase();
       Expression<bool> searchExpr =
-          otpItems.issuer.lower().like('%$q%') |
-          otpItems.accountName.lower().like('%$q%');
-      searchExpr = searchExpr | noteItems.content.lower().like('%$q%');
+          vaultItems.name.lower().like('%$q%') |
+          passwordItems.login.lower().like('%$q%') |
+          passwordItems.email.lower().like('%$q%') |
+          passwordItems.url.lower().like('%$q%') |
+          vaultItems.description.lower().like('%$q%') |
+          noteItems.content.lower().like('%$q%');
       expr = expr & searchExpr;
     }
 
@@ -135,12 +145,6 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
 
     if (base.isDeleted != null) {
       expr = expr & vaultItems.isDeleted.equals(base.isDeleted!);
-    } else {
-      expr = expr & vaultItems.isDeleted.equals(false);
-    }
-
-    if (base.isPinned != null) {
-      expr = expr & vaultItems.isPinned.equals(base.isPinned!);
     }
 
     if (base.hasNotes != null) {
@@ -195,53 +199,35 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
     return expr;
   }
 
-  Expression<bool> _applyOtpSpecificFilters(OtpsFilter filter) {
+  Expression<bool> _applyPasswordSpecificFilters(PasswordsFilter filter) {
     Expression<bool> expr = const Constant(true);
 
-    if (filter.types.isNotEmpty) {
-      final typeExprs = filter.types
-          .map((type) => otpItems.type.equals(type.name))
-          .reduce((a, b) => a | b);
-      expr = expr & typeExprs;
-    }
-
-    if (filter.algorithms.isNotEmpty) {
-      final algExprs = filter.algorithms
-          .map((alg) => otpItems.algorithm.equals(alg.name))
-          .reduce((a, b) => a | b);
-      expr = expr & algExprs;
-    }
-
-    if (filter.issuer != null) {
+    if (filter.name != null) {
       expr =
           expr &
-          otpItems.issuer.lower().like('%${filter.issuer!.toLowerCase()}%');
+          vaultItems.name.lower().like('%${filter.name!.toLowerCase()}%');
     }
-    if (filter.accountName != null) {
+    if (filter.login != null) {
       expr =
           expr &
-          otpItems.accountName.lower().like(
-            '%${filter.accountName!.toLowerCase()}%',
-          );
+          passwordItems.login.lower().like('%${filter.login!.toLowerCase()}%');
     }
-    if (filter.digits.isNotEmpty) {
-      expr = expr & otpItems.digits.isIn(filter.digits);
-    }
-    if (filter.periods.isNotEmpty) {
-      expr = expr & otpItems.period.isIn(filter.periods);
-    }
-    if (filter.secretEncodings.isNotEmpty) {
-      final encExprs = filter.secretEncodings
-          .map((enc) => otpItems.secretEncoding.equals(enc.name))
-          .reduce((a, b) => a | b);
-      expr = expr & encExprs;
-    }
-    if (filter.hasPasswordLink != null) {
+    if (filter.email != null) {
       expr =
           expr &
-          (filter.hasPasswordLink!
-              ? otpItems.passwordItemId.isNotNull()
-              : otpItems.passwordItemId.isNull());
+          passwordItems.email.lower().like('%${filter.email!.toLowerCase()}%');
+    }
+    if (filter.url != null) {
+      expr =
+          expr &
+          passwordItems.url.lower().like('%${filter.url!.toLowerCase()}%');
+    }
+    if (filter.hasDescription != null) {
+      expr =
+          expr &
+          (filter.hasDescription!
+              ? vaultItems.description.isNotNull()
+              : vaultItems.description.isNull());
     }
     if (filter.hasNotes != null) {
       expr =
@@ -249,6 +235,27 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
           (filter.hasNotes!
               ? vaultItems.noteId.isNotNull()
               : vaultItems.noteId.isNull());
+    }
+    if (filter.hasUrl != null) {
+      expr =
+          expr &
+          (filter.hasUrl!
+              ? passwordItems.url.isNotNull()
+              : passwordItems.url.isNull());
+    }
+    if (filter.hasLogin != null) {
+      expr =
+          expr &
+          (filter.hasLogin!
+              ? passwordItems.login.isNotNull()
+              : passwordItems.login.isNull());
+    }
+    if (filter.hasEmail != null) {
+      expr =
+          expr &
+          (filter.hasEmail!
+              ? passwordItems.email.isNotNull()
+              : passwordItems.email.isNull());
     }
     return expr;
   }
@@ -268,7 +275,7 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
     );
   }
 
-  List<OrderingTerm> _buildOrderBy(OtpsFilter filter) {
+  List<OrderingTerm> _buildOrderBy(PasswordsFilter filter) {
     final terms = <OrderingTerm>[];
     terms.add(
       OrderingTerm(expression: vaultItems.isPinned, mode: OrderingMode.desc),
@@ -279,34 +286,33 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
         : OrderingMode.desc;
 
     if (filter.base.isFrequentlyUsed == true) {
-      final wd = filter.base.frequencyWindowDays ?? 7;
+      final windowDays = filter.base.frequencyWindowDays ?? 7;
       terms.add(
-        OrderingTerm(expression: _calculateDynamicScore(wd), mode: mode),
+        OrderingTerm(
+          expression: _calculateDynamicScore(windowDays),
+          mode: mode,
+        ),
       );
       return terms;
     }
 
     if (filter.sortField != null) {
       switch (filter.sortField!) {
-        case OtpsSortField.issuer:
-          terms.add(OrderingTerm(expression: otpItems.issuer, mode: mode));
-        case OtpsSortField.accountName:
-          terms.add(OrderingTerm(expression: otpItems.accountName, mode: mode));
-        case OtpsSortField.type:
-          terms.add(OrderingTerm(expression: otpItems.type, mode: mode));
-        case OtpsSortField.algorithm:
-          terms.add(OrderingTerm(expression: otpItems.algorithm, mode: mode));
-        case OtpsSortField.digits:
-          terms.add(OrderingTerm(expression: otpItems.digits, mode: mode));
-        case OtpsSortField.period:
-          terms.add(OrderingTerm(expression: otpItems.period, mode: mode));
-        case OtpsSortField.createdAt:
+        case PasswordsSortField.name:
+          terms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
+        case PasswordsSortField.login:
+          terms.add(OrderingTerm(expression: passwordItems.login, mode: mode));
+        case PasswordsSortField.email:
+          terms.add(OrderingTerm(expression: passwordItems.email, mode: mode));
+        case PasswordsSortField.url:
+          terms.add(OrderingTerm(expression: passwordItems.url, mode: mode));
+        case PasswordsSortField.createdAt:
           terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
-        case OtpsSortField.modifiedAt:
+        case PasswordsSortField.modifiedAt:
           terms.add(
             OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
           );
-        case OtpsSortField.lastAccessed:
+        case PasswordsSortField.lastAccessed:
           terms.add(
             OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
           );
@@ -348,10 +354,12 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
     for (final row in results) {
       final it = row.readTable(itemTags);
       final tag = row.readTable(tags);
-
-      tagsMap.putIfAbsent(it.itemId, () => []);
-      if (tagsMap[it.itemId]!.length < 10) {
-        tagsMap[it.itemId]!.add(
+      final id = it.itemId;
+      if (!tagsMap.containsKey(id)) {
+        tagsMap[id] = [];
+      }
+      if (tagsMap[id]!.length < 10) {
+        tagsMap[id]!.add(
           TagInCardDto(id: tag.id, name: tag.name, color: tag.color),
         );
       }

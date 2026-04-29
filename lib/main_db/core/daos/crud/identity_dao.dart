@@ -1,75 +1,62 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
-import 'package:hoplixi/main_db/core/dao/base_main_entity_dao.dart';
-import 'package:hoplixi/main_db/core/models/dto/license_key_dto.dart';
+import 'package:hoplixi/main_db/core/daos/base_main_entity_dao.dart';
+import 'package:hoplixi/main_db/core/models/dto/identity_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
-import 'package:hoplixi/main_db/core/tables/license_key_items.dart';
+import 'package:hoplixi/main_db/core/tables/identity_items.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items.dart';
 import 'package:uuid/uuid.dart';
 
-part 'license_key_dao.g.dart';
+part 'identity_dao.g.dart';
 
-@DriftAccessor(tables: [VaultItems, LicenseKeyItems])
-class LicenseKeyDao extends DatabaseAccessor<MainStore>
-    with _$LicenseKeyDaoMixin
+@DriftAccessor(tables: [VaultItems, IdentityItems])
+class IdentityDao extends DatabaseAccessor<MainStore>
+    with _$IdentityDaoMixin
     implements BaseMainEntityDao {
-  LicenseKeyDao(super.db);
+  IdentityDao(super.db);
 
-  Future<List<(VaultItemsData, LicenseKeyItemsData)>>
-  getAllLicenseKeys() async {
+  Future<List<(VaultItemsData, IdentityItemsData)>> getAllIdentities() async {
     final query = select(vaultItems).join([
-      innerJoin(
-        licenseKeyItems,
-        licenseKeyItems.itemId.equalsExp(vaultItems.id),
-      ),
+      innerJoin(identityItems, identityItems.itemId.equalsExp(vaultItems.id)),
     ]);
     final rows = await query.get();
     return rows
-        .map(
-          (row) => (row.readTable(vaultItems), row.readTable(licenseKeyItems)),
-        )
+        .map((row) => (row.readTable(vaultItems), row.readTable(identityItems)))
         .toList();
   }
 
-  Future<(VaultItemsData, LicenseKeyItemsData)?> getById(String id) async {
+  Future<(VaultItemsData, IdentityItemsData)?> getById(String id) async {
     final query = select(vaultItems).join([
-      innerJoin(
-        licenseKeyItems,
-        licenseKeyItems.itemId.equalsExp(vaultItems.id),
-      ),
+      innerJoin(identityItems, identityItems.itemId.equalsExp(vaultItems.id)),
     ])..where(vaultItems.id.equals(id));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
-    return (row.readTable(vaultItems), row.readTable(licenseKeyItems));
+    return (row.readTable(vaultItems), row.readTable(identityItems));
   }
 
-  Stream<List<(VaultItemsData, LicenseKeyItemsData)>> watchAllLicenseKeys() {
+  Stream<List<(VaultItemsData, IdentityItemsData)>> watchAllIdentities() {
     final query = select(vaultItems).join([
-      innerJoin(
-        licenseKeyItems,
-        licenseKeyItems.itemId.equalsExp(vaultItems.id),
-      ),
+      innerJoin(identityItems, identityItems.itemId.equalsExp(vaultItems.id)),
     ])..orderBy([OrderingTerm.desc(vaultItems.modifiedAt)]);
 
     return query.watch().map(
       (rows) => rows
           .map(
-            (row) =>
-                (row.readTable(vaultItems), row.readTable(licenseKeyItems)),
+            (row) => (row.readTable(vaultItems), row.readTable(identityItems)),
           )
           .toList(),
     );
   }
 
-  Future<String> createLicenseKey(CreateLicenseKeyDto dto) {
+  Future<String> createIdentity(CreateIdentityDto dto) {
     final id = const Uuid().v4();
 
     return db.transaction(() async {
       await into(vaultItems).insert(
         VaultItemsCompanion.insert(
           id: Value(id),
-          type: VaultItemType.licenseKey,
+          type: VaultItemType.identity,
           name: dto.name,
           description: Value(dto.description),
           noteId: Value(dto.noteId),
@@ -77,21 +64,22 @@ class LicenseKeyDao extends DatabaseAccessor<MainStore>
         ),
       );
 
-      await into(licenseKeyItems).insert(
-        LicenseKeyItemsCompanion.insert(
+      await into(identityItems).insert(
+        IdentityItemsCompanion.insert(
           itemId: id,
-          product: dto.product,
-          licenseKey: dto.licenseKey,
-          licenseType: Value(dto.licenseType),
-          seats: Value(dto.seats),
-          maxActivations: Value(dto.maxActivations),
-          activatedOn: Value(dto.activatedOn),
-          purchaseDate: Value(dto.purchaseDate),
-          purchaseFrom: Value(dto.purchaseFrom),
-          orderId: Value(dto.orderId),
-          licenseFileId: Value(dto.licenseFileId),
-          expiresAt: Value(dto.expiresAt),
-          supportContact: Value(dto.supportContact),
+          idType: dto.idType,
+          idNumber: dto.idNumber,
+          fullName: Value(dto.fullName),
+          dateOfBirth: Value(dto.dateOfBirth),
+          placeOfBirth: Value(dto.placeOfBirth),
+          nationality: Value(dto.nationality),
+          issuingAuthority: Value(dto.issuingAuthority),
+          issueDate: Value(dto.issueDate),
+          expiryDate: Value(dto.expiryDate),
+          mrz: Value(dto.mrz),
+          scanAttachmentId: Value(dto.scanAttachmentId),
+          photoAttachmentId: Value(dto.photoAttachmentId),
+          verified: Value(dto.verified ?? false),
         ),
       );
 
@@ -100,7 +88,7 @@ class LicenseKeyDao extends DatabaseAccessor<MainStore>
     });
   }
 
-  Future<bool> updateLicenseKey(String id, UpdateLicenseKeyDto dto) {
+  Future<bool> updateIdentity(String id, UpdateIdentityDto dto) {
     return db.transaction(() async {
       final vaultCompanion = VaultItemsCompanion(
         name: dto.name != null ? Value(dto.name!) : const Value.absent(),
@@ -123,27 +111,28 @@ class LicenseKeyDao extends DatabaseAccessor<MainStore>
         vaultItems,
       )..where((v) => v.id.equals(id))).write(vaultCompanion);
 
-      final itemCompanion = LicenseKeyItemsCompanion(
-        product: dto.product != null
-            ? Value(dto.product!)
+      final itemCompanion = IdentityItemsCompanion(
+        idType: dto.idType != null ? Value(dto.idType!) : const Value.absent(),
+        idNumber: dto.idNumber != null
+            ? Value(dto.idNumber!)
             : const Value.absent(),
-        licenseKey: dto.licenseKey != null
-            ? Value(dto.licenseKey!)
+        fullName: Value(dto.fullName),
+        dateOfBirth: Value(dto.dateOfBirth),
+        placeOfBirth: Value(dto.placeOfBirth),
+        nationality: Value(dto.nationality),
+        issuingAuthority: Value(dto.issuingAuthority),
+        issueDate: Value(dto.issueDate),
+        expiryDate: Value(dto.expiryDate),
+        mrz: Value(dto.mrz),
+        scanAttachmentId: Value(dto.scanAttachmentId),
+        photoAttachmentId: Value(dto.photoAttachmentId),
+        verified: dto.verified != null
+            ? Value(dto.verified!)
             : const Value.absent(),
-        licenseType: Value(dto.licenseType),
-        seats: Value(dto.seats),
-        maxActivations: Value(dto.maxActivations),
-        activatedOn: Value(dto.activatedOn),
-        purchaseDate: Value(dto.purchaseDate),
-        purchaseFrom: Value(dto.purchaseFrom),
-        orderId: Value(dto.orderId),
-        licenseFileId: Value(dto.licenseFileId),
-        expiresAt: Value(dto.expiresAt),
-        supportContact: Value(dto.supportContact),
       );
 
       await (update(
-        licenseKeyItems,
+        identityItems,
       )..where((i) => i.itemId.equals(id))).write(itemCompanion);
 
       if (dto.tagsIds != null) {

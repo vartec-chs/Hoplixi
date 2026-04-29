@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/main_db/core/dao/index.dart';
+import 'package:hoplixi/main_db/core/daos/daos.dart';
 import 'package:hoplixi/main_db/core/main_store_history_triggers_installer.dart';
 import 'package:hoplixi/main_db/core/main_store_indexes_installer.dart';
 import 'package:hoplixi/main_db/core/migrations/index.dart';

@@ -1,36 +1,34 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/dao/filters_dao/filter.dart';
+import 'package:hoplixi/main_db/core/daos/filters_dao/filter.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/category_dto.dart';
-import 'package:hoplixi/main_db/core/models/dto/certificate_dto.dart';
+import 'package:hoplixi/main_db/core/models/dto/license_key_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
-import 'package:hoplixi/main_db/core/models/filter/certificates_filter.dart';
+import 'package:hoplixi/main_db/core/models/filter/license_keys_filter.dart';
 import 'package:hoplixi/main_db/core/tables/categories.dart';
-import 'package:hoplixi/main_db/core/tables/certificate_items.dart';
 import 'package:hoplixi/main_db/core/tables/item_tags.dart';
+import 'package:hoplixi/main_db/core/tables/license_key_items.dart';
 import 'package:hoplixi/main_db/core/tables/note_items.dart';
 import 'package:hoplixi/main_db/core/tables/tags.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items.dart';
 
-part 'certificate_filter_dao.g.dart';
+part 'license_key_filter_dao.g.dart';
 
 @DriftAccessor(
-  tables: [VaultItems, CertificateItems, Categories, Tags, ItemTags, NoteItems],
+  tables: [VaultItems, LicenseKeyItems, Categories, Tags, ItemTags, NoteItems],
 )
-class CertificateFilterDao extends DatabaseAccessor<MainStore>
-    with _$CertificateFilterDaoMixin
-    implements FilterDao<CertificatesFilter, CertificateCardDto> {
-  CertificateFilterDao(super.db);
+class LicenseKeyFilterDao extends DatabaseAccessor<MainStore>
+    with _$LicenseKeyFilterDaoMixin
+    implements FilterDao<LicenseKeysFilter, LicenseKeyCardDto> {
+  LicenseKeyFilterDao(super.db);
 
   @override
-  Future<List<CertificateCardDto>> getFiltered(
-    CertificatesFilter filter,
-  ) async {
+  Future<List<LicenseKeyCardDto>> getFiltered(LicenseKeysFilter filter) async {
     final query = select(vaultItems).join([
       innerJoin(
-        certificateItems,
-        certificateItems.itemId.equalsExp(vaultItems.id),
+        licenseKeyItems,
+        licenseKeyItems.itemId.equalsExp(vaultItems.id),
       ),
       leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
@@ -49,22 +47,17 @@ class CertificateFilterDao extends DatabaseAccessor<MainStore>
 
     return rows.map((row) {
       final item = row.readTable(vaultItems);
-      final cert = row.readTable(certificateItems);
+      final license = row.readTable(licenseKeyItems);
       final category = row.readTableOrNull(categories);
 
-      return CertificateCardDto(
+      return LicenseKeyCardDto(
         id: item.id,
         name: item.name,
-        serialNumber: cert.serialNumber,
-        issuer: cert.issuer,
-        subject: cert.subject,
-        validFrom: cert.validFrom,
-        validTo: cert.validTo,
-        fingerprint: cert.fingerprint,
-        hasPrivateKey: cert.privateKey != null && cert.privateKey!.isNotEmpty,
-        hasPfx: cert.pfxBlob != null && cert.pfxBlob!.isNotEmpty,
-        autoRenew: cert.autoRenew,
-        lastCheckedAt: cert.lastCheckedAt,
+        product: license.product,
+        licenseType: license.licenseType,
+        orderId: license.orderId,
+        expiresAt: license.expiresAt,
+        seats: license.seats,
         description: item.description,
         category: category != null
             ? CategoryInCardDto(
@@ -90,11 +83,11 @@ class CertificateFilterDao extends DatabaseAccessor<MainStore>
   }
 
   @override
-  Future<int> countFiltered(CertificatesFilter filter) async {
+  Future<int> countFiltered(LicenseKeysFilter filter) async {
     final query = select(vaultItems).join([
       innerJoin(
-        certificateItems,
-        certificateItems.itemId.equalsExp(vaultItems.id),
+        licenseKeyItems,
+        licenseKeyItems.itemId.equalsExp(vaultItems.id),
       ),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
@@ -104,7 +97,7 @@ class CertificateFilterDao extends DatabaseAccessor<MainStore>
     return rows.length;
   }
 
-  Expression<bool> _buildWhereExpression(CertificatesFilter filter) {
+  Expression<bool> _buildWhereExpression(LicenseKeysFilter filter) {
     Expression<bool> expr = const Constant(true);
     expr = expr & _applyBaseFilters(filter.base);
     expr = expr & _applySpecificFilters(filter);
@@ -123,10 +116,10 @@ class CertificateFilterDao extends DatabaseAccessor<MainStore>
       expr =
           expr &
           (vaultItems.name.lower().like('%$q%') |
-              certificateItems.issuer.lower().like('%$q%') |
-              certificateItems.subject.lower().like('%$q%') |
-              certificateItems.serialNumber.lower().like('%$q%') |
-              certificateItems.fingerprint.lower().like('%$q%') |
+              licenseKeyItems.product.lower().like('%$q%') |
+              licenseKeyItems.licenseType.lower().like('%$q%') |
+              licenseKeyItems.orderId.lower().like('%$q%') |
+              licenseKeyItems.purchaseFrom.lower().like('%$q%') |
               vaultItems.description.lower().like('%$q%') |
               noteItems.content.lower().like('%$q%'));
     }
@@ -161,7 +154,7 @@ class CertificateFilterDao extends DatabaseAccessor<MainStore>
     return expr;
   }
 
-  Expression<bool> _applySpecificFilters(CertificatesFilter filter) {
+  Expression<bool> _applySpecificFilters(LicenseKeysFilter filter) {
     Expression<bool> expr = const Constant(true);
 
     if (filter.name != null) {
@@ -170,75 +163,57 @@ class CertificateFilterDao extends DatabaseAccessor<MainStore>
           vaultItems.name.lower().like('%${filter.name!.toLowerCase()}%');
     }
 
-    if (filter.issuer != null) {
+    if (filter.product != null) {
       expr =
           expr &
-          certificateItems.issuer.lower().like(
-            '%${filter.issuer!.toLowerCase()}%',
+          licenseKeyItems.product.lower().like(
+            '%${filter.product!.toLowerCase()}%',
           );
     }
 
-    if (filter.subject != null) {
+    if (filter.licenseType != null) {
       expr =
           expr &
-          certificateItems.subject.lower().like(
-            '%${filter.subject!.toLowerCase()}%',
+          licenseKeyItems.licenseType.lower().like(
+            '%${filter.licenseType!.toLowerCase()}%',
           );
     }
 
-    if (filter.serialNumber != null) {
+    if (filter.orderId != null) {
       expr =
           expr &
-          certificateItems.serialNumber.lower().like(
-            '%${filter.serialNumber!.toLowerCase()}%',
+          licenseKeyItems.orderId.lower().like(
+            '%${filter.orderId!.toLowerCase()}%',
           );
     }
 
-    if (filter.fingerprint != null) {
+    if (filter.purchaseFrom != null) {
       expr =
           expr &
-          certificateItems.fingerprint.lower().like(
-            '%${filter.fingerprint!.toLowerCase()}%',
+          licenseKeyItems.purchaseFrom.lower().like(
+            '%${filter.purchaseFrom!.toLowerCase()}%',
           );
     }
 
-    if (filter.hasPrivateKey != null) {
+    if (filter.supportContact != null) {
       expr =
           expr &
-          (filter.hasPrivateKey!
-              ? (certificateItems.privateKey.isNotNull() &
-                    certificateItems.privateKey.isBiggerThanValue(''))
-              : (certificateItems.privateKey.isNull() |
-                    certificateItems.privateKey.equals('')));
+          licenseKeyItems.supportContact.lower().like(
+            '%${filter.supportContact!.toLowerCase()}%',
+          );
     }
 
-    if (filter.hasPfx != null) {
+    if (filter.expiredOnly == true) {
       expr =
           expr &
-          (filter.hasPfx!
-              ? certificateItems.pfxBlob.isNotNull()
-              : certificateItems.pfxBlob.isNull());
-    }
-
-    if (filter.autoRenew != null) {
-      expr = expr & certificateItems.autoRenew.equals(filter.autoRenew!);
-    }
-
-    if (filter.isExpired != null) {
-      final now = DateTime.now();
-      expr =
-          expr &
-          (filter.isExpired!
-              ? (certificateItems.validTo.isNotNull() &
-                    certificateItems.validTo.isSmallerThanValue(now))
-              : (certificateItems.validTo.isNull() |
-                    certificateItems.validTo.isBiggerOrEqualValue(now)));
+          licenseKeyItems.expiresAt.isNotNull() &
+          licenseKeyItems.expiresAt.isSmallerOrEqualValue(DateTime.now());
     }
 
     return expr;
   }
 
-  List<OrderingTerm> _buildOrderBy(CertificatesFilter filter) {
+  List<OrderingTerm> _buildOrderBy(LicenseKeysFilter filter) {
     final terms = <OrderingTerm>[
       OrderingTerm(expression: vaultItems.isPinned, mode: OrderingMode.desc),
     ];
@@ -248,25 +223,29 @@ class CertificateFilterDao extends DatabaseAccessor<MainStore>
         : OrderingMode.desc;
 
     switch (filter.sortField) {
-      case CertificatesSortField.name:
+      case LicenseKeysSortField.name:
         terms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
-      case CertificatesSortField.issuer:
+      case LicenseKeysSortField.product:
         terms.add(
-          OrderingTerm(expression: certificateItems.issuer, mode: mode),
+          OrderingTerm(expression: licenseKeyItems.product, mode: mode),
         );
-      case CertificatesSortField.subject:
+      case LicenseKeysSortField.licenseType:
         terms.add(
-          OrderingTerm(expression: certificateItems.subject, mode: mode),
+          OrderingTerm(expression: licenseKeyItems.licenseType, mode: mode),
         );
-      case CertificatesSortField.validTo:
+      case LicenseKeysSortField.orderId:
         terms.add(
-          OrderingTerm(expression: certificateItems.validTo, mode: mode),
+          OrderingTerm(expression: licenseKeyItems.orderId, mode: mode),
         );
-      case CertificatesSortField.createdAt:
+      case LicenseKeysSortField.expiresAt:
+        terms.add(
+          OrderingTerm(expression: licenseKeyItems.expiresAt, mode: mode),
+        );
+      case LicenseKeysSortField.createdAt:
         terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
-      case CertificatesSortField.modifiedAt:
+      case LicenseKeysSortField.modifiedAt:
         terms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
-      case CertificatesSortField.lastAccessed:
+      case LicenseKeysSortField.lastAccessed:
         terms.add(OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
       case null:
         terms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));

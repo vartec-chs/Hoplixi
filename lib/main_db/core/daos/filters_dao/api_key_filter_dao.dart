@@ -1,32 +1,32 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/dao/filters_dao/filter.dart';
+import 'package:hoplixi/main_db/core/daos/filters_dao/filter.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
+import 'package:hoplixi/main_db/core/models/dto/api_key_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/category_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
-import 'package:hoplixi/main_db/core/models/dto/wifi_dto.dart';
+import 'package:hoplixi/main_db/core/models/filter/api_keys_filter.dart';
 import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
-import 'package:hoplixi/main_db/core/models/filter/wifis_filter.dart';
+import 'package:hoplixi/main_db/core/tables/api_key_items.dart';
 import 'package:hoplixi/main_db/core/tables/categories.dart';
 import 'package:hoplixi/main_db/core/tables/item_tags.dart';
 import 'package:hoplixi/main_db/core/tables/note_items.dart';
 import 'package:hoplixi/main_db/core/tables/tags.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items.dart';
-import 'package:hoplixi/main_db/core/tables/wifi_items.dart';
 
-part 'wifi_filter_dao.g.dart';
+part 'api_key_filter_dao.g.dart';
 
 @DriftAccessor(
-  tables: [VaultItems, WifiItems, Categories, Tags, ItemTags, NoteItems],
+  tables: [VaultItems, ApiKeyItems, Categories, Tags, ItemTags, NoteItems],
 )
-class WifiFilterDao extends DatabaseAccessor<MainStore>
-    with _$WifiFilterDaoMixin
-    implements FilterDao<WifisFilter, WifiCardDto> {
-  WifiFilterDao(super.db);
+class ApiKeyFilterDao extends DatabaseAccessor<MainStore>
+    with _$ApiKeyFilterDaoMixin
+    implements FilterDao<ApiKeysFilter, ApiKeyCardDto> {
+  ApiKeyFilterDao(super.db);
 
   @override
-  Future<List<WifiCardDto>> getFiltered(WifisFilter filter) async {
+  Future<List<ApiKeyCardDto>> getFiltered(ApiKeysFilter filter) async {
     final query = select(vaultItems).join([
-      innerJoin(wifiItems, wifiItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(apiKeyItems, apiKeyItems.itemId.equalsExp(vaultItems.id)),
       leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
@@ -44,21 +44,20 @@ class WifiFilterDao extends DatabaseAccessor<MainStore>
 
     return rows.map((row) {
       final item = row.readTable(vaultItems);
-      final wifi = row.readTable(wifiItems);
+      final api = row.readTable(apiKeyItems);
       final category = row.readTableOrNull(categories);
 
-      return WifiCardDto(
+      return ApiKeyCardDto(
         id: item.id,
         name: item.name,
+        service: api.service,
         iconSource: item.iconSource,
         iconValue: item.iconValue,
-        ssid: wifi.ssid,
-        security: wifi.security,
-        hidden: wifi.hidden,
-        eapMethod: wifi.eapMethod,
-        priority: wifi.priority,
-        lastConnectedBssid: wifi.lastConnectedBssid,
-        hasPassword: wifi.password != null && wifi.password!.isNotEmpty,
+        maskedKey: api.maskedKey,
+        tokenType: api.tokenType,
+        environment: api.environment,
+        expiresAt: api.expiresAt,
+        revoked: api.revoked,
         description: item.description,
         category: category != null
             ? CategoryInCardDto(
@@ -84,9 +83,9 @@ class WifiFilterDao extends DatabaseAccessor<MainStore>
   }
 
   @override
-  Future<int> countFiltered(WifisFilter filter) async {
+  Future<int> countFiltered(ApiKeysFilter filter) async {
     final query = select(vaultItems).join([
-      innerJoin(wifiItems, wifiItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(apiKeyItems, apiKeyItems.itemId.equalsExp(vaultItems.id)),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
 
@@ -95,7 +94,7 @@ class WifiFilterDao extends DatabaseAccessor<MainStore>
     return rows.length;
   }
 
-  Expression<bool> _buildWhereExpression(WifisFilter filter) {
+  Expression<bool> _buildWhereExpression(ApiKeysFilter filter) {
     Expression<bool> expr = const Constant(true);
     expr = expr & _applyBaseFilters(filter.base);
     expr = expr & _applySpecificFilters(filter);
@@ -114,10 +113,9 @@ class WifiFilterDao extends DatabaseAccessor<MainStore>
       expr =
           expr &
           (vaultItems.name.lower().like('%$q%') |
-              wifiItems.ssid.lower().like('%$q%') |
-              wifiItems.security.lower().like('%$q%') |
-              wifiItems.eapMethod.lower().like('%$q%') |
-              wifiItems.lastConnectedBssid.lower().like('%$q%') |
+              apiKeyItems.service.lower().like('%$q%') |
+              apiKeyItems.environment.lower().like('%$q%') |
+              apiKeyItems.tokenType.lower().like('%$q%') |
               vaultItems.description.lower().like('%$q%') |
               noteItems.content.lower().like('%$q%'));
     }
@@ -152,7 +150,7 @@ class WifiFilterDao extends DatabaseAccessor<MainStore>
     return expr;
   }
 
-  Expression<bool> _applySpecificFilters(WifisFilter filter) {
+  Expression<bool> _applySpecificFilters(ApiKeysFilter filter) {
     Expression<bool> expr = const Constant(true);
 
     if (filter.name != null) {
@@ -161,57 +159,46 @@ class WifiFilterDao extends DatabaseAccessor<MainStore>
           vaultItems.name.lower().like('%${filter.name!.toLowerCase()}%');
     }
 
-    if (filter.ssid != null) {
-      expr =
-          expr & wifiItems.ssid.lower().like('%${filter.ssid!.toLowerCase()}%');
-    }
-
-    if (filter.security != null) {
+    if (filter.service != null) {
       expr =
           expr &
-          wifiItems.security.lower().like(
-            '%${filter.security!.toLowerCase()}%',
+          apiKeyItems.service.lower().like(
+            '%${filter.service!.toLowerCase()}%',
           );
     }
 
-    if (filter.eapMethod != null) {
+    if (filter.tokenType != null) {
       expr =
           expr &
-          wifiItems.eapMethod.lower().like(
-            '%${filter.eapMethod!.toLowerCase()}%',
+          apiKeyItems.tokenType.lower().like(
+            '%${filter.tokenType!.toLowerCase()}%',
           );
     }
 
-    if (filter.hidden != null) {
-      expr = expr & wifiItems.hidden.equals(filter.hidden!);
-    }
-
-    if (filter.hasPassword != null) {
+    if (filter.environment != null) {
       expr =
           expr &
-          (filter.hasPassword!
-              ? (wifiItems.password.isNotNull() &
-                    wifiItems.password.isBiggerThanValue(''))
-              : (wifiItems.password.isNull() | wifiItems.password.equals('')));
+          apiKeyItems.environment.lower().like(
+            '%${filter.environment!.toLowerCase()}%',
+          );
     }
 
-    if (filter.isOpenNetwork != null) {
+    if (filter.revoked != null) {
+      expr = expr & apiKeyItems.revoked.equals(filter.revoked!);
+    }
+
+    if (filter.hasExpiration != null) {
       expr =
           expr &
-          (filter.isOpenNetwork!
-              ? (wifiItems.security.isNull() |
-                    wifiItems.security.lower().equals('open'))
-              : (wifiItems.security.isNotNull() &
-                    wifiItems.security
-                        .lower()
-                        .equalsExp(const Constant('open'))
-                        .not()));
+          (filter.hasExpiration!
+              ? apiKeyItems.expiresAt.isNotNull()
+              : apiKeyItems.expiresAt.isNull());
     }
 
     return expr;
   }
 
-  List<OrderingTerm> _buildOrderBy(WifisFilter filter) {
+  List<OrderingTerm> _buildOrderBy(ApiKeysFilter filter) {
     final terms = <OrderingTerm>[
       OrderingTerm(expression: vaultItems.isPinned, mode: OrderingMode.desc),
     ];
@@ -221,17 +208,21 @@ class WifiFilterDao extends DatabaseAccessor<MainStore>
         : OrderingMode.desc;
 
     switch (filter.sortField) {
-      case WifisSortField.name:
+      case ApiKeysSortField.name:
         terms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
-      case WifisSortField.ssid:
-        terms.add(OrderingTerm(expression: wifiItems.ssid, mode: mode));
-      case WifisSortField.priority:
-        terms.add(OrderingTerm(expression: wifiItems.priority, mode: mode));
-      case WifisSortField.createdAt:
+      case ApiKeysSortField.service:
+        terms.add(OrderingTerm(expression: apiKeyItems.service, mode: mode));
+      case ApiKeysSortField.environment:
+        terms.add(
+          OrderingTerm(expression: apiKeyItems.environment, mode: mode),
+        );
+      case ApiKeysSortField.expiresAt:
+        terms.add(OrderingTerm(expression: apiKeyItems.expiresAt, mode: mode));
+      case ApiKeysSortField.createdAt:
         terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
-      case WifisSortField.modifiedAt:
+      case ApiKeysSortField.modifiedAt:
         terms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
-      case WifisSortField.lastAccessed:
+      case ApiKeysSortField.lastAccessed:
         terms.add(OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
       case null:
         terms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));

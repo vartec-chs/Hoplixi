@@ -1,32 +1,37 @@
-import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/dao/filters_dao/filter.dart';
+﻿import 'package:drift/drift.dart';
+import 'package:hoplixi/main_db/core/daos/filters_dao/filter.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/category_dto.dart';
-import 'package:hoplixi/main_db/core/models/dto/password_dto.dart';
+import 'package:hoplixi/main_db/core/models/dto/loyalty_card_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
-import 'package:hoplixi/main_db/core/models/filter/passwords_filter.dart';
+import 'package:hoplixi/main_db/core/models/filter/loyalty_cards_filter.dart';
 import 'package:hoplixi/main_db/core/tables/categories.dart';
 import 'package:hoplixi/main_db/core/tables/item_tags.dart';
+import 'package:hoplixi/main_db/core/tables/loyalty_card_items.dart';
 import 'package:hoplixi/main_db/core/tables/note_items.dart';
-import 'package:hoplixi/main_db/core/tables/password_items.dart';
 import 'package:hoplixi/main_db/core/tables/tags.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items.dart';
 
-part 'password_filter_dao.g.dart';
+part 'loyalty_card_filter_dao.g.dart';
 
 @DriftAccessor(
-  tables: [VaultItems, PasswordItems, Categories, Tags, ItemTags, NoteItems],
+  tables: [VaultItems, LoyaltyCardItems, Categories, Tags, ItemTags, NoteItems],
 )
-class PasswordFilterDao extends DatabaseAccessor<MainStore>
-    with _$PasswordFilterDaoMixin
-    implements FilterDao<PasswordsFilter, PasswordCardDto> {
-  PasswordFilterDao(super.db);
+class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
+    with _$LoyaltyCardFilterDaoMixin
+    implements FilterDao<LoyaltyCardsFilter, LoyaltyCardCardDto> {
+  LoyaltyCardFilterDao(super.db);
 
   @override
-  Future<List<PasswordCardDto>> getFiltered(PasswordsFilter filter) async {
+  Future<List<LoyaltyCardCardDto>> getFiltered(
+    LoyaltyCardsFilter filter,
+  ) async {
     final query = select(vaultItems).join([
-      innerJoin(passwordItems, passwordItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(
+        loyaltyCardItems,
+        loyaltyCardItems.itemId.equalsExp(vaultItems.id),
+      ),
       leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
@@ -39,27 +44,28 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
     }
 
     final results = await query.get();
-
     final itemIds = results.map((row) => row.readTable(vaultItems).id).toList();
     final tagsMap = await _loadTagsForItems(itemIds);
 
     return results.map((row) {
       final item = row.readTable(vaultItems);
-      final pw = row.readTable(passwordItems);
+      final loyalty = row.readTable(loyaltyCardItems);
       final category = row.readTableOrNull(categories);
-      final itemTags = tagsMap[item.id] ?? [];
 
-      return PasswordCardDto(
+      return LoyaltyCardCardDto(
         id: item.id,
         name: item.name,
-        login: pw.login,
-        email: pw.email,
-        url: pw.url,
         iconSource: item.iconSource,
         iconValue: item.iconValue,
-        isArchived: item.isArchived,
-        description: item.description,
-        isDeleted: item.isDeleted,
+        programName: loyalty.programName,
+        cardNumber: loyalty.cardNumber,
+        holderName: loyalty.holderName,
+        barcodeValue: loyalty.barcodeValue,
+        barcodeType: loyalty.barcodeType,
+        password: loyalty.password,
+        pointsBalance: loyalty.pointsBalance,
+        tier: loyalty.tier,
+        expiryDate: loyalty.expiryDate,
         category: category != null
             ? CategoryInCardDto(
                 id: category.id,
@@ -71,52 +77,48 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
                 iconValue: category.iconValue,
               )
             : null,
+        tags: tagsMap[item.id] ?? [],
         isFavorite: item.isFavorite,
         isPinned: item.isPinned,
+        isArchived: item.isArchived,
+        isDeleted: item.isDeleted,
         usedCount: item.usedCount,
         modifiedAt: item.modifiedAt,
         createdAt: item.createdAt,
-        tags: itemTags,
-        expireAt: pw.expireAt,
       );
     }).toList();
   }
 
   @override
-  Future<int> countFiltered(PasswordsFilter filter) async {
+  Future<int> countFiltered(LoyaltyCardsFilter filter) async {
     final query = select(vaultItems).join([
-      innerJoin(passwordItems, passwordItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(
+        loyaltyCardItems,
+        loyaltyCardItems.itemId.equalsExp(vaultItems.id),
+      ),
       leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
     query.where(_buildWhereExpression(filter));
-    final results = await query.get();
-    return results.length;
+    return (await query.get()).length;
   }
 
-  Expression<bool> _buildWhereExpression(PasswordsFilter filter) {
-    Expression<bool> expr = const Constant(true);
-    expr = expr & _applyBaseFilters(filter.base);
-    expr = expr & _applyPasswordSpecificFilters(filter);
-    return expr;
+  Expression<bool> _buildWhereExpression(LoyaltyCardsFilter filter) {
+    return _applyBaseFilters(filter.base) &
+        _applyLoyaltyCardSpecificFilters(filter);
   }
 
   Expression<bool> _applyBaseFilters(BaseFilter base) {
     Expression<bool> expr = const Constant(true);
 
-    if (base.isDeleted == null) {
-      expr = expr & vaultItems.isDeleted.equals(false);
-    }
-
     if (base.query.isNotEmpty) {
       final q = base.query.toLowerCase();
       Expression<bool> searchExpr =
           vaultItems.name.lower().like('%$q%') |
-          passwordItems.login.lower().like('%$q%') |
-          passwordItems.email.lower().like('%$q%') |
-          passwordItems.url.lower().like('%$q%') |
-          vaultItems.description.lower().like('%$q%') |
-          noteItems.content.lower().like('%$q%');
+          loyaltyCardItems.programName.lower().like('%$q%') |
+          loyaltyCardItems.cardNumber.lower().like('%$q%') |
+          vaultItems.description.lower().like('%$q%');
+      searchExpr = searchExpr | noteItems.content.lower().like('%$q%');
       expr = expr & searchExpr;
     }
 
@@ -137,6 +139,10 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
       expr = expr & vaultItems.isFavorite.equals(base.isFavorite!);
     }
 
+    if (base.isPinned != null) {
+      expr = expr & vaultItems.isPinned.equals(base.isPinned!);
+    }
+
     if (base.isArchived != null) {
       expr = expr & vaultItems.isArchived.equals(base.isArchived!);
     } else {
@@ -145,6 +151,8 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
 
     if (base.isDeleted != null) {
       expr = expr & vaultItems.isDeleted.equals(base.isDeleted!);
+    } else {
+      expr = expr & vaultItems.isDeleted.equals(false);
     }
 
     if (base.hasNotes != null) {
@@ -196,67 +204,63 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
       expr =
           expr & vaultItems.usedCount.isSmallerOrEqualValue(base.maxUsedCount!);
     }
+
     return expr;
   }
 
-  Expression<bool> _applyPasswordSpecificFilters(PasswordsFilter filter) {
+  Expression<bool> _applyLoyaltyCardSpecificFilters(LoyaltyCardsFilter filter) {
     Expression<bool> expr = const Constant(true);
 
-    if (filter.name != null) {
+    if (filter.programName != null && filter.programName!.isNotEmpty) {
       expr =
           expr &
-          vaultItems.name.lower().like('%${filter.name!.toLowerCase()}%');
+          loyaltyCardItems.programName.lower().contains(
+            filter.programName!.toLowerCase(),
+          );
     }
-    if (filter.login != null) {
+
+    if (filter.holderName != null && filter.holderName!.isNotEmpty) {
       expr =
           expr &
-          passwordItems.login.lower().like('%${filter.login!.toLowerCase()}%');
+          loyaltyCardItems.holderName.lower().contains(
+            filter.holderName!.toLowerCase(),
+          );
     }
-    if (filter.email != null) {
+
+    if (filter.tier != null && filter.tier!.isNotEmpty) {
       expr =
           expr &
-          passwordItems.email.lower().like('%${filter.email!.toLowerCase()}%');
+          loyaltyCardItems.tier.lower().contains(filter.tier!.toLowerCase());
     }
-    if (filter.url != null) {
+
+    if (filter.hasBarcode != null) {
       expr =
           expr &
-          passwordItems.url.lower().like('%${filter.url!.toLowerCase()}%');
+          (filter.hasBarcode!
+              ? loyaltyCardItems.barcodeValue.isNotNull()
+              : loyaltyCardItems.barcodeValue.isNull());
     }
-    if (filter.hasDescription != null) {
+
+    if (filter.hasExpiryDatePassed != null) {
       expr =
           expr &
-          (filter.hasDescription!
-              ? vaultItems.description.isNotNull()
-              : vaultItems.description.isNull());
+          (filter.hasExpiryDatePassed!
+              ? loyaltyCardItems.expiryDate.isSmallerThanValue(DateTime.now())
+              : (loyaltyCardItems.expiryDate.isNull() |
+                    loyaltyCardItems.expiryDate.isBiggerOrEqualValue(
+                      DateTime.now(),
+                    )));
     }
-    if (filter.hasNotes != null) {
+
+    if (filter.isExpiringSoon == true) {
+      final now = DateTime.now();
+      final soon = now.add(const Duration(days: 90));
       expr =
           expr &
-          (filter.hasNotes!
-              ? vaultItems.noteId.isNotNull()
-              : vaultItems.noteId.isNull());
+          loyaltyCardItems.expiryDate.isBiggerOrEqualValue(now) &
+          loyaltyCardItems.expiryDate.isSmallerOrEqualValue(soon);
     }
-    if (filter.hasUrl != null) {
-      expr =
-          expr &
-          (filter.hasUrl!
-              ? passwordItems.url.isNotNull()
-              : passwordItems.url.isNull());
-    }
-    if (filter.hasLogin != null) {
-      expr =
-          expr &
-          (filter.hasLogin!
-              ? passwordItems.login.isNotNull()
-              : passwordItems.login.isNull());
-    }
-    if (filter.hasEmail != null) {
-      expr =
-          expr &
-          (filter.hasEmail!
-              ? passwordItems.email.isNotNull()
-              : passwordItems.email.isNull());
-    }
+
     return expr;
   }
 
@@ -266,8 +270,7 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
     final windowSec = windowDays * 24 * 60 * 60;
 
     return CustomExpression<double>(
-      'CAST(COALESCE("vault_items"."recent_score",'
-      ' 1) AS REAL) * '
+      'CAST(COALESCE("vault_items"."recent_score", 1) AS REAL) * '
       'exp(-($nowSec - COALESCE('
       '"vault_items"."last_used_at",'
       ' "vault_items"."created_at")) / '
@@ -275,44 +278,50 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
     );
   }
 
-  List<OrderingTerm> _buildOrderBy(PasswordsFilter filter) {
-    final terms = <OrderingTerm>[];
-    terms.add(
+  List<OrderingTerm> _buildOrderBy(LoyaltyCardsFilter filter) {
+    final terms = <OrderingTerm>[
       OrderingTerm(expression: vaultItems.isPinned, mode: OrderingMode.desc),
-    );
+    ];
 
     final mode = filter.base.sortDirection == SortDirection.asc
         ? OrderingMode.asc
         : OrderingMode.desc;
 
     if (filter.base.isFrequentlyUsed == true) {
-      final windowDays = filter.base.frequencyWindowDays ?? 7;
+      final wd = filter.base.frequencyWindowDays ?? 7;
       terms.add(
-        OrderingTerm(
-          expression: _calculateDynamicScore(windowDays),
-          mode: mode,
-        ),
+        OrderingTerm(expression: _calculateDynamicScore(wd), mode: mode),
       );
       return terms;
     }
 
     if (filter.sortField != null) {
       switch (filter.sortField!) {
-        case PasswordsSortField.name:
+        case LoyaltyCardsSortField.name:
           terms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
-        case PasswordsSortField.login:
-          terms.add(OrderingTerm(expression: passwordItems.login, mode: mode));
-        case PasswordsSortField.email:
-          terms.add(OrderingTerm(expression: passwordItems.email, mode: mode));
-        case PasswordsSortField.url:
-          terms.add(OrderingTerm(expression: passwordItems.url, mode: mode));
-        case PasswordsSortField.createdAt:
+        case LoyaltyCardsSortField.programName:
+          terms.add(
+            OrderingTerm(expression: loyaltyCardItems.programName, mode: mode),
+          );
+        case LoyaltyCardsSortField.holderName:
+          terms.add(
+            OrderingTerm(expression: loyaltyCardItems.holderName, mode: mode),
+          );
+        case LoyaltyCardsSortField.tier:
+          terms.add(
+            OrderingTerm(expression: loyaltyCardItems.tier, mode: mode),
+          );
+        case LoyaltyCardsSortField.expiryDate:
+          terms.add(
+            OrderingTerm(expression: loyaltyCardItems.expiryDate, mode: mode),
+          );
+        case LoyaltyCardsSortField.createdAt:
           terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
-        case PasswordsSortField.modifiedAt:
+        case LoyaltyCardsSortField.modifiedAt:
           terms.add(
             OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
           );
-        case PasswordsSortField.lastAccessed:
+        case LoyaltyCardsSortField.lastAccessed:
           terms.add(
             OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
           );
@@ -336,6 +345,7 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
           );
       }
     }
+
     return terms;
   }
 
@@ -352,18 +362,17 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
     final tagsMap = <String, List<TagInCardDto>>{};
 
     for (final row in results) {
-      final it = row.readTable(itemTags);
+      final itemTag = row.readTable(itemTags);
       final tag = row.readTable(tags);
-      final id = it.itemId;
-      if (!tagsMap.containsKey(id)) {
-        tagsMap[id] = [];
-      }
-      if (tagsMap[id]!.length < 10) {
-        tagsMap[id]!.add(
+
+      tagsMap.putIfAbsent(itemTag.itemId, () => []);
+      if (tagsMap[itemTag.itemId]!.length < 10) {
+        tagsMap[itemTag.itemId]!.add(
           TagInCardDto(id: tag.id, name: tag.name, color: tag.color),
         );
       }
     }
+
     return tagsMap;
   }
 }

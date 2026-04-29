@@ -1,43 +1,36 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/dao/filters_dao/filter.dart';
+import 'package:hoplixi/main_db/core/daos/filters_dao/filter.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/category_dto.dart';
-import 'package:hoplixi/main_db/core/models/dto/crypto_wallet_dto.dart';
+import 'package:hoplixi/main_db/core/models/dto/certificate_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
-import 'package:hoplixi/main_db/core/models/filter/crypto_wallets_filter.dart';
+import 'package:hoplixi/main_db/core/models/filter/certificates_filter.dart';
 import 'package:hoplixi/main_db/core/tables/categories.dart';
-import 'package:hoplixi/main_db/core/tables/crypto_wallet_items.dart';
+import 'package:hoplixi/main_db/core/tables/certificate_items.dart';
 import 'package:hoplixi/main_db/core/tables/item_tags.dart';
 import 'package:hoplixi/main_db/core/tables/note_items.dart';
 import 'package:hoplixi/main_db/core/tables/tags.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items.dart';
 
-part 'crypto_wallet_filter_dao.g.dart';
+part 'certificate_filter_dao.g.dart';
 
 @DriftAccessor(
-  tables: [
-    VaultItems,
-    CryptoWalletItems,
-    Categories,
-    Tags,
-    ItemTags,
-    NoteItems,
-  ],
+  tables: [VaultItems, CertificateItems, Categories, Tags, ItemTags, NoteItems],
 )
-class CryptoWalletFilterDao extends DatabaseAccessor<MainStore>
-    with _$CryptoWalletFilterDaoMixin
-    implements FilterDao<CryptoWalletsFilter, CryptoWalletCardDto> {
-  CryptoWalletFilterDao(super.db);
+class CertificateFilterDao extends DatabaseAccessor<MainStore>
+    with _$CertificateFilterDaoMixin
+    implements FilterDao<CertificatesFilter, CertificateCardDto> {
+  CertificateFilterDao(super.db);
 
   @override
-  Future<List<CryptoWalletCardDto>> getFiltered(
-    CryptoWalletsFilter filter,
+  Future<List<CertificateCardDto>> getFiltered(
+    CertificatesFilter filter,
   ) async {
     final query = select(vaultItems).join([
       innerJoin(
-        cryptoWalletItems,
-        cryptoWalletItems.itemId.equalsExp(vaultItems.id),
+        certificateItems,
+        certificateItems.itemId.equalsExp(vaultItems.id),
       ),
       leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
@@ -56,23 +49,22 @@ class CryptoWalletFilterDao extends DatabaseAccessor<MainStore>
 
     return rows.map((row) {
       final item = row.readTable(vaultItems);
-      final wallet = row.readTable(cryptoWalletItems);
+      final cert = row.readTable(certificateItems);
       final category = row.readTableOrNull(categories);
 
-      return CryptoWalletCardDto(
+      return CertificateCardDto(
         id: item.id,
         name: item.name,
-        walletType: wallet.walletType,
-        network: wallet.network,
-        derivationPath: wallet.derivationPath,
-        hardwareDevice: wallet.hardwareDevice,
-        lastBalanceCheckedAt: wallet.lastBalanceCheckedAt,
-        watchOnly: wallet.watchOnly,
-        hasMnemonic: wallet.mnemonic != null && wallet.mnemonic!.isNotEmpty,
-        hasPrivateKey:
-            wallet.privateKey != null && wallet.privateKey!.isNotEmpty,
-        hasXpub: wallet.xpub != null && wallet.xpub!.isNotEmpty,
-        hasXprv: wallet.xprv != null && wallet.xprv!.isNotEmpty,
+        serialNumber: cert.serialNumber,
+        issuer: cert.issuer,
+        subject: cert.subject,
+        validFrom: cert.validFrom,
+        validTo: cert.validTo,
+        fingerprint: cert.fingerprint,
+        hasPrivateKey: cert.privateKey != null && cert.privateKey!.isNotEmpty,
+        hasPfx: cert.pfxBlob != null && cert.pfxBlob!.isNotEmpty,
+        autoRenew: cert.autoRenew,
+        lastCheckedAt: cert.lastCheckedAt,
         description: item.description,
         category: category != null
             ? CategoryInCardDto(
@@ -98,11 +90,11 @@ class CryptoWalletFilterDao extends DatabaseAccessor<MainStore>
   }
 
   @override
-  Future<int> countFiltered(CryptoWalletsFilter filter) async {
+  Future<int> countFiltered(CertificatesFilter filter) async {
     final query = select(vaultItems).join([
       innerJoin(
-        cryptoWalletItems,
-        cryptoWalletItems.itemId.equalsExp(vaultItems.id),
+        certificateItems,
+        certificateItems.itemId.equalsExp(vaultItems.id),
       ),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
@@ -112,7 +104,7 @@ class CryptoWalletFilterDao extends DatabaseAccessor<MainStore>
     return rows.length;
   }
 
-  Expression<bool> _buildWhereExpression(CryptoWalletsFilter filter) {
+  Expression<bool> _buildWhereExpression(CertificatesFilter filter) {
     Expression<bool> expr = const Constant(true);
     expr = expr & _applyBaseFilters(filter.base);
     expr = expr & _applySpecificFilters(filter);
@@ -131,10 +123,10 @@ class CryptoWalletFilterDao extends DatabaseAccessor<MainStore>
       expr =
           expr &
           (vaultItems.name.lower().like('%$q%') |
-              cryptoWalletItems.walletType.lower().like('%$q%') |
-              cryptoWalletItems.network.lower().like('%$q%') |
-              cryptoWalletItems.hardwareDevice.lower().like('%$q%') |
-              cryptoWalletItems.derivationPath.lower().like('%$q%') |
+              certificateItems.issuer.lower().like('%$q%') |
+              certificateItems.subject.lower().like('%$q%') |
+              certificateItems.serialNumber.lower().like('%$q%') |
+              certificateItems.fingerprint.lower().like('%$q%') |
               vaultItems.description.lower().like('%$q%') |
               noteItems.content.lower().like('%$q%'));
     }
@@ -169,7 +161,7 @@ class CryptoWalletFilterDao extends DatabaseAccessor<MainStore>
     return expr;
   }
 
-  Expression<bool> _applySpecificFilters(CryptoWalletsFilter filter) {
+  Expression<bool> _applySpecificFilters(CertificatesFilter filter) {
     Expression<bool> expr = const Constant(true);
 
     if (filter.name != null) {
@@ -178,68 +170,75 @@ class CryptoWalletFilterDao extends DatabaseAccessor<MainStore>
           vaultItems.name.lower().like('%${filter.name!.toLowerCase()}%');
     }
 
-    if (filter.walletType != null) {
+    if (filter.issuer != null) {
       expr =
           expr &
-          cryptoWalletItems.walletType.lower().like(
-            '%${filter.walletType!.toLowerCase()}%',
+          certificateItems.issuer.lower().like(
+            '%${filter.issuer!.toLowerCase()}%',
           );
     }
 
-    if (filter.network != null) {
+    if (filter.subject != null) {
       expr =
           expr &
-          cryptoWalletItems.network.lower().like(
-            '%${filter.network!.toLowerCase()}%',
+          certificateItems.subject.lower().like(
+            '%${filter.subject!.toLowerCase()}%',
           );
     }
 
-    if (filter.hardwareDevice != null) {
+    if (filter.serialNumber != null) {
       expr =
           expr &
-          cryptoWalletItems.hardwareDevice.lower().like(
-            '%${filter.hardwareDevice!.toLowerCase()}%',
+          certificateItems.serialNumber.lower().like(
+            '%${filter.serialNumber!.toLowerCase()}%',
           );
     }
 
-    if (filter.watchOnly != null) {
-      expr = expr & cryptoWalletItems.watchOnly.equals(filter.watchOnly!);
-    }
-
-    if (filter.hasMnemonic != null) {
+    if (filter.fingerprint != null) {
       expr =
           expr &
-          (filter.hasMnemonic!
-              ? (cryptoWalletItems.mnemonic.isNotNull() &
-                    cryptoWalletItems.mnemonic.isBiggerThanValue(''))
-              : (cryptoWalletItems.mnemonic.isNull() |
-                    cryptoWalletItems.mnemonic.equals('')));
+          certificateItems.fingerprint.lower().like(
+            '%${filter.fingerprint!.toLowerCase()}%',
+          );
     }
 
     if (filter.hasPrivateKey != null) {
       expr =
           expr &
           (filter.hasPrivateKey!
-              ? (cryptoWalletItems.privateKey.isNotNull() &
-                    cryptoWalletItems.privateKey.isBiggerThanValue(''))
-              : (cryptoWalletItems.privateKey.isNull() |
-                    cryptoWalletItems.privateKey.equals('')));
+              ? (certificateItems.privateKey.isNotNull() &
+                    certificateItems.privateKey.isBiggerThanValue(''))
+              : (certificateItems.privateKey.isNull() |
+                    certificateItems.privateKey.equals('')));
     }
 
-    if (filter.hasXprv != null) {
+    if (filter.hasPfx != null) {
       expr =
           expr &
-          (filter.hasXprv!
-              ? (cryptoWalletItems.xprv.isNotNull() &
-                    cryptoWalletItems.xprv.isBiggerThanValue(''))
-              : (cryptoWalletItems.xprv.isNull() |
-                    cryptoWalletItems.xprv.equals('')));
+          (filter.hasPfx!
+              ? certificateItems.pfxBlob.isNotNull()
+              : certificateItems.pfxBlob.isNull());
+    }
+
+    if (filter.autoRenew != null) {
+      expr = expr & certificateItems.autoRenew.equals(filter.autoRenew!);
+    }
+
+    if (filter.isExpired != null) {
+      final now = DateTime.now();
+      expr =
+          expr &
+          (filter.isExpired!
+              ? (certificateItems.validTo.isNotNull() &
+                    certificateItems.validTo.isSmallerThanValue(now))
+              : (certificateItems.validTo.isNull() |
+                    certificateItems.validTo.isBiggerOrEqualValue(now)));
     }
 
     return expr;
   }
 
-  List<OrderingTerm> _buildOrderBy(CryptoWalletsFilter filter) {
+  List<OrderingTerm> _buildOrderBy(CertificatesFilter filter) {
     final terms = <OrderingTerm>[
       OrderingTerm(expression: vaultItems.isPinned, mode: OrderingMode.desc),
     ];
@@ -249,21 +248,25 @@ class CryptoWalletFilterDao extends DatabaseAccessor<MainStore>
         : OrderingMode.desc;
 
     switch (filter.sortField) {
-      case CryptoWalletsSortField.name:
+      case CertificatesSortField.name:
         terms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
-      case CryptoWalletsSortField.walletType:
+      case CertificatesSortField.issuer:
         terms.add(
-          OrderingTerm(expression: cryptoWalletItems.walletType, mode: mode),
+          OrderingTerm(expression: certificateItems.issuer, mode: mode),
         );
-      case CryptoWalletsSortField.network:
+      case CertificatesSortField.subject:
         terms.add(
-          OrderingTerm(expression: cryptoWalletItems.network, mode: mode),
+          OrderingTerm(expression: certificateItems.subject, mode: mode),
         );
-      case CryptoWalletsSortField.createdAt:
+      case CertificatesSortField.validTo:
+        terms.add(
+          OrderingTerm(expression: certificateItems.validTo, mode: mode),
+        );
+      case CertificatesSortField.createdAt:
         terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
-      case CryptoWalletsSortField.modifiedAt:
+      case CertificatesSortField.modifiedAt:
         terms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
-      case CryptoWalletsSortField.lastAccessed:
+      case CertificatesSortField.lastAccessed:
         terms.add(OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
       case null:
         terms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/index.dart' hide Session;
-import 'package:hoplixi/main_db/core/dao/index.dart';
+import 'package:hoplixi/main_db/core/daos/daos.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:hoplixi/main_db/models/session.dart';

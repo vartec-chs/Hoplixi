@@ -1,32 +1,44 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/dao/filters_dao/filter.dart';
+import 'package:hoplixi/main_db/core/daos/filters_dao/filter.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
-import 'package:hoplixi/main_db/core/models/dto/api_key_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/category_dto.dart';
+import 'package:hoplixi/main_db/core/models/dto/recovery_codes_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
-import 'package:hoplixi/main_db/core/models/filter/api_keys_filter.dart';
 import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
-import 'package:hoplixi/main_db/core/tables/api_key_items.dart';
+import 'package:hoplixi/main_db/core/models/filter/recovery_codes_filter.dart';
 import 'package:hoplixi/main_db/core/tables/categories.dart';
 import 'package:hoplixi/main_db/core/tables/item_tags.dart';
 import 'package:hoplixi/main_db/core/tables/note_items.dart';
+import 'package:hoplixi/main_db/core/tables/recovery_codes_items.dart';
 import 'package:hoplixi/main_db/core/tables/tags.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items.dart';
 
-part 'api_key_filter_dao.g.dart';
+part 'recovery_codes_filter_dao.g.dart';
 
 @DriftAccessor(
-  tables: [VaultItems, ApiKeyItems, Categories, Tags, ItemTags, NoteItems],
+  tables: [
+    VaultItems,
+    RecoveryCodesItems,
+    Categories,
+    Tags,
+    ItemTags,
+    NoteItems,
+  ],
 )
-class ApiKeyFilterDao extends DatabaseAccessor<MainStore>
-    with _$ApiKeyFilterDaoMixin
-    implements FilterDao<ApiKeysFilter, ApiKeyCardDto> {
-  ApiKeyFilterDao(super.db);
+class RecoveryCodesFilterDao extends DatabaseAccessor<MainStore>
+    with _$RecoveryCodesFilterDaoMixin
+    implements FilterDao<RecoveryCodesFilter, RecoveryCodesCardDto> {
+  RecoveryCodesFilterDao(super.db);
 
   @override
-  Future<List<ApiKeyCardDto>> getFiltered(ApiKeysFilter filter) async {
+  Future<List<RecoveryCodesCardDto>> getFiltered(
+    RecoveryCodesFilter filter,
+  ) async {
     final query = select(vaultItems).join([
-      innerJoin(apiKeyItems, apiKeyItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(
+        recoveryCodesItems,
+        recoveryCodesItems.itemId.equalsExp(vaultItems.id),
+      ),
       leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
@@ -44,20 +56,17 @@ class ApiKeyFilterDao extends DatabaseAccessor<MainStore>
 
     return rows.map((row) {
       final item = row.readTable(vaultItems);
-      final api = row.readTable(apiKeyItems);
+      final data = row.readTable(recoveryCodesItems);
       final category = row.readTableOrNull(categories);
 
-      return ApiKeyCardDto(
+      return RecoveryCodesCardDto(
         id: item.id,
         name: item.name,
-        service: api.service,
-        iconSource: item.iconSource,
-        iconValue: item.iconValue,
-        maskedKey: api.maskedKey,
-        tokenType: api.tokenType,
-        environment: api.environment,
-        expiresAt: api.expiresAt,
-        revoked: api.revoked,
+        codesCount: data.codesCount,
+        codesUsedCount: data.usedCount,
+        oneTime: data.oneTime,
+        generatedAt: data.generatedAt,
+        displayHint: data.displayHint,
         description: item.description,
         category: category != null
             ? CategoryInCardDto(
@@ -75,7 +84,7 @@ class ApiKeyFilterDao extends DatabaseAccessor<MainStore>
         isPinned: item.isPinned,
         isArchived: item.isArchived,
         isDeleted: item.isDeleted,
-        usedCount: item.usedCount,
+        usedCountMetric: item.usedCount,
         modifiedAt: item.modifiedAt,
         createdAt: item.createdAt,
       );
@@ -83,9 +92,12 @@ class ApiKeyFilterDao extends DatabaseAccessor<MainStore>
   }
 
   @override
-  Future<int> countFiltered(ApiKeysFilter filter) async {
+  Future<int> countFiltered(RecoveryCodesFilter filter) async {
     final query = select(vaultItems).join([
-      innerJoin(apiKeyItems, apiKeyItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(
+        recoveryCodesItems,
+        recoveryCodesItems.itemId.equalsExp(vaultItems.id),
+      ),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
 
@@ -94,7 +106,7 @@ class ApiKeyFilterDao extends DatabaseAccessor<MainStore>
     return rows.length;
   }
 
-  Expression<bool> _buildWhereExpression(ApiKeysFilter filter) {
+  Expression<bool> _buildWhereExpression(RecoveryCodesFilter filter) {
     Expression<bool> expr = const Constant(true);
     expr = expr & _applyBaseFilters(filter.base);
     expr = expr & _applySpecificFilters(filter);
@@ -113,9 +125,7 @@ class ApiKeyFilterDao extends DatabaseAccessor<MainStore>
       expr =
           expr &
           (vaultItems.name.lower().like('%$q%') |
-              apiKeyItems.service.lower().like('%$q%') |
-              apiKeyItems.environment.lower().like('%$q%') |
-              apiKeyItems.tokenType.lower().like('%$q%') |
+              recoveryCodesItems.displayHint.lower().like('%$q%') |
               vaultItems.description.lower().like('%$q%') |
               noteItems.content.lower().like('%$q%'));
     }
@@ -150,7 +160,7 @@ class ApiKeyFilterDao extends DatabaseAccessor<MainStore>
     return expr;
   }
 
-  Expression<bool> _applySpecificFilters(ApiKeysFilter filter) {
+  Expression<bool> _applySpecificFilters(RecoveryCodesFilter filter) {
     Expression<bool> expr = const Constant(true);
 
     if (filter.name != null) {
@@ -159,46 +169,32 @@ class ApiKeyFilterDao extends DatabaseAccessor<MainStore>
           vaultItems.name.lower().like('%${filter.name!.toLowerCase()}%');
     }
 
-    if (filter.service != null) {
+    if (filter.displayHint != null) {
       expr =
           expr &
-          apiKeyItems.service.lower().like(
-            '%${filter.service!.toLowerCase()}%',
+          recoveryCodesItems.displayHint.lower().like(
+            '%${filter.displayHint!.toLowerCase()}%',
           );
     }
 
-    if (filter.tokenType != null) {
+    if (filter.oneTime != null) {
+      expr = expr & recoveryCodesItems.oneTime.equals(filter.oneTime!);
+    }
+
+    if (filter.depletedOnly == true) {
       expr =
           expr &
-          apiKeyItems.tokenType.lower().like(
-            '%${filter.tokenType!.toLowerCase()}%',
+          recoveryCodesItems.codesCount.isNotNull() &
+          recoveryCodesItems.usedCount.isNotNull() &
+          recoveryCodesItems.usedCount.isBiggerOrEqual(
+            recoveryCodesItems.codesCount,
           );
-    }
-
-    if (filter.environment != null) {
-      expr =
-          expr &
-          apiKeyItems.environment.lower().like(
-            '%${filter.environment!.toLowerCase()}%',
-          );
-    }
-
-    if (filter.revoked != null) {
-      expr = expr & apiKeyItems.revoked.equals(filter.revoked!);
-    }
-
-    if (filter.hasExpiration != null) {
-      expr =
-          expr &
-          (filter.hasExpiration!
-              ? apiKeyItems.expiresAt.isNotNull()
-              : apiKeyItems.expiresAt.isNull());
     }
 
     return expr;
   }
 
-  List<OrderingTerm> _buildOrderBy(ApiKeysFilter filter) {
+  List<OrderingTerm> _buildOrderBy(RecoveryCodesFilter filter) {
     final terms = <OrderingTerm>[
       OrderingTerm(expression: vaultItems.isPinned, mode: OrderingMode.desc),
     ];
@@ -208,21 +204,25 @@ class ApiKeyFilterDao extends DatabaseAccessor<MainStore>
         : OrderingMode.desc;
 
     switch (filter.sortField) {
-      case ApiKeysSortField.name:
+      case RecoveryCodesSortField.name:
         terms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
-      case ApiKeysSortField.service:
-        terms.add(OrderingTerm(expression: apiKeyItems.service, mode: mode));
-      case ApiKeysSortField.environment:
+      case RecoveryCodesSortField.codesCount:
         terms.add(
-          OrderingTerm(expression: apiKeyItems.environment, mode: mode),
+          OrderingTerm(expression: recoveryCodesItems.codesCount, mode: mode),
         );
-      case ApiKeysSortField.expiresAt:
-        terms.add(OrderingTerm(expression: apiKeyItems.expiresAt, mode: mode));
-      case ApiKeysSortField.createdAt:
+      case RecoveryCodesSortField.usedCount:
+        terms.add(
+          OrderingTerm(expression: recoveryCodesItems.usedCount, mode: mode),
+        );
+      case RecoveryCodesSortField.generatedAt:
+        terms.add(
+          OrderingTerm(expression: recoveryCodesItems.generatedAt, mode: mode),
+        );
+      case RecoveryCodesSortField.createdAt:
         terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
-      case ApiKeysSortField.modifiedAt:
+      case RecoveryCodesSortField.modifiedAt:
         terms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
-      case ApiKeysSortField.lastAccessed:
+      case RecoveryCodesSortField.lastAccessed:
         terms.add(OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
       case null:
         terms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));

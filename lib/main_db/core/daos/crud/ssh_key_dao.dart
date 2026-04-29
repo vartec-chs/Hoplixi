@@ -1,62 +1,60 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
-import 'package:hoplixi/main_db/core/dao/base_main_entity_dao.dart';
-import 'package:hoplixi/main_db/core/models/dto/contact_dto.dart';
+import 'package:hoplixi/main_db/core/daos/base_main_entity_dao.dart';
+import 'package:hoplixi/main_db/core/models/dto/ssh_key_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
-import 'package:hoplixi/main_db/core/tables/contact_items.dart';
+import 'package:hoplixi/main_db/core/tables/ssh_key_items.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items.dart';
 import 'package:uuid/uuid.dart';
 
-part 'contact_dao.g.dart';
+part 'ssh_key_dao.g.dart';
 
-@DriftAccessor(tables: [VaultItems, ContactItems])
-class ContactDao extends DatabaseAccessor<MainStore>
-    with _$ContactDaoMixin
+@DriftAccessor(tables: [VaultItems, SshKeyItems])
+class SshKeyDao extends DatabaseAccessor<MainStore>
+    with _$SshKeyDaoMixin
     implements BaseMainEntityDao {
-  ContactDao(super.db);
+  SshKeyDao(super.db);
 
-  Future<List<(VaultItemsData, ContactItemsData)>> getAllContacts() async {
+  Future<List<(VaultItemsData, SshKeyItemsData)>> getAllSshKeys() async {
     final query = select(vaultItems).join([
-      innerJoin(contactItems, contactItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(sshKeyItems, sshKeyItems.itemId.equalsExp(vaultItems.id)),
     ]);
     final rows = await query.get();
     return rows
-        .map((row) => (row.readTable(vaultItems), row.readTable(contactItems)))
+        .map((row) => (row.readTable(vaultItems), row.readTable(sshKeyItems)))
         .toList();
   }
 
-  Future<(VaultItemsData, ContactItemsData)?> getById(String id) async {
+  Future<(VaultItemsData, SshKeyItemsData)?> getById(String id) async {
     final query = select(vaultItems).join([
-      innerJoin(contactItems, contactItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(sshKeyItems, sshKeyItems.itemId.equalsExp(vaultItems.id)),
     ])..where(vaultItems.id.equals(id));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
-    return (row.readTable(vaultItems), row.readTable(contactItems));
+    return (row.readTable(vaultItems), row.readTable(sshKeyItems));
   }
 
-  Stream<List<(VaultItemsData, ContactItemsData)>> watchAllContacts() {
+  Stream<List<(VaultItemsData, SshKeyItemsData)>> watchAllSshKeys() {
     final query = select(vaultItems).join([
-      innerJoin(contactItems, contactItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(sshKeyItems, sshKeyItems.itemId.equalsExp(vaultItems.id)),
     ])..orderBy([OrderingTerm.desc(vaultItems.modifiedAt)]);
 
     return query.watch().map(
       (rows) => rows
-          .map(
-            (row) => (row.readTable(vaultItems), row.readTable(contactItems)),
-          )
+          .map((row) => (row.readTable(vaultItems), row.readTable(sshKeyItems)))
           .toList(),
     );
   }
 
-  Future<String> createContact(CreateContactDto dto) {
+  Future<String> createSshKey(CreateSshKeyDto dto) {
     final id = const Uuid().v4();
 
     return db.transaction(() async {
       await into(vaultItems).insert(
         VaultItemsCompanion.insert(
           id: Value(id),
-          type: VaultItemType.contact,
+          type: VaultItemType.sshKey,
           name: dto.name,
           description: Value(dto.description),
           noteId: Value(dto.noteId),
@@ -64,17 +62,22 @@ class ContactDao extends DatabaseAccessor<MainStore>
         ),
       );
 
-      await into(contactItems).insert(
-        ContactItemsCompanion.insert(
+      await into(sshKeyItems).insert(
+        SshKeyItemsCompanion.insert(
           itemId: id,
-          phone: Value(dto.phone),
-          email: Value(dto.email),
-          company: Value(dto.company),
-          jobTitle: Value(dto.jobTitle),
-          address: Value(dto.address),
-          website: Value(dto.website),
-          birthday: Value(dto.birthday),
-          isEmergencyContact: Value(dto.isEmergencyContact ?? false),
+          publicKey: dto.publicKey,
+          privateKey: dto.privateKey,
+          keyType: Value(dto.keyType),
+          keySize: Value(dto.keySize),
+          passphraseHint: Value(dto.passphraseHint),
+          comment: Value(dto.comment),
+          fingerprint: Value(dto.fingerprint),
+          createdBy: Value(dto.createdBy),
+          addedToAgent: Value(dto.addedToAgent ?? false),
+          usage: Value(dto.usage),
+          publicKeyFileId: Value(dto.publicKeyFileId),
+          privateKeyFileId: Value(dto.privateKeyFileId),
+          metadata: Value(dto.metadata),
         ),
       );
 
@@ -83,7 +86,7 @@ class ContactDao extends DatabaseAccessor<MainStore>
     });
   }
 
-  Future<bool> updateContact(String id, UpdateContactDto dto) {
+  Future<bool> updateSshKey(String id, UpdateSshKeyDto dto) {
     return db.transaction(() async {
       final vaultCompanion = VaultItemsCompanion(
         name: dto.name != null ? Value(dto.name!) : const Value.absent(),
@@ -106,21 +109,30 @@ class ContactDao extends DatabaseAccessor<MainStore>
         vaultItems,
       )..where((v) => v.id.equals(id))).write(vaultCompanion);
 
-      final itemCompanion = ContactItemsCompanion(
-        phone: Value(dto.phone),
-        email: Value(dto.email),
-        company: Value(dto.company),
-        jobTitle: Value(dto.jobTitle),
-        address: Value(dto.address),
-        website: Value(dto.website),
-        birthday: Value(dto.birthday),
-        isEmergencyContact: dto.isEmergencyContact != null
-            ? Value(dto.isEmergencyContact!)
+      final itemCompanion = SshKeyItemsCompanion(
+        publicKey: dto.publicKey != null
+            ? Value(dto.publicKey!)
             : const Value.absent(),
+        privateKey: dto.privateKey != null
+            ? Value(dto.privateKey!)
+            : const Value.absent(),
+        keyType: Value(dto.keyType),
+        keySize: Value(dto.keySize),
+        passphraseHint: Value(dto.passphraseHint),
+        comment: Value(dto.comment),
+        fingerprint: Value(dto.fingerprint),
+        createdBy: Value(dto.createdBy),
+        addedToAgent: dto.addedToAgent != null
+            ? Value(dto.addedToAgent!)
+            : const Value.absent(),
+        usage: Value(dto.usage),
+        publicKeyFileId: Value(dto.publicKeyFileId),
+        privateKeyFileId: Value(dto.privateKeyFileId),
+        metadata: Value(dto.metadata),
       );
 
       await (update(
-        contactItems,
+        sshKeyItems,
       )..where((i) => i.itemId.equals(id))).write(itemCompanion);
 
       if (dto.tagsIds != null) {
@@ -129,6 +141,15 @@ class ContactDao extends DatabaseAccessor<MainStore>
 
       return true;
     });
+  }
+
+  Future<String?> getPrivateKeyFieldById(String id) async {
+    final query = selectOnly(sshKeyItems)
+      ..addColumns([sshKeyItems.privateKey])
+      ..where(sshKeyItems.itemId.equals(id));
+
+    final result = await query.getSingleOrNull();
+    return result?.read(sshKeyItems.privateKey);
   }
 
   @override

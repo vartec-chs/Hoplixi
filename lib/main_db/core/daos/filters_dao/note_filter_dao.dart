@@ -1,47 +1,30 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/dao/filters_dao/filter.dart';
+import 'package:hoplixi/main_db/core/daos/filters_dao/filter.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/category_dto.dart';
-import 'package:hoplixi/main_db/core/models/dto/file_dto.dart';
+import 'package:hoplixi/main_db/core/models/dto/note_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
-import 'package:hoplixi/main_db/core/models/filter/files_filter.dart';
+import 'package:hoplixi/main_db/core/models/filter/notes_filter.dart';
 import 'package:hoplixi/main_db/core/tables/categories.dart';
-import 'package:hoplixi/main_db/core/tables/file_items.dart';
-import 'package:hoplixi/main_db/core/tables/file_metadata.dart';
 import 'package:hoplixi/main_db/core/tables/item_tags.dart';
 import 'package:hoplixi/main_db/core/tables/note_items.dart';
 import 'package:hoplixi/main_db/core/tables/tags.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items.dart';
 
-part 'file_filter_dao.g.dart';
+part 'note_filter_dao.g.dart';
 
-@DriftAccessor(
-  tables: [
-    VaultItems,
-    FileItems,
-    FileMetadata,
-    Categories,
-    Tags,
-    ItemTags,
-    NoteItems,
-  ],
-)
-class FileFilterDao extends DatabaseAccessor<MainStore>
-    with _$FileFilterDaoMixin
-    implements FilterDao<FilesFilter, FileCardDto> {
-  FileFilterDao(super.db);
+@DriftAccessor(tables: [VaultItems, NoteItems, Categories, Tags, ItemTags])
+class NoteFilterDao extends DatabaseAccessor<MainStore>
+    with _$NoteFilterDaoMixin
+    implements FilterDao<NotesFilter, NoteCardDto> {
+  NoteFilterDao(super.db);
 
   @override
-  Future<List<FileCardDto>> getFiltered(FilesFilter filter) async {
+  Future<List<NoteCardDto>> getFiltered(NotesFilter filter) async {
     final query = select(vaultItems).join([
-      innerJoin(fileItems, fileItems.itemId.equalsExp(vaultItems.id)),
-      leftOuterJoin(
-        fileMetadata,
-        fileMetadata.id.equalsExp(fileItems.metadataId),
-      ),
+      innerJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.id)),
       leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
-      leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
 
     query.where(_buildWhereExpression(filter));
@@ -58,17 +41,14 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
 
     return results.map((row) {
       final item = row.readTable(vaultItems);
-      final fi = row.readTable(fileItems);
       final category = row.readTableOrNull(categories);
-      final metadata = row.readTableOrNull(fileMetadata);
 
-      return FileCardDto(
+      return NoteCardDto(
         id: item.id,
-        name: item.name,
-        metadataId: fi.metadataId,
-        fileName: metadata?.fileName,
-        fileExtension: metadata?.fileExtension,
-        fileSize: metadata?.fileSize,
+        title: item.name,
+        description: item.description,
+        iconSource: item.iconSource,
+        iconValue: item.iconValue,
         category: category != null
             ? CategoryInCardDto(
                 id: category.id,
@@ -92,23 +72,19 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
   }
 
   @override
-  Future<int> countFiltered(FilesFilter filter) async {
-    final query = select(vaultItems).join([
-      innerJoin(fileItems, fileItems.itemId.equalsExp(vaultItems.id)),
-      leftOuterJoin(
-        fileMetadata,
-        fileMetadata.id.equalsExp(fileItems.metadataId),
-      ),
-    ]);
+  Future<int> countFiltered(NotesFilter filter) async {
+    final query = select(
+      vaultItems,
+    ).join([innerJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.id))]);
     query.where(_buildWhereExpression(filter));
     final results = await query.get();
     return results.length;
   }
 
-  Expression<bool> _buildWhereExpression(FilesFilter filter) {
+  Expression<bool> _buildWhereExpression(NotesFilter filter) {
     Expression<bool> expr = const Constant(true);
     expr = expr & _applyBaseFilters(filter.base);
-    expr = expr & _applyFileSpecificFilters(filter);
+    expr = expr & _applyNoteSpecificFilters(filter);
     return expr;
   }
 
@@ -117,12 +93,11 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
 
     if (base.query.isNotEmpty) {
       final q = base.query.toLowerCase();
-      Expression<bool> searchExpr =
-          vaultItems.name.lower().like('%$q%') |
-          vaultItems.description.lower().like('%$q%') |
-          fileMetadata.fileName.lower().like('%$q%');
-      searchExpr = searchExpr | noteItems.content.lower().like('%$q%');
-      expr = expr & searchExpr;
+      expr =
+          expr &
+          (vaultItems.name.lower().like('%$q%') |
+              vaultItems.description.lower().like('%$q%') |
+              noteItems.content.lower().like('%$q%'));
     }
 
     if (base.categoryIds.isNotEmpty) {
@@ -142,10 +117,6 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
       expr = expr & vaultItems.isFavorite.equals(base.isFavorite!);
     }
 
-    if (base.isPinned != null) {
-      expr = expr & vaultItems.isPinned.equals(base.isPinned!);
-    }
-
     if (base.isArchived != null) {
       expr = expr & vaultItems.isArchived.equals(base.isArchived!);
     } else {
@@ -158,16 +129,8 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
       expr = expr & vaultItems.isDeleted.equals(false);
     }
 
-    if (base.hasNotes != null) {
-      expr =
-          expr &
-          (base.hasNotes!
-              ? vaultItems.noteId.isNotNull()
-              : vaultItems.noteId.isNull());
-    }
-
-    if (base.noteIds.isNotEmpty) {
-      expr = expr & vaultItems.noteId.isIn(base.noteIds);
+    if (base.isPinned != null) {
+      expr = expr & vaultItems.isPinned.equals(base.isPinned!);
     }
 
     if (base.createdAfter != null) {
@@ -210,50 +173,46 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
     return expr;
   }
 
-  Expression<bool> _applyFileSpecificFilters(FilesFilter filter) {
+  Expression<bool> _applyNoteSpecificFilters(NotesFilter filter) {
     Expression<bool> expr = const Constant(true);
 
-    if (filter.fileExtensions.isNotEmpty) {
-      Expression<bool>? extExpr;
-      for (final ext in filter.fileExtensions) {
-        final cond = fileMetadata.fileExtension.lower().equals(
-          ext.toLowerCase(),
-        );
-        extExpr = extExpr == null ? cond : (extExpr | cond);
-      }
-      if (extExpr != null) {
-        expr = expr & extExpr;
-      }
-    }
-
-    if (filter.mimeTypes.isNotEmpty) {
-      Expression<bool>? mimeExpr;
-      for (final mime in filter.mimeTypes) {
-        final cond = fileMetadata.mimeType.lower().equals(mime.toLowerCase());
-        mimeExpr = mimeExpr == null ? cond : (mimeExpr | cond);
-      }
-      if (mimeExpr != null) {
-        expr = expr & mimeExpr;
-      }
-    }
-
-    if (filter.fileName != null && filter.fileName!.isNotEmpty) {
+    if (filter.title != null) {
       expr =
           expr &
-          fileMetadata.fileName.lower().like(
-            '%${filter.fileName!.toLowerCase()}%',
+          vaultItems.name.lower().like('%${filter.title!.toLowerCase()}%');
+    }
+    if (filter.content != null) {
+      expr =
+          expr &
+          noteItems.content.lower().like('%${filter.content!.toLowerCase()}%');
+    }
+    if (filter.hasDescription != null) {
+      expr =
+          expr &
+          (filter.hasDescription!
+              ? vaultItems.description.isNotNull()
+              : vaultItems.description.isNull());
+    }
+    if (filter.hasDeltaJson != null) {
+      expr =
+          expr &
+          (filter.hasDeltaJson!
+              ? noteItems.deltaJson.isNotNull()
+              : noteItems.deltaJson.isNull());
+    }
+    if (filter.minContentLength != null) {
+      expr =
+          expr &
+          noteItems.content.length.isBiggerOrEqualValue(
+            filter.minContentLength!,
           );
     }
-
-    if (filter.minFileSize != null) {
+    if (filter.maxContentLength != null) {
       expr =
           expr &
-          fileMetadata.fileSize.isBiggerOrEqualValue(filter.minFileSize!);
-    }
-    if (filter.maxFileSize != null) {
-      expr =
-          expr &
-          fileMetadata.fileSize.isSmallerOrEqualValue(filter.maxFileSize!);
+          noteItems.content.length.isSmallerOrEqualValue(
+            filter.maxContentLength!,
+          );
     }
     return expr;
   }
@@ -273,7 +232,7 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
     );
   }
 
-  List<OrderingTerm> _buildOrderBy(FilesFilter filter) {
+  List<OrderingTerm> _buildOrderBy(NotesFilter filter) {
     final terms = <OrderingTerm>[];
     terms.add(
       OrderingTerm(expression: vaultItems.isPinned, mode: OrderingMode.desc),
@@ -293,31 +252,23 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
 
     if (filter.sortField != null) {
       switch (filter.sortField!) {
-        case FilesSortField.name:
+        case NotesSortField.title:
           terms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
-        case FilesSortField.fileName:
+        case NotesSortField.description:
           terms.add(
-            OrderingTerm(expression: fileMetadata.fileName, mode: mode),
+            OrderingTerm(expression: vaultItems.description, mode: mode),
           );
-        case FilesSortField.fileSize:
+        case NotesSortField.contentLength:
           terms.add(
-            OrderingTerm(expression: fileMetadata.fileSize, mode: mode),
+            OrderingTerm(expression: noteItems.content.length, mode: mode),
           );
-        case FilesSortField.fileExtension:
-          terms.add(
-            OrderingTerm(expression: fileMetadata.fileExtension, mode: mode),
-          );
-        case FilesSortField.mimeType:
-          terms.add(
-            OrderingTerm(expression: fileMetadata.mimeType, mode: mode),
-          );
-        case FilesSortField.createdAt:
+        case NotesSortField.createdAt:
           terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
-        case FilesSortField.modifiedAt:
+        case NotesSortField.modifiedAt:
           terms.add(
             OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
           );
-        case FilesSortField.lastAccessed:
+        case NotesSortField.lastAccessed:
           terms.add(
             OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
           );
@@ -359,10 +310,12 @@ class FileFilterDao extends DatabaseAccessor<MainStore>
     for (final row in results) {
       final it = row.readTable(itemTags);
       final tag = row.readTable(tags);
-
-      tagsMap.putIfAbsent(it.itemId, () => []);
-      if (tagsMap[it.itemId]!.length < 10) {
-        tagsMap[it.itemId]!.add(
+      final id = it.itemId;
+      if (!tagsMap.containsKey(id)) {
+        tagsMap[id] = [];
+      }
+      if (tagsMap[id]!.length < 10) {
+        tagsMap[id]!.add(
           TagInCardDto(id: tag.id, name: tag.name, color: tag.color),
         );
       }

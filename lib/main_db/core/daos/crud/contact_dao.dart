@@ -1,60 +1,62 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
-import 'package:hoplixi/main_db/core/dao/base_main_entity_dao.dart';
-import 'package:hoplixi/main_db/core/models/dto/wifi_dto.dart';
+import 'package:hoplixi/main_db/core/daos/base_main_entity_dao.dart';
+import 'package:hoplixi/main_db/core/models/dto/contact_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
+import 'package:hoplixi/main_db/core/tables/contact_items.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items.dart';
-import 'package:hoplixi/main_db/core/tables/wifi_items.dart';
 import 'package:uuid/uuid.dart';
 
-part 'wifi_dao.g.dart';
+part 'contact_dao.g.dart';
 
-@DriftAccessor(tables: [VaultItems, WifiItems])
-class WifiDao extends DatabaseAccessor<MainStore>
-    with _$WifiDaoMixin
+@DriftAccessor(tables: [VaultItems, ContactItems])
+class ContactDao extends DatabaseAccessor<MainStore>
+    with _$ContactDaoMixin
     implements BaseMainEntityDao {
-  WifiDao(super.db);
+  ContactDao(super.db);
 
-  Future<List<(VaultItemsData, WifiItemsData)>> getAllWifis() async {
-    final query = select(
-      vaultItems,
-    ).join([innerJoin(wifiItems, wifiItems.itemId.equalsExp(vaultItems.id))]);
+  Future<List<(VaultItemsData, ContactItemsData)>> getAllContacts() async {
+    final query = select(vaultItems).join([
+      innerJoin(contactItems, contactItems.itemId.equalsExp(vaultItems.id)),
+    ]);
     final rows = await query.get();
     return rows
-        .map((row) => (row.readTable(vaultItems), row.readTable(wifiItems)))
+        .map((row) => (row.readTable(vaultItems), row.readTable(contactItems)))
         .toList();
   }
 
-  Future<(VaultItemsData, WifiItemsData)?> getById(String id) async {
+  Future<(VaultItemsData, ContactItemsData)?> getById(String id) async {
     final query = select(vaultItems).join([
-      innerJoin(wifiItems, wifiItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(contactItems, contactItems.itemId.equalsExp(vaultItems.id)),
     ])..where(vaultItems.id.equals(id));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
-    return (row.readTable(vaultItems), row.readTable(wifiItems));
+    return (row.readTable(vaultItems), row.readTable(contactItems));
   }
 
-  Stream<List<(VaultItemsData, WifiItemsData)>> watchAllWifis() {
+  Stream<List<(VaultItemsData, ContactItemsData)>> watchAllContacts() {
     final query = select(vaultItems).join([
-      innerJoin(wifiItems, wifiItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(contactItems, contactItems.itemId.equalsExp(vaultItems.id)),
     ])..orderBy([OrderingTerm.desc(vaultItems.modifiedAt)]);
 
     return query.watch().map(
       (rows) => rows
-          .map((row) => (row.readTable(vaultItems), row.readTable(wifiItems)))
+          .map(
+            (row) => (row.readTable(vaultItems), row.readTable(contactItems)),
+          )
           .toList(),
     );
   }
 
-  Future<String> createWifi(CreateWifiDto dto) {
+  Future<String> createContact(CreateContactDto dto) {
     final id = const Uuid().v4();
 
     return db.transaction(() async {
       await into(vaultItems).insert(
         VaultItemsCompanion.insert(
           id: Value(id),
-          type: VaultItemType.wifi,
+          type: VaultItemType.contact,
           name: dto.name,
           description: Value(dto.description),
           noteId: Value(dto.noteId),
@@ -62,20 +64,17 @@ class WifiDao extends DatabaseAccessor<MainStore>
         ),
       );
 
-      await into(wifiItems).insert(
-        WifiItemsCompanion.insert(
+      await into(contactItems).insert(
+        ContactItemsCompanion.insert(
           itemId: id,
-          ssid: dto.ssid,
-          password: Value(dto.password),
-          security: Value(dto.security),
-          hidden: Value(dto.hidden ?? false),
-          eapMethod: Value(dto.eapMethod),
-          username: Value(dto.username),
-          identity: Value(dto.identity),
-          domain: Value(dto.domain),
-          lastConnectedBssid: Value(dto.lastConnectedBssid),
-          priority: Value(dto.priority),
-          qrCodePayload: Value(dto.qrCodePayload),
+          phone: Value(dto.phone),
+          email: Value(dto.email),
+          company: Value(dto.company),
+          jobTitle: Value(dto.jobTitle),
+          address: Value(dto.address),
+          website: Value(dto.website),
+          birthday: Value(dto.birthday),
+          isEmergencyContact: Value(dto.isEmergencyContact ?? false),
         ),
       );
 
@@ -84,7 +83,7 @@ class WifiDao extends DatabaseAccessor<MainStore>
     });
   }
 
-  Future<bool> updateWifi(String id, UpdateWifiDto dto) {
+  Future<bool> updateContact(String id, UpdateContactDto dto) {
     return db.transaction(() async {
       final vaultCompanion = VaultItemsCompanion(
         name: dto.name != null ? Value(dto.name!) : const Value.absent(),
@@ -107,22 +106,21 @@ class WifiDao extends DatabaseAccessor<MainStore>
         vaultItems,
       )..where((v) => v.id.equals(id))).write(vaultCompanion);
 
-      final itemCompanion = WifiItemsCompanion(
-        ssid: dto.ssid != null ? Value(dto.ssid!) : const Value.absent(),
-        password: Value(dto.password),
-        security: Value(dto.security),
-        hidden: dto.hidden != null ? Value(dto.hidden!) : const Value.absent(),
-        eapMethod: Value(dto.eapMethod),
-        username: Value(dto.username),
-        identity: Value(dto.identity),
-        domain: Value(dto.domain),
-        lastConnectedBssid: Value(dto.lastConnectedBssid),
-        priority: Value(dto.priority),
-        qrCodePayload: Value(dto.qrCodePayload),
+      final itemCompanion = ContactItemsCompanion(
+        phone: Value(dto.phone),
+        email: Value(dto.email),
+        company: Value(dto.company),
+        jobTitle: Value(dto.jobTitle),
+        address: Value(dto.address),
+        website: Value(dto.website),
+        birthday: Value(dto.birthday),
+        isEmergencyContact: dto.isEmergencyContact != null
+            ? Value(dto.isEmergencyContact!)
+            : const Value.absent(),
       );
 
       await (update(
-        wifiItems,
+        contactItems,
       )..where((i) => i.itemId.equals(id))).write(itemCompanion);
 
       if (dto.tagsIds != null) {
@@ -131,15 +129,6 @@ class WifiDao extends DatabaseAccessor<MainStore>
 
       return true;
     });
-  }
-
-  Future<String?> getPasswordFieldById(String id) async {
-    final query = selectOnly(wifiItems)
-      ..addColumns([wifiItems.password])
-      ..where(wifiItems.itemId.equals(id));
-
-    final result = await query.getSingleOrNull();
-    return result?.read(wifiItems.password);
   }
 
   @override

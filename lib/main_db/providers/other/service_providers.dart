@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/errors/errors.dart';
-import 'package:hoplixi/main_db/providers/dao_providers.dart';
+import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/main_db/services/main_store_storage_service.dart';
 import 'package:hoplixi/main_db/services/other/document_storage_service.dart';

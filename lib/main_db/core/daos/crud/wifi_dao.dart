@@ -1,60 +1,60 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
-import 'package:hoplixi/main_db/core/dao/base_main_entity_dao.dart';
-import 'package:hoplixi/main_db/core/models/dto/ssh_key_dto.dart';
+import 'package:hoplixi/main_db/core/daos/base_main_entity_dao.dart';
+import 'package:hoplixi/main_db/core/models/dto/wifi_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
-import 'package:hoplixi/main_db/core/tables/ssh_key_items.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items.dart';
+import 'package:hoplixi/main_db/core/tables/wifi_items.dart';
 import 'package:uuid/uuid.dart';
 
-part 'ssh_key_dao.g.dart';
+part 'wifi_dao.g.dart';
 
-@DriftAccessor(tables: [VaultItems, SshKeyItems])
-class SshKeyDao extends DatabaseAccessor<MainStore>
-    with _$SshKeyDaoMixin
+@DriftAccessor(tables: [VaultItems, WifiItems])
+class WifiDao extends DatabaseAccessor<MainStore>
+    with _$WifiDaoMixin
     implements BaseMainEntityDao {
-  SshKeyDao(super.db);
+  WifiDao(super.db);
 
-  Future<List<(VaultItemsData, SshKeyItemsData)>> getAllSshKeys() async {
-    final query = select(vaultItems).join([
-      innerJoin(sshKeyItems, sshKeyItems.itemId.equalsExp(vaultItems.id)),
-    ]);
+  Future<List<(VaultItemsData, WifiItemsData)>> getAllWifis() async {
+    final query = select(
+      vaultItems,
+    ).join([innerJoin(wifiItems, wifiItems.itemId.equalsExp(vaultItems.id))]);
     final rows = await query.get();
     return rows
-        .map((row) => (row.readTable(vaultItems), row.readTable(sshKeyItems)))
+        .map((row) => (row.readTable(vaultItems), row.readTable(wifiItems)))
         .toList();
   }
 
-  Future<(VaultItemsData, SshKeyItemsData)?> getById(String id) async {
+  Future<(VaultItemsData, WifiItemsData)?> getById(String id) async {
     final query = select(vaultItems).join([
-      innerJoin(sshKeyItems, sshKeyItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(wifiItems, wifiItems.itemId.equalsExp(vaultItems.id)),
     ])..where(vaultItems.id.equals(id));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
-    return (row.readTable(vaultItems), row.readTable(sshKeyItems));
+    return (row.readTable(vaultItems), row.readTable(wifiItems));
   }
 
-  Stream<List<(VaultItemsData, SshKeyItemsData)>> watchAllSshKeys() {
+  Stream<List<(VaultItemsData, WifiItemsData)>> watchAllWifis() {
     final query = select(vaultItems).join([
-      innerJoin(sshKeyItems, sshKeyItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(wifiItems, wifiItems.itemId.equalsExp(vaultItems.id)),
     ])..orderBy([OrderingTerm.desc(vaultItems.modifiedAt)]);
 
     return query.watch().map(
       (rows) => rows
-          .map((row) => (row.readTable(vaultItems), row.readTable(sshKeyItems)))
+          .map((row) => (row.readTable(vaultItems), row.readTable(wifiItems)))
           .toList(),
     );
   }
 
-  Future<String> createSshKey(CreateSshKeyDto dto) {
+  Future<String> createWifi(CreateWifiDto dto) {
     final id = const Uuid().v4();
 
     return db.transaction(() async {
       await into(vaultItems).insert(
         VaultItemsCompanion.insert(
           id: Value(id),
-          type: VaultItemType.sshKey,
+          type: VaultItemType.wifi,
           name: dto.name,
           description: Value(dto.description),
           noteId: Value(dto.noteId),
@@ -62,22 +62,20 @@ class SshKeyDao extends DatabaseAccessor<MainStore>
         ),
       );
 
-      await into(sshKeyItems).insert(
-        SshKeyItemsCompanion.insert(
+      await into(wifiItems).insert(
+        WifiItemsCompanion.insert(
           itemId: id,
-          publicKey: dto.publicKey,
-          privateKey: dto.privateKey,
-          keyType: Value(dto.keyType),
-          keySize: Value(dto.keySize),
-          passphraseHint: Value(dto.passphraseHint),
-          comment: Value(dto.comment),
-          fingerprint: Value(dto.fingerprint),
-          createdBy: Value(dto.createdBy),
-          addedToAgent: Value(dto.addedToAgent ?? false),
-          usage: Value(dto.usage),
-          publicKeyFileId: Value(dto.publicKeyFileId),
-          privateKeyFileId: Value(dto.privateKeyFileId),
-          metadata: Value(dto.metadata),
+          ssid: dto.ssid,
+          password: Value(dto.password),
+          security: Value(dto.security),
+          hidden: Value(dto.hidden ?? false),
+          eapMethod: Value(dto.eapMethod),
+          username: Value(dto.username),
+          identity: Value(dto.identity),
+          domain: Value(dto.domain),
+          lastConnectedBssid: Value(dto.lastConnectedBssid),
+          priority: Value(dto.priority),
+          qrCodePayload: Value(dto.qrCodePayload),
         ),
       );
 
@@ -86,7 +84,7 @@ class SshKeyDao extends DatabaseAccessor<MainStore>
     });
   }
 
-  Future<bool> updateSshKey(String id, UpdateSshKeyDto dto) {
+  Future<bool> updateWifi(String id, UpdateWifiDto dto) {
     return db.transaction(() async {
       final vaultCompanion = VaultItemsCompanion(
         name: dto.name != null ? Value(dto.name!) : const Value.absent(),
@@ -109,30 +107,22 @@ class SshKeyDao extends DatabaseAccessor<MainStore>
         vaultItems,
       )..where((v) => v.id.equals(id))).write(vaultCompanion);
 
-      final itemCompanion = SshKeyItemsCompanion(
-        publicKey: dto.publicKey != null
-            ? Value(dto.publicKey!)
-            : const Value.absent(),
-        privateKey: dto.privateKey != null
-            ? Value(dto.privateKey!)
-            : const Value.absent(),
-        keyType: Value(dto.keyType),
-        keySize: Value(dto.keySize),
-        passphraseHint: Value(dto.passphraseHint),
-        comment: Value(dto.comment),
-        fingerprint: Value(dto.fingerprint),
-        createdBy: Value(dto.createdBy),
-        addedToAgent: dto.addedToAgent != null
-            ? Value(dto.addedToAgent!)
-            : const Value.absent(),
-        usage: Value(dto.usage),
-        publicKeyFileId: Value(dto.publicKeyFileId),
-        privateKeyFileId: Value(dto.privateKeyFileId),
-        metadata: Value(dto.metadata),
+      final itemCompanion = WifiItemsCompanion(
+        ssid: dto.ssid != null ? Value(dto.ssid!) : const Value.absent(),
+        password: Value(dto.password),
+        security: Value(dto.security),
+        hidden: dto.hidden != null ? Value(dto.hidden!) : const Value.absent(),
+        eapMethod: Value(dto.eapMethod),
+        username: Value(dto.username),
+        identity: Value(dto.identity),
+        domain: Value(dto.domain),
+        lastConnectedBssid: Value(dto.lastConnectedBssid),
+        priority: Value(dto.priority),
+        qrCodePayload: Value(dto.qrCodePayload),
       );
 
       await (update(
-        sshKeyItems,
+        wifiItems,
       )..where((i) => i.itemId.equals(id))).write(itemCompanion);
 
       if (dto.tagsIds != null) {
@@ -143,13 +133,13 @@ class SshKeyDao extends DatabaseAccessor<MainStore>
     });
   }
 
-  Future<String?> getPrivateKeyFieldById(String id) async {
-    final query = selectOnly(sshKeyItems)
-      ..addColumns([sshKeyItems.privateKey])
-      ..where(sshKeyItems.itemId.equals(id));
+  Future<String?> getPasswordFieldById(String id) async {
+    final query = selectOnly(wifiItems)
+      ..addColumns([wifiItems.password])
+      ..where(wifiItems.itemId.equals(id));
 
     final result = await query.getSingleOrNull();
-    return result?.read(sshKeyItems.privateKey);
+    return result?.read(wifiItems.password);
   }
 
   @override

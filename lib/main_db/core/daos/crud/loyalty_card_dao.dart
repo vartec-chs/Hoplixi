@@ -1,60 +1,75 @@
-import 'package:drift/drift.dart';
+﻿import 'package:drift/drift.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
-import 'package:hoplixi/main_db/core/dao/base_main_entity_dao.dart';
-import 'package:hoplixi/main_db/core/models/dto/api_key_dto.dart';
+import 'package:hoplixi/main_db/core/daos/base_main_entity_dao.dart';
+import 'package:hoplixi/main_db/core/models/dto/loyalty_card_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
-import 'package:hoplixi/main_db/core/tables/api_key_items.dart';
+import 'package:hoplixi/main_db/core/tables/loyalty_card_items.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items.dart';
 import 'package:uuid/uuid.dart';
 
-part 'api_key_dao.g.dart';
+part 'loyalty_card_dao.g.dart';
 
-@DriftAccessor(tables: [VaultItems, ApiKeyItems])
-class ApiKeyDao extends DatabaseAccessor<MainStore>
-    with _$ApiKeyDaoMixin
+@DriftAccessor(tables: [VaultItems, LoyaltyCardItems])
+class LoyaltyCardDao extends DatabaseAccessor<MainStore>
+    with _$LoyaltyCardDaoMixin
     implements BaseMainEntityDao {
-  ApiKeyDao(super.db);
+  LoyaltyCardDao(super.db);
 
-  Future<List<(VaultItemsData, ApiKeyItemsData)>> getAllApiKeys() async {
+  Future<List<(VaultItemsData, LoyaltyCardItemsData)>>
+  getAllLoyaltyCards() async {
     final query = select(vaultItems).join([
-      innerJoin(apiKeyItems, apiKeyItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(
+        loyaltyCardItems,
+        loyaltyCardItems.itemId.equalsExp(vaultItems.id),
+      ),
     ]);
     final rows = await query.get();
     return rows
-        .map((row) => (row.readTable(vaultItems), row.readTable(apiKeyItems)))
+        .map(
+          (row) => (row.readTable(vaultItems), row.readTable(loyaltyCardItems)),
+        )
         .toList();
   }
 
-  Future<(VaultItemsData, ApiKeyItemsData)?> getById(String id) async {
+  Future<(VaultItemsData, LoyaltyCardItemsData)?> getById(String id) async {
     final query = select(vaultItems).join([
-      innerJoin(apiKeyItems, apiKeyItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(
+        loyaltyCardItems,
+        loyaltyCardItems.itemId.equalsExp(vaultItems.id),
+      ),
     ])..where(vaultItems.id.equals(id));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
-    return (row.readTable(vaultItems), row.readTable(apiKeyItems));
+    return (row.readTable(vaultItems), row.readTable(loyaltyCardItems));
   }
 
-  Stream<List<(VaultItemsData, ApiKeyItemsData)>> watchAllApiKeys() {
+  Stream<List<(VaultItemsData, LoyaltyCardItemsData)>> watchAllLoyaltyCards() {
     final query = select(vaultItems).join([
-      innerJoin(apiKeyItems, apiKeyItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(
+        loyaltyCardItems,
+        loyaltyCardItems.itemId.equalsExp(vaultItems.id),
+      ),
     ])..orderBy([OrderingTerm.desc(vaultItems.modifiedAt)]);
 
     return query.watch().map(
       (rows) => rows
-          .map((row) => (row.readTable(vaultItems), row.readTable(apiKeyItems)))
+          .map(
+            (row) =>
+                (row.readTable(vaultItems), row.readTable(loyaltyCardItems)),
+          )
           .toList(),
     );
   }
 
-  Future<String> createApiKey(CreateApiKeyDto dto) {
+  Future<String> createLoyaltyCard(CreateLoyaltyCardDto dto) {
     final id = const Uuid().v4();
 
     return db.transaction(() async {
       await into(vaultItems).insert(
         VaultItemsCompanion.insert(
           id: Value(id),
-          type: VaultItemType.apiKey,
+          type: VaultItemType.loyaltyCard,
           name: dto.name,
           description: Value(dto.description),
           noteId: Value(dto.noteId),
@@ -62,19 +77,20 @@ class ApiKeyDao extends DatabaseAccessor<MainStore>
         ),
       );
 
-      await into(apiKeyItems).insert(
-        ApiKeyItemsCompanion.insert(
+      await into(loyaltyCardItems).insert(
+        LoyaltyCardItemsCompanion.insert(
           itemId: id,
-          service: dto.service,
-          key: dto.key,
-          maskedKey: Value(dto.maskedKey),
-          tokenType: Value(dto.tokenType),
-          environment: Value(dto.environment),
-          expiresAt: Value(dto.expiresAt),
-          revoked: Value(dto.revoked ?? false),
-          rotationPeriodDays: Value(dto.rotationPeriodDays),
-          lastRotatedAt: Value(dto.lastRotatedAt),
-          metadata: Value(dto.metadata),
+          programName: dto.programName,
+          cardNumber: Value(dto.cardNumber),
+          holderName: Value(dto.holderName),
+          barcodeValue: Value(dto.barcodeValue),
+          barcodeType: Value(dto.barcodeType),
+          password: Value(dto.password),
+          pointsBalance: Value(dto.pointsBalance),
+          tier: Value(dto.tier),
+          expiryDate: Value(dto.expiryDate),
+          website: Value(dto.website),
+          phoneNumber: Value(dto.phoneNumber),
         ),
       );
 
@@ -83,7 +99,7 @@ class ApiKeyDao extends DatabaseAccessor<MainStore>
     });
   }
 
-  Future<bool> updateApiKey(String id, UpdateApiKeyDto dto) {
+  Future<bool> updateLoyaltyCard(String id, UpdateLoyaltyCardDto dto) {
     return db.transaction(() async {
       final vaultCompanion = VaultItemsCompanion(
         name: dto.name != null ? Value(dto.name!) : const Value.absent(),
@@ -106,26 +122,25 @@ class ApiKeyDao extends DatabaseAccessor<MainStore>
         vaultItems,
       )..where((v) => v.id.equals(id))).write(vaultCompanion);
 
-      final itemCompanion = ApiKeyItemsCompanion(
-        service: dto.service != null
-            ? Value(dto.service!)
+      final loyaltyCompanion = LoyaltyCardItemsCompanion(
+        programName: dto.programName != null
+            ? Value(dto.programName!)
             : const Value.absent(),
-        key: dto.key != null ? Value(dto.key!) : const Value.absent(),
-        maskedKey: Value(dto.maskedKey),
-        tokenType: Value(dto.tokenType),
-        environment: Value(dto.environment),
-        expiresAt: Value(dto.expiresAt),
-        revoked: dto.revoked != null
-            ? Value(dto.revoked!)
-            : const Value.absent(),
-        rotationPeriodDays: Value(dto.rotationPeriodDays),
-        lastRotatedAt: Value(dto.lastRotatedAt),
-        metadata: Value(dto.metadata),
+        cardNumber: Value(dto.cardNumber),
+        holderName: Value(dto.holderName),
+        barcodeValue: Value(dto.barcodeValue),
+        barcodeType: Value(dto.barcodeType),
+        password: Value(dto.password),
+        pointsBalance: Value(dto.pointsBalance),
+        tier: Value(dto.tier),
+        expiryDate: Value(dto.expiryDate),
+        website: Value(dto.website),
+        phoneNumber: Value(dto.phoneNumber),
       );
 
       await (update(
-        apiKeyItems,
-      )..where((i) => i.itemId.equals(id))).write(itemCompanion);
+        loyaltyCardItems,
+      )..where((i) => i.itemId.equals(id))).write(loyaltyCompanion);
 
       if (dto.tagsIds != null) {
         await db.vaultItemDao.syncTags(id, dto.tagsIds!);
@@ -133,15 +148,6 @@ class ApiKeyDao extends DatabaseAccessor<MainStore>
 
       return true;
     });
-  }
-
-  Future<String?> getKeyFieldById(String id) async {
-    final query = selectOnly(apiKeyItems)
-      ..addColumns([apiKeyItems.key])
-      ..where(apiKeyItems.itemId.equals(id));
-
-    final result = await query.getSingleOrNull();
-    return result?.read(apiKeyItems.key);
   }
 
   @override

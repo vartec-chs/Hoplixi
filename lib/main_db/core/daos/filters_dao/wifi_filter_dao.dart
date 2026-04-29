@@ -1,35 +1,32 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/dao/filters_dao/filter.dart';
+import 'package:hoplixi/main_db/core/daos/filters_dao/filter.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/category_dto.dart';
-import 'package:hoplixi/main_db/core/models/dto/license_key_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
+import 'package:hoplixi/main_db/core/models/dto/wifi_dto.dart';
 import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
-import 'package:hoplixi/main_db/core/models/filter/license_keys_filter.dart';
+import 'package:hoplixi/main_db/core/models/filter/wifis_filter.dart';
 import 'package:hoplixi/main_db/core/tables/categories.dart';
 import 'package:hoplixi/main_db/core/tables/item_tags.dart';
-import 'package:hoplixi/main_db/core/tables/license_key_items.dart';
 import 'package:hoplixi/main_db/core/tables/note_items.dart';
 import 'package:hoplixi/main_db/core/tables/tags.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items.dart';
+import 'package:hoplixi/main_db/core/tables/wifi_items.dart';
 
-part 'license_key_filter_dao.g.dart';
+part 'wifi_filter_dao.g.dart';
 
 @DriftAccessor(
-  tables: [VaultItems, LicenseKeyItems, Categories, Tags, ItemTags, NoteItems],
+  tables: [VaultItems, WifiItems, Categories, Tags, ItemTags, NoteItems],
 )
-class LicenseKeyFilterDao extends DatabaseAccessor<MainStore>
-    with _$LicenseKeyFilterDaoMixin
-    implements FilterDao<LicenseKeysFilter, LicenseKeyCardDto> {
-  LicenseKeyFilterDao(super.db);
+class WifiFilterDao extends DatabaseAccessor<MainStore>
+    with _$WifiFilterDaoMixin
+    implements FilterDao<WifisFilter, WifiCardDto> {
+  WifiFilterDao(super.db);
 
   @override
-  Future<List<LicenseKeyCardDto>> getFiltered(LicenseKeysFilter filter) async {
+  Future<List<WifiCardDto>> getFiltered(WifisFilter filter) async {
     final query = select(vaultItems).join([
-      innerJoin(
-        licenseKeyItems,
-        licenseKeyItems.itemId.equalsExp(vaultItems.id),
-      ),
+      innerJoin(wifiItems, wifiItems.itemId.equalsExp(vaultItems.id)),
       leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
@@ -47,17 +44,21 @@ class LicenseKeyFilterDao extends DatabaseAccessor<MainStore>
 
     return rows.map((row) {
       final item = row.readTable(vaultItems);
-      final license = row.readTable(licenseKeyItems);
+      final wifi = row.readTable(wifiItems);
       final category = row.readTableOrNull(categories);
 
-      return LicenseKeyCardDto(
+      return WifiCardDto(
         id: item.id,
         name: item.name,
-        product: license.product,
-        licenseType: license.licenseType,
-        orderId: license.orderId,
-        expiresAt: license.expiresAt,
-        seats: license.seats,
+        iconSource: item.iconSource,
+        iconValue: item.iconValue,
+        ssid: wifi.ssid,
+        security: wifi.security,
+        hidden: wifi.hidden,
+        eapMethod: wifi.eapMethod,
+        priority: wifi.priority,
+        lastConnectedBssid: wifi.lastConnectedBssid,
+        hasPassword: wifi.password != null && wifi.password!.isNotEmpty,
         description: item.description,
         category: category != null
             ? CategoryInCardDto(
@@ -83,12 +84,9 @@ class LicenseKeyFilterDao extends DatabaseAccessor<MainStore>
   }
 
   @override
-  Future<int> countFiltered(LicenseKeysFilter filter) async {
+  Future<int> countFiltered(WifisFilter filter) async {
     final query = select(vaultItems).join([
-      innerJoin(
-        licenseKeyItems,
-        licenseKeyItems.itemId.equalsExp(vaultItems.id),
-      ),
+      innerJoin(wifiItems, wifiItems.itemId.equalsExp(vaultItems.id)),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
 
@@ -97,7 +95,7 @@ class LicenseKeyFilterDao extends DatabaseAccessor<MainStore>
     return rows.length;
   }
 
-  Expression<bool> _buildWhereExpression(LicenseKeysFilter filter) {
+  Expression<bool> _buildWhereExpression(WifisFilter filter) {
     Expression<bool> expr = const Constant(true);
     expr = expr & _applyBaseFilters(filter.base);
     expr = expr & _applySpecificFilters(filter);
@@ -116,10 +114,10 @@ class LicenseKeyFilterDao extends DatabaseAccessor<MainStore>
       expr =
           expr &
           (vaultItems.name.lower().like('%$q%') |
-              licenseKeyItems.product.lower().like('%$q%') |
-              licenseKeyItems.licenseType.lower().like('%$q%') |
-              licenseKeyItems.orderId.lower().like('%$q%') |
-              licenseKeyItems.purchaseFrom.lower().like('%$q%') |
+              wifiItems.ssid.lower().like('%$q%') |
+              wifiItems.security.lower().like('%$q%') |
+              wifiItems.eapMethod.lower().like('%$q%') |
+              wifiItems.lastConnectedBssid.lower().like('%$q%') |
               vaultItems.description.lower().like('%$q%') |
               noteItems.content.lower().like('%$q%'));
     }
@@ -154,7 +152,7 @@ class LicenseKeyFilterDao extends DatabaseAccessor<MainStore>
     return expr;
   }
 
-  Expression<bool> _applySpecificFilters(LicenseKeysFilter filter) {
+  Expression<bool> _applySpecificFilters(WifisFilter filter) {
     Expression<bool> expr = const Constant(true);
 
     if (filter.name != null) {
@@ -163,57 +161,57 @@ class LicenseKeyFilterDao extends DatabaseAccessor<MainStore>
           vaultItems.name.lower().like('%${filter.name!.toLowerCase()}%');
     }
 
-    if (filter.product != null) {
+    if (filter.ssid != null) {
+      expr =
+          expr & wifiItems.ssid.lower().like('%${filter.ssid!.toLowerCase()}%');
+    }
+
+    if (filter.security != null) {
       expr =
           expr &
-          licenseKeyItems.product.lower().like(
-            '%${filter.product!.toLowerCase()}%',
+          wifiItems.security.lower().like(
+            '%${filter.security!.toLowerCase()}%',
           );
     }
 
-    if (filter.licenseType != null) {
+    if (filter.eapMethod != null) {
       expr =
           expr &
-          licenseKeyItems.licenseType.lower().like(
-            '%${filter.licenseType!.toLowerCase()}%',
+          wifiItems.eapMethod.lower().like(
+            '%${filter.eapMethod!.toLowerCase()}%',
           );
     }
 
-    if (filter.orderId != null) {
-      expr =
-          expr &
-          licenseKeyItems.orderId.lower().like(
-            '%${filter.orderId!.toLowerCase()}%',
-          );
+    if (filter.hidden != null) {
+      expr = expr & wifiItems.hidden.equals(filter.hidden!);
     }
 
-    if (filter.purchaseFrom != null) {
+    if (filter.hasPassword != null) {
       expr =
           expr &
-          licenseKeyItems.purchaseFrom.lower().like(
-            '%${filter.purchaseFrom!.toLowerCase()}%',
-          );
+          (filter.hasPassword!
+              ? (wifiItems.password.isNotNull() &
+                    wifiItems.password.isBiggerThanValue(''))
+              : (wifiItems.password.isNull() | wifiItems.password.equals('')));
     }
 
-    if (filter.supportContact != null) {
+    if (filter.isOpenNetwork != null) {
       expr =
           expr &
-          licenseKeyItems.supportContact.lower().like(
-            '%${filter.supportContact!.toLowerCase()}%',
-          );
-    }
-
-    if (filter.expiredOnly == true) {
-      expr =
-          expr &
-          licenseKeyItems.expiresAt.isNotNull() &
-          licenseKeyItems.expiresAt.isSmallerOrEqualValue(DateTime.now());
+          (filter.isOpenNetwork!
+              ? (wifiItems.security.isNull() |
+                    wifiItems.security.lower().equals('open'))
+              : (wifiItems.security.isNotNull() &
+                    wifiItems.security
+                        .lower()
+                        .equalsExp(const Constant('open'))
+                        .not()));
     }
 
     return expr;
   }
 
-  List<OrderingTerm> _buildOrderBy(LicenseKeysFilter filter) {
+  List<OrderingTerm> _buildOrderBy(WifisFilter filter) {
     final terms = <OrderingTerm>[
       OrderingTerm(expression: vaultItems.isPinned, mode: OrderingMode.desc),
     ];
@@ -223,29 +221,17 @@ class LicenseKeyFilterDao extends DatabaseAccessor<MainStore>
         : OrderingMode.desc;
 
     switch (filter.sortField) {
-      case LicenseKeysSortField.name:
+      case WifisSortField.name:
         terms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
-      case LicenseKeysSortField.product:
-        terms.add(
-          OrderingTerm(expression: licenseKeyItems.product, mode: mode),
-        );
-      case LicenseKeysSortField.licenseType:
-        terms.add(
-          OrderingTerm(expression: licenseKeyItems.licenseType, mode: mode),
-        );
-      case LicenseKeysSortField.orderId:
-        terms.add(
-          OrderingTerm(expression: licenseKeyItems.orderId, mode: mode),
-        );
-      case LicenseKeysSortField.expiresAt:
-        terms.add(
-          OrderingTerm(expression: licenseKeyItems.expiresAt, mode: mode),
-        );
-      case LicenseKeysSortField.createdAt:
+      case WifisSortField.ssid:
+        terms.add(OrderingTerm(expression: wifiItems.ssid, mode: mode));
+      case WifisSortField.priority:
+        terms.add(OrderingTerm(expression: wifiItems.priority, mode: mode));
+      case WifisSortField.createdAt:
         terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
-      case LicenseKeysSortField.modifiedAt:
+      case WifisSortField.modifiedAt:
         terms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
-      case LicenseKeysSortField.lastAccessed:
+      case WifisSortField.lastAccessed:
         terms.add(OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
       case null:
         terms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));

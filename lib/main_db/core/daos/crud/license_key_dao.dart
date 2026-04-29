@@ -1,54 +1,54 @@
-﻿import 'package:drift/drift.dart';
+import 'package:drift/drift.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
-import 'package:hoplixi/main_db/core/dao/base_main_entity_dao.dart';
-import 'package:hoplixi/main_db/core/models/dto/loyalty_card_dto.dart';
+import 'package:hoplixi/main_db/core/daos/base_main_entity_dao.dart';
+import 'package:hoplixi/main_db/core/models/dto/license_key_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
-import 'package:hoplixi/main_db/core/tables/loyalty_card_items.dart';
+import 'package:hoplixi/main_db/core/tables/license_key_items.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items.dart';
 import 'package:uuid/uuid.dart';
 
-part 'loyalty_card_dao.g.dart';
+part 'license_key_dao.g.dart';
 
-@DriftAccessor(tables: [VaultItems, LoyaltyCardItems])
-class LoyaltyCardDao extends DatabaseAccessor<MainStore>
-    with _$LoyaltyCardDaoMixin
+@DriftAccessor(tables: [VaultItems, LicenseKeyItems])
+class LicenseKeyDao extends DatabaseAccessor<MainStore>
+    with _$LicenseKeyDaoMixin
     implements BaseMainEntityDao {
-  LoyaltyCardDao(super.db);
+  LicenseKeyDao(super.db);
 
-  Future<List<(VaultItemsData, LoyaltyCardItemsData)>>
-  getAllLoyaltyCards() async {
+  Future<List<(VaultItemsData, LicenseKeyItemsData)>>
+  getAllLicenseKeys() async {
     final query = select(vaultItems).join([
       innerJoin(
-        loyaltyCardItems,
-        loyaltyCardItems.itemId.equalsExp(vaultItems.id),
+        licenseKeyItems,
+        licenseKeyItems.itemId.equalsExp(vaultItems.id),
       ),
     ]);
     final rows = await query.get();
     return rows
         .map(
-          (row) => (row.readTable(vaultItems), row.readTable(loyaltyCardItems)),
+          (row) => (row.readTable(vaultItems), row.readTable(licenseKeyItems)),
         )
         .toList();
   }
 
-  Future<(VaultItemsData, LoyaltyCardItemsData)?> getById(String id) async {
+  Future<(VaultItemsData, LicenseKeyItemsData)?> getById(String id) async {
     final query = select(vaultItems).join([
       innerJoin(
-        loyaltyCardItems,
-        loyaltyCardItems.itemId.equalsExp(vaultItems.id),
+        licenseKeyItems,
+        licenseKeyItems.itemId.equalsExp(vaultItems.id),
       ),
     ])..where(vaultItems.id.equals(id));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
-    return (row.readTable(vaultItems), row.readTable(loyaltyCardItems));
+    return (row.readTable(vaultItems), row.readTable(licenseKeyItems));
   }
 
-  Stream<List<(VaultItemsData, LoyaltyCardItemsData)>> watchAllLoyaltyCards() {
+  Stream<List<(VaultItemsData, LicenseKeyItemsData)>> watchAllLicenseKeys() {
     final query = select(vaultItems).join([
       innerJoin(
-        loyaltyCardItems,
-        loyaltyCardItems.itemId.equalsExp(vaultItems.id),
+        licenseKeyItems,
+        licenseKeyItems.itemId.equalsExp(vaultItems.id),
       ),
     ])..orderBy([OrderingTerm.desc(vaultItems.modifiedAt)]);
 
@@ -56,20 +56,20 @@ class LoyaltyCardDao extends DatabaseAccessor<MainStore>
       (rows) => rows
           .map(
             (row) =>
-                (row.readTable(vaultItems), row.readTable(loyaltyCardItems)),
+                (row.readTable(vaultItems), row.readTable(licenseKeyItems)),
           )
           .toList(),
     );
   }
 
-  Future<String> createLoyaltyCard(CreateLoyaltyCardDto dto) {
+  Future<String> createLicenseKey(CreateLicenseKeyDto dto) {
     final id = const Uuid().v4();
 
     return db.transaction(() async {
       await into(vaultItems).insert(
         VaultItemsCompanion.insert(
           id: Value(id),
-          type: VaultItemType.loyaltyCard,
+          type: VaultItemType.licenseKey,
           name: dto.name,
           description: Value(dto.description),
           noteId: Value(dto.noteId),
@@ -77,20 +77,21 @@ class LoyaltyCardDao extends DatabaseAccessor<MainStore>
         ),
       );
 
-      await into(loyaltyCardItems).insert(
-        LoyaltyCardItemsCompanion.insert(
+      await into(licenseKeyItems).insert(
+        LicenseKeyItemsCompanion.insert(
           itemId: id,
-          programName: dto.programName,
-          cardNumber: Value(dto.cardNumber),
-          holderName: Value(dto.holderName),
-          barcodeValue: Value(dto.barcodeValue),
-          barcodeType: Value(dto.barcodeType),
-          password: Value(dto.password),
-          pointsBalance: Value(dto.pointsBalance),
-          tier: Value(dto.tier),
-          expiryDate: Value(dto.expiryDate),
-          website: Value(dto.website),
-          phoneNumber: Value(dto.phoneNumber),
+          product: dto.product,
+          licenseKey: dto.licenseKey,
+          licenseType: Value(dto.licenseType),
+          seats: Value(dto.seats),
+          maxActivations: Value(dto.maxActivations),
+          activatedOn: Value(dto.activatedOn),
+          purchaseDate: Value(dto.purchaseDate),
+          purchaseFrom: Value(dto.purchaseFrom),
+          orderId: Value(dto.orderId),
+          licenseFileId: Value(dto.licenseFileId),
+          expiresAt: Value(dto.expiresAt),
+          supportContact: Value(dto.supportContact),
         ),
       );
 
@@ -99,7 +100,7 @@ class LoyaltyCardDao extends DatabaseAccessor<MainStore>
     });
   }
 
-  Future<bool> updateLoyaltyCard(String id, UpdateLoyaltyCardDto dto) {
+  Future<bool> updateLicenseKey(String id, UpdateLicenseKeyDto dto) {
     return db.transaction(() async {
       final vaultCompanion = VaultItemsCompanion(
         name: dto.name != null ? Value(dto.name!) : const Value.absent(),
@@ -122,25 +123,28 @@ class LoyaltyCardDao extends DatabaseAccessor<MainStore>
         vaultItems,
       )..where((v) => v.id.equals(id))).write(vaultCompanion);
 
-      final loyaltyCompanion = LoyaltyCardItemsCompanion(
-        programName: dto.programName != null
-            ? Value(dto.programName!)
+      final itemCompanion = LicenseKeyItemsCompanion(
+        product: dto.product != null
+            ? Value(dto.product!)
             : const Value.absent(),
-        cardNumber: Value(dto.cardNumber),
-        holderName: Value(dto.holderName),
-        barcodeValue: Value(dto.barcodeValue),
-        barcodeType: Value(dto.barcodeType),
-        password: Value(dto.password),
-        pointsBalance: Value(dto.pointsBalance),
-        tier: Value(dto.tier),
-        expiryDate: Value(dto.expiryDate),
-        website: Value(dto.website),
-        phoneNumber: Value(dto.phoneNumber),
+        licenseKey: dto.licenseKey != null
+            ? Value(dto.licenseKey!)
+            : const Value.absent(),
+        licenseType: Value(dto.licenseType),
+        seats: Value(dto.seats),
+        maxActivations: Value(dto.maxActivations),
+        activatedOn: Value(dto.activatedOn),
+        purchaseDate: Value(dto.purchaseDate),
+        purchaseFrom: Value(dto.purchaseFrom),
+        orderId: Value(dto.orderId),
+        licenseFileId: Value(dto.licenseFileId),
+        expiresAt: Value(dto.expiresAt),
+        supportContact: Value(dto.supportContact),
       );
 
       await (update(
-        loyaltyCardItems,
-      )..where((i) => i.itemId.equals(id))).write(loyaltyCompanion);
+        licenseKeyItems,
+      )..where((i) => i.itemId.equals(id))).write(itemCompanion);
 
       if (dto.tagsIds != null) {
         await db.vaultItemDao.syncTags(id, dto.tagsIds!);

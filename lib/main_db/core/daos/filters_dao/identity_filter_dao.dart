@@ -1,44 +1,32 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/dao/filters_dao/filter.dart';
+import 'package:hoplixi/main_db/core/daos/filters_dao/filter.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/category_dto.dart';
-import 'package:hoplixi/main_db/core/models/dto/recovery_codes_dto.dart';
+import 'package:hoplixi/main_db/core/models/dto/identity_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
-import 'package:hoplixi/main_db/core/models/filter/recovery_codes_filter.dart';
+import 'package:hoplixi/main_db/core/models/filter/identities_filter.dart';
 import 'package:hoplixi/main_db/core/tables/categories.dart';
+import 'package:hoplixi/main_db/core/tables/identity_items.dart';
 import 'package:hoplixi/main_db/core/tables/item_tags.dart';
 import 'package:hoplixi/main_db/core/tables/note_items.dart';
-import 'package:hoplixi/main_db/core/tables/recovery_codes_items.dart';
 import 'package:hoplixi/main_db/core/tables/tags.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items.dart';
 
-part 'recovery_codes_filter_dao.g.dart';
+part 'identity_filter_dao.g.dart';
 
 @DriftAccessor(
-  tables: [
-    VaultItems,
-    RecoveryCodesItems,
-    Categories,
-    Tags,
-    ItemTags,
-    NoteItems,
-  ],
+  tables: [VaultItems, IdentityItems, Categories, Tags, ItemTags, NoteItems],
 )
-class RecoveryCodesFilterDao extends DatabaseAccessor<MainStore>
-    with _$RecoveryCodesFilterDaoMixin
-    implements FilterDao<RecoveryCodesFilter, RecoveryCodesCardDto> {
-  RecoveryCodesFilterDao(super.db);
+class IdentityFilterDao extends DatabaseAccessor<MainStore>
+    with _$IdentityFilterDaoMixin
+    implements FilterDao<IdentitiesFilter, IdentityCardDto> {
+  IdentityFilterDao(super.db);
 
   @override
-  Future<List<RecoveryCodesCardDto>> getFiltered(
-    RecoveryCodesFilter filter,
-  ) async {
+  Future<List<IdentityCardDto>> getFiltered(IdentitiesFilter filter) async {
     final query = select(vaultItems).join([
-      innerJoin(
-        recoveryCodesItems,
-        recoveryCodesItems.itemId.equalsExp(vaultItems.id),
-      ),
+      innerJoin(identityItems, identityItems.itemId.equalsExp(vaultItems.id)),
       leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
@@ -56,17 +44,18 @@ class RecoveryCodesFilterDao extends DatabaseAccessor<MainStore>
 
     return rows.map((row) {
       final item = row.readTable(vaultItems);
-      final data = row.readTable(recoveryCodesItems);
+      final identity = row.readTable(identityItems);
       final category = row.readTableOrNull(categories);
 
-      return RecoveryCodesCardDto(
+      return IdentityCardDto(
         id: item.id,
         name: item.name,
-        codesCount: data.codesCount,
-        codesUsedCount: data.usedCount,
-        oneTime: data.oneTime,
-        generatedAt: data.generatedAt,
-        displayHint: data.displayHint,
+        idType: identity.idType,
+        idNumber: identity.idNumber,
+        fullName: identity.fullName,
+        nationality: identity.nationality,
+        expiryDate: identity.expiryDate,
+        verified: identity.verified,
         description: item.description,
         category: category != null
             ? CategoryInCardDto(
@@ -84,7 +73,7 @@ class RecoveryCodesFilterDao extends DatabaseAccessor<MainStore>
         isPinned: item.isPinned,
         isArchived: item.isArchived,
         isDeleted: item.isDeleted,
-        usedCountMetric: item.usedCount,
+        usedCount: item.usedCount,
         modifiedAt: item.modifiedAt,
         createdAt: item.createdAt,
       );
@@ -92,12 +81,9 @@ class RecoveryCodesFilterDao extends DatabaseAccessor<MainStore>
   }
 
   @override
-  Future<int> countFiltered(RecoveryCodesFilter filter) async {
+  Future<int> countFiltered(IdentitiesFilter filter) async {
     final query = select(vaultItems).join([
-      innerJoin(
-        recoveryCodesItems,
-        recoveryCodesItems.itemId.equalsExp(vaultItems.id),
-      ),
+      innerJoin(identityItems, identityItems.itemId.equalsExp(vaultItems.id)),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
 
@@ -106,7 +92,7 @@ class RecoveryCodesFilterDao extends DatabaseAccessor<MainStore>
     return rows.length;
   }
 
-  Expression<bool> _buildWhereExpression(RecoveryCodesFilter filter) {
+  Expression<bool> _buildWhereExpression(IdentitiesFilter filter) {
     Expression<bool> expr = const Constant(true);
     expr = expr & _applyBaseFilters(filter.base);
     expr = expr & _applySpecificFilters(filter);
@@ -125,7 +111,10 @@ class RecoveryCodesFilterDao extends DatabaseAccessor<MainStore>
       expr =
           expr &
           (vaultItems.name.lower().like('%$q%') |
-              recoveryCodesItems.displayHint.lower().like('%$q%') |
+              identityItems.idType.lower().like('%$q%') |
+              identityItems.idNumber.lower().like('%$q%') |
+              identityItems.fullName.lower().like('%$q%') |
+              identityItems.nationality.lower().like('%$q%') |
               vaultItems.description.lower().like('%$q%') |
               noteItems.content.lower().like('%$q%'));
     }
@@ -160,7 +149,7 @@ class RecoveryCodesFilterDao extends DatabaseAccessor<MainStore>
     return expr;
   }
 
-  Expression<bool> _applySpecificFilters(RecoveryCodesFilter filter) {
+  Expression<bool> _applySpecificFilters(IdentitiesFilter filter) {
     Expression<bool> expr = const Constant(true);
 
     if (filter.name != null) {
@@ -169,32 +158,53 @@ class RecoveryCodesFilterDao extends DatabaseAccessor<MainStore>
           vaultItems.name.lower().like('%${filter.name!.toLowerCase()}%');
     }
 
-    if (filter.displayHint != null) {
+    if (filter.idType != null) {
       expr =
           expr &
-          recoveryCodesItems.displayHint.lower().like(
-            '%${filter.displayHint!.toLowerCase()}%',
+          identityItems.idType.lower().like(
+            '%${filter.idType!.toLowerCase()}%',
           );
     }
 
-    if (filter.oneTime != null) {
-      expr = expr & recoveryCodesItems.oneTime.equals(filter.oneTime!);
-    }
-
-    if (filter.depletedOnly == true) {
+    if (filter.idNumber != null) {
       expr =
           expr &
-          recoveryCodesItems.codesCount.isNotNull() &
-          recoveryCodesItems.usedCount.isNotNull() &
-          recoveryCodesItems.usedCount.isBiggerOrEqual(
-            recoveryCodesItems.codesCount,
+          identityItems.idNumber.lower().like(
+            '%${filter.idNumber!.toLowerCase()}%',
           );
+    }
+
+    if (filter.fullName != null) {
+      expr =
+          expr &
+          identityItems.fullName.lower().like(
+            '%${filter.fullName!.toLowerCase()}%',
+          );
+    }
+
+    if (filter.nationality != null) {
+      expr =
+          expr &
+          identityItems.nationality.lower().like(
+            '%${filter.nationality!.toLowerCase()}%',
+          );
+    }
+
+    if (filter.verified != null) {
+      expr = expr & identityItems.verified.equals(filter.verified!);
+    }
+
+    if (filter.expiredOnly == true) {
+      expr =
+          expr &
+          identityItems.expiryDate.isNotNull() &
+          identityItems.expiryDate.isSmallerOrEqualValue(DateTime.now());
     }
 
     return expr;
   }
 
-  List<OrderingTerm> _buildOrderBy(RecoveryCodesFilter filter) {
+  List<OrderingTerm> _buildOrderBy(IdentitiesFilter filter) {
     final terms = <OrderingTerm>[
       OrderingTerm(expression: vaultItems.isPinned, mode: OrderingMode.desc),
     ];
@@ -204,25 +214,21 @@ class RecoveryCodesFilterDao extends DatabaseAccessor<MainStore>
         : OrderingMode.desc;
 
     switch (filter.sortField) {
-      case RecoveryCodesSortField.name:
+      case IdentitiesSortField.name:
         terms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
-      case RecoveryCodesSortField.codesCount:
+      case IdentitiesSortField.idType:
+        terms.add(OrderingTerm(expression: identityItems.idType, mode: mode));
+      case IdentitiesSortField.idNumber:
+        terms.add(OrderingTerm(expression: identityItems.idNumber, mode: mode));
+      case IdentitiesSortField.expiryDate:
         terms.add(
-          OrderingTerm(expression: recoveryCodesItems.codesCount, mode: mode),
+          OrderingTerm(expression: identityItems.expiryDate, mode: mode),
         );
-      case RecoveryCodesSortField.usedCount:
-        terms.add(
-          OrderingTerm(expression: recoveryCodesItems.usedCount, mode: mode),
-        );
-      case RecoveryCodesSortField.generatedAt:
-        terms.add(
-          OrderingTerm(expression: recoveryCodesItems.generatedAt, mode: mode),
-        );
-      case RecoveryCodesSortField.createdAt:
+      case IdentitiesSortField.createdAt:
         terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
-      case RecoveryCodesSortField.modifiedAt:
+      case IdentitiesSortField.modifiedAt:
         terms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
-      case RecoveryCodesSortField.lastAccessed:
+      case IdentitiesSortField.lastAccessed:
         terms.add(OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
       case null:
         terms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));

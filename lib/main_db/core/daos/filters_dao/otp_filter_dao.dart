@@ -1,37 +1,32 @@
-﻿import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/dao/filters_dao/filter.dart';
+import 'package:drift/drift.dart';
+import 'package:hoplixi/main_db/core/daos/filters_dao/filter.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/category_dto.dart';
-import 'package:hoplixi/main_db/core/models/dto/loyalty_card_dto.dart';
+import 'package:hoplixi/main_db/core/models/dto/otp_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
-import 'package:hoplixi/main_db/core/models/filter/loyalty_cards_filter.dart';
+import 'package:hoplixi/main_db/core/models/filter/otps_filter.dart';
 import 'package:hoplixi/main_db/core/tables/categories.dart';
 import 'package:hoplixi/main_db/core/tables/item_tags.dart';
-import 'package:hoplixi/main_db/core/tables/loyalty_card_items.dart';
 import 'package:hoplixi/main_db/core/tables/note_items.dart';
+import 'package:hoplixi/main_db/core/tables/otp_items.dart';
 import 'package:hoplixi/main_db/core/tables/tags.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items.dart';
 
-part 'loyalty_card_filter_dao.g.dart';
+part 'otp_filter_dao.g.dart';
 
 @DriftAccessor(
-  tables: [VaultItems, LoyaltyCardItems, Categories, Tags, ItemTags, NoteItems],
+  tables: [VaultItems, OtpItems, Categories, Tags, ItemTags, NoteItems],
 )
-class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
-    with _$LoyaltyCardFilterDaoMixin
-    implements FilterDao<LoyaltyCardsFilter, LoyaltyCardCardDto> {
-  LoyaltyCardFilterDao(super.db);
+class OtpFilterDao extends DatabaseAccessor<MainStore>
+    with _$OtpFilterDaoMixin
+    implements FilterDao<OtpsFilter, OtpCardDto> {
+  OtpFilterDao(super.db);
 
   @override
-  Future<List<LoyaltyCardCardDto>> getFiltered(
-    LoyaltyCardsFilter filter,
-  ) async {
+  Future<List<OtpCardDto>> getFiltered(OtpsFilter filter) async {
     final query = select(vaultItems).join([
-      innerJoin(
-        loyaltyCardItems,
-        loyaltyCardItems.itemId.equalsExp(vaultItems.id),
-      ),
+      innerJoin(otpItems, otpItems.itemId.equalsExp(vaultItems.id)),
       leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
@@ -44,28 +39,24 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
     }
 
     final results = await query.get();
+
     final itemIds = results.map((row) => row.readTable(vaultItems).id).toList();
     final tagsMap = await _loadTagsForItems(itemIds);
 
     return results.map((row) {
       final item = row.readTable(vaultItems);
-      final loyalty = row.readTable(loyaltyCardItems);
+      final otp = row.readTable(otpItems);
       final category = row.readTableOrNull(categories);
 
-      return LoyaltyCardCardDto(
+      return OtpCardDto(
         id: item.id,
-        name: item.name,
         iconSource: item.iconSource,
         iconValue: item.iconValue,
-        programName: loyalty.programName,
-        cardNumber: loyalty.cardNumber,
-        holderName: loyalty.holderName,
-        barcodeValue: loyalty.barcodeValue,
-        barcodeType: loyalty.barcodeType,
-        password: loyalty.password,
-        pointsBalance: loyalty.pointsBalance,
-        tier: loyalty.tier,
-        expiryDate: loyalty.expiryDate,
+        issuer: otp.issuer,
+        accountName: otp.accountName,
+        type: otp.type.name,
+        digits: otp.digits,
+        period: otp.period,
         category: category != null
             ? CategoryInCardDto(
                 id: category.id,
@@ -84,28 +75,27 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
         isDeleted: item.isDeleted,
         usedCount: item.usedCount,
         modifiedAt: item.modifiedAt,
-        createdAt: item.createdAt,
       );
     }).toList();
   }
 
   @override
-  Future<int> countFiltered(LoyaltyCardsFilter filter) async {
+  Future<int> countFiltered(OtpsFilter filter) async {
     final query = select(vaultItems).join([
-      innerJoin(
-        loyaltyCardItems,
-        loyaltyCardItems.itemId.equalsExp(vaultItems.id),
-      ),
+      innerJoin(otpItems, otpItems.itemId.equalsExp(vaultItems.id)),
       leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
     query.where(_buildWhereExpression(filter));
-    return (await query.get()).length;
+    final results = await query.get();
+    return results.length;
   }
 
-  Expression<bool> _buildWhereExpression(LoyaltyCardsFilter filter) {
-    return _applyBaseFilters(filter.base) &
-        _applyLoyaltyCardSpecificFilters(filter);
+  Expression<bool> _buildWhereExpression(OtpsFilter filter) {
+    Expression<bool> expr = const Constant(true);
+    expr = expr & _applyBaseFilters(filter.base);
+    expr = expr & _applyOtpSpecificFilters(filter);
+    return expr;
   }
 
   Expression<bool> _applyBaseFilters(BaseFilter base) {
@@ -114,10 +104,8 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
     if (base.query.isNotEmpty) {
       final q = base.query.toLowerCase();
       Expression<bool> searchExpr =
-          vaultItems.name.lower().like('%$q%') |
-          loyaltyCardItems.programName.lower().like('%$q%') |
-          loyaltyCardItems.cardNumber.lower().like('%$q%') |
-          vaultItems.description.lower().like('%$q%');
+          otpItems.issuer.lower().like('%$q%') |
+          otpItems.accountName.lower().like('%$q%');
       searchExpr = searchExpr | noteItems.content.lower().like('%$q%');
       expr = expr & searchExpr;
     }
@@ -139,10 +127,6 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
       expr = expr & vaultItems.isFavorite.equals(base.isFavorite!);
     }
 
-    if (base.isPinned != null) {
-      expr = expr & vaultItems.isPinned.equals(base.isPinned!);
-    }
-
     if (base.isArchived != null) {
       expr = expr & vaultItems.isArchived.equals(base.isArchived!);
     } else {
@@ -153,6 +137,10 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
       expr = expr & vaultItems.isDeleted.equals(base.isDeleted!);
     } else {
       expr = expr & vaultItems.isDeleted.equals(false);
+    }
+
+    if (base.isPinned != null) {
+      expr = expr & vaultItems.isPinned.equals(base.isPinned!);
     }
 
     if (base.hasNotes != null) {
@@ -204,63 +192,64 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
       expr =
           expr & vaultItems.usedCount.isSmallerOrEqualValue(base.maxUsedCount!);
     }
-
     return expr;
   }
 
-  Expression<bool> _applyLoyaltyCardSpecificFilters(LoyaltyCardsFilter filter) {
+  Expression<bool> _applyOtpSpecificFilters(OtpsFilter filter) {
     Expression<bool> expr = const Constant(true);
 
-    if (filter.programName != null && filter.programName!.isNotEmpty) {
+    if (filter.types.isNotEmpty) {
+      final typeExprs = filter.types
+          .map((type) => otpItems.type.equals(type.name))
+          .reduce((a, b) => a | b);
+      expr = expr & typeExprs;
+    }
+
+    if (filter.algorithms.isNotEmpty) {
+      final algExprs = filter.algorithms
+          .map((alg) => otpItems.algorithm.equals(alg.name))
+          .reduce((a, b) => a | b);
+      expr = expr & algExprs;
+    }
+
+    if (filter.issuer != null) {
       expr =
           expr &
-          loyaltyCardItems.programName.lower().contains(
-            filter.programName!.toLowerCase(),
+          otpItems.issuer.lower().like('%${filter.issuer!.toLowerCase()}%');
+    }
+    if (filter.accountName != null) {
+      expr =
+          expr &
+          otpItems.accountName.lower().like(
+            '%${filter.accountName!.toLowerCase()}%',
           );
     }
-
-    if (filter.holderName != null && filter.holderName!.isNotEmpty) {
+    if (filter.digits.isNotEmpty) {
+      expr = expr & otpItems.digits.isIn(filter.digits);
+    }
+    if (filter.periods.isNotEmpty) {
+      expr = expr & otpItems.period.isIn(filter.periods);
+    }
+    if (filter.secretEncodings.isNotEmpty) {
+      final encExprs = filter.secretEncodings
+          .map((enc) => otpItems.secretEncoding.equals(enc.name))
+          .reduce((a, b) => a | b);
+      expr = expr & encExprs;
+    }
+    if (filter.hasPasswordLink != null) {
       expr =
           expr &
-          loyaltyCardItems.holderName.lower().contains(
-            filter.holderName!.toLowerCase(),
-          );
+          (filter.hasPasswordLink!
+              ? otpItems.passwordItemId.isNotNull()
+              : otpItems.passwordItemId.isNull());
     }
-
-    if (filter.tier != null && filter.tier!.isNotEmpty) {
+    if (filter.hasNotes != null) {
       expr =
           expr &
-          loyaltyCardItems.tier.lower().contains(filter.tier!.toLowerCase());
+          (filter.hasNotes!
+              ? vaultItems.noteId.isNotNull()
+              : vaultItems.noteId.isNull());
     }
-
-    if (filter.hasBarcode != null) {
-      expr =
-          expr &
-          (filter.hasBarcode!
-              ? loyaltyCardItems.barcodeValue.isNotNull()
-              : loyaltyCardItems.barcodeValue.isNull());
-    }
-
-    if (filter.hasExpiryDatePassed != null) {
-      expr =
-          expr &
-          (filter.hasExpiryDatePassed!
-              ? loyaltyCardItems.expiryDate.isSmallerThanValue(DateTime.now())
-              : (loyaltyCardItems.expiryDate.isNull() |
-                    loyaltyCardItems.expiryDate.isBiggerOrEqualValue(
-                      DateTime.now(),
-                    )));
-    }
-
-    if (filter.isExpiringSoon == true) {
-      final now = DateTime.now();
-      final soon = now.add(const Duration(days: 90));
-      expr =
-          expr &
-          loyaltyCardItems.expiryDate.isBiggerOrEqualValue(now) &
-          loyaltyCardItems.expiryDate.isSmallerOrEqualValue(soon);
-    }
-
     return expr;
   }
 
@@ -270,7 +259,8 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
     final windowSec = windowDays * 24 * 60 * 60;
 
     return CustomExpression<double>(
-      'CAST(COALESCE("vault_items"."recent_score", 1) AS REAL) * '
+      'CAST(COALESCE("vault_items"."recent_score",'
+      ' 1) AS REAL) * '
       'exp(-($nowSec - COALESCE('
       '"vault_items"."last_used_at",'
       ' "vault_items"."created_at")) / '
@@ -278,10 +268,11 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
     );
   }
 
-  List<OrderingTerm> _buildOrderBy(LoyaltyCardsFilter filter) {
-    final terms = <OrderingTerm>[
+  List<OrderingTerm> _buildOrderBy(OtpsFilter filter) {
+    final terms = <OrderingTerm>[];
+    terms.add(
       OrderingTerm(expression: vaultItems.isPinned, mode: OrderingMode.desc),
-    ];
+    );
 
     final mode = filter.base.sortDirection == SortDirection.asc
         ? OrderingMode.asc
@@ -297,31 +288,25 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
 
     if (filter.sortField != null) {
       switch (filter.sortField!) {
-        case LoyaltyCardsSortField.name:
-          terms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
-        case LoyaltyCardsSortField.programName:
-          terms.add(
-            OrderingTerm(expression: loyaltyCardItems.programName, mode: mode),
-          );
-        case LoyaltyCardsSortField.holderName:
-          terms.add(
-            OrderingTerm(expression: loyaltyCardItems.holderName, mode: mode),
-          );
-        case LoyaltyCardsSortField.tier:
-          terms.add(
-            OrderingTerm(expression: loyaltyCardItems.tier, mode: mode),
-          );
-        case LoyaltyCardsSortField.expiryDate:
-          terms.add(
-            OrderingTerm(expression: loyaltyCardItems.expiryDate, mode: mode),
-          );
-        case LoyaltyCardsSortField.createdAt:
+        case OtpsSortField.issuer:
+          terms.add(OrderingTerm(expression: otpItems.issuer, mode: mode));
+        case OtpsSortField.accountName:
+          terms.add(OrderingTerm(expression: otpItems.accountName, mode: mode));
+        case OtpsSortField.type:
+          terms.add(OrderingTerm(expression: otpItems.type, mode: mode));
+        case OtpsSortField.algorithm:
+          terms.add(OrderingTerm(expression: otpItems.algorithm, mode: mode));
+        case OtpsSortField.digits:
+          terms.add(OrderingTerm(expression: otpItems.digits, mode: mode));
+        case OtpsSortField.period:
+          terms.add(OrderingTerm(expression: otpItems.period, mode: mode));
+        case OtpsSortField.createdAt:
           terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
-        case LoyaltyCardsSortField.modifiedAt:
+        case OtpsSortField.modifiedAt:
           terms.add(
             OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
           );
-        case LoyaltyCardsSortField.lastAccessed:
+        case OtpsSortField.lastAccessed:
           terms.add(
             OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
           );
@@ -345,7 +330,6 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
           );
       }
     }
-
     return terms;
   }
 
@@ -362,17 +346,16 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
     final tagsMap = <String, List<TagInCardDto>>{};
 
     for (final row in results) {
-      final itemTag = row.readTable(itemTags);
+      final it = row.readTable(itemTags);
       final tag = row.readTable(tags);
 
-      tagsMap.putIfAbsent(itemTag.itemId, () => []);
-      if (tagsMap[itemTag.itemId]!.length < 10) {
-        tagsMap[itemTag.itemId]!.add(
+      tagsMap.putIfAbsent(it.itemId, () => []);
+      if (tagsMap[it.itemId]!.length < 10) {
+        tagsMap[it.itemId]!.add(
           TagInCardDto(id: tag.id, name: tag.name, color: tag.color),
         );
       }
     }
-
     return tagsMap;
   }
 }

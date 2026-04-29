@@ -1,32 +1,33 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/dao/filters_dao/filter.dart';
+import 'package:hoplixi/main_db/core/daos/filters_dao/filter.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
+import 'package:hoplixi/main_db/core/models/dto/bank_card_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/category_dto.dart';
-import 'package:hoplixi/main_db/core/models/dto/document_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
+import 'package:hoplixi/main_db/core/models/enums/index.dart';
+import 'package:hoplixi/main_db/core/models/filter/bank_cards_filter.dart';
 import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
-import 'package:hoplixi/main_db/core/models/filter/documents_filter.dart';
+import 'package:hoplixi/main_db/core/tables/bank_card_items.dart';
 import 'package:hoplixi/main_db/core/tables/categories.dart';
-import 'package:hoplixi/main_db/core/tables/document_items.dart';
 import 'package:hoplixi/main_db/core/tables/item_tags.dart';
 import 'package:hoplixi/main_db/core/tables/note_items.dart';
 import 'package:hoplixi/main_db/core/tables/tags.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items.dart';
 
-part 'document_filter_dao.g.dart';
+part 'bank_card_filter_dao.g.dart';
 
 @DriftAccessor(
-  tables: [VaultItems, DocumentItems, Categories, Tags, ItemTags, NoteItems],
+  tables: [VaultItems, BankCardItems, Categories, Tags, ItemTags, NoteItems],
 )
-class DocumentFilterDao extends DatabaseAccessor<MainStore>
-    with _$DocumentFilterDaoMixin
-    implements FilterDao<DocumentsFilter, DocumentCardDto> {
-  DocumentFilterDao(super.db);
+class BankCardFilterDao extends DatabaseAccessor<MainStore>
+    with _$BankCardFilterDaoMixin
+    implements FilterDao<BankCardsFilter, BankCardCardDto> {
+  BankCardFilterDao(super.db);
 
   @override
-  Future<List<DocumentCardDto>> getFiltered(DocumentsFilter filter) async {
+  Future<List<BankCardCardDto>> getFiltered(BankCardsFilter filter) async {
     final query = select(vaultItems).join([
-      innerJoin(documentItems, documentItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(bankCardItems, bankCardItems.itemId.equalsExp(vaultItems.id)),
       leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
       leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
@@ -45,16 +46,21 @@ class DocumentFilterDao extends DatabaseAccessor<MainStore>
 
     return results.map((row) {
       final item = row.readTable(vaultItems);
-      final doc = row.readTable(documentItems);
+      final card = row.readTable(bankCardItems);
       final category = row.readTableOrNull(categories);
-      final note = row.readTableOrNull(noteItems);
 
-      return DocumentCardDto(
+      return BankCardCardDto(
         id: item.id,
-        title: item.name,
-        documentType: doc.documentType,
-        description: item.description,
-        pageCount: doc.pageCount,
+        name: item.name,
+        iconSource: item.iconSource,
+        iconValue: item.iconValue,
+        cardholderName: card.cardholderName,
+        cardNumber: card.cardNumber,
+        expiryMonth: card.expiryMonth,
+        expiryYear: card.expiryYear,
+        cardType: card.cardType?.value,
+        cardNetwork: card.cardNetwork?.value,
+        bankName: card.bankName,
         category: category != null
             ? CategoryInCardDto(
                 id: category.id,
@@ -66,33 +72,33 @@ class DocumentFilterDao extends DatabaseAccessor<MainStore>
                 iconValue: category.iconValue,
               )
             : null,
-        noteId: item.noteId,
-        noteName: note != null ? item.name : null,
-        tags: tagsMap[item.id] ?? [],
         isFavorite: item.isFavorite,
-        isArchived: item.isArchived,
         isPinned: item.isPinned,
+        isArchived: item.isArchived,
         isDeleted: item.isDeleted,
         usedCount: item.usedCount,
         modifiedAt: item.modifiedAt,
+        tags: tagsMap[item.id] ?? [],
       );
     }).toList();
   }
 
   @override
-  Future<int> countFiltered(DocumentsFilter filter) async {
+  Future<int> countFiltered(BankCardsFilter filter) async {
     final query = select(vaultItems).join([
-      innerJoin(documentItems, documentItems.itemId.equalsExp(vaultItems.id)),
+      innerJoin(bankCardItems, bankCardItems.itemId.equalsExp(vaultItems.id)),
+      leftOuterJoin(categories, categories.id.equalsExp(vaultItems.categoryId)),
+      leftOuterJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.noteId)),
     ]);
     query.where(_buildWhereExpression(filter));
     final results = await query.get();
     return results.length;
   }
 
-  Expression<bool> _buildWhereExpression(DocumentsFilter filter) {
+  Expression<bool> _buildWhereExpression(BankCardsFilter filter) {
     Expression<bool> expr = const Constant(true);
     expr = expr & _applyBaseFilters(filter.base);
-    expr = expr & _applyDocumentSpecificFilters(filter);
+    expr = expr & _applyBankCardSpecificFilters(filter);
     return expr;
   }
 
@@ -101,11 +107,13 @@ class DocumentFilterDao extends DatabaseAccessor<MainStore>
 
     if (base.query.isNotEmpty) {
       final q = base.query.toLowerCase();
-      expr =
-          expr &
-          (vaultItems.name.lower().like('%$q%') |
-              vaultItems.description.lower().like('%$q%') |
-              documentItems.aggregatedText.lower().like('%$q%'));
+      Expression<bool> searchExpr =
+          vaultItems.name.lower().like('%$q%') |
+          bankCardItems.cardholderName.lower().like('%$q%') |
+          bankCardItems.bankName.lower().like('%$q%') |
+          vaultItems.description.lower().like('%$q%');
+      searchExpr = searchExpr | noteItems.content.lower().like('%$q%');
+      expr = expr & searchExpr;
     }
 
     if (base.categoryIds.isNotEmpty) {
@@ -139,6 +147,18 @@ class DocumentFilterDao extends DatabaseAccessor<MainStore>
       expr = expr & vaultItems.isDeleted.equals(base.isDeleted!);
     } else {
       expr = expr & vaultItems.isDeleted.equals(false);
+    }
+
+    if (base.hasNotes != null) {
+      expr =
+          expr &
+          (base.hasNotes!
+              ? vaultItems.noteId.isNotNull()
+              : vaultItems.noteId.isNull());
+    }
+
+    if (base.noteIds.isNotEmpty) {
+      expr = expr & vaultItems.noteId.isIn(base.noteIds);
     }
 
     if (base.createdAfter != null) {
@@ -181,13 +201,13 @@ class DocumentFilterDao extends DatabaseAccessor<MainStore>
     return expr;
   }
 
-  Expression<bool> _applyDocumentSpecificFilters(DocumentsFilter filter) {
+  Expression<bool> _applyBankCardSpecificFilters(BankCardsFilter filter) {
     Expression<bool> expr = const Constant(true);
 
-    if (filter.documentTypes.isNotEmpty) {
+    if (filter.cardTypes.isNotEmpty) {
       Expression<bool>? typeExpr;
-      for (final type in filter.documentTypes) {
-        final cond = documentItems.documentType.lower().equals(type);
+      for (final type in filter.cardTypes) {
+        final cond = bankCardItems.cardType.equalsValue(type);
         typeExpr = typeExpr == null ? cond : (typeExpr | cond);
       }
       if (typeExpr != null) {
@@ -195,40 +215,71 @@ class DocumentFilterDao extends DatabaseAccessor<MainStore>
       }
     }
 
-    if (filter.titleQuery != null && filter.titleQuery!.isNotEmpty) {
-      expr =
-          expr &
-          vaultItems.name.lower().like('%${filter.titleQuery!.toLowerCase()}%');
+    if (filter.cardNetworks.isNotEmpty) {
+      Expression<bool>? netExpr;
+      for (final net in filter.cardNetworks) {
+        final cond = bankCardItems.cardNetwork.equalsValue(net);
+        netExpr = netExpr == null ? cond : (netExpr | cond);
+      }
+      if (netExpr != null) {
+        expr = expr & netExpr;
+      }
     }
 
-    if (filter.descriptionQuery != null &&
-        filter.descriptionQuery!.isNotEmpty) {
+    if (filter.bankName != null && filter.bankName!.isNotEmpty) {
       expr =
           expr &
-          vaultItems.description.lower().like(
-            '%${filter.descriptionQuery!.toLowerCase()}%',
+          bankCardItems.bankName.lower().contains(
+            filter.bankName!.toLowerCase(),
           );
     }
 
-    if (filter.aggregatedTextQuery != null &&
-        filter.aggregatedTextQuery!.isNotEmpty) {
+    if (filter.cardholderName != null && filter.cardholderName!.isNotEmpty) {
       expr =
           expr &
-          documentItems.aggregatedText.lower().like(
-            '%${filter.aggregatedTextQuery!.toLowerCase()}%',
+          bankCardItems.cardholderName.lower().contains(
+            filter.cardholderName!.toLowerCase(),
           );
     }
 
-    if (filter.minPageCount != null) {
+    if (filter.hasExpiryDatePassed != null) {
+      final now = DateTime.now();
+      final curYear = now.year.toString();
+      final curMonth = now.month.toString().padLeft(2, '0');
+
+      if (filter.hasExpiryDatePassed!) {
+        expr =
+            expr &
+            (bankCardItems.expiryYear.isSmallerThanValue(curYear) |
+                (bankCardItems.expiryYear.equals(curYear) &
+                    bankCardItems.expiryMonth.isSmallerThanValue(curMonth)));
+      } else {
+        expr =
+            expr &
+            (bankCardItems.expiryYear.isBiggerThanValue(curYear) |
+                (bankCardItems.expiryYear.equals(curYear) &
+                    bankCardItems.expiryMonth.isBiggerOrEqualValue(curMonth)));
+      }
+    }
+
+    if (filter.isExpiringSoon != null && filter.isExpiringSoon!) {
+      final now = DateTime.now();
+      final fut = now.add(const Duration(days: 90));
+      final futYear = fut.year.toString();
+      final futMonth = fut.month.toString().padLeft(2, '0');
+      final curYear = now.year.toString();
+      final curMonth = now.month.toString().padLeft(2, '0');
+
       expr =
           expr &
-          documentItems.pageCount.isBiggerOrEqualValue(filter.minPageCount!);
+          (bankCardItems.expiryYear.isBiggerThanValue(curYear) |
+              (bankCardItems.expiryYear.equals(curYear) &
+                  bankCardItems.expiryMonth.isBiggerOrEqualValue(curMonth))) &
+          (bankCardItems.expiryYear.isSmallerThanValue(futYear) |
+              (bankCardItems.expiryYear.equals(futYear) &
+                  bankCardItems.expiryMonth.isSmallerOrEqualValue(futMonth)));
     }
-    if (filter.maxPageCount != null) {
-      expr =
-          expr &
-          documentItems.pageCount.isSmallerOrEqualValue(filter.maxPageCount!);
-    }
+
     return expr;
   }
 
@@ -247,7 +298,7 @@ class DocumentFilterDao extends DatabaseAccessor<MainStore>
     );
   }
 
-  List<OrderingTerm> _buildOrderBy(DocumentsFilter filter) {
+  List<OrderingTerm> _buildOrderBy(BankCardsFilter filter) {
     final terms = <OrderingTerm>[];
     terms.add(
       OrderingTerm(expression: vaultItems.isPinned, mode: OrderingMode.desc),
@@ -267,23 +318,30 @@ class DocumentFilterDao extends DatabaseAccessor<MainStore>
 
     if (filter.sortField != null) {
       switch (filter.sortField!) {
-        case DocumentsSortField.title:
+        case BankCardsSortField.name:
           terms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
-        case DocumentsSortField.documentType:
+        case BankCardsSortField.cardholderName:
           terms.add(
-            OrderingTerm(expression: documentItems.documentType, mode: mode),
+            OrderingTerm(expression: bankCardItems.cardholderName, mode: mode),
           );
-        case DocumentsSortField.pageCount:
+        case BankCardsSortField.bankName:
           terms.add(
-            OrderingTerm(expression: documentItems.pageCount, mode: mode),
+            OrderingTerm(expression: bankCardItems.bankName, mode: mode),
           );
-        case DocumentsSortField.createdAt:
+        case BankCardsSortField.expiryDate:
+          terms.add(
+            OrderingTerm(expression: bankCardItems.expiryYear, mode: mode),
+          );
+          terms.add(
+            OrderingTerm(expression: bankCardItems.expiryMonth, mode: mode),
+          );
+        case BankCardsSortField.createdAt:
           terms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
-        case DocumentsSortField.modifiedAt:
+        case BankCardsSortField.modifiedAt:
           terms.add(
             OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
           );
-        case DocumentsSortField.lastUsedAt:
+        case BankCardsSortField.lastAccessed:
           terms.add(
             OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
           );
