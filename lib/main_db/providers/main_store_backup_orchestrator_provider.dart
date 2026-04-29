@@ -4,14 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
-import 'package:hoplixi/main_db/new/models/db_state.dart';
-import 'package:hoplixi/main_db/new/models/main_store_backup_models.dart';
-import 'package:hoplixi/main_db/new/providers/main_store_manager_provider.dart';
-import 'package:hoplixi/main_db/new/services/main_store_backup_service.dart';
-import 'package:hoplixi/main_db/new/services/main_store_storage_service.dart';
-import 'package:hoplixi/main_db/new/services/store_manifest_service/store_manifest_service.dart';
+import 'package:hoplixi/main_db/models/db_state.dart';
+import 'package:hoplixi/main_db/models/main_store_backup_models.dart';
+import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/main_db/services/main_store_backup_service.dart';
+import 'package:hoplixi/main_db/services/main_store_storage_service.dart';
+import 'package:hoplixi/main_db/services/store_manifest_service/store_manifest_service.dart';
 
-export 'package:hoplixi/main_db/new/models/main_store_backup_models.dart';
+export 'package:hoplixi/main_db/models/main_store_backup_models.dart';
 
 final mainStoreBackupServiceProvider = Provider<MainStoreBackupService>(
   (ref) => MainStoreBackupService(),

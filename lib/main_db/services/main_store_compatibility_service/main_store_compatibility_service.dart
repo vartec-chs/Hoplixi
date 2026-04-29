@@ -1,7 +1,7 @@
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/errors/errors.dart';
-import 'package:hoplixi/main_db/new/services/main_store_compatibility_service/model/store_open_compatibility.dart';
-import 'package:hoplixi/main_db/new/services/store_manifest_service/model/store_manifest.dart';
+import 'package:hoplixi/main_db/services/main_store_compatibility_service/model/store_open_compatibility.dart';
+import 'package:hoplixi/main_db/services/store_manifest_service/model/store_manifest.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class MainStoreCompatibilityService {

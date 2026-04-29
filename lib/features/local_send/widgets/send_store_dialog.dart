@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/core/app_paths.dart';
-import 'package:hoplixi/main_db/new/models/store_folder_info.dart';
+import 'package:hoplixi/main_db/models/store_folder_info.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 

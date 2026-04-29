@@ -4,9 +4,9 @@ import 'package:hoplixi/core/logger/index.dart' hide Session;
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
-import 'package:hoplixi/main_db/new/models/db_state.dart';
-import 'package:hoplixi/main_db/new/models/session.dart';
-import 'package:hoplixi/main_db/new/providers/main_store_close_sync_provider.dart';
+import 'package:hoplixi/main_db/models/db_state.dart';
+import 'package:hoplixi/main_db/models/session.dart';
+import 'package:hoplixi/main_db/providers/main_store_close_sync_provider.dart';
 import 'package:synchronized/synchronized.dart';
 
 import '../services/main_store_manager.dart';

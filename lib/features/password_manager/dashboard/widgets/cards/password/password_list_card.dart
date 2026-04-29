@@ -7,7 +7,7 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
-import 'package:hoplixi/main_db/new/providers/dao_providers.dart';
+import 'package:hoplixi/main_db/providers/dao_providers.dart';
 import 'package:otp/otp.dart';
 
 class PasswordListCard extends ConsumerStatefulWidget {

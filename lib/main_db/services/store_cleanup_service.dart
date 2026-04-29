@@ -1,7 +1,7 @@
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_db/core/dao/index.dart';
-import 'package:hoplixi/main_db/new/config/store_settings_keys.dart';
-import 'package:hoplixi/main_db/new/services/other/file_storage_service.dart';
+import 'package:hoplixi/main_db/config/store_settings_keys.dart';
+import 'package:hoplixi/main_db/services/other/file_storage_service.dart';
 
 class StoreCleanupService {
   const StoreCleanupService(this._settingsDao, this._fileStorageService);

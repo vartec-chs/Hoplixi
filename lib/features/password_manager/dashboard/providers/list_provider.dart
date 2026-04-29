@@ -8,7 +8,7 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/filter_tab
 import 'package:hoplixi/main_db/core/dao/filters_dao/filter.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:hoplixi/main_db/core/models/filter/index.dart';
-import 'package:hoplixi/main_db/new/providers/index.dart';
+import 'package:hoplixi/main_db/providers/index.dart';
 
 import '../models/filter_tab.dart';
 import 'data_refresh_trigger_provider.dart';

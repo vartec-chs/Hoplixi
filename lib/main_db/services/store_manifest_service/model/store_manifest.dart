@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
-import 'package:hoplixi/main_db/new/models/store_key_config.dart';
+import 'package:hoplixi/main_db/models/store_key_config.dart';
 
 part 'store_manifest.freezed.dart';
 

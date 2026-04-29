@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_db/core/models/dto/icon_dto.dart';
-import 'package:hoplixi/main_db/new/providers/dao_providers.dart';
+import 'package:hoplixi/main_db/providers/dao_providers.dart';
 
 /// Виджет карточки иконки с асинхронной загрузкой данных
 class IconCard extends ConsumerWidget {

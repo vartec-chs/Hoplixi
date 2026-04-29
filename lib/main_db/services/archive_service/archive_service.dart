@@ -5,8 +5,8 @@ import 'package:archive/archive_io.dart';
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/main_db/new/services/store_manifest_service/model/store_manifest.dart';
-import 'package:hoplixi/main_db/new/services/store_manifest_service/store_manifest_service.dart';
+import 'package:hoplixi/main_db/services/store_manifest_service/model/store_manifest.dart';
+import 'package:hoplixi/main_db/services/store_manifest_service/store_manifest_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:result_dart/result_dart.dart' as rd;
 

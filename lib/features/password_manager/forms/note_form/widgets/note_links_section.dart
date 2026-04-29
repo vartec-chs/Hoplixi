@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/forms/note_form/providers/note_form_provider.dart';
 import 'package:hoplixi/main_db/core/models/dto/linked_vault_item_card_dto.dart';
-import 'package:hoplixi/main_db/new/providers/dao_providers.dart';
+import 'package:hoplixi/main_db/providers/dao_providers.dart';
 
 /// Секция для отображения связей заметки с vault items.
 class NoteLinksSection extends ConsumerWidget {

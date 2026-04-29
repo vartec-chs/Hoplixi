@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/main_db/new/models/db_state.dart';
-import 'package:hoplixi/main_db/new/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/main_db/models/db_state.dart';
+import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 
 class DecryptedFilesGuardState {
   final Set<String> inUsePaths;
