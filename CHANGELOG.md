@@ -99,6 +99,11 @@
 - В `PasswordGeneratorWidget` вынесены отдельные виджеты в папку
   `lib/features/password_generator/widgets` без использования `part`.
 
+### password_manager (dashboard menu backup)
+
+- В popup-меню dashboard app bar добавлен пункт `Бэкап сейчас`, который
+  запускает ручное создание бэкапа для открытого хранилища.
+
 ## 2026-04-28
 
 ### cloud_sync (snapshot sync)

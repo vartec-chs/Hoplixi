@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/main_db/core/models/filter/index.dart';
+import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/store_settings/index.dart';
+import 'package:hoplixi/main_db/core/models/filter/index.dart';
+import 'package:hoplixi/main_db/providers/main_store_backup_orchestrator_provider.dart';
+import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:typed_prefs/typed_prefs.dart';
 
 import '../../../models/entity_type.dart';
 import '../../../providers/filter_providers/base_filter_provider.dart';
 import '../entity_type_dropdown.dart';
 import 'app_bar_widgets.dart';
 
-enum _DashboardMenuAction { storeSettings, keepassImport }
+enum _DashboardMenuAction { storeSettings, backupNow, keepassImport }
 
 /// Полноценный SliverAppBar для дашборда с фильтрацией и поиском
 /// Включает drawer кнопку, выбор типа сущности, кнопку фильтров, поиск и вкладки
@@ -135,6 +141,47 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
     showStoreSettingsModal(context);
   }
 
+  BackupScope _parseBackupScope(String? raw) {
+    switch (raw) {
+      case 'databaseOnly':
+        return BackupScope.databaseOnly;
+      case 'encryptedFilesOnly':
+        return BackupScope.encryptedFilesOnly;
+      case 'full':
+      default:
+        return BackupScope.full;
+    }
+  }
+
+  Future<void> _createBackupNow() async {
+    final store = getIt<PreferencesService>().settingsPrefs;
+    final backupPath = await store.getBackupPath();
+    final scopeRaw = await store.getBackupScope();
+    final backupMaxPerStore = await store.getBackupMaxPerStore();
+    final scope = _parseBackupScope(scopeRaw);
+
+    final result = await ref
+        .read(mainStoreBackupOrchestratorProvider)
+        .createBackup(
+          scope: scope,
+          outputDirPath: backupPath,
+          periodic: false,
+          maxBackupsPerStore: backupMaxPerStore,
+        );
+
+    if (!mounted) return;
+
+    if (result == null) {
+      Toaster.error(
+        title: 'Бэкап не создан',
+        description: 'Проверьте, что хранилище открыто',
+      );
+      return;
+    }
+
+    Toaster.success(title: 'Бэкап создан', description: result.backupPath);
+  }
+
   String _getSearchHint(EntityType entityType) {
     switch (entityType) {
       case EntityType.password:
@@ -177,6 +224,9 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
     final theme = Theme.of(context);
     final baseFilter = ref.watch(baseFilterProvider);
     final currentEntityType = currentType;
+    final isStoreOpen = ref
+        .watch(mainStoreProvider)
+        .maybeWhen(data: (state) => state.isOpen, orElse: () => false);
 
     return SliverAppBar(
       expandedHeight: widget.expandedHeight,
@@ -249,13 +299,23 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
               case _DashboardMenuAction.storeSettings:
                 _openStoreSettingsModal();
                 break;
+              case _DashboardMenuAction.backupNow:
+                if (isStoreOpen) {
+                  _createBackupNow();
+                } else {
+                  Toaster.warning(
+                    title: 'Бэкап недоступен',
+                    description: 'Сначала откройте хранилище',
+                  );
+                }
+                break;
               case _DashboardMenuAction.keepassImport:
                 context.go(AppRoutesPaths.keepassImport);
                 break;
             }
           },
-          itemBuilder: (context) => const [
-            PopupMenuItem<_DashboardMenuAction>(
+          itemBuilder: (context) => [
+            const PopupMenuItem<_DashboardMenuAction>(
               value: _DashboardMenuAction.storeSettings,
               child: Row(
                 children: [
@@ -266,6 +326,17 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
               ),
             ),
             PopupMenuItem<_DashboardMenuAction>(
+              value: _DashboardMenuAction.backupNow,
+              enabled: isStoreOpen,
+              child: const Row(
+                children: [
+                  Icon(Icons.backup, size: 20),
+                  SizedBox(width: 8),
+                  Text('Бэкап сейчас'),
+                ],
+              ),
+            ),
+            const PopupMenuItem<_DashboardMenuAction>(
               value: _DashboardMenuAction.keepassImport,
               child: Row(
                 children: [
