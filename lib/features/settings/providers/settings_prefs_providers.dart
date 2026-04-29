@@ -37,6 +37,16 @@ final autoUploadSnapshotOnCloseEnabledProvider = StreamProvider<bool>(
       .watchAutoUploadSnapshotOnCloseEnabled(),
 );
 
+final dashboardAnimationsEnabledProvider = StreamProvider<bool>(
+  (ref) => getIt<PreferencesService>().settingsPrefs
+      .watchDashboardAnimationsEnabled(),
+);
+
+final dashboardAnimatedItemsThresholdProvider = StreamProvider<int>(
+  (ref) => getIt<PreferencesService>().settingsPrefs
+      .watchDashboardAnimatedItemsThreshold(),
+);
+
 final lastSyncTimeProvider = StreamProvider<int?>(
   (ref) => getIt<PreferencesService>().systemPrefs.watchLastSyncTime(),
 );

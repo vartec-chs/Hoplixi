@@ -13,9 +13,9 @@ import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.da
 import 'package:hoplixi/features/cloud_sync/screens/cloud_sync_playground_screen.dart';
 import 'package:hoplixi/features/cloud_sync/screens/cloud_sync_storage_screen.dart';
 import 'package:hoplixi/features/component_showcase/component_showcase_screen.dart';
+import 'package:hoplixi/features/custom_icon_packs/screens/icon_packs_screen.dart';
 import 'package:hoplixi/features/home/crypt_test_screen.dart';
 import 'package:hoplixi/features/home/home_screen.dart';
-import 'package:hoplixi/features/custom_icon_packs/screens/icon_packs_screen.dart';
 import 'package:hoplixi/features/local_send/screens/local_send_history_screen.dart';
 import 'package:hoplixi/features/local_send/screens/local_send_screen.dart';
 import 'package:hoplixi/features/local_send/screens/local_send_transfer_screen.dart';
@@ -86,6 +86,7 @@ final List<RouteBase> appRoutes = [
     path: AppRoutesPaths.settings,
     builder: (context, state) => const SettingsScreen(),
   ),
+
   GoRoute(
     path: AppRoutesPaths.logs,
     builder: (context, state) => const LogsTabsScreen(),

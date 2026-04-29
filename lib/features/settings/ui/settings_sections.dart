@@ -5,11 +5,10 @@ import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/services/services.dart';
 import 'package:hoplixi/core/theme/theme_switcher.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/main_db/providers/main_store_backup_orchestrator_provider.dart';
-import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/features/settings/providers/settings_prefs_providers.dart';
 import 'package:hoplixi/features/settings/ui/widgets/settings_section_card.dart';
 import 'package:hoplixi/features/settings/ui/widgets/settings_tile.dart';
+import 'package:hoplixi/main_db/providers/main_store_backup_orchestrator_provider.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/widgets/language_switcher.dart';
 import 'package:typed_prefs/typed_prefs.dart';
@@ -681,6 +680,81 @@ class BackupSettingsSection extends ConsumerWidget {
           maxBackupsPerStore: backupMaxPerStore,
         );
       }
+    }
+  }
+}
+
+/// Секция настроек Dashboard
+class DashboardSettingsSection extends ConsumerWidget {
+  const DashboardSettingsSection({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dashboardAnimationsEnabled =
+        ref.watch(dashboardAnimationsEnabledProvider).value ?? true;
+    final animatedItemsThreshold =
+        ref.watch(dashboardAnimatedItemsThresholdProvider).value ?? 15;
+
+    return SettingsSectionCard(
+      title: 'Dashboard',
+      children: [
+        SettingsSwitchTile(
+          title: 'Анимации dashboard',
+          subtitle: 'Полностью отключить анимации списка, сетки и переходов',
+          leading: const Icon(Icons.motion_photos_off_outlined),
+          value: dashboardAnimationsEnabled,
+          onChanged: (value) => getIt<PreferencesService>().settingsPrefs
+              .setDashboardAnimationsEnabled(value),
+        ),
+        const Divider(height: 1),
+        SettingsTile(
+          title: 'Порог анимированных элементов',
+          subtitle:
+              'Если элементов не больше $animatedItemsThreshold, список и сетка анимируются',
+          leading: const Icon(Icons.auto_awesome_outlined),
+          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+          onTap: () => _showAnimatedItemsThresholdDialog(
+            context,
+            currentValue: animatedItemsThreshold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showAnimatedItemsThresholdDialog(
+    BuildContext context, {
+    required int currentValue,
+  }) async {
+    const options = <int>[5, 10, 15, 20, 25, 30, 40, 50];
+
+    final selected = await showDialog<int>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: const Text('Порог анимированных элементов'),
+        children: [
+          for (final option in options)
+            RadioListTile<int>(
+              title: Text('$option элементов'),
+              value: option,
+              groupValue: currentValue,
+              onChanged: (value) => Navigator.pop(dialogContext, value),
+            ),
+        ],
+      ),
+    );
+
+    if (selected == null || selected == currentValue) {
+      return;
+    }
+
+    await getIt<PreferencesService>().settingsPrefs
+        .setDashboardAnimatedItemsThreshold(selected);
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Новый порог: $selected элементов')),
+      );
     }
   }
 }

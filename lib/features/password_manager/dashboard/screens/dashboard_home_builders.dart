@@ -2,7 +2,6 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/list_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/current_view_mode_provider.dart';
@@ -41,19 +40,20 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/wifi/w
 import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/wifi/wifi_list_card.dart';
 import 'package:hoplixi/features/password_manager/decrypt_modal/document_decrypt_modal.dart';
 import 'package:hoplixi/features/password_manager/decrypt_modal/file_decrypt_modal.dart';
+import 'package:hoplixi/features/settings/providers/settings_prefs_providers.dart';
+import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
-part 'dashboard_home_builders/content_sliver.dart';
 part 'dashboard_home_builders/animated_slivers.dart';
+part 'dashboard_home_builders/card_builders.dart';
+part 'dashboard_home_builders/content_sliver.dart';
 part 'dashboard_home_builders/item_transitions.dart';
 part 'dashboard_home_builders/status_slivers.dart';
-part 'dashboard_home_builders/card_builders.dart';
 
 /// Длительность анимации переключения состояний.
 const kStatusSwitchDuration = Duration(milliseconds: 180);
-const kDashboardAnimatedItemsThreshold = 15;
 
 /// Коллбэки для действий с элементами списка.
 class DashboardCardCallbacks {

@@ -4,9 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/main_db/core/models/dto/index.dart';
-import 'package:hoplixi/main_db/core/models/enums/index.dart';
-import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/list_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/current_view_mode_provider.dart';
@@ -18,13 +15,17 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_ho
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_layout/dashboard_drawer_scope.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/widgets/tag_picker_field.dart';
+import 'package:hoplixi/features/settings/providers/settings_prefs_providers.dart';
+import 'package:hoplixi/main_db/core/models/dto/index.dart';
+import 'package:hoplixi/main_db/core/models/enums/index.dart';
+import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 
-part 'dashboard_home_screen/list_sync.dart';
+part 'dashboard_home_screen/build_helpers.dart';
 part 'dashboard_home_screen/bulk_actions.dart';
 part 'dashboard_home_screen/dialogs.dart';
-part 'dashboard_home_screen/build_helpers.dart';
+part 'dashboard_home_screen/list_sync.dart';
 
 /// Длительность анимации для элементов списка.
 const kAnimationDuration = Duration(milliseconds: 180);

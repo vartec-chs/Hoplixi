@@ -44,6 +44,10 @@ class SettingsScreen extends ConsumerWidget {
               // Секция резервного копирования
               const BackupSettingsSection(),
 
+              const SizedBox(height: 8),
+
+              const DashboardSettingsSection(),
+
               const SizedBox(height: 16),
 
               Padding(

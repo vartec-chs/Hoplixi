@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../dashboard_layout_constants.dart';
+import '../config/dashboard_layout_constants.dart';
 
 /// Элемент плавающей навигационной панели.
 ///

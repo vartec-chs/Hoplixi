@@ -73,6 +73,14 @@
   автоматически срабатывает для подходящих сетевых и HTTP status ошибок, а 401
   по-прежнему уходит в existing OAuth refresh flow.
 
+### password_manager (dashboard animation setting)
+
+- Порог, при котором dashboard использует анимированные `SliverAnimatedList` /
+  `SliverAnimatedGrid`, вынесен в отдельную настройку в `SettingsPrefs` и теперь
+  редактируется в секции Dashboard на экране `SettingsScreen`.
+- Добавлен общий switch для полного отключения анимаций dashboard: при
+  выключении список, сетка и diff-обновления переходят в статичный режим.
+
 ## 2026-04-28
 
 ### cloud_sync (snapshot sync)

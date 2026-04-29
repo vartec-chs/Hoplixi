@@ -8,7 +8,7 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_ho
 import 'package:hoplixi/routing/paths.dart';
 
 import 'dashboard_drawer_scope.dart';
-import 'dashboard_layout_constants.dart';
+import 'config/dashboard_layout_constants.dart';
 import 'desktop_three_column_layout.dart';
 import 'keyboard_shortcuts.dart';
 import 'widgets/fab_builder.dart';

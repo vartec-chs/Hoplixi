@@ -22,6 +22,12 @@ class SettingsPrefs {
   @Pref(defaultValue: false)
   static const autoUploadSnapshotOnCloseEnabled = PrefKey<bool>();
 
+  @Pref(defaultValue: true)
+  static const dashboardAnimationsEnabled = PrefKey<bool>();
+
+  @Pref(defaultValue: 15)
+  static const dashboardAnimatedItemsThreshold = PrefKey<int>();
+
   @Pref(defaultValue: false)
   static const autoBackupEnabled = PrefKey<bool>();
 

@@ -17,10 +17,15 @@ Widget _buildDashboardAnimatedListOrGrid({
   required void Function(String id) onOpenView,
   Key? key,
 }) {
+  final dashboardAnimationsEnabled =
+      ref.watch(dashboardAnimationsEnabledProvider).value ?? true;
   final hasMore = state?.hasMore ?? false;
   final isLoadingMore = state?.isLoadingMore ?? false;
+  final animatedItemsThreshold =
+      ref.watch(dashboardAnimatedItemsThresholdProvider).value ?? 15;
   final useAnimatedSliver =
-      displayedItems.length <= kDashboardAnimatedItemsThreshold;
+      dashboardAnimationsEnabled &&
+      displayedItems.length <= animatedItemsThreshold;
 
   final listSliver = viewMode == ViewMode.list
       ? (useAnimatedSliver

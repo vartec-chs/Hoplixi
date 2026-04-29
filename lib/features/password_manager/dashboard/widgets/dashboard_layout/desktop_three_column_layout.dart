@@ -4,7 +4,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/dashboard_drawer.dart';
 
-import 'dashboard_layout_constants.dart';
+import 'config/dashboard_layout_constants.dart';
 
 class DesktopThreeColumnLayout extends StatefulWidget {
   final EntityType entityType;

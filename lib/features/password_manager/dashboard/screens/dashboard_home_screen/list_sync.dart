@@ -67,6 +67,14 @@ void _dashboardHomeSyncItems(
     return;
   }
 
+  final dashboardAnimationsEnabled =
+      state.ref.read(dashboardAnimationsEnabledProvider).value ?? true;
+
+  if (!dashboardAnimationsEnabled) {
+    state._replaceItemsWithoutAnimation(newItems);
+    return;
+  }
+
   final viewMode = state.ref.read(currentViewModeProvider);
   final listState = state._listKey.currentState;
   final gridState = state._gridKey.currentState;
@@ -92,10 +100,18 @@ bool _dashboardHomeShouldAnimateItems(
   _DashboardHomeScreenState state,
   List<BaseCardDto> newItems,
 ) {
+  final dashboardAnimationsEnabled =
+      state.ref.read(dashboardAnimationsEnabledProvider).value ?? true;
+  if (!dashboardAnimationsEnabled) {
+    return false;
+  }
+
   final totalItems = newItems.length > state._displayedItems.length
       ? newItems.length
       : state._displayedItems.length;
-  return totalItems <= kDashboardAnimatedItemsThreshold;
+  final animatedItemsThreshold =
+      state.ref.read(dashboardAnimatedItemsThresholdProvider).value ?? 15;
+  return totalItems <= animatedItemsThreshold;
 }
 
 void _dashboardHomeReplaceItemsWithoutAnimation(
