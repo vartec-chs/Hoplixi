@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:hoplixi/main_db/core/daos/crud/crud_types.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/otp_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
@@ -13,7 +14,7 @@ class OtpDao extends DatabaseAccessor<MainStore> with _$OtpDaoMixin {
   OtpDao(super.db);
 
   /// Получить все OTP (JOIN)
-  Future<List<(VaultItemsData, OtpItemsData)>> getAllOtps() async {
+  Future<List<VaultItemWith<OtpItemsData>>> getAllOtps() async {
     final query = select(
       vaultItems,
     ).join([innerJoin(otpItems, otpItems.itemId.equalsExp(vaultItems.id))]);
@@ -24,7 +25,7 @@ class OtpDao extends DatabaseAccessor<MainStore> with _$OtpDaoMixin {
   }
 
   /// Получить OTP по ID
-  Future<(VaultItemsData, OtpItemsData)?> getById(String id) async {
+  Future<VaultItemWith<OtpItemsData>?> getById(String id) async {
     final query = select(vaultItems).join([
       innerJoin(otpItems, otpItems.itemId.equalsExp(vaultItems.id)),
     ])..where(vaultItems.id.equals(id));
@@ -34,7 +35,7 @@ class OtpDao extends DatabaseAccessor<MainStore> with _$OtpDaoMixin {
   }
 
   /// Получить OTP по ID пароля
-  Future<(VaultItemsData, OtpItemsData)?> getByPasswordItemId(
+  Future<VaultItemWith<OtpItemsData>?> getByPasswordItemId(
     String passwordItemId,
   ) async {
     final query = select(vaultItems).join([
@@ -55,7 +56,7 @@ class OtpDao extends DatabaseAccessor<MainStore> with _$OtpDaoMixin {
   }
 
   /// Смотреть все OTP
-  Stream<List<(VaultItemsData, OtpItemsData)>> watchAllOtps() {
+  Stream<List<VaultItemWith<OtpItemsData>>> watchAllOtps() {
     final query = select(vaultItems).join([
       innerJoin(otpItems, otpItems.itemId.equalsExp(vaultItems.id)),
     ])..orderBy([OrderingTerm.desc(vaultItems.modifiedAt)]);

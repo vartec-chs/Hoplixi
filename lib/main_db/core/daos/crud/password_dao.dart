@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:hoplixi/main_db/core/daos/crud/crud_types.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/password_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
@@ -13,7 +14,7 @@ class PasswordDao extends DatabaseAccessor<MainStore> with _$PasswordDaoMixin {
   PasswordDao(super.db);
 
   /// Получить все пароли (JOIN vault_items + password_items)
-  Future<List<(VaultItemsData, PasswordItemsData)>> getAllPasswords() async {
+  Future<List<VaultItemWith<PasswordItemsData>>> getAllPasswords() async {
     final query = select(vaultItems).join([
       innerJoin(passwordItems, passwordItems.itemId.equalsExp(vaultItems.id)),
     ]);
@@ -24,7 +25,7 @@ class PasswordDao extends DatabaseAccessor<MainStore> with _$PasswordDaoMixin {
   }
 
   /// Получить пароль по ID
-  Future<(VaultItemsData, PasswordItemsData)?> getById(String id) async {
+  Future<VaultItemWith<PasswordItemsData>?> getById(String id) async {
     final query = select(vaultItems).join([
       innerJoin(passwordItems, passwordItems.itemId.equalsExp(vaultItems.id)),
     ])..where(vaultItems.id.equals(id));
@@ -34,7 +35,7 @@ class PasswordDao extends DatabaseAccessor<MainStore> with _$PasswordDaoMixin {
   }
 
   /// Смотреть все пароли с автообновлением
-  Stream<List<(VaultItemsData, PasswordItemsData)>> watchAllPasswords() {
+  Stream<List<VaultItemWith<PasswordItemsData>>> watchAllPasswords() {
     final query = select(vaultItems).join([
       innerJoin(passwordItems, passwordItems.itemId.equalsExp(vaultItems.id)),
     ])..orderBy([OrderingTerm.desc(vaultItems.modifiedAt)]);

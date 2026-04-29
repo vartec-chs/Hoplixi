@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/daos/base_main_entity_dao.dart';
+import 'package:hoplixi/main_db/core/daos/crud/crud_types.dart';
+import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/recovery_codes_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
 import 'package:hoplixi/main_db/core/tables/recovery_codes.dart';
@@ -20,7 +21,7 @@ class RecoveryCodesDao extends DatabaseAccessor<MainStore>
   // Чтение
   // ---------------------------------------------------------------------------
 
-  Future<List<(VaultItemsData, RecoveryCodesItemsData)>>
+  Future<List<VaultItemWith<RecoveryCodesItemsData>>>
   getAllRecoveryCodes() async {
     final query = select(vaultItems).join([
       innerJoin(
@@ -37,7 +38,7 @@ class RecoveryCodesDao extends DatabaseAccessor<MainStore>
         .toList();
   }
 
-  Future<(VaultItemsData, RecoveryCodesItemsData)?> getById(String id) async {
+  Future<VaultItemWith<RecoveryCodesItemsData>?> getById(String id) async {
     final query = select(vaultItems).join([
       innerJoin(
         recoveryCodesItems,
@@ -50,8 +51,7 @@ class RecoveryCodesDao extends DatabaseAccessor<MainStore>
     return (row.readTable(vaultItems), row.readTable(recoveryCodesItems));
   }
 
-  Stream<List<(VaultItemsData, RecoveryCodesItemsData)>>
-  watchAllRecoveryCodes() {
+  Stream<List<VaultItemWith<RecoveryCodesItemsData>>> watchAllRecoveryCodes() {
     final query = select(vaultItems).join([
       innerJoin(
         recoveryCodesItems,

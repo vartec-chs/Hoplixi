@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/daos/base_main_entity_dao.dart';
+import 'package:hoplixi/main_db/core/daos/crud/crud_types.dart';
+import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/ssh_key_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
 import 'package:hoplixi/main_db/core/tables/ssh_key_items.dart';
@@ -15,7 +16,7 @@ class SshKeyDao extends DatabaseAccessor<MainStore>
     implements BaseMainEntityDao {
   SshKeyDao(super.db);
 
-  Future<List<(VaultItemsData, SshKeyItemsData)>> getAllSshKeys() async {
+  Future<List<VaultItemWith<SshKeyItemsData>>> getAllSshKeys() async {
     final query = select(vaultItems).join([
       innerJoin(sshKeyItems, sshKeyItems.itemId.equalsExp(vaultItems.id)),
     ]);
@@ -25,7 +26,7 @@ class SshKeyDao extends DatabaseAccessor<MainStore>
         .toList();
   }
 
-  Future<(VaultItemsData, SshKeyItemsData)?> getById(String id) async {
+  Future<VaultItemWith<SshKeyItemsData>?> getById(String id) async {
     final query = select(vaultItems).join([
       innerJoin(sshKeyItems, sshKeyItems.itemId.equalsExp(vaultItems.id)),
     ])..where(vaultItems.id.equals(id));
@@ -35,7 +36,7 @@ class SshKeyDao extends DatabaseAccessor<MainStore>
     return (row.readTable(vaultItems), row.readTable(sshKeyItems));
   }
 
-  Stream<List<(VaultItemsData, SshKeyItemsData)>> watchAllSshKeys() {
+  Stream<List<VaultItemWith<SshKeyItemsData>>> watchAllSshKeys() {
     final query = select(vaultItems).join([
       innerJoin(sshKeyItems, sshKeyItems.itemId.equalsExp(vaultItems.id)),
     ])..orderBy([OrderingTerm.desc(vaultItems.modifiedAt)]);

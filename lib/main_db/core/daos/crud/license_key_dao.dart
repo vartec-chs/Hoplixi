@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/daos/base_main_entity_dao.dart';
+import 'package:hoplixi/main_db/core/daos/crud/crud_types.dart';
+import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/license_key_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
 import 'package:hoplixi/main_db/core/tables/license_key_items.dart';
@@ -15,8 +16,7 @@ class LicenseKeyDao extends DatabaseAccessor<MainStore>
     implements BaseMainEntityDao {
   LicenseKeyDao(super.db);
 
-  Future<List<(VaultItemsData, LicenseKeyItemsData)>>
-  getAllLicenseKeys() async {
+  Future<List<VaultItemWith<LicenseKeyItemsData>>> getAllLicenseKeys() async {
     final query = select(vaultItems).join([
       innerJoin(
         licenseKeyItems,
@@ -31,7 +31,7 @@ class LicenseKeyDao extends DatabaseAccessor<MainStore>
         .toList();
   }
 
-  Future<(VaultItemsData, LicenseKeyItemsData)?> getById(String id) async {
+  Future<VaultItemWith<LicenseKeyItemsData>?> getById(String id) async {
     final query = select(vaultItems).join([
       innerJoin(
         licenseKeyItems,
@@ -44,7 +44,7 @@ class LicenseKeyDao extends DatabaseAccessor<MainStore>
     return (row.readTable(vaultItems), row.readTable(licenseKeyItems));
   }
 
-  Stream<List<(VaultItemsData, LicenseKeyItemsData)>> watchAllLicenseKeys() {
+  Stream<List<VaultItemWith<LicenseKeyItemsData>>> watchAllLicenseKeys() {
     final query = select(vaultItems).join([
       innerJoin(
         licenseKeyItems,

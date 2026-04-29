@@ -1,6 +1,7 @@
 ﻿import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/daos/base_main_entity_dao.dart';
+import 'package:hoplixi/main_db/core/daos/crud/crud_types.dart';
+import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/loyalty_card_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
 import 'package:hoplixi/main_db/core/tables/loyalty_card_items.dart';
@@ -15,8 +16,7 @@ class LoyaltyCardDao extends DatabaseAccessor<MainStore>
     implements BaseMainEntityDao {
   LoyaltyCardDao(super.db);
 
-  Future<List<(VaultItemsData, LoyaltyCardItemsData)>>
-  getAllLoyaltyCards() async {
+  Future<List<VaultItemWith<LoyaltyCardItemsData>>> getAllLoyaltyCards() async {
     final query = select(vaultItems).join([
       innerJoin(
         loyaltyCardItems,
@@ -31,7 +31,7 @@ class LoyaltyCardDao extends DatabaseAccessor<MainStore>
         .toList();
   }
 
-  Future<(VaultItemsData, LoyaltyCardItemsData)?> getById(String id) async {
+  Future<VaultItemWith<LoyaltyCardItemsData>?> getById(String id) async {
     final query = select(vaultItems).join([
       innerJoin(
         loyaltyCardItems,
@@ -44,7 +44,7 @@ class LoyaltyCardDao extends DatabaseAccessor<MainStore>
     return (row.readTable(vaultItems), row.readTable(loyaltyCardItems));
   }
 
-  Stream<List<(VaultItemsData, LoyaltyCardItemsData)>> watchAllLoyaltyCards() {
+  Stream<List<VaultItemWith<LoyaltyCardItemsData>>> watchAllLoyaltyCards() {
     final query = select(vaultItems).join([
       innerJoin(
         loyaltyCardItems,

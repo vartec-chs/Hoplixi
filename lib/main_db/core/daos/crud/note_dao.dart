@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:hoplixi/main_db/core/daos/crud/crud_types.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/note_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
@@ -13,7 +14,7 @@ class NoteDao extends DatabaseAccessor<MainStore> with _$NoteDaoMixin {
   NoteDao(super.db);
 
   /// Получить все заметки (JOIN)
-  Future<List<(VaultItemsData, NoteItemsData)>> getAllNotes() async {
+  Future<List<VaultItemWith<NoteItemsData>>> getAllNotes() async {
     final query = select(
       vaultItems,
     ).join([innerJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.id))]);
@@ -24,7 +25,7 @@ class NoteDao extends DatabaseAccessor<MainStore> with _$NoteDaoMixin {
   }
 
   /// Получить заметку по ID
-  Future<(VaultItemsData, NoteItemsData)?> getById(String id) async {
+  Future<VaultItemWith<NoteItemsData>?> getById(String id) async {
     final query = select(vaultItems).join([
       innerJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.id)),
     ])..where(vaultItems.id.equals(id));
@@ -34,7 +35,7 @@ class NoteDao extends DatabaseAccessor<MainStore> with _$NoteDaoMixin {
   }
 
   /// Смотреть все заметки
-  Stream<List<(VaultItemsData, NoteItemsData)>> watchAllNotes() {
+  Stream<List<VaultItemWith<NoteItemsData>>> watchAllNotes() {
     final query = select(vaultItems).join([
       innerJoin(noteItems, noteItems.itemId.equalsExp(vaultItems.id)),
     ])..orderBy([OrderingTerm.desc(vaultItems.modifiedAt)]);

@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:hoplixi/main_db/core/daos/crud/crud_types.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/document_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
@@ -13,7 +14,7 @@ class DocumentDao extends DatabaseAccessor<MainStore> with _$DocumentDaoMixin {
   DocumentDao(super.db);
 
   /// Получить все документы (JOIN)
-  Future<List<(VaultItemsData, DocumentItemsData)>> getAllDocuments() async {
+  Future<List<VaultItemWith<DocumentItemsData>>> getAllDocuments() async {
     final query = select(vaultItems).join([
       innerJoin(documentItems, documentItems.itemId.equalsExp(vaultItems.id)),
     ]);
@@ -24,7 +25,7 @@ class DocumentDao extends DatabaseAccessor<MainStore> with _$DocumentDaoMixin {
   }
 
   /// Получить документ по ID
-  Future<(VaultItemsData, DocumentItemsData)?> getById(String id) async {
+  Future<VaultItemWith<DocumentItemsData>?> getById(String id) async {
     final query = select(vaultItems).join([
       innerJoin(documentItems, documentItems.itemId.equalsExp(vaultItems.id)),
     ])..where(vaultItems.id.equals(id));
@@ -114,7 +115,7 @@ class DocumentDao extends DatabaseAccessor<MainStore> with _$DocumentDaoMixin {
   }
 
   /// Поиск документов
-  Future<List<(VaultItemsData, DocumentItemsData)>> searchDocuments(
+  Future<List<VaultItemWith<DocumentItemsData>>> searchDocuments(
     String query,
   ) async {
     final q = query.toLowerCase();

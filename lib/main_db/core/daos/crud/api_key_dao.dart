@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/daos/base_main_entity_dao.dart';
+import 'package:hoplixi/main_db/core/daos/crud/crud_types.dart';
+import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/api_key_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
 import 'package:hoplixi/main_db/core/tables/api_key_items.dart';
@@ -15,7 +16,7 @@ class ApiKeyDao extends DatabaseAccessor<MainStore>
     implements BaseMainEntityDao {
   ApiKeyDao(super.db);
 
-  Future<List<(VaultItemsData, ApiKeyItemsData)>> getAllApiKeys() async {
+  Future<List<VaultItemWith<ApiKeyItemsData>>> getAllApiKeys() async {
     final query = select(vaultItems).join([
       innerJoin(apiKeyItems, apiKeyItems.itemId.equalsExp(vaultItems.id)),
     ]);
@@ -25,7 +26,7 @@ class ApiKeyDao extends DatabaseAccessor<MainStore>
         .toList();
   }
 
-  Future<(VaultItemsData, ApiKeyItemsData)?> getById(String id) async {
+  Future<VaultItemWith<ApiKeyItemsData>?> getById(String id) async {
     final query = select(vaultItems).join([
       innerJoin(apiKeyItems, apiKeyItems.itemId.equalsExp(vaultItems.id)),
     ])..where(vaultItems.id.equals(id));
@@ -35,7 +36,7 @@ class ApiKeyDao extends DatabaseAccessor<MainStore>
     return (row.readTable(vaultItems), row.readTable(apiKeyItems));
   }
 
-  Stream<List<(VaultItemsData, ApiKeyItemsData)>> watchAllApiKeys() {
+  Stream<List<VaultItemWith<ApiKeyItemsData>>> watchAllApiKeys() {
     final query = select(vaultItems).join([
       innerJoin(apiKeyItems, apiKeyItems.itemId.equalsExp(vaultItems.id)),
     ])..orderBy([OrderingTerm.desc(vaultItems.modifiedAt)]);

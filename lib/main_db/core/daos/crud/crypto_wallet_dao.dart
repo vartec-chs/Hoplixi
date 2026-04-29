@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/daos/base_main_entity_dao.dart';
+import 'package:hoplixi/main_db/core/daos/crud/crud_types.dart';
+import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/crypto_wallet_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
 import 'package:hoplixi/main_db/core/tables/crypto_wallet_items.dart';
@@ -15,7 +16,7 @@ class CryptoWalletDao extends DatabaseAccessor<MainStore>
     implements BaseMainEntityDao {
   CryptoWalletDao(super.db);
 
-  Future<List<(VaultItemsData, CryptoWalletItemsData)>>
+  Future<List<VaultItemWith<CryptoWalletItemsData>>>
   getAllCryptoWallets() async {
     final query = select(vaultItems).join([
       innerJoin(
@@ -32,7 +33,7 @@ class CryptoWalletDao extends DatabaseAccessor<MainStore>
         .toList();
   }
 
-  Future<(VaultItemsData, CryptoWalletItemsData)?> getById(String id) async {
+  Future<VaultItemWith<CryptoWalletItemsData>?> getById(String id) async {
     final query = select(vaultItems).join([
       innerJoin(
         cryptoWalletItems,
@@ -45,8 +46,7 @@ class CryptoWalletDao extends DatabaseAccessor<MainStore>
     return (row.readTable(vaultItems), row.readTable(cryptoWalletItems));
   }
 
-  Stream<List<(VaultItemsData, CryptoWalletItemsData)>>
-  watchAllCryptoWallets() {
+  Stream<List<VaultItemWith<CryptoWalletItemsData>>> watchAllCryptoWallets() {
     final query = select(vaultItems).join([
       innerJoin(
         cryptoWalletItems,

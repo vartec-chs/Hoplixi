@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:hoplixi/main_db/core/daos/crud/crud_types.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/bank_card_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
@@ -13,7 +14,7 @@ class BankCardDao extends DatabaseAccessor<MainStore> with _$BankCardDaoMixin {
   BankCardDao(super.db);
 
   /// Получить все карты (JOIN)
-  Future<List<(VaultItemsData, BankCardItemsData)>> getAllBankCards() async {
+  Future<List<VaultItemWith<BankCardItemsData>>> getAllBankCards() async {
     final query = select(vaultItems).join([
       innerJoin(bankCardItems, bankCardItems.itemId.equalsExp(vaultItems.id)),
     ]);
@@ -24,7 +25,7 @@ class BankCardDao extends DatabaseAccessor<MainStore> with _$BankCardDaoMixin {
   }
 
   /// Получить карту по ID
-  Future<(VaultItemsData, BankCardItemsData)?> getById(String id) async {
+  Future<VaultItemWith<BankCardItemsData>?> getById(String id) async {
     final query = select(vaultItems).join([
       innerJoin(bankCardItems, bankCardItems.itemId.equalsExp(vaultItems.id)),
     ])..where(vaultItems.id.equals(id));
@@ -34,7 +35,7 @@ class BankCardDao extends DatabaseAccessor<MainStore> with _$BankCardDaoMixin {
   }
 
   /// Смотреть все карты
-  Stream<List<(VaultItemsData, BankCardItemsData)>> watchAllBankCards() {
+  Stream<List<VaultItemWith<BankCardItemsData>>> watchAllBankCards() {
     final query = select(vaultItems).join([
       innerJoin(bankCardItems, bankCardItems.itemId.equalsExp(vaultItems.id)),
     ])..orderBy([OrderingTerm.desc(vaultItems.modifiedAt)]);

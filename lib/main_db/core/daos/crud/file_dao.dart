@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:hoplixi/main_db/core/daos/crud/crud_types.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/file_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
@@ -14,7 +15,7 @@ class FileDao extends DatabaseAccessor<MainStore> with _$FileDaoMixin {
   FileDao(super.db);
 
   /// Получить все файлы (JOIN)
-  Future<List<(VaultItemsData, FileItemsData)>> getAllFiles() async {
+  Future<List<VaultItemWith<FileItemsData>>> getAllFiles() async {
     final query = select(
       vaultItems,
     ).join([innerJoin(fileItems, fileItems.itemId.equalsExp(vaultItems.id))]);
@@ -25,7 +26,7 @@ class FileDao extends DatabaseAccessor<MainStore> with _$FileDaoMixin {
   }
 
   /// Получить файл по ID
-  Future<(VaultItemsData, FileItemsData)?> getById(String id) async {
+  Future<VaultItemWith<FileItemsData>?> getById(String id) async {
     final query = select(vaultItems).join([
       innerJoin(fileItems, fileItems.itemId.equalsExp(vaultItems.id)),
     ])..where(vaultItems.id.equals(id));
@@ -42,7 +43,7 @@ class FileDao extends DatabaseAccessor<MainStore> with _$FileDaoMixin {
   }
 
   /// Смотреть все файлы
-  Stream<List<(VaultItemsData, FileItemsData)>> watchAllFiles() {
+  Stream<List<VaultItemWith<FileItemsData>>> watchAllFiles() {
     final query = select(vaultItems).join([
       innerJoin(fileItems, fileItems.itemId.equalsExp(vaultItems.id)),
     ])..orderBy([OrderingTerm.desc(vaultItems.modifiedAt)]);

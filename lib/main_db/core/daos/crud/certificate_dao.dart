@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/daos/base_main_entity_dao.dart';
+import 'package:hoplixi/main_db/core/daos/crud/crud_types.dart';
+import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/certificate_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
 import 'package:hoplixi/main_db/core/tables/certificate_items.dart';
@@ -15,8 +16,7 @@ class CertificateDao extends DatabaseAccessor<MainStore>
     implements BaseMainEntityDao {
   CertificateDao(super.db);
 
-  Future<List<(VaultItemsData, CertificateItemsData)>>
-  getAllCertificates() async {
+  Future<List<VaultItemWith<CertificateItemsData>>> getAllCertificates() async {
     final query = select(vaultItems).join([
       innerJoin(
         certificateItems,
@@ -31,7 +31,7 @@ class CertificateDao extends DatabaseAccessor<MainStore>
         .toList();
   }
 
-  Future<(VaultItemsData, CertificateItemsData)?> getById(String id) async {
+  Future<VaultItemWith<CertificateItemsData>?> getById(String id) async {
     final query = select(vaultItems).join([
       innerJoin(
         certificateItems,
@@ -44,7 +44,7 @@ class CertificateDao extends DatabaseAccessor<MainStore>
     return (row.readTable(vaultItems), row.readTable(certificateItems));
   }
 
-  Stream<List<(VaultItemsData, CertificateItemsData)>> watchAllCertificates() {
+  Stream<List<VaultItemWith<CertificateItemsData>>> watchAllCertificates() {
     final query = select(vaultItems).join([
       innerJoin(
         certificateItems,

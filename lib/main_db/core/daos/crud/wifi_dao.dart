@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/daos/base_main_entity_dao.dart';
+import 'package:hoplixi/main_db/core/daos/crud/crud_types.dart';
+import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/wifi_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items.dart';
@@ -15,7 +16,7 @@ class WifiDao extends DatabaseAccessor<MainStore>
     implements BaseMainEntityDao {
   WifiDao(super.db);
 
-  Future<List<(VaultItemsData, WifiItemsData)>> getAllWifis() async {
+  Future<List<VaultItemWith<WifiItemsData>>> getAllWifis() async {
     final query = select(
       vaultItems,
     ).join([innerJoin(wifiItems, wifiItems.itemId.equalsExp(vaultItems.id))]);
@@ -25,7 +26,7 @@ class WifiDao extends DatabaseAccessor<MainStore>
         .toList();
   }
 
-  Future<(VaultItemsData, WifiItemsData)?> getById(String id) async {
+  Future<VaultItemWith<WifiItemsData>?> getById(String id) async {
     final query = select(vaultItems).join([
       innerJoin(wifiItems, wifiItems.itemId.equalsExp(vaultItems.id)),
     ])..where(vaultItems.id.equals(id));
@@ -35,7 +36,7 @@ class WifiDao extends DatabaseAccessor<MainStore>
     return (row.readTable(vaultItems), row.readTable(wifiItems));
   }
 
-  Stream<List<(VaultItemsData, WifiItemsData)>> watchAllWifis() {
+  Stream<List<VaultItemWith<WifiItemsData>>> watchAllWifis() {
     final query = select(vaultItems).join([
       innerJoin(wifiItems, wifiItems.itemId.equalsExp(vaultItems.id)),
     ])..orderBy([OrderingTerm.desc(vaultItems.modifiedAt)]);

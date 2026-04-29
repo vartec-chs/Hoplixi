@@ -2,6 +2,13 @@
 
 ## 2026-04-29
 
+### db_core (crud dao tuples)
+
+- В `lib/main_db/core/daos/crud` добавлен общий generic alias
+  `VaultItemWith<T> = (VaultItemsData, T)`.
+- CRUD-DAO в папке переведены на `VaultItemWith<T>`, чтобы убрать повторение
+  `VaultItemsData` в сигнатурах JOIN-результатов.
+
 ### password_manager (wifi form)
 
 - `WifiOsBridge` переведён на `AsyncResultDart` из `result_dart`; локальный
