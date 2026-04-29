@@ -21,6 +21,8 @@
   до получения sync status.
 - `LockStoreScreen` теперь также блокирует разблокировку и выход во время
   общего `isSyncInProgress`, показывая текст текущей cloud sync операции.
+- Close-store sync dialog при успешном upload показывает короткое состояние
+  завершения с галочкой и только после этого автоматически закрывается.
 - За мобильный `FloatingNavBar` добавлено градиентное затемнение, которое
   усиливает контраст нижней навигации над контентом.
 - Мобильный `FloatingNavBar` сделан полупрозрачным, чтобы контент под ним мягко
@@ -102,6 +104,8 @@
 - `resolveConflictWithUpload/Download` публикуют состояние подготовки
   синхронно на входе, до любых `await`, чтобы пользователь сразу видел
   заблокированный sync flow.
+- `currentStoreSyncProvider` больше не затирает активный remote download status
+  дефолтным locked-status при переходе на `LockStoreScreen`.
 
 ### password_manager (dashboard animation setting)
 

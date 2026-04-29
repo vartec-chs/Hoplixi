@@ -51,7 +51,8 @@ class MainStoreCloseSyncState {
   bool get isActive =>
       phase == MainStoreCloseSyncPhase.checking ||
       phase == MainStoreCloseSyncPhase.waitingForDecision ||
-      phase == MainStoreCloseSyncPhase.syncing;
+      phase == MainStoreCloseSyncPhase.syncing ||
+      phase == MainStoreCloseSyncPhase.completed;
 
   MainStoreCloseSyncState copyWith({
     MainStoreCloseSyncPhase? phase,

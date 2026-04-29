@@ -643,6 +643,17 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     required bool useWatch,
   }) async {
     if (!storeState.isOpen) {
+      final activeStatus = state.value;
+      if (storeState.isLocked &&
+          activeStatus != null &&
+          _shouldKeepLockedSyncStatus(activeStatus)) {
+        return activeStatus.copyWith(
+          isStoreOpen: false,
+          storePath: storeState.path ?? activeStatus.storePath,
+          storeName: storeState.name ?? activeStatus.storeName,
+        );
+      }
+
       return StoreSyncStatus(
         isStoreOpen: false,
         storePath: storeState.path,
@@ -698,6 +709,14 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       );
       Error.throwWithStackTrace(error, stackTrace);
     }
+  }
+
+  bool _shouldKeepLockedSyncStatus(StoreSyncStatus status) {
+    return status.isSyncInProgress ||
+        status.isApplyingRemoteUpdate ||
+        status.syncActivity != StoreSyncActivity.idle ||
+        status.syncProgress != null ||
+        status.requiresUnlockToApply;
   }
 
   Future<bool> _hasInternetAccess() async {

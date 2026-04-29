@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/close_sync_state.dart';
@@ -26,21 +28,61 @@ class _CloseStoreSyncScreenState extends ConsumerState<CloseStoreSyncScreen> {
   }
 }
 
-class CloseStoreSyncDialogHost extends ConsumerWidget {
+class CloseStoreSyncDialogHost extends ConsumerStatefulWidget {
   const CloseStoreSyncDialogHost({required this.child, super.key});
 
   final Widget child;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CloseStoreSyncDialogHost> createState() =>
+      _CloseStoreSyncDialogHostState();
+}
+
+class _CloseStoreSyncDialogHostState
+    extends ConsumerState<CloseStoreSyncDialogHost> {
+  static const _completedDisplayDuration = Duration(milliseconds: 900);
+
+  Timer? _completedCloseTimer;
+
+  @override
+  void dispose() {
+    _completedCloseTimer?.cancel();
+    super.dispose();
+  }
+
+  void _syncCompletedCloseTimer(MainStoreCloseSyncState? closeSyncState) {
+    if (closeSyncState?.phase != MainStoreCloseSyncPhase.completed) {
+      _completedCloseTimer?.cancel();
+      _completedCloseTimer = null;
+      return;
+    }
+
+    _completedCloseTimer ??= Timer(_completedDisplayDuration, () {
+      if (!mounted) {
+        return;
+      }
+
+      final currentPhase = ref.read(mainStoreCloseSyncProvider).value?.phase;
+      if (currentPhase != MainStoreCloseSyncPhase.completed) {
+        return;
+      }
+
+      ref.read(mainStoreCloseSyncProvider.notifier).reset();
+      _completedCloseTimer = null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final closeSyncState = ref.watch(mainStoreCloseSyncProvider).value;
+    _syncCompletedCloseTimer(closeSyncState);
     final isVisible = closeSyncState?.isActive == true;
 
     return PopScope(
       canPop: !isVisible,
       child: Stack(
         children: [
-          child,
+          widget.child,
           if (isVisible) const Positioned.fill(child: _CloseStoreSyncDialog()),
         ],
       ),
@@ -189,6 +231,8 @@ class _CloseStoreSyncContentState extends ConsumerState<CloseStoreSyncContent>
     final dbState = ref.watch(mainStoreProvider).value;
     final closeSyncState = ref.watch(mainStoreCloseSyncProvider).value;
     final closeSyncStatus = closeSyncState?.status;
+    final isCompleted =
+        closeSyncState?.phase == MainStoreCloseSyncPhase.completed;
     final isChecking =
         closeSyncState?.phase == MainStoreCloseSyncPhase.checking;
     final syncStatus = isChecking
@@ -200,17 +244,23 @@ class _CloseStoreSyncContentState extends ConsumerState<CloseStoreSyncContent>
     final requiresUnlockToApply = syncStatus?.requiresUnlockToApply ?? false;
     final shouldAskAboutUpload = _shouldAskAboutUpload(syncStatus);
     final theme = Theme.of(context);
-    final title = isChecking
+    final title = isCompleted
+        ? 'Синхронизация завершена'
+        : isChecking
         ? 'Проверка синхронизации'
         : 'Синхронизация после закрытия хранилища';
-    final description = isChecking
+    final description = isCompleted
+        ? 'Актуальная snapshot-версия сохранена в облаке. Окно закроется автоматически.'
+        : isChecking
         ? 'Проверяем локальную и облачную snapshot-версии после закрытия хранилища. Не закрывайте приложение до завершения проверки.'
         : shouldAskAboutUpload
         ? _uploadDecisionDescription(syncStatus)
         : requiresUnlockToApply
         ? 'Удалённый snapshot уже применён локально после закрытия хранилища. Экран закроется автоматически после завершения сценария закрытия.'
         : 'Идёт финальная синхронизация изменений после закрытия хранилища. Это окно закроется автоматически.';
-    final body = isChecking
+    final body = isCompleted
+        ? const _CloseStoreSyncSuccessCard(key: ValueKey('completed'))
+        : isChecking
         ? const _CloseStoreCheckingCard(key: ValueKey('checking'))
         : shouldAskAboutUpload
         ? _CloseStoreUploadDecisionCard(
@@ -339,6 +389,47 @@ class _CloseStoreCheckingCard extends StatelessWidget {
                 'Определяем, нужно ли отправить изменения в облако...',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CloseStoreSyncSuccessCard extends StatelessWidget {
+  const _CloseStoreSyncSuccessCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            TweenAnimationBuilder<double>(
+              tween: Tween<double>(begin: 0.82, end: 1),
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeOutBack,
+              builder: (context, scale, child) {
+                return Transform.scale(scale: scale, child: child);
+              },
+              child: Icon(
+                Icons.check_circle_outline,
+                size: 34,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                'Готово',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
