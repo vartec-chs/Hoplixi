@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:dio_smart_retry/dio_smart_retry.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
@@ -51,6 +52,8 @@ class CloudSyncHttpClient implements CloudSyncHttpTransport {
         logPrint: AppLogger.instance.dioLogPrint(tag: _logTag),
       ),
     );
+    _attachRetryInterceptor(_dio);
+    _attachRetryInterceptor(_retryDio);
 
     _dio.interceptors.add(
       _CloudSyncAuthInterceptor(
@@ -76,6 +79,21 @@ class CloudSyncHttpClient implements CloudSyncHttpTransport {
   late final Dio _dio;
   late final Dio _retryDio;
   Future<AuthTokenEntry>? _refreshInFlight;
+
+  void _attachRetryInterceptor(Dio dio) {
+    dio.interceptors.add(
+      RetryInterceptor(
+        dio: dio,
+        logPrint: AppLogger.instance.dioLogPrint(tag: _logTag),
+        retries: 3,
+        retryDelays: const [
+          Duration(seconds: 1),
+          Duration(seconds: 2),
+          Duration(seconds: 3),
+        ],
+      ),
+    );
+  }
 
   static BaseOptions _createBaseOptions() {
     return BaseOptions(

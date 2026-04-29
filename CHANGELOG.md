@@ -4,12 +4,12 @@
 
 ### password_manager (close store sync)
 
-- `SnapshotSyncService.loadStatus()` теперь повторяет чтение remote manifest
-  при временных cloud storage `network`/`timeout` ошибках, чтобы нестабильное
+- `SnapshotSyncService.loadStatus()` теперь повторяет чтение remote manifest при
+  временных cloud storage `network`/`timeout` ошибках, чтобы нестабильное
   соединение не превращалось сразу в ложный `remoteMissing`.
 - `MobileCloudSyncOverlay` снова заметно показывает initial cloud-check hint:
-  длительность увеличена до 2 секунд, добавлен fallback-текст для старта sync
-  до первого progress event.
+  длительность увеличена до 2 секунд, добавлен fallback-текст для старта sync до
+  первого progress event.
 - `MobileCloudSyncOverlay` больше не показывает delayed check hint после уже
   завершённого сравнения локальной и облачной версий; для loading используется
   cached sync status.
@@ -39,8 +39,8 @@
 
 ### db_core (crud dao tuples)
 
-- Старый `StoreCleanupService` удалён; очистка хранилища теперь использует
-  use case `PerformStoreCleanup` и provider `performStoreCleanupProvider`.
+- Старый `StoreCleanupService` удалён; очистка хранилища теперь использует use
+  case `PerformStoreCleanup` и provider `performStoreCleanupProvider`.
 - Startup cleanup при `createStore`/`openStore` остаётся неблокирующим через
   `unawaited(runStartupCleanup(session))`.
 
@@ -66,6 +66,12 @@
 
 - `CloseStoreSyncContent` получил мягкую анимацию появления и плавный
   `AnimatedSwitcher` для смены состояния внутри экрана закрытия.
+
+### cloud_sync (dio smart retry)
+
+- `CloudSyncHttpClient` подключён к `dio_smart_retry`: retry теперь
+  автоматически срабатывает для подходящих сетевых и HTTP status ошибок, а 401
+  по-прежнему уходит в existing OAuth refresh flow.
 
 ## 2026-04-28
 

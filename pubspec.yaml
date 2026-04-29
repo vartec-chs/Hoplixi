@@ -118,6 +118,7 @@ dependencies:
   internet_connection_checker_plus: ^2.9.1+2
   intl_phone_number_input: ^0.7.5
   nfc_manager: ^4.2.1
+  dio_smart_retry: ^7.0.1
 
 hooks:
   user_defines:
