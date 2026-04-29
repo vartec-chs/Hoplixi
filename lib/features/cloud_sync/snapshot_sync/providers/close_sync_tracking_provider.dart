@@ -1,4 +1,4 @@
-import 'package:riverpod/riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final closeSyncTrackingProvider =
     NotifierProvider<CloseSyncTrackingNotifier, CloseSyncTrackingState>(

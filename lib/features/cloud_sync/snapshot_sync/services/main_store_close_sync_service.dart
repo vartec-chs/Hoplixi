@@ -4,10 +4,10 @@ import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_exceptio
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
-import 'package:hoplixi/main_db/models/main_store_close_sync_state.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/close_sync_state.dart';
 
-class MainStoreCloseSyncService {
-  const MainStoreCloseSyncService();
+class CloseSyncService {
+  const CloseSyncService();
 
   bool hasLogicalChanges({
     required DateTime? openedModifiedAt,

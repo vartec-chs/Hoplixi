@@ -7,29 +7,28 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
 import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_exception.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/close_sync_state.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/close_sync_tracking_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/main_store_close_sync_service.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
-import 'package:hoplixi/main_db/models/main_store_close_sync_state.dart';
-import 'package:hoplixi/main_db/providers/close_sync_tracking_provider.dart';
-import 'package:hoplixi/main_db/services/main_store_close_sync_service.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:typed_prefs/typed_prefs.dart';
 
-final mainStoreCloseSyncServiceProvider = Provider<MainStoreCloseSyncService>(
-  (ref) => const MainStoreCloseSyncService(),
+final closeSyncServiceProvider = Provider<CloseSyncService>(
+  (ref) => const CloseSyncService(),
 );
 
 final mainStoreCloseSyncProvider =
-    AsyncNotifierProvider<MainStoreCloseSyncNotifier, MainStoreCloseSyncState>(
-      MainStoreCloseSyncNotifier.new,
+    AsyncNotifierProvider<CloseSyncNotifier, MainStoreCloseSyncState>(
+      CloseSyncNotifier.new,
     );
 
-class MainStoreCloseSyncNotifier
-    extends AsyncNotifier<MainStoreCloseSyncState> {
+class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
   static const String _logTag = 'MainStoreCloseSyncNotifier';
 
   Completer<bool>? _closeStoreUploadDecision;
@@ -37,8 +36,7 @@ class MainStoreCloseSyncNotifier
   MainStoreCloseSyncState get _current =>
       state.value ?? const MainStoreCloseSyncState();
 
-  MainStoreCloseSyncService get _service =>
-      ref.read(mainStoreCloseSyncServiceProvider);
+  CloseSyncService get _service => ref.read(closeSyncServiceProvider);
 
   @override
   Future<MainStoreCloseSyncState> build() async {
