@@ -17,6 +17,7 @@ import 'package:hoplixi/features/password_generator/password_generator_widget.da
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/shared/widgets/watchers/lifecycle/app_lifecycle_provider.dart';
 import 'package:hoplixi/shared/widgets/titlebar.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:path/path.dart' as p;
@@ -81,6 +82,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _pulseAnimation = Tween<double>(begin: 0.7, end: 1.0).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+    _syncHomeAnimations(ref.read(isAppActiveProvider));
 
     _launchPathSubscription = ref.listenManual<String?>(launchDbPathProvider, (
       previous,
@@ -322,6 +324,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
   }
 
+  void _syncHomeAnimations(bool isAppActive) {
+    if (isAppActive) {
+      if (!_pulseController.isAnimating) {
+        _pulseController.repeat(reverse: true);
+      }
+      return;
+    }
+
+    _pulseController.stop(canceled: false);
+  }
+
   @override
   void dispose() {
     _launchPathSubscription?.close();
@@ -334,6 +347,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final recentDbAsync = ref.watch(recentDatabaseProvider);
+    final isAppActive = ref.watch(isAppActiveProvider);
+
+    ref.listen<bool>(isAppActiveProvider, (previous, next) {
+      if (previous == next) {
+        return;
+      }
+      _syncHomeAnimations(next);
+    });
 
     // Определяем, есть ли недавняя БД
     final hasRecentDb = recentDbAsync.maybeWhen(
@@ -380,23 +401,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
                         child: Center(
-                          child: AnimatedTextKit(
-                            animatedTexts: [
-                              TypewriterAnimatedText(
-                                'Hoplixi',
-                                textStyle: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.onPrimary,
+                          child: isAppActive
+                              ? AnimatedTextKit(
+                                  animatedTexts: [
+                                    TypewriterAnimatedText(
+                                      'Hoplixi',
+                                      textStyle: TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        color: colorScheme.onPrimary,
+                                      ),
+                                      speed: const Duration(milliseconds: 150),
+                                    ),
+                                  ],
+                                  repeatForever: true,
+                                  pause: const Duration(milliseconds: 1000),
+                                  displayFullTextOnTap: true,
+                                  stopPauseOnTap: false,
+                                )
+                              : Text(
+                                  'Hoplixi',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.onPrimary,
+                                  ),
                                 ),
-                                speed: const Duration(milliseconds: 150),
-                              ),
-                            ],
-                            repeatForever: true,
-                            pause: const Duration(milliseconds: 1000),
-                            displayFullTextOnTap: true,
-                            stopPauseOnTap: false,
-                          ),
                         ),
                       ),
                     ),

@@ -61,3 +61,7 @@ final appLifecycleProvider =
     NotifierProvider<AppLifecycleNotifier, AppLifecycleState>(
       AppLifecycleNotifier.new,
     );
+
+final isAppActiveProvider = Provider<bool>((ref) {
+  return ref.watch(appLifecycleProvider) == AppLifecycleState.resumed;
+});
