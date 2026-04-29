@@ -16,6 +16,11 @@
 
 ### password_manager (close store sync)
 
+- `LockStoreScreen` теперь показывает отдельный текст проверки синхронизации
+  при initial loading `currentStoreSyncProvider` и временно блокирует действия
+  до получения sync status.
+- `LockStoreScreen` теперь также блокирует разблокировку и выход во время
+  общего `isSyncInProgress`, показывая текст текущей cloud sync операции.
 - За мобильный `FloatingNavBar` добавлено градиентное затемнение, которое
   усиливает контраст нижней навигации над контентом.
 - Мобильный `FloatingNavBar` сделан полупрозрачным, чтобы контент под ним мягко
@@ -90,6 +95,13 @@
 - `CloudSyncHttpClient` подключён к `dio_smart_retry`: retry теперь
   автоматически срабатывает для подходящих сетевых и HTTP status ошибок, а 401
   по-прежнему уходит в existing OAuth refresh flow.
+- В `StoreSyncStatus` добавлен typed `StoreSyncActivity`; `_resolveConflict` и
+  обычный `syncNow` сразу публикуют `preparingUpload/preparingDownload`, а
+  progress events переводят состояние в `uploading/downloading`, чтобы UI
+  мгновенно показывал текущую cloud sync операцию.
+- `resolveConflictWithUpload/Download` публикуют состояние подготовки
+  синхронно на входе, до любых `await`, чтобы пользователь сразу видел
+  заблокированный sync flow.
 
 ### password_manager (dashboard animation setting)
 

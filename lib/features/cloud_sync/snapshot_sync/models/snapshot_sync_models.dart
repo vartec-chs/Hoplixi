@@ -25,6 +25,27 @@ enum StoreVersionCompareResult {
 
 enum SnapshotSyncResultType { idle, noChanges, uploaded, downloaded, conflict }
 
+/// User-visible cloud sync activity currently running for the opened store.
+enum StoreSyncActivity {
+  /// No cloud sync operation is active.
+  idle,
+
+  /// Store sync status is being checked.
+  checkingStatus,
+
+  /// Local snapshot is being prepared for upload.
+  preparingUpload,
+
+  /// Local snapshot is being uploaded.
+  uploading,
+
+  /// Remote snapshot download is being prepared.
+  preparingDownload,
+
+  /// Remote snapshot is being downloaded.
+  downloading,
+}
+
 /// Текущий этап выполнения snapshot sync.
 enum SnapshotSyncStage {
   /// Подготовка локального snapshot перед синхронизацией.
@@ -196,6 +217,7 @@ class StoreSyncStatus {
     this.remoteCheckSkippedOffline = false,
     this.syncProgress,
     this.isSyncInProgress = false,
+    this.syncActivity = StoreSyncActivity.idle,
   });
 
   final bool isStoreOpen;
@@ -214,6 +236,7 @@ class StoreSyncStatus {
   final bool remoteCheckSkippedOffline;
   final SnapshotSyncProgress? syncProgress;
   final bool isSyncInProgress;
+  final StoreSyncActivity syncActivity;
 
   StoreSyncStatus copyWith({
     bool? isStoreOpen,
@@ -238,6 +261,7 @@ class StoreSyncStatus {
     SnapshotSyncProgress? syncProgress,
     bool clearSyncProgress = false,
     bool? isSyncInProgress,
+    StoreSyncActivity? syncActivity,
   }) {
     return StoreSyncStatus(
       isStoreOpen: isStoreOpen ?? this.isStoreOpen,
@@ -267,6 +291,7 @@ class StoreSyncStatus {
           ? null
           : (syncProgress ?? this.syncProgress),
       isSyncInProgress: isSyncInProgress ?? this.isSyncInProgress,
+      syncActivity: syncActivity ?? this.syncActivity,
     );
   }
 }

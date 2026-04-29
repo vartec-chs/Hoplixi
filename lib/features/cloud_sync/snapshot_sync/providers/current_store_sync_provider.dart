@@ -1,7 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/models/db_state.dart';
-import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
-import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
@@ -10,6 +7,9 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_m
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_service.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
+import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/main_db/models/db_state.dart';
+import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 
 final currentStoreSyncProvider =
     AsyncNotifierProvider<CurrentStoreSyncNotifier, StoreSyncStatus>(
@@ -277,6 +277,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
         isApplyingRemoteUpdate: true,
         syncProgress: _initialDownloadProgress(),
         isSyncInProgress: true,
+        syncActivity: StoreSyncActivity.preparingDownload,
       );
       _setSyncState(downloadInProgressState);
       try {
@@ -312,18 +313,23 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
             isApplyingRemoteUpdate: false,
             clearSyncProgress: true,
             isSyncInProgress: false,
+            syncActivity: StoreSyncActivity.idle,
           ),
         );
         Error.throwWithStackTrace(error, stackTrace);
       }
     }
 
+    final progressBaseState = current.copyWith(
+      clearPendingConflict: true,
+      syncProgress: _initialUploadProgress(),
+      isSyncInProgress: true,
+      syncActivity: StoreSyncActivity.preparingUpload,
+    );
+    _setSyncState(progressBaseState);
+
     final result = await _runProgressStream(
-      baseState: current.copyWith(
-        clearPendingConflict: true,
-        clearSyncProgress: true,
-        isSyncInProgress: false,
-      ),
+      baseState: progressBaseState,
       stream: syncService.syncWithProgress(
         storePath: storePath,
         storeInfo: storeInfo,
@@ -344,6 +350,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
           lastResultType: SnapshotSyncResultType.conflict,
           clearSyncProgress: true,
           isSyncInProgress: false,
+          syncActivity: StoreSyncActivity.idle,
         ),
       );
       return;
@@ -379,15 +386,42 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
   }
 
   Future<void> resolveConflictWithUpload() async {
+    _setConflictPreparationState(SnapshotConflictResolution.uploadLocal);
     await _resolveConflict(SnapshotConflictResolution.uploadLocal);
   }
 
   Future<void> resolveConflictWithDownload() async {
+    _setConflictPreparationState(SnapshotConflictResolution.downloadRemote);
     await _resolveConflict(SnapshotConflictResolution.downloadRemote);
   }
 
+  void _setConflictPreparationState(SnapshotConflictResolution resolution) {
+    final current = state.value;
+    if (current == null) {
+      return;
+    }
+
+    final next = switch (resolution) {
+      SnapshotConflictResolution.uploadLocal => current.copyWith(
+        clearPendingConflict: true,
+        requiresUnlockToApply: false,
+        syncProgress: _initialUploadProgress(),
+        isSyncInProgress: true,
+        syncActivity: StoreSyncActivity.preparingUpload,
+      ),
+      SnapshotConflictResolution.downloadRemote => current.copyWith(
+        clearPendingConflict: true,
+        requiresUnlockToApply: false,
+        syncProgress: _initialDownloadProgress(),
+        isSyncInProgress: true,
+        syncActivity: StoreSyncActivity.preparingDownload,
+      ),
+    };
+    _setSyncState(next);
+  }
+
   Future<void> _resolveConflict(SnapshotConflictResolution resolution) async {
-    final current = await future;
+    final current = state.value ?? await future;
     final binding = current.binding;
     final token = current.token;
     final storePath = current.storePath;
@@ -417,14 +451,17 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
             isApplyingRemoteUpdate: true,
             syncProgress: _initialDownloadProgress(),
             isSyncInProgress: true,
+            syncActivity: StoreSyncActivity.preparingDownload,
           )
         : current.copyWith(
             clearPendingConflict: true,
-            clearSyncProgress: true,
-            isSyncInProgress: false,
+            requiresUnlockToApply: false,
+            syncProgress: _initialUploadProgress(),
+            isSyncInProgress: true,
+            syncActivity: StoreSyncActivity.preparingUpload,
           );
+    _setSyncState(progressBaseState);
     if (requiresUnlock) {
-      _setSyncState(progressBaseState);
       try {
         await ref
             .read(mainStoreProvider.notifier)
@@ -435,6 +472,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
             isApplyingRemoteUpdate: false,
             clearSyncProgress: true,
             isSyncInProgress: false,
+            syncActivity: StoreSyncActivity.idle,
           ),
         );
         Error.throwWithStackTrace(error, stackTrace);
@@ -487,6 +525,10 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
           baseState.copyWith(
             syncProgress: event.progress,
             isSyncInProgress: true,
+            syncActivity: _activityForProgress(
+              event.progress,
+              fallback: baseState.syncActivity,
+            ),
           ),
         );
         continue;
@@ -519,6 +561,14 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
         storeUuid: binding.storeUuid,
         storePath: storePath,
       );
+      _setSyncState(
+        baseState.copyWith(
+          isApplyingRemoteUpdate: false,
+          clearSyncProgress: true,
+          isSyncInProgress: false,
+          syncActivity: StoreSyncActivity.idle,
+        ),
+      );
       Error.throwWithStackTrace(error, stackTrace);
     }
   }
@@ -535,6 +585,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       clearSyncProgress: true,
       isSyncInProgress: false,
       isApplyingRemoteUpdate: false,
+      syncActivity: StoreSyncActivity.idle,
     );
   }
 
@@ -559,6 +610,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       requiresUnlockToApply: true,
       isApplyingRemoteUpdate: false,
       isSyncInProgress: false,
+      syncActivity: StoreSyncActivity.idle,
     );
   }
 
@@ -569,6 +621,16 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       totalSteps: 6,
       title: 'Подготовка локального снимка',
       description: 'Подготавливаем применение удалённого snapshot.',
+    );
+  }
+
+  SnapshotSyncProgress _initialUploadProgress() {
+    return const SnapshotSyncProgress(
+      stage: SnapshotSyncStage.preparingLocalSnapshot,
+      stepIndex: 1,
+      totalSteps: 6,
+      title: 'Подготовка локального снимка',
+      description: 'Подготавливаем отправку локального snapshot в облако.',
     );
   }
 
@@ -725,6 +787,20 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
   }
 }
 
+StoreSyncActivity _activityForProgress(
+  SnapshotSyncProgress progress, {
+  required StoreSyncActivity fallback,
+}) {
+  return switch (progress.transferProgress?.direction) {
+    SnapshotSyncTransferDirection.upload => StoreSyncActivity.uploading,
+    SnapshotSyncTransferDirection.download => StoreSyncActivity.downloading,
+    null =>
+      progress.stage == SnapshotSyncStage.completed
+          ? StoreSyncActivity.idle
+          : fallback,
+  };
+}
+
 class CloseStoreSnapshotSyncCoordinator {
   const CloseStoreSnapshotSyncCoordinator(this.ref);
 
@@ -775,6 +851,7 @@ class CloseStoreSnapshotSyncCoordinator {
         lastResultType: result.type,
         clearSyncProgress: true,
         isSyncInProgress: false,
+        syncActivity: StoreSyncActivity.idle,
       ),
     );
 
@@ -793,6 +870,10 @@ class CloseStoreSnapshotSyncCoordinator {
           baseState.copyWith(
             syncProgress: event.progress,
             isSyncInProgress: true,
+            syncActivity: _activityForProgress(
+              event.progress,
+              fallback: baseState.syncActivity,
+            ),
           ),
         );
         continue;
@@ -830,6 +911,14 @@ class CloseStoreSnapshotSyncCoordinator {
         token: token,
         storeUuid: binding.storeUuid,
         storePath: storePath,
+      );
+      onStatusChanged?.call(
+        baseState.copyWith(
+          isApplyingRemoteUpdate: false,
+          clearSyncProgress: true,
+          isSyncInProgress: false,
+          syncActivity: StoreSyncActivity.idle,
+        ),
       );
       Error.throwWithStackTrace(error, stackTrace);
     }

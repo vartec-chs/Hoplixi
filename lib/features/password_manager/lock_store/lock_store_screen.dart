@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/snapshot_sync_progress_card.dart';
 import 'package:hoplixi/main_db/providers/db_history_provider.dart';
@@ -54,10 +55,16 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
   }
 
   Future<void> _unlock() async {
+    final syncState = ref.read(currentStoreSyncProvider);
+    final isSyncStatusLoading = syncState.isLoading && syncState.value == null;
     final isApplyingRemoteUpdate =
-        ref.read(currentStoreSyncProvider).value?.isApplyingRemoteUpdate ??
-        false;
-    if (isApplyingRemoteUpdate) {
+        syncState.value?.isApplyingRemoteUpdate ?? false;
+    final syncActivity =
+        syncState.value?.syncActivity ?? StoreSyncActivity.idle;
+    final isSyncInProgress =
+        (syncState.value?.isSyncInProgress ?? false) ||
+        syncActivity != StoreSyncActivity.idle;
+    if (isSyncStatusLoading || isSyncInProgress || isApplyingRemoteUpdate) {
       return;
     }
 
@@ -102,10 +109,16 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
   }
 
   Future<void> _goHome() async {
+    final syncState = ref.read(currentStoreSyncProvider);
+    final isSyncStatusLoading = syncState.isLoading && syncState.value == null;
     final isApplyingRemoteUpdate =
-        ref.read(currentStoreSyncProvider).value?.isApplyingRemoteUpdate ??
-        false;
-    if (isApplyingRemoteUpdate) {
+        syncState.value?.isApplyingRemoteUpdate ?? false;
+    final syncActivity =
+        syncState.value?.syncActivity ?? StoreSyncActivity.idle;
+    final isSyncInProgress =
+        (syncState.value?.isSyncInProgress ?? false) ||
+        syncActivity != StoreSyncActivity.idle;
+    if (isSyncStatusLoading || isSyncInProgress || isApplyingRemoteUpdate) {
       return;
     }
 
@@ -116,15 +129,44 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
   @override
   Widget build(BuildContext context) {
     final dbState = ref.watch(mainStoreProvider).value;
-    final syncStatus = ref.watch(currentStoreSyncProvider).value;
+    final syncState = ref.watch(currentStoreSyncProvider);
+    final syncStatus = syncState.value;
+    final isSyncStatusLoading = syncState.isLoading && syncStatus == null;
     final isApplyingRemoteUpdate = syncStatus?.isApplyingRemoteUpdate ?? false;
+    final syncActivity = syncStatus?.syncActivity ?? StoreSyncActivity.idle;
+    final isSyncInProgress =
+        (syncStatus?.isSyncInProgress ?? false) ||
+        syncActivity != StoreSyncActivity.idle;
     final requiresUnlockToApply = syncStatus?.requiresUnlockToApply ?? false;
     final syncProgress = syncStatus?.syncProgress;
-    final isUiBlocked = _isLoading || isApplyingRemoteUpdate;
+    final isUiBlocked =
+        _isLoading ||
+        isSyncStatusLoading ||
+        isSyncInProgress ||
+        isApplyingRemoteUpdate;
     final theme = Theme.of(context);
+    final title = _titleForState(
+      isSyncStatusLoading: isSyncStatusLoading,
+      isApplyingRemoteUpdate: isApplyingRemoteUpdate,
+      syncActivity: syncActivity,
+      requiresUnlockToApply: requiresUnlockToApply,
+    );
+    final description = _descriptionForState(
+      isSyncStatusLoading: isSyncStatusLoading,
+      isApplyingRemoteUpdate: isApplyingRemoteUpdate,
+      syncActivity: syncActivity,
+      requiresUnlockToApply: requiresUnlockToApply,
+    );
+    final icon = _iconForState(
+      isSyncStatusLoading: isSyncStatusLoading,
+      isApplyingRemoteUpdate: isApplyingRemoteUpdate,
+      syncActivity: syncActivity,
+      requiresUnlockToApply: requiresUnlockToApply,
+    );
 
     return PopScope(
-      canPop: !isApplyingRemoteUpdate,
+      canPop:
+          !isSyncStatusLoading && !isSyncInProgress && !isApplyingRemoteUpdate,
       child: Scaffold(
         body: Center(
           child: SingleChildScrollView(
@@ -136,21 +178,13 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Icon(
-                    isApplyingRemoteUpdate
-                        ? Icons.cloud_download_outlined
-                        : requiresUnlockToApply
-                        ? Icons.cloud_done_outlined
-                        : Icons.lock_outline,
+                    icon,
                     size: 64,
                     color: theme.colorScheme.primary,
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    isApplyingRemoteUpdate
-                        ? 'Загружаем новую версию хранилища'
-                        : requiresUnlockToApply
-                        ? 'Новая версия уже применена'
-                        : 'В целях безопасности база данных заблокирована',
+                    title,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -158,11 +192,7 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    isApplyingRemoteUpdate
-                        ? 'Найдена новая версия в облаке. Дождитесь завершения загрузки и применения изменений. Пока процесс не завершится, разблокировка и выход недоступны.'
-                        : requiresUnlockToApply
-                        ? 'Удалённый snapshot уже записан локально. Разблокируйте хранилище, чтобы открыть обновлённые данные.'
-                        : 'Разблокируйте хранилище, чтобы продолжить работу.',
+                    description,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -196,6 +226,9 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
                   ] else if (requiresUnlockToApply) ...[
                     const SizedBox(height: 24),
                     const SnapshotSyncPendingApplyCard(),
+                  ] else if (isSyncStatusLoading) ...[
+                    const SizedBox(height: 24),
+                    const _LockStoreSyncCheckingCard(),
                   ] else if (isApplyingRemoteUpdate) ...[
                     const SizedBox(height: 24),
                     const Center(child: CircularProgressIndicator()),
@@ -204,7 +237,7 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
                   if (!_hasSavedPassword)
                     TextField(
                       controller: _passwordController,
-                      enabled: !isApplyingRemoteUpdate,
+                      enabled: !isUiBlocked,
                       decoration: primaryInputDecoration(
                         context,
                         labelText: 'Пароль',
@@ -212,9 +245,7 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
                         prefixIcon: const Icon(Icons.vpn_key),
                       ),
                       obscureText: true,
-                      onSubmitted: isApplyingRemoteUpdate
-                          ? null
-                          : (_) => _unlock(),
+                      onSubmitted: isUiBlocked ? null : (_) => _unlock(),
                     ),
                   if (_hasSavedPassword)
                     Container(
@@ -269,6 +300,115 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  String _titleForState({
+    required bool isSyncStatusLoading,
+    required bool isApplyingRemoteUpdate,
+    required StoreSyncActivity syncActivity,
+    required bool requiresUnlockToApply,
+  }) {
+    if (isSyncStatusLoading) {
+      return 'Проверяем синхронизацию хранилища';
+    }
+    return switch (syncActivity) {
+      StoreSyncActivity.preparingUpload =>
+        'Подготавливаем отправку snapshot в облако',
+      StoreSyncActivity.uploading => 'Отправляем snapshot в облако',
+      StoreSyncActivity.preparingDownload =>
+        'Подготавливаем загрузку snapshot из облака',
+      StoreSyncActivity.downloading => 'Загружаем snapshot из облака',
+      StoreSyncActivity.checkingStatus =>
+        'Проверяем синхронизацию хранилища',
+      StoreSyncActivity.idle => isApplyingRemoteUpdate
+          ? 'Загружаем новую версию хранилища'
+          : requiresUnlockToApply
+          ? 'Новая версия уже применена'
+          : 'В целях безопасности база данных заблокирована',
+    };
+  }
+
+  String _descriptionForState({
+    required bool isSyncStatusLoading,
+    required bool isApplyingRemoteUpdate,
+    required StoreSyncActivity syncActivity,
+    required bool requiresUnlockToApply,
+  }) {
+    if (isSyncStatusLoading) {
+      return 'Проверяем локальную и облачную snapshot-версии. Дождитесь завершения проверки перед разблокировкой.';
+    }
+    return switch (syncActivity) {
+      StoreSyncActivity.preparingUpload =>
+        'Готовим локальный snapshot к отправке. Разблокировка и выход будут доступны после завершения операции.',
+      StoreSyncActivity.uploading =>
+        'Передаём актуальную локальную версию в облако. Дождитесь завершения операции.',
+      StoreSyncActivity.preparingDownload =>
+        'Готовим загрузку удалённого snapshot. Разблокировка и выход будут доступны после завершения операции.',
+      StoreSyncActivity.downloading =>
+        'Загружаем удалённую snapshot-версию. Дождитесь завершения операции.',
+      StoreSyncActivity.checkingStatus =>
+        'Проверяем локальную и облачную snapshot-версии. Дождитесь завершения проверки.',
+      StoreSyncActivity.idle => isApplyingRemoteUpdate
+          ? 'Найдена новая версия в облаке. Дождитесь завершения загрузки и применения изменений. Пока процесс не завершится, разблокировка и выход недоступны.'
+          : requiresUnlockToApply
+          ? 'Удалённый snapshot уже записан локально. Разблокируйте хранилище, чтобы открыть обновлённые данные.'
+          : 'Разблокируйте хранилище, чтобы продолжить работу.',
+    };
+  }
+
+  IconData _iconForState({
+    required bool isSyncStatusLoading,
+    required bool isApplyingRemoteUpdate,
+    required StoreSyncActivity syncActivity,
+    required bool requiresUnlockToApply,
+  }) {
+    if (isSyncStatusLoading) {
+      return Icons.cloud_sync_outlined;
+    }
+    return switch (syncActivity) {
+      StoreSyncActivity.preparingUpload ||
+      StoreSyncActivity.uploading => Icons.cloud_upload_outlined,
+      StoreSyncActivity.preparingDownload ||
+      StoreSyncActivity.downloading => Icons.cloud_download_outlined,
+      StoreSyncActivity.checkingStatus => Icons.cloud_sync_outlined,
+      StoreSyncActivity.idle => isApplyingRemoteUpdate
+          ? Icons.cloud_download_outlined
+          : requiresUnlockToApply
+          ? Icons.cloud_done_outlined
+          : Icons.lock_outline,
+    };
+  }
+}
+
+class _LockStoreSyncCheckingCard extends StatelessWidget {
+  const _LockStoreSyncCheckingCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            const SizedBox.square(
+              dimension: 28,
+              child: CircularProgressIndicator(strokeWidth: 3),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                'Проверяем, нужно ли применить новую версию из облака...',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
