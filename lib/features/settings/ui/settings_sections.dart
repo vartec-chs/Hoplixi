@@ -694,6 +694,9 @@ class DashboardSettingsSection extends ConsumerWidget {
         ref.watch(dashboardAnimationsEnabledProvider).value ?? true;
     final floatingNavEffectsEnabled =
         ref.watch(dashboardFloatingNavEffectsEnabledProvider).value ?? true;
+    final floatingNavHighlightColor =
+        ref.watch(dashboardFloatingNavHighlightColorProvider).value ??
+        DashboardFloatingNavHighlightColor.primary;
     final animatedItemsThreshold =
         ref.watch(dashboardAnimatedItemsThresholdProvider).value ?? 15;
 
@@ -720,6 +723,19 @@ class DashboardSettingsSection extends ConsumerWidget {
         ),
         const Divider(height: 1),
         SettingsTile(
+          title: 'Цвет подсветки нижней навигации',
+          subtitle: _floatingNavHighlightColorTitle(
+            floatingNavHighlightColor,
+          ),
+          leading: const Icon(Icons.palette_outlined),
+          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+          onTap: () => _showFloatingNavHighlightColorDialog(
+            context,
+            currentValue: floatingNavHighlightColor,
+          ),
+        ),
+        const Divider(height: 1),
+        SettingsTile(
           title: 'Порог анимированных элементов',
           subtitle:
               'Если элементов не больше $animatedItemsThreshold, список и сетка анимируются',
@@ -732,6 +748,46 @@ class DashboardSettingsSection extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  String _floatingNavHighlightColorTitle(String value) {
+    return switch (value) {
+      DashboardFloatingNavHighlightColor.darkGrey => 'Тёмно-серый',
+      _ => 'Primary',
+    };
+  }
+
+  Future<void> _showFloatingNavHighlightColorDialog(
+    BuildContext context, {
+    required String currentValue,
+  }) async {
+    const options = <String>[
+      DashboardFloatingNavHighlightColor.primary,
+      DashboardFloatingNavHighlightColor.darkGrey,
+    ];
+
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: const Text('Цвет подсветки'),
+        children: [
+          for (final option in options)
+            RadioListTile<String>(
+              title: Text(_floatingNavHighlightColorTitle(option)),
+              value: option,
+              groupValue: currentValue,
+              onChanged: (value) => Navigator.pop(dialogContext, value),
+            ),
+        ],
+      ),
+    );
+
+    if (selected == null || selected == currentValue) {
+      return;
+    }
+
+    await getIt<PreferencesService>().settingsPrefs
+        .setDashboardFloatingNavHighlightColor(selected);
   }
 
   Future<void> _showAnimatedItemsThresholdDialog(

@@ -3,6 +3,11 @@ import "package:typed_prefs/typed_prefs.dart";
 
 part 'settings_prefs.g.dart';
 
+abstract final class DashboardFloatingNavHighlightColor {
+  static const primary = 'primary';
+  static const darkGrey = 'darkGrey';
+}
+
 @Prefs()
 class SettingsPrefs {
   @Pref(defaultValue: ThemeMode.system, serializer: EnumPrefSerializer)
@@ -27,6 +32,9 @@ class SettingsPrefs {
 
   @Pref(defaultValue: true)
   static const dashboardFloatingNavEffectsEnabled = PrefKey<bool>();
+
+  @Pref(defaultValue: DashboardFloatingNavHighlightColor.primary)
+  static const dashboardFloatingNavHighlightColor = PrefKey<String>();
 
   @Pref(defaultValue: 15)
   static const dashboardAnimatedItemsThreshold = PrefKey<int>();

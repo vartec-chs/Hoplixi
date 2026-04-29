@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/screen_protection_provider.dart';
@@ -167,6 +168,7 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
     required int currentIndex,
     required List<NavigationRailDestination> destinations,
     required bool floatingNavEffectsEnabled,
+    required String floatingNavHighlightColor,
   }) {
     final showBottomNav = _shouldShowBottomNav(location);
     final showFAB = _shouldShowFAB(location);
@@ -200,7 +202,12 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
                   opacity: showBottomNav ? 1.0 : 0.0,
                   duration: kFadeAnimationDuration,
                   curve: Curves.easeInOut,
-                  child: const _FloatingNavBarScrim(),
+                  child: _FloatingNavBarScrim(
+                    highlightColor: _resolveFloatingNavHighlightColor(
+                      context,
+                      floatingNavHighlightColor,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -374,6 +381,9 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
         ref.watch(dashboardScreenProtectionProvider);
         final floatingNavEffectsEnabled =
             ref.watch(dashboardFloatingNavEffectsEnabledProvider).value ?? true;
+        final floatingNavHighlightColor =
+            ref.watch(dashboardFloatingNavHighlightColorProvider).value ??
+            DashboardFloatingNavHighlightColor.primary;
         final shell = isMobile
             ? _buildMobileShell(
                 context,
@@ -382,6 +392,7 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
                 currentIndex: currentIndex,
                 destinations: destinations,
                 floatingNavEffectsEnabled: floatingNavEffectsEnabled,
+                floatingNavHighlightColor: floatingNavHighlightColor,
               )
             : _buildDesktopShell(
                 context,
@@ -400,24 +411,31 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
       },
     );
   }
+
+  Color _resolveFloatingNavHighlightColor(BuildContext context, String value) {
+    return switch (value) {
+      DashboardFloatingNavHighlightColor.darkGrey => const Color(0xFF202124),
+      _ => Theme.of(context).primaryColor,
+    };
+  }
 }
 
 class _FloatingNavBarScrim extends StatelessWidget {
-  const _FloatingNavBarScrim();
+  const _FloatingNavBarScrim({required this.highlightColor});
+
+  final Color highlightColor;
 
   @override
   Widget build(BuildContext context) {
-    final shadowColor = Theme.of(context).primaryColor;
-
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
           colors: [
-            shadowColor.withValues(alpha: 0.24),
-            shadowColor.withValues(alpha: 0.14),
-            shadowColor.withValues(alpha: 0.0),
+            highlightColor.withValues(alpha: 0.22),
+            highlightColor.withValues(alpha: 0.14),
+            highlightColor.withValues(alpha: 0.0),
           ],
           stops: const [0.0, 0.5, 1.0],
         ),

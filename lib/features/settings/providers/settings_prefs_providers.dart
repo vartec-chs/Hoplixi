@@ -47,6 +47,11 @@ final dashboardFloatingNavEffectsEnabledProvider = StreamProvider<bool>(
       .watchDashboardFloatingNavEffectsEnabled(),
 );
 
+final dashboardFloatingNavHighlightColorProvider = StreamProvider<String>(
+  (ref) => getIt<PreferencesService>().settingsPrefs
+      .watchDashboardFloatingNavHighlightColor(),
+);
+
 final dashboardAnimatedItemsThresholdProvider = StreamProvider<int>(
   (ref) => getIt<PreferencesService>().settingsPrefs
       .watchDashboardAnimatedItemsThreshold(),
