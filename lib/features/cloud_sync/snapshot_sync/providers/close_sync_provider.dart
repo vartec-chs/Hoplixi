@@ -189,7 +189,12 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
         stackTrace: stackTrace,
         tag: _logTag,
       );
-      ref.read(closeSyncTrackingProvider.notifier).markUploadRequired();
+      ref
+          .read(closeSyncTrackingProvider.notifier)
+          .markUploadRequired(
+            storeUuid: storeInfo.id,
+            storePath: currentStorePath,
+          );
       _setState(
         _current.copyWith(
           phase: MainStoreCloseSyncPhase.failed,
@@ -219,8 +224,13 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
     resolveUploadDecision(shouldUpload);
   }
 
-  void markSnapshotUploadOnCloseRequired() {
-    ref.read(closeSyncTrackingProvider.notifier).markUploadRequired();
+  void markSnapshotUploadOnCloseRequired({
+    String? storeUuid,
+    String? storePath,
+  }) {
+    ref
+        .read(closeSyncTrackingProvider.notifier)
+        .markUploadRequired(storeUuid: storeUuid, storePath: storePath);
   }
 
   void syncPendingSnapshotUploadPrompt({
@@ -302,6 +312,12 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
     );
 
     if (!shouldUpload) {
+      ref
+          .read(closeSyncTrackingProvider.notifier)
+          .markUploadRequired(
+            storeUuid: context.storeInfo.id,
+            storePath: context.storePath,
+          );
       clearPublishedStatus();
       logInfo(
         'Skipping snapshot upload after close by user choice.',

@@ -2,15 +2,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/index.dart' hide Session;
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/close_sync_provider.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:hoplixi/main_db/models/db_state.dart';
 import 'package:hoplixi/main_db/models/session.dart';
-import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/close_sync_provider.dart';
 import 'package:synchronized/synchronized.dart';
 
-import '../services/main_store_manager.dart';
 import '../../features/cloud_sync/snapshot_sync/providers/close_sync_tracking_provider.dart';
+import '../services/main_store_manager.dart';
 import 'db_history_provider.dart';
 
 final mainStoreManagerProvider = FutureProvider<MainStoreManager>((ref) async {
@@ -100,7 +100,7 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
 
         return result.fold(
           (session) {
-            _setOpenedSession(session, forceUpload: true);
+            _setOpenedSession(session, _currentState, forceUpload: true);
             logInfo(
               'Store created',
               tag: _logTag,
@@ -160,7 +160,11 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
 
         return result.fold(
           (session) {
-            _setOpenedSession(session, forceUpload: allowMigration);
+            _setOpenedSession(
+              session,
+              _currentState,
+              forceUpload: allowMigration,
+            );
             logInfo(
               'Store opened',
               tag: _logTag,
@@ -437,7 +441,7 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
 
         return result.fold(
           (session) {
-            _setOpenedSession(session);
+            _setOpenedSession(session, lockedState);
             logInfo('Store unlocked successfully', tag: _logTag);
             return true;
           },
@@ -616,17 +620,14 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
 
   Future<String?> createSubfolder(String folderName) async {
     final result = await _manager.createSubfolder(folderName);
-    return result.fold(
-      (path) => path,
-      (error) {
-        _setState(_currentState.copyWith(error: error));
-        logError(
-          'Failed to create store subfolder: ${error.message}',
-          tag: _logTag,
-        );
-        return null;
-      },
-    );
+    return result.fold((path) => path, (error) {
+      _setState(_currentState.copyWith(error: error));
+      logError(
+        'Failed to create store subfolder: ${error.message}',
+        tag: _logTag,
+      );
+      return null;
+    });
   }
 
   void resolveCloseStoreUploadDecision(bool shouldUpload) {
@@ -636,7 +637,12 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
   }
 
   void markSnapshotUploadOnCloseRequired() {
-    ref.read(mainStoreCloseSyncProvider.notifier).markSnapshotUploadOnCloseRequired();
+    ref
+        .read(mainStoreCloseSyncProvider.notifier)
+        .markSnapshotUploadOnCloseRequired(
+          storeUuid: _currentState.info?.id,
+          storePath: _manager.currentStorePath ?? _currentState.path,
+        );
   }
 
   void syncPendingSnapshotUploadPrompt({
@@ -644,14 +650,16 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
     required bool hasBinding,
     required StoreVersionCompareResult? compareResult,
   }) {
-    ref.read(mainStoreCloseSyncProvider.notifier).syncPendingSnapshotUploadPrompt(
-      isStoreOpen: _currentState.isOpen,
-      currentStorePath: _manager.currentStorePath,
-      storeUuid: storeUuid,
-      statusStorePath: _manager.currentStorePath,
-      hasBinding: hasBinding,
-      compareResult: compareResult,
-    );
+    ref
+        .read(mainStoreCloseSyncProvider.notifier)
+        .syncPendingSnapshotUploadPrompt(
+          isStoreOpen: _currentState.isOpen,
+          currentStorePath: _manager.currentStorePath,
+          storeUuid: storeUuid,
+          statusStorePath: _manager.currentStorePath,
+          hasBinding: hasBinding,
+          compareResult: compareResult,
+        );
   }
 
   void _setState(DatabaseState newState) {
@@ -660,12 +668,12 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
 
   void _finalizeClosedStoreAfterCloseSync() {
     _setState(const DatabaseState(status: DatabaseStatus.idle));
-    ref.read(closeSyncTrackingProvider.notifier).reset();
+    ref.read(closeSyncTrackingProvider.notifier).closeSession();
     ref.read(mainStoreCloseSyncProvider.notifier).clearPublishedStatus();
   }
 
   void _finalizeLockedStoreAfterCloseSync() {
-    ref.read(closeSyncTrackingProvider.notifier).reset();
+    ref.read(closeSyncTrackingProvider.notifier).closeSession();
     ref.read(mainStoreCloseSyncProvider.notifier).clearPublishedStatus();
   }
 
@@ -675,10 +683,19 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
     _setState(const DatabaseState(status: DatabaseStatus.idle));
   }
 
-  void _setOpenedSession(Session session, {bool forceUpload = false}) {
+  void _setOpenedSession(
+    Session session,
+    DatabaseState state, {
+    bool forceUpload = false,
+  }) {
     ref
         .read(closeSyncTrackingProvider.notifier)
-        .start(session.info.modifiedAt, forceUpload: forceUpload);
+        .start(
+          session.info.modifiedAt,
+          storeUuid: session.info.id,
+          storePath: state.path,
+          forceUpload: forceUpload,
+        );
     _setState(_stateFromSession(session));
   }
 
