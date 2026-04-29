@@ -301,7 +301,7 @@ class _CloudSyncStatusWidget extends ConsumerWidget {
             icon: Icons.cloud_queue,
             label: 'Синх: нет облака',
             color: Colors.grey,
-            tooltip: 'Удалённая snapshot-версия ещё не создана',
+            tooltip: 'Удалённая snapshot-версия ещё не создана или не получена',
           ),
           StoreVersionCompareResult.differentStore => _buildSyncChip(
             icon: Icons.cloud_off,

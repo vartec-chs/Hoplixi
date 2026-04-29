@@ -39,6 +39,10 @@ class ImportedRemoteStoreResult {
 
 class SnapshotSyncService {
   static const int _totalProgressSteps = 6;
+  static const int _remoteManifestStatusReadAttempts = 3;
+  static const Duration _remoteManifestStatusReadRetryDelay = Duration(
+    milliseconds: 350,
+  );
 
   SnapshotSyncService({
     required SnapshotSyncRepository repository,
@@ -144,17 +148,30 @@ class SnapshotSyncService {
       return null;
     }
 
-    try {
-      return await _repository.readRemoteStoreManifest(
-        binding.tokenId,
-        storeUuid: storeUuid,
-      );
-    } on CloudStorageException catch (error) {
-      if (!_isRecoverableStatusLoadError(error)) {
-        rethrow;
+    for (
+      var attempt = 1;
+      attempt <= _remoteManifestStatusReadAttempts;
+      attempt++
+    ) {
+      try {
+        return await _repository.readRemoteStoreManifest(
+          binding.tokenId,
+          storeUuid: storeUuid,
+        );
+      } on CloudStorageException catch (error) {
+        final isRecoverable = _isRecoverableStatusLoadError(error);
+        if (!isRecoverable) {
+          rethrow;
+        }
+        if (attempt == _remoteManifestStatusReadAttempts) {
+          return null;
+        }
+        await Future<void>.delayed(
+          _remoteManifestStatusReadRetryDelay * attempt,
+        );
       }
-      return null;
     }
+    return null;
   }
 
   StoreSyncStatus _buildStoreSyncStatus({
@@ -950,7 +967,15 @@ class SnapshotSyncService {
       } on AppError catch (error) {
         final canTryNextName = error.maybeWhen(
           validation:
-              (code, message, data, debugMessage, cause, stackTrace, timestamp) {
+              (
+                code,
+                message,
+                data,
+                debugMessage,
+                cause,
+                stackTrace,
+                timestamp,
+              ) {
                 return code == ValidationErrorCode.alreadyExists ||
                     code == ValidationErrorCode.invalidInput;
               },

@@ -15,7 +15,7 @@ class MobileCloudSyncOverlay extends ConsumerStatefulWidget {
 
 class _MobileCloudSyncOverlayState
     extends ConsumerState<MobileCloudSyncOverlay> {
-  static const _initialHintDuration = Duration(milliseconds: 100);
+  static const _initialHintDuration = Duration(seconds: 2);
 
   bool _showInitialCheckHint = false;
   bool _handledInitialSnapshot = false;
@@ -39,8 +39,9 @@ class _MobileCloudSyncOverlayState
     });
 
     final syncState = ref.watch(currentStoreSyncProvider);
+    final cachedStatus = ref.watch(cachedCurrentStoreSyncStatusProvider);
     _handleInitialSnapshot(syncState);
-    final message = _messageForState(syncState);
+    final message = _messageForState(syncState, cachedStatus: cachedStatus);
     final systemPadding = MediaQuery.of(context).viewPadding;
     final visible = message != null;
 
@@ -124,19 +125,12 @@ class _MobileCloudSyncOverlayState
     final currentStoreChanged =
         _storeKeyOf(previousStatus) != null &&
         _storeKeyOf(previousStatus) != _storeKeyOf(status);
-    final finishedCheckWithBoundStore =
-        previous?.isLoading == true &&
-        status?.binding != null &&
-        !(status!.isSyncInProgress && status.syncProgress != null);
     final swappedToBoundStoreWithoutVisibleLoading =
         currentStoreChanged &&
         status?.binding != null &&
         !(status!.isSyncInProgress && status.syncProgress != null);
-    if (finishedCheckWithBoundStore ||
-        swappedToBoundStoreWithoutVisibleLoading) {
+    if (swappedToBoundStoreWithoutVisibleLoading) {
       _rememberStoreContext(status);
-      _showHintTemporarily();
-      return;
     }
     _handleSyncState(next);
   }
@@ -250,15 +244,25 @@ class _MobileCloudSyncOverlayState
     }
   }
 
-  String? _messageForState(AsyncValue<StoreSyncStatus> syncState) {
+  String? _messageForState(
+    AsyncValue<StoreSyncStatus> syncState, {
+    StoreSyncStatus? cachedStatus,
+  }) {
     final status = syncState.hasValue ? syncState.requireValue : null;
 
     if (status?.isSyncInProgress == true && status?.syncProgress != null) {
       return '${status!.syncProgress!.title} · шаг ${status.syncProgress!.stepIndex} из ${status.syncProgress!.totalSteps}';
     }
 
-    if (syncState.isLoading && _currentStoreHasCloudSyncBinding) {
-      return 'Проверяем облачную версию хранилища...';
+    if (status?.isSyncInProgress == true) {
+      return 'Синхронизируем облачную версию хранилища...';
+    }
+
+    if (syncState.isLoading) {
+      if (_currentStoreHasCloudSyncBinding || cachedStatus?.binding != null) {
+        return 'Проверяем облачную версию хранилища...';
+      }
+      return 'Проверяем состояние облачной синхронизации...';
     }
 
     if (_showInitialCheckHint && _currentStoreHasCloudSyncBinding) {

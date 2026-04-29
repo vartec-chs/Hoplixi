@@ -4,6 +4,17 @@
 
 ### password_manager (close store sync)
 
+- `SnapshotSyncService.loadStatus()` теперь повторяет чтение remote manifest
+  при временных cloud storage `network`/`timeout` ошибках, чтобы нестабильное
+  соединение не превращалось сразу в ложный `remoteMissing`.
+- `MobileCloudSyncOverlay` снова заметно показывает initial cloud-check hint:
+  длительность увеличена до 2 секунд, добавлен fallback-текст для старта sync
+  до первого progress event.
+- `MobileCloudSyncOverlay` больше не показывает delayed check hint после уже
+  завершённого сравнения локальной и облачной версий; для loading используется
+  cached sync status.
+- Во время первичной загрузки sync status overlay показывает нейтральный статус
+  проверки даже до того, как станет известно наличие cloud binding.
 - Close-store snapshot sync больше не редиректит на отдельный route: состояние
   `closeStoreSyncStatusProvider` отображается глобальным незакрываемым диалогом
   поверх текущего экрана.

@@ -6,13 +6,6 @@ import 'package:hoplixi/core/services/local_auth_failure.dart';
 import 'package:hoplixi/core/services/local_auth_service.dart';
 import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/main_db/services/db_history_services/model/db_history_model.dart';
-import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
-import 'package:hoplixi/main_db/services/store_manifest_service/model/store_manifest.dart';
-import 'package:hoplixi/main_db/providers/db_history_provider.dart';
-import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
-import 'package:hoplixi/main_db/services/store_manifest_service/store_manifest_service.dart';
-import 'package:hoplixi/main_db/ui/store_open_migration_dialog.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
@@ -23,6 +16,13 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_syn
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/features/home/providers/recent_database_provider.dart';
 import 'package:hoplixi/features/password_manager/open_store/services/store_password_attempt_limiter_service.dart';
+import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/main_db/providers/db_history_provider.dart';
+import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/main_db/services/db_history_services/model/db_history_model.dart';
+import 'package:hoplixi/main_db/services/store_manifest_service/model/store_manifest.dart';
+import 'package:hoplixi/main_db/services/store_manifest_service/store_manifest_service.dart';
+import 'package:hoplixi/main_db/ui/store_open_migration_dialog.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
@@ -171,11 +171,11 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
                 type: SmoothButtonType.outlined,
                 isFullWidth: true,
                 icon: Icon(syncProvider.metadata.icon),
-                 loading: _isCheckingCloudVersion,
-                 onPressed: (isOpening || _isCheckingCloudVersion)
-                     ? null
-                     : () => _checkCloudVersion(context, entry),
-               ),
+                loading: _isCheckingCloudVersion,
+                onPressed: (isOpening || _isCheckingCloudVersion)
+                    ? null
+                    : () => _checkCloudVersion(context, entry),
+              ),
               const SizedBox(height: 12),
             ],
             if (_isCheckingCloudVersion)
@@ -646,12 +646,7 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
                 description: 'Настройте биометрию в системных настройках',
               );
             },
-            canceled: (_) {
-              Toaster.info(
-                title: 'Отменено',
-                description: 'Аутентификация отменена пользователем',
-              );
-            },
+            canceled: (_) {},
             lockedOut: (_) {
               Toaster.error(
                 title: 'Временная блокировка',
