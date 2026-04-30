@@ -11,6 +11,8 @@ import 'package:hoplixi/features/password_manager/pickers/category_picker/catego
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/otp_picker/otp_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/email_autocomplete_field/email_autocomplete_field.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/login_autocomplete_field/login_autocomplete_field.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_editor.dart';
@@ -338,16 +340,13 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                           const SizedBox(height: 16),
 
                           // Логин
-                          TextField(
+                          LoginAutocompleteField(
                             controller: _loginController,
-                            decoration: primaryInputDecoration(
-                              context,
-                              labelText: context.t.dashboard_forms.login_label,
-                              hintText:
-                                  context.t.dashboard_forms.enter_login_hint,
-                              errorText: state.loginError,
-                              prefixIcon: const Icon(LucideIcons.user),
-                            ),
+                            labelText: context.t.dashboard_forms.login_label,
+                            hintText:
+                                context.t.dashboard_forms.enter_login_hint,
+                            errorText: state.loginError,
+                            prefixIcon: const Icon(LucideIcons.user),
                             onChanged: (value) {
                               ref
                                   .read(passwordFormProvider.notifier)
@@ -357,17 +356,13 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                           const SizedBox(height: 16),
 
                           // Email
-                          TextField(
+                          EmailAutocompleteField(
                             controller: _emailController,
-                            decoration: primaryInputDecoration(
-                              context,
-                              labelText: context.t.dashboard_forms.email_label,
-                              hintText:
-                                  context.t.dashboard_forms.enter_email_hint,
-                              errorText: state.emailError,
-                              prefixIcon: const Icon(LucideIcons.mail),
-                            ),
-                            keyboardType: TextInputType.emailAddress,
+                            labelText: context.t.dashboard_forms.email_label,
+                            hintText:
+                                context.t.dashboard_forms.enter_email_hint,
+                            errorText: state.emailError,
+                            prefixIcon: const Icon(LucideIcons.mail),
                             onChanged: (value) {
                               ref
                                   .read(passwordFormProvider.notifier)

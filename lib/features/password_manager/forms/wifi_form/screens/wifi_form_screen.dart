@@ -6,6 +6,7 @@ import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_b
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/login_autocomplete_field/login_autocomplete_field.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_db/core/models/dto/icon_ref_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
@@ -339,14 +340,10 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                       onChanged: notifier.setEapMethod,
                     ),
                     const SizedBox(height: 12),
-                    TextField(
+                    LoginAutocompleteField(
                       controller: _usernameController,
-                      decoration: primaryInputDecoration(
-                        context,
-                        labelText:
-                            context.t.dashboard_forms.wifi_username_label,
-                        prefixIcon: const Icon(LucideIcons.user),
-                      ),
+                      labelText: context.t.dashboard_forms.wifi_username_label,
+                      prefixIcon: const Icon(LucideIcons.user),
                       onChanged: notifier.setUsername,
                     ),
                     const SizedBox(height: 12),

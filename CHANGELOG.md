@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 2026-05-01
+
+### password_manager
+
+- Добавлены shared widgets `LoginAutocompleteField` и
+  `EmailAutocompleteField`: поля используют общую декорацию
+  `primaryInputDecoration` и показывают до 10 подсказок из текущего store.
+- Провайдер подсказок логина/email переведен на `AutoDisposeAsyncNotifier` со
+  state и SQL-запросами `UNION ... LIMIT 10` вместо загрузки всех записей через
+  DAO.
+- В форме пароля поля логина и email переведены на новые autocomplete-виджеты.
+- Autocomplete-поля подключены в формах контакта, Wi-Fi и OTP для email,
+  username и account name.
+
 ## 2026-04-29
 
 ### home
