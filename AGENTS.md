@@ -1,4 +1,4 @@
-# Hoplixi Agent Handbook (Lean)
+# AGENTS.md
 
 This document is the minimal entry point for coding agents. Goal: quickly apply
 core project rules and route to the exact docs without loading redundant
@@ -9,8 +9,11 @@ context.
 1. This file (`AGENTS.md`)
 2. `docs-ai/agent-task-router.md`
 3. Task-specific docs from the router
-4. If docs are insufficient: MCP (`context7` for Dart/Flutter version-specific
-   details)
+4. Always use Context7 when I need library/API documentation, code generation,
+   setup or configuration steps without me having to explicitly ask.
+5. MCP tools for implementation workflows (Dart/Flutter MCP, Serena MCP,
+   rust-mcp-server, desktop-commander).
+6. Existing project code patterns.
 
 ## 2) Non-Negotiable Rules
 
