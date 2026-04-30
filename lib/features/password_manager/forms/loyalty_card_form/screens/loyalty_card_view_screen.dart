@@ -10,7 +10,7 @@ import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
-import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_view_section.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 

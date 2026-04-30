@@ -7,7 +7,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.d
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
-import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_view_section.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 
 class ApiKeyViewScreen extends ConsumerStatefulWidget {
   const ApiKeyViewScreen({super.key, required this.apiKeyId});

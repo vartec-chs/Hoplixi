@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 
 part 'wifi_form_state.freezed.dart';
 

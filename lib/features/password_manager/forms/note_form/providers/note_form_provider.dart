@@ -9,8 +9,8 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/data_refre
 import 'package:hoplixi/main_db/core/models/dto/note_dto.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/shared/utils/vault_link_utils.dart';
-import 'package:hoplixi/shared/custom_fields/custom_fields_helpers.dart';
-import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 
 import '../models/note_form_state.dart';
 

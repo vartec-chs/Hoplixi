@@ -7,7 +7,7 @@ import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/modal_sheet_close_button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
-import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_editor.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_editor.dart';
 import 'package:hoplixi/shared/widgets/icon_source_picker_button.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 

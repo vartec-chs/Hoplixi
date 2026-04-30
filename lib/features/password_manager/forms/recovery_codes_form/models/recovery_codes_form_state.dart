@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/main_db/core/models/dto/recovery_code_item_dto.dart';
 
 part 'recovery_codes_form_state.freezed.dart';

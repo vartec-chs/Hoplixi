@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
-import 'package:hoplixi/shared/custom_fields/models/custom_field_entry.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Виджет просмотра кастомных полей (read-only).

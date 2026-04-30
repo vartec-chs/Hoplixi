@@ -10,7 +10,7 @@ import 'package:hoplixi/features/password_manager/shared/widgets/login_autocompl
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_db/core/models/dto/icon_ref_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
-import 'package:hoplixi/shared/custom_fields/widgets/custom_fields_editor.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_editor.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/widgets/icon_source_picker_button.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
