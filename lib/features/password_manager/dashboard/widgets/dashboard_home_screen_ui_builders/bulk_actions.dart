@@ -1,4 +1,4 @@
-part of '../dashboard_home_screen.dart';
+part of '../../screens/dashboard_home_screen.dart';
 
 void _dashboardHomeOpenItemView(_DashboardHomeScreenState state, String id) {
   final viewPath = AppRoutesPaths.dashboardEntityView(

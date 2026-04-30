@@ -46,11 +46,11 @@ import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
-part 'dashboard_home_builders/animated_slivers.dart';
-part 'dashboard_home_builders/card_builders.dart';
-part 'dashboard_home_builders/content_sliver.dart';
-part 'dashboard_home_builders/item_transitions.dart';
-part 'dashboard_home_builders/status_slivers.dart';
+part 'animated_slivers.dart';
+part 'card_builders.dart';
+part 'content_sliver.dart';
+part 'item_transitions.dart';
+part 'status_slivers.dart';
 
 /// Длительность анимации переключения состояний.
 const kStatusSwitchDuration = Duration(milliseconds: 180);

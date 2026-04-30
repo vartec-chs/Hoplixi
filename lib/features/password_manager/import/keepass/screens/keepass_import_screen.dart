@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/form_close_button.dart';
+import 'package:hoplixi/features/password_manager/forms/form_close_button.dart';
 import 'package:hoplixi/features/password_manager/import/keepass/providers/keepass_import_provider.dart';
 import 'package:hoplixi/features/password_manager/import/keepass/widgets/keepass_import_navigation_bar.dart';
 import 'package:hoplixi/features/password_manager/import/keepass/widgets/keepass_import_step_content.dart';

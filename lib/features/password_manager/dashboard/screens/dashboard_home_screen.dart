@@ -9,7 +9,7 @@ import 'package:hoplixi/features/password_manager/dashboard/models/list_state.da
 import 'package:hoplixi/features/password_manager/dashboard/providers/current_view_mode_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/base_filter_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/list_provider.dart';
-import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_builders.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home_screen_ui_builders/builders/dashboard_home_builders.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/app_bar/app_bar_widgets.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_list_toolbar.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_layout/dashboard_drawer_scope.dart';
@@ -22,10 +22,10 @@ import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 
-part 'dashboard_home_screen/build_helpers.dart';
-part 'dashboard_home_screen/bulk_actions.dart';
-part 'dashboard_home_screen/dialogs.dart';
-part 'dashboard_home_screen/list_sync.dart';
+part '../widgets/dashboard_home_screen_ui_builders/build_helpers.dart';
+part '../widgets/dashboard_home_screen_ui_builders/bulk_actions.dart';
+part '../widgets/dashboard_home_screen_ui_builders/dialogs.dart';
+part '../widgets/dashboard_home_screen_ui_builders/list_sync.dart';
 
 /// Длительность анимации для элементов списка.
 const kAnimationDuration = Duration(milliseconds: 180);

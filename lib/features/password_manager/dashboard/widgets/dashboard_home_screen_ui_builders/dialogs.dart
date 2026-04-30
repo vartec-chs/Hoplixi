@@ -1,4 +1,4 @@
-part of '../dashboard_home_screen.dart';
+part of '../../screens/dashboard_home_screen.dart';
 
 Future<void> _dashboardHomeShowBulkDeleteDialog(
   _DashboardHomeScreenState state,

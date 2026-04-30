@@ -9,11 +9,10 @@ class FormCloseButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return IconButton(
-      constraints: const BoxConstraints(maxWidth: 40, maxHeight: 40),
       tooltip: 'Закрыть',
       icon: context.canPop()
-          ? const Icon(Icons.arrow_back, size: 24)
-          : const Icon(Icons.close, size: 24),
+          ? const Icon(Icons.arrow_back)
+          : const Icon(Icons.close),
       onPressed: () {
         if (context.canPop()) {
           context.pop();

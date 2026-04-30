@@ -1,4 +1,4 @@
-part of '../dashboard_home_screen.dart';
+part of '../../screens/dashboard_home_screen.dart';
 
 void _dashboardHomeInitState(_DashboardHomeScreenState state) {
   state._scrollController = ScrollController()..addListener(state._onScroll);

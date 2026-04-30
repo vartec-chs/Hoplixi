@@ -1,4 +1,4 @@
-part of '../dashboard_home_screen.dart';
+part of '../../screens/dashboard_home_screen.dart';
 
 Widget _buildDashboardHomeScreen(
   _DashboardHomeScreenState state,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/expandable_fab.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/fab/expandable_fab.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 /// Утилита для построения FAB действий в DashboardLayout.

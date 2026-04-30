@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/expandable_fab.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/fab/expandable_fab.dart';
 
 class ExpandableFabScreen extends StatefulWidget {
   const ExpandableFabScreen({super.key});

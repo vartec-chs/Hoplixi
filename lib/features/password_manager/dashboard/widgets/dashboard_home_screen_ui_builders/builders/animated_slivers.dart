@@ -1,4 +1,4 @@
-part of '../dashboard_home_builders.dart';
+part of 'dashboard_home_builders.dart';
 
 Widget _buildDashboardAnimatedListOrGrid({
   required BuildContext context,
