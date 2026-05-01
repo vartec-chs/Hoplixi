@@ -5,12 +5,12 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/decrypt_modal/document_decrypt_modal.dart';
 import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/document_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
-import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Экран просмотра документа (только чтение)
@@ -25,6 +25,7 @@ class DocumentViewScreen extends ConsumerStatefulWidget {
 
 class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
   (VaultItemsData, DocumentItemsData)? _document;
+  bool _isDeleted = false;
   bool _isLoading = true;
   String? _categoryName;
   List<String> _tagNames = [];
@@ -42,6 +43,7 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
       if (record != null && mounted) {
         setState(() {
           _document = record;
+          _isDeleted = record.$1.isDeleted;
           _isLoading = false;
         });
         await _loadRelatedData(record);
@@ -121,7 +123,10 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
                 ? null
                 : () => showDocumentDecryptModal(context, _createDocumentDto()),
           ),
-          IconButton(icon: const Icon(LucideIcons.pencil), onPressed: _edit),
+          IconButton(
+            icon: const Icon(LucideIcons.pencil),
+            onPressed: _isDeleted ? null : _edit,
+          ),
         ],
       ),
       body: SafeArea(

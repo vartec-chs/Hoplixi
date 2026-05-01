@@ -19,6 +19,7 @@ class IdentityViewScreen extends ConsumerStatefulWidget {
 
 class _IdentityViewScreenState extends ConsumerState<IdentityViewScreen> {
   bool _loading = true;
+  bool _isDeleted = false;
 
   String _name = '';
   String _idType = '';
@@ -56,6 +57,7 @@ class _IdentityViewScreenState extends ConsumerState<IdentityViewScreen> {
       final identity = row.$2;
 
       setState(() {
+        _isDeleted = item.isDeleted;
         _name = item.name;
         _idType = identity.idType;
         _idNumber = identity.idNumber;
@@ -97,12 +99,14 @@ class _IdentityViewScreenState extends ConsumerState<IdentityViewScreen> {
         actions: [
           IconButton(
             tooltip: l10n.edit,
-            onPressed: () => context.push(
-              AppRoutesPaths.dashboardEntityEdit(
-                EntityType.identity,
-                widget.identityId,
-              ),
-            ),
+            onPressed: _isDeleted
+                ? null
+                : () => context.push(
+                    AppRoutesPaths.dashboardEntityEdit(
+                      EntityType.identity,
+                      widget.identityId,
+                    ),
+                  ),
             icon: const Icon(Icons.edit),
           ),
         ],

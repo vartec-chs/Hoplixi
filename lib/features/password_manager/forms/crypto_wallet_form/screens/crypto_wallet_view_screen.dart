@@ -22,6 +22,7 @@ class CryptoWalletViewScreen extends ConsumerStatefulWidget {
 class _CryptoWalletViewScreenState
     extends ConsumerState<CryptoWalletViewScreen> {
   bool _loading = true;
+  bool _isDeleted = false;
   bool _showMnemonic = false;
   bool _showPrivateKey = false;
   bool _showXprv = false;
@@ -61,6 +62,7 @@ class _CryptoWalletViewScreenState
       final wallet = row.$2;
 
       setState(() {
+        _isDeleted = item.isDeleted;
         _name = item.name;
         _walletType = wallet.walletType;
         _network = wallet.network;
@@ -228,12 +230,14 @@ class _CryptoWalletViewScreenState
         actions: [
           IconButton(
             tooltip: l10n.edit,
-            onPressed: () => context.push(
-              AppRoutesPaths.dashboardEntityEdit(
-                EntityType.cryptoWallet,
-                widget.cryptoWalletId,
-              ),
-            ),
+            onPressed: _isDeleted
+                ? null
+                : () => context.push(
+                    AppRoutesPaths.dashboardEntityEdit(
+                      EntityType.cryptoWallet,
+                      widget.cryptoWalletId,
+                    ),
+                  ),
             icon: const Icon(Icons.edit),
           ),
         ],

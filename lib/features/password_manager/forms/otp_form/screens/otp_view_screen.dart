@@ -28,6 +28,7 @@ class OtpViewScreen extends ConsumerStatefulWidget {
 
 class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
   (VaultItemsData, OtpItemsData)? _otp;
+  bool _isDeleted = false;
   bool _isLoading = true;
   String? _categoryName;
   List<String> _tagNames = [];
@@ -54,6 +55,7 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
       if (record != null && mounted) {
         setState(() {
           _otp = record;
+          _isDeleted = record.$1.isDeleted;
           _isLoading = false;
         });
         _startCodeGeneration();
@@ -167,7 +169,10 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
       appBar: AppBar(
         title: Text(_otp?.$1.name ?? 'OTP'),
         actions: [
-          IconButton(icon: const Icon(LucideIcons.pencil), onPressed: _edit),
+          IconButton(
+            icon: const Icon(LucideIcons.pencil),
+            onPressed: _isDeleted ? null : _edit,
+          ),
         ],
       ),
       body: SafeArea(

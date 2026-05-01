@@ -5,12 +5,12 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/decrypt_modal/file_decrypt_modal.dart';
 import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/file_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
-import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Экран просмотра файла (только чтение)
@@ -26,6 +26,7 @@ class FileViewScreen extends ConsumerStatefulWidget {
 class _FileViewScreenState extends ConsumerState<FileViewScreen> {
   (VaultItemsData, FileItemsData)? _file;
   FileMetadataData? _metadata;
+  bool _isDeleted = false;
   bool _isLoading = true;
   String? _categoryName;
   List<String> _tagNames = [];
@@ -44,6 +45,7 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
       if (record != null && mounted) {
         setState(() {
           _file = record;
+          _isDeleted = record.$1.isDeleted;
           _isLoading = false;
         });
         await _loadMetadata(record.$2, dao);
@@ -166,7 +168,10 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
                 ? null
                 : () => showFileDecryptModal(context, _createFileDto()),
           ),
-          IconButton(icon: const Icon(LucideIcons.pencil), onPressed: _edit),
+          IconButton(
+            icon: const Icon(LucideIcons.pencil),
+            onPressed: _isDeleted ? null : _edit,
+          ),
         ],
       ),
       body: SafeArea(

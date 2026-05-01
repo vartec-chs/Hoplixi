@@ -5,10 +5,10 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
-import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Экран просмотра банковской карты (только чтение)
@@ -24,6 +24,7 @@ class BankCardViewScreen extends ConsumerStatefulWidget {
 class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
   bool _showBackView = false;
   (VaultItemsData, BankCardItemsData)? _bankCard;
+  bool _isDeleted = false;
   bool _isLoading = true;
   String? _categoryName;
   List<String> _tagNames = [];
@@ -42,6 +43,7 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
       if (record != null && mounted) {
         setState(() {
           _bankCard = record;
+          _isDeleted = record.$1.isDeleted;
           _isLoading = false;
         });
         await _loadRelatedData(record);
@@ -113,7 +115,10 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
       appBar: AppBar(
         title: Text(_bankCard?.$1.name ?? 'Карта'),
         actions: [
-          IconButton(icon: const Icon(LucideIcons.pencil), onPressed: _edit),
+          IconButton(
+            icon: const Icon(LucideIcons.pencil),
+            onPressed: _isDeleted ? null : _edit,
+          ),
         ],
       ),
       body: SafeArea(

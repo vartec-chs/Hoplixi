@@ -20,6 +20,7 @@ class SshKeyViewScreen extends ConsumerStatefulWidget {
 
 class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
   bool _loading = true;
+  bool _isDeleted = false;
   bool _showPrivateKey = false;
   String? _privateKey;
 
@@ -50,6 +51,7 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
       final item = row.$1;
       final ssh = row.$2;
       setState(() {
+        _isDeleted = item.isDeleted;
         _name = item.name;
         _publicKey = ssh.publicKey;
         _keyType = ssh.keyType;
@@ -125,12 +127,14 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
         actions: [
           IconButton(
             tooltip: l10n.edit,
-            onPressed: () => context.push(
-              AppRoutesPaths.dashboardEntityEdit(
-                EntityType.sshKey,
-                widget.sshKeyId,
-              ),
-            ),
+            onPressed: _isDeleted
+                ? null
+                : () => context.push(
+                    AppRoutesPaths.dashboardEntityEdit(
+                      EntityType.sshKey,
+                      widget.sshKeyId,
+                    ),
+                  ),
             icon: const Icon(Icons.edit),
           ),
         ],

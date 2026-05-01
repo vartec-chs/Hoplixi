@@ -27,6 +27,7 @@ class LoyaltyCardViewScreen extends ConsumerStatefulWidget {
 class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
   (VaultItemsData, LoyaltyCardItemsData)? _loyaltyCard;
   bool _isLoading = true;
+  bool _isDeleted = false;
   String? _categoryName;
   List<String> _tagNames = [];
   bool _passwordVisible = false;
@@ -46,6 +47,7 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
       if (!mounted) return;
       setState(() {
         _loyaltyCard = record;
+          _isDeleted = record!.$1.isDeleted;
         _isLoading = false;
       });
 
@@ -196,7 +198,10 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
       appBar: AppBar(
         title: Text(_loyaltyCard?.$1.name ?? 'Карта лояльности'),
         actions: [
-          IconButton(icon: const Icon(LucideIcons.pencil), onPressed: _edit),
+          IconButton(
+            icon: const Icon(LucideIcons.pencil),
+            onPressed: _isDeleted ? null : _edit,
+          ),
         ],
       ),
       body: SafeArea(

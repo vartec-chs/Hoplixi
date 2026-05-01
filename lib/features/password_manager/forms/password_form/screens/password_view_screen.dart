@@ -4,11 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_viewer.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
-import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
-import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_viewer.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Экран просмотра пароля (только чтение, с возможностью копирования)
@@ -24,6 +24,7 @@ class PasswordViewScreen extends ConsumerStatefulWidget {
 class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
   bool _obscurePassword = true;
   (VaultItemsData, PasswordItemsData)? _password;
+  bool _isDeleted = false;
   bool _isLoading = true;
   String? _categoryName;
   List<String> _tagNames = [];
@@ -44,6 +45,7 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
       if (record != null && mounted) {
         setState(() {
           _password = record;
+          _isDeleted = record.$1.isDeleted;
           _isLoading = false;
         });
         await _loadRelatedData(record);
@@ -114,7 +116,7 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
           IconButton(
             icon: const Icon(LucideIcons.pencil),
             tooltip: 'Редактировать',
-            onPressed: _edit,
+            onPressed: _isDeleted ? null : _edit,
           ),
         ],
       ),

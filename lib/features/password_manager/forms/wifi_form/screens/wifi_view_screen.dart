@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
-import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 
 import '../services/wifi_os_bridge.dart';
 
@@ -25,6 +25,7 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
   bool _showPassword = false;
 
   String? _password;
+  bool _isDeleted = false;
   String _name = '';
   String _ssid = '';
   String? _security;
@@ -60,6 +61,7 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
       setState(() {
         _name = item.name;
         _ssid = wifi.ssid;
+        _isDeleted = item.isDeleted;
         _security = wifi.security;
         _hidden = wifi.hidden;
         _eapMethod = wifi.eapMethod;
@@ -178,12 +180,14 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
           ),
           IconButton(
             tooltip: l10n.edit,
-            onPressed: () => context.push(
-              AppRoutesPaths.dashboardEntityEdit(
-                EntityType.wifi,
-                widget.wifiId,
-              ),
-            ),
+            onPressed: () => _isDeleted
+                ? null
+                : context.push(
+                    AppRoutesPaths.dashboardEntityEdit(
+                      EntityType.wifi,
+                      widget.wifiId,
+                    ),
+                  ),
             icon: const Icon(Icons.edit),
           ),
         ],

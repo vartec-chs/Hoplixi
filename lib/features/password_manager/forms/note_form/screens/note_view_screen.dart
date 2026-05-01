@@ -7,10 +7,10 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
-import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Экран просмотра заметки (только чтение)
@@ -25,6 +25,7 @@ class NoteViewScreen extends ConsumerStatefulWidget {
 
 class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
   (VaultItemsData, NoteItemsData)? _note;
+  bool _isDeleted = false;
   bool _isLoading = true;
   String? _categoryName;
   List<String> _tagNames = [];
@@ -50,6 +51,7 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
       if (record != null && mounted) {
         setState(() {
           _note = record;
+          _isDeleted = record.$1.isDeleted;
           _isLoading = false;
         });
         _initQuillController(record.$2);
@@ -132,7 +134,7 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
           IconButton(
             icon: const Icon(LucideIcons.pencil),
             tooltip: 'Редактировать',
-            onPressed: _edit,
+            onPressed: _isDeleted ? null : _edit,
           ),
         ],
       ),
@@ -196,7 +198,7 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
                   Padding(
                     padding: const EdgeInsets.all(12),
                     child: FilledButton.icon(
-                      onPressed: _edit,
+                      onPressed: _isDeleted ? null : _edit,
                       icon: const Icon(LucideIcons.pencil),
                       label: const Text('Редактировать'),
                       style: FilledButton.styleFrom(

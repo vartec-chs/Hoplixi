@@ -21,6 +21,7 @@ class CertificateViewScreen extends ConsumerStatefulWidget {
 
 class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
   bool _loading = true;
+  bool _isDeleted = false;
   bool _showPrivateKey = false;
   bool _showPfxPassword = false;
   String? _privateKey;
@@ -56,6 +57,7 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
       final item = row.$1;
       final cert = row.$2;
       setState(() {
+        _isDeleted = item.isDeleted;
         _name = item.name;
         _certificatePem = cert.certificatePem;
         _serialNumber = cert.serialNumber;
@@ -162,12 +164,14 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
         actions: [
           IconButton(
             tooltip: l10n.edit,
-            onPressed: () => context.push(
-              AppRoutesPaths.dashboardEntityEdit(
-                EntityType.certificate,
-                widget.certificateId,
-              ),
-            ),
+            onPressed: _isDeleted
+                ? null
+                : () => context.push(
+                    AppRoutesPaths.dashboardEntityEdit(
+                      EntityType.certificate,
+                      widget.certificateId,
+                    ),
+                  ),
             icon: const Icon(Icons.edit),
           ),
         ],

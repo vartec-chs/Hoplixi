@@ -20,6 +20,7 @@ class ApiKeyViewScreen extends ConsumerStatefulWidget {
 
 class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
   bool _loading = true;
+  bool _isDeleted = false;
   bool _revealingKey = false;
   String? _realKey;
 
@@ -50,6 +51,7 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
       final item = row.$1;
       final details = row.$2;
       setState(() {
+        _isDeleted = item.isDeleted;
         _name = item.name;
         _service = details.service;
         _maskedKey = details.maskedKey;
@@ -111,12 +113,14 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
         actions: [
           IconButton(
             tooltip: context.t.dashboard_forms.edit,
-            onPressed: () => context.push(
-              AppRoutesPaths.dashboardEntityEdit(
-                EntityType.apiKey,
-                widget.apiKeyId,
-              ),
-            ),
+            onPressed: _isDeleted
+                ? null
+                : () => context.push(
+                    AppRoutesPaths.dashboardEntityEdit(
+                      EntityType.apiKey,
+                      widget.apiKeyId,
+                    ),
+                  ),
             icon: const Icon(Icons.edit),
           ),
         ],

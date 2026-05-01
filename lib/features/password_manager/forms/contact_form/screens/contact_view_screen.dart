@@ -23,6 +23,7 @@ class ContactViewScreen extends ConsumerStatefulWidget {
 
 class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
   bool _loading = true;
+  bool _isDeleted = false;
 
   String _name = '';
   String? _phone;
@@ -54,6 +55,7 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
       final item = row.$1;
       final details = row.$2;
       setState(() {
+        _isDeleted = item.isDeleted;
         _name = item.name;
         _phone = details.phone;
         _email = details.email;
@@ -148,12 +150,14 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
           ),
           IconButton(
             tooltip: l10n.edit,
-            onPressed: () => context.push(
-              AppRoutesPaths.dashboardEntityEdit(
-                EntityType.contact,
-                widget.contactId,
-              ),
-            ),
+            onPressed: _isDeleted
+                ? null
+                : () => context.push(
+                    AppRoutesPaths.dashboardEntityEdit(
+                      EntityType.contact,
+                      widget.contactId,
+                    ),
+                  ),
             icon: const Icon(Icons.edit),
           ),
         ],

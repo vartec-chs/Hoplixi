@@ -23,6 +23,7 @@ class RecoveryCodesViewScreen extends ConsumerStatefulWidget {
 class _RecoveryCodesViewScreenState
     extends ConsumerState<RecoveryCodesViewScreen> {
   bool _loading = true;
+  bool _isDeleted = false;
 
   String _name = '';
   int _codesCount = 0;
@@ -67,6 +68,7 @@ class _RecoveryCodesViewScreenState
 
       if (!mounted) return;
       setState(() {
+        _isDeleted = item.isDeleted;
         _name = item.name;
         _codesCount = data.codesCount;
         _usedCount = data.usedCount;
@@ -157,14 +159,16 @@ class _RecoveryCodesViewScreenState
         actions: [
           IconButton(
             tooltip: l10n.edit,
-            onPressed: () => context
-                .push(
-                  AppRoutesPaths.dashboardEntityEdit(
-                    EntityType.recoveryCodes,
-                    widget.recoveryCodesId,
-                  ),
-                )
-                .then((_) => _load()),
+            onPressed: _isDeleted
+                ? null
+                : () => context
+                      .push(
+                        AppRoutesPaths.dashboardEntityEdit(
+                          EntityType.recoveryCodes,
+                          widget.recoveryCodesId,
+                        ),
+                      )
+                      .then((_) => _load()),
             icon: const Icon(Icons.edit),
           ),
         ],

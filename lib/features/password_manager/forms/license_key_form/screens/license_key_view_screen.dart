@@ -20,6 +20,7 @@ class LicenseKeyViewScreen extends ConsumerStatefulWidget {
 
 class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
   bool _loading = true;
+  bool _isDeleted = false;
 
   String _name = '';
   String _product = '';
@@ -56,6 +57,7 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
       final license = row.$2;
 
       setState(() {
+        _isDeleted = item.isDeleted;
         _name = item.name;
         _product = license.product;
         _licenseKey = license.licenseKey;
@@ -96,12 +98,14 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
         actions: [
           IconButton(
             tooltip: l10n.edit,
-            onPressed: () => context.push(
-              AppRoutesPaths.dashboardEntityEdit(
-                EntityType.licenseKey,
-                widget.licenseKeyId,
-              ),
-            ),
+            onPressed: _isDeleted
+                ? null
+                : () => context.push(
+                    AppRoutesPaths.dashboardEntityEdit(
+                      EntityType.licenseKey,
+                      widget.licenseKeyId,
+                    ),
+                  ),
             icon: const Icon(Icons.edit),
           ),
         ],
