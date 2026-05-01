@@ -1,7 +1,9 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/shared/widgets/icon_ref_preview.dart';
 
 class ExpandableListCard extends StatefulWidget {
@@ -264,7 +266,7 @@ class _ExpandableListCardState extends State<ExpandableListCard>
               ),
             );
           },
-          child: widget.onOpenView != null
+          child: widget.onOpenView != null && !widget.isDeleted
               ? IconButton(
                   icon: const Icon(Icons.visibility_outlined, size: 18),
                   onPressed: widget.onOpenView,
@@ -399,8 +401,7 @@ class _ExpandableListCardState extends State<ExpandableListCard>
               const SizedBox(height: 12),
             ],
 
-            if (widget.copyActions.isNotEmpty)
-              HorizontalScrollableActions(actions: widget.copyActions),
+            _buildCopyActions(theme),
 
             if (widget.tags != null && widget.tags!.isNotEmpty) ...[
               const SizedBox(height: 12),
@@ -423,6 +424,70 @@ class _ExpandableListCardState extends State<ExpandableListCard>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCopyActions(ThemeData theme) {
+    if (widget.copyActions.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final actions = HorizontalScrollableActions(actions: widget.copyActions);
+    if (!widget.isDeleted) {
+      return actions;
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          IgnorePointer(child: Opacity(opacity: 0.38, child: actions)),
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface.withValues(alpha: 0.68),
+                ),
+                child: Center(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.92),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.restore_from_trash,
+                            size: 16,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Восстановите для использования',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
