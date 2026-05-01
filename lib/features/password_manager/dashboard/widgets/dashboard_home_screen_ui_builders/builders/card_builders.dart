@@ -484,7 +484,7 @@ Widget _buildDashboardDismissible({
     background: Container(
       decoration: BoxDecoration(
         color: isDeleted
-            ? Colors.greenAccent
+            ? Colors.green
             : (item.isArchived ? Colors.orangeAccent : Colors.blueAccent),
         borderRadius: BorderRadius.circular(12),
       ),

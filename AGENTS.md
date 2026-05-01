@@ -77,8 +77,9 @@ See `docs-ai/agent-architecture-map.md` for compact module and folder map.
    - Dart/Flutter MCP for formatting, project/app tooling, and framework-aware
      operations
    - Serena MCP for semantic search/navigation/refactoring
-   - `rust-mcp-server` for Rust semantic workflows and Rust-aware operations
-   - `context7` for version-sensitive framework behavior
+   - rust-mcp-server for Rust semantic workflows and Rust-aware operations
+   - context7 for version-sensitive framework behavior
+   - desktop-commander
 4. General Flutter/Dart knowledge
 
 Never override project rules with generic recommendations.

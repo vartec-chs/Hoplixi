@@ -189,6 +189,9 @@ const int kIconsIndex = 3;
 /// Индекс пункта "Граф"
 const int kGraphIndex = 4;
 
+/// Индекс пункта "Дубли"
+const int kPasswordDuplicatesIndex = 4;
+
 // =============================================================================
 // Navigation Destinations
 // =============================================================================
@@ -210,9 +213,21 @@ const NavigationRailDestination kGraphDestination = NavigationRailDestination(
   label: Text('Граф'),
 );
 
+/// Destination для одинаковых паролей (только для passwords)
+const NavigationRailDestination kPasswordDuplicatesDestination =
+    NavigationRailDestination(
+      icon: Icon(Icons.content_copy),
+      label: Text('Дубли'),
+    );
+
 // =============================================================================
 // Actions
 // =============================================================================
 
 /// Действия панели справа и нижнего меню
-const List<String> kDashboardActions = ['categories', 'tags', 'icons'];
+const List<String> kDashboardActions = [
+  'categories',
+  'tags',
+  'icons',
+  'duplicates',
+];

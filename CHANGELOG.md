@@ -4,9 +4,22 @@
 
 ### password_manager
 
-- Добавлены shared widgets `LoginAutocompleteField` и
-  `EmailAutocompleteField`: поля используют общую декорацию
-  `primaryInputDecoration` и показывают до 10 подсказок из текущего store.
+- Autocomplete-поля логина/email больше не изменяют Riverpod provider во время
+  build-фазы `RawAutocomplete`: запрос подсказок отложен до завершения текущего
+  построения дерева.
+- Экран одинаковых паролей повторно запускает анализ после возврата из формы
+  редактирования выбранного пароля.
+- Мобильный scrim под `FloatingNavBar` переведён на однотонную полупрозрачную
+  заливку, чтобы нижняя панель читалась мягче над контентом.
+- Добавлен dashboard-экран анализа одинаковых паролей: отдельный пункт `Дубли`
+  для паролей запускает проверку активных записей после первого кадра,
+  показывает группы совпадений без раскрытия значения пароля и открывает
+  редактирование выбранной записи по клику.
+- На мобильном экране анализа одинаковых паролей скрыт dashboard FAB, чтобы
+  нижние действия не перекрывали результаты проверки.
+- Добавлены shared widgets `LoginAutocompleteField` и `EmailAutocompleteField`:
+  поля используют общую декорацию `primaryInputDecoration` и показывают до 10
+  подсказок из текущего store.
 - Провайдер подсказок логина/email переведен на `AutoDisposeAsyncNotifier` со
   state и SQL-запросами `UNION ... LIMIT 10` вместо загрузки всех записей через
   DAO.
@@ -30,11 +43,11 @@
 
 ### password_manager (close store sync)
 
-- `LockStoreScreen` теперь показывает отдельный текст проверки синхронизации
-  при initial loading `currentStoreSyncProvider` и временно блокирует действия
-  до получения sync status.
-- `LockStoreScreen` теперь также блокирует разблокировку и выход во время
-  общего `isSyncInProgress`, показывая текст текущей cloud sync операции.
+- `LockStoreScreen` теперь показывает отдельный текст проверки синхронизации при
+  initial loading `currentStoreSyncProvider` и временно блокирует действия до
+  получения sync status.
+- `LockStoreScreen` теперь также блокирует разблокировку и выход во время общего
+  `isSyncInProgress`, показывая текст текущей cloud sync операции.
 - Close-store sync dialog при успешном upload показывает короткое состояние
   завершения с галочкой и только после этого автоматически закрывается.
 - За мобильный `FloatingNavBar` добавлено градиентное затемнение, которое
@@ -115,9 +128,9 @@
   обычный `syncNow` сразу публикуют `preparingUpload/preparingDownload`, а
   progress events переводят состояние в `uploading/downloading`, чтобы UI
   мгновенно показывал текущую cloud sync операцию.
-- `resolveConflictWithUpload/Download` публикуют состояние подготовки
-  синхронно на входе, до любых `await`, чтобы пользователь сразу видел
-  заблокированный sync flow.
+- `resolveConflictWithUpload/Download` публикуют состояние подготовки синхронно
+  на входе, до любых `await`, чтобы пользователь сразу видел заблокированный
+  sync flow.
 - `currentStoreSyncProvider` больше не затирает активный remote download status
   дефолтным locked-status при переходе на `LockStoreScreen`.
 

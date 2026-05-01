@@ -18,7 +18,6 @@ import 'widgets/floating_nav_bar.dart';
 import 'widgets/mobile_cloud_sync_overlay.dart';
 
 const List<String> _fullCenterPaths = [AppRoutesPaths.notesGraph];
-const double _floatingNavScrimExtraHeight = 56.0;
 
 class AppNavigationShell extends StatefulWidget {
   final GoRouterState state;
@@ -59,6 +58,10 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
       return true;
     }
     if (segments.length == kMinPathSegmentsForPanel &&
+        segments[2] == 'duplicates') {
+      return false;
+    }
+    if (segments.length == kMinPathSegmentsForPanel &&
         kDashboardActions.contains(segments[2])) {
       return true;
     }
@@ -91,6 +94,8 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
         return kIconsIndex;
       case 'graph':
         return kGraphIndex;
+      case 'duplicates':
+        return kPasswordDuplicatesIndex;
       default:
         return kHomeIndex;
     }
@@ -105,9 +110,13 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
   }
 
   List<NavigationRailDestination> _destinations(String entity) {
-    return entity == EntityType.note.id
-        ? [...kBaseDestinations, kGraphDestination]
-        : kBaseDestinations;
+    if (entity == EntityType.note.id) {
+      return [...kBaseDestinations, kGraphDestination];
+    }
+    if (entity == EntityType.password.id) {
+      return [...kBaseDestinations, kPasswordDuplicatesDestination];
+    }
+    return kBaseDestinations;
   }
 
   void _openDrawer() {
@@ -124,6 +133,9 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
       targetPath = '/dashboard/$entity/${kDashboardActions[index - 1]}';
     } else if (index == kGraphIndex && entity == EntityType.note.id) {
       targetPath = AppRoutesPaths.notesGraph;
+    } else if (index == kPasswordDuplicatesIndex &&
+        entity == EntityType.password.id) {
+      targetPath = AppRoutesPaths.passwordDuplicates;
     } else {
       return;
     }
@@ -175,8 +187,7 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
     final entityType = EntityType.fromId(entity) ?? EntityType.password;
     final systemPadding = MediaQuery.of(context).viewPadding;
     final navBottom = systemPadding.bottom + 12;
-    final navScrimHeight =
-        navBottom + kFloatingNavBarHeight + _floatingNavScrimExtraHeight;
+    final navScrimHeight = navBottom + kFloatingNavBarHeight + 15;
     final fabBottom = showBottomNav
         ? systemPadding.bottom +
               kFloatingNavBarHeight +
@@ -207,6 +218,7 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
                       context,
                       floatingNavHighlightColor,
                     ),
+                    variant: _FloatingNavBarScrimVariant.gradient,
                   ),
                 ),
               ),
@@ -414,31 +426,47 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
 
   Color _resolveFloatingNavHighlightColor(BuildContext context, String value) {
     return switch (value) {
-      DashboardFloatingNavHighlightColor.darkGrey => const Color(0xFF202124),
+      DashboardFloatingNavHighlightColor.darkGrey => const Color.fromARGB(
+        255,
+        95,
+        95,
+        99,
+      ),
       _ => Theme.of(context).primaryColor,
     };
   }
 }
 
+enum _FloatingNavBarScrimVariant { gradient, solid }
+
 class _FloatingNavBarScrim extends StatelessWidget {
-  const _FloatingNavBarScrim({required this.highlightColor});
+  const _FloatingNavBarScrim({
+    required this.highlightColor,
+    this.variant = _FloatingNavBarScrimVariant.gradient,
+  });
 
   final Color highlightColor;
+  final _FloatingNavBarScrimVariant variant;
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-          colors: [
-            highlightColor.withValues(alpha: 0.22),
-            highlightColor.withValues(alpha: 0.14),
-            highlightColor.withValues(alpha: 0.0),
-          ],
-          stops: const [0.0, 0.5, 1.0],
-        ),
+        color: variant == _FloatingNavBarScrimVariant.solid
+            ? highlightColor.withValues(alpha: 0.16)
+            : null,
+        gradient: variant == _FloatingNavBarScrimVariant.gradient
+            ? LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [
+                  highlightColor.withValues(alpha: 0.18),
+                  highlightColor.withValues(alpha: 0.16),
+                  highlightColor.withValues(alpha: 0.0),
+                ],
+                stops: const [0.0, 0.5, 1.0],
+              )
+            : null,
       ),
     );
   }

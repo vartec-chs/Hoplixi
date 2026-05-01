@@ -84,6 +84,17 @@ sealed class PasswordCardDto with _$PasswordCardDto implements BaseCardDto {
       _$PasswordCardDtoFromJson(json);
 }
 
+/// Группа записей, у которых совпадает значение пароля.
+///
+/// Сам пароль намеренно не хранится в DTO и не передается в UI.
+class DuplicatePasswordGroupDto {
+  const DuplicatePasswordGroupDto({required this.items});
+
+  final List<PasswordCardDto> items;
+
+  int get count => items.length;
+}
+
 /// DTO для обновления пароля
 @freezed
 sealed class UpdatePasswordDto with _$UpdatePasswordDto {

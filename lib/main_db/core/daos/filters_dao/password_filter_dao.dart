@@ -23,6 +23,63 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
     implements FilterDao<PasswordsFilter, PasswordCardDto> {
   PasswordFilterDao(super.db);
 
+  /// Найти активные пароли с одинаковым значением поля password.
+  ///
+  /// Сырое значение пароля используется только как локальный ключ группировки и
+  /// не возвращается наружу.
+  Future<List<DuplicatePasswordGroupDto>> getDuplicatePasswordGroups() async {
+    final query =
+        select(vaultItems).join([
+            innerJoin(
+              passwordItems,
+              passwordItems.itemId.equalsExp(vaultItems.id),
+            ),
+            leftOuterJoin(
+              categories,
+              categories.id.equalsExp(vaultItems.categoryId),
+            ),
+            leftOuterJoin(
+              noteItems,
+              noteItems.itemId.equalsExp(vaultItems.noteId),
+            ),
+          ])
+          ..where(vaultItems.isDeleted.equals(false))
+          ..where(vaultItems.isArchived.equals(false))
+          ..orderBy([
+            OrderingTerm.asc(passwordItems.password),
+            OrderingTerm.desc(vaultItems.modifiedAt),
+          ]);
+
+    final results = await query.get();
+    final itemIds = results.map((row) => row.readTable(vaultItems).id).toList();
+    final tagsMap = await _loadTagsForItems(itemIds);
+    final groupedRows = <String, List<TypedResult>>{};
+
+    for (final row in results) {
+      final passwordValue = row.readTable(passwordItems).password;
+      groupedRows.putIfAbsent(passwordValue, () => <TypedResult>[]).add(row);
+    }
+
+    final groups = <DuplicatePasswordGroupDto>[];
+    for (final rows in groupedRows.values) {
+      if (rows.length < 2) continue;
+      groups.add(
+        DuplicatePasswordGroupDto(
+          items: rows
+              .map((row) => _mapPasswordCard(row, tagsMap))
+              .toList(growable: false),
+        ),
+      );
+    }
+
+    groups.sort((a, b) {
+      final countCompare = b.count.compareTo(a.count);
+      if (countCompare != 0) return countCompare;
+      return b.items.first.modifiedAt.compareTo(a.items.first.modifiedAt);
+    });
+    return groups;
+  }
+
   @override
   Future<List<PasswordCardDto>> getFiltered(PasswordsFilter filter) async {
     final query = select(vaultItems).join([
@@ -43,43 +100,7 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
     final itemIds = results.map((row) => row.readTable(vaultItems).id).toList();
     final tagsMap = await _loadTagsForItems(itemIds);
 
-    return results.map((row) {
-      final item = row.readTable(vaultItems);
-      final pw = row.readTable(passwordItems);
-      final category = row.readTableOrNull(categories);
-      final itemTags = tagsMap[item.id] ?? [];
-
-      return PasswordCardDto(
-        id: item.id,
-        name: item.name,
-        login: pw.login,
-        email: pw.email,
-        url: pw.url,
-        iconSource: item.iconSource,
-        iconValue: item.iconValue,
-        isArchived: item.isArchived,
-        description: item.description,
-        isDeleted: item.isDeleted,
-        category: category != null
-            ? CategoryInCardDto(
-                id: category.id,
-                name: category.name,
-                type: category.type.name,
-                color: category.color,
-                iconId: category.iconId,
-                iconSource: category.iconSource,
-                iconValue: category.iconValue,
-              )
-            : null,
-        isFavorite: item.isFavorite,
-        isPinned: item.isPinned,
-        usedCount: item.usedCount,
-        modifiedAt: item.modifiedAt,
-        createdAt: item.createdAt,
-        tags: itemTags,
-        expireAt: pw.expireAt,
-      );
-    }).toList();
+    return results.map((row) => _mapPasswordCard(row, tagsMap)).toList();
   }
 
   @override
@@ -365,5 +386,46 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
       }
     }
     return tagsMap;
+  }
+
+  PasswordCardDto _mapPasswordCard(
+    TypedResult row,
+    Map<String, List<TagInCardDto>> tagsMap,
+  ) {
+    final item = row.readTable(vaultItems);
+    final pw = row.readTable(passwordItems);
+    final category = row.readTableOrNull(categories);
+    final itemTags = tagsMap[item.id] ?? [];
+
+    return PasswordCardDto(
+      id: item.id,
+      name: item.name,
+      login: pw.login,
+      email: pw.email,
+      url: pw.url,
+      iconSource: item.iconSource,
+      iconValue: item.iconValue,
+      isArchived: item.isArchived,
+      description: item.description,
+      isDeleted: item.isDeleted,
+      category: category != null
+          ? CategoryInCardDto(
+              id: category.id,
+              name: category.name,
+              type: category.type.name,
+              color: category.color,
+              iconId: category.iconId,
+              iconSource: category.iconSource,
+              iconValue: category.iconValue,
+            )
+          : null,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      usedCount: item.usedCount,
+      modifiedAt: item.modifiedAt,
+      createdAt: item.createdAt,
+      tags: itemTags,
+      expireAt: pw.expireAt,
+    );
   }
 }

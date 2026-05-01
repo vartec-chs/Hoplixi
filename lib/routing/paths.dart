@@ -61,6 +61,8 @@ class AppRoutesPaths {
   /// - passwords
   static String passwords = '/dashboard/${EntityType.password.id}';
   static String passwordAdd = '/dashboard/${EntityType.password.id}/add';
+  static String passwordDuplicates =
+      '/dashboard/${EntityType.password.id}/duplicates';
   static String passwordEdit = '/dashboard/${EntityType.password.id}/edit/:id';
   static const String keepassImport = '/dashboard/import/keepass';
   static String passwordImport = '/dashboard/${EntityType.password.id}/import';

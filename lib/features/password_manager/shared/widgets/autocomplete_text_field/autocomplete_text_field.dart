@@ -82,7 +82,9 @@ class _AutocompleteTextFieldState extends State<AutocompleteTextField> {
         final query = textEditingValue.text.trim();
         if (query.isEmpty) return const Iterable<String>.empty();
 
-        final options = await widget.optionsBuilder(query);
+        final options = await Future<Iterable<String>>(
+          () async => widget.optionsBuilder(query),
+        );
         return options.take(10);
       },
       onSelected: widget.onChanged,
