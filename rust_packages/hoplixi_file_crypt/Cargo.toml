@@ -29,7 +29,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 bincode = { version = "2.0.1", features = ["serde"] }
 walkdir = "2.5.0"
 tempfile = "3.27.0"
-sevenz-rust2 = { version = "0.20.2", features = ["compress", "util"] }
+sevenz-rust2 = { version = "0.21.0", features = ["compress", "util"] }
 flate2 = "1.1.9"
 thiserror = "2.0.18"
 zeroize = { version = "1.8.2", features = ["derive"] }
