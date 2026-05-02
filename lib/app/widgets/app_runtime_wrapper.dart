@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/localization/locale_provider.dart';
 import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
-import 'package:hoplixi/core/theme/index.dart';
+import 'package:hoplixi/core/theme/theme.dart';
 import 'package:hoplixi/core/theme/theme_window_sync_service.dart';
 import 'package:hoplixi/main_db/providers/decrypted_files_guard_provider.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';

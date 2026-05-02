@@ -2,7 +2,7 @@ import 'package:animated_theme_switcher/animated_theme_switcher.dart'
     as animated_theme;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/theme/theme.dart';
+import 'package:hoplixi/core/theme/app_theme.dart';
 import 'package:hoplixi/core/theme/theme_provider.dart';
 import 'package:hoplixi/features/setup/providers/setup_provider.dart';
 

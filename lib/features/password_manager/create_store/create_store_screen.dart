@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/core/theme/index.dart';
+import 'package:hoplixi/core/theme/theme.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';

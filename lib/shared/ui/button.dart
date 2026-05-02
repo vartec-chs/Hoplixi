@@ -102,19 +102,11 @@ class SmoothButton extends StatelessWidget {
   }
 
   Color _loadingIndicatorColor(BuildContext context) {
-    if (onPressed == null && !loading) {
+    if (loading || onPressed == null) {
       return _disabledForegroundColor(context);
     }
 
     final theme = Theme.of(context);
-    final variantColor = _getVariantColor(context);
-
-    if (variant != SmoothButtonVariant.normal) {
-      if (type == SmoothButtonType.filled) {
-        return theme.colorScheme.onPrimary;
-      }
-      return variantColor;
-    }
 
     switch (type) {
       case SmoothButtonType.filled:
@@ -128,6 +120,10 @@ class SmoothButton extends StatelessWidget {
     }
   }
 
+  Color _loadingLabelColor(BuildContext context) {
+    return _disabledForegroundColor(context);
+  }
+
   Widget _buildChild(BuildContext context) {
     final textWidget = Text(
       label,
@@ -137,7 +133,7 @@ class SmoothButton extends StatelessWidget {
       style: TextStyle(
         fontSize: _fontSize,
         fontWeight: bold ? FontWeight.bold : FontWeight.normal,
-        color: loading ? _loadingIndicatorColor(context) : null,
+        color: loading ? _loadingLabelColor(context) : null,
       ),
     );
 

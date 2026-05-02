@@ -5,7 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/core/theme/index.dart';
+import 'package:hoplixi/core/theme/theme.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/shared/widgets/app_loading_screen.dart';
 import 'package:hoplixi/shared/widgets/watchers/lifecycle/app_lifecycle_observer.dart';

@@ -7,6 +7,10 @@
 - Добавлен `AppActivityScope`, который отключает `TickerMode` и переводит UI в
   `Offstage`, когда приложение не видно, а также подключён к основному bootstrap
   lifecycle-обёртки.
+- В `SmoothButton` цвет текста в loading-состоянии больше не жёстко привязан к
+  `onPrimary`, чтобы на светлой теме он не становился белым.
+- В `SmoothButton` spinner в loading-состоянии тоже переведён на нейтральный
+  disabled-цвет вместо белого.
 - Tray-интеграция переведена на `TrayService` с Riverpod-состоянием
   `AppActivityMode`; прямые tray callbacks из `TrayWatcher` заменены
   провайдерными вызовами сервиса.

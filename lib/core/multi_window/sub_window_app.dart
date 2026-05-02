@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/localization/locale_provider.dart';
-import 'package:hoplixi/core/theme/theme.dart';
+import 'package:hoplixi/core/theme/app_theme.dart';
 import 'package:hoplixi/core/theme/theme_provider.dart';
 import 'package:hoplixi/core/theme/theme_window_sync_service.dart';
 import 'package:hoplixi/global_key.dart';

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_prefs/security_prefs.dart';
-import 'package:hoplixi/core/services/local_auth_failure.dart';
-import 'package:hoplixi/core/services/local_auth_service.dart';
-import 'package:hoplixi/core/theme/index.dart';
+import 'package:hoplixi/core/services/local_auth_service/local_auth_failure.dart';
+import 'package:hoplixi/core/services/local_auth_service/local_auth_service.dart';
+import 'package:hoplixi/core/theme/theme.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';

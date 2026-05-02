@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/core/services/local_auth_failure.dart';
+import 'package:hoplixi/core/services/local_auth_service/local_auth_failure.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:universal_platform/universal_platform.dart';

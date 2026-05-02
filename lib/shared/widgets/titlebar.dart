@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
-import 'package:hoplixi/core/theme/index.dart';
+import 'package:hoplixi/core/theme/theme.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/main_db/providers/main_store_backup_orchestrator_provider.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';

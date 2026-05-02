@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'clippers/wave_theme_switcher_clipper.dart';
-import 'theme.dart';
+import 'app_theme.dart';
 import 'theme_provider.dart';
 
 /// Современный виджет для переключения темы приложения
