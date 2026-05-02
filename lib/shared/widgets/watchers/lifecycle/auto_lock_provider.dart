@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/settings/providers/settings_prefs_providers.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/setup/setup_tray.dart';
 import 'package:hoplixi/shared/widgets/watchers/lifecycle/app_lifecycle_provider.dart';
 
 /// Состояние автоблокировки
@@ -65,6 +66,15 @@ class AutoLockNotifier extends Notifier<AutoLockState> {
     // Слушаем изменения жизненного цикла
     ref.listen(appLifecycleProvider, (previous, next) {
       _handleLifecycleChange(next);
+    });
+
+    // Слушаем переходы приложения в tray и сразу блокируем открытую базу.
+    ref.listen(appActivityModeProvider, (previous, next) async {
+      if (previous == next || next != AppActivityMode.tray) {
+        return;
+      }
+
+      await _triggerTrayLock();
     });
 
     // Слушаем изменения состояния БД
@@ -140,6 +150,12 @@ class AutoLockNotifier extends Notifier<AutoLockState> {
 
   Future<void> _triggerLock() async {
     logInfo('Auto-lock triggered', tag: _tag);
+    await ref.read(mainStoreProvider.notifier).lockStore();
+  }
+
+  Future<void> _triggerTrayLock() async {
+    stopTimer();
+    logInfo('Tray mode lock triggered', tag: _tag);
     await ref.read(mainStoreProvider.notifier).lockStore();
   }
 }

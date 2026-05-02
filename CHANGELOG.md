@@ -10,6 +10,8 @@
 - Tray-интеграция переведена на `TrayService` с Riverpod-состоянием
   `AppActivityMode`; прямые tray callbacks из `TrayWatcher` заменены
   провайдерными вызовами сервиса.
+- При переходе приложения в `AppActivityMode.tray` автоблокировка сразу
+  вызывает `lockStore()` для открытого хранилища.
 
 ### docs
 
