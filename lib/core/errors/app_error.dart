@@ -81,6 +81,18 @@ sealed class AppError with _$AppError implements Exception {
     DateTime? timestamp,
   }) = ArchiveAppError;
 
+  const factory AppError.feature({
+    required String feature,
+    required String code,
+    required String message,
+    @Default(<String, dynamic>{}) Map<String, dynamic> data,
+    String? debugMessage,
+    @JsonKey(includeFromJson: false, includeToJson: false) Object? cause,
+    @JsonKey(includeFromJson: false, includeToJson: false)
+    StackTrace? stackTrace,
+    DateTime? timestamp,
+  }) = FeatureAppError;
+
   const factory AppError.unknown({
     @Default('UNKNOWN_ERROR') String code,
     @Default('Произошла неизвестная ошибка') String message,
@@ -117,6 +129,17 @@ sealed class AppError with _$AppError implements Exception {
     archive:
         (code, message, data, debugMessage, cause, stackTrace, timestamp) =>
             code.value,
+    feature:
+        (
+          feature,
+          code,
+          message,
+          data,
+          debugMessage,
+          cause,
+          stackTrace,
+          timestamp,
+        ) => code,
     unknown:
         (code, message, data, debugMessage, cause, stackTrace, timestamp) =>
             code,
@@ -149,6 +172,11 @@ sealed class AppError with _$AppError implements Exception {
 
   bool get isArchive => maybeWhen(
     archive: (_, __, ___, ____, _____, ______, _______) => true,
+    orElse: () => false,
+  );
+
+  bool get isFeature => maybeWhen(
+    feature: (_, __, ___, ____, _____, ______, _______, ________) => true,
     orElse: () => false,
   );
 

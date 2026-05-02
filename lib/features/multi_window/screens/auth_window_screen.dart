@@ -3,6 +3,8 @@ import 'package:window_manager/window_manager.dart';
 
 import '../../../core/multi_window/window_channel_service.dart';
 
+/// TEST SCREEN
+///
 /// Экран авторизации, открываемый в отдельном суб-окне.
 ///
 /// Используется для ввода учётных данных без переключения

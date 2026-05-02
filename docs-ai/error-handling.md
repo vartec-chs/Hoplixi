@@ -236,6 +236,18 @@ behaviour when composing steps.
 Use the existing shared error model in `lib/core/errors/app_error.dart`. Prefer
 `AppError` variants over introducing ad-hoc custom error classes.
 
+`AppError.feature(...)` is intended for local errors that belong to a specific
+feature and do not justify a new global domain in `AppError`. Use it when the
+error:
+
+- belongs to one or two related features only;
+- should still reach UI, logs, snackbar/dialog flows, and JSON serialization in
+  one consistent format;
+- does not need a dedicated top-level `AppError` branch.
+
+Keep the same typed-result flow for these errors as for the rest of the shared
+error model.
+
 ```dart
 ResultDart<User, AppError> validateInput(String username) {
   if (username.trim().isEmpty) {
