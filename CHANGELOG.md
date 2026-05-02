@@ -19,6 +19,15 @@
 - При показе приложения из tray окно возвращается к
   `MainConstants.defaultWindowSize`.
 
+### cloud_sync
+
+- Экран `CloudSyncPlaygroundScreen` переработан в дружелюбный центр управления
+  App Credentials, Auth Tokens и Drive Storage API с быстрыми действиями,
+  статусами провайдеров и адаптивной раскладкой.
+- Виджеты Cloud Sync Center вынесены в `cloud_sync/playground/widgets`, а
+  desktop-раскладка расширена отдельной правой колонкой и grid-панелями для
+  provider readiness и Drive Storage API.
+
 ### docs
 
 - В `error-handling.md` добавлено правило для `AppError.feature(...)` как
