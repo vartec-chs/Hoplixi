@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_paths.dart';
+import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/logger.dart';
 import 'package:hoplixi/core/multi_window/multi_window_service.dart';
 import 'package:hoplixi/core/multi_window/sub_window_type.dart';
 import 'package:hoplixi/core/utils/window_manager.dart';
 import 'package:open_dir/open_dir.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:universal_platform/universal_platform.dart';
 
@@ -154,8 +155,10 @@ class TrayService with TrayListener {
       return;
     }
 
-    await WindowManager.show();
     ref.read(appActivityModeProvider.notifier).setActive();
+    await WindowManager.show();
+    await WindowManager.setSize(MainConstants.defaultWindowSize);
+    await WindowManager.focus();
   }
 
   Future<void> openPasswordGenerator() async {
