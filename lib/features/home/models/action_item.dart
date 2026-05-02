@@ -9,6 +9,10 @@ class ActionItem {
     this.isPrimary = false,
     this.disabled = false,
     this.onTap,
+    this.showcaseKey,
+    this.showcaseTitle,
+    this.showcaseDescription,
+    this.useCustomShowcaseTooltip = false,
   });
 
   final IconData icon;
@@ -17,4 +21,8 @@ class ActionItem {
   final bool isPrimary;
   final bool disabled;
   final VoidCallback? onTap;
+  final GlobalKey? showcaseKey;
+  final String? showcaseTitle;
+  final String? showcaseDescription;
+  final bool useCustomShowcaseTooltip;
 }

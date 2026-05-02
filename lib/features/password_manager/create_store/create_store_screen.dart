@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,16 +7,21 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/theme/theme.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
-import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/features/onboarding/application/showcase_controller.dart';
+import 'package:hoplixi/features/onboarding/domain/app_guide_id.dart';
+import 'package:hoplixi/features/onboarding/domain/guide_start_mode.dart';
+import 'package:hoplixi/features/onboarding/presentation/showcase_help_button.dart';
 import 'package:hoplixi/features/password_manager/create_store/models/create_store_state.dart';
 import 'package:hoplixi/features/password_manager/create_store/providers/create_store_form_provider.dart';
 import 'package:hoplixi/features/password_manager/create_store/widgets/step1_name_description.dart';
 import 'package:hoplixi/features/password_manager/create_store/widgets/step2_select_path.dart';
 import 'package:hoplixi/features/password_manager/create_store/widgets/step3_master_password.dart';
 import 'package:hoplixi/features/password_manager/create_store/widgets/step4_confirmation.dart';
+import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/widgets/titlebar.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 /// Экран создания хранилища по шагам
 class CreateStoreScreen extends ConsumerStatefulWidget {
@@ -24,22 +31,74 @@ class CreateStoreScreen extends ConsumerStatefulWidget {
   ConsumerState<CreateStoreScreen> createState() => _CreateStoreScreenState();
 }
 
+const _createStoreShowcaseScope = 'create_store_guide';
+
 class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen>
     with SingleTickerProviderStateMixin {
   late final PageController _pageController;
   late final AnimationController _animationController;
+  late final CreateStoreGuideKeys _guideKeys;
 
   @override
   void initState() {
     super.initState();
+    _guideKeys = CreateStoreGuideKeys();
+    ShowcaseView.register(
+      scope: _createStoreShowcaseScope,
+      enableAutoScroll: true,
+      semanticEnable: true,
+      autoPlay: false,
+      onFinish: _markCreateStoreGuideSeen,
+      onDismiss: (_) => _markCreateStoreGuideSeen(),
+    );
     _pageController = PageController();
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
       _updateTitleBarLabel();
+      unawaited(_startCreateStoreGuide(GuideStartMode.auto));
     });
+  }
+
+  Future<void> _startCreateStoreGuide(GuideStartMode mode) async {
+    final controller = ref.read(showcaseControllerProvider.notifier);
+    if (mode == GuideStartMode.auto &&
+        !await controller.shouldAutoStart(AppGuideId.createStore)) {
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+
+    final keys = _guideKeys.sequence
+        .where((key) => key.currentContext != null)
+        .toList(growable: false);
+    if (keys.isEmpty) {
+      return;
+    }
+
+    final showcaseView = ShowcaseView.getNamed(_createStoreShowcaseScope);
+    if (showcaseView.isShowcaseRunning) {
+      return;
+    }
+
+    showcaseView.startShowCase(keys, delay: const Duration(milliseconds: 250));
+  }
+
+  void _markCreateStoreGuideSeen() {
+    if (!mounted) {
+      return;
+    }
+    unawaited(
+      ref
+          .read(showcaseControllerProvider.notifier)
+          .markSeen(AppGuideId.createStore),
+    );
   }
 
   void _updateTitleBarLabel() {
@@ -50,6 +109,7 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen>
   void dispose() {
     _pageController.dispose();
     _animationController.dispose();
+    ShowcaseView.getNamed(_createStoreShowcaseScope).unregister();
     super.dispose();
   }
 
@@ -114,6 +174,12 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen>
             icon: const Icon(Icons.close),
             onPressed: () => _handleClose(context, formNotifier),
           ),
+          actions: [
+            ShowcaseHelpButton(
+              keys: _guideKeys.sequence,
+              scope: _createStoreShowcaseScope,
+            ),
+          ],
         ),
 
         body: SafeArea(
@@ -122,6 +188,8 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen>
             children: [
               // Индикатор прогресса
               _ProgressIndicator(
+                showcaseKey: _guideKeys.progress,
+                showcaseScope: _createStoreShowcaseScope,
                 currentStep: formState.stepIndex,
                 totalSteps: 4,
                 progress: formState.progress,
@@ -132,11 +200,14 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen>
                 child: PageView(
                   controller: _pageController,
                   physics: const NeverScrollableScrollPhysics(),
-                  children: const [
-                    Step1NameAndDescription(),
-                    Step2SelectPath(),
-                    Step3MasterPassword(),
-                    Step4Confirmation(),
+                  children: [
+                    Step1NameAndDescription(
+                      storeNameShowcaseKey: _guideKeys.storeName,
+                      showcaseScope: _createStoreShowcaseScope,
+                    ),
+                    const Step2SelectPath(),
+                    const Step3MasterPassword(),
+                    const Step4Confirmation(),
                   ],
                 ),
               ),
@@ -147,6 +218,8 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen>
                 onPrevious: () => formNotifier.previousStep(),
                 onNext: () => formNotifier.nextStep(),
                 onCreate: () => _handleCreate(context, formState),
+                primaryButtonShowcaseKey: _guideKeys.primaryButton,
+                showcaseScope: _createStoreShowcaseScope,
               ),
             ],
           ),
@@ -250,16 +323,20 @@ class _ProgressIndicator extends StatelessWidget {
   final int currentStep;
   final int totalSteps;
   final double progress;
+  final GlobalKey? showcaseKey;
+  final String? showcaseScope;
 
   const _ProgressIndicator({
     required this.currentStep,
     required this.totalSteps,
     required this.progress,
+    this.showcaseKey,
+    this.showcaseScope,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final child = Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       decoration: BoxDecoration(
         // color: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -317,6 +394,20 @@ class _ProgressIndicator extends StatelessWidget {
           ),
         ],
       ),
+    );
+
+    final key = showcaseKey;
+    if (key == null) {
+      return child;
+    }
+
+    return Showcase(
+      key: key,
+      scope: showcaseScope,
+      title: 'Шаги создания',
+      description:
+          'Индикатор показывает текущий шаг мастера: основные данные, путь, пароль и подтверждение.',
+      child: child,
     );
   }
 
@@ -411,12 +502,16 @@ class _NavigationButtons extends StatelessWidget {
   final VoidCallback onPrevious;
   final VoidCallback onNext;
   final VoidCallback onCreate;
+  final GlobalKey? primaryButtonShowcaseKey;
+  final String? showcaseScope;
 
   const _NavigationButtons({
     required this.formState,
     required this.onPrevious,
     required this.onNext,
     required this.onCreate,
+    this.primaryButtonShowcaseKey,
+    this.showcaseScope,
   });
 
   @override
@@ -462,24 +557,51 @@ class _NavigationButtons extends StatelessWidget {
                 : isMobile
                 ? 1
                 : 2,
-            child: SmoothButton(
-              onPressed: formState.canProceed && !formState.isCreating
-                  ? (isLastStep ? onCreate : onNext)
-                  : null,
-              icon: isLastStep
-                  ? const Icon(Icons.check)
-                  : const Icon(Icons.arrow_forward),
-              iconPosition: SmoothButtonIconPosition.end,
-              label: formState.isCreating
-                  ? 'Создание...'
-                  : (isLastStep ? 'Создать' : 'Далее'),
-              type: SmoothButtonType.filled,
-              loading: formState.isCreating,
-              isFullWidth: true,
+            child: _wrapPrimaryButton(
+              SmoothButton(
+                onPressed: formState.canProceed && !formState.isCreating
+                    ? (isLastStep ? onCreate : onNext)
+                    : null,
+                icon: isLastStep
+                    ? const Icon(Icons.check)
+                    : const Icon(Icons.arrow_forward),
+                iconPosition: SmoothButtonIconPosition.end,
+                label: formState.isCreating
+                    ? 'Создание...'
+                    : (isLastStep ? 'Создать' : 'Далее'),
+                type: SmoothButtonType.filled,
+                loading: formState.isCreating,
+                isFullWidth: true,
+              ),
+              isLastStep: isLastStep,
             ),
           ),
         ],
       ),
     );
   }
+
+  Widget _wrapPrimaryButton(Widget child, {required bool isLastStep}) {
+    final key = primaryButtonShowcaseKey;
+    if (key == null) {
+      return child;
+    }
+
+    return Showcase(
+      key: key,
+      scope: showcaseScope,
+      title: isLastStep ? 'Создать хранилище' : 'Перейти дальше',
+      description:
+          'Эта кнопка ведёт по шагам мастера. На последнем шаге она создаёт хранилище.',
+      child: child,
+    );
+  }
+}
+
+class CreateStoreGuideKeys {
+  final progress = GlobalKey();
+  final storeName = GlobalKey();
+  final primaryButton = GlobalKey();
+
+  List<GlobalKey> get sequence => [progress, storeName, primaryButton];
 }

@@ -9,11 +9,13 @@ class HomeActionsContentLayer extends StatelessWidget {
     required this.top,
     required this.hasRecentDatabase,
     required this.items,
+    this.showcaseScope,
   });
 
   final double top;
   final bool hasRecentDatabase;
   final List<ActionItem> items;
+  final String? showcaseScope;
 
   @override
   Widget build(BuildContext context) {
@@ -32,10 +34,18 @@ class HomeActionsContentLayer extends StatelessWidget {
                       child: RecentDatabaseCard(),
                     ),
                     const SizedBox(height: 12),
-                    Expanded(child: _ActionsScrollView(items: items)),
+                    Expanded(
+                      child: _ActionsScrollView(
+                        items: items,
+                        showcaseScope: showcaseScope,
+                      ),
+                    ),
                   ],
                 )
-              : _ActionsScrollView(items: items),
+              : _ActionsScrollView(
+                  items: items,
+                  showcaseScope: showcaseScope,
+                ),
         ),
       ),
     );
@@ -43,9 +53,10 @@ class HomeActionsContentLayer extends StatelessWidget {
 }
 
 class _ActionsScrollView extends StatelessWidget {
-  const _ActionsScrollView({required this.items});
+  const _ActionsScrollView({required this.items, this.showcaseScope});
 
   final List<ActionItem> items;
+  final String? showcaseScope;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +64,7 @@ class _ActionsScrollView extends StatelessWidget {
       padding: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: HomeActionGrid(items: items),
+        child: HomeActionGrid(items: items, showcaseScope: showcaseScope),
       ),
     );
   }

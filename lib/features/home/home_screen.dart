@@ -8,6 +8,10 @@ import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/home/models/action_item.dart';
+import 'package:hoplixi/features/onboarding/application/showcase_controller.dart';
+import 'package:hoplixi/features/onboarding/domain/app_guide_id.dart';
+import 'package:hoplixi/features/onboarding/domain/guide_start_mode.dart';
+import 'package:hoplixi/features/onboarding/presentation/showcase_help_button.dart';
 import 'package:hoplixi/features/password_generator/password_generator_widget.dart';
 import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_db/providers/db_history_provider.dart';
@@ -20,6 +24,7 @@ import 'package:hoplixi/shared/widgets/titlebar.dart';
 import 'package:hoplixi/shared/widgets/watchers/lifecycle/app_lifecycle_provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:path/path.dart' as p;
+import 'package:showcaseview/showcaseview.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 import 'providers/recent_database_provider.dart';
@@ -34,9 +39,12 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
+const _homeShowcaseScope = 'home_guide';
+
 class _HomeScreenState extends ConsumerState<HomeScreen>
     with TickerProviderStateMixin {
   late ScrollController _scrollController;
+  late final HomeGuideKeys _guideKeys;
   ProviderSubscription<String?>? _launchPathSubscription;
   bool _isHandlingLaunchPath = false;
 
@@ -47,6 +55,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   void initState() {
     super.initState();
+    _guideKeys = HomeGuideKeys();
+    ShowcaseView.register(
+      scope: _homeShowcaseScope,
+      enableAutoScroll: true,
+      semanticEnable: true,
+      autoPlay: false,
+      skipIfTargetNotPresent: true,
+      hideFloatingActionWidgetForShowcase: [_guideKeys.settings],
+      globalFloatingActionWidget: (_) => FloatingActionWidget(
+        left: 16,
+        bottom: 16,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: ElevatedButton(
+            onPressed: () =>
+                ShowcaseView.getNamed(_homeShowcaseScope).dismiss(),
+            child: const Text('Пропустить'),
+          ),
+        ),
+      ),
+      globalTooltipActionConfig: const TooltipActionConfig(
+        position: TooltipActionPosition.inside,
+        alignment: MainAxisAlignment.spaceBetween,
+        actionGap: 20,
+      ),
+      globalTooltipActions: [
+        TooltipActionButton(
+          type: TooltipDefaultActionType.previous,
+          textStyle: const TextStyle(color: Colors.white),
+          hideActionWidgetForShowcase: [_guideKeys.createStore],
+        ),
+        TooltipActionButton(
+          type: TooltipDefaultActionType.next,
+          textStyle: const TextStyle(color: Colors.white),
+          hideActionWidgetForShowcase: [_guideKeys.settings],
+        ),
+      ],
+      onFinish: _markHomeGuideSeen,
+      onDismiss: (_) => _markHomeGuideSeen(),
+    );
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
 
@@ -72,8 +120,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }, fireImmediately: true);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
       _updateTitleBarLabel();
+      unawaited(_startHomeGuide(GuideStartMode.auto));
     });
+  }
+
+  Future<void> _startHomeGuide(GuideStartMode mode) async {
+    final controller = ref.read(showcaseControllerProvider.notifier);
+    if (mode == GuideStartMode.auto &&
+        !await controller.shouldAutoStart(AppGuideId.home)) {
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+
+    final keys = _guideKeys.sequence;
+
+    final showcaseView = ShowcaseView.getNamed(_homeShowcaseScope);
+    if (showcaseView.isShowcaseRunning) {
+      return;
+    }
+
+    showcaseView.startShowCase(keys, delay: const Duration(milliseconds: 250));
+  }
+
+  void _markHomeGuideSeen() {
+    if (!mounted) {
+      return;
+    }
+    unawaited(
+      ref.read(showcaseControllerProvider.notifier).markSeen(AppGuideId.home),
+    );
   }
 
   Future<void> _handleLaunchDbPath(String launchPath) async {
@@ -317,6 +398,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _launchPathSubscription?.close();
     _scrollController.dispose();
     _pulseController.dispose();
+    ShowcaseView.getNamed(_homeShowcaseScope).unregister();
     super.dispose();
   }
 
@@ -351,11 +433,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             isAppActive: isAppActive,
             pulseAnimation: _pulseAnimation,
           ),
-          const HomeTopActions(),
+          HomeTopActions(
+            settingsShowcaseKey: _guideKeys.settings,
+            showcaseScope: _homeShowcaseScope,
+            helpButton: ShowcaseHelpButton(
+              keys: _guideKeys.sequence,
+              scope: _homeShowcaseScope,
+              color: Colors.white.withOpacity(0.8),
+            ),
+          ),
           HomeActionsContentLayer(
             top: contentTop,
             hasRecentDatabase: hasRecentDatabase,
             items: _buildActionItems(context),
+            showcaseScope: _homeShowcaseScope,
           ),
         ],
       ),
@@ -371,17 +462,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         description: 'Существующее хранилище',
         isPrimary: true,
         onTap: () => context.push(AppRoutesPaths.openStore),
+        showcaseKey: _guideKeys.openStore,
+        showcaseTitle: 'Открыть хранилище',
+        showcaseDescription:
+            'Используйте эту карточку, чтобы выбрать и открыть существующее хранилище.',
       ),
       ActionItem(
         icon: LucideIcons.plus,
         label: 'Создать',
         description: 'Новое хранилище',
         onTap: () => context.push(AppRoutesPaths.createStore),
+        showcaseKey: _guideKeys.createStore,
+        showcaseTitle: 'Создать хранилище',
+        showcaseDescription:
+            'Начните здесь, если нужно создать новое зашифрованное хранилище.',
+        useCustomShowcaseTooltip: true,
       ),
       ActionItem(
         icon: LucideIcons.key,
         label: 'Генератор',
         description: 'Генерация паролей',
+        showcaseKey: _guideKeys.generator,
+        showcaseTitle: 'Генератор паролей',
+        showcaseDescription:
+            'Проверьте модальное окно генератора и убедитесь, что showcase работает поверх sheet.',
         onTap: () async {
           await _openPasswordGeneratorModal();
         },
@@ -413,6 +517,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         icon: LucideIcons.cloud,
         label: 'Cloud Sync',
         description: 'Центр управления облачной синхронизацией и токенами.',
+        showcaseKey: _guideKeys.cloudSync,
+        showcaseTitle: 'Cloud Sync',
+        showcaseDescription:
+            'Здесь можно проверить, что подсказки не мешают переходам в раздел синхронизации.',
         onTap: () => context.push(AppRoutesPaths.cloudSync),
       ),
       if (!MainConstants.isProduction) ...[
@@ -470,4 +578,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ],
     );
   }
+}
+
+class HomeGuideKeys {
+  final createStore = GlobalKey();
+  final openStore = GlobalKey();
+  final generator = GlobalKey();
+  final cloudSync = GlobalKey();
+  final settings = GlobalKey();
+
+  List<GlobalKey> get sequence => [
+    createStore,
+    openStore,
+    generator,
+    cloudSync,
+    settings,
+  ];
 }

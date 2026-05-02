@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/theme/constants.dart';
-import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
 import 'package:hoplixi/features/password_manager/create_store/providers/create_store_form_provider.dart';
+import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 /// Шаг 1: Имя и описание хранилища
 class Step1NameAndDescription extends ConsumerStatefulWidget {
-  const Step1NameAndDescription({super.key});
+  const Step1NameAndDescription({
+    super.key,
+    this.storeNameShowcaseKey,
+    this.showcaseScope,
+  });
+
+  final GlobalKey? storeNameShowcaseKey;
+  final String? showcaseScope;
 
   @override
   ConsumerState<Step1NameAndDescription> createState() =>
@@ -68,19 +76,21 @@ class _Step1NameAndDescriptionState
           const SizedBox(height: 32),
 
           // Поле имени
-          TextField(
-            controller: _nameController,
-            focusNode: _nameFocusNode,
+          _wrapStoreNameField(
+            TextField(
+              controller: _nameController,
+              focusNode: _nameFocusNode,
 
-            decoration: primaryInputDecoration(
-              context,
-              labelText: 'Имя хранилища *',
-              hintText: 'Например: Личное, Рабочее',
-              errorText: state.nameError,
-              prefixIcon: const Icon(Icons.storage),
+              decoration: primaryInputDecoration(
+                context,
+                labelText: 'Имя хранилища *',
+                hintText: 'Например: Личное, Рабочее',
+                errorText: state.nameError,
+                prefixIcon: const Icon(Icons.storage),
+              ),
+              onChanged: notifier.updateName,
+              textInputAction: TextInputAction.next,
             ),
-            onChanged: notifier.updateName,
-            textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 24),
 
@@ -199,6 +209,22 @@ class _Step1NameAndDescriptionState
           ),
         ],
       ),
+    );
+  }
+
+  Widget _wrapStoreNameField(Widget child) {
+    final key = widget.storeNameShowcaseKey;
+    if (key == null) {
+      return child;
+    }
+
+    return Showcase(
+      key: key,
+      scope: widget.showcaseScope,
+      title: 'Имя хранилища',
+      description:
+          'Задайте понятное имя, чтобы потом быстро отличать это хранилище от других.',
+      child: child,
     );
   }
 }

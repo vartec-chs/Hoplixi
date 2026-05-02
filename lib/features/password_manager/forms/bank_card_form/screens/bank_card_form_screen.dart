@@ -5,15 +5,15 @@ import 'package:flutter_credit_card/flutter_credit_card.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/main_db/core/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/features/password_manager/forms/form_close_button.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
-import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_editor.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
+import 'package:hoplixi/main_db/core/models/dto/icon_ref_dto.dart';
+import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
+import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/widgets/icon_source_picker_button.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -434,6 +434,12 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                               color: colorScheme.outline.withOpacity(0.3),
                             ),
                             padding: 8,
+                            cardType: .values.firstWhere(
+                              (type) =>
+                                  type.name.toLowerCase() ==
+                                  state.cardNetwork?.toLowerCase(),
+                              orElse: () => .otherBrand,
+                            ),
                           ),
 
                           const SizedBox(height: 24),

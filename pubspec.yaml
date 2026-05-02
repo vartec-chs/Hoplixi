@@ -118,6 +118,7 @@ dependencies:
   intl_phone_number_input: ^0.7.5
   nfc_manager: ^4.2.1
   dio_smart_retry: ^7.0.1
+  showcaseview: ^5.0.2
 
 hooks:
   user_defines:

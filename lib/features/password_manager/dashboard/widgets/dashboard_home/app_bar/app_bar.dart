@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/onboarding/presentation/dashboard_guide_scope.dart';
+import 'package:hoplixi/features/onboarding/presentation/showcase_help_button.dart';
 import 'package:hoplixi/features/password_manager/store_settings/index.dart';
 import 'package:hoplixi/main_db/core/models/filter/index.dart';
 import 'package:hoplixi/main_db/providers/main_store_backup_orchestrator_provider.dart';
@@ -12,6 +14,7 @@ import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:typed_prefs/typed_prefs.dart';
 
 import '../../../models/entity_type.dart';
@@ -224,6 +227,7 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
     final theme = Theme.of(context);
     final baseFilter = ref.watch(baseFilterProvider);
     final currentEntityType = currentType;
+    final guideKeys = DashboardGuideScope.maybeOf(context);
     final isStoreOpen = ref
         .watch(mainStoreProvider)
         .maybeWhen(data: (state) => state.isOpen, orElse: () => false);
@@ -285,68 +289,76 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
           onPressed: _openFilterModal,
           tooltip: 'Открыть фильтры',
         ),
+        if (guideKeys != null)
+            ShowcaseHelpButton(
+              keys: guideKeys.sequence,
+              scope: dashboardShowcaseScope,
+            ),
 
         // Меню действий: настройки и импорт
-        PopupMenuButton<_DashboardMenuAction>(
-          icon: const Icon(LucideIcons.settings),
-          tooltip: 'Меню хранилища',
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+        _wrapSyncStatus(
+          guideKeys,
+          PopupMenuButton<_DashboardMenuAction>(
+            icon: const Icon(LucideIcons.settings),
+            tooltip: 'Меню хранилища',
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
 
-          onSelected: (action) {
-            switch (action) {
-              case _DashboardMenuAction.storeSettings:
-                _openStoreSettingsModal();
-                break;
-              case _DashboardMenuAction.backupNow:
-                if (isStoreOpen) {
-                  _createBackupNow();
-                } else {
-                  Toaster.warning(
-                    title: 'Бэкап недоступен',
-                    description: 'Сначала откройте хранилище',
-                  );
-                }
-                break;
-              case _DashboardMenuAction.keepassImport:
-                context.go(AppRoutesPaths.keepassImport);
-                break;
-            }
-          },
-          itemBuilder: (context) => [
-            const PopupMenuItem<_DashboardMenuAction>(
-              value: _DashboardMenuAction.storeSettings,
-              child: Row(
-                children: [
-                  Icon(LucideIcons.settings, size: 20),
-                  SizedBox(width: 8),
-                  Text('Настройки хранилища'),
-                ],
+            onSelected: (action) {
+              switch (action) {
+                case _DashboardMenuAction.storeSettings:
+                  _openStoreSettingsModal();
+                  break;
+                case _DashboardMenuAction.backupNow:
+                  if (isStoreOpen) {
+                    _createBackupNow();
+                  } else {
+                    Toaster.warning(
+                      title: 'Бэкап недоступен',
+                      description: 'Сначала откройте хранилище',
+                    );
+                  }
+                  break;
+                case _DashboardMenuAction.keepassImport:
+                  context.go(AppRoutesPaths.keepassImport);
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem<_DashboardMenuAction>(
+                value: _DashboardMenuAction.storeSettings,
+                child: Row(
+                  children: [
+                    Icon(LucideIcons.settings, size: 20),
+                    SizedBox(width: 8),
+                    Text('Настройки хранилища'),
+                  ],
+                ),
               ),
-            ),
-            PopupMenuItem<_DashboardMenuAction>(
-              value: _DashboardMenuAction.backupNow,
-              enabled: isStoreOpen,
-              child: const Row(
-                children: [
-                  Icon(Icons.backup, size: 20),
-                  SizedBox(width: 8),
-                  Text('Бэкап сейчас'),
-                ],
+              PopupMenuItem<_DashboardMenuAction>(
+                value: _DashboardMenuAction.backupNow,
+                enabled: isStoreOpen,
+                child: const Row(
+                  children: [
+                    Icon(Icons.backup, size: 20),
+                    SizedBox(width: 8),
+                    Text('Бэкап сейчас'),
+                  ],
+                ),
               ),
-            ),
-            const PopupMenuItem<_DashboardMenuAction>(
-              value: _DashboardMenuAction.keepassImport,
-              child: Row(
-                children: [
-                  Icon(LucideIcons.import, size: 20),
-                  SizedBox(width: 8),
-                  Text('Импорт данных из KeePass'),
-                ],
+              const PopupMenuItem<_DashboardMenuAction>(
+                value: _DashboardMenuAction.keepassImport,
+                child: Row(
+                  children: [
+                    Icon(LucideIcons.import, size: 20),
+                    SizedBox(width: 8),
+                    Text('Импорт данных из KeePass'),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
 
         // Дополнительные actions
@@ -394,32 +406,38 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
                           padding: const EdgeInsets.only(bottom: 8.0),
                           child: SizedBox(
                             height: 50,
-                            child: PrimaryTextField(
-                              controller: _searchController,
-                              focusNode: _searchFocusNode,
-                              hintText: _getSearchHint(currentEntityType),
-                              prefixIcon: const Icon(Icons.search),
-                              suffixIcon: _searchController.text.isNotEmpty
-                                  ? IconButton(
-                                      icon: const Icon(Icons.clear),
-                                      onPressed: () {
-                                        _searchController.clear();
-                                        _onSearchChanged('');
-                                      },
-                                    )
-                                  : null,
-                              onChanged: _onSearchChanged,
-                              textInputAction: TextInputAction.search,
-                              decoration:
-                                  primaryInputDecoration(
-                                    context,
-                                    hintText: _getSearchHint(currentEntityType),
-                                  ).copyWith(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 12,
+                            child: _wrapSearchField(
+                              guideKeys,
+                              PrimaryTextField(
+                                controller: _searchController,
+                                focusNode: _searchFocusNode,
+                                hintText: _getSearchHint(currentEntityType),
+                                prefixIcon: const Icon(Icons.search),
+                                suffixIcon: _searchController.text.isNotEmpty
+                                    ? IconButton(
+                                        icon: const Icon(Icons.clear),
+                                        onPressed: () {
+                                          _searchController.clear();
+                                          _onSearchChanged('');
+                                        },
+                                      )
+                                    : null,
+                                onChanged: _onSearchChanged,
+                                textInputAction: TextInputAction.search,
+                                decoration:
+                                    primaryInputDecoration(
+                                      context,
+                                      hintText: _getSearchHint(
+                                        currentEntityType,
+                                      ),
+                                    ).copyWith(
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 12,
+                                          ),
                                     ),
-                                  ),
+                              ),
                             ),
                           ),
                         ),
@@ -450,6 +468,36 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
         titlePadding: EdgeInsets.zero,
         centerTitle: true,
       ),
+    );
+  }
+
+  Widget _wrapSearchField(DashboardGuideKeys? keys, Widget child) {
+    if (keys == null) {
+      return child;
+    }
+
+    return Showcase(
+      key: keys.search,
+      scope: dashboardShowcaseScope,
+      title: 'Поиск по записям',
+      description:
+          'Введите запрос, чтобы отфильтровать текущий список по основным полям записи.',
+      child: child,
+    );
+  }
+
+  Widget _wrapSyncStatus(DashboardGuideKeys? keys, Widget child) {
+    if (keys == null) {
+      return child;
+    }
+
+    return Showcase(
+      key: keys.syncStatus,
+      scope: dashboardShowcaseScope,
+      title: 'Меню хранилища',
+      description:
+          'Здесь доступны настройки хранилища, ручной бэкап и импорт данных.',
+      child: child,
     );
   }
 }

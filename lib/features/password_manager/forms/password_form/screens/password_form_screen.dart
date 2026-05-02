@@ -1,7 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/onboarding/application/showcase_controller.dart';
+import 'package:hoplixi/features/onboarding/domain/app_guide_id.dart';
+import 'package:hoplixi/features/onboarding/domain/guide_start_mode.dart';
+import 'package:hoplixi/features/onboarding/presentation/showcase_help_button.dart';
+import 'package:hoplixi/features/password_manager/forms/password_form/models/password_form_state.dart';
 import 'package:hoplixi/main_db/core/models/dto/icon_ref_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
@@ -21,6 +28,7 @@ import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/widgets/icon_source_picker_button.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 import '../providers/password_form_provider.dart';
@@ -38,6 +46,8 @@ class PasswordFormScreen extends ConsumerStatefulWidget {
   ConsumerState<PasswordFormScreen> createState() => _PasswordFormScreenState();
 }
 
+const _passwordAddShowcaseScope = 'password_add_guide';
+
 class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
   final _formKey = GlobalKey<FormState>();
 
@@ -47,6 +57,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
   late final TextEditingController _emailController;
   late final TextEditingController _urlController;
   late final TextEditingController _descriptionController;
+  late final PasswordAddGuideKeys _guideKeys;
 
   String? _noteName;
   String? _otpName;
@@ -57,6 +68,15 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
   void initState() {
     super.initState();
 
+    _guideKeys = PasswordAddGuideKeys();
+    ShowcaseView.register(
+      scope: _passwordAddShowcaseScope,
+      enableAutoScroll: true,
+      semanticEnable: true,
+      autoPlay: false,
+      onFinish: _markPasswordAddGuideSeen,
+      onDismiss: (_) => _markPasswordAddGuideSeen(),
+    );
     _nameController = TextEditingController();
     _passwordController = TextEditingController();
     _loginController = TextEditingController();
@@ -75,6 +95,59 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
     });
   }
 
+  void _schedulePasswordAddGuideStart(PasswordFormState state) {
+    if (widget.passwordId != null || state.isLoading || _guideKeys.scheduled) {
+      return;
+    }
+
+    _guideKeys.scheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      unawaited(_startPasswordAddGuide(GuideStartMode.auto));
+    });
+  }
+
+  Future<void> _startPasswordAddGuide(GuideStartMode mode) async {
+    final controller = ref.read(showcaseControllerProvider.notifier);
+    if (mode == GuideStartMode.auto &&
+        !await controller.shouldAutoStart(AppGuideId.passwordAdd)) {
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+
+    final keys = _guideKeys.sequence
+        .where((key) => key.currentContext != null)
+        .toList(growable: false);
+    if (keys.isEmpty) {
+      return;
+    }
+
+    final showcaseView = ShowcaseView.getNamed(_passwordAddShowcaseScope);
+    if (showcaseView.isShowcaseRunning) {
+      return;
+    }
+
+    showcaseView.startShowCase(
+      keys,
+      delay: const Duration(milliseconds: 250),
+    );
+  }
+
+  void _markPasswordAddGuideSeen() {
+    if (!mounted) {
+      return;
+    }
+    unawaited(
+      ref
+          .read(showcaseControllerProvider.notifier)
+          .markSeen(AppGuideId.passwordAdd),
+    );
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -83,6 +156,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
     _emailController.dispose();
     _urlController.dispose();
     _descriptionController.dispose();
+    ShowcaseView.getNamed(_passwordAddShowcaseScope).unregister();
     super.dispose();
   }
 
@@ -176,6 +250,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final state = ref.watch(passwordFormProvider);
+    _schedulePasswordAddGuideStart(state);
 
     // Синхронизация контроллеров с состоянием при загрузке данных
     if (state.isEditMode && !state.isLoading) {
@@ -221,6 +296,11 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
               : context.t.dashboard_forms.new_password,
         ),
         actions: [
+          if (widget.passwordId == null)
+            ShowcaseHelpButton(
+              keys: _guideKeys.sequence,
+              scope: _passwordAddShowcaseScope,
+            ),
           // Выпадающее меню миграции
           PopupMenuButton<_MigrationMenuAction>(
             icon: const Icon(LucideIcons.import),
@@ -254,15 +334,25 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
               ),
             )
           else
-            IconButton(icon: const Icon(Icons.save), onPressed: _handleSave),
+            Showcase(
+              key: _guideKeys.saveButton,
+              scope: _passwordAddShowcaseScope,
+              title: 'Сохранить пароль',
+              description:
+                  'После заполнения обязательных данных нажмите эту кнопку, чтобы сохранить запись.',
+              child: IconButton(
+                icon: const Icon(Icons.save),
+                onPressed: _handleSave,
+              ),
+            ),
         ],
         leading: const FormCloseButton(),
       ),
 
       body: SafeArea(
-        child: state.isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : Column(
+          child: state.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Column(
                 children: [
                   Expanded(
                     child: Form(
@@ -271,87 +361,117 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                         padding: formPadding,
                         children: [
                           // Название *
-                          TextField(
-                            controller: _nameController,
-                            decoration: primaryInputDecoration(
-                              context,
-                              labelText: context.t.dashboard_forms.name_label,
-                              hintText:
-                                  context.t.dashboard_forms.enter_name_hint,
-                              errorText: state.nameError,
-                              prefixIcon: const Icon(LucideIcons.tag),
+                          Showcase(
+                            key: _guideKeys.title,
+                            scope: _passwordAddShowcaseScope,
+                            title: 'Название записи',
+                            description:
+                                'Укажите название сервиса или сайта, чтобы запись было легко найти.',
+                            child: TextField(
+                              controller: _nameController,
+                              decoration: primaryInputDecoration(
+                                context,
+                                labelText: context.t.dashboard_forms.name_label,
+                                hintText:
+                                    context.t.dashboard_forms.enter_name_hint,
+                                errorText: state.nameError,
+                                prefixIcon: const Icon(LucideIcons.tag),
+                              ),
+                              onChanged: (value) {
+                                ref
+                                    .read(passwordFormProvider.notifier)
+                                    .setName(value);
+                              },
                             ),
-                            onChanged: (value) {
-                              ref
-                                  .read(passwordFormProvider.notifier)
-                                  .setName(value);
-                            },
                           ),
                           const SizedBox(height: 16),
 
                           // Пароль *
-                          TextField(
-                            controller: _passwordController,
-                            obscureText: _obscurePassword,
-                            decoration: primaryInputDecoration(
-                              context,
-                              labelText:
-                                  context.t.dashboard_forms.password_label,
-                              hintText:
-                                  context.t.dashboard_forms.enter_password_hint,
-                              errorText: state.passwordError,
-                              prefixIcon: const Icon(LucideIcons.lock),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
+                          Showcase(
+                            key: _guideKeys.password,
+                            scope: _passwordAddShowcaseScope,
+                            title: 'Пароль',
+                            description:
+                                'Введите пароль вручную или сгенерируйте новый безопасный пароль.',
+                            child: TextField(
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              decoration: primaryInputDecoration(
+                                context,
+                                labelText:
+                                    context.t.dashboard_forms.password_label,
+                                hintText: context
+                                    .t
+                                    .dashboard_forms
+                                    .enter_password_hint,
+                                errorText: state.passwordError,
+                                prefixIcon: const Icon(LucideIcons.lock),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
                                 ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
                               ),
+                              onChanged: (value) {
+                                ref
+                                    .read(passwordFormProvider.notifier)
+                                    .setPassword(value);
+                              },
                             ),
-                            onChanged: (value) {
-                              ref
-                                  .read(passwordFormProvider.notifier)
-                                  .setPassword(value);
-                            },
                           ),
                           const SizedBox(height: 8),
 
                           Align(
                             alignment: Alignment.centerRight,
-                            child: SmoothButton(
-                              onPressed: state.isSaving
-                                  ? null
-                                  : _openPasswordGeneratorModal,
-                              icon: const Icon(Icons.password, size: 18),
-                              label: context
-                                  .t
-                                  .dashboard_forms
-                                  .generate_password_action,
-                              type: SmoothButtonType.text,
-                              size: SmoothButtonSize.small,
+                            child: Showcase(
+                              key: _guideKeys.generator,
+                              scope: _passwordAddShowcaseScope,
+                              title: 'Генератор пароля',
+                              description:
+                                  'Откройте генератор, чтобы создать пароль и сразу подставить его в поле.',
+                              child: SmoothButton(
+                                onPressed: state.isSaving
+                                    ? null
+                                    : _openPasswordGeneratorModal,
+                                icon: const Icon(Icons.password, size: 18),
+                                label: context
+                                    .t
+                                    .dashboard_forms
+                                    .generate_password_action,
+                                type: SmoothButtonType.text,
+                                size: SmoothButtonSize.small,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 16),
 
                           // Логин
-                          LoginAutocompleteField(
-                            controller: _loginController,
-                            labelText: context.t.dashboard_forms.login_label,
-                            hintText:
-                                context.t.dashboard_forms.enter_login_hint,
-                            errorText: state.loginError,
-                            prefixIcon: const Icon(LucideIcons.user),
-                            onChanged: (value) {
-                              ref
-                                  .read(passwordFormProvider.notifier)
-                                  .setLogin(value);
-                            },
+                          Showcase(
+                            key: _guideKeys.username,
+                            scope: _passwordAddShowcaseScope,
+                            title: 'Логин',
+                            description:
+                                'Добавьте имя пользователя или логин для этой записи.',
+                            child: LoginAutocompleteField(
+                              controller: _loginController,
+                              labelText: context.t.dashboard_forms.login_label,
+                              hintText:
+                                  context.t.dashboard_forms.enter_login_hint,
+                              errorText: state.loginError,
+                              prefixIcon: const Icon(LucideIcons.user),
+                              onChanged: (value) {
+                                ref
+                                    .read(passwordFormProvider.notifier)
+                                    .setLogin(value);
+                              },
+                            ),
                           ),
                           const SizedBox(height: 16),
 
@@ -577,4 +697,22 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
       ),
     );
   }
+}
+
+class PasswordAddGuideKeys {
+  final title = GlobalKey();
+  final username = GlobalKey();
+  final password = GlobalKey();
+  final generator = GlobalKey();
+  final saveButton = GlobalKey();
+
+  bool scheduled = false;
+
+  List<GlobalKey> get sequence => [
+    title,
+    username,
+    password,
+    generator,
+    saveButton,
+  ];
 }

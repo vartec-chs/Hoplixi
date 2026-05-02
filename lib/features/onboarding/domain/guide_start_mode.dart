@@ -1,0 +1,5 @@
+enum GuideStartMode {
+  auto,
+  manual,
+}
+

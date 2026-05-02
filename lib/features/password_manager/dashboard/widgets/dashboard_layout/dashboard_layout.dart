@@ -1,13 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
+import 'package:hoplixi/features/onboarding/application/showcase_controller.dart';
+import 'package:hoplixi/features/onboarding/domain/app_guide_id.dart';
+import 'package:hoplixi/features/onboarding/domain/guide_start_mode.dart';
+import 'package:hoplixi/features/onboarding/presentation/dashboard_guide_scope.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/screen_protection_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/dashboard_drawer.dart';
 import 'package:hoplixi/features/settings/providers/settings_prefs_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import 'config/dashboard_layout_constants.dart';
 import 'dashboard_drawer_scope.dart';
@@ -36,7 +43,28 @@ class AppNavigationShell extends StatefulWidget {
 class _AppNavigationShellState extends State<AppNavigationShell> {
   final GlobalKey<ScaffoldState> _mobileScaffoldKey =
       GlobalKey<ScaffoldState>();
+  final DashboardGuideKeys _dashboardGuideKeys = DashboardGuideKeys();
+  String? _dashboardGuideScheduledForLocation;
   bool _isDrawerOpen = false;
+
+  @override
+  void initState() {
+    super.initState();
+    ShowcaseView.register(
+      scope: dashboardShowcaseScope,
+      enableAutoScroll: true,
+      semanticEnable: true,
+      autoPlay: false,
+      onFinish: _markDashboardGuideSeen,
+      onDismiss: (_) => _markDashboardGuideSeen(),
+    );
+  }
+
+  @override
+  void dispose() {
+    ShowcaseView.getNamed(dashboardShowcaseScope).unregister();
+    super.dispose();
+  }
 
   String _currentEntity() {
     final ent = widget.state.pathParameters['entity'];
@@ -173,6 +201,67 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
     context.go('/dashboard/$entity/icons');
   }
 
+  void _scheduleDashboardGuideStart(
+    WidgetRef ref, {
+    required String location,
+    required String entity,
+  }) {
+    if (entity != EntityType.password.id ||
+        !_isBaseRoute(location) ||
+        _dashboardGuideScheduledForLocation == location) {
+      return;
+    }
+
+    _dashboardGuideScheduledForLocation = location;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      unawaited(_startDashboardGuide(ref, GuideStartMode.auto));
+    });
+  }
+
+  Future<void> _startDashboardGuide(WidgetRef ref, GuideStartMode mode) async {
+    final controller = ref.read(showcaseControllerProvider.notifier);
+    if (mode == GuideStartMode.auto &&
+        !await controller.shouldAutoStart(AppGuideId.dashboard)) {
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+
+    final keys = _dashboardGuideKeys.sequence
+        .where((key) => key.currentContext != null)
+        .toList(growable: false);
+    if (keys.isEmpty) {
+      return;
+    }
+
+    final showcaseView = ShowcaseView.getNamed(dashboardShowcaseScope);
+    if (showcaseView.isShowcaseRunning) {
+      return;
+    }
+
+    showcaseView.startShowCase(
+      keys,
+      delay: const Duration(milliseconds: 250),
+    );
+  }
+
+  void _markDashboardGuideSeen() {
+    if (!mounted) {
+      return;
+    }
+    final context = this.context;
+    final container = ProviderScope.containerOf(context, listen: false);
+    unawaited(
+      container
+          .read(showcaseControllerProvider.notifier)
+          .markSeen(AppGuideId.dashboard),
+    );
+  }
+
   Widget _buildMobileShell(
     BuildContext context, {
     required String entity,
@@ -195,109 +284,128 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
               10
         : systemPadding.bottom + kFloatingNavFabBottomOffset;
 
-    return DashboardDrawerScope(
-      openDrawer: _openDrawer,
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: KeyedSubtree(key: ValueKey(location), child: widget.child),
-          ),
-          if (floatingNavEffectsEnabled)
+    return DashboardGuideScope(
+      guideKeys: _dashboardGuideKeys,
+      child: DashboardDrawerScope(
+        openDrawer: _openDrawer,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: KeyedSubtree(key: ValueKey(location), child: widget.child),
+            ),
+            if (floatingNavEffectsEnabled)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: navScrimHeight,
+                child: IgnorePointer(
+                  child: AnimatedOpacity(
+                    opacity: showBottomNav ? 1.0 : 0.0,
+                    duration: kFadeAnimationDuration,
+                    curve: Curves.easeInOut,
+                    child: _FloatingNavBarScrim(
+                      highlightColor: _resolveFloatingNavHighlightColor(
+                        context,
+                        floatingNavHighlightColor,
+                      ),
+                      variant: _FloatingNavBarScrimVariant.gradient,
+                    ),
+                  ),
+                ),
+              ),
             Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: navScrimHeight,
+              left: kFloatingNavMarginHorizontal,
+              right: kFloatingNavMarginHorizontal,
+              bottom: navBottom,
               child: IgnorePointer(
-                child: AnimatedOpacity(
-                  opacity: showBottomNav ? 1.0 : 0.0,
-                  duration: kFadeAnimationDuration,
-                  curve: Curves.easeInOut,
-                  child: _FloatingNavBarScrim(
-                    highlightColor: _resolveFloatingNavHighlightColor(
-                      context,
-                      floatingNavHighlightColor,
-                    ),
-                    variant: _FloatingNavBarScrimVariant.gradient,
-                  ),
-                ),
-              ),
-            ),
-          Positioned(
-            left: kFloatingNavMarginHorizontal,
-            right: kFloatingNavMarginHorizontal,
-            bottom: navBottom,
-            child: IgnorePointer(
-              ignoring: !showBottomNav,
-              child: AnimatedSlide(
-                offset: showBottomNav ? Offset.zero : const Offset(0, 1.5),
-                duration: kScaleAnimationDuration,
-                curve: showBottomNav ? Curves.easeOutCubic : Curves.easeInCubic,
-                child: AnimatedOpacity(
-                  opacity: showBottomNav ? 1.0 : 0.0,
-                  duration: kFadeAnimationDuration,
-                  curve: Curves.easeInOut,
-                  child: AnimatedScale(
-                    scale: showBottomNav ? 1.0 : 0.95,
-                    duration: kScaleAnimationDuration,
-                    curve: showBottomNav ? Curves.easeOutBack : Curves.easeIn,
-                    child: FloatingNavBar(
-                      destinations: destinations,
-                      selectedIndex: currentIndex,
-                      visualEffectsEnabled: floatingNavEffectsEnabled,
-                      onItemSelected: (index) =>
-                          _onNavItemSelected(context, index, entity),
+                ignoring: !showBottomNav,
+                child: AnimatedSlide(
+                  offset: showBottomNav ? Offset.zero : const Offset(0, 1.5),
+                  duration: kScaleAnimationDuration,
+                  curve: showBottomNav
+                      ? Curves.easeOutCubic
+                      : Curves.easeInCubic,
+                  child: AnimatedOpacity(
+                    opacity: showBottomNav ? 1.0 : 0.0,
+                    duration: kFadeAnimationDuration,
+                    curve: Curves.easeInOut,
+                    child: AnimatedScale(
+                      scale: showBottomNav ? 1.0 : 0.95,
+                      duration: kScaleAnimationDuration,
+                      curve: showBottomNav ? Curves.easeOutBack : Curves.easeIn,
+                      child: Showcase(
+                        key: _dashboardGuideKeys.navigation,
+                        scope: dashboardShowcaseScope,
+                        title: 'Навигация разделов',
+                        description:
+                            'Переключайтесь между списком, категориями, тегами и служебными разделами текущего типа данных.',
+                        child: FloatingNavBar(
+                          destinations: destinations,
+                          selectedIndex: currentIndex,
+                          visualEffectsEnabled: floatingNavEffectsEnabled,
+                          onItemSelected: (index) =>
+                              _onNavItemSelected(context, index, entity),
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-          AnimatedPositioned(
-            right: kFloatingNavMarginHorizontal,
-            bottom: fabBottom,
-            duration: kScaleAnimationDuration,
-            curve: showBottomNav ? Curves.easeOutCubic : Curves.easeInCubic,
-            child: IgnorePointer(
-              ignoring: !showFAB,
-              child: AnimatedSlide(
-                offset: showFAB ? Offset.zero : const Offset(0, 1.5),
-                duration: kScaleAnimationDuration,
-                curve: showFAB ? Curves.easeOutCubic : Curves.easeInCubic,
-                child: AnimatedOpacity(
-                  opacity: showFAB ? 1.0 : 0.0,
-                  duration: kFadeAnimationDuration,
-                  curve: Curves.easeInOut,
-                  child: AnimatedScale(
-                    scale: showFAB ? 1.0 : 0.95,
-                    duration: kScaleAnimationDuration,
-                    curve: showFAB ? Curves.easeOutBack : Curves.easeIn,
-                    child: DashboardFabBuilder(
-                      context: context,
-                      entity: entity,
-                      currentAction: _currentAction(location),
-                      isMobile: true,
-                    ).buildExpandableFAB(),
+            AnimatedPositioned(
+              right: kFloatingNavMarginHorizontal,
+              bottom: fabBottom,
+              duration: kScaleAnimationDuration,
+              curve: showBottomNav ? Curves.easeOutCubic : Curves.easeInCubic,
+              child: IgnorePointer(
+                ignoring: !showFAB,
+                child: AnimatedSlide(
+                  offset: showFAB ? Offset.zero : const Offset(0, 1.5),
+                  duration: kScaleAnimationDuration,
+                  curve: showFAB ? Curves.easeOutCubic : Curves.easeInCubic,
+                  child: AnimatedOpacity(
+                    opacity: showFAB ? 1.0 : 0.0,
+                    duration: kFadeAnimationDuration,
+                    curve: Curves.easeInOut,
+                    child: AnimatedScale(
+                      scale: showFAB ? 1.0 : 0.95,
+                      duration: kScaleAnimationDuration,
+                      curve: showFAB ? Curves.easeOutBack : Curves.easeIn,
+                      child: Showcase(
+                        key: _dashboardGuideKeys.createItem,
+                        scope: dashboardShowcaseScope,
+                        title: 'Добавить запись',
+                        description:
+                            'Основная кнопка создания добавляет новую запись выбранного типа.',
+                        child: DashboardFabBuilder(
+                          context: context,
+                          entity: entity,
+                          currentAction: _currentAction(location),
+                          isMobile: true,
+                        ).buildExpandableFAB(),
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          Positioned.fill(
-            child: IgnorePointer(
-              ignoring: !_isDrawerOpen,
-              child: Scaffold(
-                key: _mobileScaffoldKey,
-                backgroundColor: Colors.transparent,
-                onDrawerChanged: (isOpen) {
-                  setState(() => _isDrawerOpen = isOpen);
-                },
-                drawer: DashboardDrawer(entityType: entityType),
-                body: const SizedBox.expand(),
+            Positioned.fill(
+              child: IgnorePointer(
+                ignoring: !_isDrawerOpen,
+                child: Scaffold(
+                  key: _mobileScaffoldKey,
+                  backgroundColor: Colors.transparent,
+                  onDrawerChanged: (isOpen) {
+                    setState(() => _isDrawerOpen = isOpen);
+                  },
+                  drawer: DashboardDrawer(entityType: entityType),
+                  body: const SizedBox.expand(),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -319,60 +427,77 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
             rightPanel: _isBaseRoute(location) ? null : widget.child,
           );
 
-    return CallbackShortcuts(
-      bindings: <ShortcutActivator, VoidCallback>{
-        kShortcutGoBack: () => _handleGoBack(entity),
-        kShortcutCreateEntity: () => _handleCreateEntity(entity),
-        kShortcutOpenTags: () => _handleOpenTags(entity),
-        kShortcutOpenCategories: () => _handleOpenCategories(entity),
-        kShortcutOpenIcons: () => _handleOpenIcons(entity),
-      },
-      child: Focus(
-        autofocus: true,
-        child: Scaffold(
-          body: Row(
-            children: [
-              SizedBox(
-                width: kNavigationRailWidth,
-                child: NavigationRail(
-                  unselectedIconTheme: IconThemeData(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  unselectedLabelTextStyle: TextStyle(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w400,
-                  ),
-                  selectedIconTheme: IconThemeData(
-                    color: theme.colorScheme.onPrimary,
-                  ),
-                  selectedLabelTextStyle: TextStyle(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w400,
-                  ),
-                  indicatorColor: theme.colorScheme.primaryContainer,
-                  indicatorShape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(kIndicatorBorderRadius),
-                  ),
-                  backgroundColor: theme.colorScheme.surfaceContainerLowest,
-                  selectedIndex: currentIndex,
-                  onDestinationSelected: (index) =>
-                      _onNavItemSelected(context, index, entity),
-                  labelType: NavigationRailLabelType.all,
-                  destinations: destinations,
-                  leading: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: DashboardFabBuilder(
-                      context: context,
-                      entity: entity,
-                      currentAction: null,
-                      isMobile: false,
-                    ).buildExpandableFAB(),
+    return DashboardGuideScope(
+      guideKeys: _dashboardGuideKeys,
+      child: CallbackShortcuts(
+        bindings: <ShortcutActivator, VoidCallback>{
+          kShortcutGoBack: () => _handleGoBack(entity),
+          kShortcutCreateEntity: () => _handleCreateEntity(entity),
+          kShortcutOpenTags: () => _handleOpenTags(entity),
+          kShortcutOpenCategories: () => _handleOpenCategories(entity),
+          kShortcutOpenIcons: () => _handleOpenIcons(entity),
+        },
+        child: Focus(
+          autofocus: true,
+          child: Scaffold(
+            body: Row(
+              children: [
+                Showcase(
+                  key: _dashboardGuideKeys.navigation,
+                  scope: dashboardShowcaseScope,
+                  title: 'Навигация разделов',
+                  description:
+                      'Левая панель переключает список, категории, теги и дополнительные разделы.',
+                  child: SizedBox(
+                    width: kNavigationRailWidth,
+                    child: NavigationRail(
+                      unselectedIconTheme: IconThemeData(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      unselectedLabelTextStyle: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      selectedIconTheme: IconThemeData(
+                        color: theme.colorScheme.onPrimary,
+                      ),
+                      selectedLabelTextStyle: TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      indicatorColor: theme.colorScheme.primaryContainer,
+                      indicatorShape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(kIndicatorBorderRadius),
+                      ),
+                      backgroundColor: theme.colorScheme.surfaceContainerLowest,
+                      selectedIndex: currentIndex,
+                      onDestinationSelected: (index) =>
+                          _onNavItemSelected(context, index, entity),
+                      labelType: NavigationRailLabelType.all,
+                      destinations: destinations,
+                      leading: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Showcase(
+                          key: _dashboardGuideKeys.createItem,
+                          scope: dashboardShowcaseScope,
+                          title: 'Добавить запись',
+                          description:
+                              'Кнопка создания открывает форму добавления записи выбранного типа.',
+                          child: DashboardFabBuilder(
+                            context: context,
+                            entity: entity,
+                            currentAction: null,
+                            isMobile: false,
+                          ).buildExpandableFAB(),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              const VerticalDivider(width: 1, thickness: 1),
-              Expanded(child: shellChild),
-            ],
+                const VerticalDivider(width: 1, thickness: 1),
+                Expanded(child: shellChild),
+              ],
+            ),
           ),
         ),
       ),
@@ -396,6 +521,7 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
         final floatingNavHighlightColor =
             ref.watch(dashboardFloatingNavHighlightColorProvider).value ??
             DashboardFloatingNavHighlightColor.primary;
+        _scheduleDashboardGuideStart(ref, location: location, entity: entity);
         final shell = isMobile
             ? _buildMobileShell(
                 context,
