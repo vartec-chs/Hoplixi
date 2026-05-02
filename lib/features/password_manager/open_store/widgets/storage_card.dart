@@ -1,6 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hoplixi/features/password_manager/open_store/models/open_store_state.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Карточка хранилища в списке
 class StorageCard extends StatelessWidget {
@@ -93,7 +93,7 @@ class StorageCard extends StatelessWidget {
                   if (onDelete != null) ...[
                     const SizedBox(width: 8),
                     IconButton(
-                      icon: const Icon(CupertinoIcons.delete),
+                      icon: const Icon(LucideIcons.delete),
                       tooltip: 'Удалить с диска',
                       onPressed: onDelete,
                       color: colorScheme.error,

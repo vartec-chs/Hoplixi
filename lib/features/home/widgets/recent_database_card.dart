@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_prefs/security_prefs.dart';
@@ -95,7 +94,7 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(CupertinoIcons.trash),
+                  icon: const Icon(LucideIcons.trash),
                   tooltip: 'Удалить из истории',
                   onPressed: () => _deleteFromHistory(context, ref, entry),
                   color: colorScheme.error,
@@ -868,9 +867,7 @@ class _PasswordDialogState extends State<_PasswordDialog> {
                 labelText: 'Пароль',
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscureText
-                        ? CupertinoIcons.eye
-                        : CupertinoIcons.eye_slash,
+                    _obscureText ? LucideIcons.eye : LucideIcons.eyeClosed,
                   ),
                   onPressed: () {
                     setState(() {

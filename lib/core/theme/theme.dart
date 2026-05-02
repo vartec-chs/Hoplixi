@@ -1,10 +1,12 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
-import 'package:flutter/cupertino.dart';
+
 import 'package:flutter/material.dart';
 import 'package:go_transitions/go_transitions.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:universal_platform/universal_platform.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
+import 'package:flutter/cupertino.dart';
+
 
 import 'button_themes.dart';
 import 'colors.dart';
@@ -82,7 +84,6 @@ abstract final class AppTheme {
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
-        
       ),
       popupMenuTheme: bs.popupMenuTheme.copyWith(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
