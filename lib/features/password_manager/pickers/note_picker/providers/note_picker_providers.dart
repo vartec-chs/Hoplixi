@@ -80,7 +80,7 @@ class NotePickerDataNotifier extends Notifier<NotePickerData> {
 
     try {
       final manager = await ref.read(mainStoreManagerProvider.future);
-      if (manager == null || manager.currentStore == null) {
+      if (manager.currentStore == null) {
         Toaster.error(title: 'Ошибка', description: 'База данных недоступна');
         return;
       }
@@ -125,7 +125,7 @@ class NotePickerDataNotifier extends Notifier<NotePickerData> {
       final updatedFilter = ref.read(notePickerFilterProvider);
 
       final manager = await ref.read(mainStoreManagerProvider.future);
-      if (manager == null || manager.currentStore == null) {
+      if (manager.currentStore == null) {
         state = state.copyWith(isLoadingMore: false);
         return;
       }

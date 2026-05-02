@@ -229,7 +229,7 @@ class ArchiveService {
           stackTrace: s,
           data: {
             'archivePath': archivePath,
-            if (stagingPath != null) 'stagingPath': stagingPath,
+            'stagingPath': ?stagingPath,
           },
         ),
       );

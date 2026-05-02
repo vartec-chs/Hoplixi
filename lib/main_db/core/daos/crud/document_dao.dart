@@ -42,7 +42,7 @@ class DocumentDao extends DatabaseAccessor<MainStore> with _$DocumentDaoMixin {
         VaultItemsCompanion.insert(
           id: Value(uuid),
           type: VaultItemType.document,
-          name: dto.title ?? 'Document',
+          name: dto.title,
           description: Value(dto.description),
           noteId: Value(dto.noteId),
           categoryId: Value(dto.categoryId),

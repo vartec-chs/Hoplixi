@@ -10,7 +10,7 @@ import 'package:universal_platform/universal_platform.dart';
 import 'store_opening_overlay.dart';
 
 class RootAppShell extends StatelessWidget {
-  const RootAppShell({
+  const RootAppShell({super.key, 
     required this.child,
     required this.isStoreOpeningOverlayVisible,
   });

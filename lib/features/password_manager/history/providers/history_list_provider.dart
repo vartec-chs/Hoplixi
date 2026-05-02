@@ -748,7 +748,7 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
             entityType: EntityType.loyaltyCard,
             action: card.action,
             title: card.name,
-            subtitle: card.programName ?? card.cardNumber,
+            subtitle: card.programName,
             actionAt: card.actionAt,
           ),
         )

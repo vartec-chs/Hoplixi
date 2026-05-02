@@ -120,7 +120,6 @@ class SmartConverter {
   String _base32Encode(Uint8List data, {bool addPadding = true}) {
     if (data.isEmpty) return addPadding ? '' : '';
     final buffer = StringBuffer();
-    int index = 0;
     int currByte;
     int nextByte;
     int digit;
@@ -204,7 +203,6 @@ class SmartConverter {
   String _base32EncodeBitAcc(Uint8List data, {bool addPadding = true}) {
     if (data.isEmpty) return '';
     final buffer = StringBuffer();
-    int index = 0;
     int curr = 0;
     int bitsLeft = 0;
 

@@ -158,7 +158,7 @@ class _LogsFilterBarState extends ConsumerState<LogsFilterBar> {
                   : null;
 
               return DropdownButtonFormField<String?>(
-                value: resolvedTagFilter,
+                initialValue: resolvedTagFilter,
                 decoration: primaryInputDecoration(
                   context,
                   labelText: 'Тег',

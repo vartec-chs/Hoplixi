@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
 import 'package:hoplixi/features/password_manager/create_store/models/create_store_state.dart';
+import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
 
 /// Провайдер для управления состоянием формы создания хранилища
 final createStoreFormProvider =
@@ -137,7 +137,7 @@ class CreateStoreFormNotifier extends Notifier<CreateStoreFormState> {
   }
 
   String? _validatePassword(String password) {
-    bool isFullValidation = false;
+    // bool isFullValidation = false;
     if (password.isEmpty) {
       return 'Введите мастер пароль';
     }
@@ -146,30 +146,30 @@ class CreateStoreFormNotifier extends Notifier<CreateStoreFormState> {
       return 'Пароль должен содержать минимум 4 символа';
     }
 
-    if (isFullValidation) {
-      if (password.length < 8) {
-        return 'Пароль должен содержать минимум 8 символов';
-      }
-      if (password.length > 128) {
-        return 'Пароль слишком длинный (макс. 128 символов)';
-      }
+    // if (isFullValidation) {
+    //   if (password.length < 8) {
+    //     return 'Пароль должен содержать минимум 8 символов';
+    //   }
+    //   if (password.length > 128) {
+    //     return 'Пароль слишком длинный (макс. 128 символов)';
+    //   }
 
-      // Проверка сложности пароля
-      bool hasUppercase = password.contains(RegExp(r'[A-Z]'));
-      bool hasLowercase = password.contains(RegExp(r'[a-z]'));
-      bool hasDigit = password.contains(RegExp(r'[0-9]'));
-      bool hasSpecial = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+    //   // Проверка сложности пароля
+    //   bool hasUppercase = password.contains(RegExp(r'[A-Z]'));
+    //   bool hasLowercase = password.contains(RegExp(r'[a-z]'));
+    //   bool hasDigit = password.contains(RegExp(r'[0-9]'));
+    //   bool hasSpecial = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
 
-      int complexity = 0;
-      if (hasUppercase) complexity++;
-      if (hasLowercase) complexity++;
-      if (hasDigit) complexity++;
-      if (hasSpecial) complexity++;
+    //   int complexity = 0;
+    //   if (hasUppercase) complexity++;
+    //   if (hasLowercase) complexity++;
+    //   if (hasDigit) complexity++;
+    //   if (hasSpecial) complexity++;
 
-      if (complexity < 3) {
-        return 'Пароль должен содержать буквы, цифры и спецсимволы';
-      }
-    }
+    //   if (complexity < 3) {
+    //     return 'Пароль должен содержать буквы, цифры и спецсимволы';
+    //   }
+    // }
 
     return null;
   }

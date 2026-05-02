@@ -74,8 +74,8 @@ class _TagSectionState extends ConsumerState<TagSection> {
                 key: ValueKey('loading'),
                 child: CircularProgressIndicator(),
               ),
-              error: (e, _) => Center(
-                key: const ValueKey('error'),
+              error: (e, _) => const Center(
+                key: ValueKey('error'),
                 child: Text('Ошибка загрузки тегов'),
               ),
             ),

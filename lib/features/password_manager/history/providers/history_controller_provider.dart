@@ -204,7 +204,7 @@ class HistoryController extends AsyncNotifier<HistoryScreenState> {
 
   Future<HistoryRepository> _repository() async {
     final manager = await ref.read(mainStoreManagerProvider.future);
-    final store = manager?.currentStore;
+    final store = manager.currentStore;
     if (store == null) {
       throw StateError('Main store is not initialized.');
     }

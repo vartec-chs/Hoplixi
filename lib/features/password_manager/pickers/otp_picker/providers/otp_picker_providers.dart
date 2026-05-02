@@ -80,7 +80,7 @@ class OtpPickerDataNotifier extends Notifier<OtpPickerData> {
 
     try {
       final manager = await ref.read(mainStoreManagerProvider.future);
-      if (manager == null || manager.currentStore == null) {
+      if (manager.currentStore == null) {
         Toaster.error(title: 'Ошибка', description: 'База данных недоступна');
         return;
       }
@@ -118,7 +118,7 @@ class OtpPickerDataNotifier extends Notifier<OtpPickerData> {
       final filter = ref.read(otpPickerFilterProvider);
 
       final manager = await ref.read(mainStoreManagerProvider.future);
-      if (manager == null || manager.currentStore == null) return;
+      if (manager.currentStore == null) return;
 
       final dao = manager.currentStore!.otpFilterDao;
       final newOtps = await dao.getFiltered(filter);

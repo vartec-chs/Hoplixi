@@ -394,20 +394,20 @@ class _IconPackPickerIconPageState
     );
   }
 
-  bool _isCustomPreviewColor(BuildContext context, Color? color) {
-    if (color == null) {
-      return false;
-    }
+  // bool _isCustomPreviewColor(BuildContext context, Color? color) {
+  //   if (color == null) {
+  //     return false;
+  //   }
 
-    final theme = Theme.of(context);
-    final presetValues = <int>{
-      theme.colorScheme.onSurface.value,
-      theme.colorScheme.primary.value,
-      theme.colorScheme.secondary.value,
-      theme.colorScheme.error.value,
-    };
-    return !presetValues.contains(color.value);
-  }
+  //   final theme = Theme.of(context);
+  //   final presetValues = <int>{
+  //     theme.colorScheme.onSurface.value,
+  //     theme.colorScheme.primary.value,
+  //     theme.colorScheme.secondary.value,
+  //     theme.colorScheme.error.value,
+  //   };
+  //   return !presetValues.contains(color.value);
+  // }
 
   Future<void> _pickPreviewColor(
     BuildContext context, {

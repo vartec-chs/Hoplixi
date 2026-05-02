@@ -135,7 +135,7 @@ String _resolveFileSystemMessage(FileSystemException exception) {
     return sourceMessage;
   }
 
-  final osMessage = exception.osError?.message?.trim();
+  final osMessage = exception.osError?.message.trim();
   if (osMessage != null && osMessage.isNotEmpty) {
     return osMessage;
   }

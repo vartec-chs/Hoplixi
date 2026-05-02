@@ -47,7 +47,7 @@ class ProfilesSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<String?>(
-          value: selectedProfileId,
+          initialValue: selectedProfileId,
           items: [
             const DropdownMenuItem<String?>(
               value: null,

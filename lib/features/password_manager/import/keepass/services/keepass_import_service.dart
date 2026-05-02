@@ -683,7 +683,7 @@ class KeepassImportService {
 
     if (!options.importOtps && entry.otp != null) {
       result.add(
-        _CustomFieldSeed(
+        const _CustomFieldSeed(
           label: 'KeePass OTP Disabled',
           value: 'OTP не был импортирован, потому что опция отключена.',
         ),

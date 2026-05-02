@@ -18,7 +18,7 @@ class CryptTestScreen extends ConsumerStatefulWidget {
 class _CryptTestScreenState extends ConsumerState<CryptTestScreen> {
   final _passwordController = TextEditingController();
   String? _selectedFilePath;
-  String? _outputFilePath;
+  String? outputFilePath;
   bool _isProcessing = false;
   double _progress = 0.0;
   String _statusMessage = '';
@@ -35,7 +35,7 @@ class _CryptTestScreenState extends ConsumerState<CryptTestScreen> {
     if (result != null && result.files.single.path != null) {
       setState(() {
         _selectedFilePath = result.files.single.path;
-        _outputFilePath = null;
+        outputFilePath = null;
         _statusMessage =
             'Файл выбран: ${_selectedFilePath!.split(Platform.pathSeparator).last}';
         _headerInfo = null;
@@ -78,7 +78,7 @@ class _CryptTestScreenState extends ConsumerState<CryptTestScreen> {
                   },
                   done: (result) {
                     setState(() {
-                      _outputFilePath = result.outputPath;
+                      outputFilePath = result.outputPath;
                       _statusMessage =
                           'Успешно зашифровано в:\n${result.outputPath}';
                       _isProcessing = false;
@@ -145,7 +145,7 @@ class _CryptTestScreenState extends ConsumerState<CryptTestScreen> {
                   },
                   done: (result) {
                     setState(() {
-                      _outputFilePath = result.outputPath;
+                      outputFilePath = result.outputPath;
                       _statusMessage =
                           'Успешно расшифровано в:\n${result.outputPath}';
                       _isProcessing = false;

@@ -40,7 +40,7 @@ class BatchPasswordsSection extends StatelessWidget {
           children: [
             Expanded(
               child: DropdownButtonFormField<int>(
-                value: selectedCount,
+                initialValue: selectedCount,
                 decoration: primaryInputDecoration(
                   context,
                   labelText: 'Количество паролей',

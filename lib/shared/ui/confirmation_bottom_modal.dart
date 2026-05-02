@@ -55,7 +55,7 @@ class ConfirmationBottomModal extends StatelessWidget {
       barrierColor: barrierColor,
       useRootNavigator: useRootNavigator,
       transitionDuration: const Duration(milliseconds: 220),
-      pageBuilder: (dialogContext, _, __) {
+      pageBuilder: (dialogContext, _, _) {
         final keyboardBottomInset = MediaQuery.of(
           dialogContext,
         ).viewInsets.bottom;

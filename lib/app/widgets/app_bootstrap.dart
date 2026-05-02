@@ -15,7 +15,7 @@ import 'package:hoplixi/shared/widgets/watchers/tray_watcher.dart';
 import 'root_app_shell.dart';
 
 class AppBootstrap extends StatelessWidget {
-  const AppBootstrap({
+  const AppBootstrap({super.key, 
     required this.initialThemeModeFuture,
     required this.router,
     required this.isStoreOpeningOverlayVisible,
@@ -108,8 +108,8 @@ class _ConfiguredMaterialApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         builder: (context, child) {
           return RootAppShell(
-            child: child!,
             isStoreOpeningOverlayVisible: isStoreOpeningOverlayVisible,
+            child: child!,
           );
         },
       ),

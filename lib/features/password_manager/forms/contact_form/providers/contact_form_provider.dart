@@ -154,8 +154,9 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
   }
 
   String? _validateName(String value) {
-    if (value.trim().isEmpty)
+    if (value.trim().isEmpty) {
       return t.dashboard_forms.validation_required_contact_name;
+    }
     return null;
   }
 

@@ -102,7 +102,7 @@ class _Step1NameAndDescriptionState
 
           // Выбор алгоритма шифрования
           DropdownButtonFormField<DBCipher>(
-            value: state.cipher,
+            initialValue: state.cipher,
             isExpanded: true,
             itemHeight: null,
             decoration: primaryInputDecoration(

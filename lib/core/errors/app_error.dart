@@ -146,42 +146,42 @@ sealed class AppError with _$AppError implements Exception {
   );
 
   bool get isDatabase => maybeWhen(
-    mainDatabase: (_, __, ___, ____, _____, ______, _______) => true,
+    mainDatabase: (_, _, _, _, _, _, _) => true,
     orElse: () => false,
   );
 
   bool get isFileSystem => maybeWhen(
-    fileSystem: (_, __, ___, ____, _____, ______, _______) => true,
+    fileSystem: (_, _, _, _, _, _, _) => true,
     orElse: () => false,
   );
 
   bool get isNetwork => maybeWhen(
-    network: (_, __, ___, ____, _____, ______, _______) => true,
+    network: (_, _, _, _, _, _, _) => true,
     orElse: () => false,
   );
 
   bool get isValidation => maybeWhen(
-    validation: (_, __, ___, ____, _____, ______, _______) => true,
+    validation: (_, _, _, _, _, _, _) => true,
     orElse: () => false,
   );
 
   bool get isAuth => maybeWhen(
-    auth: (_, __, ___, ____, _____, ______, _______) => true,
+    auth: (_, _, _, _, _, _, _) => true,
     orElse: () => false,
   );
 
   bool get isArchive => maybeWhen(
-    archive: (_, __, ___, ____, _____, ______, _______) => true,
+    archive: (_, _, _, _, _, _, _) => true,
     orElse: () => false,
   );
 
   bool get isFeature => maybeWhen(
-    feature: (_, __, ___, ____, _____, ______, _______, ________) => true,
+    feature: (_, _, _, _, _, _, _, _) => true,
     orElse: () => false,
   );
 
   bool get isUnknown => maybeWhen(
-    unknown: (_, __, ___, ____, _____, ______, _______) => true,
+    unknown: (_, _, _, _, _, _, _) => true,
     orElse: () => false,
   );
 }

@@ -134,8 +134,9 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
   }
 
   String? _validateService(String value) {
-    if (value.trim().isEmpty)
+    if (value.trim().isEmpty) {
       return t.dashboard_forms.validation_required_service;
+    }
     return null;
   }
 
