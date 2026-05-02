@@ -1,7 +1,7 @@
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/core/logger/logger.dart';
 import 'package:hoplixi/core/theme/theme_window_sync_service.dart';
 import 'package:hoplixi/setup/setup_error_handling.dart';
 import 'package:window_manager/window_manager.dart';

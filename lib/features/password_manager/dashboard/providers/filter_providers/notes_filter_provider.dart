@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/core/logger/logger.dart';
 import 'base_filter_provider.dart';
 import 'package:hoplixi/main_db/core/models/filter/index.dart';
 

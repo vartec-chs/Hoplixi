@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:hoplixi/core/logger/index.dart' hide DeviceInfo;
+import 'package:hoplixi/core/logger/logger.dart' hide DeviceInfo;
 import 'package:hoplixi/features/local_send/models/device_info.dart';
 import 'package:hoplixi/features/local_send/services/device_registry.dart';
 import 'package:hoplixi/features/local_send/services/discovery_status.dart';

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/logger/index.dart' hide DeviceInfo;
+import 'package:hoplixi/core/logger/logger.dart' hide DeviceInfo;
 import 'package:hoplixi/features/local_send/models/device_info.dart';
 import 'package:hoplixi/features/local_send/providers/discovery_settings_provider.dart';
 import 'package:hoplixi/features/local_send/services/discovery_service.dart';

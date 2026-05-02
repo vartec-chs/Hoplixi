@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:hoplixi/core/app_paths.dart';
-import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/core/logger/logger.dart';
 import 'package:hoplixi/core/multi_window/multi_window_service.dart';
 import 'package:hoplixi/core/multi_window/sub_window_type.dart';
 import 'package:hoplixi/core/utils/window_manager.dart';

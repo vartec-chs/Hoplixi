@@ -1,7 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/errors/errors.dart';
-import 'package:hoplixi/core/logger/index.dart' hide Session;
+import 'package:hoplixi/core/logger/logger.dart' hide Session;
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';

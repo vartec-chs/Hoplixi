@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/errors/errors.dart';
-import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/core/logger/logger.dart';
 import 'package:path/path.dart' as p;
 
 class MainStoreFileService {

@@ -5,7 +5,7 @@ import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:path/path.dart' as path;
 import 'package:typed_prefs/typed_prefs.dart';
 
-import '../logger/index.dart';
+import '../logger/logger.dart';
 import 'launch_at_startup_service.dart';
 
 /// Сервис для однократного применения конфигурации установщика.

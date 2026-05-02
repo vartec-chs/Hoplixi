@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/core/app_paths.dart';
-import 'package:hoplixi/core/logger/index.dart' hide DeviceInfo;
+import 'package:hoplixi/core/logger/logger.dart' hide DeviceInfo;
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/local_send/models/cloud_sync_tokens_transfer_payload.dart';
 import 'package:hoplixi/features/local_send/models/device_info.dart';

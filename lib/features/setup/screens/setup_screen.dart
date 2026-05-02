@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/core/logger/logger.dart';
 import 'package:hoplixi/core/utils/system_ui_utils.dart';
 import 'package:hoplixi/features/setup/providers/setup_provider.dart';
 import 'package:hoplixi/features/setup/widgets/biometric_page.dart';

@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/core/logger/logger.dart';
 
 /// Возвращает приоритетный балл интерфейса по имени.
 ///

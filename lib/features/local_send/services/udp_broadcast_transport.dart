@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/core/logger/logger.dart';
 import 'package:hoplixi/features/local_send/services/network_interface_cache.dart';
 
 /// UDP-порт для широковещательного fallback-обнаружения.

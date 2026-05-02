@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/core/logger/logger.dart';
 import 'package:hoplixi/rust/api/logging.dart' as rust_api;
 
 class RustLogBridge {

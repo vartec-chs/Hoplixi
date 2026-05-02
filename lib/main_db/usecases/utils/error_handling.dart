@@ -1,5 +1,5 @@
 import 'package:hoplixi/core/errors/errors.dart';
-import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/core/logger/logger.dart';
 import 'package:result_dart/result_dart.dart';
 
 Failure<S, AppError> handleMainStoreUseCaseError<S extends Object>({

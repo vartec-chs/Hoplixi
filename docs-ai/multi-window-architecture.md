@@ -102,6 +102,11 @@ JSONL file from multiple processes (main window + sub-windows).
    - `CrashReportManager` is **disabled** in sub-windows (crashes are caught and
      logged as errors, but full reports are managed by the main process or
      separate mechanisms).
+   - `withTag(String tag)` / `loggerWithTag(tag)` are used to declare a
+     service-level tagged logger field once, so the service can log through that
+     field without repeating `tag:` in every call and still keep entries easy to
+     filter in shared JSONL logs.
+   - Example: `final _log = loggerWithTag('LaunchAtStartupService');`
 
 2. **`DeviceInfo`**:
    - Has a factory `DeviceInfo.subWindow()` that creates a minimal `DeviceInfo`

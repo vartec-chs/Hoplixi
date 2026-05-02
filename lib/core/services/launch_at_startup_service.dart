@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:launch_at_startup/launch_at_startup.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-import '../logger/index.dart';
+import '../logger/logger.dart';
 
 class LaunchAtStartupService {
   final _log = loggerWithTag('LaunchAtStartupService');

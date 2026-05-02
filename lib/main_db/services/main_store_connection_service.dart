@@ -4,7 +4,7 @@ import 'dart:math' as math;
 import 'package:drift/native.dart';
 import 'package:flutter/services.dart';
 import 'package:hoplixi/core/errors/errors.dart';
-import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/core/logger/logger.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
 import 'package:result_dart/result_dart.dart';

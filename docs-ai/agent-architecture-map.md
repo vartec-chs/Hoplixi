@@ -16,7 +16,8 @@ a full technical spec.
 ## Core Module (`lib/core/`)
 
 - `logger/`: structured logging helpers (`logInfo`, `logWarning`, `logError`,
-  ...)
+  `loggerWithTag`, `withTag` for service-level tagged logger fields, ...)
+  Example: `final _log = loggerWithTag('LaunchAtStartupService');`
 - `constants/`: app constants (`MainConstants`)
 - `app_paths.dart`: OS-specific directories
 - `utils/`: toasts, UI/system helpers, result extensions, parsers

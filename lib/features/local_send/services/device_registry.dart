@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:hoplixi/core/logger/index.dart' hide DeviceInfo;
+import 'package:hoplixi/core/logger/logger.dart' hide DeviceInfo;
 import 'package:hoplixi/features/local_send/models/device_info.dart';
 
 /// TTL устройства: если не видели дольше — удаляем из реестра.

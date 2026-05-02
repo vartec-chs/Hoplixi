@@ -8,7 +8,7 @@ import 'package:flutter_single_instance/flutter_single_instance.dart';
 import 'package:hoplixi/app/app.dart';
 import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
-import 'package:hoplixi/core/logger/index.dart';
+import 'package:hoplixi/core/logger/logger.dart';
 import 'package:hoplixi/core/logger/rust_log_bridge.dart';
 import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
 import 'package:hoplixi/core/services/services.dart';

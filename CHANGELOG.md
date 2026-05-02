@@ -10,14 +10,19 @@
 - Tray-интеграция переведена на `TrayService` с Riverpod-состоянием
   `AppActivityMode`; прямые tray callbacks из `TrayWatcher` заменены
   провайдерными вызовами сервиса.
-- При переходе приложения в `AppActivityMode.tray` автоблокировка сразу
-  вызывает `lockStore()` для открытого хранилища.
+- При переходе приложения в `AppActivityMode.tray` автоблокировка сразу вызывает
+  `lockStore()` для открытого хранилища.
 
 ### docs
 
 - В `error-handling.md` добавлено правило для `AppError.feature(...)` как
   локального варианта ошибки внутри одной-двух фич с единым путём до UI, логов,
   snackbar/dialog и сериализации.
+- В `agent-architecture-map.md` и `multi-window-architecture.md` добавлен
+  `loggerWithTag`/`withTag` как способ объявить сервисный tagged logger field и
+  не повторять `tag:` в каждом вызове лога.
+- В AI-доки добавлен конкретный пример `LaunchAtStartupService` как образец
+  service-level `loggerWithTag(...)`.
 
 ### core
 
@@ -42,8 +47,8 @@
 
 - `keepass_api` и `icon_pack_catalog_api` разнесены по вложенным Rust-модулям,
   сохранив прежние FRB-экспорты для Dart.
-- `crypt_api` разнесён на вложенные Rust-модули `types` и `operations` для
-  более читаемой поддержки файлового шифрования.
+- `crypt_api` разнесён на вложенные Rust-модули `types` и `operations` для более
+  читаемой поддержки файлового шифрования.
 - Rust FRB API-модули `crypt_api`, `keepass_api` и `icon_pack_catalog_api`
   переведены на папки с `mod.rs`; публичные обёртки оставлены в корне модулей,
   чтобы generated Dart API не уходил во вложенные `operations`/`types` файлы.
@@ -53,8 +58,8 @@
   прогрессом через stream и сохранением manifest/index в служебный каталог
   приложения.
 - `keepass_api.rs` переведён на актуальный reference API crate `keepass`:
-  экспорт групп, записей, иконок и вложений больше не обращается к private
-  полям старой модели.
+  экспорт групп, записей, иконок и вложений больше не обращается к private полям
+  старой модели.
 
 ## 2026-05-01
 
