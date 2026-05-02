@@ -4,6 +4,7 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/crypt_api.dart';
+import 'api/icon_pack_catalog_api.dart';
 import 'api/keepass_api.dart';
 import 'api/logging.dart';
 import 'api/simple.dart';
@@ -41,6 +42,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustStreamSink<FrbEncryptEvent> dco_decode_StreamSink_frb_encrypt_event_Sse(
     dynamic raw,
   );
+
+  @protected
+  RustStreamSink<FrbIconPackImportEvent>
+  dco_decode_StreamSink_frb_icon_pack_import_event_Sse(dynamic raw);
 
   @protected
   RustStreamSink<LogEntry> dco_decode_StreamSink_log_entry_Sse(dynamic raw);
@@ -85,6 +90,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   FrbEncryptResult dco_decode_box_autoadd_frb_encrypt_result(dynamic raw);
+
+  @protected
+  FrbIconPackError dco_decode_box_autoadd_frb_icon_pack_error(dynamic raw);
+
+  @protected
+  FrbIconPackImportProgress
+  dco_decode_box_autoadd_frb_icon_pack_import_progress(dynamic raw);
+
+  @protected
+  FrbIconPackSummary dco_decode_box_autoadd_frb_icon_pack_summary(dynamic raw);
 
   @protected
   FrbKeepassAutoType dco_decode_box_autoadd_frb_keepass_auto_type(dynamic raw);
@@ -160,6 +175,23 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   FrbEncryptResult dco_decode_frb_encrypt_result(dynamic raw);
+
+  @protected
+  FrbIconPackEntry dco_decode_frb_icon_pack_entry(dynamic raw);
+
+  @protected
+  FrbIconPackError dco_decode_frb_icon_pack_error(dynamic raw);
+
+  @protected
+  FrbIconPackImportEvent dco_decode_frb_icon_pack_import_event(dynamic raw);
+
+  @protected
+  FrbIconPackImportProgress dco_decode_frb_icon_pack_import_progress(
+    dynamic raw,
+  );
+
+  @protected
+  FrbIconPackSummary dco_decode_frb_icon_pack_summary(dynamic raw);
 
   @protected
   FrbKeepassAttachment dco_decode_frb_keepass_attachment(dynamic raw);
@@ -239,6 +271,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<FrbEncryptResult> dco_decode_list_frb_encrypt_result(dynamic raw);
+
+  @protected
+  List<FrbIconPackEntry> dco_decode_list_frb_icon_pack_entry(dynamic raw);
+
+  @protected
+  List<FrbIconPackSummary> dco_decode_list_frb_icon_pack_summary(dynamic raw);
 
   @protected
   List<FrbKeepassAttachment> dco_decode_list_frb_keepass_attachment(
@@ -350,6 +388,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<FrbIconPackImportEvent>
+  sse_decode_StreamSink_frb_icon_pack_import_event_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   RustStreamSink<LogEntry> sse_decode_StreamSink_log_entry_Sse(
     SseDeserializer deserializer,
   );
@@ -400,6 +444,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   FrbEncryptResult sse_decode_box_autoadd_frb_encrypt_result(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbIconPackError sse_decode_box_autoadd_frb_icon_pack_error(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbIconPackImportProgress
+  sse_decode_box_autoadd_frb_icon_pack_import_progress(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbIconPackSummary sse_decode_box_autoadd_frb_icon_pack_summary(
     SseDeserializer deserializer,
   );
 
@@ -507,6 +567,27 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FrbEncryptResult sse_decode_frb_encrypt_result(SseDeserializer deserializer);
 
   @protected
+  FrbIconPackEntry sse_decode_frb_icon_pack_entry(SseDeserializer deserializer);
+
+  @protected
+  FrbIconPackError sse_decode_frb_icon_pack_error(SseDeserializer deserializer);
+
+  @protected
+  FrbIconPackImportEvent sse_decode_frb_icon_pack_import_event(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbIconPackImportProgress sse_decode_frb_icon_pack_import_progress(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbIconPackSummary sse_decode_frb_icon_pack_summary(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   FrbKeepassAttachment sse_decode_frb_keepass_attachment(
     SseDeserializer deserializer,
   );
@@ -602,6 +683,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<FrbEncryptResult> sse_decode_list_frb_encrypt_result(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbIconPackEntry> sse_decode_list_frb_icon_pack_entry(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbIconPackSummary> sse_decode_list_frb_icon_pack_summary(
     SseDeserializer deserializer,
   );
 
@@ -732,6 +823,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_StreamSink_frb_icon_pack_import_event_Sse(
+    RustStreamSink<FrbIconPackImportEvent> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_StreamSink_log_entry_Sse(
     RustStreamSink<LogEntry> self,
     SseSerializer serializer,
@@ -791,6 +888,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_frb_encrypt_result(
     FrbEncryptResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_frb_icon_pack_error(
+    FrbIconPackError self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_frb_icon_pack_import_progress(
+    FrbIconPackImportProgress self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_frb_icon_pack_summary(
+    FrbIconPackSummary self,
     SseSerializer serializer,
   );
 
@@ -920,6 +1035,36 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_frb_encrypt_result(
     FrbEncryptResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_icon_pack_entry(
+    FrbIconPackEntry self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_icon_pack_error(
+    FrbIconPackError self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_icon_pack_import_event(
+    FrbIconPackImportEvent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_icon_pack_import_progress(
+    FrbIconPackImportProgress self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_icon_pack_summary(
+    FrbIconPackSummary self,
     SseSerializer serializer,
   );
 
@@ -1055,6 +1200,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_frb_encrypt_result(
     List<FrbEncryptResult> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_icon_pack_entry(
+    List<FrbIconPackEntry> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_icon_pack_summary(
+    List<FrbIconPackSummary> self,
     SseSerializer serializer,
   );
 

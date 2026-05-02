@@ -29,7 +29,9 @@ class _IconPacksScreenState extends ConsumerState<IconPacksScreen> {
       if (next.successMessage != null &&
           next.successMessage != previous?.successMessage) {
         Toaster.success(
-          title: 'Импорт завершён',
+          title: previous?.deletingPackKey != null
+              ? 'Пак удалён'
+              : 'Импорт завершён',
           description: next.successMessage,
         );
       }
@@ -58,7 +60,7 @@ class _IconPacksScreenState extends ConsumerState<IconPacksScreen> {
           children: [
             _buildImportCard(context, state, notifier),
             const SizedBox(height: 16),
-            _buildPacksSection(context, state),
+            _buildPacksSection(context, state, notifier),
           ],
         ),
       ),
@@ -82,7 +84,7 @@ class _IconPacksScreenState extends ConsumerState<IconPacksScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Выберите ZIP-архив или обычную папку, подтвердите название пака и сохраните его в служебный каталог приложения.',
+              'Выберите ZIP или 7Z архив либо обычную папку, подтвердите название пака и сохраните его в служебный каталог приложения.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
@@ -93,7 +95,7 @@ class _IconPacksScreenState extends ConsumerState<IconPacksScreen> {
               decoration: primaryInputDecoration(
                 context,
                 labelText: 'Источник',
-                hintText: 'Выберите ZIP-архив или папку',
+                hintText: 'Выберите ZIP/7Z-архив или папку',
                 prefixIcon: Icon(
                   state.sourceType == IconPackImportSourceType.archive
                       ? Icons.archive_outlined
@@ -162,9 +164,15 @@ class _IconPacksScreenState extends ConsumerState<IconPacksScreen> {
             ),
             if (state.isImporting) ...[
               const SizedBox(height: 16),
-              LinearProgressIndicator(value: state.progress),
+              LinearProgressIndicator(
+                value: state.progress.clamp(0, 1).toDouble(),
+              ),
               const SizedBox(height: 8),
-              Text('${(state.progress * 100).toStringAsFixed(0)}%'),
+              Text(
+                state.progress >= 1
+                    ? 'Завершение импорта...'
+                    : '${(state.progress * 100).toStringAsFixed(0)}%',
+              ),
               if (state.currentFile != null) ...[
                 const SizedBox(height: 4),
                 Text(
@@ -180,7 +188,11 @@ class _IconPacksScreenState extends ConsumerState<IconPacksScreen> {
     );
   }
 
-  Widget _buildPacksSection(BuildContext context, IconPacksState state) {
+  Widget _buildPacksSection(
+    BuildContext context,
+    IconPacksState state,
+    IconPacksNotifier notifier,
+  ) {
     if (state.isLoadingPacks && state.packs.isEmpty) {
       return const Card(
         child: Padding(
@@ -207,14 +219,24 @@ class _IconPacksScreenState extends ConsumerState<IconPacksScreen> {
                 style: Theme.of(context).textTheme.bodyMedium,
               )
             else
-              ...state.packs.map((pack) => _buildPackTile(context, pack)),
+              ...state.packs.map(
+                (pack) => _buildPackTile(context, state, notifier, pack),
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPackTile(BuildContext context, IconPackSummary pack) {
+  Widget _buildPackTile(
+    BuildContext context,
+    IconPacksState state,
+    IconPacksNotifier notifier,
+    IconPackSummary pack,
+  ) {
+    final isDeleting = state.deletingPackKey == pack.packKey;
+    final canDelete = !state.isImporting && state.deletingPackKey == null;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
@@ -235,9 +257,26 @@ class _IconPacksScreenState extends ConsumerState<IconPacksScreen> {
                   child: Text(
                     pack.displayName,
                     style: Theme.of(context).textTheme.titleSmall,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                const SizedBox(width: 8),
                 Text('${pack.iconCount} SVG'),
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: 'Удалить пак',
+                  child: IconButton(
+                    onPressed: canDelete
+                        ? () => _confirmDeletePack(context, notifier, pack)
+                        : null,
+                    icon: isDeleting
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.delete_outline),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 6),
@@ -250,6 +289,40 @@ class _IconPacksScreenState extends ConsumerState<IconPacksScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDeletePack(
+    BuildContext context,
+    IconPacksNotifier notifier,
+    IconPackSummary pack,
+  ) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Удалить пак?'),
+          content: Text(
+            'Пак "${pack.displayName}" и все его SVG-иконки будут удалены.',
+          ),
+          actions: [
+            SmoothButton(
+              label: 'Отмена',
+              type: SmoothButtonType.text,
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+            ),
+            SmoothButton(
+              label: 'Удалить',
+              variant: SmoothButtonVariant.error,
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete == true && mounted) {
+      await notifier.deletePack(pack.packKey);
+    }
   }
 
   Future<void> _pickSourceAndName(
@@ -284,7 +357,7 @@ class _IconPacksScreenState extends ConsumerState<IconPacksScreen> {
               children: [
                 ListTile(
                   leading: const Icon(Icons.archive_outlined),
-                  title: const Text('ZIP-архив'),
+                  title: const Text('ZIP или 7Z архив'),
                   subtitle: const Text('Импорт из файла архива'),
                   onTap: () => Navigator.of(
                     dialogContext,

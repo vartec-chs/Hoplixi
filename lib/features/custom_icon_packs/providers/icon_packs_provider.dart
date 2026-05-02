@@ -41,9 +41,9 @@ class IconPacksNotifier extends Notifier<IconPacksState> {
 
   Future<FilePickerResult?> pickArchiveFile() {
     return FilePicker.pickFiles(
-      dialogTitle: 'Выберите ZIP-архив с SVG-иконками',
+      dialogTitle: 'Выберите ZIP- или 7Z-архив с SVG-иконками',
       type: FileType.custom,
-      allowedExtensions: const ['zip'],
+      allowedExtensions: const ['zip', '7z'],
     );
   }
 
@@ -97,6 +97,46 @@ class IconPacksNotifier extends Notifier<IconPacksState> {
     return state.packs.any((pack) => pack.packKey == normalized);
   }
 
+  Future<void> deletePack(String packKey) async {
+    if (state.isImporting || state.deletingPackKey != null) {
+      return;
+    }
+
+    state = state.copyWith(
+      deletingPackKey: packKey,
+      errorMessage: null,
+      successMessage: null,
+    );
+
+    try {
+      final service = ref.read(iconPackCatalogServiceProvider);
+      await service.deletePack(packKey);
+      state = state.copyWith(
+        packs: state.packs
+            .where((pack) => pack.packKey != packKey)
+            .toList(growable: false),
+        deletingPackKey: null,
+        successMessage: 'Пак иконок удалён.',
+      );
+      Future.microtask(loadPacks);
+    } on IconPackCatalogException catch (error) {
+      state = state.copyWith(
+        deletingPackKey: null,
+        errorMessage: error.message,
+      );
+    } catch (error, stackTrace) {
+      logError(
+        'Failed to delete icon pack: $error',
+        tag: 'IconPacksNotifier',
+        stackTrace: stackTrace,
+      );
+      state = state.copyWith(
+        deletingPackKey: null,
+        errorMessage: 'Не удалось удалить пак иконок.',
+      );
+    }
+  }
+
   Future<void> importSelectedPack() async {
     final sourcePath = state.selectedSourcePath;
     final sourceType = state.sourceType;
@@ -130,7 +170,7 @@ class IconPacksNotifier extends Notifier<IconPacksState> {
           displayName: displayName,
           onProgress: (current, total, currentFile) {
             state = state.copyWith(
-              progress: total == 0 ? 0 : current / total,
+              progress: _progressValue(current, total),
               currentFile: currentFile,
             );
           },
@@ -140,21 +180,26 @@ class IconPacksNotifier extends Notifier<IconPacksState> {
           displayName: displayName,
           onProgress: (current, total, currentFile) {
             state = state.copyWith(
-              progress: total == 0 ? 0 : current / total,
+              progress: _progressValue(current, total),
               currentFile: currentFile,
             );
           },
         ),
       };
 
-      final packs = await service.listPacks();
+      final packs = [
+        importedPack,
+        ...state.packs.where((pack) => pack.packKey != importedPack.packKey),
+      ]..sort((left, right) => right.importedAt.compareTo(left.importedAt));
       state = state.copyWith(
         packs: packs,
         isImporting: false,
         progress: 1,
+        currentFile: null,
         successMessage:
             'Пак "${importedPack.displayName}" успешно импортирован.',
       );
+      Future.microtask(loadPacks);
     } on IconPackCatalogException catch (error) {
       state = state.copyWith(isImporting: false, errorMessage: error.message);
     } catch (error, stackTrace) {
@@ -168,6 +213,14 @@ class IconPacksNotifier extends Notifier<IconPacksState> {
         errorMessage: 'Не удалось импортировать пак иконок.',
       );
     }
+  }
+
+  double _progressValue(int current, int total) {
+    if (total <= 0) {
+      return 0;
+    }
+
+    return (current / total).clamp(0, 1).toDouble();
   }
 }
 

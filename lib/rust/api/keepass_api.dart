@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `build_database_key`, `export_attachments`, `export_autotype_association`, `export_autotype`, `export_compression`, `export_config`, `export_custom_data_item`, `export_custom_data_map`, `export_database_version`, `export_entry`, `export_fields`, `export_history_entry`, `export_inner_cipher`, `export_keepass_database_blocking`, `export_meta`, `export_otp`, `export_outer_cipher`, `export_times`, `flatten_group`, `format_time`
+// These functions are ignored because they are not marked as `pub`: `build_database_key`, `export_attachments`, `export_autotype_association`, `export_autotype`, `export_compression`, `export_config`, `export_custom_data_item`, `export_custom_data_map`, `export_database_version`, `export_entry_icon`, `export_entry`, `export_fields`, `export_history_entry`, `export_icon`, `export_inner_cipher`, `export_keepass_database_blocking`, `export_meta`, `export_otp`, `export_outer_cipher`, `export_times`, `flatten_group`, `format_time`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Open a KeePass database and export it into a normalized structure.

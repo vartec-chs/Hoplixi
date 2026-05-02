@@ -27,7 +27,7 @@
 // Section: imports
 
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
-use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
+use flutter_rust_bridge::for_generated::{Lifetimeable, Lockable, transform_result_dco};
 use flutter_rust_bridge::{Handler, IntoIntoDart};
 
 // Section: boilerplate
@@ -38,7 +38,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 698379895;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 104709271;
 
 // Section: executor
 
@@ -161,6 +161,47 @@ fn wire__crate__api__crypt_api__decrypt_file_impl(
                         let output_ok = Result::<_, ()>::Ok({
                             crate::api::crypt_api::decrypt_file(api_opts, api_sink).await;
                         })?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__icon_pack_catalog_api__delete_pack_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "delete_pack",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_root_path = <String>::sse_decode(&mut deserializer);
+            let api_pack_key = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::icon_pack_catalog_api::delete_pack(
+                            api_root_path,
+                            api_pack_key,
+                        )
+                        .await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -441,6 +482,106 @@ fn wire__crate__api__simple__greet_impl(
         },
     )
 }
+fn wire__crate__api__icon_pack_catalog_api__import_directory_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "import_directory",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_root_path = <String>::sse_decode(&mut deserializer);
+            let api_directory_path = <String>::sse_decode(&mut deserializer);
+            let api_display_name = <String>::sse_decode(&mut deserializer);
+            let api_sink = <StreamSink<
+                crate::api::icon_pack_catalog_api::FrbIconPackImportEvent,
+                flutter_rust_bridge::for_generated::SseCodec,
+            >>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, ()>(
+                    (move || async move {
+                        let output_ok = Result::<_, ()>::Ok({
+                            crate::api::icon_pack_catalog_api::import_directory(
+                                api_root_path,
+                                api_directory_path,
+                                api_display_name,
+                                api_sink,
+                            )
+                            .await;
+                        })?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__icon_pack_catalog_api__import_pack_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "import_pack",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_root_path = <String>::sse_decode(&mut deserializer);
+            let api_archive_path = <String>::sse_decode(&mut deserializer);
+            let api_display_name = <String>::sse_decode(&mut deserializer);
+            let api_sink = <StreamSink<
+                crate::api::icon_pack_catalog_api::FrbIconPackImportEvent,
+                flutter_rust_bridge::for_generated::SseCodec,
+            >>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, ()>(
+                    (move || async move {
+                        let output_ok = Result::<_, ()>::Ok({
+                            crate::api::icon_pack_catalog_api::import_pack(
+                                api_root_path,
+                                api_archive_path,
+                                api_display_name,
+                                api_sink,
+                            )
+                            .await;
+                        })?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__simple__init_app_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -508,6 +649,156 @@ fn wire__crate__api__logging__install_rust_log_bridge_impl(
         },
     )
 }
+fn wire__crate__api__icon_pack_catalog_api__list_icons_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "list_icons",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_root_path = <String>::sse_decode(&mut deserializer);
+            let api_pack_key = <Option<String>>::sse_decode(&mut deserializer);
+            let api_query = <String>::sse_decode(&mut deserializer);
+            let api_offset = <i32>::sse_decode(&mut deserializer);
+            let api_limit = <i32>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::icon_pack_catalog_api::list_icons(
+                            api_root_path,
+                            api_pack_key,
+                            api_query,
+                            api_offset,
+                            api_limit,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__icon_pack_catalog_api__list_packs_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "list_packs",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_root_path = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::icon_pack_catalog_api::list_packs(api_root_path).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__icon_pack_catalog_api__normalize_icon_path_without_extension_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "normalize_icon_path_without_extension",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_value = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
+                let output_ok = Result::<_, ()>::Ok(
+                    crate::api::icon_pack_catalog_api::normalize_icon_path_without_extension(
+                        api_value,
+                    ),
+                )?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
+fn wire__crate__api__icon_pack_catalog_api__normalize_pack_key_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "normalize_pack_key",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_value = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
+                let output_ok = Result::<_, ()>::Ok(
+                    crate::api::icon_pack_catalog_api::normalize_pack_key(api_value),
+                )?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
 fn wire__crate__api__crypt_api__read_encrypted_header_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -539,6 +830,47 @@ fn wire__crate__api__crypt_api__read_encrypted_header_impl(
                         let output_ok = crate::api::crypt_api::read_encrypted_header(
                             api_input_path,
                             api_password,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__icon_pack_catalog_api__read_svg_by_key_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "read_svg_by_key",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_root_path = <String>::sse_decode(&mut deserializer);
+            let api_icon_key = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::icon_pack_catalog_api::read_svg_by_key(
+                            api_root_path,
+                            api_icon_key,
                         )
                         .await?;
                         Ok(output_ok)
@@ -819,6 +1151,19 @@ impl SseDecode
 impl SseDecode
     for StreamSink<
         crate::api::crypt_api::FrbEncryptEvent,
+        flutter_rust_bridge::for_generated::SseCodec,
+    >
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <String>::sse_decode(deserializer);
+        return StreamSink::deserialize(inner);
+    }
+}
+
+impl SseDecode
+    for StreamSink<
+        crate::api::icon_pack_catalog_api::FrbIconPackImportEvent,
         flutter_rust_bridge::for_generated::SseCodec,
     >
 {
@@ -1202,6 +1547,109 @@ impl SseDecode for crate::api::crypt_api::FrbEncryptResult {
             output_path: var_outputPath,
             uuid: var_uuid,
             original_size: var_originalSize,
+        };
+    }
+}
+
+impl SseDecode for crate::api::icon_pack_catalog_api::FrbIconPackEntry {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_key = <String>::sse_decode(deserializer);
+        let mut var_packKey = <String>::sse_decode(deserializer);
+        let mut var_packName = <String>::sse_decode(deserializer);
+        let mut var_iconKey = <String>::sse_decode(deserializer);
+        let mut var_name = <String>::sse_decode(deserializer);
+        let mut var_relativePath = <String>::sse_decode(deserializer);
+        let mut var_svgPath = <String>::sse_decode(deserializer);
+        let mut var_importedAtMillis = <i64>::sse_decode(deserializer);
+        return crate::api::icon_pack_catalog_api::FrbIconPackEntry {
+            key: var_key,
+            pack_key: var_packKey,
+            pack_name: var_packName,
+            icon_key: var_iconKey,
+            name: var_name,
+            relative_path: var_relativePath,
+            svg_path: var_svgPath,
+            imported_at_millis: var_importedAtMillis,
+        };
+    }
+}
+
+impl SseDecode for crate::api::icon_pack_catalog_api::FrbIconPackError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_code = <String>::sse_decode(deserializer);
+        let mut var_message = <String>::sse_decode(deserializer);
+        return crate::api::icon_pack_catalog_api::FrbIconPackError {
+            code: var_code,
+            message: var_message,
+        };
+    }
+}
+
+impl SseDecode for crate::api::icon_pack_catalog_api::FrbIconPackImportEvent {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_field0 =
+                    <crate::api::icon_pack_catalog_api::FrbIconPackImportProgress>::sse_decode(
+                        deserializer,
+                    );
+                return crate::api::icon_pack_catalog_api::FrbIconPackImportEvent::Progress(
+                    var_field0,
+                );
+            }
+            1 => {
+                let mut var_field0 =
+                    <crate::api::icon_pack_catalog_api::FrbIconPackSummary>::sse_decode(
+                        deserializer,
+                    );
+                return crate::api::icon_pack_catalog_api::FrbIconPackImportEvent::Done(var_field0);
+            }
+            2 => {
+                let mut var_field0 =
+                    <crate::api::icon_pack_catalog_api::FrbIconPackError>::sse_decode(deserializer);
+                return crate::api::icon_pack_catalog_api::FrbIconPackImportEvent::Error(
+                    var_field0,
+                );
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
+impl SseDecode for crate::api::icon_pack_catalog_api::FrbIconPackImportProgress {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_current = <i32>::sse_decode(deserializer);
+        let mut var_total = <i32>::sse_decode(deserializer);
+        let mut var_currentFile = <String>::sse_decode(deserializer);
+        return crate::api::icon_pack_catalog_api::FrbIconPackImportProgress {
+            current: var_current,
+            total: var_total,
+            current_file: var_currentFile,
+        };
+    }
+}
+
+impl SseDecode for crate::api::icon_pack_catalog_api::FrbIconPackSummary {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_packKey = <String>::sse_decode(deserializer);
+        let mut var_displayName = <String>::sse_decode(deserializer);
+        let mut var_sourceArchiveName = <String>::sse_decode(deserializer);
+        let mut var_importedAtMillis = <i64>::sse_decode(deserializer);
+        let mut var_iconCount = <i32>::sse_decode(deserializer);
+        return crate::api::icon_pack_catalog_api::FrbIconPackSummary {
+            pack_key: var_packKey,
+            display_name: var_displayName,
+            source_archive_name: var_sourceArchiveName,
+            imported_at_millis: var_importedAtMillis,
+            icon_count: var_iconCount,
         };
     }
 }
@@ -1745,6 +2193,34 @@ impl SseDecode for Vec<crate::api::crypt_api::FrbEncryptResult> {
     }
 }
 
+impl SseDecode for Vec<crate::api::icon_pack_catalog_api::FrbIconPackEntry> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(
+                <crate::api::icon_pack_catalog_api::FrbIconPackEntry>::sse_decode(deserializer),
+            );
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::icon_pack_catalog_api::FrbIconPackSummary> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(
+                <crate::api::icon_pack_catalog_api::FrbIconPackSummary>::sse_decode(deserializer),
+            );
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::api::keepass_api::FrbKeepassAttachment> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2038,51 +2514,87 @@ fn pde_ffi_dispatcher_primary_impl(
         1 => wire__crate__api__logging__create_log_stream_impl(port, ptr, rust_vec_len, data_len),
         2 => wire__crate__api__crypt_api__decrypt_batch_impl(port, ptr, rust_vec_len, data_len),
         3 => wire__crate__api__crypt_api__decrypt_file_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire__crate__api__crypt_api__encrypt_batch_impl(port, ptr, rust_vec_len, data_len),
-        5 => wire__crate__api__crypt_api__encrypt_file_impl(port, ptr, rust_vec_len, data_len),
-        6 => wire__crate__api__keepass_api__export_keepass_database_impl(
+        4 => wire__crate__api__icon_pack_catalog_api__delete_pack_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        7 => wire__crate__api__crypt_api__frb_decrypt_options_simple_impl(
+        5 => wire__crate__api__crypt_api__encrypt_batch_impl(port, ptr, rust_vec_len, data_len),
+        6 => wire__crate__api__crypt_api__encrypt_file_impl(port, ptr, rust_vec_len, data_len),
+        7 => wire__crate__api__keepass_api__export_keepass_database_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        8 => wire__crate__api__crypt_api__frb_encrypt_options_simple_impl(
+        8 => wire__crate__api__crypt_api__frb_decrypt_options_simple_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        9 => wire__crate__api__keepass_api__frb_keepass_export_options_simple_impl(
+        9 => wire__crate__api__crypt_api__frb_encrypt_options_simple_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        11 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
-        12 => wire__crate__api__logging__install_rust_log_bridge_impl(
+        10 => wire__crate__api__keepass_api__frb_keepass_export_options_simple_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        13 => wire__crate__api__crypt_api__read_encrypted_header_impl(
+        12 => wire__crate__api__icon_pack_catalog_api__import_directory_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        14 => wire__crate__api__logging__rust_log_impl(port, ptr, rust_vec_len, data_len),
-        15 => wire__crate__api__logging__rust_log_debug_impl(port, ptr, rust_vec_len, data_len),
-        16 => wire__crate__api__logging__rust_log_error_impl(port, ptr, rust_vec_len, data_len),
-        17 => wire__crate__api__logging__rust_log_fatal_impl(port, ptr, rust_vec_len, data_len),
-        18 => wire__crate__api__logging__rust_log_info_impl(port, ptr, rust_vec_len, data_len),
-        19 => wire__crate__api__logging__rust_log_warning_impl(port, ptr, rust_vec_len, data_len),
+        13 => wire__crate__api__icon_pack_catalog_api__import_pack_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        14 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
+        15 => wire__crate__api__logging__install_rust_log_bridge_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        16 => wire__crate__api__icon_pack_catalog_api__list_icons_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        17 => wire__crate__api__icon_pack_catalog_api__list_packs_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        20 => wire__crate__api__crypt_api__read_encrypted_header_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        21 => wire__crate__api__icon_pack_catalog_api__read_svg_by_key_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        22 => wire__crate__api__logging__rust_log_impl(port, ptr, rust_vec_len, data_len),
+        23 => wire__crate__api__logging__rust_log_debug_impl(port, ptr, rust_vec_len, data_len),
+        24 => wire__crate__api__logging__rust_log_error_impl(port, ptr, rust_vec_len, data_len),
+        25 => wire__crate__api__logging__rust_log_fatal_impl(port, ptr, rust_vec_len, data_len),
+        26 => wire__crate__api__logging__rust_log_info_impl(port, ptr, rust_vec_len, data_len),
+        27 => wire__crate__api__logging__rust_log_warning_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -2095,7 +2607,17 @@ fn pde_ffi_dispatcher_sync_impl(
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        10 => wire__crate__api__simple__greet_impl(ptr, rust_vec_len, data_len),
+        11 => wire__crate__api__simple__greet_impl(ptr, rust_vec_len, data_len),
+        18 => wire__crate__api__icon_pack_catalog_api__normalize_icon_path_without_extension_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        19 => wire__crate__api__icon_pack_catalog_api__normalize_pack_key_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
         _ => unreachable!(),
     }
 }
@@ -2526,6 +3048,132 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::crypt_api::FrbEncryptResult>
     for crate::api::crypt_api::FrbEncryptResult
 {
     fn into_into_dart(self) -> crate::api::crypt_api::FrbEncryptResult {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::icon_pack_catalog_api::FrbIconPackEntry {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.key.into_into_dart().into_dart(),
+            self.pack_key.into_into_dart().into_dart(),
+            self.pack_name.into_into_dart().into_dart(),
+            self.icon_key.into_into_dart().into_dart(),
+            self.name.into_into_dart().into_dart(),
+            self.relative_path.into_into_dart().into_dart(),
+            self.svg_path.into_into_dart().into_dart(),
+            self.imported_at_millis.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::icon_pack_catalog_api::FrbIconPackEntry
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::icon_pack_catalog_api::FrbIconPackEntry>
+    for crate::api::icon_pack_catalog_api::FrbIconPackEntry
+{
+    fn into_into_dart(self) -> crate::api::icon_pack_catalog_api::FrbIconPackEntry {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::icon_pack_catalog_api::FrbIconPackError {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.code.into_into_dart().into_dart(),
+            self.message.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::icon_pack_catalog_api::FrbIconPackError
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::icon_pack_catalog_api::FrbIconPackError>
+    for crate::api::icon_pack_catalog_api::FrbIconPackError
+{
+    fn into_into_dart(self) -> crate::api::icon_pack_catalog_api::FrbIconPackError {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::icon_pack_catalog_api::FrbIconPackImportEvent {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::api::icon_pack_catalog_api::FrbIconPackImportEvent::Progress(field0) => {
+                [0.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::api::icon_pack_catalog_api::FrbIconPackImportEvent::Done(field0) => {
+                [1.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::api::icon_pack_catalog_api::FrbIconPackImportEvent::Error(field0) => {
+                [2.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::icon_pack_catalog_api::FrbIconPackImportEvent
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::icon_pack_catalog_api::FrbIconPackImportEvent>
+    for crate::api::icon_pack_catalog_api::FrbIconPackImportEvent
+{
+    fn into_into_dart(self) -> crate::api::icon_pack_catalog_api::FrbIconPackImportEvent {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart
+    for crate::api::icon_pack_catalog_api::FrbIconPackImportProgress
+{
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.current.into_into_dart().into_dart(),
+            self.total.into_into_dart().into_dart(),
+            self.current_file.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::icon_pack_catalog_api::FrbIconPackImportProgress
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::icon_pack_catalog_api::FrbIconPackImportProgress>
+    for crate::api::icon_pack_catalog_api::FrbIconPackImportProgress
+{
+    fn into_into_dart(self) -> crate::api::icon_pack_catalog_api::FrbIconPackImportProgress {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::icon_pack_catalog_api::FrbIconPackSummary {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.pack_key.into_into_dart().into_dart(),
+            self.display_name.into_into_dart().into_dart(),
+            self.source_archive_name.into_into_dart().into_dart(),
+            self.imported_at_millis.into_into_dart().into_dart(),
+            self.icon_count.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::icon_pack_catalog_api::FrbIconPackSummary
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::icon_pack_catalog_api::FrbIconPackSummary>
+    for crate::api::icon_pack_catalog_api::FrbIconPackSummary
+{
+    fn into_into_dart(self) -> crate::api::icon_pack_catalog_api::FrbIconPackSummary {
         self
     }
 }
@@ -3124,6 +3772,18 @@ impl SseEncode
 }
 
 impl SseEncode
+    for StreamSink<
+        crate::api::icon_pack_catalog_api::FrbIconPackImportEvent,
+        flutter_rust_bridge::for_generated::SseCodec,
+    >
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        unimplemented!("")
+    }
+}
+
+impl SseEncode
     for StreamSink<crate::api::logging::LogEntry, flutter_rust_bridge::for_generated::SseCodec>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -3404,6 +4064,77 @@ impl SseEncode for crate::api::crypt_api::FrbEncryptResult {
         <String>::sse_encode(self.output_path, serializer);
         <String>::sse_encode(self.uuid, serializer);
         <u64>::sse_encode(self.original_size, serializer);
+    }
+}
+
+impl SseEncode for crate::api::icon_pack_catalog_api::FrbIconPackEntry {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.key, serializer);
+        <String>::sse_encode(self.pack_key, serializer);
+        <String>::sse_encode(self.pack_name, serializer);
+        <String>::sse_encode(self.icon_key, serializer);
+        <String>::sse_encode(self.name, serializer);
+        <String>::sse_encode(self.relative_path, serializer);
+        <String>::sse_encode(self.svg_path, serializer);
+        <i64>::sse_encode(self.imported_at_millis, serializer);
+    }
+}
+
+impl SseEncode for crate::api::icon_pack_catalog_api::FrbIconPackError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.code, serializer);
+        <String>::sse_encode(self.message, serializer);
+    }
+}
+
+impl SseEncode for crate::api::icon_pack_catalog_api::FrbIconPackImportEvent {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::api::icon_pack_catalog_api::FrbIconPackImportEvent::Progress(field0) => {
+                <i32>::sse_encode(0, serializer);
+                <crate::api::icon_pack_catalog_api::FrbIconPackImportProgress>::sse_encode(
+                    field0, serializer,
+                );
+            }
+            crate::api::icon_pack_catalog_api::FrbIconPackImportEvent::Done(field0) => {
+                <i32>::sse_encode(1, serializer);
+                <crate::api::icon_pack_catalog_api::FrbIconPackSummary>::sse_encode(
+                    field0, serializer,
+                );
+            }
+            crate::api::icon_pack_catalog_api::FrbIconPackImportEvent::Error(field0) => {
+                <i32>::sse_encode(2, serializer);
+                <crate::api::icon_pack_catalog_api::FrbIconPackError>::sse_encode(
+                    field0, serializer,
+                );
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
+impl SseEncode for crate::api::icon_pack_catalog_api::FrbIconPackImportProgress {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.current, serializer);
+        <i32>::sse_encode(self.total, serializer);
+        <String>::sse_encode(self.current_file, serializer);
+    }
+}
+
+impl SseEncode for crate::api::icon_pack_catalog_api::FrbIconPackSummary {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.pack_key, serializer);
+        <String>::sse_encode(self.display_name, serializer);
+        <String>::sse_encode(self.source_archive_name, serializer);
+        <i64>::sse_encode(self.imported_at_millis, serializer);
+        <i32>::sse_encode(self.icon_count, serializer);
     }
 }
 
@@ -3772,6 +4503,26 @@ impl SseEncode for Vec<crate::api::crypt_api::FrbEncryptResult> {
     }
 }
 
+impl SseEncode for Vec<crate::api::icon_pack_catalog_api::FrbIconPackEntry> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::icon_pack_catalog_api::FrbIconPackEntry>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::icon_pack_catalog_api::FrbIconPackSummary> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::icon_pack_catalog_api::FrbIconPackSummary>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::api::keepass_api::FrbKeepassAttachment> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -4009,7 +4760,7 @@ mod io {
     use flutter_rust_bridge::for_generated::byteorder::{
         NativeEndian, ReadBytesExt, WriteBytesExt,
     };
-    use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
+    use flutter_rust_bridge::for_generated::{Lifetimeable, Lockable, transform_result_dco};
     use flutter_rust_bridge::{Handler, IntoIntoDart};
 
     // Section: boilerplate
@@ -4033,7 +4784,7 @@ mod web {
     };
     use flutter_rust_bridge::for_generated::wasm_bindgen;
     use flutter_rust_bridge::for_generated::wasm_bindgen::prelude::*;
-    use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
+    use flutter_rust_bridge::for_generated::{Lifetimeable, Lockable, transform_result_dco};
     use flutter_rust_bridge::{Handler, IntoIntoDart};
 
     // Section: boilerplate

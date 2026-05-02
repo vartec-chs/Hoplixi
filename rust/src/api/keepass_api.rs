@@ -1,14 +1,14 @@
 use std::fs::File;
 use std::path::PathBuf;
 
-use anyhow::{bail, Context};
+use anyhow::{Context, bail};
 use chrono::NaiveDateTime;
 use keepass::config::{
     CompressionConfig, DatabaseVersion, InnerCipherConfig, KdfConfig, OuterCipherConfig,
 };
 use keepass::db::{
-    self, fields, AutoType, AutoTypeAssociation, CustomDataItem, CustomDataValue, Entry, Group,
-    Times, Value,
+    self, AttachmentRef, AutoType, AutoTypeAssociation, CustomDataItem, CustomDataValue, EntryRef,
+    GroupRef, Icon, Times, Value, fields,
 };
 use keepass::{Database, DatabaseKey};
 
@@ -267,7 +267,7 @@ fn export_keepass_database_blocking(
     let mut groups = Vec::new();
     let mut entries = Vec::new();
     flatten_group(
-        &db.root,
+        db.root(),
         None,
         String::new(),
         true,
@@ -289,7 +289,7 @@ fn export_keepass_database_blocking(
         source_path: opts.input_path,
         config: export_config(&db.config),
         meta: export_meta(&db.meta),
-        root_group_uuid: db.root.uuid.to_string(),
+        root_group_uuid: db.root().id().to_string(),
         groups,
         entries,
         deleted_objects,
@@ -324,7 +324,7 @@ fn build_database_key(opts: &FrbKeepassExportOptions) -> anyhow::Result<Database
 }
 
 fn flatten_group(
-    group: &Group,
+    group: GroupRef<'_>,
     parent_uuid: Option<String>,
     path: String,
     is_root: bool,
@@ -332,7 +332,14 @@ fn flatten_group(
     groups_out: &mut Vec<FrbKeepassGroup>,
     entries_out: &mut Vec<FrbKeepassEntry>,
 ) {
-    let group_uuid = group.uuid.to_string();
+    let group_uuid = group.id().to_string();
+    let (icon_id, custom_icon_uuid) = export_icon(
+        group.icon(),
+        group
+            .custom_icon()
+            .as_ref()
+            .map(|icon| icon.id().to_string()),
+    );
 
     groups_out.push(FrbKeepassGroup {
         uuid: group_uuid.clone(),
@@ -341,22 +348,22 @@ fn flatten_group(
         path: path.clone(),
         name: group.name.clone(),
         notes: group.notes.clone(),
-        icon_id: group.icon_id.and_then(|v| u32::try_from(v).ok()),
-        custom_icon_uuid: group.custom_icon_uuid.map(|uuid| uuid.to_string()),
+        icon_id,
+        custom_icon_uuid,
         times: export_times(&group.times),
         custom_data: export_custom_data_map(&group.custom_data),
         is_expanded: group.is_expanded,
         default_autotype_sequence: group.default_autotype_sequence.clone(),
         enable_autotype: group.enable_autotype,
         enable_searching: group.enable_searching,
-        last_top_visible_entry: group.last_top_visible_entry.map(|uuid| uuid.to_string()),
+        last_top_visible_entry: None,
     });
 
-    for entry in &group.entries {
+    for entry in group.entries() {
         entries_out.push(export_entry(entry, &group_uuid, &path, opts));
     }
 
-    for child in &group.groups {
+    for child in group.groups() {
         let child_path = if path.is_empty() {
             child.name.clone()
         } else {
@@ -375,8 +382,19 @@ fn flatten_group(
     }
 }
 
+fn export_icon(
+    icon: Option<&Icon>,
+    custom_icon_uuid: Option<String>,
+) -> (Option<u32>, Option<String>) {
+    match icon {
+        Some(Icon::BuiltIn(id)) => (u32::try_from(*id).ok(), None),
+        Some(Icon::Custom(_)) => (None, custom_icon_uuid),
+        None => (None, None),
+    }
+}
+
 fn export_entry(
-    entry: &Entry,
+    entry: EntryRef<'_>,
     group_uuid: &str,
     group_path: &str,
     opts: &FrbKeepassExportOptions,
@@ -386,9 +404,8 @@ fn export_entry(
             .history
             .as_ref()
             .map(|history| {
-                history
-                    .get_entries()
-                    .iter()
+                (0..history.get_entries().len())
+                    .filter_map(|index| entry.historical(index))
                     .map(|snapshot| export_history_entry(snapshot, opts))
                     .collect()
             })
@@ -397,14 +414,10 @@ fn export_entry(
         Vec::new()
     };
 
-    let (custom_icon_uuid, custom_icon_data) = entry
-        .custom_icon
-        .as_ref()
-        .map(|(uuid, data)| (Some(uuid.to_string()), Some(data.clone())))
-        .unwrap_or((None, None));
+    let (icon_id, custom_icon_uuid, custom_icon_data) = export_entry_icon(&entry);
 
     FrbKeepassEntry {
-        uuid: entry.uuid.to_string(),
+        uuid: entry.id().to_string(),
         group_uuid: group_uuid.to_string(),
         group_path: group_path.to_string(),
         title: entry.get(fields::TITLE).map(ToOwned::to_owned),
@@ -416,29 +429,28 @@ fn export_entry(
         fields: export_fields(&entry.fields),
         times: export_times(&entry.times),
         custom_data: export_custom_data_map(&entry.custom_data),
-        icon_id: entry.icon_id.and_then(|v| u32::try_from(v).ok()),
+        icon_id,
         custom_icon_uuid,
         custom_icon_data,
         foreground_color: entry.foreground_color.as_ref().map(ToString::to_string),
         background_color: entry.background_color.as_ref().map(ToString::to_string),
         override_url: entry.override_url.clone(),
         quality_check: entry.quality_check,
-        attachments: export_attachments(&entry.attachments, opts.include_attachments),
+        attachments: export_attachments(entry.attachments(), opts.include_attachments),
         autotype: entry.autotype.as_ref().map(export_autotype),
-        otp: export_otp(entry),
+        otp: export_otp(&entry),
         history,
     }
 }
 
-fn export_history_entry(entry: &Entry, opts: &FrbKeepassExportOptions) -> FrbKeepassHistoryEntry {
-    let (custom_icon_uuid, custom_icon_data) = entry
-        .custom_icon
-        .as_ref()
-        .map(|(uuid, data)| (Some(uuid.to_string()), Some(data.clone())))
-        .unwrap_or((None, None));
+fn export_history_entry(
+    entry: EntryRef<'_>,
+    opts: &FrbKeepassExportOptions,
+) -> FrbKeepassHistoryEntry {
+    let (icon_id, custom_icon_uuid, custom_icon_data) = export_entry_icon(&entry);
 
     FrbKeepassHistoryEntry {
-        uuid: entry.uuid.to_string(),
+        uuid: entry.id().to_string(),
         title: entry.get(fields::TITLE).map(ToOwned::to_owned),
         username: entry.get(fields::USERNAME).map(ToOwned::to_owned),
         password: entry.get(fields::PASSWORD).map(ToOwned::to_owned),
@@ -448,17 +460,26 @@ fn export_history_entry(entry: &Entry, opts: &FrbKeepassExportOptions) -> FrbKee
         fields: export_fields(&entry.fields),
         times: export_times(&entry.times),
         custom_data: export_custom_data_map(&entry.custom_data),
-        icon_id: entry.icon_id.and_then(|v| u32::try_from(v).ok()),
+        icon_id,
         custom_icon_uuid,
         custom_icon_data,
         foreground_color: entry.foreground_color.as_ref().map(ToString::to_string),
         background_color: entry.background_color.as_ref().map(ToString::to_string),
         override_url: entry.override_url.clone(),
         quality_check: entry.quality_check,
-        attachments: export_attachments(&entry.attachments, opts.include_attachments),
+        attachments: export_attachments(entry.attachments(), opts.include_attachments),
         autotype: entry.autotype.as_ref().map(export_autotype),
-        otp: export_otp(entry),
+        otp: export_otp(&entry),
     }
+}
+
+fn export_entry_icon(entry: &EntryRef<'_>) -> (Option<u32>, Option<String>, Option<Vec<u8>>) {
+    let custom_icon = entry.custom_icon();
+    let custom_icon_uuid = custom_icon.as_ref().map(|icon| icon.id().to_string());
+    let custom_icon_data = custom_icon.as_ref().map(|icon| icon.data.clone());
+    let (icon_id, custom_icon_uuid) = export_icon(entry.icon(), custom_icon_uuid);
+
+    (icon_id, custom_icon_uuid, custom_icon_data)
 }
 
 fn export_fields(
@@ -503,16 +524,15 @@ fn export_custom_data_item(key: &str, item: &CustomDataItem) -> FrbKeepassCustom
     }
 }
 
-fn export_attachments(
-    attachments: &std::collections::HashMap<String, db::Attachment>,
+fn export_attachments<'a>(
+    attachments: impl Iterator<Item = AttachmentRef<'a>>,
     include_data: bool,
 ) -> Vec<FrbKeepassAttachment> {
     let mut items = attachments
-        .iter()
-        .map(|(key, attachment)| {
+        .map(|attachment| {
             let bytes = attachment.data.get();
             FrbKeepassAttachment {
-                key: key.clone(),
+                key: attachment.id().to_string(),
                 size: u64::try_from(bytes.len()).unwrap_or(u64::MAX),
                 protected: attachment.data.is_protected(),
                 data: if include_data {
@@ -547,7 +567,7 @@ fn export_autotype_association(association: &AutoTypeAssociation) -> FrbKeepassA
     }
 }
 
-fn export_otp(entry: &Entry) -> Option<FrbKeepassOtp> {
+fn export_otp(entry: &EntryRef<'_>) -> Option<FrbKeepassOtp> {
     let raw_value = entry.get_raw_otp_value()?.to_string();
 
     match entry.get_otp() {
@@ -657,6 +677,7 @@ fn export_config(config: &keepass::config::DatabaseConfig) -> FrbKeepassConfig {
                 version
             ),
         ),
+        _ => ("Unknown".to_string(), format!("{:?}", &config.kdf_config)),
     };
 
     FrbKeepassConfig {
@@ -683,6 +704,7 @@ fn export_outer_cipher(cipher: &OuterCipherConfig) -> String {
         OuterCipherConfig::AES256 => "AES256".to_string(),
         OuterCipherConfig::Twofish => "Twofish".to_string(),
         OuterCipherConfig::ChaCha20 => "ChaCha20".to_string(),
+        _ => format!("{cipher:?}"),
     }
 }
 
@@ -691,6 +713,7 @@ fn export_inner_cipher(cipher: &InnerCipherConfig) -> String {
         InnerCipherConfig::Plain => "Plain".to_string(),
         InnerCipherConfig::Salsa20 => "Salsa20".to_string(),
         InnerCipherConfig::ChaCha20 => "ChaCha20".to_string(),
+        _ => format!("{cipher:?}"),
     }
 }
 
@@ -698,6 +721,7 @@ fn export_compression(config: &CompressionConfig) -> String {
     match config {
         CompressionConfig::None => "None".to_string(),
         CompressionConfig::GZip => "GZip".to_string(),
+        _ => format!("{config:?}"),
     }
 }
 
@@ -707,17 +731,23 @@ fn format_time(value: Option<NaiveDateTime>) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{export_entry, flatten_group, FrbKeepassExportOptions};
-    use keepass::db::{fields, Entry, Group};
+    use super::{FrbKeepassExportOptions, export_entry, flatten_group};
+    use keepass::{Database, db::fields};
 
     #[test]
     fn export_entry_preserves_protected_field_flags() {
-        let mut entry = Entry::new();
-        entry.set_unprotected(fields::TITLE, "Example");
-        entry.set_protected(fields::PASSWORD, "secret");
+        let mut db = Database::new();
+        let entry_id = db
+            .root_mut()
+            .add_entry()
+            .edit(|entry| {
+                entry.set_unprotected(fields::TITLE, "Example");
+                entry.set_protected(fields::PASSWORD, "secret");
+            })
+            .id();
 
         let exported = export_entry(
-            &entry,
+            db.entry(entry_id).expect("entry"),
             "group-uuid",
             "General",
             &FrbKeepassExportOptions::simple("db.kdbx".to_string(), "pass".to_string()),
@@ -741,20 +771,29 @@ mod tests {
 
     #[test]
     fn flatten_group_builds_relative_paths() {
-        let mut root = Group::new("Root");
-        let mut general = Group::new("General");
-        let work = Group::new("Work");
-        let mut entry = Entry::new();
-        entry.set_unprotected(fields::TITLE, "Entry");
+        let mut db = Database::new();
+        let general_id = db
+            .root_mut()
+            .add_group()
+            .edit(|group| group.name = "General".to_string())
+            .id();
 
-        general.groups.push(work);
-        general.entries.push(entry);
-        root.groups.push(general);
+        db.group_mut(general_id)
+            .expect("general group")
+            .add_group()
+            .edit(|group| group.name = "Work".to_string());
+
+        db.group_mut(general_id)
+            .expect("general group")
+            .add_entry()
+            .edit(|entry| {
+                entry.set_unprotected(fields::TITLE, "Entry");
+            });
 
         let mut groups = Vec::new();
         let mut entries = Vec::new();
         flatten_group(
-            &root,
+            db.root(),
             None,
             String::new(),
             true,
@@ -763,15 +802,21 @@ mod tests {
             &mut entries,
         );
 
-        assert!(groups
-            .iter()
-            .any(|group| group.is_root && group.path.is_empty()));
-        assert!(groups
-            .iter()
-            .any(|group| group.name == "General" && group.path == "General"));
-        assert!(groups
-            .iter()
-            .any(|group| group.name == "Work" && group.path == "General/Work"));
+        assert!(
+            groups
+                .iter()
+                .any(|group| group.is_root && group.path.is_empty())
+        );
+        assert!(
+            groups
+                .iter()
+                .any(|group| group.name == "General" && group.path == "General")
+        );
+        assert!(
+            groups
+                .iter()
+                .any(|group| group.name == "Work" && group.path == "General/Work")
+        );
         assert!(entries.iter().any(|entry| entry.group_path == "General"));
     }
 }

@@ -7,6 +7,7 @@ class IconPacksState {
     this.packs = const [],
     this.isLoadingPacks = false,
     this.isImporting = false,
+    this.deletingPackKey,
     this.selectedSourcePath,
     this.sourceType,
     this.displayName,
@@ -20,6 +21,7 @@ class IconPacksState {
   final List<IconPackSummary> packs;
   final bool isLoadingPacks;
   final bool isImporting;
+  final String? deletingPackKey;
   final String? selectedSourcePath;
   final IconPackImportSourceType? sourceType;
   final String? displayName;
@@ -31,6 +33,7 @@ class IconPacksState {
 
   bool get canImport =>
       !isImporting &&
+      deletingPackKey == null &&
       selectedSourcePath != null &&
       sourceType != null &&
       displayName != null &&
@@ -42,6 +45,7 @@ class IconPacksState {
     List<IconPackSummary>? packs,
     bool? isLoadingPacks,
     bool? isImporting,
+    Object? deletingPackKey = _unset,
     Object? selectedSourcePath = _unset,
     Object? sourceType = _unset,
     Object? displayName = _unset,
@@ -55,6 +59,9 @@ class IconPacksState {
       packs: packs ?? this.packs,
       isLoadingPacks: isLoadingPacks ?? this.isLoadingPacks,
       isImporting: isImporting ?? this.isImporting,
+      deletingPackKey: identical(deletingPackKey, _unset)
+          ? this.deletingPackKey
+          : deletingPackKey as String?,
       selectedSourcePath: identical(selectedSourcePath, _unset)
           ? this.selectedSourcePath
           : selectedSourcePath as String?,

@@ -4,6 +4,7 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/crypt_api.dart';
+import 'api/icon_pack_catalog_api.dart';
 import 'api/keepass_api.dart';
 import 'api/logging.dart';
 import 'api/simple.dart';
@@ -69,7 +70,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 698379895;
+  int get rustContentHash => 104709271;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -89,6 +90,11 @@ abstract class RustLibApi extends BaseApi {
 
   Stream<FrbDecryptEvent> crateApiCryptApiDecryptFile({
     required FrbDecryptOptions opts,
+  });
+
+  Future<void> crateApiIconPackCatalogApiDeletePack({
+    required String rootPath,
+    required String packKey,
   });
 
   Stream<FrbBatchEncryptEvent> crateApiCryptApiEncryptBatch({
@@ -123,13 +129,48 @@ abstract class RustLibApi extends BaseApi {
 
   String crateApiSimpleGreet({required String name});
 
+  Stream<FrbIconPackImportEvent> crateApiIconPackCatalogApiImportDirectory({
+    required String rootPath,
+    required String directoryPath,
+    required String displayName,
+  });
+
+  Stream<FrbIconPackImportEvent> crateApiIconPackCatalogApiImportPack({
+    required String rootPath,
+    required String archivePath,
+    required String displayName,
+  });
+
   Future<void> crateApiSimpleInitApp();
 
   Future<void> crateApiLoggingInstallRustLogBridge({required int level});
 
+  Future<List<FrbIconPackEntry>> crateApiIconPackCatalogApiListIcons({
+    required String rootPath,
+    String? packKey,
+    required String query,
+    required int offset,
+    required int limit,
+  });
+
+  Future<List<FrbIconPackSummary>> crateApiIconPackCatalogApiListPacks({
+    required String rootPath,
+  });
+
+  String crateApiIconPackCatalogApiNormalizeIconPathWithoutExtension({
+    required String value,
+  });
+
+  String crateApiIconPackCatalogApiNormalizePackKey({required String value});
+
   Future<FrbDecryptedMetadata> crateApiCryptApiReadEncryptedHeader({
     required String inputPath,
     required String password,
+  });
+
+  Future<String?> crateApiIconPackCatalogApiReadSvgByKey({
+    required String rootPath,
+    required String iconKey,
   });
 
   Future<void> crateApiLoggingRustLog({
@@ -281,6 +322,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateApiIconPackCatalogApiDeletePack({
+    required String rootPath,
+    required String packKey,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(rootPath, serializer);
+          sse_encode_String(packKey, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 4,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiIconPackCatalogApiDeletePackConstMeta,
+        argValues: [rootPath, packKey],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiIconPackCatalogApiDeletePackConstMeta =>
+      const TaskConstMeta(
+        debugName: "delete_pack",
+        argNames: ["rootPath", "packKey"],
+      );
+
+  @override
   Stream<FrbBatchEncryptEvent> crateApiCryptApiEncryptBatch({
     required FrbBatchEncryptOptions opts,
   }) {
@@ -295,7 +371,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 4,
+              funcId: 5,
               port: port_,
             );
           },
@@ -333,7 +409,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 5,
+              funcId: 6,
               port: port_,
             );
           },
@@ -368,7 +444,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 6,
+            funcId: 7,
             port: port_,
           );
         },
@@ -405,7 +481,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 7,
+            funcId: 8,
             port: port_,
           );
         },
@@ -442,7 +518,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 8,
+            funcId: 9,
             port: port_,
           );
         },
@@ -478,7 +554,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 9,
+            funcId: 10,
             port: port_,
           );
         },
@@ -506,7 +582,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(name, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 10)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 11)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -523,6 +599,96 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "greet", argNames: ["name"]);
 
   @override
+  Stream<FrbIconPackImportEvent> crateApiIconPackCatalogApiImportDirectory({
+    required String rootPath,
+    required String directoryPath,
+    required String displayName,
+  }) {
+    final sink = RustStreamSink<FrbIconPackImportEvent>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_String(rootPath, serializer);
+            sse_encode_String(directoryPath, serializer);
+            sse_encode_String(displayName, serializer);
+            sse_encode_StreamSink_frb_icon_pack_import_event_Sse(
+              sink,
+              serializer,
+            );
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 12,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: null,
+          ),
+          constMeta: kCrateApiIconPackCatalogApiImportDirectoryConstMeta,
+          argValues: [rootPath, directoryPath, displayName, sink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return sink.stream;
+  }
+
+  TaskConstMeta get kCrateApiIconPackCatalogApiImportDirectoryConstMeta =>
+      const TaskConstMeta(
+        debugName: "import_directory",
+        argNames: ["rootPath", "directoryPath", "displayName", "sink"],
+      );
+
+  @override
+  Stream<FrbIconPackImportEvent> crateApiIconPackCatalogApiImportPack({
+    required String rootPath,
+    required String archivePath,
+    required String displayName,
+  }) {
+    final sink = RustStreamSink<FrbIconPackImportEvent>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_String(rootPath, serializer);
+            sse_encode_String(archivePath, serializer);
+            sse_encode_String(displayName, serializer);
+            sse_encode_StreamSink_frb_icon_pack_import_event_Sse(
+              sink,
+              serializer,
+            );
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 13,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: null,
+          ),
+          constMeta: kCrateApiIconPackCatalogApiImportPackConstMeta,
+          argValues: [rootPath, archivePath, displayName, sink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return sink.stream;
+  }
+
+  TaskConstMeta get kCrateApiIconPackCatalogApiImportPackConstMeta =>
+      const TaskConstMeta(
+        debugName: "import_pack",
+        argNames: ["rootPath", "archivePath", "displayName", "sink"],
+      );
+
+  @override
   Future<void> crateApiSimpleInitApp() {
     return handler.executeNormal(
       NormalTask(
@@ -531,7 +697,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 11,
+            funcId: 14,
             port: port_,
           );
         },
@@ -559,7 +725,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 12,
+            funcId: 15,
             port: port_,
           );
         },
@@ -581,6 +747,130 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<List<FrbIconPackEntry>> crateApiIconPackCatalogApiListIcons({
+    required String rootPath,
+    String? packKey,
+    required String query,
+    required int offset,
+    required int limit,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(rootPath, serializer);
+          sse_encode_opt_String(packKey, serializer);
+          sse_encode_String(query, serializer);
+          sse_encode_i_32(offset, serializer);
+          sse_encode_i_32(limit, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 16,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_frb_icon_pack_entry,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiIconPackCatalogApiListIconsConstMeta,
+        argValues: [rootPath, packKey, query, offset, limit],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiIconPackCatalogApiListIconsConstMeta =>
+      const TaskConstMeta(
+        debugName: "list_icons",
+        argNames: ["rootPath", "packKey", "query", "offset", "limit"],
+      );
+
+  @override
+  Future<List<FrbIconPackSummary>> crateApiIconPackCatalogApiListPacks({
+    required String rootPath,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(rootPath, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 17,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_frb_icon_pack_summary,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiIconPackCatalogApiListPacksConstMeta,
+        argValues: [rootPath],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiIconPackCatalogApiListPacksConstMeta =>
+      const TaskConstMeta(debugName: "list_packs", argNames: ["rootPath"]);
+
+  @override
+  String crateApiIconPackCatalogApiNormalizeIconPathWithoutExtension({
+    required String value,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(value, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 18)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiIconPackCatalogApiNormalizeIconPathWithoutExtensionConstMeta,
+        argValues: [value],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiIconPackCatalogApiNormalizeIconPathWithoutExtensionConstMeta =>
+      const TaskConstMeta(
+        debugName: "normalize_icon_path_without_extension",
+        argNames: ["value"],
+      );
+
+  @override
+  String crateApiIconPackCatalogApiNormalizePackKey({required String value}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(value, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 19)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiIconPackCatalogApiNormalizePackKeyConstMeta,
+        argValues: [value],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiIconPackCatalogApiNormalizePackKeyConstMeta =>
+      const TaskConstMeta(debugName: "normalize_pack_key", argNames: ["value"]);
+
+  @override
   Future<FrbDecryptedMetadata> crateApiCryptApiReadEncryptedHeader({
     required String inputPath,
     required String password,
@@ -594,7 +884,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 13,
+            funcId: 20,
             port: port_,
           );
         },
@@ -616,6 +906,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<String?> crateApiIconPackCatalogApiReadSvgByKey({
+    required String rootPath,
+    required String iconKey,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(rootPath, serializer);
+          sse_encode_String(iconKey, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 21,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_String,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiIconPackCatalogApiReadSvgByKeyConstMeta,
+        argValues: [rootPath, iconKey],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiIconPackCatalogApiReadSvgByKeyConstMeta =>
+      const TaskConstMeta(
+        debugName: "read_svg_by_key",
+        argNames: ["rootPath", "iconKey"],
+      );
+
+  @override
   Future<void> crateApiLoggingRustLog({
     required int level,
     required String tag,
@@ -631,7 +956,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 14,
+            funcId: 22,
             port: port_,
           );
         },
@@ -665,7 +990,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 15,
+            funcId: 23,
             port: port_,
           );
         },
@@ -700,7 +1025,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 16,
+            funcId: 24,
             port: port_,
           );
         },
@@ -735,7 +1060,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 17,
+            funcId: 25,
             port: port_,
           );
         },
@@ -770,7 +1095,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 18,
+            funcId: 26,
             port: port_,
           );
         },
@@ -802,7 +1127,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 19,
+            funcId: 27,
             port: port_,
           );
         },
@@ -855,6 +1180,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RustStreamSink<FrbEncryptEvent> dco_decode_StreamSink_frb_encrypt_event_Sse(
     dynamic raw,
   ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
+  RustStreamSink<FrbIconPackImportEvent>
+  dco_decode_StreamSink_frb_icon_pack_import_event_Sse(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     throw UnimplementedError();
   }
@@ -937,6 +1269,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   FrbEncryptResult dco_decode_box_autoadd_frb_encrypt_result(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_frb_encrypt_result(raw);
+  }
+
+  @protected
+  FrbIconPackError dco_decode_box_autoadd_frb_icon_pack_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_frb_icon_pack_error(raw);
+  }
+
+  @protected
+  FrbIconPackImportProgress
+  dco_decode_box_autoadd_frb_icon_pack_import_progress(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_frb_icon_pack_import_progress(raw);
+  }
+
+  @protected
+  FrbIconPackSummary dco_decode_box_autoadd_frb_icon_pack_summary(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_frb_icon_pack_summary(raw);
   }
 
   @protected
@@ -1251,6 +1602,87 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       outputPath: dco_decode_String(arr[0]),
       uuid: dco_decode_String(arr[1]),
       originalSize: dco_decode_u_64(arr[2]),
+    );
+  }
+
+  @protected
+  FrbIconPackEntry dco_decode_frb_icon_pack_entry(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 8)
+      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    return FrbIconPackEntry(
+      key: dco_decode_String(arr[0]),
+      packKey: dco_decode_String(arr[1]),
+      packName: dco_decode_String(arr[2]),
+      iconKey: dco_decode_String(arr[3]),
+      name: dco_decode_String(arr[4]),
+      relativePath: dco_decode_String(arr[5]),
+      svgPath: dco_decode_String(arr[6]),
+      importedAtMillis: dco_decode_i_64(arr[7]),
+    );
+  }
+
+  @protected
+  FrbIconPackError dco_decode_frb_icon_pack_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return FrbIconPackError(
+      code: dco_decode_String(arr[0]),
+      message: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
+  FrbIconPackImportEvent dco_decode_frb_icon_pack_import_event(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return FrbIconPackImportEvent_Progress(
+          dco_decode_box_autoadd_frb_icon_pack_import_progress(raw[1]),
+        );
+      case 1:
+        return FrbIconPackImportEvent_Done(
+          dco_decode_box_autoadd_frb_icon_pack_summary(raw[1]),
+        );
+      case 2:
+        return FrbIconPackImportEvent_Error(
+          dco_decode_box_autoadd_frb_icon_pack_error(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  FrbIconPackImportProgress dco_decode_frb_icon_pack_import_progress(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return FrbIconPackImportProgress(
+      current: dco_decode_i_32(arr[0]),
+      total: dco_decode_i_32(arr[1]),
+      currentFile: dco_decode_String(arr[2]),
+    );
+  }
+
+  @protected
+  FrbIconPackSummary dco_decode_frb_icon_pack_summary(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return FrbIconPackSummary(
+      packKey: dco_decode_String(arr[0]),
+      displayName: dco_decode_String(arr[1]),
+      sourceArchiveName: dco_decode_String(arr[2]),
+      importedAtMillis: dco_decode_i_64(arr[3]),
+      iconCount: dco_decode_i_32(arr[4]),
     );
   }
 
@@ -1630,6 +2062,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<FrbIconPackEntry> dco_decode_list_frb_icon_pack_entry(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_frb_icon_pack_entry).toList();
+  }
+
+  @protected
+  List<FrbIconPackSummary> dco_decode_list_frb_icon_pack_summary(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_frb_icon_pack_summary)
+        .toList();
+  }
+
+  @protected
   List<FrbKeepassAttachment> dco_decode_list_frb_keepass_attachment(
     dynamic raw,
   ) {
@@ -1849,6 +2295,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RustStreamSink<FrbIconPackImportEvent>
+  sse_decode_StreamSink_frb_icon_pack_import_event_Sse(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    throw UnimplementedError('Unreachable ()');
+  }
+
+  @protected
   RustStreamSink<LogEntry> sse_decode_StreamSink_log_entry_Sse(
     SseDeserializer deserializer,
   ) {
@@ -1937,6 +2392,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_frb_encrypt_result(deserializer));
+  }
+
+  @protected
+  FrbIconPackError sse_decode_box_autoadd_frb_icon_pack_error(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_frb_icon_pack_error(deserializer));
+  }
+
+  @protected
+  FrbIconPackImportProgress
+  sse_decode_box_autoadd_frb_icon_pack_import_progress(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_frb_icon_pack_import_progress(deserializer));
+  }
+
+  @protected
+  FrbIconPackSummary sse_decode_box_autoadd_frb_icon_pack_summary(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_frb_icon_pack_summary(deserializer));
   }
 
   @protected
@@ -2325,6 +2805,103 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       outputPath: var_outputPath,
       uuid: var_uuid,
       originalSize: var_originalSize,
+    );
+  }
+
+  @protected
+  FrbIconPackEntry sse_decode_frb_icon_pack_entry(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_key = sse_decode_String(deserializer);
+    var var_packKey = sse_decode_String(deserializer);
+    var var_packName = sse_decode_String(deserializer);
+    var var_iconKey = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_relativePath = sse_decode_String(deserializer);
+    var var_svgPath = sse_decode_String(deserializer);
+    var var_importedAtMillis = sse_decode_i_64(deserializer);
+    return FrbIconPackEntry(
+      key: var_key,
+      packKey: var_packKey,
+      packName: var_packName,
+      iconKey: var_iconKey,
+      name: var_name,
+      relativePath: var_relativePath,
+      svgPath: var_svgPath,
+      importedAtMillis: var_importedAtMillis,
+    );
+  }
+
+  @protected
+  FrbIconPackError sse_decode_frb_icon_pack_error(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_code = sse_decode_String(deserializer);
+    var var_message = sse_decode_String(deserializer);
+    return FrbIconPackError(code: var_code, message: var_message);
+  }
+
+  @protected
+  FrbIconPackImportEvent sse_decode_frb_icon_pack_import_event(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_field0 = sse_decode_box_autoadd_frb_icon_pack_import_progress(
+          deserializer,
+        );
+        return FrbIconPackImportEvent_Progress(var_field0);
+      case 1:
+        var var_field0 = sse_decode_box_autoadd_frb_icon_pack_summary(
+          deserializer,
+        );
+        return FrbIconPackImportEvent_Done(var_field0);
+      case 2:
+        var var_field0 = sse_decode_box_autoadd_frb_icon_pack_error(
+          deserializer,
+        );
+        return FrbIconPackImportEvent_Error(var_field0);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  FrbIconPackImportProgress sse_decode_frb_icon_pack_import_progress(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_current = sse_decode_i_32(deserializer);
+    var var_total = sse_decode_i_32(deserializer);
+    var var_currentFile = sse_decode_String(deserializer);
+    return FrbIconPackImportProgress(
+      current: var_current,
+      total: var_total,
+      currentFile: var_currentFile,
+    );
+  }
+
+  @protected
+  FrbIconPackSummary sse_decode_frb_icon_pack_summary(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_packKey = sse_decode_String(deserializer);
+    var var_displayName = sse_decode_String(deserializer);
+    var var_sourceArchiveName = sse_decode_String(deserializer);
+    var var_importedAtMillis = sse_decode_i_64(deserializer);
+    var var_iconCount = sse_decode_i_32(deserializer);
+    return FrbIconPackSummary(
+      packKey: var_packKey,
+      displayName: var_displayName,
+      sourceArchiveName: var_sourceArchiveName,
+      importedAtMillis: var_importedAtMillis,
+      iconCount: var_iconCount,
     );
   }
 
@@ -2858,6 +3435,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<FrbIconPackEntry> sse_decode_list_frb_icon_pack_entry(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FrbIconPackEntry>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_frb_icon_pack_entry(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FrbIconPackSummary> sse_decode_list_frb_icon_pack_summary(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FrbIconPackSummary>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_frb_icon_pack_summary(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<FrbKeepassAttachment> sse_decode_list_frb_keepass_attachment(
     SseDeserializer deserializer,
   ) {
@@ -3215,6 +3820,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_StreamSink_frb_icon_pack_import_event_Sse(
+    RustStreamSink<FrbIconPackImportEvent> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(
+      self.setupAndSerialize(
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_frb_icon_pack_import_event,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+      ),
+      serializer,
+    );
+  }
+
+  @protected
   void sse_encode_StreamSink_log_entry_Sse(
     RustStreamSink<LogEntry> self,
     SseSerializer serializer,
@@ -3319,6 +3941,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_frb_encrypt_result(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_frb_icon_pack_error(
+    FrbIconPackError self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_frb_icon_pack_error(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_frb_icon_pack_import_progress(
+    FrbIconPackImportProgress self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_frb_icon_pack_import_progress(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_frb_icon_pack_summary(
+    FrbIconPackSummary self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_frb_icon_pack_summary(self, serializer);
   }
 
   @protected
@@ -3646,6 +4295,78 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.outputPath, serializer);
     sse_encode_String(self.uuid, serializer);
     sse_encode_u_64(self.originalSize, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_icon_pack_entry(
+    FrbIconPackEntry self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.key, serializer);
+    sse_encode_String(self.packKey, serializer);
+    sse_encode_String(self.packName, serializer);
+    sse_encode_String(self.iconKey, serializer);
+    sse_encode_String(self.name, serializer);
+    sse_encode_String(self.relativePath, serializer);
+    sse_encode_String(self.svgPath, serializer);
+    sse_encode_i_64(self.importedAtMillis, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_icon_pack_error(
+    FrbIconPackError self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.code, serializer);
+    sse_encode_String(self.message, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_icon_pack_import_event(
+    FrbIconPackImportEvent self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case FrbIconPackImportEvent_Progress(field0: final field0):
+        sse_encode_i_32(0, serializer);
+        sse_encode_box_autoadd_frb_icon_pack_import_progress(
+          field0,
+          serializer,
+        );
+      case FrbIconPackImportEvent_Done(field0: final field0):
+        sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_frb_icon_pack_summary(field0, serializer);
+      case FrbIconPackImportEvent_Error(field0: final field0):
+        sse_encode_i_32(2, serializer);
+        sse_encode_box_autoadd_frb_icon_pack_error(field0, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_frb_icon_pack_import_progress(
+    FrbIconPackImportProgress self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.current, serializer);
+    sse_encode_i_32(self.total, serializer);
+    sse_encode_String(self.currentFile, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_icon_pack_summary(
+    FrbIconPackSummary self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.packKey, serializer);
+    sse_encode_String(self.displayName, serializer);
+    sse_encode_String(self.sourceArchiveName, serializer);
+    sse_encode_i_64(self.importedAtMillis, serializer);
+    sse_encode_i_32(self.iconCount, serializer);
   }
 
   @protected
@@ -4004,6 +4725,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_frb_encrypt_result(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_frb_icon_pack_entry(
+    List<FrbIconPackEntry> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_frb_icon_pack_entry(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_frb_icon_pack_summary(
+    List<FrbIconPackSummary> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_frb_icon_pack_summary(item, serializer);
     }
   }
 
