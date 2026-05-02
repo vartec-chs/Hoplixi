@@ -4,8 +4,11 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/crypt_api.dart';
+import 'api/crypt_api/types.dart';
 import 'api/icon_pack_catalog_api.dart';
+import 'api/icon_pack_catalog_api/types.dart';
 import 'api/keepass_api.dart';
+import 'api/keepass_api/types.dart';
 import 'api/logging.dart';
 import 'api/simple.dart';
 import 'dart:async';

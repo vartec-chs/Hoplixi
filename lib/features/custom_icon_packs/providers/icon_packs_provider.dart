@@ -8,6 +8,9 @@ final iconPackCatalogServiceProvider = Provider<IconPackCatalogService>((ref) {
   return const IconPackCatalogService();
 });
 
+const _importProgressUiInterval = Duration(milliseconds: 120);
+const _importProgressDelta = 0.01;
+
 class IconPacksNotifier extends Notifier<IconPacksState> {
   @override
   IconPacksState build() {
@@ -164,26 +167,37 @@ class IconPacksNotifier extends Notifier<IconPacksState> {
 
     try {
       final service = ref.read(iconPackCatalogServiceProvider);
+      var lastProgressUpdate = DateTime.fromMillisecondsSinceEpoch(0);
+      var lastProgressValue = 0.0;
+
+      void updateImportProgress(int current, int total, String currentFile) {
+        final nextProgress = _progressValue(current, total);
+        final now = DateTime.now();
+        final isFinal = total > 0 && current >= total;
+        final shouldUpdate =
+            isFinal ||
+            nextProgress - lastProgressValue >= _importProgressDelta ||
+            now.difference(lastProgressUpdate) >= _importProgressUiInterval;
+
+        if (!shouldUpdate) {
+          return;
+        }
+
+        lastProgressUpdate = now;
+        lastProgressValue = nextProgress;
+        state = state.copyWith(progress: nextProgress, currentFile: currentFile);
+      }
+
       final importedPack = switch (sourceType) {
         IconPackImportSourceType.archive => await service.importPack(
           archivePath: sourcePath,
           displayName: displayName,
-          onProgress: (current, total, currentFile) {
-            state = state.copyWith(
-              progress: _progressValue(current, total),
-              currentFile: currentFile,
-            );
-          },
+          onProgress: updateImportProgress,
         ),
         IconPackImportSourceType.directory => await service.importDirectory(
           directoryPath: sourcePath,
           displayName: displayName,
-          onProgress: (current, total, currentFile) {
-            state = state.copyWith(
-              progress: _progressValue(current, total),
-              currentFile: currentFile,
-            );
-          },
+          onProgress: updateImportProgress,
         ),
       };
 

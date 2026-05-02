@@ -5,6 +5,7 @@ import 'package:hoplixi/core/logger/index.dart';
 import 'package:hoplixi/features/custom_icon_packs/models/icon_pack_entry.dart';
 import 'package:hoplixi/features/custom_icon_packs/models/icon_pack_summary.dart';
 import 'package:hoplixi/rust/api/icon_pack_catalog_api.dart' as rust;
+import 'package:hoplixi/rust/api/icon_pack_catalog_api/types.dart' as rust_types;
 
 typedef IconPackImportProgress =
     void Function(int current, int total, String currentFile);
@@ -252,7 +253,7 @@ class IconPackCatalogService {
     return rootPath ?? await AppPaths.iconPacksPath;
   }
 
-  static IconPackSummary _mapSummary(rust.FrbIconPackSummary summary) {
+  static IconPackSummary _mapSummary(rust_types.FrbIconPackSummary summary) {
     return IconPackSummary(
       packKey: summary.packKey,
       displayName: summary.displayName,
@@ -265,7 +266,7 @@ class IconPackCatalogService {
     );
   }
 
-  static IconPackEntry _mapEntry(rust.FrbIconPackEntry entry) {
+  static IconPackEntry _mapEntry(rust_types.FrbIconPackEntry entry) {
     return IconPackEntry(
       key: entry.key,
       packKey: entry.packKey,

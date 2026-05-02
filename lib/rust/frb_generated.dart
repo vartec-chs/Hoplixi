@@ -4,8 +4,11 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/crypt_api.dart';
+import 'api/crypt_api/types.dart';
 import 'api/icon_pack_catalog_api.dart';
+import 'api/icon_pack_catalog_api/types.dart';
 import 'api/keepass_api.dart';
+import 'api/keepass_api/types.dart';
 import 'api/logging.dart';
 import 'api/simple.dart';
 import 'dart:async';
@@ -70,7 +73,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 104709271;
+  int get rustContentHash => -626618812;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -109,20 +112,20 @@ abstract class RustLibApi extends BaseApi {
     required FrbKeepassExportOptions opts,
   });
 
-  Future<FrbDecryptOptions> crateApiCryptApiFrbDecryptOptionsSimple({
+  Future<FrbDecryptOptions> crateApiCryptApiTypesFrbDecryptOptionsSimple({
     required String inputPath,
     required String outputDir,
     required String password,
   });
 
-  Future<FrbEncryptOptions> crateApiCryptApiFrbEncryptOptionsSimple({
+  Future<FrbEncryptOptions> crateApiCryptApiTypesFrbEncryptOptionsSimple({
     required String inputPath,
     required String outputDir,
     required String password,
   });
 
   Future<FrbKeepassExportOptions>
-  crateApiKeepassApiFrbKeepassExportOptionsSimple({
+  crateApiKeepassApiTypesFrbKeepassExportOptionsSimple({
     required String inputPath,
     required String password,
   });
@@ -466,7 +469,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<FrbDecryptOptions> crateApiCryptApiFrbDecryptOptionsSimple({
+  Future<FrbDecryptOptions> crateApiCryptApiTypesFrbDecryptOptionsSimple({
     required String inputPath,
     required String outputDir,
     required String password,
@@ -489,21 +492,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_frb_decrypt_options,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiCryptApiFrbDecryptOptionsSimpleConstMeta,
+        constMeta: kCrateApiCryptApiTypesFrbDecryptOptionsSimpleConstMeta,
         argValues: [inputPath, outputDir, password],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiCryptApiFrbDecryptOptionsSimpleConstMeta =>
+  TaskConstMeta get kCrateApiCryptApiTypesFrbDecryptOptionsSimpleConstMeta =>
       const TaskConstMeta(
         debugName: "frb_decrypt_options_simple",
         argNames: ["inputPath", "outputDir", "password"],
       );
 
   @override
-  Future<FrbEncryptOptions> crateApiCryptApiFrbEncryptOptionsSimple({
+  Future<FrbEncryptOptions> crateApiCryptApiTypesFrbEncryptOptionsSimple({
     required String inputPath,
     required String outputDir,
     required String password,
@@ -526,14 +529,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_frb_encrypt_options,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiCryptApiFrbEncryptOptionsSimpleConstMeta,
+        constMeta: kCrateApiCryptApiTypesFrbEncryptOptionsSimpleConstMeta,
         argValues: [inputPath, outputDir, password],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiCryptApiFrbEncryptOptionsSimpleConstMeta =>
+  TaskConstMeta get kCrateApiCryptApiTypesFrbEncryptOptionsSimpleConstMeta =>
       const TaskConstMeta(
         debugName: "frb_encrypt_options_simple",
         argNames: ["inputPath", "outputDir", "password"],
@@ -541,7 +544,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @override
   Future<FrbKeepassExportOptions>
-  crateApiKeepassApiFrbKeepassExportOptionsSimple({
+  crateApiKeepassApiTypesFrbKeepassExportOptionsSimple({
     required String inputPath,
     required String password,
   }) {
@@ -562,14 +565,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_frb_keepass_export_options,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiKeepassApiFrbKeepassExportOptionsSimpleConstMeta,
+        constMeta:
+            kCrateApiKeepassApiTypesFrbKeepassExportOptionsSimpleConstMeta,
         argValues: [inputPath, password],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiKeepassApiFrbKeepassExportOptionsSimpleConstMeta =>
+  TaskConstMeta
+  get kCrateApiKeepassApiTypesFrbKeepassExportOptionsSimpleConstMeta =>
       const TaskConstMeta(
         debugName: "frb_keepass_export_options_simple",
         argNames: ["inputPath", "password"],

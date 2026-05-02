@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/rust/api/crypt_api.dart';
+import 'package:hoplixi/rust/api/crypt_api/types.dart';
 
 class CryptTestScreen extends ConsumerStatefulWidget {
   const CryptTestScreen({super.key});

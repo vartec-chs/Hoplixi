@@ -8,6 +8,8 @@ import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/file_dto.dart';
 import 'package:hoplixi/main_db/config/store_settings_keys.dart';
 import 'package:hoplixi/rust/api/crypt_api.dart' as crypt;
+import 'package:hoplixi/rust/api/crypt_api/types.dart' as crypt_types;
+
 import 'package:mime/mime.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
@@ -51,7 +53,7 @@ class FileStorageService {
     void Function(double percentage)? onProgress,
   }) async {
     final tempDir = await getTemporaryDirectory();
-    final opts = crypt.FrbEncryptOptions(
+    final opts = crypt_types.FrbEncryptOptions(
       inputPath: inputPath,
       outputDir: outputDir,
       password: password,
@@ -60,18 +62,18 @@ class FileStorageService {
       outputExtension: MainConstants.encryptedFileExtension,
       tempDir: tempDir.path,
       metadata: const [],
-      chunkSize: const crypt.FrbChunkSizePreset.desktop(),
+      chunkSize: const crypt_types.FrbChunkSizePreset.desktop(),
     );
 
     String? resultPath;
 
     await for (final event in crypt.encryptFile(opts: opts)) {
       switch (event) {
-        case crypt.FrbEncryptEvent_Progress(:final field0):
+        case crypt_types.FrbEncryptEvent_Progress(:final field0):
           onProgress?.call(field0.percentage);
-        case crypt.FrbEncryptEvent_Done(:final field0):
+        case crypt_types.FrbEncryptEvent_Done(:final field0):
           resultPath = field0.outputPath;
-        case crypt.FrbEncryptEvent_Error(:final field0):
+        case crypt_types.FrbEncryptEvent_Error(:final field0):
           throw Exception('Ошибка шифрования: $field0');
       }
     }
@@ -93,23 +95,23 @@ class FileStorageService {
     void Function(double percentage)? onProgress,
   }) async {
     final tempDir = await getTemporaryDirectory();
-    final opts = crypt.FrbDecryptOptions(
+    final opts = crypt_types.FrbDecryptOptions(
       inputPath: encryptedFilePath,
       outputDir: outputDir,
       password: password,
       tempDir: tempDir.path,
-      chunkSize: const crypt.FrbChunkSizePreset.desktop(),
+      chunkSize: const crypt_types.FrbChunkSizePreset.desktop(),
     );
 
     String? resultPath;
 
     await for (final event in crypt.decryptFile(opts: opts)) {
       switch (event) {
-        case crypt.FrbDecryptEvent_Progress(:final field0):
+        case crypt_types.FrbDecryptEvent_Progress(:final field0):
           onProgress?.call(field0.percentage);
-        case crypt.FrbDecryptEvent_Done(:final field0):
+        case crypt_types.FrbDecryptEvent_Done(:final field0):
           resultPath = field0.outputPath;
-        case crypt.FrbDecryptEvent_Error(:final field0):
+        case crypt_types.FrbDecryptEvent_Error(:final field0):
           throw Exception('Ошибка расшифровки: $field0');
       }
     }

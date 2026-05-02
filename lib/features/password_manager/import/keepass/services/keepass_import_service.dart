@@ -14,7 +14,7 @@ import 'package:hoplixi/main_db/core/models/dto/otp_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/password_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
-import 'package:hoplixi/rust/api/keepass_api.dart';
+import 'package:hoplixi/rust/api/keepass_api/types.dart';
 
 class KeepassImportExecutionOptions {
   final bool importOtps;

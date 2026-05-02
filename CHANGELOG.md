@@ -15,6 +15,8 @@
 
 ### custom_icon_packs
 
+- Импорт больших icon packs разгружен для UI: native импорт теперь ограничивает
+  частоту progress-событий, а Riverpod state обновляется с throttling.
 - `IconPackCatalogService` переведён на thin adapter поверх FRB-API в Rust:
   листинг, чтение SVG и импорт пака теперь идут через native слой.
 - Импорт архивов для icon packs расширен до ZIP и 7Z через `archive`; обновлены
@@ -27,6 +29,15 @@
 
 ### rust_bridge
 
+- `keepass_api` и `icon_pack_catalog_api` разнесены по вложенным Rust-модулям,
+  сохранив прежние FRB-экспорты для Dart.
+- `crypt_api` разнесён на вложенные Rust-модули `types` и `operations` для
+  более читаемой поддержки файлового шифрования.
+- Rust FRB API-модули `crypt_api`, `keepass_api` и `icon_pack_catalog_api`
+  переведены на папки с `mod.rs`; публичные обёртки оставлены в корне модулей,
+  чтобы generated Dart API не уходил во вложенные `operations`/`types` файлы.
+- Импорт icon packs из Rust перенесён в blocking task, чтобы распаковка архивов
+  и файловые операции не занимали async executor FRB во время больших импортов.
 - Добавлен Rust FRB API для icon packs с поддержкой импорта из архива и папки,
   прогрессом через stream и сохранением manifest/index в служебный каталог
   приложения.

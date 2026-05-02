@@ -7,8 +7,11 @@
 // ignore_for_file: argument_type_not_assignable
 
 import 'api/crypt_api.dart';
+import 'api/crypt_api/types.dart';
 import 'api/icon_pack_catalog_api.dart';
+import 'api/icon_pack_catalog_api/types.dart';
 import 'api/keepass_api.dart';
+import 'api/keepass_api/types.dart';
 import 'api/logging.dart';
 import 'api/simple.dart';
 import 'dart:async';
