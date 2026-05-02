@@ -1,5 +1,5 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/local_send/models/device_info.dart';
-import 'package:riverpod/riverpod.dart';
 
 /// Провайдер для входящего запроса на соединение.
 ///

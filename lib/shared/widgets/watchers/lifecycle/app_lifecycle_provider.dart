@@ -1,8 +1,10 @@
 import 'dart:ui';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/setup/setup_tray.dart';
 
 class AppLifecycleNotifier extends Notifier<AppLifecycleState> {
   static const String _logTag = 'AppLifecycle';
@@ -65,3 +67,30 @@ final appLifecycleProvider =
 final isAppActiveProvider = Provider<bool>((ref) {
   return ref.watch(appLifecycleProvider) == AppLifecycleState.resumed;
 });
+
+final appVisibleProvider = Provider<bool>((ref) {
+  final isWindowLifecycleVisible = switch (ref.watch(appLifecycleProvider)) {
+    AppLifecycleState.resumed || AppLifecycleState.inactive => true,
+    AppLifecycleState.hidden ||
+    AppLifecycleState.paused ||
+    AppLifecycleState.detached => false,
+  };
+
+  return isWindowLifecycleVisible && !ref.watch(appInTrayProvider);
+});
+
+class AppActivityScope extends ConsumerWidget {
+  const AppActivityScope({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isAppVisible = ref.watch(appVisibleProvider);
+
+    return Offstage(
+      offstage: !isAppVisible,
+      child: TickerMode(enabled: isAppVisible, child: child),
+    );
+  }
+}

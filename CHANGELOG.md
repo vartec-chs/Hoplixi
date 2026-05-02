@@ -2,6 +2,15 @@
 
 ## 2026-05-02
 
+### shared
+
+- Добавлен `AppActivityScope`, который отключает `TickerMode` и переводит UI в
+  `Offstage`, когда приложение не видно, а также подключён к основному bootstrap
+  lifecycle-обёртки.
+- Tray-интеграция переведена на `TrayService` с Riverpod-состоянием
+  `AppActivityMode`; прямые tray callbacks из `TrayWatcher` заменены
+  провайдерными вызовами сервиса.
+
 ### docs
 
 - В `error-handling.md` добавлено правило для `AppError.feature(...)` как

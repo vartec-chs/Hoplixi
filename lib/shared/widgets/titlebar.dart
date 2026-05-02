@@ -7,6 +7,7 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/main_db/providers/main_store_backup_orchestrator_provider.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/setup/di_init.dart';
+import 'package:hoplixi/setup/setup_tray.dart';
 import 'package:hoplixi/shared/widgets/close_database_button.dart';
 import 'package:hoplixi/shared/widgets/language_switcher.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -217,7 +218,7 @@ class _TitleBarState extends ConsumerState<TitleBar> {
                       if (widget.lockStoreOnClose) {
                         await ref.read(mainStoreProvider.notifier).lockStore();
                       }
-                      await windowManager.hide();
+                      await ref.read(trayServiceProvider).hideToTray();
                     },
                   ),
                 ],

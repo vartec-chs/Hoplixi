@@ -9,13 +9,15 @@ import 'package:hoplixi/core/theme/index.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/shared/widgets/app_loading_screen.dart';
 import 'package:hoplixi/shared/widgets/watchers/lifecycle/app_lifecycle_observer.dart';
+import 'package:hoplixi/shared/widgets/watchers/lifecycle/app_lifecycle_provider.dart';
 import 'package:hoplixi/shared/widgets/watchers/shortcut_watcher.dart';
 import 'package:hoplixi/shared/widgets/watchers/tray_watcher.dart';
 
 import 'root_app_shell.dart';
 
 class AppBootstrap extends StatelessWidget {
-  const AppBootstrap({super.key, 
+  const AppBootstrap({
+    super.key,
     required this.initialThemeModeFuture,
     required this.router,
     required this.isStoreOpeningOverlayVisible,
@@ -30,10 +32,12 @@ class AppBootstrap extends StatelessWidget {
     return ShortcutWatcher(
       child: TrayWatcher(
         child: AppLifecycleObserver(
-          child: _AppThemeLoader(
-            initialThemeModeFuture: initialThemeModeFuture,
-            router: router,
-            isStoreOpeningOverlayVisible: isStoreOpeningOverlayVisible,
+          child: AppActivityScope(
+            child: _AppThemeLoader(
+              initialThemeModeFuture: initialThemeModeFuture,
+              router: router,
+              isStoreOpeningOverlayVisible: isStoreOpeningOverlayVisible,
+            ),
           ),
         ),
       ),

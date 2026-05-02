@@ -110,9 +110,6 @@ Future<void> _runGuiMode(LaunchContext launchContext) async {
     await setupDI();
     await _applyInstallConfig();
     await _syncLaunchAtStartupPreference();
-    if (UniversalPlatform.isDesktop) {
-      await setupTray();
-    }
 
     if (launchContext.startInTray) {
       logInfo('Приложение запущено в режиме автозапуска: старт в трей');
@@ -121,6 +118,13 @@ Future<void> _runGuiMode(LaunchContext launchContext) async {
 
     final app = ProviderScope(
       observers: [LoggingProviderObserver()],
+      overrides: [
+        initialAppActivityModeProvider.overrideWithValue(
+          launchContext.startInTray
+              ? AppActivityMode.tray
+              : AppActivityMode.active,
+        ),
+      ],
       child: TranslationProvider(
         child: setupToastificationWrapper(
           App(filePath: launchContext.filePath),
@@ -199,8 +203,17 @@ Future<bool> _handleSubWindowStartup() async {
 
 void _configureSingleInstanceFocusHandler() {
   FlutterSingleInstance.onFocus = (metadata) async {
+    final context = navigatorKey.currentContext;
+    final container = context == null
+        ? null
+        : ProviderScope.containerOf(context, listen: false);
+
     if (UniversalPlatform.isDesktop) {
-      await WindowManager.show();
+      if (container == null) {
+        await WindowManager.show();
+      } else {
+        await container.read(trayServiceProvider).showFromTray();
+      }
     }
 
     final filePath = extractIncomingFilePath(metadata);
@@ -208,15 +221,13 @@ void _configureSingleInstanceFocusHandler() {
       return;
     }
 
-    final context = navigatorKey.currentContext;
-    if (context == null) {
+    if (container == null) {
       logWarning(
         'Не удалось обработать путь запуска: контекст навигатора недоступен',
       );
       return;
     }
 
-    final container = ProviderScope.containerOf(context, listen: false);
     container.read(launchDbPathProvider.notifier).setPath(filePath);
     logInfo('Получен путь файла из второго экземпляра: $filePath');
   };
