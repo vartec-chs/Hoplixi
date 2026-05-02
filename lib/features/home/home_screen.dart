@@ -1,54 +1,31 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/home/models/action_item.dart';
+import 'package:hoplixi/features/password_generator/password_generator_widget.dart';
 import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_db/providers/db_history_provider.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/main_db/ui/store_open_migration_dialog.dart';
-import 'package:hoplixi/features/about/ui/about_app_modal.dart';
-import 'package:hoplixi/features/password_generator/password_generator_widget.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
-import 'package:hoplixi/shared/widgets/watchers/lifecycle/app_lifecycle_provider.dart';
 import 'package:hoplixi/shared/widgets/titlebar.dart';
+import 'package:hoplixi/shared/widgets/watchers/lifecycle/app_lifecycle_provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:path/path.dart' as p;
-import 'package:universal_platform/universal_platform.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 import 'providers/recent_database_provider.dart';
-import 'widgets/action_button.dart';
-import 'widgets/action_button_compact.dart';
-import 'widgets/recent_database_card.dart';
-
-/// Модель данных для кнопки действия
-class ActionItem {
-  final IconData icon;
-  final String label;
-  final String? description;
-  final bool isPrimary;
-  final bool disabled;
-  final String? routePath;
-  final VoidCallback? onTap;
-
-  const ActionItem({
-    required this.icon,
-    required this.label,
-    this.description,
-    this.isPrimary = false,
-    this.disabled = false,
-    this.routePath,
-    this.onTap,
-  });
-}
+import 'widgets/home_actions_content_layer.dart';
+import 'widgets/home_header_background.dart';
+import 'widgets/home_top_actions.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -345,7 +322,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final recentDbAsync = ref.watch(recentDatabaseProvider);
     final isAppActive = ref.watch(isAppActiveProvider);
 
@@ -356,286 +332,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       _syncHomeAnimations(next);
     });
 
-    // Определяем, есть ли недавняя БД
-    final hasRecentDb = recentDbAsync.maybeWhen(
+    final topPadding = MediaQuery.of(context).padding.top;
+    final headerHeight = 220 + topPadding;
+    final hasRecentDatabase = recentDbAsync.maybeWhen(
       data: (entry) => entry != null,
       orElse: () => false,
     );
-
-    // Динамический offset: если есть карточка - наезжает на 88px, иначе начинается сразу после AppBar
-    final contentTopOffset = hasRecentDb
-        ? 220 + MediaQuery.of(context).padding.top - 88
-        : 220 + MediaQuery.of(context).padding.top;
+    final contentTop = hasRecentDatabase
+        ? headerHeight - 88
+        : headerHeight + 12;
 
     return Scaffold(
       body: Stack(
         children: [
-          // 1. AppBar-фон с градиентом и кружками
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 220 + MediaQuery.of(context).padding.top,
-            child: ClipRRect(
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(32),
-                bottomRight: Radius.circular(32),
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [colorScheme.primary, colorScheme.primaryContainer],
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    // Title с анимацией
-                    Positioned(
-                      top: hasRecentDb
-                          ? 60 + MediaQuery.of(context).padding.top
-                          : 100 + MediaQuery.of(context).padding.top,
-                      left: 0,
-                      right: 0,
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Center(
-                          child: isAppActive
-                              ? AnimatedTextKit(
-                                  animatedTexts: [
-                                    TypewriterAnimatedText(
-                                      'Hoplixi',
-                                      textStyle: TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
-                                        color: colorScheme.onPrimary,
-                                      ),
-                                      speed: const Duration(milliseconds: 150),
-                                    ),
-                                  ],
-                                  repeatForever: true,
-                                  pause: const Duration(milliseconds: 1000),
-                                  displayFullTextOnTap: true,
-                                  stopPauseOnTap: false,
-                                )
-                              : Text(
-                                  'Hoplixi',
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: colorScheme.onPrimary,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ),
-                    // Левый верхний круг
-                    Positioned(
-                      left: -40,
-                      top: 20,
-                      child: AnimatedBuilder(
-                        animation: _pulseAnimation,
-                        builder: (context, child) {
-                          return Transform.scale(
-                            scale: _pulseAnimation.value,
-                            child: Container(
-                              width: 120,
-                              height: 120,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white.withOpacity(0.1),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    // Левый нижний круг
-                    Positioned(
-                      left: 20,
-                      bottom: -30,
-                      child: AnimatedBuilder(
-                        animation: _pulseAnimation,
-                        builder: (context, child) {
-                          return Transform.scale(
-                            scale: _pulseAnimation.value * 0.9,
-                            child: Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white.withOpacity(0.08),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    // Правый верхний круг
-                    Positioned(
-                      right: -50,
-                      top: 40,
-                      child: AnimatedBuilder(
-                        animation: _pulseAnimation,
-                        builder: (context, child) {
-                          return Transform.scale(
-                            scale: _pulseAnimation.value * 1.1,
-                            child: Container(
-                              width: 140,
-                              height: 140,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white.withOpacity(0.12),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    // Правый средний круг
-                    Positioned(
-                      right: 30,
-                      top: 120,
-                      child: AnimatedBuilder(
-                        animation: _pulseAnimation,
-                        builder: (context, child) {
-                          return Transform.scale(
-                            scale: _pulseAnimation.value * 0.8,
-                            child: Container(
-                              width: 60,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white.withOpacity(0.1),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    // Правый нижний круг
-                    Positioned(
-                      right: -20,
-                      bottom: 10,
-                      child: AnimatedBuilder(
-                        animation: _pulseAnimation,
-                        builder: (context, child) {
-                          return Transform.scale(
-                            scale: _pulseAnimation.value * 1.2,
-                            child: Container(
-                              width: 90,
-                              height: 90,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white.withOpacity(0.07),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          HomeHeaderBackground(
+            height: headerHeight,
+            hasRecentDatabase: hasRecentDatabase,
+            isAppActive: isAppActive,
+            pulseAnimation: _pulseAnimation,
           ),
-
-          // кнопки about и настроек
-          Positioned(
-            top: UniversalPlatform.isMobile
-                ? MediaQuery.of(context).padding.top
-                : 36,
-            right: 12,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(LucideIcons.settings),
-                  color: Colors.white.withOpacity(0.8),
-                  tooltip: 'Настройки',
-                  onPressed: () => context.push(AppRoutesPaths.settings),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.info_outline),
-                  color: Colors.white.withOpacity(0.8),
-                  tooltip: 'О приложении',
-                  onPressed: () => showAppAboutModal(context),
-                ),
-              ],
-            ),
+          const HomeTopActions(),
+          HomeActionsContentLayer(
+            top: contentTop,
+            hasRecentDatabase: hasRecentDatabase,
+            items: _buildActionItems(context),
           ),
-
-          // 2. Карточка БД (фиксированная) + скроллируемый контент ниже
-          if (hasRecentDb)
-            Positioned.fill(
-              top: contentTopOffset,
-              child: MediaQuery.removePadding(
-                context: context,
-                removeTop: true,
-                child: SafeArea(
-                  top: false,
-                  child: Column(
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12.0),
-                        child: RecentDatabaseCard(),
-                      ),
-                      const SizedBox(height: 12),
-                      Expanded(
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            final isSmallScreen = constraints.maxWidth < 500;
-                            final items = _buildActionItems(context);
-
-                            return SingleChildScrollView(
-                              padding: EdgeInsets.zero,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12.0,
-                                ),
-                                child: isSmallScreen
-                                    ? _buildCompactGrid(items)
-                                    : _buildWideGrid(items),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-          // 3. Центрированный экран без недавней БД
-          if (!hasRecentDb)
-            Positioned.fill(
-              top: 220 + MediaQuery.of(context).padding.top + 12,
-              child: MediaQuery.removePadding(
-                context: context,
-                removeTop: true,
-                child: SafeArea(
-                  top: false,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final isSmallScreen = constraints.maxWidth < 500;
-                      final items = _buildActionItems(context);
-
-                      return SingleChildScrollView(
-                        padding: EdgeInsets.zero,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                          child: isSmallScreen
-                              ? _buildCompactGrid(items)
-                              : _buildWideGrid(items),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );
@@ -662,15 +383,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         label: 'Генератор',
         description: 'Генерация паролей',
         onTap: () async {
-          // if (!UniversalPlatform.isDesktop) {
-          //   unawaited(
-          //     MultiWindowService.instance.openWindow(
-          //       type: SubWindowType.passwordGenerator,
-          //     ),
-          //   );
-          // } else {
           await _openPasswordGeneratorModal();
-          // }
         },
       ),
 
@@ -699,7 +412,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ActionItem(
         icon: LucideIcons.cloud,
         label: 'Cloud Sync',
-        description: 'Полигон для авторизации, OAuth credentials и токенов.',
+        description: 'Центр управления облачной синхронизацией и токенами.',
         onTap: () => context.push(AppRoutesPaths.cloudSync),
       ),
       if (!MainConstants.isProduction) ...[
@@ -714,52 +427,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   /// Компактная сетка 2x2 для маленьких экранов
-  Widget _buildCompactGrid(List<ActionItem> items) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 1.0,
-      children: items
-          .map(
-            (item) => ActionButtonCompact(
-              icon: item.icon,
-              label: item.label,
-              description: item.description,
-              isPrimary: item.isPrimary,
-              disabled: item.disabled,
-              onTap: item.onTap,
-            ),
-          )
-          .toList(),
-    );
-  }
 
   /// Сетка горизонтальных кнопок 2x2 для больших экранов
-  Widget _buildWideGrid(List<ActionItem> items) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 2.8,
-      children: items
-          .map(
-            (item) => ActionButton(
-              icon: item.icon,
-              label: item.label,
-              description: item.description,
-              isPrimary: item.isPrimary,
-              disabled: item.disabled,
-              onTap: item.onTap,
-            ),
-          )
-          .toList(),
-    );
-  }
 
   Future<void> _openPasswordGeneratorModal() async {
     await WoltModalSheet.show<void>(
