@@ -396,7 +396,6 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
     );
   }
 
-  @override
   Future<void> _handleQuillLaunchUrl(String url) async {
     logInfo('QuillEditor onLaunchUrl: $url');
     final link = parseVaultLink(url);
@@ -500,6 +499,7 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
     );
   }
 
+  @override
   Widget build(BuildContext context) {
     final state = ref.watch(noteFormProvider);
 
