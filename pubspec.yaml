@@ -119,6 +119,7 @@ dependencies:
   nfc_manager: ^4.2.1
   dio_smart_retry: ^7.0.1
   showcaseview: ^5.0.2
+  flutter_native_splash: ^2.4.7
 
 hooks:
   user_defines:

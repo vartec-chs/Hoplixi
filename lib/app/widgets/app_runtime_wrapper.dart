@@ -1,19 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/localization/locale_provider.dart';
 import 'package:hoplixi/core/providers/launch_db_path_provider.dart';
 import 'package:hoplixi/core/theme/theme.dart';
 import 'package:hoplixi/core/theme/theme_window_sync_service.dart';
-import 'package:hoplixi/main_db/providers/decrypted_files_guard_provider.dart';
-import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/features/cloud_sync/auth/widgets/show_cloud_sync_auth_sheet.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/password_manager/store_settings/providers/store_settings_modal_provider.dart';
 import 'package:hoplixi/global_key.dart';
+import 'package:hoplixi/main_db/providers/decrypted_files_guard_provider.dart';
+import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/routing/router.dart';
 import 'package:hoplixi/setup/di_init.dart';
@@ -104,6 +105,10 @@ class _AppRuntimeWrapperState extends ConsumerState<AppRuntimeWrapper> {
           },
           fireImmediately: true,
         );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      FlutterNativeSplash.remove();
+    });
   }
 
   @override

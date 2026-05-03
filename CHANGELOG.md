@@ -2,6 +2,13 @@
 
 ## 2026-05-03
 
+### app
+
+- Настроен `flutter_native_splash.yaml`: убраны несуществующие PNG-пути,
+  включена splash-конфигурация для Android, iOS, Web и Android 12+.
+- В splash-конфигурацию подключён логотип `assets/logo/logo.png` для обычного
+  splash и Android 12+.
+
 ### note_form
 
 - Добавлена модалка разворачивания Quill-редактора поверх текущего sidebar:
