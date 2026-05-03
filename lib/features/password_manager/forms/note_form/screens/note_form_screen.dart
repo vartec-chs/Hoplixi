@@ -9,6 +9,7 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/forms/note_form/models/note_form_state.dart';
+import 'package:hoplixi/features/password_manager/forms/note_form/widgets/expandable_quill_modal.dart';
 import 'package:hoplixi/features/password_manager/pickers/vault_item_picker/vault_item_picker_modal.dart';
 import 'package:hoplixi/shared/utils/vault_link_utils.dart';
 import 'package:hoplixi/shared/ui/button.dart';
@@ -396,8 +397,110 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Future<void> _handleQuillLaunchUrl(String url) async {
+    logInfo('QuillEditor onLaunchUrl: $url');
+    final link = parseVaultLink(url);
+    if (link != null) {
+      _handleVaultLinkClick(link);
+    }
+  }
+
+  void _openExpandedEditorModal() {
+    final state = ref.read(noteFormProvider);
+    final title = state.title.trim().isEmpty ? 'Заметки' : state.title.trim();
+
+    showQuillEditorModal(
+      context: context,
+      controller: _quillController,
+      title: title,
+      toolbar: _buildQuillToolbar(focusNode: null),
+      onLaunchUrl: _handleQuillLaunchUrl,
+    );
+  }
+
+  Widget _buildQuillToolbar({required FocusNode? focusNode}) {
     final theme = Theme.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: theme.dividerColor,
+            width: 1,
+          ),
+        ),
+      ),
+      child: QuillSimpleToolbar(
+        controller: _quillController,
+        config: QuillSimpleToolbarConfig(
+          showClipboardPaste: true,
+          multiRowsDisplay: false,
+          decoration: const BoxDecoration(
+            color: Colors.transparent,
+          ),
+          toolbarSize: 40,
+          dialogTheme: QuillDialogTheme(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            dialogBackgroundColor: theme.colorScheme.surface,
+          ),
+          customButtons: [
+            QuillToolbarCustomButtonOptions(
+              icon: const Icon(Icons.link),
+              tooltip: 'Ссылка на объект',
+              onPressed: () async {
+                await _insertNoteLink();
+              },
+            ),
+          ],
+          buttonOptions: QuillSimpleToolbarButtonOptions(
+            base: QuillToolbarBaseButtonOptions(
+              afterButtonPressed: () {
+                focusNode?.requestFocus();
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuillEditor({
+    required FocusNode focusNode,
+    required ScrollController scrollController,
+  }) {
+    final theme = Theme.of(context);
+
+    return QuillEditor(
+      focusNode: focusNode,
+      scrollController: scrollController,
+      controller: _quillController,
+      config: QuillEditorConfig(
+        placeholder: 'Начните писать заметку...',
+        padding: const EdgeInsets.all(12),
+        expands: true,
+        dialogTheme: QuillDialogTheme(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          dialogBackgroundColor: theme.colorScheme.surface,
+        ),
+        onLaunchUrl: _handleQuillLaunchUrl,
+        onTapDown: (details, p1) {
+          return false;
+        },
+        customStyles: DefaultStyles(
+          link: TextStyle(
+            color: theme.colorScheme.primary,
+            decoration: TextDecoration.underline,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget build(BuildContext context) {
     final state = ref.watch(noteFormProvider);
 
     return PopScope(
@@ -435,6 +538,11 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
                 tooltip: 'Связи заметки',
                 onPressed: _showLinksModal,
               ),
+            IconButton(
+              icon: const Icon(Icons.open_in_full),
+              tooltip: 'Развернуть редактор',
+              onPressed: _openExpandedEditorModal,
+            ),
             IconButton(
               icon: Icon(
                 _quillController.readOnly ? Icons.edit : Icons.visibility,
@@ -477,90 +585,13 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
               : Column(
                   children: [
                     // Панель инструментов Quill
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                            color: theme.dividerColor,
-                            width: 1,
-                          ),
-                        ),
-                      ),
-                      child: QuillSimpleToolbar(
-                        controller: _quillController,
-                        config: QuillSimpleToolbarConfig(
-                          showClipboardPaste: true,
-                          multiRowsDisplay: false,
-                          decoration: const BoxDecoration(
-                            color: Colors.transparent,
-                          ),
-                          toolbarSize: 40,
-                          dialogTheme: QuillDialogTheme(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            dialogBackgroundColor: theme.colorScheme.surface,
-                          ),
-
-                          customButtons: [
-                            // Кастомная кнопка для ссылки на заметку
-                            QuillToolbarCustomButtonOptions(
-                              icon: const Icon(Icons.link),
-                              tooltip: 'Ссылка на объект',
-                              onPressed: () async {
-                                await _insertNoteLink();
-                              },
-                            ),
-                          ],
-                          buttonOptions: QuillSimpleToolbarButtonOptions(
-                            base: QuillToolbarBaseButtonOptions(
-                              afterButtonPressed: () {
-                                // Возвращаем фокус в редактор после нажатия кнопки
-                                _editorFocusNode.requestFocus();
-                              },
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                    _buildQuillToolbar(focusNode: _editorFocusNode),
 
                     // Редактор Quill
                     Expanded(
-                      child: QuillEditor(
+                      child: _buildQuillEditor(
                         focusNode: _editorFocusNode,
                         scrollController: _editorScrollController,
-                        controller: _quillController,
-                        config: QuillEditorConfig(
-                          placeholder: 'Начните писать заметку...',
-                          padding: const EdgeInsets.all(12),
-                          expands: true,
-                          dialogTheme: QuillDialogTheme(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            dialogBackgroundColor: theme.colorScheme.surface,
-                          ),
-
-                          onLaunchUrl: (url) async {
-                            logInfo('QuillEditor onLaunchUrl: $url');
-                            // Перехватываем ссылки на заметки, чтобы не открывать в браузере
-                            final link = parseVaultLink(url);
-                            if (link != null) {
-                              _handleVaultLinkClick(link);
-                            }
-                            // Для обычных URL можно добавить url_launcher
-                          },
-                          onTapDown: (details, p1) {
-                            // Обработка тапов
-                            return false;
-                          },
-                          customStyles: DefaultStyles(
-                            link: TextStyle(
-                              color: theme.colorScheme.primary,
-                              decoration: TextDecoration.underline,
-                            ),
-                          ),
-                        ),
                       ),
                     ),
                   ],
