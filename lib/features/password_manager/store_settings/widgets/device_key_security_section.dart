@@ -72,7 +72,7 @@ class _DeviceKeySecuritySectionState
           ),
           const SizedBox(height: 8),
           Text(
-            'Переключение требует текущий мастер пароль. Если у хранилища также включён JSON key file, сначала выберите текущий key file на соседней странице.',
+            'Переключение требует текущий мастер пароль. Если у хранилища также включён JSON key file, сначала выберите текущий key file на странице "JSON key file".',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),

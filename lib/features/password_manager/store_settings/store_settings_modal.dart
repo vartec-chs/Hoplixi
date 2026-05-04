@@ -19,6 +19,7 @@ Future<bool?> showStoreSettingsModal(
   final container = ProviderScope.containerOf(context, listen: false);
   container.read(pendingStoreSettingsModalPageProvider.notifier).clear();
   final pageIndexNotifier = ValueNotifier<int>(initialPageIndex);
+  final returnToDeviceKeyPage = ValueNotifier<bool>(false);
   container.read(isStoreSettingsModalOpenProvider.notifier).setOpen(true);
 
   try {
@@ -65,13 +66,7 @@ Future<bool?> showStoreSettingsModal(
                   },
                   tooltip: 'Cloud Sync',
                 ),
-                IconButton(
-                  icon: const Icon(Icons.phonelink_lock_outlined),
-                  onPressed: () {
-                    pageIndexNotifier.value = 5;
-                  },
-                  tooltip: 'Ключ устройства',
-                ),
+
                 IconButton(
                   icon: const Icon(Icons.push_pin_outlined),
                   onPressed: () {
@@ -120,12 +115,25 @@ Future<bool?> showStoreSettingsModal(
             ),
             trailingNavBarWidget: Padding(
               padding: const EdgeInsets.only(right: 8.0),
-              child: IconButton(
-                icon: const Icon(Icons.key_outlined),
-                onPressed: () {
-                  pageIndexNotifier.value = 4;
-                },
-                tooltip: 'JSON key file',
+              child: Row(
+                spacing: 8,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.key_outlined),
+                    onPressed: () {
+                      pageIndexNotifier.value = 4;
+                    },
+                    tooltip: 'JSON key file',
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.phonelink_lock_outlined),
+                    onPressed: () {
+                      pageIndexNotifier.value = 5;
+                    },
+                    tooltip: 'Ключ устройства',
+                  ),
+                ],
               ),
             ),
             child: const Padding(
@@ -213,9 +221,24 @@ Future<bool?> showStoreSettingsModal(
               child: IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () {
-                  pageIndexNotifier.value = 0;
+                  if (returnToDeviceKeyPage.value) {
+                    pageIndexNotifier.value = 5;
+                    returnToDeviceKeyPage.value = false;
+                  } else {
+                    pageIndexNotifier.value = 1;
+                  }
                 },
                 tooltip: 'Назад',
+              ),
+            ),
+            trailingNavBarWidget: Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: IconButton(
+                icon: const Icon(Icons.phonelink_lock_outlined),
+                onPressed: () {
+                  pageIndexNotifier.value = 5;
+                },
+                tooltip: 'Ключ устройства',
               ),
             ),
             child: const KeyFileSecuritySection(),
@@ -239,9 +262,20 @@ Future<bool?> showStoreSettingsModal(
               child: IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () {
-                  pageIndexNotifier.value = 0;
+                  pageIndexNotifier.value = 1;
                 },
                 tooltip: 'Назад',
+              ),
+            ),
+            trailingNavBarWidget: Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: IconButton(
+                icon: const Icon(Icons.key_outlined),
+                onPressed: () {
+                  pageIndexNotifier.value = 4;
+                  returnToDeviceKeyPage.value = true;
+                },
+                tooltip: 'JSON key file',
               ),
             ),
             child: const DeviceKeySecuritySection(),
