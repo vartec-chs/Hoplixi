@@ -18,12 +18,11 @@ void registerAppGuideShowcase({
   TooltipActionConfig? globalTooltipActionConfig,
   List<TooltipActionButton>? globalTooltipActions,
 }) {
-  final isDesktop = UniversalPlatform.isDesktop;
   final effectiveFloatingActionWidget =
       globalFloatingActionWidget ??
       (_) => FloatingActionWidget(
         left: 12,
-        top: isDesktop ? 24 : 12,
+        top: 32,
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: SmoothButton(

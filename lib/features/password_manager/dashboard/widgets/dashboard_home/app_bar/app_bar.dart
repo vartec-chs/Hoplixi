@@ -6,7 +6,6 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/onboarding/presentation/custom_showcase_tooltip.dart';
 import 'package:hoplixi/features/onboarding/presentation/dashboard_guide_scope.dart';
-import 'package:hoplixi/features/onboarding/presentation/showcase_help_button.dart';
 import 'package:hoplixi/features/password_manager/store_settings/index.dart';
 import 'package:hoplixi/main_db/core/models/filter/index.dart';
 import 'package:hoplixi/main_db/providers/main_store_backup_orchestrator_provider.dart';
@@ -23,7 +22,7 @@ import '../../../providers/filter_providers/base_filter_provider.dart';
 import '../entity_type_dropdown.dart';
 import 'app_bar_widgets.dart';
 
-enum _DashboardMenuAction { storeSettings, backupNow, keepassImport }
+enum _DashboardMenuAction { storeSettings, backupNow, keepassImport, showHints }
 
 /// Полноценный SliverAppBar для дашборда с фильтрацией и поиском
 /// Включает drawer кнопку, выбор типа сущности, кнопку фильтров, поиск и вкладки
@@ -143,6 +142,22 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
     );
 
     showStoreSettingsModal(context);
+  }
+
+  void _showDashboardHints(DashboardGuideKeys? guideKeys) {
+    if (guideKeys == null) {
+      return;
+    }
+
+    final showcaseView = ShowcaseView.getNamed(dashboardShowcaseScope);
+    if (showcaseView.isShowcaseRunning) {
+      return;
+    }
+
+    showcaseView.startShowCase(
+      guideKeys.sequence,
+      delay: const Duration(milliseconds: 250),
+    );
   }
 
   BackupScope _parseBackupScope(String? raw) {
@@ -296,12 +311,6 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
             tooltip: 'Открыть фильтры',
           ),
         ),
-        if (guideKeys != null)
-          ShowcaseHelpButton(
-            keys: guideKeys.sequence,
-            scope: dashboardShowcaseScope,
-          ),
-
         // Меню действий: настройки и импорт
         _wrapSyncStatus(
           guideKeys,
@@ -330,6 +339,9 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
                 case _DashboardMenuAction.keepassImport:
                   context.go(AppRoutesPaths.keepassImport);
                   break;
+                case _DashboardMenuAction.showHints:
+                  _showDashboardHints(guideKeys);
+                  break;
               }
             },
             itemBuilder: (context) => [
@@ -340,6 +352,17 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
                     Icon(LucideIcons.settings, size: 20),
                     SizedBox(width: 8),
                     Text('Настройки хранилища'),
+                  ],
+                ),
+              ),
+              PopupMenuItem<_DashboardMenuAction>(
+                value: _DashboardMenuAction.showHints,
+                enabled: guideKeys != null,
+                child: const Row(
+                  children: [
+                    Icon(Icons.help_outline, size: 20),
+                    SizedBox(width: 8),
+                    Text('Показать подсказки'),
                   ],
                 ),
               ),

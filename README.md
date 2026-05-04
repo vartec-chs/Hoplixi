@@ -24,6 +24,7 @@
 - полный changelog: [CHANGELOG.md](CHANGELOG.md)
 - release notes v1.2.0:
   [docs/release-notes/v1.2.0-github-release.md](docs/release-notes/v1.2.0-github-release.md)
+- нумерация версий: [docs/versioning.md](docs/versioning.md)
 
 <img src="assets/logo/logo.png" width="200" alt="Hoplixi Logo" />
 
