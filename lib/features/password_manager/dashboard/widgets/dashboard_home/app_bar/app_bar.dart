@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/onboarding/presentation/custom_showcase_tooltip.dart';
 import 'package:hoplixi/features/onboarding/presentation/dashboard_guide_scope.dart';
 import 'package:hoplixi/features/onboarding/presentation/showcase_help_button.dart';
 import 'package:hoplixi/features/password_manager/store_settings/index.dart';
@@ -253,47 +254,53 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
       actions: [
         if (widget.showEntityTypeSelector) ...[
           // Компактный селектор типа сущности
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: EntityTypeCompactDropdown(
-              onEntityTypeChanged: (entityType) {
-                logInfo(
-                  'DashboardSliverAppBar: Изменен тип сущности',
-                  data: {'type': entityType.label},
-                );
-              },
+          _wrapEntityTypeSelector(
+            guideKeys,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: EntityTypeCompactDropdown(
+                onEntityTypeChanged: (entityType) {
+                  logInfo(
+                    'DashboardSliverAppBar: Изменен тип сущности',
+                    data: {'type': entityType.label},
+                  );
+                },
+              ),
             ),
           ),
         ],
         // Кнопка открытия модального окна фильтров
-        IconButton(
-          icon: Stack(
-            children: [
-              const Icon(Icons.filter_list),
-              // Индикатор активных фильтров
-              if (baseFilter.hasActiveConstraints)
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      shape: BoxShape.circle,
+        _wrapFilterButton(
+          guideKeys,
+          IconButton(
+            icon: Stack(
+              children: [
+                const Icon(Icons.filter_list),
+                // Индикатор активных фильтров
+                if (baseFilter.hasActiveConstraints)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
+            onPressed: _openFilterModal,
+            tooltip: 'Открыть фильтры',
           ),
-          onPressed: _openFilterModal,
-          tooltip: 'Открыть фильтры',
         ),
         if (guideKeys != null)
-            ShowcaseHelpButton(
-              keys: guideKeys.sequence,
-              scope: dashboardShowcaseScope,
-            ),
+          ShowcaseHelpButton(
+            keys: guideKeys.sequence,
+            scope: dashboardShowcaseScope,
+          ),
 
         // Меню действий: настройки и импорт
         _wrapSyncStatus(
@@ -476,12 +483,48 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
       return child;
     }
 
-    return Showcase(
+    return Showcase.withWidget(
       key: keys.search,
       scope: dashboardShowcaseScope,
-      title: 'Поиск по записям',
-      description:
-          'Введите запрос, чтобы отфильтровать текущий список по основным полям записи.',
+      container: const CustomShowcaseTooltip(
+        title: 'Поиск по записям',
+        description:
+            'Введите запрос, чтобы отфильтровать текущий список по основным полям записи.',
+      ),
+      child: child,
+    );
+  }
+
+  Widget _wrapEntityTypeSelector(DashboardGuideKeys? keys, Widget child) {
+    if (keys == null) {
+      return child;
+    }
+
+    return Showcase.withWidget(
+      key: keys.entityTypeSelector,
+      scope: dashboardShowcaseScope,
+      container: const CustomShowcaseTooltip(
+        title: 'Выбор сущности',
+        description:
+            'Переключайте текущий тип данных, чтобы увидеть разные наборы записей и контекстные действия.',
+      ),
+      child: child,
+    );
+  }
+
+  Widget _wrapFilterButton(DashboardGuideKeys? keys, Widget child) {
+    if (keys == null) {
+      return child;
+    }
+
+    return Showcase.withWidget(
+      key: keys.filters,
+      scope: dashboardShowcaseScope,
+      container: const CustomShowcaseTooltip(
+        title: 'Фильтры',
+        description:
+            'Откройте фильтры, чтобы сузить список по активным условиям и параметрам поиска.',
+      ),
       child: child,
     );
   }
@@ -491,12 +534,14 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
       return child;
     }
 
-    return Showcase(
+    return Showcase.withWidget(
       key: keys.syncStatus,
       scope: dashboardShowcaseScope,
-      title: 'Меню хранилища',
-      description:
-          'Здесь доступны настройки хранилища, ручной бэкап и импорт данных.',
+      container: const CustomShowcaseTooltip(
+        title: 'Меню хранилища',
+        description:
+            'Здесь доступны настройки хранилища, ручной бэкап и импорт данных.',
+      ),
       child: child,
     );
   }

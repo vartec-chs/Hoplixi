@@ -17,7 +17,7 @@ class CustomShowcaseTooltip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.32),
@@ -46,21 +46,6 @@ class CustomShowcaseTooltip extends StatelessWidget {
             description,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: colorScheme.primaryContainer.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              'Нажмите, чтобы проверить работу подсказки',
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: colorScheme.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
             ),
           ),
         ],

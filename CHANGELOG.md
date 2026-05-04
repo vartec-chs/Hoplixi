@@ -8,6 +8,14 @@
   `registerAppGuideShowcase()` в onboarding presentation layer.
 - `CustomShowcaseTooltip` вынесен в общий onboarding-widget и переиспользуется
   из home action grid.
+- `CloudSyncPlaygroundScreen` получил свой onboarding guide с подсказками для
+  header, health, access, provider readiness и drive storage.
+- В dashboard guide добавлены отдельные подсказки для выбора сущности и кнопки
+  фильтров.
+- Dashboard app bar переведен на `Showcase.withWidget` через общий
+  `CustomShowcaseTooltip` для search, entity selector, filters и sync status.
+- В home guide добавлена подсказка для `LocalSend`, а версия home guide поднята
+  до `2`, чтобы новый шаг автозапускался повторно.
 - В helper перенесены стандартные `showcaseview`-контролы: skip widget, tooltip
   config и default previous/next actions.
 - `HomeScreen`, `CreateStoreScreen`, dashboard layout и `PasswordFormScreen`

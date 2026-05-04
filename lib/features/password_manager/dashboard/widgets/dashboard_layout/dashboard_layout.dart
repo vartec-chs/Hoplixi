@@ -8,6 +8,7 @@ import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/onboarding/application/showcase_controller.dart';
 import 'package:hoplixi/features/onboarding/domain/app_guide_id.dart';
 import 'package:hoplixi/features/onboarding/domain/guide_start_mode.dart';
+import 'package:hoplixi/features/onboarding/presentation/custom_showcase_tooltip.dart';
 import 'package:hoplixi/features/onboarding/presentation/dashboard_guide_scope.dart';
 import 'package:hoplixi/features/onboarding/presentation/showcase_registration.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
@@ -332,12 +333,14 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
                       scale: showBottomNav ? 1.0 : 0.95,
                       duration: kScaleAnimationDuration,
                       curve: showBottomNav ? Curves.easeOutBack : Curves.easeIn,
-                      child: Showcase(
+                      child: Showcase.withWidget(
                         key: _dashboardGuideKeys.navigation,
                         scope: dashboardShowcaseScope,
-                        title: 'Навигация разделов',
-                        description:
-                            'Переключайтесь между списком, категориями, тегами и служебными разделами текущего типа данных.',
+                        container: const CustomShowcaseTooltip(
+                          title: 'Навигация разделов',
+                          description:
+                              'Переключайтесь между списком, категориями, тегами и служебными разделами текущего типа данных.',
+                        ),
                         child: FloatingNavBar(
                           destinations: destinations,
                           selectedIndex: currentIndex,
@@ -370,12 +373,14 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
                       scale: showFAB ? 1.0 : 0.95,
                       duration: kScaleAnimationDuration,
                       curve: showFAB ? Curves.easeOutBack : Curves.easeIn,
-                      child: Showcase(
+                      child: Showcase.withWidget(
                         key: _dashboardGuideKeys.createItem,
                         scope: dashboardShowcaseScope,
-                        title: 'Добавить запись',
-                        description:
-                            'Основная кнопка создания добавляет новую запись выбранного типа.',
+                        container: const CustomShowcaseTooltip(
+                          title: 'Добавить запись',
+                          description:
+                              'Основная кнопка создания добавляет новую запись выбранного типа.',
+                        ),
                         child: DashboardFabBuilder(
                           context: context,
                           entity: entity,
@@ -440,12 +445,14 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
           child: Scaffold(
             body: Row(
               children: [
-                Showcase(
+                Showcase.withWidget(
                   key: _dashboardGuideKeys.navigation,
                   scope: dashboardShowcaseScope,
-                  title: 'Навигация разделов',
-                  description:
-                      'Левая панель переключает список, категории, теги и дополнительные разделы.',
+                  container: const CustomShowcaseTooltip(
+                    title: 'Навигация разделов',
+                    description:
+                        'Левая панель переключает список, категории, теги и дополнительные разделы.',
+                  ),
                   child: SizedBox(
                     width: kNavigationRailWidth,
                     child: NavigationRail(
@@ -477,12 +484,14 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
                       destinations: destinations,
                       leading: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Showcase(
+                        child: Showcase.withWidget(
                           key: _dashboardGuideKeys.createItem,
                           scope: dashboardShowcaseScope,
-                          title: 'Добавить запись',
-                          description:
-                              'Кнопка создания открывает форму добавления записи выбранного типа.',
+                          container: const CustomShowcaseTooltip(
+                            title: 'Добавить запись',
+                            description:
+                                'Кнопка создания открывает форму добавления записи выбранного типа.',
+                          ),
                           child: DashboardFabBuilder(
                             context: context,
                             entity: entity,

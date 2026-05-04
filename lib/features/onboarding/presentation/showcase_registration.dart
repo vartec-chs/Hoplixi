@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:universal_platform/universal_platform.dart';
 
 void registerAppGuideShowcase({
   required String scope,
@@ -17,17 +18,19 @@ void registerAppGuideShowcase({
   TooltipActionConfig? globalTooltipActionConfig,
   List<TooltipActionButton>? globalTooltipActions,
 }) {
+  final isDesktop = UniversalPlatform.isDesktop;
   final effectiveFloatingActionWidget =
       globalFloatingActionWidget ??
       (_) => FloatingActionWidget(
-        left: 16,
-        bottom: 16,
+        left: 12,
+        top: isDesktop ? 24 : 12,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: SmoothButton(
             onPressed: () => ShowcaseView.getNamed(scope).dismiss(),
             label: 'Пропустить',
-            type: SmoothButtonType.text,
+            type: SmoothButtonType.outlined,
+            size: SmoothButtonSize.small,
           ),
         ),
       );
@@ -69,7 +72,7 @@ void registerAppGuideShowcase({
     globalTooltipActionConfig: effectiveTooltipActionConfig,
     globalTooltipActions: effectiveTooltipActions,
     onFinish: onFinish,
-    
+
     onDismiss: onDismiss,
   );
 }

@@ -465,6 +465,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         label: 'LocalSend',
         description:
             'Отправка данных по локальной сети в том числе и хранилища',
+        showcaseKey: _guideKeys.localSend,
+        showcaseTitle: 'LocalSend',
+        showcaseDescription:
+            'Используйте отправку по локальной сети, чтобы быстро передавать данные и связанные файлы между устройствами.',
         onTap: () => context.push(AppRoutesPaths.localSendSend),
       ),
 
@@ -553,6 +557,7 @@ class HomeGuideKeys {
   final createStore = GlobalKey();
   final openStore = GlobalKey();
   final generator = GlobalKey();
+  final localSend = GlobalKey();
   final cloudSync = GlobalKey();
   final settings = GlobalKey();
 
@@ -560,6 +565,7 @@ class HomeGuideKeys {
     createStore,
     openStore,
     generator,
+    localSend,
     cloudSync,
     settings,
   ];

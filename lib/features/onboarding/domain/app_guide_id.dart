@@ -3,6 +3,7 @@ enum AppGuideId {
   createStore,
   dashboard,
   passwordAdd,
+  cloudSyncPlayground,
 }
 
 extension AppGuideIdStorageKey on AppGuideId {
@@ -11,6 +12,6 @@ extension AppGuideIdStorageKey on AppGuideId {
     AppGuideId.createStore => 'create_store',
     AppGuideId.dashboard => 'dashboard',
     AppGuideId.passwordAdd => 'password_add',
+    AppGuideId.cloudSyncPlayground => 'cloud_sync_playground',
   };
 }
-
