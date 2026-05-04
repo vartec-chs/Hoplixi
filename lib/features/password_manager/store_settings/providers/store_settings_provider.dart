@@ -141,6 +141,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
           useKeyFile: manifest?.useKeyFile ?? false,
           keyFileId: manifest?.keyFileId,
           keyFileHint: manifest?.keyFileHint,
+          useDeviceKey: manifest?.keyConfig?.useDeviceKey ?? false,
         );
       }
     } catch (e, s) {
@@ -406,6 +407,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
     state = state.copyWith(
       saveError: null,
       keyFileSettingsError: null,
+      deviceKeySettingsError: null,
       successMessage: null,
     );
   }
@@ -568,6 +570,14 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
     );
   }
 
+  void updateDeviceKeyPassword(String password) {
+    state = state.copyWith(
+      deviceKeyPassword: password,
+      deviceKeySettingsError: null,
+      successMessage: null,
+    );
+  }
+
   Future<void> selectKeyFileForSettings() async {
     final result = await const VaultKeyFileService().pickAndRead();
     result.fold(
@@ -640,6 +650,149 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       );
     }
     return _rekeyKeyFileSettings(enable: false, masterPassword: masterPassword);
+  }
+
+  AsyncResultDart<bool, String> enableDeviceKey(String masterPassword) async {
+    if (masterPassword.isEmpty) {
+      state = state.copyWith(
+        deviceKeySettingsError: 'Введите текущий мастер пароль',
+      );
+      return const Failure('Введите текущий мастер пароль');
+    }
+    if (state.useKeyFile &&
+        (state.selectedKeyFileId == null ||
+            state.selectedKeyFileSecret == null)) {
+      state = state.copyWith(
+        deviceKeySettingsError:
+            'Выберите текущий JSON key file для переключения ключа устройства',
+      );
+      return const Failure(
+        'Выберите текущий JSON key file для переключения ключа устройства',
+      );
+    }
+    if (state.useKeyFile && state.selectedKeyFileId != state.keyFileId) {
+      state = state.copyWith(
+        deviceKeySettingsError:
+            'Выбранный JSON key file не подходит для этого хранилища',
+      );
+      return const Failure(
+        'Выбранный JSON key file не подходит для этого хранилища',
+      );
+    }
+    return _rekeyDeviceKeySettings(enable: true, masterPassword: masterPassword);
+  }
+
+  AsyncResultDart<bool, String> disableDeviceKey(String masterPassword) async {
+    if (masterPassword.isEmpty) {
+      state = state.copyWith(
+        deviceKeySettingsError: 'Введите текущий мастер пароль',
+      );
+      return const Failure('Введите текущий мастер пароль');
+    }
+    if (state.useKeyFile &&
+        (state.selectedKeyFileId == null ||
+            state.selectedKeyFileSecret == null)) {
+      state = state.copyWith(
+        deviceKeySettingsError:
+            'Выберите текущий JSON key file для переключения ключа устройства',
+      );
+      return const Failure(
+        'Выберите текущий JSON key file для переключения ключа устройства',
+      );
+    }
+    if (state.useKeyFile && state.selectedKeyFileId != state.keyFileId) {
+      state = state.copyWith(
+        deviceKeySettingsError:
+            'Выбранный JSON key file не подходит для этого хранилища',
+      );
+      return const Failure(
+        'Выбранный JSON key file не подходит для этого хранилища',
+      );
+    }
+    return _rekeyDeviceKeySettings(
+      enable: false,
+      masterPassword: masterPassword,
+    );
+  }
+
+  AsyncResultDart<bool, String> _rekeyDeviceKeySettings({
+    required bool enable,
+    required String masterPassword,
+  }) async {
+    state = state.copyWith(
+      isUpdatingDeviceKey: true,
+      deviceKeySettingsError: null,
+      saveError: null,
+      successMessage: null,
+    );
+
+    try {
+      final dao = await ref.read(storeMetaDaoProvider.future);
+      final meta = await dao.getStoreMeta();
+      if (meta == null) {
+        throw StateError('Метаданные хранилища не найдены');
+      }
+      if (_hashPassword(masterPassword, meta.salt) != meta.passwordHash) {
+        throw StateError('Текущий мастер пароль неверен');
+      }
+
+      final dbState = await ref.read(mainStoreProvider.future);
+      final currentPath = dbState.path;
+      if (currentPath == null) {
+        throw StateError('Не удалось определить текущее хранилище');
+      }
+
+      final manifest = await StoreManifestService.readFrom(currentPath);
+      final keyConfig = manifest?.keyConfig;
+      if (manifest == null || keyConfig == null) {
+        throw StateError('Не найден keyConfig в store_manifest.json');
+      }
+
+      final keyService = DbKeyDerivationService(getIt<FlutterSecureStorage>());
+      final newPragmaKey = await keyService.derivePragmaKey(
+        masterPassword,
+        keyConfig.argon2Salt,
+        useDeviceKey: enable,
+        keyFileSecret: manifest.useKeyFile ? state.selectedKeyFileSecret : null,
+        kdfVersion: keyConfig.kdfVersion,
+      );
+
+      final result = await dao.changePassword(newPragmaKey);
+      final resultException = result.exceptionOrNull();
+      if (resultException != null) {
+        throw Exception(resultException);
+      }
+
+      final updatedManifest = manifest.copyWith(
+        keyConfig: keyConfig.copyWith(useDeviceKey: enable),
+        updatedAt: DateTime.now().toUtc(),
+      );
+      await StoreManifestService.writeTo(currentPath, updatedManifest);
+
+      state = state.copyWith(
+        isUpdatingDeviceKey: false,
+        useDeviceKey: updatedManifest.keyConfig?.useDeviceKey ?? enable,
+        deviceKeyPassword: '',
+        selectedKeyFileId: null,
+        selectedKeyFileHint: null,
+        selectedKeyFileSecret: null,
+        successMessage: enable
+            ? 'Ключ устройства включён'
+            : 'Ключ устройства отключён',
+      );
+      return const Success(true);
+    } catch (e, s) {
+      logError(
+        'Failed to update device key settings: $e',
+        stackTrace: s,
+        tag: _logTag,
+      );
+      state = state.copyWith(
+        isUpdatingDeviceKey: false,
+        deviceKeySettingsError: e.toString(),
+      );
+      return Failure(e.toString());
+    }
   }
 
   AsyncResultDart<bool, String> _rekeyKeyFileSettings({

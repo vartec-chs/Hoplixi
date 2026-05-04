@@ -13,7 +13,9 @@ store_settings/
 ├── providers/
 │   └── store_settings_provider.dart    # Провайдер управления состоянием
 └── widgets/
-    └── store_settings_form.dart        # Форма редактирования
+  ├── store_settings_form.dart        # Форма редактирования
+  ├── key_file_security_section.dart  # Включение/отключение JSON key file
+  └── device_key_security_section.dart # Включение/отключение device key
 ```
 
 ## Использование
@@ -68,6 +70,7 @@ class MyWidget extends ConsumerWidget {
 - ✅ Сброс изменений к исходным значениям
 - ✅ Индикация процесса сохранения
 - ✅ Уведомления об ошибках и успехе
+- ✅ Отдельная страница для включения и отключения device key
 - ✅ Работа через Riverpod и result_dart
 - ✅ Использование StoreMetaDao
 
@@ -83,6 +86,8 @@ class MyWidget extends ConsumerWidget {
 - `save()` — сохранить изменения (возвращает Result)
 - `reset()` — сбросить к исходным значениям
 - `clearMessages()` — очистить сообщения об ошибках/успехе
+- `enableDeviceKey(String)` — включить device key через rekey
+- `disableDeviceKey(String)` — отключить device key через rekey
 
 ### Состояние
 

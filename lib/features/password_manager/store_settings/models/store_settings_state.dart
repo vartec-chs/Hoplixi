@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
@@ -97,6 +95,10 @@ sealed class StoreSettingsState with _$StoreSettingsState {
     @Default(false) bool useKeyFile,
     String? keyFileId,
     String? keyFileHint,
+
+    /// Ключ устройства из store_manifest.json.
+    @Default(false) bool useDeviceKey,
+
     @Default('') String keyFilePassword,
     String? selectedKeyFileId,
     String? selectedKeyFileHint,
@@ -104,6 +106,10 @@ sealed class StoreSettingsState with _$StoreSettingsState {
     Uint8List? selectedKeyFileSecret,
     @Default(false) bool isUpdatingKeyFile,
     String? keyFileSettingsError,
+
+    @Default('') String deviceKeyPassword,
+    @Default(false) bool isUpdatingDeviceKey,
+    String? deviceKeySettingsError,
   }) = _StoreSettingsState;
 
   const StoreSettingsState._();

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/cloud_sync_settings_page.dart';
 import 'package:hoplixi/features/password_manager/store_settings/providers/store_settings_modal_provider.dart';
 import 'package:hoplixi/features/password_manager/store_settings/widgets/change_password_section.dart';
+import 'package:hoplixi/features/password_manager/store_settings/widgets/device_key_security_section.dart';
 import 'package:hoplixi/features/password_manager/store_settings/widgets/key_file_security_section.dart';
 import 'package:hoplixi/features/password_manager/store_settings/widgets/pinned_entity_types_selector.dart';
 import 'package:hoplixi/features/password_manager/store_settings/widgets/store_settings_form.dart';
@@ -63,6 +64,13 @@ Future<bool?> showStoreSettingsModal(
                     pageIndexNotifier.value = 3;
                   },
                   tooltip: 'Cloud Sync',
+                ),
+                IconButton(
+                  icon: const Icon(Icons.phonelink_lock_outlined),
+                  onPressed: () {
+                    pageIndexNotifier.value = 5;
+                  },
+                  tooltip: 'Ключ устройства',
                 ),
                 IconButton(
                   icon: const Icon(Icons.push_pin_outlined),
@@ -211,6 +219,32 @@ Future<bool?> showStoreSettingsModal(
               ),
             ),
             child: const KeyFileSecuritySection(),
+          ),
+
+          WoltModalSheetPage(
+            surfaceTintColor: Colors.transparent,
+            hasTopBarLayer: true,
+            topBarTitle: Builder(
+              builder: (context) {
+                return Text(
+                  'Ключ устройства',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                );
+              },
+            ),
+            leadingNavBarWidget: Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  pageIndexNotifier.value = 0;
+                },
+                tooltip: 'Назад',
+              ),
+            ),
+            child: const DeviceKeySecuritySection(),
           ),
         ];
       },
