@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 2026-05-04
+
+### onboarding helper
+
+- `ShowcaseView.register()` вынесен в универсальный helper
+  `registerAppGuideShowcase()` в onboarding presentation layer.
+- `CustomShowcaseTooltip` вынесен в общий onboarding-widget и переиспользуется
+  из home action grid.
+- В helper перенесены стандартные `showcaseview`-контролы: skip widget, tooltip
+  config и default previous/next actions.
+- `HomeScreen`, `CreateStoreScreen`, dashboard layout и `PasswordFormScreen`
+  переведены на общий helper регистрации showcase.
+
 ## 2026-05-03
 
 ### app

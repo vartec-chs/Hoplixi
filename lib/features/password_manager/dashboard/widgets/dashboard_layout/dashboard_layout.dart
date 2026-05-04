@@ -9,6 +9,7 @@ import 'package:hoplixi/features/onboarding/application/showcase_controller.dart
 import 'package:hoplixi/features/onboarding/domain/app_guide_id.dart';
 import 'package:hoplixi/features/onboarding/domain/guide_start_mode.dart';
 import 'package:hoplixi/features/onboarding/presentation/dashboard_guide_scope.dart';
+import 'package:hoplixi/features/onboarding/presentation/showcase_registration.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/screen_protection_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/dashboard_drawer.dart';
@@ -50,7 +51,7 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
   @override
   void initState() {
     super.initState();
-    ShowcaseView.register(
+    registerAppGuideShowcase(
       scope: dashboardShowcaseScope,
       enableAutoScroll: true,
       semanticEnable: true,
@@ -243,10 +244,7 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
       return;
     }
 
-    showcaseView.startShowCase(
-      keys,
-      delay: const Duration(milliseconds: 250),
-    );
+    showcaseView.startShowCase(keys, delay: const Duration(milliseconds: 250));
   }
 
   void _markDashboardGuideSeen() {
@@ -467,7 +465,9 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
                       ),
                       indicatorColor: theme.colorScheme.primaryContainer,
                       indicatorShape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(kIndicatorBorderRadius),
+                        borderRadius: BorderRadius.circular(
+                          kIndicatorBorderRadius,
+                        ),
                       ),
                       backgroundColor: theme.colorScheme.surfaceContainerLowest,
                       selectedIndex: currentIndex,

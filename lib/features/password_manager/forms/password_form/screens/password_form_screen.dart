@@ -8,21 +8,22 @@ import 'package:hoplixi/features/onboarding/application/showcase_controller.dart
 import 'package:hoplixi/features/onboarding/domain/app_guide_id.dart';
 import 'package:hoplixi/features/onboarding/domain/guide_start_mode.dart';
 import 'package:hoplixi/features/onboarding/presentation/showcase_help_button.dart';
-import 'package:hoplixi/features/password_manager/forms/password_form/models/password_form_state.dart';
-import 'package:hoplixi/main_db/core/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/features/onboarding/presentation/showcase_registration.dart';
 import 'package:hoplixi/features/password_generator/password_generator_widget.dart';
 import 'package:hoplixi/features/password_manager/forms/form_close_button.dart';
+import 'package:hoplixi/features/password_manager/forms/password_form/models/password_form_state.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/otp_picker/otp_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_editor.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/email_autocomplete_field/email_autocomplete_field.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/login_autocomplete_field/login_autocomplete_field.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
+import 'package:hoplixi/main_db/core/models/dto/icon_ref_dto.dart';
+import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
+import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
-import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_editor.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/widgets/icon_source_picker_button.dart';
@@ -69,7 +70,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
     super.initState();
 
     _guideKeys = PasswordAddGuideKeys();
-    ShowcaseView.register(
+    registerAppGuideShowcase(
       scope: _passwordAddShowcaseScope,
       enableAutoScroll: true,
       semanticEnable: true,
@@ -131,10 +132,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
       return;
     }
 
-    showcaseView.startShowCase(
-      keys,
-      delay: const Duration(milliseconds: 250),
-    );
+    showcaseView.startShowCase(keys, delay: const Duration(milliseconds: 250));
   }
 
   void _markPasswordAddGuideSeen() {
@@ -350,9 +348,9 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
       ),
 
       body: SafeArea(
-          child: state.isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : Column(
+        child: state.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
                 children: [
                   Expanded(
                     child: Form(

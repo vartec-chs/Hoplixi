@@ -12,6 +12,7 @@ import 'package:hoplixi/features/onboarding/application/showcase_controller.dart
 import 'package:hoplixi/features/onboarding/domain/app_guide_id.dart';
 import 'package:hoplixi/features/onboarding/domain/guide_start_mode.dart';
 import 'package:hoplixi/features/onboarding/presentation/showcase_help_button.dart';
+import 'package:hoplixi/features/onboarding/presentation/showcase_registration.dart';
 import 'package:hoplixi/features/password_generator/password_generator_widget.dart';
 import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_db/providers/db_history_provider.dart';
@@ -56,42 +57,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void initState() {
     super.initState();
     _guideKeys = HomeGuideKeys();
-    ShowcaseView.register(
+    registerAppGuideShowcase(
       scope: _homeShowcaseScope,
-      enableAutoScroll: true,
-      semanticEnable: true,
-      autoPlay: false,
-      skipIfTargetNotPresent: true,
       hideFloatingActionWidgetForShowcase: [_guideKeys.settings],
-      globalFloatingActionWidget: (_) => FloatingActionWidget(
-        left: 16,
-        bottom: 16,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: ElevatedButton(
-            onPressed: () =>
-                ShowcaseView.getNamed(_homeShowcaseScope).dismiss(),
-            child: const Text('Пропустить'),
-          ),
-        ),
-      ),
-      globalTooltipActionConfig: const TooltipActionConfig(
-        position: TooltipActionPosition.inside,
-        alignment: MainAxisAlignment.spaceBetween,
-        actionGap: 20,
-      ),
-      globalTooltipActions: [
-        TooltipActionButton(
-          type: TooltipDefaultActionType.previous,
-          textStyle: const TextStyle(color: Colors.white),
-          hideActionWidgetForShowcase: [_guideKeys.createStore],
-        ),
-        TooltipActionButton(
-          type: TooltipDefaultActionType.next,
-          textStyle: const TextStyle(color: Colors.white),
-          hideActionWidgetForShowcase: [_guideKeys.settings],
-        ),
-      ],
+      previousActionHideKeys: [_guideKeys.createStore],
+      nextActionHideKeys: [_guideKeys.settings],
       onFinish: _markHomeGuideSeen,
       onDismiss: (_) => _markHomeGuideSeen(),
     );
@@ -476,7 +446,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         showcaseTitle: 'Создать хранилище',
         showcaseDescription:
             'Начните здесь, если нужно создать новое зашифрованное хранилище.',
-        useCustomShowcaseTooltip: true,
       ),
       ActionItem(
         icon: LucideIcons.key,
@@ -485,7 +454,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         showcaseKey: _guideKeys.generator,
         showcaseTitle: 'Генератор паролей',
         showcaseDescription:
-            'Проверьте модальное окно генератора и убедитесь, что showcase работает поверх sheet.',
+            'Генератор паролей поможет создать надёжные пароли с нужными параметрами. Результат можно скопировать или сразу использовать для создания новой записи.',
         onTap: () async {
           await _openPasswordGeneratorModal();
         },
@@ -520,7 +489,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         showcaseKey: _guideKeys.cloudSync,
         showcaseTitle: 'Cloud Sync',
         showcaseDescription:
-            'Здесь можно проверить, что подсказки не мешают переходам в раздел синхронизации.',
+            'Это центральное место для управления всеми аспектами облачной синхронизации, включая настройку аккаунта, управление токенами доступа и дополнительным функциям облачных сервисов.',
         onTap: () => context.push(AppRoutesPaths.cloudSync),
       ),
       if (!MainConstants.isProduction) ...[

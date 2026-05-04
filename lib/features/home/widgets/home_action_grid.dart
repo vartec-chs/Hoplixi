@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hoplixi/features/home/models/action_item.dart';
 import 'package:hoplixi/features/home/widgets/action_button.dart';
 import 'package:hoplixi/features/home/widgets/action_button_compact.dart';
+import 'package:hoplixi/features/onboarding/presentation/custom_showcase_tooltip.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 class HomeActionGrid extends StatelessWidget {
@@ -108,89 +109,10 @@ Widget _wrapShowcase(
     return child;
   }
 
-  if (item.useCustomShowcaseTooltip) {
-    return Showcase.withWidget(
-      key: showcaseKey,
-      scope: scope,
-
-      container: _CustomShowcaseTooltip(title: title, description: description),
-      child: child,
-    );
-  }
-
-  return Showcase(
+  return Showcase.withWidget(
     key: showcaseKey,
     scope: scope,
-    title: title,
-    description: description,
+    container: CustomShowcaseTooltip(title: title, description: description),
     child: child,
   );
-}
-
-class _CustomShowcaseTooltip extends StatelessWidget {
-  const _CustomShowcaseTooltip({
-    required this.title,
-    required this.description,
-  });
-
-  final String title;
-  final String description;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.32),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withValues(alpha: 0.18),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            description,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: colorScheme.primaryContainer.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              'Нажмите, чтобы проверить работу подсказки',
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: colorScheme.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

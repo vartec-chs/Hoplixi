@@ -5,6 +5,7 @@ class ShowcaseHelpButton extends StatelessWidget {
   const ShowcaseHelpButton({
     super.key,
     required this.keys,
+    this.enabled = true,
     this.scope,
     this.color,
     this.tooltip = 'Показать подсказки',
@@ -16,6 +17,7 @@ class ShowcaseHelpButton extends StatelessWidget {
   final Color? color;
   final String tooltip;
   final Duration delay;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +25,7 @@ class ShowcaseHelpButton extends StatelessWidget {
       icon: const Icon(Icons.help_outline),
       color: color,
       tooltip: tooltip,
-      onPressed: () {
+      onPressed: enabled ? () {
         if (keys.isEmpty) {
           return;
         }
@@ -36,7 +38,7 @@ class ShowcaseHelpButton extends StatelessWidget {
         }
 
         showcaseView.startShowCase(keys, delay: delay);
-      },
+      } : null,
     );
   }
 }

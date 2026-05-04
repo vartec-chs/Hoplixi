@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/about/ui/about_app_modal.dart';
+import 'package:hoplixi/features/onboarding/presentation/custom_showcase_tooltip.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -53,12 +54,14 @@ class HomeTopActions extends StatelessWidget {
       return child;
     }
 
-    return Showcase(
+    return Showcase.withWidget(
       key: showcaseKey,
       scope: showcaseScope,
-      title: 'Настройки приложения',
-      description:
-          'Здесь находятся параметры интерфейса, безопасности и поведения приложения.',
+      container: const CustomShowcaseTooltip(
+        title: 'Настройки приложения',
+        description:
+            'Здесь находятся параметры интерфейса, безопасности и поведения приложения.',
+      ),
       child: child,
     );
   }

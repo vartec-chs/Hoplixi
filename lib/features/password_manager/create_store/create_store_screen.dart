@@ -11,6 +11,7 @@ import 'package:hoplixi/features/onboarding/application/showcase_controller.dart
 import 'package:hoplixi/features/onboarding/domain/app_guide_id.dart';
 import 'package:hoplixi/features/onboarding/domain/guide_start_mode.dart';
 import 'package:hoplixi/features/onboarding/presentation/showcase_help_button.dart';
+import 'package:hoplixi/features/onboarding/presentation/showcase_registration.dart';
 import 'package:hoplixi/features/password_manager/create_store/models/create_store_state.dart';
 import 'package:hoplixi/features/password_manager/create_store/providers/create_store_form_provider.dart';
 import 'package:hoplixi/features/password_manager/create_store/widgets/step1_name_description.dart';
@@ -43,7 +44,7 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen>
   void initState() {
     super.initState();
     _guideKeys = CreateStoreGuideKeys();
-    ShowcaseView.register(
+    registerAppGuideShowcase(
       scope: _createStoreShowcaseScope,
       enableAutoScroll: true,
       semanticEnable: true,
@@ -176,6 +177,8 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen>
           ),
           actions: [
             ShowcaseHelpButton(
+              enabled:
+                  isFirstStep, // Доступно только на первом шаге, так как там есть ключи для показа
               keys: _guideKeys.sequence,
               scope: _createStoreShowcaseScope,
             ),

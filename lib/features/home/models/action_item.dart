@@ -12,7 +12,6 @@ class ActionItem {
     this.showcaseKey,
     this.showcaseTitle,
     this.showcaseDescription,
-    this.useCustomShowcaseTooltip = false,
   });
 
   final IconData icon;
@@ -24,5 +23,4 @@ class ActionItem {
   final GlobalKey? showcaseKey;
   final String? showcaseTitle;
   final String? showcaseDescription;
-  final bool useCustomShowcaseTooltip;
 }
