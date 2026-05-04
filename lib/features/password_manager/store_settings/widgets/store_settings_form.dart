@@ -103,7 +103,7 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(12.0),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

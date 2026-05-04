@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
 
@@ -37,6 +39,12 @@ sealed class CreateStoreFormState with _$CreateStoreFormState {
     @Default('') String password,
     @Default('') String passwordConfirmation,
     @Default(false) bool useDeviceKey,
+    @Default(false) bool useKeyFile,
+    String? keyFileId,
+    String? keyFileHint,
+    @JsonKey(includeFromJson: false, includeToJson: false)
+    Uint8List? keyFileSecret,
+    String? keyFileError,
 
     // Валидация
     String? nameError,
@@ -76,7 +84,12 @@ sealed class CreateStoreFormState with _$CreateStoreFormState {
       case CreateStoreStep.selectPath:
         return isPathValid;
       case CreateStoreStep.masterPassword:
-        return isPasswordValid;
+        return isPasswordValid &&
+            (!useKeyFile ||
+                (keyFileId != null &&
+                    keyFileId!.trim().isNotEmpty &&
+                    keyFileSecret != null &&
+                    keyFileError == null));
       case CreateStoreStep.confirmation:
         return true;
     }

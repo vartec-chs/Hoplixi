@@ -21,6 +21,7 @@ import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/main_db/services/db_history_services/model/db_history_model.dart';
 import 'package:hoplixi/main_db/services/store_manifest_service/model/store_manifest.dart';
 import 'package:hoplixi/main_db/services/store_manifest_service/store_manifest_service.dart';
+import 'package:hoplixi/main_db/services/vault_key_file_service.dart';
 import 'package:hoplixi/main_db/ui/store_open_migration_dialog.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/ui/button.dart';
@@ -703,9 +704,19 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
     }
 
     final resolvedPassword = password;
+    final requiresKeyFile = await _entryRequiresKeyFile(entry);
+    final keyFile = await _resolveKeyFileForEntry(context, entry);
+    if (!context.mounted || (requiresKeyFile && keyFile == null)) {
+      return;
+    }
 
     final success = await notifier.openStore(
-      OpenStoreDto(path: entry.path, password: resolvedPassword),
+      OpenStoreDto(
+        path: entry.path,
+        password: resolvedPassword,
+        keyFileId: keyFile?.id,
+        keyFileSecret: keyFile?.secret,
+      ),
     );
 
     if (!context.mounted) return;
@@ -727,7 +738,12 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
       final handled = await promptStoreMigrationAndOpen(
         context: context,
         ref: ref,
-        dto: OpenStoreDto(path: entry.path, password: resolvedPassword),
+        dto: OpenStoreDto(
+          path: entry.path,
+          password: resolvedPassword,
+          keyFileId: keyFile?.id,
+          keyFileSecret: keyFile?.secret,
+        ),
         onOpened: () async {
           await attemptLimiter.reset(entry.path);
 
@@ -762,6 +778,40 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
 
       Toaster.error(title: 'Ошибка', description: errorMessage);
     }
+  }
+
+  Future<bool> _entryRequiresKeyFile(DatabaseEntry entry) async {
+    final manifest = await StoreManifestService.readFrom(entry.path);
+    return manifest?.useKeyFile == true;
+  }
+
+  Future<VaultKeyFile?> _resolveKeyFileForEntry(
+    BuildContext context,
+    DatabaseEntry entry,
+  ) async {
+    final manifest = await StoreManifestService.readFrom(entry.path);
+    if (manifest?.useKeyFile != true) {
+      return null;
+    }
+
+    final result = await const VaultKeyFileService().pickAndRead();
+    if (!context.mounted) {
+      return null;
+    }
+
+    return result.fold((keyFile) {
+      if (keyFile.id != manifest!.keyFileId) {
+        Toaster.error(
+          title: 'Неверный key file',
+          description: 'Выбранный JSON key file не подходит для хранилища',
+        );
+        return null;
+      }
+      return keyFile;
+    }, (error) {
+      Toaster.error(title: 'Ошибка key file', description: error.message);
+      return null;
+    });
   }
 
   Future<void> _deleteFromHistory(

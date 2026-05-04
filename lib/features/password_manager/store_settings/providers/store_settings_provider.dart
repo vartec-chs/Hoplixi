@@ -4,16 +4,18 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
+import 'package:hoplixi/features/password_manager/store_settings/models/store_settings_state.dart';
 import 'package:hoplixi/main_db/config/store_settings_keys.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
 import 'package:hoplixi/main_db/providers/db_history_provider.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/main_db/providers/other/service_providers.dart';
 import 'package:hoplixi/main_db/services/db_key_derivation_service.dart';
+import 'package:hoplixi/main_db/services/store_manifest_service/model/store_manifest.dart';
 import 'package:hoplixi/main_db/services/store_manifest_service/store_manifest_service.dart';
+import 'package:hoplixi/main_db/services/vault_key_file_service.dart';
 import 'package:hoplixi/setup/di_init.dart';
-import 'package:hoplixi/features/password_manager/store_settings/models/store_settings_state.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
@@ -113,6 +115,10 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         StoreSettingsKeys.pinnedEntityTypes,
       );
       final pinnedIds = _parsePinnedEntityTypes(pinnedRaw);
+      final dbState = await ref.read(mainStoreProvider.future);
+      final manifest = dbState.path == null
+          ? null
+          : await StoreManifestService.readFrom(dbState.path!);
 
       if (meta != null) {
         state = state.copyWith(
@@ -132,6 +138,9 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
           newHistoryCleanupIntervalDays: historyCleanupIntervalDays,
           pinnedEntityTypes: pinnedIds,
           newPinnedEntityTypes: pinnedIds,
+          useKeyFile: manifest?.useKeyFile ?? false,
+          keyFileId: manifest?.keyFileId,
+          keyFileHint: manifest?.keyFileHint,
         );
       }
     } catch (e, s) {
@@ -394,7 +403,11 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
 
   /// Очистить сообщения
   void clearMessages() {
-    state = state.copyWith(saveError: null, successMessage: null);
+    state = state.copyWith(
+      saveError: null,
+      keyFileSettingsError: null,
+      successMessage: null,
+    );
   }
 
   /// Обновить новый пароль
@@ -462,11 +475,34 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         );
       }
 
+      if (manifest!.useKeyFile) {
+        if (state.selectedKeyFileId == null ||
+            state.selectedKeyFileSecret == null) {
+          state = state.copyWith(
+            isChangingPassword: false,
+            saveError: 'Выберите JSON key file для смены пароля.',
+          );
+          return const Failure('Выберите JSON key file для смены пароля.');
+        }
+        if (state.selectedKeyFileId != manifest.keyFileId) {
+          state = state.copyWith(
+            isChangingPassword: false,
+            saveError:
+                'Выбранный JSON key file не подходит для этого хранилища.',
+          );
+          return const Failure(
+            'Выбранный JSON key file не подходит для этого хранилища.',
+          );
+        }
+      }
+
       final keyService = DbKeyDerivationService(getIt<FlutterSecureStorage>());
       final newPragmaKey = await keyService.derivePragmaKey(
         state.newPassword,
         keyConfig.argon2Salt,
         useDeviceKey: keyConfig.useDeviceKey,
+        keyFileSecret: manifest.useKeyFile ? state.selectedKeyFileSecret : null,
+        kdfVersion: keyConfig.kdfVersion,
       );
 
       final result = await daoResult.changePassword(newPragmaKey);
@@ -496,6 +532,9 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         newPasswordConfirmation: '',
         newPasswordError: null,
         newPasswordConfirmationError: null,
+        selectedKeyFileId: null,
+        selectedKeyFileHint: null,
+        selectedKeyFileSecret: null,
         successMessage: 'Пароль успешно изменен',
       );
 
@@ -519,6 +558,171 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       newPasswordError: null,
       newPasswordConfirmationError: null,
     );
+  }
+
+  void updateKeyFilePassword(String password) {
+    state = state.copyWith(
+      keyFilePassword: password,
+      keyFileSettingsError: null,
+      successMessage: null,
+    );
+  }
+
+  Future<void> selectKeyFileForSettings() async {
+    final result = await const VaultKeyFileService().pickAndRead();
+    result.fold(
+      (keyFile) => state = state.copyWith(
+        selectedKeyFileId: keyFile.id,
+        selectedKeyFileHint: keyFile.hint,
+        selectedKeyFileSecret: keyFile.secret,
+        keyFileSettingsError: null,
+      ),
+      (error) => state = state.copyWith(keyFileSettingsError: error.message),
+    );
+  }
+
+  Future<void> generateKeyFileForSettings() async {
+    final fileName = '${state.name.trim().replaceAll(' ', '_')}_key_file';
+    final result = await const VaultKeyFileService().createAndSave(
+      suggestedFileName: fileName,
+      hint: state.selectedKeyFileHint ?? state.keyFileHint,
+    );
+    result.fold(
+      (keyFile) => state = state.copyWith(
+        selectedKeyFileId: keyFile.id,
+        selectedKeyFileHint: keyFile.hint,
+        selectedKeyFileSecret: keyFile.secret,
+        keyFileSettingsError: null,
+      ),
+      (error) => state = state.copyWith(keyFileSettingsError: error.message),
+    );
+  }
+
+  AsyncResultDart<bool, String> enableKeyFile(String masterPassword) async {
+    if (masterPassword.isEmpty) {
+      state = state.copyWith(
+        keyFileSettingsError: 'Введите текущий мастер пароль',
+      );
+      return const Failure('Введите текущий мастер пароль');
+    }
+    if (state.selectedKeyFileId == null ||
+        state.selectedKeyFileSecret == null) {
+      state = state.copyWith(
+        keyFileSettingsError: 'Выберите или сгенерируйте JSON key file',
+      );
+      return const Failure('Выберите или сгенерируйте JSON key file');
+    }
+    return _rekeyKeyFileSettings(enable: true, masterPassword: masterPassword);
+  }
+
+  AsyncResultDart<bool, String> disableKeyFile(String masterPassword) async {
+    if (masterPassword.isEmpty) {
+      state = state.copyWith(
+        keyFileSettingsError: 'Введите текущий мастер пароль',
+      );
+      return const Failure('Введите текущий мастер пароль');
+    }
+    if (state.useKeyFile &&
+        (state.selectedKeyFileId == null ||
+            state.selectedKeyFileSecret == null)) {
+      state = state.copyWith(
+        keyFileSettingsError: 'Выберите текущий JSON key file',
+      );
+      return const Failure('Выберите текущий JSON key file');
+    }
+    if (state.useKeyFile && state.selectedKeyFileId != state.keyFileId) {
+      state = state.copyWith(
+        keyFileSettingsError:
+            'Выбранный JSON key file не подходит для этого хранилища',
+      );
+      return const Failure(
+        'Выбранный JSON key file не подходит для этого хранилища',
+      );
+    }
+    return _rekeyKeyFileSettings(enable: false, masterPassword: masterPassword);
+  }
+
+  AsyncResultDart<bool, String> _rekeyKeyFileSettings({
+    required bool enable,
+    required String masterPassword,
+  }) async {
+    state = state.copyWith(
+      isUpdatingKeyFile: true,
+      keyFileSettingsError: null,
+      saveError: null,
+      successMessage: null,
+    );
+
+    try {
+      final dao = await ref.read(storeMetaDaoProvider.future);
+      final meta = await dao.getStoreMeta();
+      if (meta == null) {
+        throw StateError('Метаданные хранилища не найдены');
+      }
+      if (_hashPassword(masterPassword, meta.salt) != meta.passwordHash) {
+        throw StateError('Текущий мастер пароль неверен');
+      }
+
+      final dbState = await ref.read(mainStoreProvider.future);
+      final currentPath = dbState.path;
+      if (currentPath == null) {
+        throw StateError('Не удалось определить текущее хранилище');
+      }
+
+      final manifest = await StoreManifestService.readFrom(currentPath);
+      final keyConfig = manifest?.keyConfig;
+      if (manifest == null || keyConfig == null) {
+        throw StateError('Не найден keyConfig в store_manifest.json');
+      }
+
+      final keyService = DbKeyDerivationService(getIt<FlutterSecureStorage>());
+      final newPragmaKey = await keyService.derivePragmaKey(
+        masterPassword,
+        keyConfig.argon2Salt,
+        useDeviceKey: keyConfig.useDeviceKey,
+        keyFileSecret: enable ? state.selectedKeyFileSecret : null,
+        kdfVersion: keyConfig.kdfVersion,
+      );
+
+      final result = await dao.changePassword(newPragmaKey);
+      final resultException = result.exceptionOrNull();
+      if (resultException != null) {
+        throw Exception(resultException);
+      }
+
+      final updatedManifest = enable
+          ? manifest.withKeyFile(
+              keyFileId: state.selectedKeyFileId!,
+              keyFileHint: state.selectedKeyFileHint,
+            )
+          : manifest.withoutKeyFile();
+      await StoreManifestService.writeTo(currentPath, updatedManifest);
+
+      state = state.copyWith(
+        isUpdatingKeyFile: false,
+        useKeyFile: updatedManifest.useKeyFile,
+        keyFileId: updatedManifest.keyFileId,
+        keyFileHint: updatedManifest.keyFileHint,
+        selectedKeyFileId: null,
+        selectedKeyFileHint: null,
+        selectedKeyFileSecret: null,
+        successMessage: enable
+            ? 'JSON key file включён'
+            : 'JSON key file отключён',
+      );
+      return const Success(true);
+    } catch (e, s) {
+      logError(
+        'Failed to update key file settings: $e',
+        stackTrace: s,
+        tag: _logTag,
+      );
+      state = state.copyWith(
+        isUpdatingKeyFile: false,
+        keyFileSettingsError: e.toString(),
+      );
+      return Failure(e.toString());
+    }
   }
 
   /// Обновить информацию о хранилище в истории баз данных

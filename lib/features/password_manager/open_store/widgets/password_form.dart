@@ -73,7 +73,12 @@ class _PasswordFormState extends ConsumerState<PasswordForm> {
     await promptStoreMigrationAndOpen(
       context: context,
       ref: ref,
-      dto: OpenStoreDto(path: storage.path, password: _passwordController.text),
+      dto: OpenStoreDto(
+        path: storage.path,
+        password: _passwordController.text,
+        keyFileId: state!.keyFileId,
+        keyFileSecret: state.keyFileSecret,
+      ),
       onOpened: () async {
         widget.onSuccess();
       },
@@ -202,10 +207,53 @@ class _PasswordFormState extends ConsumerState<PasswordForm> {
                 controller: _passwordController,
                 autofocus: true,
               ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.key, size: 20, color: colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        state.keyFileId == null
+                            ? 'JSON key file не выбран'
+                            : 'JSON key file выбран',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    SmoothButton(
+                      label: 'Выбрать',
+                      type: SmoothButtonType.text,
+                      size: SmoothButtonSize.small,
+                      onPressed: isOpening
+                          ? null
+                          : () => ref
+                                .read(openStoreFormProvider.notifier)
+                                .selectKeyFile(),
+                    ),
+                  ],
+                ),
+              ),
               if (passwordError != null) ...[
                 const SizedBox(height: 8),
                 Text(
                   passwordError,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.error,
+                  ),
+                ),
+              ],
+              if (state.keyFileError != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  state.keyFileError!,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.error,
                   ),

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/logger.dart' hide Session;
@@ -425,7 +427,11 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
     });
   }
 
-  Future<bool> unlockStore(String password) async {
+  Future<bool> unlockStore(
+    String password, {
+    String? keyFileId,
+    Uint8List? keyFileSecret,
+  }) async {
     return _lock.synchronized(() async {
       try {
         if (!_currentState.isLocked) {
@@ -449,7 +455,12 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
         );
 
         final result = await _manager.openStore(
-          OpenStoreDto(path: storePath, password: password),
+          OpenStoreDto(
+            path: storePath,
+            password: password,
+            keyFileId: keyFileId,
+            keyFileSecret: keyFileSecret,
+          ),
           password,
         );
 

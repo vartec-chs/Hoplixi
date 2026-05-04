@@ -20,6 +20,7 @@ class StoreManifestService {
 
   /// Записать манифест на диск в директорию [storageDir].
   static Future<void> writeTo(String storageDir, StoreManifest manifest) async {
+    manifest.validateKeyFileSettings();
     final file = File(manifestFilePath(storageDir));
     await file.writeAsString(
       const JsonEncoder.withIndent('  ').convert(manifest.toJson()),

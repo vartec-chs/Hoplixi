@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/cloud_sync_settings_page.dart';
 import 'package:hoplixi/features/password_manager/store_settings/providers/store_settings_modal_provider.dart';
 import 'package:hoplixi/features/password_manager/store_settings/widgets/change_password_section.dart';
+import 'package:hoplixi/features/password_manager/store_settings/widgets/key_file_security_section.dart';
 import 'package:hoplixi/features/password_manager/store_settings/widgets/pinned_entity_types_selector.dart';
 import 'package:hoplixi/features/password_manager/store_settings/widgets/store_settings_form.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
@@ -11,8 +12,7 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 ///
 /// Возвращает `true` если настройки были сохранены, `false` если отменены
 Future<bool?> showStoreSettingsModal(
-  BuildContext context,
-   {
+  BuildContext context, {
   int initialPageIndex = 0,
 }) async {
   final container = ProviderScope.containerOf(context, listen: false);
@@ -110,8 +110,18 @@ Future<bool?> showStoreSettingsModal(
                 tooltip: 'Назад',
               ),
             ),
+            trailingNavBarWidget: Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: IconButton(
+                icon: const Icon(Icons.key_outlined),
+                onPressed: () {
+                  pageIndexNotifier.value = 4;
+                },
+                tooltip: 'JSON key file',
+              ),
+            ),
             child: const Padding(
-              padding: EdgeInsets.all(8.0),
+              padding: EdgeInsets.all(12.0),
               child: ChangePasswordSection(),
             ),
           ),
@@ -142,7 +152,7 @@ Future<bool?> showStoreSettingsModal(
               ),
             ),
             child: const Padding(
-              padding: EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(12.0),
               child: PinnedEntityTypesSelector(),
             ),
           ),
@@ -175,6 +185,32 @@ Future<bool?> showStoreSettingsModal(
             child: const CloudSyncSettingsPage(
               reopenStoreSettingsAfterAuth: true,
             ),
+          ),
+
+          WoltModalSheetPage(
+            surfaceTintColor: Colors.transparent,
+            hasTopBarLayer: true,
+            topBarTitle: Builder(
+              builder: (context) {
+                return Text(
+                  'JSON key file',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                );
+              },
+            ),
+            leadingNavBarWidget: Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  pageIndexNotifier.value = 0;
+                },
+                tooltip: 'Назад',
+              ),
+            ),
+            child: const KeyFileSecuritySection(),
           ),
         ];
       },

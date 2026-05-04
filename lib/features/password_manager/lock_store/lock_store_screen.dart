@@ -8,6 +8,8 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_stor
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/snapshot_sync_progress_card.dart';
 import 'package:hoplixi/main_db/providers/db_history_provider.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/main_db/services/store_manifest_service/store_manifest_service.dart';
+import 'package:hoplixi/main_db/services/vault_key_file_service.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
@@ -78,9 +80,41 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
     });
 
     try {
-      final success = await ref
-          .read(mainStoreProvider.notifier)
-          .unlockStore(_passwordController.text);
+      final dbState = await ref.read(mainStoreProvider.future);
+      final storePath = dbState.path;
+      VaultKeyFile? keyFile;
+      if (storePath != null) {
+        final manifest = await StoreManifestService.readFrom(storePath);
+        if (manifest?.useKeyFile == true) {
+          if (keyFile == null) {
+            final result = await const VaultKeyFileService().pickAndRead();
+            keyFile = result.fold((value) => value, (error) {
+              if (mounted) {
+                Toaster.error(title: 'Ошибка key file', description: error.message);
+              }
+              return null;
+            });
+          }
+          if (keyFile == null) {
+            return;
+          }
+          if (keyFile.id != manifest!.keyFileId) {
+            if (mounted) {
+              Toaster.error(
+                title: 'Неверный key file',
+                description: 'Выбранный JSON key file не подходит для хранилища',
+              );
+            }
+            return;
+          }
+        }
+      }
+
+      final success = await ref.read(mainStoreProvider.notifier).unlockStore(
+            _passwordController.text,
+            keyFileId: keyFile?.id,
+            keyFileSecret: keyFile?.secret,
+          );
 
       if (success) {
         if (mounted) {

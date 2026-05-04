@@ -2,6 +2,32 @@
 
 ## 2026-05-04
 
+### password_manager
+
+- Добавлена поддержка JSON key file как дополнительного фактора открытия
+  хранилища: manifest хранит только безопасные метаданные, а секрет key file
+  используется транзиентно при derivation/rekey.
+- `StoreManifest` расширен полями `useKeyFile`, `keyFileId` и `keyFileHint` с
+  обратной совместимостью для старых manifest-файлов и очисткой key-file
+  метаданных при отключении.
+- `DbKeyDerivationService`, `CreateStoreDto` и `OpenStoreDto` поддерживают
+  транзиентный секрет key file без сериализации и без записи в manifest/history.
+- Потоки создания, открытия, разблокировки и настроек хранилища получили выбор
+  или генерацию JSON key file с проверкой ID и очисткой метаданных при
+  отключении.
+- Добавлены проверки безопасной подсказки key file, запрет path/secret-like
+  material в manifest и unit-тесты для manifest/key-file/open validation.
+- Исправлен rekey в настройках JSON key file: мастер-пароль берётся напрямую из
+  поля ввода, проверяется по hash/salt в meta table и используется при
+  включении/отключении key file.
+- `_deriveV2ContextKey` стал основной веткой для `kdfVersion = 2` и покрывает
+  контекстную деривацию `db/files/mac`; все app-пути создания, открытия и rekey
+  вызывают `derivePragmaKey`, а версия берётся из `StoreKeyConfig`.
+- Расширение key file в диалогах выбора и сохранения изменено с `.json` на
+  `.hdbkey`.
+- Расширение key file вынесено в `MainConstants.keyFileExtension` и больше не
+  дублируется строковым литералом в сервисе выбора/сохранения.
+
 ### onboarding helper
 
 - `ShowcaseView.register()` вынесен в универсальный helper

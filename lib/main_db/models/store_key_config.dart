@@ -10,6 +10,12 @@ sealed class StoreKeyConfig with _$StoreKeyConfig {
     /// Версия формата конфига.
     @Default(1) int version,
 
+    /// Версия KDF-схемы.
+    ///
+    /// `1` — legacy Argon2id + последовательные HKDF.
+    /// `2` — Argon2id + HKDF-Extract rootKey + HKDF-Expand context keys.
+    @Default(1) int kdfVersion,
+
     /// Argon2-соль (Base64URL), уникальная для каждого хранилища.
     required String argon2Salt,
 

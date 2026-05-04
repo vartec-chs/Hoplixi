@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
@@ -90,6 +92,18 @@ sealed class StoreSettingsState with _$StoreSettingsState {
 
     /// Идет ли загрузка информации о cipher
     @Default(true) bool isCipherLoading,
+
+    /// Key file настройки из store_manifest.json.
+    @Default(false) bool useKeyFile,
+    String? keyFileId,
+    String? keyFileHint,
+    @Default('') String keyFilePassword,
+    String? selectedKeyFileId,
+    String? selectedKeyFileHint,
+    @JsonKey(includeFromJson: false, includeToJson: false)
+    Uint8List? selectedKeyFileSecret,
+    @Default(false) bool isUpdatingKeyFile,
+    String? keyFileSettingsError,
   }) = _StoreSettingsState;
 
   const StoreSettingsState._();

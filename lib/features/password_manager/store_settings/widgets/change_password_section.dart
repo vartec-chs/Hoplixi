@@ -147,6 +147,40 @@ class _ChangePasswordSectionState extends ConsumerState<ChangePasswordSection> {
           PasswordStrengthIndicator(password: state.newPassword),
         ],
 
+        if (state.useKeyFile) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.key, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    state.selectedKeyFileId == null
+                        ? 'Для смены пароля выберите JSON key file'
+                        : 'JSON key file выбран',
+                  ),
+                ),
+                SmoothButton(
+                  label: 'Выбрать',
+                  size: SmoothButtonSize.small,
+                  type: SmoothButtonType.text,
+                  onPressed: state.isChangingPassword
+                      ? null
+                      : () => ref
+                            .read(storeSettingsProvider.notifier)
+                            .selectKeyFileForSettings(),
+                ),
+              ],
+            ),
+          ),
+        ],
+
         const SizedBox(height: 16),
 
         // Подтверждение нового пароля

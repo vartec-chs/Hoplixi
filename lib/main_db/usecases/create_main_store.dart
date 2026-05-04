@@ -117,7 +117,9 @@ class CreateMainStore {
       );
 
       final argon2Salt = DbKeyDerivationService.generateSalt();
+      _validateKeyFileSettings(dto);
       final keyConfig = StoreKeyConfig(
+        kdfVersion: DbKeyDerivationService.currentKdfVersion,
         argon2Salt: argon2Salt,
         useDeviceKey: dto.useDeviceKey,
         cipher: dto.cipher,
@@ -131,6 +133,8 @@ class CreateMainStore {
         masterPassword,
         argon2Salt,
         useDeviceKey: dto.useDeviceKey,
+        keyFileSecret: dto.useKeyFile ? dto.keyFileSecret : null,
+        kdfVersion: keyConfig.kdfVersion,
       );
 
       final storeResult = await _connectionService.createDatabaseConnection(
@@ -154,6 +158,7 @@ class CreateMainStore {
       await _writeStoreManifest(
         storagePath: storageDir.path,
         info: info,
+        dto: dto,
         keyConfig: keyConfig,
       );
 
@@ -309,6 +314,7 @@ class CreateMainStore {
   Future<void> _writeStoreManifest({
     required String storagePath,
     required StoreInfoDto info,
+    required CreateStoreDto dto,
     required StoreKeyConfig keyConfig,
   }) async {
     final deviceInfo = await logger_models.DeviceInfo.collect();
@@ -332,6 +338,9 @@ class CreateMainStore {
       updatedAt: info.modifiedAt.toUtc(),
       lastModifiedBy: lastModifiedBy,
       keyConfig: keyConfig,
+      useKeyFile: dto.useKeyFile,
+      keyFileId: dto.keyFileId,
+      keyFileHint: dto.keyFileHint,
     );
 
     try {
@@ -343,6 +352,26 @@ class CreateMainStore {
         message: 'Не удалось записать store_manifest.json: $error',
         cause: error,
         stackTrace: stackTrace,
+        timestamp: DateTime.now(),
+      );
+    }
+  }
+
+  void _validateKeyFileSettings(CreateStoreDto dto) {
+    if (!dto.useKeyFile) {
+      return;
+    }
+    if (dto.keyFileId == null || dto.keyFileId!.trim().isEmpty) {
+      throw AppError.validation(
+        code: ValidationErrorCode.invalidInput,
+        message: 'Для создания хранилища с key file требуется ID файла ключа',
+        timestamp: DateTime.now(),
+      );
+    }
+    if (dto.keyFileSecret == null || dto.keyFileSecret!.isEmpty) {
+      throw AppError.validation(
+        code: ValidationErrorCode.invalidInput,
+        message: 'Для создания хранилища с key file требуется секрет файла',
         timestamp: DateTime.now(),
       );
     }

@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 import 'package:hoplixi/main_db/models/store_key_config.dart';
+import 'package:hoplixi/main_db/services/vault_key_file_service.dart';
 
 part 'store_manifest.freezed.dart';
 
@@ -195,6 +196,9 @@ sealed class StoreManifest with _$StoreManifest {
     required StoreManifestLastModifiedBy lastModifiedBy,
     StoreManifestSyncMetadata? sync,
     StoreKeyConfig? keyConfig,
+    @Default(false) bool useKeyFile,
+    String? keyFileId,
+    String? keyFileHint,
     required StoreManifestContent content,
   }) = _StoreManifest;
 
@@ -208,7 +212,15 @@ sealed class StoreManifest with _$StoreManifest {
     required DateTime updatedAt,
     required StoreManifestLastModifiedBy lastModifiedBy,
     StoreKeyConfig? keyConfig,
+    bool useKeyFile = false,
+    String? keyFileId,
+    String? keyFileHint,
   }) {
+    final keyFileSettings = StoreManifestKeyFileSettings.normalize(
+      useKeyFile: useKeyFile,
+      keyFileId: keyFileId,
+      keyFileHint: keyFileHint,
+    );
     return StoreManifest(
       lastMigrationVersion: lastMigrationVersion,
       appVersion: appVersion,
@@ -219,6 +231,9 @@ sealed class StoreManifest with _$StoreManifest {
       snapshotId: '',
       lastModifiedBy: lastModifiedBy,
       keyConfig: keyConfig,
+      useKeyFile: keyFileSettings.useKeyFile,
+      keyFileId: keyFileSettings.keyFileId,
+      keyFileHint: keyFileSettings.keyFileHint,
       content: StoreManifestContent.empty(),
     );
   }
@@ -249,6 +264,9 @@ sealed class StoreManifest with _$StoreManifest {
           appVersion: '',
         ),
         keyConfig: null,
+        useKeyFile: false,
+        keyFileId: null,
+        keyFileHint: null,
         content: StoreManifestContent.empty(),
       );
     }
@@ -262,6 +280,12 @@ sealed class StoreManifest with _$StoreManifest {
             clientInstanceId: '',
             appVersion: '',
           );
+
+    final keyFileSettings = StoreManifestKeyFileSettings.normalize(
+      useKeyFile: json['useKeyFile'] as bool? ?? false,
+      keyFileId: (json['keyFileId'] as String?)?.trim(),
+      keyFileHint: json['keyFileHint'] as String?,
+    );
 
     return StoreManifest(
       manifestVersion: _toInt(
@@ -294,6 +318,9 @@ sealed class StoreManifest with _$StoreManifest {
       keyConfig: json['keyConfig'] is Map<String, dynamic>
           ? StoreKeyConfig.fromJson(json['keyConfig'] as Map<String, dynamic>)
           : null,
+      useKeyFile: keyFileSettings.useKeyFile,
+      keyFileId: keyFileSettings.keyFileId,
+      keyFileHint: keyFileSettings.keyFileHint,
       content: json['content'] is Map<String, dynamic>
           ? StoreManifestContent.fromJson(
               json['content'] as Map<String, dynamic>,
@@ -303,6 +330,11 @@ sealed class StoreManifest with _$StoreManifest {
   }
 
   Map<String, dynamic> toJson() {
+    final keyFileSettings = StoreManifestKeyFileSettings.normalize(
+      useKeyFile: useKeyFile,
+      keyFileId: keyFileId,
+      keyFileHint: keyFileHint,
+    );
     return <String, dynamic>{
       'manifestVersion': manifestVersion,
       'lastMigrationVersion': lastMigrationVersion,
@@ -317,13 +349,19 @@ sealed class StoreManifest with _$StoreManifest {
       'lastModifiedBy': lastModifiedBy.toJson(),
       'sync': sync?.toJson(),
       'keyConfig': keyConfig?.toJson(),
+      'useKeyFile': keyFileSettings.useKeyFile,
+      'keyFileId': keyFileSettings.keyFileId,
+      'keyFileHint': keyFileSettings.keyFileHint,
       'content': content.toJson(),
     };
   }
 
   bool isSameContent(StoreManifest other) {
     return content.signature == other.content.signature &&
-        keyConfig == other.keyConfig;
+        keyConfig == other.keyConfig &&
+        useKeyFile == other.useKeyFile &&
+        keyFileId == other.keyFileId &&
+        keyFileHint == other.keyFileHint;
   }
 
   int get version => manifestVersion;
@@ -331,6 +369,90 @@ sealed class StoreManifest with _$StoreManifest {
   String get storeId => storeUuid;
 
   int get lastModified => updatedAt.millisecondsSinceEpoch;
+}
+
+typedef StoreManifestKeyFileSettingsRecord = ({
+  bool useKeyFile,
+  String? keyFileId,
+  String? keyFileHint,
+});
+
+final class StoreManifestKeyFileSettings {
+  const StoreManifestKeyFileSettings._();
+
+  static StoreManifestKeyFileSettingsRecord normalize({
+    required bool useKeyFile,
+    String? keyFileId,
+    String? keyFileHint,
+  }) {
+    if (!useKeyFile) {
+      return (useKeyFile: false, keyFileId: null, keyFileHint: null);
+    }
+
+    final normalizedId = keyFileId?.trim();
+    final normalizedHint = VaultKeyFileSecurity.sanitizeHint(keyFileHint);
+    validate(
+      useKeyFile: true,
+      keyFileId: normalizedId,
+      keyFileHint: normalizedHint,
+    );
+    return (
+      useKeyFile: true,
+      keyFileId: normalizedId,
+      keyFileHint: normalizedHint,
+    );
+  }
+
+  static void validate({
+    required bool useKeyFile,
+    String? keyFileId,
+    String? keyFileHint,
+  }) {
+    if (useKeyFile && (keyFileId == null || keyFileId.trim().isEmpty)) {
+      throw ArgumentError('keyFileId is required when useKeyFile is true');
+    }
+    if (keyFileHint != null &&
+        VaultKeyFileSecurity.containsUnsafeHintMaterial(keyFileHint)) {
+      throw ArgumentError('keyFileHint contains unsafe material');
+    }
+  }
+}
+
+extension StoreManifestKeyFileValidation on StoreManifest {
+  void validateKeyFileSettings() {
+    StoreManifestKeyFileSettings.validate(
+      useKeyFile: useKeyFile,
+      keyFileId: keyFileId,
+      keyFileHint: keyFileHint,
+    );
+  }
+
+  StoreManifest withoutKeyFile() {
+    return copyWith(
+      useKeyFile: false,
+      keyFileId: null,
+      keyFileHint: null,
+      updatedAt: DateTime.now().toUtc(),
+    );
+  }
+
+  StoreManifest withKeyFile({
+    required String keyFileId,
+    String? keyFileHint,
+    DateTime? updatedAt,
+  }) {
+    final normalized = StoreManifestKeyFileSettings.normalize(
+      useKeyFile: true,
+      keyFileId: keyFileId,
+      keyFileHint: keyFileHint,
+    );
+    return copyWith(
+      useKeyFile: normalized.useKeyFile,
+      keyFileId: normalized.keyFileId,
+      keyFileHint: normalized.keyFileHint,
+      updatedAt: (updatedAt ?? DateTime.now()).toUtc(),
+    );
+  }
 }
 
 CloudSyncProvider? _tryParseProvider(Object? raw) {

@@ -7,6 +7,9 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_db/providers/db_history_provider.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/main_db/services/store_manifest_service/model/store_manifest.dart';
+import 'package:hoplixi/main_db/services/store_manifest_service/store_manifest_service.dart';
+import 'package:hoplixi/main_db/services/vault_key_file_service.dart';
 import 'package:hoplixi/features/password_manager/open_store/models/open_store_state.dart';
 import 'package:hoplixi/features/password_manager/open_store/services/store_password_attempt_limiter_service.dart';
 import 'package:hoplixi/setup/di_init.dart';
@@ -124,6 +127,10 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
         selectedStorage: storage,
         password: '',
         passwordError: null,
+        keyFileId: null,
+        keyFileHint: null,
+        keyFileSecret: null,
+        keyFileError: null,
         error: null,
       ),
     );
@@ -135,6 +142,26 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
     }
 
     _setState(_currentState.copyWith(password: password, passwordError: null));
+  }
+
+  Future<void> selectKeyFile() async {
+    final result = await const VaultKeyFileService().pickAndRead();
+    if (!_isMounted) {
+      return;
+    }
+
+    result.fold(
+      (keyFile) => _setState(
+        _currentState.copyWith(
+          keyFileId: keyFile.id,
+          keyFileHint: keyFile.hint,
+          keyFileSecret: keyFile.secret,
+          keyFileError: null,
+          passwordError: null,
+        ),
+      ),
+      (error) => _setState(_currentState.copyWith(keyFileError: error.message)),
+    );
   }
 
   Future<bool> openStorage() async {
@@ -166,14 +193,51 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
       return false;
     }
 
-    _setState(
-      currentState.copyWith(isOpening: true, passwordError: null, error: null),
-    );
-
     try {
+      final manifest = await _readManifestForStorage(selectedStorage.path);
+      if (!_isMounted) {
+        return false;
+      }
+
+      if (manifest?.useKeyFile == true) {
+        final selectedKeyFileId = _currentState.keyFileId?.trim();
+        if (selectedKeyFileId == null ||
+            selectedKeyFileId.isEmpty ||
+            _currentState.keyFileSecret == null) {
+          _setState(
+            _currentState.copyWith(
+              keyFileError: 'Выберите JSON key file для этого хранилища',
+            ),
+          );
+          return false;
+        }
+        if (selectedKeyFileId != manifest!.keyFileId) {
+          _setState(
+            _currentState.copyWith(
+              keyFileError:
+                  'Выбранный JSON key file не подходит для этого хранилища',
+            ),
+          );
+          return false;
+        }
+      }
+
+      _setState(
+        _currentState.copyWith(
+          isOpening: true,
+          passwordError: null,
+          keyFileError: null,
+          error: null,
+        ),
+      );
+
       final dto = OpenStoreDto(
         path: selectedStorage.path,
-        password: currentState.password,
+        password: _currentState.password,
+        keyFileId: manifest?.useKeyFile == true ? _currentState.keyFileId : null,
+        keyFileSecret: manifest?.useKeyFile == true
+            ? _currentState.keyFileSecret
+            : null,
       );
 
       final storeNotifier = ref.read(mainStoreProvider.notifier);
@@ -232,6 +296,11 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
       );
       return false;
     }
+  }
+
+  Future<StoreManifest?> _readManifestForStorage(String path) async {
+    return await StoreManifestService.readFrom(p.dirname(path)) ??
+        await StoreManifestService.readFrom(path);
   }
 
   Future<bool> deleteStorage(String path) async {

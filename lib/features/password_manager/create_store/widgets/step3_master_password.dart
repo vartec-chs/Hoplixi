@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/theme/constants.dart';
 import 'package:hoplixi/features/password_manager/create_store/providers/create_store_form_provider.dart';
+import 'package:hoplixi/main_db/services/vault_key_file_service.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/notification_card.dart';
 import 'package:hoplixi/features/password_generator/password_generator_widget.dart';
@@ -21,10 +22,12 @@ class Step3MasterPassword extends ConsumerStatefulWidget {
 class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
   late final TextEditingController _passwordController;
   late final TextEditingController _confirmationController;
+  late final TextEditingController _keyFileHintController;
   late final FocusNode _passwordFocusNode;
   late final FocusNode _confirmationFocusNode;
   bool _obscurePassword = true;
   bool _obscureConfirmation = true;
+  final _keyFileService = const VaultKeyFileService();
 
   Future<void> _openPasswordGeneratorModal() async {
     final generatedPassword = await WoltModalSheet.show<String>(
@@ -76,6 +79,28 @@ class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
     notifier.updatePasswordConfirmation(generatedPassword);
   }
 
+  Future<void> _generateKeyFile() async {
+    final notifier = ref.read(createStoreFormProvider.notifier);
+    final state = ref.read(createStoreFormProvider);
+    final result = await _keyFileService.createAndSave(
+      suggestedFileName: '${state.name.trim().replaceAll(' ', '_')}_key_file',
+      hint: _keyFileHintController.text,
+    );
+    result.fold(
+      (keyFile) => notifier.setKeyFile(keyFile),
+      (error) => notifier.setKeyFileError(error.message),
+    );
+  }
+
+  Future<void> _importKeyFile() async {
+    final notifier = ref.read(createStoreFormProvider.notifier);
+    final result = await _keyFileService.pickAndRead();
+    result.fold((keyFile) {
+      _keyFileHintController.text = keyFile.hint ?? '';
+      notifier.setKeyFile(keyFile);
+    }, (error) => notifier.setKeyFileError(error.message));
+  }
+
   @override
   void initState() {
     super.initState();
@@ -84,6 +109,12 @@ class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
     _confirmationController = TextEditingController(
       text: state.passwordConfirmation,
     );
+    _keyFileHintController = TextEditingController(text: state.keyFileHint);
+    _keyFileHintController.addListener(() {
+      ref
+          .read(createStoreFormProvider.notifier)
+          .updateKeyFileHint(_keyFileHintController.text);
+    });
     _passwordFocusNode = FocusNode();
     _confirmationFocusNode = FocusNode();
 
@@ -96,6 +127,7 @@ class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
   void dispose() {
     _passwordController.dispose();
     _confirmationController.dispose();
+    _keyFileHintController.dispose();
     _passwordFocusNode.dispose();
     _confirmationFocusNode.dispose();
     super.dispose();
@@ -293,6 +325,111 @@ class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
                       ),
                     ],
                   ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.secondary.withOpacity(0.3),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.key,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Использовать JSON key file',
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Для открытия потребуется внешний JSON-файл ключа',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                  height: 1.3,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Switch(
+                      value: state.useKeyFile,
+                      onChanged: notifier.setUseKeyFile,
+                    ),
+                  ],
+                ),
+                if (state.useKeyFile) ...[
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _keyFileHintController,
+                    decoration: primaryInputDecoration(
+                      context,
+                      labelText: 'Безопасная подсказка',
+                      hintText: 'Например: USB key file',
+                      prefixIcon: const Icon(Icons.info_outline),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      SmoothButton(
+                        onPressed: _generateKeyFile,
+                        icon: const Icon(Icons.add),
+                        label: 'Сгенерировать',
+                        size: .small,
+                      ),
+                      SmoothButton(
+                        onPressed: _importKeyFile,
+                        icon: const Icon(Icons.upload_file),
+                        label: 'Выбрать файл',
+                        type: .outlined,
+                        size: .small,
+                      ),
+                    ],
+                  ),
+                  if (state.keyFileId != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      'Key file ID: ${state.keyFileId}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                  if (state.keyFileError != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      state.keyFileError!,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ],
                 ],
               ],
             ),

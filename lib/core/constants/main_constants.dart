@@ -17,6 +17,7 @@ class MainConstants {
   static const int storeManifestVersion = 2;
   static const String dbExtension = '.hplxdb';
   static const String encryptedFileExtension = '.hplxenc';
+  static const String keyFileExtension = '.hdbkey';
 
   // Минимальное количество использований для считания записи часто используемой
   static const int frequentlyUsedThreshold = 5;

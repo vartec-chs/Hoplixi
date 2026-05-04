@@ -143,6 +143,20 @@ class Step4Confirmation extends ConsumerWidget {
                     ),
                   ),
                 ],
+                if (state.useKeyFile) ...[
+                  const Divider(height: 24),
+                  _InfoRow(
+                    icon: Icons.key,
+                    label: 'JSON key file',
+                    value: state.keyFileHint ?? state.keyFileId ?? 'Включено',
+                    maxLines: 2,
+                    trailing: const Icon(
+                      Icons.check_circle,
+                      color: Colors.green,
+                      size: 20,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

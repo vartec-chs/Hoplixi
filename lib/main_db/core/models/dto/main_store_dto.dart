@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
 
@@ -21,6 +23,15 @@ sealed class CreateStoreDto with _$CreateStoreDto {
     /// и сохраняется в [FlutterSecureStorage]. При открытии БД на
     /// другом устройстве потребуется экспорт/импорт секрета.
     @Default(false) bool useDeviceKey,
+
+    /// Требовать внешний JSON key file как дополнительный фактор.
+    @Default(false) bool useKeyFile,
+    String? keyFileId,
+    String? keyFileHint,
+
+    /// Транзиентный секрет из JSON key file. Не сериализуется.
+    @JsonKey(includeFromJson: false, includeToJson: false)
+    Uint8List? keyFileSecret,
   }) = _CreateStoreDto;
 
   factory CreateStoreDto.fromJson(Map<String, dynamic> json) =>
@@ -34,6 +45,11 @@ sealed class OpenStoreDto with _$OpenStoreDto {
     required String password,
     required String path,
     @Default(false) bool saveMasterPassword,
+    String? keyFileId,
+
+    /// Транзиентный секрет из JSON key file. Не сериализуется.
+    @JsonKey(includeFromJson: false, includeToJson: false)
+    Uint8List? keyFileSecret,
   }) = _OpenStoreDto;
 
   factory OpenStoreDto.fromJson(Map<String, dynamic> json) =>

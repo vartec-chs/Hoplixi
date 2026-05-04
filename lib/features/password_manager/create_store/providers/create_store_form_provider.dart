@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/create_store/models/create_store_state.dart';
+import 'package:hoplixi/main_db/services/vault_key_file_service.dart';
 import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
 
 /// Провайдер для управления состоянием формы создания хранилища
@@ -70,6 +71,38 @@ class CreateStoreFormNotifier extends Notifier<CreateStoreFormState> {
   /// Установить использование ключа устройства
   void setUseDeviceKey(bool value) {
     state = state.copyWith(useDeviceKey: value);
+  }
+
+  /// Установить использование JSON key file.
+  void setUseKeyFile(bool value) {
+    state = state.copyWith(
+      useKeyFile: value,
+      keyFileId: value ? state.keyFileId : null,
+      keyFileHint: value ? state.keyFileHint : null,
+      keyFileSecret: value ? state.keyFileSecret : null,
+      keyFileError: null,
+    );
+  }
+
+  void setKeyFile(VaultKeyFile keyFile) {
+    state = state.copyWith(
+      useKeyFile: true,
+      keyFileId: keyFile.id,
+      keyFileHint: keyFile.hint,
+      keyFileSecret: keyFile.secret,
+      keyFileError: null,
+    );
+  }
+
+  void setKeyFileError(String? error) {
+    state = state.copyWith(keyFileError: error);
+  }
+
+  void updateKeyFileHint(String hint) {
+    state = state.copyWith(
+      keyFileHint: hint.trim().isEmpty ? null : hint.trim(),
+      keyFileError: null,
+    );
   }
 
   /// Перейти к следующему шагу

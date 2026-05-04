@@ -88,11 +88,20 @@ class OpenMainStore {
           ),
         );
       }
+      final keyFileValidationError = validateKeyFileForOpen(
+        dto: dto,
+        manifest: manifest,
+      );
+      if (keyFileValidationError != null) {
+        return Failure(keyFileValidationError);
+      }
 
       final pragmaKey = await _keyService.derivePragmaKey(
         masterPassword,
         keyConfig.argon2Salt,
         useDeviceKey: keyConfig.useDeviceKey,
+        keyFileSecret: manifest.useKeyFile ? dto.keyFileSecret : null,
+        kdfVersion: keyConfig.kdfVersion,
       );
       final connection = await _openDatabase(
         dbFilePath: dbFilePath,
@@ -200,6 +209,49 @@ class OpenMainStore {
       lastOpenedAt: meta.lastOpenedAt,
       version: meta.version,
     );
+  }
+
+  static AppError? validateKeyFileForOpen({
+    required OpenStoreDto dto,
+    required StoreManifest manifest,
+  }) {
+    try {
+      manifest.validateKeyFileSettings();
+    } on ArgumentError catch (error, stackTrace) {
+      return AppError.validation(
+        code: ValidationErrorCode.invalidInput,
+        message: error.message?.toString() ?? 'Некорректные настройки key file',
+        cause: error,
+        stackTrace: stackTrace,
+        timestamp: DateTime.now(),
+      );
+    }
+
+    if (!manifest.useKeyFile) {
+      return null;
+    }
+
+    final selectedKeyFileId = dto.keyFileId?.trim();
+    if (selectedKeyFileId == null ||
+        selectedKeyFileId.isEmpty ||
+        dto.keyFileSecret == null ||
+        dto.keyFileSecret!.isEmpty) {
+      return AppError.validation(
+        code: ValidationErrorCode.emptyField,
+        message: 'Для открытия этого хранилища выберите JSON key file',
+        timestamp: DateTime.now(),
+      );
+    }
+
+    if (selectedKeyFileId != manifest.keyFileId) {
+      return AppError.validation(
+        code: ValidationErrorCode.invalidInput,
+        message: 'Выбранный JSON key file не подходит для этого хранилища',
+        timestamp: DateTime.now(),
+      );
+    }
+
+    return null;
   }
 
   Future<void> _writeUpdatedManifest({
