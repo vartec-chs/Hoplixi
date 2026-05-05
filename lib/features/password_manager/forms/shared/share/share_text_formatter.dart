@@ -1,16 +1,35 @@
 import 'shareable_field.dart';
 
 String buildShareText(ShareableEntity entity, Set<String> selectedFieldIds) {
-  final buffer = StringBuffer(entity.title.trim());
   final fields = entity.nonEmptyFields.where(
     (field) => selectedFieldIds.contains(field.id),
   );
 
+  return buildShareTextFromFields(fields, title: entity.title);
+}
+
+String buildShareTextFromFields(
+  Iterable<ShareableField> fields, {
+  String? title,
+}) {
+  final buffer = StringBuffer();
+  final trimmedTitle = title?.trim();
+  var needsSeparator = false;
+
+  if (trimmedTitle != null && trimmedTitle.isNotEmpty) {
+    buffer.write(trimmedTitle);
+    needsSeparator = true;
+  }
+
   for (final field in fields) {
-    buffer
-      ..writeln()
-      ..writeln();
+    if (needsSeparator) {
+      buffer
+        ..writeln()
+        ..writeln();
+    }
+
     _writeField(buffer, field);
+    needsSeparator = true;
   }
 
   return buffer.toString().trimRight();

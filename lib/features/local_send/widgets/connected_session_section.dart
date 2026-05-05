@@ -5,10 +5,12 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/local_send/models/encrypted_transfer_envelope.dart';
 import 'package:hoplixi/features/local_send/models/device_info.dart';
+import 'package:hoplixi/features/local_send/models/encrypted_transfer_envelope.dart';
 import 'package:hoplixi/features/local_send/models/history_item.dart';
+import 'package:hoplixi/features/local_send/providers/local_send_buffer_provider.dart';
 import 'package:hoplixi/features/local_send/providers/session_history_provider.dart';
 import 'package:hoplixi/features/local_send/providers/transfer_provider.dart';
 import 'package:hoplixi/features/local_send/utils/platform_icons.dart';
@@ -16,6 +18,7 @@ import 'package:hoplixi/features/local_send/widgets/import_cloud_sync_tokens_dia
 import 'package:hoplixi/features/local_send/widgets/import_store_archive_dialog.dart';
 import 'package:hoplixi/features/local_send/widgets/send_cloud_sync_tokens_dialog.dart';
 import 'package:hoplixi/features/local_send/widgets/send_store_dialog.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/main_db/services/archive_service/archive_service.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
@@ -39,6 +42,7 @@ class _ConnectedSessionSectionState
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final localSendBuffer = ref.watch(localSendBufferProvider);
 
     return DropTarget(
       onDragDone: (detail) async {
@@ -95,6 +99,11 @@ class _ConnectedSessionSectionState
                         ),
                       ],
                     ),
+                    if (localSendBuffer.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      _buildBufferCard(localSendBuffer, colorScheme, textTheme),
+                    ],
+
                     const SizedBox(height: 12),
                     Row(
                       children: [
@@ -188,6 +197,101 @@ class _ConnectedSessionSectionState
         ],
       ),
     );
+  }
+
+  Widget _buildBufferCard(
+    List<ShareableField> localSendBuffer,
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+  ) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.tertiaryContainer.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.tertiary.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.inventory_2_outlined, color: colorScheme.tertiary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Локальный буфер',
+                  style: textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Text(
+                '${localSendBuffer.length} пол.',
+                style: textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Содержимое будет отправлено как текст.',
+            style: textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: SmoothButton(
+                  onPressed: _sendLocalBuffer,
+                  type: SmoothButtonType.filled,
+                  label: 'Отправить буфер',
+                  icon: const Icon(Icons.send_outlined),
+                ),
+              ),
+              const SizedBox(width: 12),
+              SmoothButton(
+                onPressed: _clearLocalBuffer,
+                type: SmoothButtonType.outlined,
+                label: 'Очистить',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _sendLocalBuffer() async {
+    try {
+      final sent = await ref.read(localSendBufferProvider.notifier).send();
+      if (!mounted) return;
+      if (sent) {
+        Toaster.success(title: 'Буфер отправлен');
+      } else {
+        Toaster.warning(title: 'Локальный буфер пуст');
+      }
+    } catch (error, stackTrace) {
+      logError(
+        'Failed to send local buffer',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (!mounted) return;
+      Toaster.error(
+        title: 'Не удалось отправить буфер',
+        description: error.toString(),
+      );
+    }
+  }
+
+  void _clearLocalBuffer() {
+    ref.read(localSendBufferProvider.notifier).clearBuffer();
+    Toaster.info(title: 'Локальный буфер очищен');
   }
 
   Widget _buildCompactAction({

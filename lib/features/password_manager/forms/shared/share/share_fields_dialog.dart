@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/local_send/providers/local_send_buffer_provider.dart';
 import 'package:hoplixi/features/password_manager/forms/shared/share/share_text_formatter.dart';
 import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
@@ -30,13 +32,9 @@ Future<void> showShareFieldsDialog({
     pageListBuilder: (modalContext) => [
       WoltModalSheetPage(
         hasSabGradient: false,
-        topBarTitle: Builder(
-          builder: (context) {
-            return Text(
-              l10n.share_dialog_title,
-              style: Theme.of(modalContext).textTheme.titleMedium,
-            );
-          },
+        topBarTitle: Text(
+          l10n.share_dialog_title,
+          style: Theme.of(modalContext).textTheme.titleMedium,
         ),
         isTopBarLayerAlwaysVisible: true,
         leadingNavBarWidget: Padding(
@@ -151,6 +149,20 @@ class _ShareFieldsContentState extends State<_ShareFieldsContent> {
                   isFullWidth: true,
                 ),
                 const SizedBox(height: 8),
+                Consumer(
+                  builder: (context, ref, child) {
+                    return SmoothButton(
+                      onPressed: _isSharing
+                          ? null
+                          : () => _bufferSelection(ref),
+                      type: SmoothButtonType.tonal,
+                      icon: const Icon(Icons.inventory_2_outlined),
+                      label: 'В локальный буфер',
+                      isFullWidth: true,
+                    );
+                  },
+                ),
+                const SizedBox(height: 8),
                 SmoothButton(
                   onPressed: _isSharing
                       ? null
@@ -198,6 +210,20 @@ class _ShareFieldsContentState extends State<_ShareFieldsContent> {
                 Row(
                   spacing: 8,
                   children: [
+                    Consumer(
+                      builder: (context, ref, child) {
+                        return Expanded(
+                          child: SmoothButton(
+                            onPressed: _isSharing
+                                ? null
+                                : () => _bufferSelection(ref),
+                            type: SmoothButtonType.tonal,
+                            icon: const Icon(Icons.inventory_2_outlined),
+                            label: 'В локальный буфер',
+                          ),
+                        );
+                      },
+                    ),
                     Expanded(
                       child: SmoothButton(
                         onPressed: _isSharing
@@ -227,6 +253,22 @@ class _ShareFieldsContentState extends State<_ShareFieldsContent> {
     );
   }
 
+  void _bufferSelection(WidgetRef ref) {
+    final selectedFields = _selectedFields();
+    if (selectedFields.isEmpty) {
+      return;
+    }
+
+    ref.read(localSendBufferProvider.notifier).addToBuffer(selectedFields);
+    Toaster.success(title: 'Поля сохранены в локальный буфер');
+  }
+
+  List<ShareableField> _selectedFields() {
+    return widget.fields
+        .where((field) => _selectedIds.contains(field.id))
+        .toList(growable: false);
+  }
+
   void _toggleField(String id, {required bool? value}) {
     setState(() {
       if (value ?? false) {
@@ -250,7 +292,11 @@ class _ShareFieldsContentState extends State<_ShareFieldsContent> {
   }
 
   Future<void> _share() async {
-    final text = buildShareText(widget.entity, _selectedIds);
+    final selectedFields = _selectedFields();
+    final text = buildShareTextFromFields(
+      selectedFields,
+      title: widget.entity.title,
+    );
     setState(() => _isSharing = true);
 
     try {
