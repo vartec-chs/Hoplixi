@@ -4,8 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/share_fields_helpers.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -88,6 +91,65 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
     AppRoutesPaths.dashboardEntityEdit(EntityType.bankCard, widget.bankCardId),
   );
 
+  Future<void> _share() async {
+    final record = _bankCard;
+    if (record == null) return;
+
+    final l10n = context.t.dashboard_forms;
+    final customFields = await loadCustomShareableFields(
+      ref,
+      widget.bankCardId,
+    );
+    final fields = [
+      ...buildCommonShareFields(
+        context,
+        name: record.$1.name,
+        categoryName: _categoryName,
+        tagNames: _tagNames,
+        description: record.$1.description,
+      ),
+      ...compactShareableFields([
+        shareableField(
+          id: 'card_number',
+          label: l10n.card_number_label,
+          value: record.$2.cardNumber,
+          isSensitive: true,
+        ),
+        shareableField(
+          id: 'cardholder',
+          label: l10n.cardholder_name_label,
+          value: record.$2.cardholderName,
+        ),
+        shareableField(
+          id: 'expiry',
+          label: l10n.expiration_date_label,
+          value: _getExpiryDate(),
+        ),
+        shareableField(
+          id: 'cvv',
+          label: 'CVV',
+          value: record.$2.cvv,
+          isSensitive: true,
+        ),
+        shareableField(
+          id: 'bank',
+          label: l10n.bank_name_label,
+          value: record.$2.bankName,
+        ),
+      ]),
+      ...customFields,
+    ];
+
+    await shareEntityFields(
+      context: context,
+      entity: ShareableEntity(
+        title: record.$1.name,
+        entityTypeLabel: EntityType.bankCard.label,
+        fields: fields,
+      ),
+    );
+  }
+
   String _formatCardNumber(String number) {
     final clean = number.replaceAll(RegExp(r'\D'), '');
     final buffer = StringBuffer();
@@ -115,6 +177,13 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
       appBar: AppBar(
         title: Text(_bankCard?.$1.name ?? 'Карта'),
         actions: [
+          IconButton(
+            icon: const Icon(LucideIcons.share2),
+            tooltip: context.t.dashboard_forms.share_action,
+            onPressed: _isLoading || _isDeleted || _bankCard == null
+                ? null
+                : _share,
+          ),
           IconButton(
             icon: const Icon(LucideIcons.pencil),
             onPressed: _isDeleted ? null : _edit,

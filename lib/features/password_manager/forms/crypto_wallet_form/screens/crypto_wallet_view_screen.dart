@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/share_fields_helpers.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -220,6 +222,100 @@ class _CryptoWalletViewScreenState
     );
   }
 
+  Future<void> _share() async {
+    final l10n = context.t.dashboard_forms;
+    String? mnemonic = _mnemonic;
+    String? privateKey = _privateKey;
+    String? xprv = _xprv;
+    try {
+      final dao = await ref.read(cryptoWalletDaoProvider.future);
+      mnemonic ??= await dao.getMnemonicFieldById(widget.cryptoWalletId);
+      privateKey ??= await dao.getPrivateKeyFieldById(widget.cryptoWalletId);
+      xprv ??= await dao.getXprvFieldById(widget.cryptoWalletId);
+    } catch (e) {
+      Toaster.error(title: l10n.common_load_error, description: '$e');
+    }
+
+    final customFields = await loadCustomShareableFields(
+      ref,
+      widget.cryptoWalletId,
+    );
+    final fields = [
+      ...compactShareableFields([
+        shareableField(id: 'name', label: l10n.share_name_label, value: _name),
+        shareableField(
+          id: 'wallet_type',
+          label: l10n.wallet_type_label,
+          value: _walletType,
+        ),
+        shareableField(
+          id: 'mnemonic',
+          label: l10n.mnemonic_label,
+          value: mnemonic,
+          isSensitive: true,
+        ),
+        shareableField(
+          id: 'private_key',
+          label: l10n.private_key_label,
+          value: privateKey,
+          isSensitive: true,
+        ),
+        shareableField(
+          id: 'xprv',
+          label: l10n.xprv_label,
+          value: xprv,
+          isSensitive: true,
+        ),
+        shareableField(id: 'xpub', label: l10n.xpub_label, value: _xpub),
+        shareableField(
+          id: 'network',
+          label: l10n.network_label,
+          value: _network,
+        ),
+        shareableField(
+          id: 'derivation_path',
+          label: l10n.derivation_path_label,
+          value: _derivationPath,
+        ),
+        shareableField(
+          id: 'derivation_scheme',
+          label: l10n.derivation_scheme_label,
+          value: _derivationScheme,
+        ),
+        shareableField(
+          id: 'hardware_device',
+          label: l10n.hardware_device_label,
+          value: _hardwareDevice,
+        ),
+        shareableField(
+          id: 'addresses',
+          label: l10n.addresses_json_label,
+          value: _addresses,
+        ),
+        shareableField(
+          id: 'watch_only',
+          label: l10n.watch_only_label,
+          value: _watchOnly ? l10n.common_enabled : l10n.common_disabled,
+        ),
+        shareableField(
+          id: 'description',
+          label: l10n.description_label,
+          value: _description,
+        ),
+      ]),
+      ...customFields,
+    ];
+
+    await shareEntityFields(
+      context: context,
+      entity: ShareableEntity(
+        title: _name,
+        entityTypeLabel: EntityType.cryptoWallet.label,
+        fields: fields,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.t.dashboard_forms;
@@ -228,6 +324,11 @@ class _CryptoWalletViewScreenState
       appBar: AppBar(
         title: Text(l10n.view_crypto_wallet),
         actions: [
+          IconButton(
+            tooltip: l10n.share_action,
+            onPressed: _loading || _isDeleted ? null : _share,
+            icon: const Icon(Icons.share),
+          ),
           IconButton(
             tooltip: l10n.edit,
             onPressed: _isDeleted

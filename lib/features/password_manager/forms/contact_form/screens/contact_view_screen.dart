@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/share_fields_helpers.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -135,6 +137,63 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
     }
   }
 
+  Future<void> _share() async {
+    final l10n = context.t.dashboard_forms;
+    final customFields = await loadCustomShareableFields(ref, widget.contactId);
+    final fields = [
+      ...compactShareableFields([
+        shareableField(id: 'name', label: l10n.share_name_label, value: _name),
+        shareableField(
+          id: 'company',
+          label: l10n.company_label,
+          value: _company,
+        ),
+        shareableField(
+          id: 'emergency',
+          label: l10n.emergency_contact_label,
+          value: _isEmergencyContact ? l10n.common_yes : l10n.common_no,
+        ),
+        shareableField(id: 'phone', label: l10n.phone_label, value: _phone),
+        shareableField(id: 'email', label: l10n.email_label, value: _email),
+        shareableField(
+          id: 'job_title',
+          label: l10n.job_title_label,
+          value: _jobTitle,
+        ),
+        shareableField(
+          id: 'address',
+          label: l10n.address_label,
+          value: _address,
+        ),
+        shareableField(
+          id: 'website',
+          label: l10n.website_label,
+          value: _website,
+        ),
+        shareableField(
+          id: 'birthday',
+          label: l10n.birthday_label,
+          value: _birthday == null ? null : _formatDate(_birthday!),
+        ),
+        shareableField(
+          id: 'description',
+          label: l10n.description_label,
+          value: _description,
+        ),
+      ]),
+      ...customFields,
+    ];
+
+    await shareEntityFields(
+      context: context,
+      entity: ShareableEntity(
+        title: _name,
+        entityTypeLabel: EntityType.contact.label,
+        fields: fields,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.t.dashboard_forms;
@@ -147,6 +206,11 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
             tooltip: l10n.export_contact_to_os_tooltip,
             onPressed: _loading ? null : _exportToOsContact,
             icon: const Icon(Icons.upload_rounded),
+          ),
+          IconButton(
+            tooltip: l10n.share_action,
+            onPressed: _loading || _isDeleted ? null : _share,
+            icon: const Icon(Icons.share),
           ),
           IconButton(
             tooltip: l10n.edit,

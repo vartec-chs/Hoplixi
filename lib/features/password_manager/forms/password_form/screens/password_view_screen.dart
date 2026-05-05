@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/share_fields_helpers.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_viewer.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -106,6 +109,56 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
     AppRoutesPaths.dashboardEntityEdit(EntityType.password, widget.passwordId),
   );
 
+  Future<void> _share() async {
+    final record = _password;
+    if (record == null) return;
+
+    final l10n = context.t.dashboard_forms;
+    final fields = [
+      ...buildCommonShareFields(
+        context,
+        name: record.$1.name,
+        categoryName: _categoryName,
+        tagNames: _tagNames,
+        description: record.$1.description,
+        customFields: _customFields,
+      ),
+      ...compactShareableFields([
+        shareableField(
+          id: 'password',
+          label: l10n.password_label,
+          value: record.$2.password,
+          isSensitive: true,
+        ),
+        shareableField(
+          id: 'login',
+          label: l10n.login_label,
+          value: record.$2.login,
+        ),
+        shareableField(
+          id: 'email',
+          label: l10n.email_label,
+          value: record.$2.email,
+        ),
+        shareableField(id: 'url', label: l10n.url_label, value: record.$2.url),
+        shareableField(
+          id: 'note',
+          label: l10n.share_linked_note_label,
+          value: _noteName,
+        ),
+      ]),
+    ];
+
+    await shareEntityFields(
+      context: context,
+      entity: ShareableEntity(
+        title: record.$1.name,
+        entityTypeLabel: EntityType.password.label,
+        fields: fields,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -113,6 +166,13 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
       appBar: AppBar(
         title: Text(_password?.$1.name ?? 'Пароль'),
         actions: [
+          IconButton(
+            icon: const Icon(LucideIcons.share2),
+            tooltip: context.t.dashboard_forms.share_action,
+            onPressed: _isLoading || _isDeleted || _password == null
+                ? null
+                : _share,
+          ),
           IconButton(
             icon: const Icon(LucideIcons.pencil),
             tooltip: 'Редактировать',

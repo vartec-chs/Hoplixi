@@ -1,4 +1,4 @@
-﻿import 'dart:typed_data';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,7 +6,10 @@ import 'package:flutter_zxing/flutter_zxing.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/share_fields_helpers.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -47,7 +50,7 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
       if (!mounted) return;
       setState(() {
         _loyaltyCard = record;
-          _isDeleted = record!.$1.isDeleted;
+        _isDeleted = record!.$1.isDeleted;
         _isLoading = false;
       });
 
@@ -190,6 +193,93 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
     return '${value.day.toString().padLeft(2, '0')}.${value.month.toString().padLeft(2, '0')}.${value.year}';
   }
 
+  Future<void> _share() async {
+    final record = _loyaltyCard;
+    if (record == null) return;
+
+    final l10n = context.t.dashboard_forms;
+    final customFields = await loadCustomShareableFields(
+      ref,
+      widget.loyaltyCardId,
+    );
+    final fields = [
+      ...buildCommonShareFields(
+        context,
+        name: record.$1.name,
+        categoryName: _categoryName,
+        tagNames: _tagNames,
+        description: record.$1.description,
+      ),
+      ...compactShareableFields([
+        shareableField(
+          id: 'program',
+          label: l10n.program_name_label,
+          value: record.$2.programName,
+        ),
+        shareableField(
+          id: 'card_number',
+          label: l10n.loyalty_card_number_label,
+          value: record.$2.cardNumber,
+          isSensitive: true,
+        ),
+        shareableField(
+          id: 'barcode',
+          label: l10n.barcode_value_label,
+          value: record.$2.barcodeValue,
+          isSensitive: true,
+        ),
+        shareableField(
+          id: 'password',
+          label: l10n.pin_password_label,
+          value: record.$2.password,
+          isSensitive: true,
+        ),
+        shareableField(
+          id: 'holder',
+          label: l10n.holder_name_label,
+          value: record.$2.holderName,
+        ),
+        shareableField(
+          id: 'tier',
+          label: l10n.tier_label,
+          value: record.$2.tier,
+        ),
+        shareableField(
+          id: 'points',
+          label: l10n.points_balance_label,
+          value: record.$2.pointsBalance,
+        ),
+        shareableField(
+          id: 'expiry',
+          label: l10n.expiration_date_label,
+          value: record.$2.expiryDate == null
+              ? null
+              : _formatDate(record.$2.expiryDate),
+        ),
+        shareableField(
+          id: 'website',
+          label: l10n.website_label,
+          value: record.$2.website,
+        ),
+        shareableField(
+          id: 'phone',
+          label: l10n.phone_label,
+          value: record.$2.phoneNumber,
+        ),
+      ]),
+      ...customFields,
+    ];
+
+    await shareEntityFields(
+      context: context,
+      entity: ShareableEntity(
+        title: record.$1.name,
+        entityTypeLabel: EntityType.loyaltyCard.label,
+        fields: fields,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -198,6 +288,13 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
       appBar: AppBar(
         title: Text(_loyaltyCard?.$1.name ?? 'Карта лояльности'),
         actions: [
+          IconButton(
+            icon: const Icon(LucideIcons.share2),
+            tooltip: context.t.dashboard_forms.share_action,
+            onPressed: _isLoading || _isDeleted || _loyaltyCard == null
+                ? null
+                : _share,
+          ),
           IconButton(
             icon: const Icon(LucideIcons.pencil),
             onPressed: _isDeleted ? null : _edit,

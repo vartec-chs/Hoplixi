@@ -6,8 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/share_fields_helpers.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -118,6 +121,40 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
     AppRoutesPaths.dashboardEntityEdit(EntityType.note, widget.noteId),
   );
 
+  Future<void> _share() async {
+    final record = _note;
+    if (record == null) return;
+
+    final l10n = context.t.dashboard_forms;
+    final customFields = await loadCustomShareableFields(ref, widget.noteId);
+    final fields = [
+      ...buildCommonShareFields(
+        context,
+        name: record.$1.name,
+        categoryName: _categoryName,
+        tagNames: _tagNames,
+        description: record.$1.description,
+      ),
+      ...compactShareableFields([
+        shareableField(
+          id: 'content',
+          label: l10n.share_content_label,
+          value: _quillController?.document.toPlainText(),
+        ),
+      ]),
+      ...customFields,
+    ];
+
+    await shareEntityFields(
+      context: context,
+      entity: ShareableEntity(
+        title: record.$1.name,
+        entityTypeLabel: EntityType.note.label,
+        fields: fields,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -126,6 +163,13 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
       appBar: AppBar(
         title: Text(_note?.$1.name ?? 'Заметка'),
         actions: [
+          IconButton(
+            icon: const Icon(LucideIcons.share2),
+            tooltip: context.t.dashboard_forms.share_action,
+            onPressed: _isLoading || _isDeleted || _note == null
+                ? null
+                : _share,
+          ),
           IconButton(
             icon: const Icon(LucideIcons.copy),
             tooltip: 'Копировать текст',
@@ -200,7 +244,7 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
                     child: FilledButton.icon(
                       onPressed: _isDeleted ? null : _edit,
                       icon: const Icon(LucideIcons.pencil),
-                      label: const Text('Редактировать'),
+                      label: Text(context.t.dashboard_forms.edit),
                       style: FilledButton.styleFrom(
                         minimumSize: const Size.fromHeight(48),
                       ),

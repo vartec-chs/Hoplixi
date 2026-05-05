@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/share_fields_helpers.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_db/core/models/dto/recovery_code_item_dto.dart';
@@ -149,6 +151,66 @@ class _RecoveryCodesViewScreenState
     await _load();
   }
 
+  Future<void> _share() async {
+    final l10n = context.t.dashboard_forms;
+    final customFields = await loadCustomShareableFields(
+      ref,
+      widget.recoveryCodesId,
+    );
+    final codesText = _codes
+        .map(
+          (code) =>
+              '${code.code} - ${code.used ? l10n.code_used_label : l10n.code_unused_label}',
+        )
+        .join('\n');
+    final fields = [
+      ...compactShareableFields([
+        shareableField(id: 'name', label: l10n.share_name_label, value: _name),
+        shareableField(
+          id: 'codes_count',
+          label: l10n.total_codes_label,
+          value: _codesCount,
+        ),
+        shareableField(
+          id: 'used_count',
+          label: l10n.used_codes_label,
+          value: _usedCount,
+        ),
+        shareableField(
+          id: 'one_time',
+          label: l10n.one_time_codes_label,
+          value: _oneTime ? l10n.common_enabled : l10n.common_disabled,
+        ),
+        shareableField(
+          id: 'display_hint',
+          label: l10n.display_hint_label,
+          value: _displayHint,
+        ),
+        shareableField(
+          id: 'description',
+          label: l10n.description_label,
+          value: _description,
+        ),
+        shareableField(
+          id: 'codes',
+          label: l10n.codes_label,
+          value: codesText,
+          isSensitive: true,
+        ),
+      ]),
+      ...customFields,
+    ];
+
+    await shareEntityFields(
+      context: context,
+      entity: ShareableEntity(
+        title: _name,
+        entityTypeLabel: EntityType.recoveryCodes.label,
+        fields: fields,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.t.dashboard_forms;
@@ -157,6 +219,11 @@ class _RecoveryCodesViewScreenState
       appBar: AppBar(
         title: Text(l10n.view_recovery_codes),
         actions: [
+          IconButton(
+            tooltip: l10n.share_action,
+            onPressed: _loading || _isDeleted ? null : _share,
+            icon: const Icon(Icons.share),
+          ),
           IconButton(
             tooltip: l10n.edit,
             onPressed: _isDeleted

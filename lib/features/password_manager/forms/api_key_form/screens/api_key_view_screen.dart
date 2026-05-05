@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/share_fields_helpers.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -105,12 +107,81 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
     Toaster.success(title: context.t.dashboard_forms.api_key_copied);
   }
 
+  Future<void> _share() async {
+    final l10n = context.t.dashboard_forms;
+    String? key = _realKey;
+    try {
+      final dao = await ref.read(apiKeyDaoProvider.future);
+      key ??= await dao.getKeyFieldById(widget.apiKeyId);
+    } catch (e) {
+      Toaster.error(
+        title: l10n.common_error_getting_field(Field: l10n.api_key_label),
+        description: '$e',
+      );
+    }
+
+    final customFields = await loadCustomShareableFields(ref, widget.apiKeyId);
+    final fields = [
+      ...compactShareableFields([
+        shareableField(id: 'name', label: l10n.share_name_label, value: _name),
+        shareableField(
+          id: 'service',
+          label: l10n.api_key_service_label,
+          value: _service,
+        ),
+        shareableField(
+          id: 'api_key',
+          label: l10n.api_key_label,
+          value: key ?? _maskedKey,
+          isSensitive: true,
+        ),
+        shareableField(
+          id: 'token_type',
+          label: l10n.token_type_label,
+          value: _tokenType,
+        ),
+        shareableField(
+          id: 'environment',
+          label: l10n.environment_label,
+          value: _environment,
+        ),
+        shareableField(
+          id: 'status',
+          label: l10n.api_key_status_label,
+          value: _revoked
+              ? l10n.api_key_revoked_status
+              : l10n.api_key_active_status,
+        ),
+        shareableField(
+          id: 'description',
+          label: l10n.description_label,
+          value: _description,
+        ),
+      ]),
+      ...customFields,
+    ];
+
+    await shareEntityFields(
+      context: context,
+      entity: ShareableEntity(
+        title: _name,
+        entityTypeLabel: EntityType.apiKey.label,
+        fields: fields,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(context.t.dashboard_forms.view_api_key),
         actions: [
+          IconButton(
+            tooltip: context.t.dashboard_forms.share_action,
+            onPressed: _loading || _isDeleted ? null : _share,
+            icon: const Icon(Icons.share),
+          ),
           IconButton(
             tooltip: context.t.dashboard_forms.edit,
             onPressed: _isDeleted

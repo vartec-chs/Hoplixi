@@ -7,7 +7,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/share_fields_helpers.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
@@ -160,6 +163,79 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
     AppRoutesPaths.dashboardEntityEdit(EntityType.otp, widget.otpId),
   );
 
+  Future<void> _share() async {
+    final record = _otp;
+    if (record == null) return;
+
+    final l10n = context.t.dashboard_forms;
+    String? secret;
+    try {
+      secret = _decodeSecret(record.$2.secret, record.$2.secretEncoding);
+    } catch (_) {
+      secret = null;
+    }
+
+    final customFields = await loadCustomShareableFields(ref, widget.otpId);
+    final fields = [
+      ...buildCommonShareFields(
+        context,
+        name: record.$1.name,
+        categoryName: _categoryName,
+        tagNames: _tagNames,
+        description: record.$1.description,
+      ),
+      ...compactShareableFields([
+        shareableField(
+          id: 'current_code',
+          label: l10n.share_current_code_label,
+          value: _currentCode,
+          isSensitive: true,
+        ),
+        shareableField(
+          id: 'secret',
+          label: l10n.otp_secret_key_label,
+          value: secret,
+          isSensitive: true,
+        ),
+        shareableField(
+          id: 'issuer',
+          label: l10n.otp_issuer_label,
+          value: record.$2.issuer,
+        ),
+        shareableField(
+          id: 'account',
+          label: l10n.otp_account_name_label,
+          value: record.$2.accountName,
+        ),
+        shareableField(
+          id: 'period',
+          label: l10n.period_seconds_label,
+          value: record.$2.period,
+        ),
+        shareableField(
+          id: 'digits',
+          label: l10n.digits_count_label,
+          value: record.$2.digits,
+        ),
+        shareableField(
+          id: 'algorithm',
+          label: l10n.algorithm_label,
+          value: record.$2.algorithm.name,
+        ),
+      ]),
+      ...customFields,
+    ];
+
+    await shareEntityFields(
+      context: context,
+      entity: ShareableEntity(
+        title: record.$1.name,
+        entityTypeLabel: EntityType.otp.label,
+        fields: fields,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -169,6 +245,11 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
       appBar: AppBar(
         title: Text(_otp?.$1.name ?? 'OTP'),
         actions: [
+          IconButton(
+            icon: const Icon(LucideIcons.share2),
+            tooltip: context.t.dashboard_forms.share_action,
+            onPressed: _isLoading || _isDeleted || _otp == null ? null : _share,
+          ),
           IconButton(
             icon: const Icon(LucideIcons.pencil),
             onPressed: _isDeleted ? null : _edit,

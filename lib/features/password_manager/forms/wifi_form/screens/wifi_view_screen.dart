@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/share_fields_helpers.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
@@ -165,6 +167,93 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
     );
   }
 
+  Future<void> _share() async {
+    final l10n = context.t.dashboard_forms;
+    String? password;
+    try {
+      password = await _loadPasswordForConnection();
+    } catch (e) {
+      Toaster.error(
+        title: l10n.common_error_getting_field(Field: l10n.wifi_password_label),
+        description: '$e',
+      );
+    }
+
+    final customFields = await loadCustomShareableFields(ref, widget.wifiId);
+    final fields = [
+      ...compactShareableFields([
+        shareableField(id: 'name', label: l10n.share_name_label, value: _name),
+        shareableField(id: 'ssid', label: 'SSID', value: _ssid),
+        shareableField(
+          id: 'password',
+          label: l10n.wifi_password_label,
+          value: password,
+          isSensitive: true,
+        ),
+        shareableField(
+          id: 'security',
+          label: l10n.wifi_security_label,
+          value: _security,
+        ),
+        shareableField(
+          id: 'hidden',
+          label: l10n.wifi_hidden_network_label,
+          value: _hidden ? l10n.common_yes : l10n.common_no,
+        ),
+        shareableField(
+          id: 'eap_method',
+          label: l10n.wifi_eap_method_label,
+          value: _eapMethod,
+        ),
+        shareableField(
+          id: 'username',
+          label: l10n.wifi_username_label,
+          value: _username,
+        ),
+        shareableField(
+          id: 'identity',
+          label: l10n.wifi_identity_label,
+          value: _identity,
+        ),
+        shareableField(
+          id: 'domain',
+          label: l10n.wifi_domain_label,
+          value: _domain,
+        ),
+        shareableField(
+          id: 'last_connected_bssid',
+          label: l10n.wifi_last_connected_bssid_label,
+          value: _lastConnectedBssid,
+        ),
+        shareableField(
+          id: 'priority',
+          label: l10n.wifi_priority_label,
+          value: _priority,
+        ),
+        shareableField(
+          id: 'qr_payload',
+          label: l10n.wifi_qr_payload_label,
+          value: _qrPayload,
+        ),
+        shareableField(
+          id: 'description',
+          label: l10n.description_label,
+          value: _description,
+        ),
+      ]),
+      ...customFields,
+    ];
+
+    await shareEntityFields(
+      context: context,
+      entity: ShareableEntity(
+        title: _name,
+        entityTypeLabel: EntityType.wifi.label,
+        fields: fields,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.t.dashboard_forms;
@@ -177,6 +266,11 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
             tooltip: l10n.network_label,
             onPressed: _loading ? null : _exportToWifi,
             icon: const Icon(Icons.upload_rounded),
+          ),
+          IconButton(
+            tooltip: l10n.share_action,
+            onPressed: _loading || _isDeleted ? null : _share,
+            icon: const Icon(Icons.share),
           ),
           IconButton(
             tooltip: l10n.edit,

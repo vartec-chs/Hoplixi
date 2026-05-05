@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/share_fields_helpers.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -117,6 +119,69 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
     );
   }
 
+  Future<void> _share() async {
+    final l10n = context.t.dashboard_forms;
+    String? privateKey = _privateKey;
+    try {
+      final dao = await ref.read(sshKeyDaoProvider.future);
+      privateKey ??= await dao.getPrivateKeyFieldById(widget.sshKeyId);
+    } catch (e) {
+      Toaster.error(
+        title: l10n.common_error_getting_field(Field: l10n.private_key_label),
+        description: '$e',
+      );
+    }
+
+    final customFields = await loadCustomShareableFields(ref, widget.sshKeyId);
+    final fields = [
+      ...compactShareableFields([
+        shareableField(id: 'name', label: l10n.share_name_label, value: _name),
+        shareableField(
+          id: 'public_key',
+          label: l10n.share_public_key_label,
+          value: _publicKey,
+        ),
+        shareableField(
+          id: 'private_key',
+          label: l10n.private_key_label,
+          value: privateKey,
+          isSensitive: true,
+        ),
+        shareableField(
+          id: 'key_type',
+          label: l10n.key_type_label,
+          value: _keyType,
+        ),
+        shareableField(
+          id: 'fingerprint',
+          label: l10n.fingerprint_label,
+          value: _fingerprint,
+        ),
+        shareableField(id: 'usage', label: l10n.usage_label, value: _usage),
+        shareableField(
+          id: 'added_to_agent',
+          label: l10n.added_to_ssh_agent_label,
+          value: _addedToAgent ? l10n.common_added : l10n.common_not_added,
+        ),
+        shareableField(
+          id: 'description',
+          label: l10n.description_label,
+          value: _description,
+        ),
+      ]),
+      ...customFields,
+    ];
+
+    await shareEntityFields(
+      context: context,
+      entity: ShareableEntity(
+        title: _name,
+        entityTypeLabel: EntityType.sshKey.label,
+        fields: fields,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.t.dashboard_forms;
@@ -125,6 +190,11 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
       appBar: AppBar(
         title: Text(l10n.view_ssh_key),
         actions: [
+          IconButton(
+            tooltip: l10n.share_action,
+            onPressed: _loading || _isDeleted ? null : _share,
+            icon: const Icon(Icons.share),
+          ),
           IconButton(
             tooltip: l10n.edit,
             onPressed: _isDeleted

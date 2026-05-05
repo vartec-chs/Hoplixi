@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/share_fields_helpers.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -88,6 +90,95 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
     return value.toIso8601String();
   }
 
+  Future<void> _share() async {
+    final l10n = context.t.dashboard_forms;
+    final customFields = await loadCustomShareableFields(
+      ref,
+      widget.licenseKeyId,
+    );
+    final fields = [
+      ...compactShareableFields([
+        shareableField(id: 'name', label: l10n.share_name_label, value: _name),
+        shareableField(
+          id: 'product',
+          label: l10n.product_label,
+          value: _product,
+        ),
+        shareableField(
+          id: 'license_key',
+          label: l10n.license_key_label,
+          value: _licenseKey,
+          isSensitive: true,
+        ),
+        shareableField(
+          id: 'license_type',
+          label: l10n.license_type_label,
+          value: _licenseType,
+        ),
+        shareableField(
+          id: 'seats',
+          label: l10n.seats_count_label,
+          value: _seats,
+        ),
+        shareableField(
+          id: 'max_activations',
+          label: l10n.max_activations_label,
+          value: _maxActivations,
+        ),
+        shareableField(
+          id: 'activated_on',
+          label: l10n.activated_at_iso_label,
+          value: _activatedOn,
+        ),
+        shareableField(
+          id: 'purchase_date',
+          label: l10n.purchase_date_iso_label,
+          value: _purchaseDate,
+        ),
+        shareableField(
+          id: 'purchase_from',
+          label: l10n.purchased_from_label,
+          value: _purchaseFrom,
+        ),
+        shareableField(
+          id: 'order_id',
+          label: l10n.order_id_label,
+          value: _orderId,
+        ),
+        shareableField(
+          id: 'license_file',
+          label: l10n.license_file_id_label,
+          value: _licenseFileId,
+        ),
+        shareableField(
+          id: 'expires_at',
+          label: l10n.expires_at_iso_label,
+          value: _expiresAt,
+        ),
+        shareableField(
+          id: 'support_contact',
+          label: l10n.support_contact_label,
+          value: _supportContact,
+        ),
+        shareableField(
+          id: 'description',
+          label: l10n.description_label,
+          value: _description,
+        ),
+      ]),
+      ...customFields,
+    ];
+
+    await shareEntityFields(
+      context: context,
+      entity: ShareableEntity(
+        title: _name,
+        entityTypeLabel: EntityType.licenseKey.label,
+        fields: fields,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.t.dashboard_forms;
@@ -96,6 +187,11 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
       appBar: AppBar(
         title: Text(l10n.view_license),
         actions: [
+          IconButton(
+            tooltip: l10n.share_action,
+            onPressed: _loading || _isDeleted ? null : _share,
+            icon: const Icon(Icons.share),
+          ),
           IconButton(
             tooltip: l10n.edit,
             onPressed: _isDeleted

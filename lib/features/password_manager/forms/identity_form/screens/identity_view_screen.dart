@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/share_fields_helpers.dart';
+import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -89,6 +91,101 @@ class _IdentityViewScreenState extends ConsumerState<IdentityViewScreen> {
     return value.toIso8601String();
   }
 
+  Future<void> _share() async {
+    final l10n = context.t.dashboard_forms;
+    final customFields = await loadCustomShareableFields(
+      ref,
+      widget.identityId,
+    );
+    final fields = [
+      ...compactShareableFields([
+        shareableField(id: 'name', label: l10n.share_name_label, value: _name),
+        shareableField(
+          id: 'id_type',
+          label: l10n.document_type_required_label,
+          value: _idType,
+        ),
+        shareableField(
+          id: 'id_number',
+          label: l10n.document_number_required_label,
+          value: _idNumber,
+          isSensitive: true,
+        ),
+        shareableField(
+          id: 'full_name',
+          label: l10n.full_name_label,
+          value: _fullName,
+        ),
+        shareableField(
+          id: 'date_of_birth',
+          label: l10n.birth_date_iso_label,
+          value: _dateOfBirth,
+        ),
+        shareableField(
+          id: 'place_of_birth',
+          label: l10n.place_of_birth_label,
+          value: _placeOfBirth,
+        ),
+        shareableField(
+          id: 'nationality',
+          label: l10n.nationality_label,
+          value: _nationality,
+        ),
+        shareableField(
+          id: 'issuing_authority',
+          label: l10n.issuing_authority_label,
+          value: _issuingAuthority,
+        ),
+        shareableField(
+          id: 'issue_date',
+          label: l10n.issue_date_iso_label,
+          value: _issueDate,
+        ),
+        shareableField(
+          id: 'expiry_date',
+          label: l10n.expiry_date_iso_label,
+          value: _expiryDate,
+        ),
+        shareableField(
+          id: 'mrz',
+          label: l10n.mrz_label,
+          value: _mrz,
+          isSensitive: true,
+        ),
+        shareableField(
+          id: 'scan_id',
+          label: l10n.scan_id_label,
+          value: _scanAttachmentId,
+        ),
+        shareableField(
+          id: 'photo_id',
+          label: l10n.photo_id_label,
+          value: _photoAttachmentId,
+        ),
+        shareableField(
+          id: 'verified',
+          label: l10n.verified_label,
+          value: _verified ? l10n.common_yes : l10n.common_no,
+        ),
+        shareableField(
+          id: 'description',
+          label: l10n.description_label,
+          value: _description,
+        ),
+      ]),
+      ...customFields,
+    ];
+
+    await shareEntityFields(
+      context: context,
+      entity: ShareableEntity(
+        title: _name,
+        entityTypeLabel: EntityType.identity.label,
+        fields: fields,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.t.dashboard_forms;
@@ -97,6 +194,11 @@ class _IdentityViewScreenState extends ConsumerState<IdentityViewScreen> {
       appBar: AppBar(
         title: Text(l10n.view_identity),
         actions: [
+          IconButton(
+            tooltip: l10n.share_action,
+            onPressed: _loading || _isDeleted ? null : _share,
+            icon: const Icon(Icons.share),
+          ),
           IconButton(
             tooltip: l10n.edit,
             onPressed: _isDeleted

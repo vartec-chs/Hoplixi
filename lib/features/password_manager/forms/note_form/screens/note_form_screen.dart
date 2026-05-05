@@ -422,21 +422,14 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: theme.dividerColor,
-            width: 1,
-          ),
-        ),
+        border: Border(bottom: BorderSide(color: theme.dividerColor, width: 1)),
       ),
       child: QuillSimpleToolbar(
         controller: _quillController,
         config: QuillSimpleToolbarConfig(
           showClipboardPaste: true,
           multiRowsDisplay: false,
-          decoration: const BoxDecoration(
-            color: Colors.transparent,
-          ),
+          decoration: const BoxDecoration(color: Colors.transparent),
           toolbarSize: 40,
           dialogTheme: QuillDialogTheme(
             shape: RoundedRectangleBorder(
