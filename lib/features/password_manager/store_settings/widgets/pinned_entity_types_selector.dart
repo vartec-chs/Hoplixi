@@ -1,21 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/store_settings/providers/store_settings_provider.dart';
 
-/// Секция выбора закреплённых типов сущностей в entity_type_dropdown.
+/// Секция выбора закреплённых типов сущностей.
 /// Если ничего не выбрано — отображаются все типы.
-class PinnedEntityTypesSelector extends ConsumerWidget {
-  const PinnedEntityTypesSelector({super.key});
+class PinnedEntityTypesSelector extends StatelessWidget {
+  final List<String> selectedEntityTypeIds;
+  final ValueChanged<List<String>> onChanged;
+  final bool enabled;
+
+  const PinnedEntityTypesSelector({
+    super.key,
+    required this.selectedEntityTypeIds,
+    required this.onChanged,
+    this.enabled = true,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(storeSettingsProvider);
-    final notifier = ref.read(storeSettingsProvider.notifier);
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     // Если список пустой — значит «показывать все»
-    final selected = state.newPinnedEntityTypes.toSet();
+    final selected = selectedEntityTypeIds.toSet();
     final allSelected = selected.isEmpty;
 
     return Column(
@@ -32,9 +37,7 @@ class PinnedEntityTypesSelector extends ConsumerWidget {
               ),
             ),
             TextButton(
-              onPressed: state.isSaving
-                  ? null
-                  : () => notifier.updatePinnedEntityTypes(const []),
+              onPressed: enabled ? () => onChanged(const []) : null,
               child: Text(
                 allSelected ? 'Все выбраны' : 'Выбрать все',
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -70,30 +73,31 @@ class PinnedEntityTypesSelector extends ConsumerWidget {
               ),
               label: Text(type.label),
               selected: isSelected,
-              onSelected: state.isSaving
-                  ? null
-                  : (checked) {
-                      final current = state.newPinnedEntityTypes.toSet();
-                      // Если сейчас «все выбраны» (пустой список) — при снятии
-                      // чипа переходим в явный режим: все, кроме снятого.
-                      final base = current.isEmpty
-                          ? EntityType.allTypes.map((t) => t.id).toSet()
-                          : current;
+              onSelected: enabled
+                ? (checked) {
+                  final current = selected;
+                  // Если сейчас «все выбраны» (пустой список) — при
+                  // снятии чипа переходим в явный режим: все, кроме
+                  // снятого.
+                  final base = current.isEmpty
+                    ? EntityType.allTypes.map((t) => t.id).toSet()
+                    : current;
 
-                      final updated = checked
-                          ? {...base, type.id}
-                          : base.difference({type.id});
+                  final updated = checked
+                    ? {...base, type.id}
+                    : base.difference({type.id});
 
-                      // Если отмечены все — храним пустой список
-                      final allIds = EntityType.allTypes
-                          .map((t) => t.id)
-                          .toSet();
-                      final result = updated.containsAll(allIds)
-                          ? <String>[]
-                          : updated.toList();
+                  // Если отмечены все — храним пустой список.
+                  final allIds = EntityType.allTypes
+                    .map((t) => t.id)
+                    .toSet();
+                  final result = updated.containsAll(allIds)
+                    ? <String>[]
+                    : updated.toList();
 
-                      notifier.updatePinnedEntityTypes(result);
-                    },
+                  onChanged(result);
+                  }
+                : null,
             );
           }).toList(),
         ),

@@ -22,7 +22,13 @@ import '../../../providers/filter_providers/base_filter_provider.dart';
 import '../entity_type_dropdown.dart';
 import 'app_bar_widgets.dart';
 
-enum _DashboardMenuAction { storeSettings, backupNow, keepassImport, showHints }
+enum _DashboardMenuAction {
+  storeSettings,
+  pinnedEntityTypes,
+  backupNow,
+  keepassImport,
+  showHints,
+}
 
 /// Полноценный SliverAppBar для дашборда с фильтрацией и поиском
 /// Включает drawer кнопку, выбор типа сущности, кнопку фильтров, поиск и вкладки
@@ -136,12 +142,20 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
     );
   }
 
-  void _openStoreSettingsModal() {
+  Future<void> _openStoreSettingsModal() async {
     logInfo(
       'DashboardSliverAppBar: Открытие модального окна настроек хранилища',
     );
 
-    showStoreSettingsModal(context);
+    await showStoreSettingsModal(context);
+  }
+
+  Future<void> _openPinnedEntityTypesModal() async {
+    logInfo(
+      'DashboardSliverAppBar: Открытие модального окна типов записей в навигации',
+    );
+
+    await showPinnedEntityTypesModal(context);
   }
 
   void _showDashboardHints(DashboardGuideKeys? guideKeys) {
@@ -321,10 +335,13 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
               borderRadius: BorderRadius.circular(12),
             ),
 
-            onSelected: (action) {
+            onSelected: (action) async {
               switch (action) {
                 case _DashboardMenuAction.storeSettings:
-                  _openStoreSettingsModal();
+                  await _openStoreSettingsModal();
+                  break;
+                case _DashboardMenuAction.pinnedEntityTypes:
+                  await _openPinnedEntityTypesModal();
                   break;
                 case _DashboardMenuAction.backupNow:
                   if (isStoreOpen) {
@@ -352,6 +369,16 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
                     Icon(LucideIcons.settings, size: 20),
                     SizedBox(width: 8),
                     Text('Настройки хранилища'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem<_DashboardMenuAction>(
+                value: _DashboardMenuAction.pinnedEntityTypes,
+                child: Row(
+                  children: [
+                    Icon(Icons.push_pin_outlined, size: 20),
+                    SizedBox(width: 8),
+                    Text('Типы записей в навигации'),
                   ],
                 ),
               ),

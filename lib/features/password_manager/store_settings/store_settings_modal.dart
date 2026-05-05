@@ -5,7 +5,6 @@ import 'package:hoplixi/features/password_manager/store_settings/providers/store
 import 'package:hoplixi/features/password_manager/store_settings/widgets/change_password_section.dart';
 import 'package:hoplixi/features/password_manager/store_settings/widgets/device_key_security_section.dart';
 import 'package:hoplixi/features/password_manager/store_settings/widgets/key_file_security_section.dart';
-import 'package:hoplixi/features/password_manager/store_settings/widgets/pinned_entity_types_selector.dart';
 import 'package:hoplixi/features/password_manager/store_settings/widgets/store_settings_form.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
@@ -62,17 +61,9 @@ Future<bool?> showStoreSettingsModal(
                 IconButton(
                   icon: const Icon(Icons.cloud_sync_outlined),
                   onPressed: () {
-                    pageIndexNotifier.value = 3;
-                  },
-                  tooltip: 'Cloud Sync',
-                ),
-
-                IconButton(
-                  icon: const Icon(Icons.push_pin_outlined),
-                  onPressed: () {
                     pageIndexNotifier.value = 2;
                   },
-                  tooltip: 'Типы записей',
+                  tooltip: 'Cloud Sync',
                 ),
                 IconButton(
                   icon: const Icon(Icons.lock_outline),
@@ -84,7 +75,6 @@ Future<bool?> showStoreSettingsModal(
                 const SizedBox(width: 8),
               ],
             ),
-
             child: const StoreSettingsForm(),
           ),
 
@@ -122,14 +112,14 @@ Future<bool?> showStoreSettingsModal(
                   IconButton(
                     icon: const Icon(Icons.key_outlined),
                     onPressed: () {
-                      pageIndexNotifier.value = 4;
+                      pageIndexNotifier.value = 3;
                     },
                     tooltip: 'JSON key file',
                   ),
                   IconButton(
                     icon: const Icon(Icons.phonelink_lock_outlined),
                     onPressed: () {
-                      pageIndexNotifier.value = 5;
+                      pageIndexNotifier.value = 4;
                     },
                     tooltip: 'Ключ устройства',
                   ),
@@ -142,38 +132,7 @@ Future<bool?> showStoreSettingsModal(
             ),
           ),
 
-          // Страница 3: Типы записей в навигации
-          WoltModalSheetPage(
-            surfaceTintColor: Colors.transparent,
-            hasTopBarLayer: true,
-            topBarTitle: Builder(
-              builder: (context) {
-                return Text(
-                  'Типы записей в навигации',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-                );
-              },
-            ),
-            isTopBarLayerAlwaysVisible: true,
-            leadingNavBarWidget: Padding(
-              padding: const EdgeInsets.only(left: 8.0),
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () {
-                  pageIndexNotifier.value = 0;
-                },
-                tooltip: 'Назад',
-              ),
-            ),
-            child: const Padding(
-              padding: EdgeInsets.all(12.0),
-              child: PinnedEntityTypesSelector(),
-            ),
-          ),
-
-          // Страница 4: Cloud Sync
+          // Страница 3: Cloud Sync
           WoltModalSheetPage(
             surfaceTintColor: Colors.transparent,
             hasTopBarLayer: true,
@@ -198,11 +157,13 @@ Future<bool?> showStoreSettingsModal(
                 tooltip: 'Назад',
               ),
             ),
-            child: const CloudSyncSettingsPage(
-              reopenStoreSettingsAfterAuth: true,
+            child: const Padding(
+              padding: EdgeInsets.all(12.0),
+              child: CloudSyncSettingsPage(reopenStoreSettingsAfterAuth: true),
             ),
           ),
 
+          // Страница 4: JSON key file
           WoltModalSheetPage(
             surfaceTintColor: Colors.transparent,
             hasTopBarLayer: true,
@@ -222,7 +183,7 @@ Future<bool?> showStoreSettingsModal(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () {
                   if (returnToDeviceKeyPage.value) {
-                    pageIndexNotifier.value = 5;
+                    pageIndexNotifier.value = 4;
                     returnToDeviceKeyPage.value = false;
                   } else {
                     pageIndexNotifier.value = 1;
@@ -236,7 +197,7 @@ Future<bool?> showStoreSettingsModal(
               child: IconButton(
                 icon: const Icon(Icons.phonelink_lock_outlined),
                 onPressed: () {
-                  pageIndexNotifier.value = 5;
+                  pageIndexNotifier.value = 4;
                 },
                 tooltip: 'Ключ устройства',
               ),
@@ -244,6 +205,7 @@ Future<bool?> showStoreSettingsModal(
             child: const KeyFileSecuritySection(),
           ),
 
+          // Страница 5: Ключ устройства
           WoltModalSheetPage(
             surfaceTintColor: Colors.transparent,
             hasTopBarLayer: true,
@@ -272,7 +234,7 @@ Future<bool?> showStoreSettingsModal(
               child: IconButton(
                 icon: const Icon(Icons.key_outlined),
                 onPressed: () {
-                  pageIndexNotifier.value = 4;
+                  pageIndexNotifier.value = 3;
                   returnToDeviceKeyPage.value = true;
                 },
                 tooltip: 'JSON key file',
