@@ -42,6 +42,11 @@ final dashboardAnimationsEnabledProvider = StreamProvider<bool>(
       .watchDashboardAnimationsEnabled(),
 );
 
+final animatedBackgroundEnabledProvider = StreamProvider<bool>(
+  (ref) => getIt<PreferencesService>().settingsPrefs
+      .watchAnimatedBackgroundEnabled(),
+);
+
 final dashboardFloatingNavEffectsEnabledProvider = StreamProvider<bool>(
   (ref) => getIt<PreferencesService>().settingsPrefs
       .watchDashboardFloatingNavEffectsEnabled(),

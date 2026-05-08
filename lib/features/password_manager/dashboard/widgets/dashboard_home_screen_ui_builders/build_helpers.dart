@@ -33,6 +33,7 @@ Widget _buildDashboardHomeScreen(
       }
     },
     child: Scaffold(
+      backgroundColor: Colors.transparent,
       body: RefreshIndicator(
         onRefresh: () => state.ref
             .read(paginatedListProvider(state.widget.entityType).notifier)

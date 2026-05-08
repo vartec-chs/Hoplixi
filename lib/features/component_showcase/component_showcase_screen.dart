@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hoplixi/features/component_showcase/screens/background_showcase_screen.dart';
 import 'package:hoplixi/features/component_showcase/screens/button_showcase_screen.dart';
 import 'package:hoplixi/features/component_showcase/screens/confirmation_bottom_modal_showcase_screen.dart';
 import 'package:hoplixi/features/component_showcase/screens/document_scanner_showcase_screen.dart';
@@ -28,6 +29,11 @@ class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
       title: 'Buttons',
       icon: Icons.smart_button,
       screen: const ButtonShowcaseScreen(),
+    ),
+    ShowcaseItem(
+      title: 'Animated Background',
+      icon: Icons.auto_awesome,
+      screen: const BackgroundShowcaseScreen(),
     ),
     ShowcaseItem(
       title: 'Text Fields',

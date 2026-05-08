@@ -13,37 +13,17 @@ class ButtonShowcaseScreen extends StatelessWidget {
       children: [
         _buildSection(
           context,
-          title: 'Button Types',
+          title: 'Button Types (using Factories)',
           children: [
-            SmoothButton(
-              label: 'Filled Button',
-              type: SmoothButtonType.filled,
-              onPressed: () {},
-            ),
+            SmoothButton.primary(label: 'Primary Factory', onPressed: () {}),
             const SizedBox(height: 12),
-            SmoothButton(
-              label: 'Tonal Button',
-              type: SmoothButtonType.tonal,
-              onPressed: () {},
-            ),
+            SmoothButton.tonal(label: 'Tonal Factory', onPressed: () {}),
             const SizedBox(height: 12),
-            SmoothButton(
-              label: 'Outlined Button',
-              type: SmoothButtonType.outlined,
-              onPressed: () {},
-            ),
+            SmoothButton.outline(label: 'Outline Factory', onPressed: () {}),
             const SizedBox(height: 12),
-            SmoothButton(
-              label: 'Dashed Button',
-              type: SmoothButtonType.dashed,
-              onPressed: () {},
-            ),
+            SmoothButton.dashed(label: 'Dashed Factory', onPressed: () {}),
             const SizedBox(height: 12),
-            SmoothButton(
-              label: 'Text Button',
-              type: SmoothButtonType.text,
-              onPressed: () {},
-            ),
+            SmoothButton.text(label: 'Text Factory', onPressed: () {}),
           ],
         ),
         const SizedBox(height: 32),

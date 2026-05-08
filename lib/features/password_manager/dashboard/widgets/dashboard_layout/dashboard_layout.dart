@@ -16,6 +16,7 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/screen_pro
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/dashboard_drawer.dart';
 import 'package:hoplixi/features/settings/providers/settings_prefs_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/ui/background/app_animated_background.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 import 'config/dashboard_layout_constants.dart';
@@ -443,6 +444,7 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
         child: Focus(
           autofocus: true,
           child: Scaffold(
+            backgroundColor: Colors.transparent,
             body: Row(
               children: [
                 Showcase.withWidget(
@@ -476,7 +478,8 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
                           kIndicatorBorderRadius,
                         ),
                       ),
-                      backgroundColor: theme.colorScheme.surfaceContainerLowest,
+                      backgroundColor: theme.colorScheme.surfaceContainerLowest
+                          .withOpacity(0.8),
                       selectedIndex: currentIndex,
                       onDestinationSelected: (index) =>
                           _onNavItemSelected(context, index, entity),
@@ -549,11 +552,13 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
                 destinations: destinations,
               );
 
-        return Stack(
-          children: [
-            Positioned.fill(child: shell),
-            const Positioned.fill(child: MobileCloudSyncOverlay()),
-          ],
+        return AppAnimatedBackground(
+          child: Stack(
+            children: [
+              Positioned.fill(child: shell),
+              const Positioned.fill(child: MobileCloudSyncOverlay()),
+            ],
+          ),
         );
       },
     );

@@ -24,7 +24,7 @@ class DashboardDrawer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return Drawer(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.8),
       child: SafeArea(child: DashboardDrawerContent(entityType: entityType)),
     );
   }

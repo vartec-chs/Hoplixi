@@ -31,6 +31,9 @@ class SettingsPrefs {
   static const dashboardAnimationsEnabled = PrefKey<bool>();
 
   @Pref(defaultValue: true)
+  static const animatedBackgroundEnabled = PrefKey<bool>();
+
+  @Pref(defaultValue: true)
   static const dashboardFloatingNavEffectsEnabled = PrefKey<bool>();
 
   @Pref(defaultValue: DashboardFloatingNavHighlightColor.primary)

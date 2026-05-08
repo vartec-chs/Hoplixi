@@ -24,6 +24,17 @@ This document is the source of truth for reusable UI components located in
   - `SmoothButton.text()` — Plain text button.
   - `SmoothButton.dashed()` — Button with dashed border (useful for placeholders or adding items).
 
+### `background/app_animated_background.dart`
+
+- `AppAnimatedBackground`
+- Components: `AnimatedMeshGradient`, `NoiseOverlay`, `FloatingSymbolsLayer`, `ParticlesLayer`
+- Use as a top-level wrapper for screens to provide a rich, animated, and tactile background.
+- Features:
+  - Subtle mesh gradient animation.
+  - Procedural noise texture for tactile feel.
+  - Floating security symbols (locks, keys, shields).
+  - Floating glowing particles.
+
 ### `copy_to_clipboard_button.dart`
 
 - `CopyToClipboardIconButton`

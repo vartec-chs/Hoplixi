@@ -19,6 +19,7 @@ import 'package:hoplixi/main_db/providers/db_history_provider.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/main_db/ui/store_open_migration_dialog.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/ui/background/app_animated_background.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/widgets/titlebar.dart';
@@ -395,30 +396,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         : headerHeight + 12;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          HomeHeaderBackground(
-            height: headerHeight,
-            hasRecentDatabase: hasRecentDatabase,
-            isAppActive: isAppActive,
-            pulseAnimation: _pulseAnimation,
-          ),
-          HomeTopActions(
-            settingsShowcaseKey: _guideKeys.settings,
-            showcaseScope: _homeShowcaseScope,
-            helpButton: ShowcaseHelpButton(
-              keys: _guideKeys.sequence,
-              scope: _homeShowcaseScope,
-              color: Colors.white.withOpacity(0.8),
+      body: AppAnimatedBackground(
+        child: Stack(
+          children: [
+            HomeHeaderBackground(
+              height: headerHeight,
+              hasRecentDatabase: hasRecentDatabase,
+              isAppActive: isAppActive,
+              pulseAnimation: _pulseAnimation,
             ),
-          ),
-          HomeActionsContentLayer(
-            top: contentTop,
-            hasRecentDatabase: hasRecentDatabase,
-            items: _buildActionItems(context),
-            showcaseScope: _homeShowcaseScope,
-          ),
-        ],
+            HomeTopActions(
+              settingsShowcaseKey: _guideKeys.settings,
+              showcaseScope: _homeShowcaseScope,
+              helpButton: ShowcaseHelpButton(
+                keys: _guideKeys.sequence,
+                scope: _homeShowcaseScope,
+                color: Colors.white.withOpacity(0.8),
+              ),
+            ),
+            HomeActionsContentLayer(
+              top: contentTop,
+              hasRecentDatabase: hasRecentDatabase,
+              items: _buildActionItems(context),
+              showcaseScope: _homeShowcaseScope,
+            ),
+          ],
+        ),
       ),
     );
   }

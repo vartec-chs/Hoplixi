@@ -20,9 +20,23 @@ class AppearanceSettingsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return const SettingsSectionCard(
+    final animatedBackgroundEnabled =
+        ref.watch(animatedBackgroundEnabledProvider).value ?? true;
+
+    return SettingsSectionCard(
       title: 'Внешний вид',
-      children: [SettingsThemeSwitcher()],
+      children: [
+        const SettingsThemeSwitcher(),
+        const Divider(height: 1),
+        SettingsSwitchTile(
+          title: 'Анимированный фон',
+          subtitle: 'Использовать живой многослойный фон вместо статичного',
+          leading: const Icon(Icons.auto_awesome_motion_outlined),
+          value: animatedBackgroundEnabled,
+          onChanged: (value) => getIt<PreferencesService>().settingsPrefs
+              .setAnimatedBackgroundEnabled(value),
+        ),
+      ],
     );
   }
 }
