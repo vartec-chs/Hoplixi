@@ -83,11 +83,11 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
           children: [
             Row(
               children: [
-                Icon(Icons.storage, color: colorScheme.primary),
+                Icon(Icons.storage_rounded, color: colorScheme.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Недавняя база данных',
+                    'Недавнее хранилище',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: colorScheme.primary,
                       fontWeight: FontWeight.bold,
@@ -103,7 +103,7 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               entry.name,
               style: Theme.of(
@@ -162,7 +162,7 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
                 ),
               ),
             ],
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             if (syncProvider != null) ...[
               SmoothButton(
                 label: _cloudSyncProgress == null
@@ -186,7 +186,7 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
             else
               SmoothButton(
                 label: isOpening ? 'Открытие...' : 'Открыть',
-                type: SmoothButtonType.filled,
+                type: SmoothButtonType.tonal,
                 isFullWidth: true,
                 icon: const Icon(LucideIcons.folderOpen),
                 loading: isOpening,

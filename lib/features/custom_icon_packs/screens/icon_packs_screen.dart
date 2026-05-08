@@ -6,6 +6,7 @@ import 'package:hoplixi/features/custom_icon_packs/models/icon_packs_state.dart'
 import 'package:hoplixi/features/custom_icon_packs/providers/icon_packs_provider.dart';
 import 'package:hoplixi/features/custom_icon_packs/services/icon_pack_catalog_service.dart';
 import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/shared/ui/notification_card.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
@@ -58,6 +59,16 @@ class _IconPacksScreenState extends ConsumerState<IconPacksScreen> {
         child: ListView(
           padding: const EdgeInsets.all(12),
           children: [
+            const InfoNotificationCard(
+              text:
+                  'Иконки помогают быстрее находить нужные аккаунты в списке. Каждой записи в хранилище можно назначить свою иконку из импортированных паков.',
+            ),
+            const SizedBox(height: 12),
+            const WarningNotificationCard(
+              text:
+                  'Для соблюдения авторских прав приложение не содержит встроенных логотипов брендов. Вы можете самостоятельно скачивать любые паки иконок из интернета и импортировать их здесь.',
+            ),
+            const SizedBox(height: 16),
             _buildImportCard(context, state, notifier),
             const SizedBox(height: 16),
             _buildPacksSection(context, state, notifier),

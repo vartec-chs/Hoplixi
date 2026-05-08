@@ -524,7 +524,7 @@ class _CloudSyncSettingsPageState extends ConsumerState<CloudSyncSettingsPage> {
     final container = ProviderScope.containerOf(authContext, listen: false);
 
     if (widget.reopenStoreSettingsAfterAuth) {
-      ref.read(pendingStoreSettingsModalPageProvider.notifier).setPage(3);
+      ref.read(pendingStoreSettingsModalPageProvider.notifier).setPage(2);
       Navigator.of(context, rootNavigator: true).pop();
       await Future<void>.delayed(Duration.zero);
     }

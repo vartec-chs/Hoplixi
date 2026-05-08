@@ -202,7 +202,7 @@ class _AppRuntimeWrapperState extends ConsumerState<AppRuntimeWrapper> {
         : AppRoutesPaths.home;
 
     if (previousRoute.startsWith(AppRoutesPaths.dashboard)) {
-      ref.read(pendingStoreSettingsModalPageProvider.notifier).setPage(3);
+      ref.read(pendingStoreSettingsModalPageProvider.notifier).setPage(2);
     } else {
       ref.read(pendingStoreSettingsModalPageProvider.notifier).clear();
     }
