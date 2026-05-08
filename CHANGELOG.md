@@ -6,6 +6,8 @@
 
 - `APP_CAPABILITIES.md` переписан как детальная карта экранов, настроек и
   рабочих подсистем с отдельными разделами по routing, LocalSend и Cloud Sync.
+- В `APP_CAPABILITIES.md` добавлен блок про `share_plus` и LocalSend-буфер для
+  отправки выбранных полей записи как текста.
 
 ### password_manager
 
