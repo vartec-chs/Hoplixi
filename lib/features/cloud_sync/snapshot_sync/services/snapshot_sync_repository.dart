@@ -9,6 +9,7 @@ import 'package:path/path.dart' as p;
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/attachments_manifest.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/cloud_manifest.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/cloud_store_lock.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_resource.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_resource_ref.dart';
@@ -29,7 +30,7 @@ class RemoteStoreLayout {
   final CloudResource attachmentsFolder;
 }
 
-class SnapshotSyncRepository {
+class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
   SnapshotSyncRepository(this._storageRepository);
 
   static const String rootFolderName = 'Hoplixi';
@@ -38,6 +39,7 @@ class SnapshotSyncRepository {
   static const String storeManifestFileName = 'store_manifest.json';
   static const String attachmentsManifestFileName = 'attachments_manifest.json';
   static const String attachmentsFolderName = 'attachments';
+  static const String storeLockFileName = '.lock';
 
   final CloudStorageRepository _storageRepository;
   final Map<String, RemoteStoreLayout> _layoutCache =
@@ -74,6 +76,74 @@ class SnapshotSyncRepository {
       }
       rethrow;
     }
+  }
+
+  Future<CloudStoreLockDto?> readStoreLockFile(
+    String tokenId, {
+    required String storeUuid,
+    RemoteStoreLayout? layout,
+  }) async {
+    final resolvedLayout = await _resolveLayout(
+      tokenId,
+      storeUuid: storeUuid,
+      layout: layout,
+    );
+    final file = await _findChildFileByName(
+      tokenId,
+      parentRef: resolvedLayout.storeFolder.ref,
+      name: storeLockFileName,
+    );
+    if (file == null) {
+      return null;
+    }
+
+    final bytes = await _downloadBytes(tokenId, file.ref);
+    return CloudStoreLockDto.fromJson(
+      jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>,
+    );
+  }
+
+  Future<void> writeStoreLockFile(
+    String tokenId, {
+    required String storeUuid,
+    required CloudStoreLockDto lock,
+    RemoteStoreLayout? layout,
+  }) async {
+    final resolvedLayout = await _resolveLayout(
+      tokenId,
+      storeUuid: storeUuid,
+      layout: layout,
+    );
+    await _uploadBytes(
+      tokenId,
+      parentRef: resolvedLayout.storeFolder.ref,
+      name: storeLockFileName,
+      bytes: utf8.encode(
+        const JsonEncoder.withIndent('  ').convert(lock.toJson()),
+      ),
+      overwrite: true,
+    );
+  }
+
+  Future<void> deleteStoreLockFile(
+    String tokenId, {
+    required String storeUuid,
+    RemoteStoreLayout? layout,
+  }) async {
+    final resolvedLayout = await _resolveLayout(
+      tokenId,
+      storeUuid: storeUuid,
+      layout: layout,
+    );
+    final file = await _findChildFileByName(
+      tokenId,
+      parentRef: resolvedLayout.storeFolder.ref,
+      name: storeLockFileName,
+    );
+    if (file == null) {
+      return;
+    }
+    await _storageRepository.deleteResource(tokenId, file.ref);
   }
 
   Future<void> writeCloudManifest(

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/services/hive_box_manager.dart';
 import 'package:hoplixi/setup/di_init.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/cloud_store_lock_service.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_repository.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_service.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/store_sync_binding_service.dart';
@@ -20,6 +21,11 @@ final storeSyncBindingServiceProvider = Provider<StoreSyncBindingService>((
 final snapshotSyncRepositoryProvider = Provider<SnapshotSyncRepository>((ref) {
   final storageRepository = ref.watch(cloudStorageRepositoryProvider);
   return SnapshotSyncRepository(storageRepository);
+});
+
+final cloudStoreLockServiceProvider = Provider<CloudStoreLockService>((ref) {
+  final repository = ref.watch(snapshotSyncRepositoryProvider);
+  return CloudStoreLockService(repository: repository);
 });
 
 final internetConnectionProvider = Provider<InternetConnection>((ref) {

@@ -5,6 +5,8 @@ import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/logger.dart' hide Session;
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/close_sync_provider.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_cloud_lock_provider.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:hoplixi/main_db/models/db_state.dart';
@@ -290,14 +292,17 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
                 'errorType': error.runtimeType.toString(),
               },
             );
+            await _releaseCloudStoreLock(storeInfo.id);
             _finalizeClosedStoreAfterCloseSync();
             return true;
           }
 
+          await _releaseCloudStoreLock(storeInfo.id);
           _finalizeClosedStoreAfterCloseSync();
           return true;
         }
 
+        await _releaseCloudStoreLock(storeInfo.id);
         _finalizeClosedStoreAfterCloseSync();
         return true;
       } catch (error, stackTrace) {
@@ -414,6 +419,7 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
           }
         }
 
+        await _releaseCloudStoreLock(storeInfo.id);
         _finalizeLockedStoreAfterCloseSync();
         logInfo('Store locked successfully', tag: _logTag);
       } catch (error, stackTrace) {
@@ -689,6 +695,23 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
 
   void _setState(DatabaseState newState) {
     state = AsyncData(newState);
+  }
+
+  Future<void> _releaseCloudStoreLock(String storeUuid) async {
+    final releaseResult = await ref
+        .read(cloudStoreLockSessionProvider)
+        .releaseCurrentLock(ref.read(cloudStoreLockServiceProvider));
+    if (releaseResult.isError()) {
+      final error = releaseResult.exceptionOrNull()!;
+      logError(
+        'Failed to release cloud store lock: ${error.message}',
+        tag: _logTag,
+        data: <String, dynamic>{
+          'storeUuid': storeUuid,
+          'errorType': error.runtimeType.toString(),
+        },
+      );
+    }
   }
 
   void _finalizeClosedStoreAfterCloseSync() {
