@@ -70,6 +70,7 @@ enum CloudStoreLockPhase {
   available,
   lockedByAnotherDevice,
   riskAccepted,
+  releasing,
   disabled,
   error,
 }
@@ -97,6 +98,7 @@ class CloudStoreLockState {
 
   bool get shouldBlockUi =>
       phase == CloudStoreLockPhase.checking ||
+      phase == CloudStoreLockPhase.releasing ||
       phase == CloudStoreLockPhase.lockedByAnotherDevice ||
       phase == CloudStoreLockPhase.error;
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/features/home/models/action_item.dart';
 import 'package:hoplixi/features/home/widgets/home_action_grid.dart';
-import 'package:hoplixi/features/home/widgets/recent_database_card.dart';
+import 'package:hoplixi/features/home/widgets/recent_database_card/recent_database_card.dart';
 
 class HomeActionsContentLayer extends StatelessWidget {
   const HomeActionsContentLayer({

@@ -3,13 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_prefs/security_prefs.dart';
 import 'package:hoplixi/core/services/local_auth_service/local_auth_failure.dart';
 import 'package:hoplixi/core/services/local_auth_service/local_auth_service.dart';
-import 'package:hoplixi/core/theme/theme.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
 import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_exception.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/cloud_store_lock.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_cloud_lock_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
@@ -25,9 +26,12 @@ import 'package:hoplixi/main_db/services/vault_key_file_service.dart';
 import 'package:hoplixi/main_db/ui/store_open_migration_dialog.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/ui/button.dart';
-import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:typed_prefs/typed_prefs.dart';
+
+import 'models/cloud_version_check_data.dart';
+import 'widgets/cloud_sync_progress_panel.dart';
+import 'widgets/password_dialog.dart';
 
 final _recentDatabaseManifestProvider = FutureProvider.family
     .autoDispose<StoreManifest?, String>((ref, path) {
@@ -62,10 +66,22 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
   Widget _buildCard(BuildContext context, WidgetRef ref, DatabaseEntry entry) {
     final colorScheme = Theme.of(context).colorScheme;
     final dbStateAsync = ref.watch(mainStoreProvider);
+    final dbState = dbStateAsync.value;
+    final lockState = ref.watch(currentStoreCloudLockProvider);
     final manifestAsync = ref.watch(
       _recentDatabaseManifestProvider(entry.path),
     );
-    final isOpening = dbStateAsync.value?.isOpening ?? false;
+    final isOpening = dbState?.isOpening ?? false;
+    final isCurrentStoreCard = dbState?.path == entry.path;
+    final lockPhase = lockState.value?.phase;
+    final isCloudLockChecking =
+        isCurrentStoreCard &&
+        ((lockState.isLoading && lockState.value == null) ||
+            lockPhase == CloudStoreLockPhase.checking);
+    final isCloudLockReleasing =
+        isCurrentStoreCard &&
+        (lockPhase == CloudStoreLockPhase.releasing ||
+            (dbState?.isClosing ?? false));
     final syncProvider = manifestAsync.maybeWhen(
       data: (manifest) => manifest?.sync?.provider,
       orElse: () => null,
@@ -75,9 +91,9 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
       color: colorScheme.surfaceContainerLow,
       margin: EdgeInsets.zero,
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
-        padding: const EdgeInsets.all(14.0),
+        padding: const EdgeInsets.all(12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -131,21 +147,20 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
               overflow: TextOverflow.ellipsis,
             ),
             if (syncProvider != null) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
                   children: [
                     CloudSyncProviderLogo(
                       metadata: syncProvider.metadata,
-                      size: 18,
+                      size: 20,
                       color: colorScheme.primary,
                     ),
                     const SizedBox(width: 8),
@@ -163,37 +178,55 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
               ),
             ],
             const SizedBox(height: 12),
-            if (syncProvider != null) ...[
-              SmoothButton(
-                label: _cloudSyncProgress == null
-                    ? 'Проверить и установить новую версию'
-                    : _buildProgressButtonLabel(_cloudSyncProgress!),
-                type: SmoothButtonType.outlined,
-                isFullWidth: true,
-                icon: CloudSyncProviderLogo(
-                  metadata: syncProvider.metadata,
-                  size: 20,
+            if (isCloudLockChecking)
+              const _CloudLockStatusBanner(
+                icon: LucideIcons.cloudCog,
+                title: 'Проверяем cloud lock',
+                message:
+                    'Кнопки появятся после проверки, что хранилище не открыто на другом устройстве.',
+                showProgress: true,
+              )
+            else if (isCloudLockReleasing)
+              const _CloudLockStatusBanner(
+                icon: LucideIcons.cloudOff,
+                title: 'Закрываем cloud-сессию',
+                message:
+                    'Удаляем lock-файл в облаке. Действия с хранилищем временно недоступны.',
+                showProgress: true,
+              )
+            else ...[
+              if (syncProvider != null) ...[
+                SmoothButton(
+                  label: _cloudSyncProgress == null
+                      ? 'Проверить и установить новую версию'
+                      : _buildProgressButtonLabel(_cloudSyncProgress!),
+                  type: SmoothButtonType.outlined,
+                  isFullWidth: true,
+                  icon: CloudSyncProviderLogo(
+                    metadata: syncProvider.metadata,
+                    size: 20,
+                  ),
+                  loading: _isCheckingCloudVersion,
+                  onPressed: (isOpening || _isCheckingCloudVersion)
+                      ? null
+                      : () => _checkCloudVersion(context, entry),
                 ),
-                loading: _isCheckingCloudVersion,
-                onPressed: (isOpening || _isCheckingCloudVersion)
-                    ? null
-                    : () => _checkCloudVersion(context, entry),
-              ),
-              const SizedBox(height: 12),
+                const SizedBox(height: 12),
+              ],
+              if (_isCheckingCloudVersion)
+                CloudSyncProgressPanel(progress: _cloudSyncProgress)
+              else
+                SmoothButton(
+                  label: isOpening ? 'Открытие...' : 'Открыть',
+                  type: SmoothButtonType.tonal,
+                  isFullWidth: true,
+                  icon: const Icon(LucideIcons.folderOpen),
+                  loading: isOpening,
+                  onPressed: isOpening
+                      ? null
+                      : () => _openDatabase(context, ref, entry),
+                ),
             ],
-            if (_isCheckingCloudVersion)
-              _buildCloudSyncProgressPanel(context)
-            else
-              SmoothButton(
-                label: isOpening ? 'Открытие...' : 'Открыть',
-                type: SmoothButtonType.tonal,
-                isFullWidth: true,
-                icon: const Icon(LucideIcons.folderOpen),
-                loading: isOpening,
-                onPressed: isOpening
-                    ? null
-                    : () => _openDatabase(context, ref, entry),
-              ),
           ],
         ),
       ),
@@ -265,7 +298,7 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
     }
   }
 
-  Future<_CloudVersionCheckData?> _loadCloudVersionCheckData(
+  Future<CloudVersionCheckData?> _loadCloudVersionCheckData(
     DatabaseEntry entry,
   ) async {
     final manifest = await StoreManifestService.readFrom(entry.path);
@@ -304,7 +337,7 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
       return null;
     }
 
-    return _CloudVersionCheckData(
+    return CloudVersionCheckData(
       manifest: manifest,
       binding: binding,
       token: token,
@@ -422,108 +455,6 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
 
   String _buildProgressButtonLabel(SnapshotSyncProgress progress) {
     return '${progress.title} · шаг ${progress.stepIndex}/${progress.totalSteps}';
-  }
-
-  Widget _buildCloudSyncProgressPanel(BuildContext context) {
-    final progress = _cloudSyncProgress;
-    if (progress == null) {
-      return const SizedBox.shrink();
-    }
-
-    final colorScheme = Theme.of(context).colorScheme;
-    final transfer = progress.transferProgress;
-    final fraction = transfer?.fraction;
-    final fileProgressText = transfer != null && transfer.hasFileProgress
-        ? '${transfer.completedFiles} из ${transfer.totalFiles} файлов'
-        : null;
-    final bytesProgressText = transfer != null && transfer.totalBytes != null
-        ? '${_formatBytes(transfer.transferredBytes)} из ${_formatBytes(transfer.totalBytes!)}'
-        : null;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  progress.title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
-                ),
-              ),
-              Text(
-                'Шаг ${progress.stepIndex} из ${progress.totalSteps}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            progress.description,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 10),
-          LinearProgressIndicator(value: fraction),
-          if (fileProgressText != null) ...[
-            const SizedBox(height: 10),
-            Text(
-              fileProgressText,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-          if (bytesProgressText != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              bytesProgressText,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-          if (transfer?.currentFileName != null &&
-              transfer!.currentFileName!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              'Текущий файл: ${transfer.currentFileName}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  String _formatBytes(int bytes) {
-    const units = ['Б', 'КБ', 'МБ', 'ГБ'];
-    var value = bytes.toDouble();
-    var unitIndex = 0;
-
-    while (value >= 1024 && unitIndex < units.length - 1) {
-      value /= 1024;
-      unitIndex++;
-    }
-
-    final precision = value >= 100 || unitIndex == 0 ? 0 : 1;
-    return '${value.toStringAsFixed(precision)} ${units[unitIndex]}';
   }
 
   StoreInfoDto _buildStoreInfo(DatabaseEntry entry, StoreManifest manifest) {
@@ -697,7 +628,7 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
       // Пароль не сохранен, показываем диалог
       final result = await showDialog<(String, bool)>(
         context: context,
-        builder: (context) => _PasswordDialog(dbName: entry.name),
+        builder: (context) => PasswordDialog(dbName: entry.name),
       );
 
       if (result == null) return; // User cancelled
@@ -872,98 +803,69 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
   }
 }
 
-class _CloudVersionCheckData {
-  const _CloudVersionCheckData({
-    required this.manifest,
-    required this.binding,
-    required this.token,
+class _CloudLockStatusBanner extends StatelessWidget {
+  const _CloudLockStatusBanner({
+    required this.icon,
+    required this.title,
+    required this.message,
+    this.showProgress = false,
   });
 
-  final StoreManifest manifest;
-  final StoreSyncBinding binding;
-  final AuthTokenEntry token;
-}
-
-class _PasswordDialog extends StatefulWidget {
-  final String dbName;
-
-  const _PasswordDialog({required this.dbName});
-
-  @override
-  State<_PasswordDialog> createState() => _PasswordDialogState();
-}
-
-class _PasswordDialogState extends State<_PasswordDialog> {
-  final _controller = TextEditingController();
-  bool _obscureText = true;
-  bool _savePassword = false;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  final IconData icon;
+  final String title;
+  final String message;
+  final bool showProgress;
 
   @override
   Widget build(BuildContext context) {
-    final fillColor = AppColors.getInputFieldBackgroundColor(context);
-    return AlertDialog(
-      insetPadding: const EdgeInsets.all(12),
-      title: Text('Введите пароль для "${widget.dbName}"'),
-      content: SizedBox(
-        width: 300,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _controller,
-              obscureText: _obscureText,
-              decoration: primaryInputDecoration(
-                context,
-                labelText: 'Пароль',
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscureText ? LucideIcons.eye : LucideIcons.eyeClosed,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _obscureText = !_obscureText;
-                    });
-                  },
-                ),
-              ),
-              onSubmitted: (value) =>
-                  Navigator.of(context).pop((value, _savePassword)),
-            ),
-            const SizedBox(height: 12),
-            SwitchListTile(
-              tileColor: fillColor,
-              title: const Text('Сохранить пароль'),
-              value: _savePassword,
-              onChanged: (value) {
-                setState(() {
-                  _savePassword = value;
-                });
-              },
-            ),
-          ],
-        ),
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withValues(alpha: 0.42),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.24)),
       ),
-      actions: [
-        SmoothButton(
-          onPressed: () => Navigator.of(context).pop(),
-          label: 'Отмена',
-
-          variant: SmoothButtonVariant.error,
-          type: SmoothButtonType.text,
-        ),
-        SmoothButton(
-          label: 'Открыть',
-
-          onPressed: () =>
-              Navigator.of(context).pop((_controller.text, _savePassword)),
-        ),
-      ],
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (showProgress)
+            SizedBox.square(
+              dimension: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.4,
+                color: colorScheme.primary,
+              ),
+            )
+          else
+            Icon(icon, size: 20, color: colorScheme.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  message,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

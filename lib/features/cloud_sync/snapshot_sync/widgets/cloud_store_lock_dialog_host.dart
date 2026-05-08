@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/cloud_store_lock.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_cloud_lock_provider.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/shared/ui/button.dart';
 
 class CloudStoreLockDialogHost extends ConsumerWidget {
   const CloudStoreLockDialogHost({required this.child, super.key});
@@ -54,8 +55,9 @@ class _CloudStoreLockDialog extends ConsumerWidget {
           color: theme.colorScheme.scrim.withValues(alpha: 0.48),
         ),
         Center(
-          child: ConstrainedBox(
+          child: Container(
             constraints: const BoxConstraints(maxWidth: 460),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
             child: Dialog(
               clipBehavior: Clip.antiAlias,
               child: Padding(
@@ -64,6 +66,12 @@ class _CloudStoreLockDialog extends ConsumerWidget {
                   CloudStoreLockPhase.lockedByAnotherDevice =>
                     _LockedByAnotherDeviceContent(state: state!),
                   CloudStoreLockPhase.error => _LockErrorContent(state: state!),
+                  CloudStoreLockPhase.releasing =>
+                    const _CheckingLockContent(
+                      title: 'Закрываем Cloud Lock',
+                      message:
+                          'Удаляем lock-файл в облаке. Действия с хранилищем временно недоступны.',
+                    ),
                   _ => const _CheckingLockContent(),
                 },
               ),
@@ -76,7 +84,14 @@ class _CloudStoreLockDialog extends ConsumerWidget {
 }
 
 class _CheckingLockContent extends StatelessWidget {
-  const _CheckingLockContent();
+  const _CheckingLockContent({
+    this.title = 'Проверка Cloud Lock',
+    this.message =
+        'Хранилище откроется после проверки, что оно не открыто на другом устройстве. Это помогает избежать конфликтов при синхронизации. Пожалуйста, подождите.',
+  });
+
+  final String title;
+  final String message;
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +112,7 @@ class _CheckingLockContent extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Проверка cloud lock',
+                title,
                 style: theme.textTheme.titleMedium,
               ),
             ),
@@ -105,7 +120,7 @@ class _CheckingLockContent extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          'Хранилище откроется после проверки, что оно не открыто на другом устройстве.',
+          message,
           style: theme.textTheme.bodyMedium,
         ),
       ],
@@ -203,7 +218,7 @@ class _LockErrorContent extends ConsumerWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Cloud lock недоступен',
+                'Cloud Lock недоступен',
                 style: theme.textTheme.titleMedium,
               ),
             ),
@@ -218,20 +233,21 @@ class _LockErrorContent extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            TextButton(
+            SmoothButton(
               onPressed: () {
                 ref.read(currentStoreCloudLockProvider.notifier).retry();
               },
-              child: const Text('Повторить'),
+              label: 'Повторить',
             ),
             const SizedBox(width: 8),
-            FilledButton(
+            SmoothButton.text(
               onPressed: () {
                 ref
                     .read(mainStoreManagerStateProvider.notifier)
                     .lockStore(skipSnapshotSync: true);
               },
-              child: const Text('Выйти'),
+              label: 'Выйти',
+              variant: SmoothButtonVariant.error,
             ),
           ],
         ),

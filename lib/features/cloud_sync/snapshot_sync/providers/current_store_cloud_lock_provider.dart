@@ -21,7 +21,10 @@ class CloudStoreLockSession {
   CloudStoreLockDto? _ownedLock;
   String? _ownedLockTokenId;
 
-  void setOwnedLock({required String tokenId, required CloudStoreLockDto lock}) {
+  void setOwnedLock({
+    required String tokenId,
+    required CloudStoreLockDto lock,
+  }) {
     _ownedLock = lock;
     _ownedLockTokenId = tokenId;
   }
@@ -197,17 +200,18 @@ class CurrentStoreCloudLockNotifier extends AsyncNotifier<CloudStoreLockState> {
   }
 
   AsyncResultDart<Unit, AppError> releaseCurrentLock() async {
+    final current = state.value;
+    if (current != null) {
+      state = AsyncData(current.copyWith(phase: CloudStoreLockPhase.releasing));
+    }
     final result = await ref
         .read(cloudStoreLockSessionProvider)
         .releaseCurrentLock(ref.read(cloudStoreLockServiceProvider));
     if (result.isSuccess()) {
-      final current = state.value;
-      if (current != null) {
+      final next = state.value;
+      if (next != null) {
         state = AsyncData(
-          current.copyWith(
-            phase: CloudStoreLockPhase.idle,
-            clearOwnedLock: true,
-          ),
+          next.copyWith(phase: CloudStoreLockPhase.idle, clearOwnedLock: true),
         );
       }
     }

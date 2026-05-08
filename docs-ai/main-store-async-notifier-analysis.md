@@ -535,7 +535,7 @@ UI close-store flow дергает:
   - `lib/features/password_manager/create_store/create_store_screen.dart`
   - `lib/features/password_manager/open_store/providers/open_store_form_provider.dart`
   - `lib/features/home/home_screen.dart`
-  - `lib/features/home/widgets/recent_database_card.dart`
+  - `lib/features/home/widgets/recent_database_card/recent_database_card.dart`
 - backup/settings:
   - `lib/features/settings/ui/settings_sections.dart`
   - `lib/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/dashboard_drawer.dart`

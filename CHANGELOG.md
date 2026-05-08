@@ -15,6 +15,8 @@
   takeover чужого lock.
 - Добавлены DTO/service/provider и unit tests для acquire/release логики,
   включая same-owner refresh и замену stale lock старше 24 часов.
+- В `currentStoreCloudLockProvider` добавлена отдельная фаза release, а карточка
+  недавнего хранилища скрывает action-кнопки во время проверки/удаления lock.
 
 ### docs
 
