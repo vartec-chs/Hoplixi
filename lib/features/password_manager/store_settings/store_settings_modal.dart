@@ -157,9 +157,8 @@ Future<bool?> showStoreSettingsModal(
                 tooltip: 'Назад',
               ),
             ),
-            child: const Padding(
-              padding: EdgeInsets.all(12.0),
-              child: CloudSyncSettingsPage(reopenStoreSettingsAfterAuth: true),
+            child: const CloudSyncSettingsPage(
+              reopenStoreSettingsAfterAuth: true,
             ),
           ),
 
