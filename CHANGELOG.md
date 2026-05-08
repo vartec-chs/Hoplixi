@@ -13,6 +13,11 @@
 - Добавлены DTO/service/provider и unit tests для acquire/release логики,
   включая same-owner refresh и замену stale lock старше 24 часов.
 
+### docs
+
+- `GEMINI.md` дополнен требованием обязательно фиксировать значимые изменения в
+  `CHANGELOG.md`.
+
 ## 2026-05-05
 
 ### docs

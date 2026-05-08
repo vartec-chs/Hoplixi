@@ -1,34 +1,20 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:hoplixi/main_db/services/store_manifest_service/model/store_manifest.dart';
-import 'package:path/path.dart' as p;
-import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/attachments_manifest.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/cloud_manifest.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/cloud_store_lock.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/utils/remote_store_layout.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/utils/snapshot_sync_utils.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_resource.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_resource_ref.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/features/cloud_sync/storage/services/cloud_storage_repository.dart';
-
-class RemoteStoreLayout {
-  const RemoteStoreLayout({
-    required this.rootFolder,
-    required this.storesFolder,
-    required this.storeFolder,
-    required this.attachmentsFolder,
-  });
-
-  final CloudResource rootFolder;
-  final CloudResource storesFolder;
-  final CloudResource storeFolder;
-  final CloudResource attachmentsFolder;
-}
+import 'package:hoplixi/main_db/services/store_manifest_service/model/store_manifest.dart';
+import 'package:path/path.dart' as p;
 
 class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
   SnapshotSyncRepository(this._storageRepository);
@@ -51,7 +37,7 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
       final provider = await _storageRepository.providerForToken(tokenId);
       final root = await _findChildFolderByName(
         tokenId,
-        parentRef: _rootRefForProvider(provider.provider),
+        parentRef: SnapshotSyncUtils.rootRefForProvider(provider.provider),
         name: rootFolderName,
       );
       if (root == null) {
@@ -78,6 +64,7 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
     }
   }
 
+  @override
   Future<CloudStoreLockDto?> readStoreLockFile(
     String tokenId, {
     required String storeUuid,
@@ -103,6 +90,7 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
     );
   }
 
+  @override
   Future<void> writeStoreLockFile(
     String tokenId, {
     required String storeUuid,
@@ -125,6 +113,7 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
     );
   }
 
+  @override
   Future<void> deleteStoreLockFile(
     String tokenId, {
     required String storeUuid,
@@ -166,7 +155,8 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
     String tokenId,
     String storeUuid,
   ) async {
-    final cachedLayout = _layoutCache[_layoutCacheKey(tokenId, storeUuid)];
+    final cachedLayout =
+        _layoutCache[SnapshotSyncUtils.layoutCacheKey(tokenId, storeUuid)];
     if (cachedLayout != null) {
       return cachedLayout;
     }
@@ -194,7 +184,7 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
       storeFolder: storeFolder,
       attachmentsFolder: attachmentsFolder,
     );
-    _layoutCache[_layoutCacheKey(tokenId, storeUuid)] = layout;
+    _layoutCache[SnapshotSyncUtils.layoutCacheKey(tokenId, storeUuid)] = layout;
     return layout;
   }
 
@@ -205,7 +195,7 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
     String? remotePath,
   }) async {
     final provider = await _storageRepository.providerForToken(tokenId);
-    final knownRef = _remoteStoreRefFromKnownLocation(
+    final knownRef = SnapshotSyncUtils.remoteStoreRefFromKnownLocation(
       provider.provider,
       remoteStoreId: remoteStoreId,
       remotePath: remotePath,
@@ -405,7 +395,7 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
             totalFiles: uploads.length,
             transferredBytes:
                 completedBytes +
-                _resolveTransferredBytes(
+                SnapshotSyncUtils.resolveTransferredBytes(
                   current,
                   reportedTotal: total,
                   fallbackTotal: upload.size,
@@ -498,7 +488,7 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
             totalFiles: uploads.length,
             transferredBytes:
                 completedBytes +
-                _resolveTransferredBytes(
+                SnapshotSyncUtils.resolveTransferredBytes(
                   current,
                   reportedTotal: total,
                   fallbackTotal: upload.size,
@@ -572,7 +562,7 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
         fileRef: resource.ref,
         savePath: destination,
         onProgress: (current, total) {
-          transferredForCurrentFile = _resolveTransferredBytes(
+          transferredForCurrentFile = SnapshotSyncUtils.resolveTransferredBytes(
             current,
             reportedTotal: total,
             fallbackTotal: resource.metadata.sizeBytes,
@@ -644,11 +634,11 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
 
     final totalBytes =
         downloads.any((item) => item.resource.metadata.sizeBytes == null)
-        ? null
-        : downloads.fold<int>(
-            0,
-            (sum, item) => sum + item.resource.metadata.sizeBytes!,
-          );
+            ? null
+            : downloads.fold<int>(
+                0,
+                (sum, item) => sum + item.resource.metadata.sizeBytes!,
+              );
     var completedFiles = 0;
     var completedBytes = 0;
 
@@ -668,7 +658,7 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
         fileRef: download.resource.ref,
         savePath: p.join(localAttachmentsDir.path, download.entry.fileName),
         onProgress: (current, total) {
-          transferredForCurrentFile = _resolveTransferredBytes(
+          transferredForCurrentFile = SnapshotSyncUtils.resolveTransferredBytes(
             current,
             reportedTotal: total,
             fallbackTotal: download.resource.metadata.sizeBytes,
@@ -725,7 +715,7 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
 
   Future<CloudResource> _ensureRootFolder(String tokenId) async {
     final provider = await _storageRepository.providerForToken(tokenId);
-    final rootRef = _rootRefForProvider(provider.provider);
+    final rootRef = SnapshotSyncUtils.rootRefForProvider(provider.provider);
     return _ensureChildFolder(
       tokenId,
       parentRef: rootRef,
@@ -738,12 +728,13 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
     required CloudResourceRef parentRef,
     required String name,
   }) async {
-    final cached = _folderCache[_folderCacheKey(tokenId, parentRef, name)];
+    final cached = _folderCache[
+        SnapshotSyncUtils.folderCacheKey(tokenId, parentRef, name)];
     if (cached != null) {
       return cached;
     }
 
-    if (_shouldCreateFolderWithoutLookup(parentRef)) {
+    if (SnapshotSyncUtils.shouldCreateFolderWithoutLookup(parentRef)) {
       try {
         final created = await _storageRepository.createFolder(
           tokenId,
@@ -778,19 +769,6 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
     return folder.resource;
   }
 
-  bool _shouldCreateFolderWithoutLookup(CloudResourceRef parentRef) {
-    if (!_usesDirectPathOnly(parentRef.provider)) {
-      return false;
-    }
-
-    if (parentRef.isRoot) {
-      return true;
-    }
-
-    final parentPath = parentRef.path?.trim();
-    return parentPath != null && parentPath.isNotEmpty;
-  }
-
   Future<List<CloudResource>> _listAll(
     String tokenId,
     CloudResourceRef parentRef,
@@ -823,7 +801,10 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
         name: name,
       );
     } on CloudStorageException catch (error) {
-      if (!_shouldFallbackToListAfterDirectLookup(parentRef.provider, error)) {
+      if (!SnapshotSyncUtils.shouldFallbackToListAfterDirectLookup(
+        parentRef.provider,
+        error,
+      )) {
         rethrow;
       }
       directLookupError = error;
@@ -831,7 +812,8 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
     if (direct != null) {
       return direct.isFolder ? direct : null;
     }
-    if (_usesDirectPathOnly(parentRef.provider) && directLookupError == null) {
+    if (SnapshotSyncUtils.usesDirectPathOnly(parentRef.provider) &&
+        directLookupError == null) {
       return null;
     }
 
@@ -858,7 +840,10 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
         name: name,
       );
     } on CloudStorageException catch (error) {
-      if (!_shouldFallbackToListAfterDirectLookup(parentRef.provider, error)) {
+      if (!SnapshotSyncUtils.shouldFallbackToListAfterDirectLookup(
+        parentRef.provider,
+        error,
+      )) {
         rethrow;
       }
       directLookupError = error;
@@ -866,7 +851,8 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
     if (direct != null) {
       return direct.isFile ? direct : null;
     }
-    if (_usesDirectPathOnly(parentRef.provider) && directLookupError == null) {
+    if (SnapshotSyncUtils.usesDirectPathOnly(parentRef.provider) &&
+        directLookupError == null) {
       return null;
     }
 
@@ -884,7 +870,7 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
     required CloudResourceRef parentRef,
     required String name,
   }) async {
-    final childRef = _buildDirectChildRef(parentRef, name);
+    final childRef = SnapshotSyncUtils.buildDirectChildRef(parentRef, name);
     if (childRef == null) {
       return null;
     }
@@ -907,7 +893,7 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
     String tokenId,
     CloudResourceRef fileRef,
   ) async {
-    final sink = _ByteCollectorSink();
+    final sink = ByteCollectorSink();
     await _storageRepository.downloadFile(
       tokenId,
       fileRef: fileRef,
@@ -973,150 +959,6 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
     );
   }
 
-  int _resolveTransferredBytes(
-    int current, {
-    required int? reportedTotal,
-    required int? fallbackTotal,
-  }) {
-    final safeCurrent = current < 0 ? 0 : current;
-    final candidates = <int>[
-      if (reportedTotal != null && reportedTotal > 0) reportedTotal,
-      if (fallbackTotal != null && fallbackTotal > 0) fallbackTotal,
-      safeCurrent,
-    ];
-    final upperBound = candidates.isEmpty
-        ? safeCurrent
-        : candidates.reduce((left, right) => left > right ? left : right);
-    return safeCurrent.clamp(0, upperBound);
-  }
-
-  CloudResourceRef _rootRefForProvider(CloudSyncProvider provider) {
-    return switch (provider) {
-      CloudSyncProvider.google => const CloudResourceRef.root(
-        provider: CloudSyncProvider.google,
-        resourceId: 'root',
-        path: '',
-      ),
-      CloudSyncProvider.onedrive => const CloudResourceRef.root(
-        provider: CloudSyncProvider.onedrive,
-        resourceId: 'root',
-        path: '',
-      ),
-      CloudSyncProvider.yandex => const CloudResourceRef.root(
-        provider: CloudSyncProvider.yandex,
-        path: 'disk:/',
-      ),
-      CloudSyncProvider.dropbox => const CloudResourceRef.root(
-        provider: CloudSyncProvider.dropbox,
-        path: '',
-      ),
-      CloudSyncProvider.other => const CloudResourceRef.root(
-        provider: CloudSyncProvider.other,
-        path: '',
-      ),
-    };
-  }
-
-  CloudResourceRef? _buildDirectChildRef(
-    CloudResourceRef parentRef,
-    String name,
-  ) {
-    final trimmedName = name.trim();
-    if (trimmedName.isEmpty) {
-      return null;
-    }
-
-    return switch (parentRef.provider) {
-      CloudSyncProvider.dropbox => CloudResourceRef(
-        provider: CloudSyncProvider.dropbox,
-        path: _joinDropboxPath(parentRef.path, trimmedName),
-      ),
-      CloudSyncProvider.yandex => CloudResourceRef(
-        provider: CloudSyncProvider.yandex,
-        path: _joinYandexPath(parentRef.path, trimmedName),
-      ),
-      _ => null,
-    };
-  }
-
-  String _joinDropboxPath(String? parentPath, String childName) {
-    final base = (parentPath ?? '').trim();
-    final normalizedBase = base.isEmpty
-        ? ''
-        : base.replaceFirst(RegExp(r'/+$'), '');
-    final normalizedChild = childName.replaceFirst(RegExp(r'^/+'), '');
-    return normalizedBase.isEmpty
-        ? '/$normalizedChild'
-        : '$normalizedBase/$normalizedChild';
-  }
-
-  String _joinYandexPath(String? parentPath, String childName) {
-    final base = (parentPath ?? 'disk:/').trim();
-    final normalizedBase = base == 'disk:/'
-        ? 'disk:/'
-        : base.replaceFirst(RegExp(r'/+$'), '');
-    final normalizedChild = childName.replaceFirst(RegExp(r'^/+'), '');
-    return normalizedBase == 'disk:/'
-        ? 'disk:/$normalizedChild'
-        : '$normalizedBase/$normalizedChild';
-  }
-
-  bool _usesDirectPathOnly(CloudSyncProvider provider) {
-    return switch (provider) {
-      CloudSyncProvider.dropbox => true,
-      CloudSyncProvider.yandex => true,
-      _ => false,
-    };
-  }
-
-  bool _shouldFallbackToListAfterDirectLookup(
-    CloudSyncProvider provider,
-    CloudStorageException error,
-  ) {
-    if (!_usesDirectPathOnly(provider)) {
-      return false;
-    }
-
-    return switch (error.type) {
-      CloudStorageExceptionType.network => true,
-      CloudStorageExceptionType.timeout => true,
-      _ => false,
-    };
-  }
-
-  String _layoutCacheKey(String tokenId, String storeUuid) {
-    return '$tokenId::$storeUuid';
-  }
-
-  CloudResourceRef? _remoteStoreRefFromKnownLocation(
-    CloudSyncProvider provider, {
-    String? remoteStoreId,
-    String? remotePath,
-  }) {
-    final normalizedId = remoteStoreId?.trim();
-    final normalizedPath = remotePath?.trim();
-    if ((normalizedId == null || normalizedId.isEmpty) &&
-        (normalizedPath == null || normalizedPath.isEmpty)) {
-      return null;
-    }
-
-    return CloudResourceRef(
-      provider: provider,
-      resourceId: normalizedId?.isEmpty == true ? null : normalizedId,
-      path: normalizedPath?.isEmpty == true ? null : normalizedPath,
-    );
-  }
-
-  String _folderCacheKey(
-    String tokenId,
-    CloudResourceRef parentRef,
-    String name,
-  ) {
-    final parentKey =
-        '${parentRef.provider.id}|${parentRef.resourceId ?? ''}|${parentRef.path ?? ''}';
-    return '$tokenId::$parentKey::$name';
-  }
-
   void _cacheFolder(
     String tokenId,
     CloudResourceRef parentRef,
@@ -1126,27 +968,12 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
     if (!folder.isFolder) {
       return;
     }
-    _folderCache[_folderCacheKey(tokenId, parentRef, name)] = folder;
+    _folderCache[SnapshotSyncUtils.folderCacheKey(tokenId, parentRef, name)] =
+        folder;
   }
 
   void _invalidateStoreCaches(String tokenId, String storeUuid) {
-    _layoutCache.remove(_layoutCacheKey(tokenId, storeUuid));
+    _layoutCache.remove(SnapshotSyncUtils.layoutCacheKey(tokenId, storeUuid));
     _folderCache.clear();
   }
-}
-
-class _ByteCollectorSink implements StreamConsumer<List<int>> {
-  final BytesBuilder _builder = BytesBuilder(copy: false);
-
-  List<int> get bytes => _builder.takeBytes();
-
-  @override
-  Future<void> addStream(Stream<List<int>> stream) async {
-    await for (final chunk in stream) {
-      _builder.add(chunk);
-    }
-  }
-
-  @override
-  Future<void> close() async {}
 }
