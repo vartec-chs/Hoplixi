@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/cloud_store_lock.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_cloud_lock_provider.dart';
+import 'package:hoplixi/main_db/models/db_state.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 
@@ -14,6 +15,7 @@ class CloudStoreLockDialogHost extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final lockState = ref.watch(currentStoreCloudLockProvider);
     final storeState = ref.watch(mainStoreProvider).value;
+    _scheduleLockCheck(ref, lockState, storeState);
     final isStoreOpen = storeState?.isOpen ?? false;
     final visible = isStoreOpen && _shouldShow(lockState);
 
@@ -34,6 +36,35 @@ class CloudStoreLockDialogHost extends ConsumerWidget {
       return true;
     }
     return lockState.value?.shouldBlockUi == true || lockState.hasError;
+  }
+
+  void _scheduleLockCheck(
+    WidgetRef ref,
+    AsyncValue<CloudStoreLockState> lockState,
+    DatabaseState? storeState,
+  ) {
+    if (storeState == null || !storeState.isOpen) {
+      return;
+    }
+
+    final lockValue = lockState.value;
+    final storeUuid = storeState.info?.id;
+    final shouldCheck =
+        !lockState.isLoading &&
+        storeUuid != null &&
+        (lockValue == null ||
+            lockValue.phase == CloudStoreLockPhase.idle ||
+            lockValue.storeUuid != storeUuid);
+
+    if (!shouldCheck) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref
+          .read(currentStoreCloudLockProvider.notifier)
+          .checkCurrentStoreLock(storeState);
+    });
   }
 }
 

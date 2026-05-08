@@ -72,8 +72,10 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
       _recentDatabaseManifestProvider(entry.path),
     );
     final isOpening = dbState?.isOpening ?? false;
-    final isCurrentStoreCard = dbState?.path == entry.path;
-    final lockPhase = lockState.value?.phase;
+    final lockValue = lockState.value;
+    final isCurrentStoreCard =
+        dbState?.path == entry.path || lockValue?.storePath == entry.path;
+    final lockPhase = lockValue?.phase;
     final isCloudLockChecking =
         isCurrentStoreCard &&
         ((lockState.isLoading && lockState.value == null) ||

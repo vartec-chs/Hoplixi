@@ -17,6 +17,9 @@
   включая same-owner refresh и замену stale lock старше 24 часов.
 - В `currentStoreCloudLockProvider` добавлена отдельная фаза release, а карточка
   недавнего хранилища скрывает action-кнопки во время проверки/удаления lock.
+- Логика хранения owned cloud lock перенесена внутрь
+  `CurrentStoreCloudLockNotifier`; отдельный session provider удалён, а запуск
+  проверки выполняется root host без Riverpod circular dependency.
 
 ### docs
 

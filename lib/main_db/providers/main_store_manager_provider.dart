@@ -6,7 +6,6 @@ import 'package:hoplixi/core/logger/logger.dart' hide Session;
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/close_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_cloud_lock_provider.dart';
-import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:hoplixi/main_db/models/db_state.dart';
@@ -699,8 +698,8 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
 
   Future<void> _releaseCloudStoreLock(String storeUuid) async {
     final releaseResult = await ref
-        .read(cloudStoreLockSessionProvider)
-        .releaseCurrentLock(ref.read(cloudStoreLockServiceProvider));
+        .read(currentStoreCloudLockProvider.notifier)
+        .releaseCurrentLock();
     if (releaseResult.isError()) {
       final error = releaseResult.exceptionOrNull()!;
       logError(
