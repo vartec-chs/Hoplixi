@@ -14,14 +14,14 @@ class BlobLayer extends StatelessWidget {
     final size = MediaQuery.sizeOf(context);
 
     final color1 = isDark
-        ? colorScheme.primary.withValues(alpha: 0.08)
+        ? colorScheme.primary.withValues(alpha: 0.12)
         : colorScheme.primary.withValues(alpha: 0.08);
     final color2 = isDark
-        ? colorScheme.tertiary.withValues(alpha: 0.12)
-        : colorScheme.tertiary.withValues(alpha: 0.08);
+        ? colorScheme.tertiary.withValues(alpha: 0.15)
+        : colorScheme.tertiary.withValues(alpha: 0.1);
     final color3 = isDark
-        ? colorScheme.secondary.withValues(alpha: 0.1)
-        : colorScheme.secondary.withValues(alpha: 0.05);
+        ? colorScheme.secondary.withValues(alpha: 0.12)
+        : colorScheme.secondary.withValues(alpha: 0.07);
 
     return AnimatedBuilder(
       animation: animation,

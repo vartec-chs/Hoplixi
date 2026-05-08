@@ -22,19 +22,61 @@ class AppearanceSettingsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final animatedBackgroundEnabled =
         ref.watch(animatedBackgroundEnabledProvider).value ?? true;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return SettingsSectionCard(
       title: 'Внешний вид',
       children: [
         const SettingsThemeSwitcher(),
         const Divider(height: 1),
-        SettingsSwitchTile(
-          title: 'Анимированный фон',
-          subtitle: 'Использовать живой многослойный фон вместо статичного',
-          leading: const Icon(Icons.auto_awesome_motion_outlined),
-          value: animatedBackgroundEnabled,
-          onChanged: (value) => getIt<PreferencesService>().settingsPrefs
-              .setAnimatedBackgroundEnabled(value),
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            SettingsSwitchTile(
+              title: 'Анимированный фон',
+              subtitle: 'Использовать живой многослойный фон вместо статичного',
+              leading: const Icon(Icons.auto_awesome_motion_outlined),
+              value: animatedBackgroundEnabled,
+              onChanged: (value) => getIt<PreferencesService>().settingsPrefs
+                  .setAnimatedBackgroundEnabled(value),
+            ),
+            Positioned(
+              left: 5,
+              top: 5,
+              child: IgnorePointer(
+                child: Transform.rotate(
+                  angle: -0.16,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorScheme.error,
+                      borderRadius: BorderRadius.circular(999),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colorScheme.shadow.withOpacity(0.18),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      'alpha',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onError,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.4,
+                        height: 1,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -738,9 +780,7 @@ class DashboardSettingsSection extends ConsumerWidget {
         const Divider(height: 1),
         SettingsTile(
           title: 'Цвет подсветки нижней навигации',
-          subtitle: _floatingNavHighlightColorTitle(
-            floatingNavHighlightColor,
-          ),
+          subtitle: _floatingNavHighlightColorTitle(floatingNavHighlightColor),
           leading: const Icon(Icons.palette_outlined),
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
           onTap: () => _showFloatingNavHighlightColorDialog(

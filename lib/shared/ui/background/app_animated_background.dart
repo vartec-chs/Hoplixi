@@ -25,19 +25,24 @@ class AppAnimatedBackground extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isAnimatedEnabled =
         ref.watch(animatedBackgroundEnabledProvider).value ?? true;
-    if (!enabled || !isAnimatedEnabled) {
-      return Container(
-        color: Theme.of(context).colorScheme.surfaceContainerLowest,
-        child: child,
-      );
-    }
+    
+    final theme = Theme.of(context);
+    final backgroundColor = theme.colorScheme.surfaceContainerLowest;
+    final isEnabled = enabled && isAnimatedEnabled;
 
-    return AnimatedBackgroundLayer(
-      enabled: enabled && isAnimatedEnabled,
-      showParticles: showParticles,
-      showSymbols: showSymbols,
-      intensity: intensity,
-      child: child,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+      color: backgroundColor,
+      child: isEnabled
+          ? AnimatedBackgroundLayer(
+              enabled: true,
+              showParticles: showParticles,
+              showSymbols: showSymbols,
+              intensity: intensity,
+              child: child,
+            )
+          : child,
     );
   }
 }

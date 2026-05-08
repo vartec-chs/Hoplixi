@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import 'app_background_intensity.dart';
 import 'blob_layer.dart';
@@ -30,17 +31,18 @@ class AnimatedBackgroundLayer extends StatefulWidget {
 
 class _AnimatedBackgroundLayerState extends State<AnimatedBackgroundLayer>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
+  late final Ticker _ticker;
+  late final _InfiniteAnimation _animation = _InfiniteAnimation();
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 40),
-    );
+    _ticker = createTicker((elapsed) {
+      // 60 seconds per "cycle" for a calmer feel, and it never resets
+      _animation.update(elapsed.inMicroseconds / 60000000.0);
+    });
     if (widget.enabled) {
-      _controller.repeat();
+      _ticker.start();
     }
   }
 
@@ -49,16 +51,16 @@ class _AnimatedBackgroundLayerState extends State<AnimatedBackgroundLayer>
     super.didUpdateWidget(oldWidget);
     if (widget.enabled != oldWidget.enabled) {
       if (widget.enabled) {
-        _controller.repeat();
+        _ticker.start();
       } else {
-        _controller.stop();
+        _ticker.stop();
       }
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _ticker.dispose();
     super.dispose();
   }
 
@@ -66,9 +68,8 @@ class _AnimatedBackgroundLayerState extends State<AnimatedBackgroundLayer>
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // const Positioned.fill(child: RepaintBoundary(child: GradientLayer())),
         Positioned.fill(
-          child: RepaintBoundary(child: BlobLayer(animation: _controller)),
+          child: RepaintBoundary(child: BlobLayer(animation: _animation)),
         ),
         const Positioned.fill(
           child: RepaintBoundary(child: NoiseLayer(opacity: 0.03)),
@@ -77,7 +78,7 @@ class _AnimatedBackgroundLayerState extends State<AnimatedBackgroundLayer>
           Positioned.fill(
             child: RepaintBoundary(
               child: SymbolsLayer(
-                animation: _controller,
+                animation: _animation,
                 intensity: widget.intensity,
               ),
             ),
@@ -86,7 +87,7 @@ class _AnimatedBackgroundLayerState extends State<AnimatedBackgroundLayer>
           Positioned.fill(
             child: RepaintBoundary(
               child: ParticlesLayer(
-                animation: _controller,
+                animation: _animation,
                 intensity: widget.intensity,
               ),
             ),
@@ -95,4 +96,26 @@ class _AnimatedBackgroundLayerState extends State<AnimatedBackgroundLayer>
       ],
     );
   }
+}
+
+class _InfiniteAnimation extends Animation<double>
+    with AnimationLocalListenersMixin, AnimationLocalStatusListenersMixin {
+  double _value = 0.0;
+
+  void update(double newValue) {
+    _value = newValue;
+    notifyListeners();
+  }
+
+  @override
+  double get value => _value;
+
+  @override
+  AnimationStatus get status => AnimationStatus.forward;
+
+  @override
+  void didRegisterListener() {}
+
+  @override
+  void didUnregisterListener() {}
 }

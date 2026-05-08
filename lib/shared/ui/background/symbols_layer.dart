@@ -44,7 +44,7 @@ class SymbolsLayer extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final color = Theme.of(
       context,
-    ).colorScheme.onSurface.withValues(alpha: isDark ? 0.03 : 0.05);
+    ).colorScheme.onSurface.withValues(alpha: isDark ? 0.05 : 0.08);
 
     final symbols = List.generate(count, (index) {
       return _SymbolData(

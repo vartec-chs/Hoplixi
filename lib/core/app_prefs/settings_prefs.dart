@@ -24,19 +24,19 @@ class SettingsPrefs {
   @Pref(defaultValue: false)
   static const autoSyncEnabled = PrefKey<bool>();
 
-  @Pref(defaultValue: false)
+  @Pref(defaultValue: true)
   static const autoUploadSnapshotOnCloseEnabled = PrefKey<bool>();
 
   @Pref(defaultValue: true)
   static const dashboardAnimationsEnabled = PrefKey<bool>();
 
-  @Pref(defaultValue: true)
+  @Pref(defaultValue: false)
   static const animatedBackgroundEnabled = PrefKey<bool>();
 
   @Pref(defaultValue: true)
   static const dashboardFloatingNavEffectsEnabled = PrefKey<bool>();
 
-  @Pref(defaultValue: DashboardFloatingNavHighlightColor.primary)
+  @Pref(defaultValue: DashboardFloatingNavHighlightColor.darkGrey)
   static const dashboardFloatingNavHighlightColor = PrefKey<String>();
 
   @Pref(defaultValue: 15)
