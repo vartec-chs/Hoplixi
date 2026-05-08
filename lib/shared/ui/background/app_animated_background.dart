@@ -25,14 +25,14 @@ class AppAnimatedBackground extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isAnimatedEnabled =
         ref.watch(animatedBackgroundEnabledProvider).value ?? true;
-    
+
     final theme = Theme.of(context);
     final backgroundColor = theme.colorScheme.surfaceContainerLowest;
     final isEnabled = enabled && isAnimatedEnabled;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
+    return Container(
+      // duration: const Duration(milliseconds: 500),
+      // curve: Curves.easeInOut,
       color: backgroundColor,
       child: isEnabled
           ? AnimatedBackgroundLayer(
