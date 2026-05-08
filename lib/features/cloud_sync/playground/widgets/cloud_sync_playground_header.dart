@@ -25,7 +25,7 @@ class CloudSyncPlaygroundHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CloudSyncIconBox(
-                icon: LucideIcons.cloudCog,
+                icon: const Icon(LucideIcons.cloudCog),
                 backgroundColor: colorScheme.primaryContainer,
                 foregroundColor: colorScheme.onPrimaryContainer,
                 size: isDesktop ? 48 : 42,

@@ -27,9 +27,12 @@ class AppCredentialListTile extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
           backgroundColor: theme.colorScheme.primaryContainer,
-          child: Icon(
-            entry.provider.metadata.icon,
-            color: theme.colorScheme.onPrimaryContainer,
+          child: Center(
+            child: CloudSyncProviderLogo(
+              metadata: entry.provider.metadata,
+              size: 24,
+              color: theme.colorScheme.onPrimaryContainer,
+            ),
           ),
         ),
         title: Row(

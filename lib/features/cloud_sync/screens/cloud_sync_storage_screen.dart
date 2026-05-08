@@ -859,7 +859,7 @@ class _TokenInfoCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Icon(provider.metadata.icon, size: 28),
+            CloudSyncProviderLogo(metadata: provider.metadata, size: 28),
             const SizedBox(width: 12),
             Expanded(
               child: Column(

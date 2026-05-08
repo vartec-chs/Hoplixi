@@ -44,10 +44,12 @@ class AuthProviderListTile extends StatelessWidget {
                     color: colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Icon(
-                    metadata.icon,
-                    color: colorScheme.onPrimaryContainer,
-                    size: 28,
+                  child: Center(
+                    child: CloudSyncProviderLogo(
+                      metadata: metadata,
+                      size: 28,
+                      color: colorScheme.onPrimaryContainer,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 14),

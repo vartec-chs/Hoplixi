@@ -67,7 +67,7 @@ class CloudSyncIconBox extends StatelessWidget {
     this.size = 42,
   });
 
-  final IconData icon;
+  final Widget icon;
   final Color backgroundColor;
   final Color foregroundColor;
   final double size;
@@ -82,7 +82,10 @@ class CloudSyncIconBox extends StatelessWidget {
         color: backgroundColor,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Icon(icon, color: foregroundColor, size: size * 0.52),
+      child: IconTheme(
+        data: IconThemeData(color: foregroundColor, size: size * 0.52),
+        child: Center(child: icon),
+      ),
     );
   }
 }

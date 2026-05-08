@@ -149,6 +149,8 @@ flutter:
   generate: true # Add this line
 
   assets:
+    - assets/
+    - assets/cloud_providers_logo/
     - assets/logo/
     - .env
 flutter_intl:

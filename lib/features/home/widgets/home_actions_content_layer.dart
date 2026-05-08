@@ -26,26 +26,31 @@ class HomeActionsContentLayer extends StatelessWidget {
         removeTop: true,
         child: SafeArea(
           top: false,
-          child: hasRecentDatabase
-              ? Column(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: RecentDatabaseCard(),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: hasRecentDatabase
+                  ? Column(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          child: RecentDatabaseCard(),
+                        ),
+                        const SizedBox(height: 12),
+                        Expanded(
+                          child: _ActionsScrollView(
+                            items: items,
+                            showcaseScope: showcaseScope,
+                          ),
+                        ),
+                      ],
+                    )
+                  : _ActionsScrollView(
+                      items: items,
+                      showcaseScope: showcaseScope,
                     ),
-                    const SizedBox(height: 12),
-                    Expanded(
-                      child: _ActionsScrollView(
-                        items: items,
-                        showcaseScope: showcaseScope,
-                      ),
-                    ),
-                  ],
-                )
-              : _ActionsScrollView(
-                  items: items,
-                  showcaseScope: showcaseScope,
-                ),
+            ),
+          ),
         ),
       ),
     );

@@ -20,7 +20,10 @@ class CloudSyncProviderSelector extends StatelessWidget {
       children: [
         for (final provider in CloudSyncProvider.values)
           ChoiceChip(
-            avatar: Icon(provider.metadata.icon, size: 18),
+            avatar: CloudSyncProviderLogo(
+              metadata: provider.metadata,
+              size: 18,
+            ),
             label: Text(provider.metadata.displayName),
             selected: provider == value,
             onSelected: (_) => onChanged(provider),

@@ -137,7 +137,11 @@ class _DriveProviderCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(metadata.icon, size: 22, color: colorScheme.primary),
+              CloudSyncProviderLogo(
+                metadata: metadata,
+                size: 22,
+                color: colorScheme.primary,
+              ),
               const SizedBox(height: 10),
               Text(
                 metadata.displayName,
@@ -178,7 +182,7 @@ class _DriveProviderChip extends StatelessWidget {
     final metadata = provider.metadata;
 
     return ActionChip(
-      avatar: Icon(metadata.icon, size: 18),
+      avatar: CloudSyncProviderLogo(metadata: metadata, size: 18),
       label: Text(
         isLoading
             ? metadata.displayName

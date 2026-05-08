@@ -33,7 +33,12 @@ class _RemoteSnapshotCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CircleAvatar(child: Icon(provider.metadata.icon)),
+            CircleAvatar(
+              child: CloudSyncProviderLogo(
+                metadata: provider.metadata,
+                size: 24,
+              ),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(

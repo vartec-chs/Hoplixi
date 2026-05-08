@@ -4,6 +4,9 @@
 
 ### cloud_sync
 
+- Провайдерные `icon` в cloud sync переведены на PNG-ассеты из
+  `assets/cloud_providers_logo`, а UI карточек и чипов обновлён под вывод
+  логотипов вместо material icons.
 - Добавлен cloud lock для snapshot sync: при открытом синхронизируемом хранилище
   создаётся `.lock` в remote store folder, а при закрытии/lock удаляется только
   lock текущего app instance.

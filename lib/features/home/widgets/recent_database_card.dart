@@ -143,8 +143,8 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      syncProvider.metadata.icon,
+                    CloudSyncProviderLogo(
+                      metadata: syncProvider.metadata,
                       size: 18,
                       color: colorScheme.primary,
                     ),
@@ -170,7 +170,10 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
                     : _buildProgressButtonLabel(_cloudSyncProgress!),
                 type: SmoothButtonType.outlined,
                 isFullWidth: true,
-                icon: Icon(syncProvider.metadata.icon),
+                icon: CloudSyncProviderLogo(
+                  metadata: syncProvider.metadata,
+                  size: 20,
+                ),
                 loading: _isCheckingCloudVersion,
                 onPressed: (isOpening || _isCheckingCloudVersion)
                     ? null
@@ -799,19 +802,22 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
       return null;
     }
 
-    return result.fold((keyFile) {
-      if (keyFile.id != manifest!.keyFileId) {
-        Toaster.error(
-          title: 'Неверный key file',
-          description: 'Выбранный JSON key file не подходит для хранилища',
-        );
+    return result.fold(
+      (keyFile) {
+        if (keyFile.id != manifest!.keyFileId) {
+          Toaster.error(
+            title: 'Неверный key file',
+            description: 'Выбранный JSON key file не подходит для хранилища',
+          );
+          return null;
+        }
+        return keyFile;
+      },
+      (error) {
+        Toaster.error(title: 'Ошибка key file', description: error.message);
         return null;
-      }
-      return keyFile;
-    }, (error) {
-      Toaster.error(title: 'Ошибка key file', description: error.message);
-      return null;
-    });
+      },
+    );
   }
 
   Future<void> _deleteFromHistory(

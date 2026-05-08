@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
+import 'package:hoplixi/core/logger/logger.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 /// Поддерживаемые провайдеры облачной синхронизации.
@@ -16,7 +17,7 @@ enum CloudSyncUserInfoMethod { get, post }
 class CloudSyncProviderMetadata {
   const CloudSyncProviderMetadata({
     required this.displayName,
-    required this.icon,
+    required this.iconAssetPath,
     required this.authorizationEndpoint,
     required this.tokenEndpoint,
     required this.supportsDesktopAuth,
@@ -28,6 +29,7 @@ class CloudSyncProviderMetadata {
     required this.scopes,
     this.supportsManualCodeAuth = false,
     this.requiresManualCodeAuthOnMobile = false,
+    this.fallbackIcon,
     this.userInfoEndpoint,
     this.userInfoMethod = CloudSyncUserInfoMethod.get,
     this.userInfoAuthScheme = 'Bearer',
@@ -36,7 +38,8 @@ class CloudSyncProviderMetadata {
   });
 
   final String displayName;
-  final IconData icon;
+  final String? iconAssetPath;
+  final IconData? fallbackIcon;
   final String? authorizationEndpoint;
   final String? tokenEndpoint;
   final bool supportsDesktopAuth;
@@ -68,7 +71,8 @@ extension CloudSyncProviderX on CloudSyncProvider {
     return switch (this) {
       CloudSyncProvider.dropbox => const CloudSyncProviderMetadata(
         displayName: 'Dropbox',
-        icon: Icons.cloud,
+        iconAssetPath: 'assets/cloud_providers_logo/dropbox.png',
+        fallbackIcon: Icons.cloud,
         authorizationEndpoint: 'https://www.dropbox.com/oauth2/authorize',
         tokenEndpoint: 'https://api.dropboxapi.com/oauth2/token',
         supportsDesktopAuth: true,
@@ -97,7 +101,8 @@ extension CloudSyncProviderX on CloudSyncProvider {
       ),
       CloudSyncProvider.google => const CloudSyncProviderMetadata(
         displayName: 'Google',
-        icon: Icons.cloud_outlined,
+        iconAssetPath: 'assets/cloud_providers_logo/google_drive.png',
+        fallbackIcon: Icons.cloud_outlined,
         authorizationEndpoint: 'https://accounts.google.com/o/oauth2/auth',
         tokenEndpoint: 'https://oauth2.googleapis.com/token',
         supportsDesktopAuth: true,
@@ -133,7 +138,8 @@ extension CloudSyncProviderX on CloudSyncProvider {
       ),
       CloudSyncProvider.onedrive => const CloudSyncProviderMetadata(
         displayName: 'OneDrive',
-        icon: Icons.cloud_done_outlined,
+        iconAssetPath: 'assets/cloud_providers_logo/one_drive.png',
+        fallbackIcon: Icons.cloud_done_outlined,
         authorizationEndpoint:
             'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
         tokenEndpoint:
@@ -163,7 +169,8 @@ extension CloudSyncProviderX on CloudSyncProvider {
       ),
       CloudSyncProvider.yandex => const CloudSyncProviderMetadata(
         displayName: 'Yandex',
-        icon: Icons.language,
+        iconAssetPath: 'assets/cloud_providers_logo/yandex_disk.png',
+        fallbackIcon: Icons.language,
         authorizationEndpoint: 'https://oauth.yandex.ru/authorize',
         tokenEndpoint: 'https://oauth.yandex.ru/token',
         supportsDesktopAuth: true,
@@ -187,7 +194,8 @@ extension CloudSyncProviderX on CloudSyncProvider {
       ),
       CloudSyncProvider.other => const CloudSyncProviderMetadata(
         displayName: 'Other',
-        icon: Icons.extension_outlined,
+        iconAssetPath: null,
+        fallbackIcon: Icons.extension_outlined,
         authorizationEndpoint: null,
         tokenEndpoint: null,
         supportsDesktopAuth: false,
@@ -199,5 +207,49 @@ extension CloudSyncProviderX on CloudSyncProvider {
         scopes: [],
       ),
     };
+  }
+}
+
+class CloudSyncProviderLogo extends StatelessWidget {
+  const CloudSyncProviderLogo({
+    super.key,
+    required this.metadata,
+    required this.size,
+    this.color,
+  });
+
+  final CloudSyncProviderMetadata metadata;
+  final double size;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final assetPath = metadata.iconAssetPath;
+    final fallbackIcon = metadata.fallbackIcon;
+
+    if (assetPath != null) {
+      return Image.asset(
+        assetPath,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          logDebug(
+            'Failed to load cloud provider logo from asset: $assetPath, error: $error',
+          );
+          if (fallbackIcon == null) {
+            return SizedBox(width: size, height: size);
+          }
+
+          return Icon(fallbackIcon, color: color, size: size);
+        },
+      );
+    }
+
+    if (fallbackIcon != null) {
+      return Icon(fallbackIcon, color: color, size: size);
+    }
+
+    return SizedBox(width: size, height: size);
   }
 }

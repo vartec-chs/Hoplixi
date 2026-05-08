@@ -130,7 +130,7 @@ class _ProviderReadinessCard extends StatelessWidget {
             Row(
               children: [
                 CloudSyncIconBox(
-                  icon: metadata.icon,
+                  icon: CloudSyncProviderLogo(metadata: metadata, size: 22),
                   backgroundColor: colorScheme.secondaryContainer,
                   foregroundColor: colorScheme.onSecondaryContainer,
                 ),
@@ -221,7 +221,7 @@ class _ProviderReadinessRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         CloudSyncIconBox(
-          icon: metadata.icon,
+          icon: CloudSyncProviderLogo(metadata: metadata, size: 22),
           backgroundColor: colorScheme.secondaryContainer,
           foregroundColor: colorScheme.onSecondaryContainer,
         ),
