@@ -4,19 +4,16 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-class NoiseOverlay extends StatefulWidget {
+class NoiseLayer extends StatefulWidget {
   final double opacity;
 
-  const NoiseOverlay({
-    super.key,
-    this.opacity = 0.05,
-  });
+  const NoiseLayer({super.key, this.opacity = 0.05});
 
   @override
-  State<NoiseOverlay> createState() => _NoiseOverlayState();
+  State<NoiseLayer> createState() => _NoiseLayerState();
 }
 
-class _NoiseOverlayState extends State<NoiseOverlay> {
+class _NoiseLayerState extends State<NoiseLayer> {
   ui.Image? _noiseImage;
 
   @override
@@ -38,7 +35,9 @@ class _NoiseOverlayState extends State<NoiseOverlay> {
       pixels[i + 3] = 255;
     }
 
-    final ui.ImmutableBuffer buffer = await ui.ImmutableBuffer.fromUint8List(pixels);
+    final ui.ImmutableBuffer buffer = await ui.ImmutableBuffer.fromUint8List(
+      pixels,
+    );
     final ui.ImageDescriptor descriptor = ui.ImageDescriptor.raw(
       buffer,
       width: size,
