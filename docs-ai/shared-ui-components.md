@@ -17,6 +17,12 @@ This document is the source of truth for reusable UI components located in
 - Enums: `SmoothButtonType`, `SmoothButtonSize`, `SmoothButtonIconPosition`,
   `SmoothButtonVariant`
 - Use for primary/secondary button actions instead of raw Material buttons.
+- **Factory Constructors:** Prefer using specialized factories for common styles:
+  - `SmoothButton.primary()` — Filled button for main actions.
+  - `SmoothButton.tonal()` — Tonal background button.
+  - `SmoothButton.outline()` — Outlined button.
+  - `SmoothButton.text()` — Plain text button.
+  - `SmoothButton.dashed()` — Button with dashed border (useful for placeholders or adding items).
 
 ### `copy_to_clipboard_button.dart`
 
