@@ -4,12 +4,12 @@
 
 ### cloud_sync
 
-- Добавлен cloud lock для snapshot sync: при открытом синхронизируемом
-  хранилище создаётся `.lock` в remote store folder, а при закрытии/lock
-  удаляется только lock текущего app instance.
-- Добавлен blocking UI для проверки `.lock`: при чужом активном lock пользователь
-  может выйти из хранилища или продолжить работу на свой риск без takeover чужого
-  lock.
+- Добавлен cloud lock для snapshot sync: при открытом синхронизируемом хранилище
+  создаётся `.lock` в remote store folder, а при закрытии/lock удаляется только
+  lock текущего app instance.
+- Добавлен blocking UI для проверки `.lock`: при чужом активном lock
+  пользователь может выйти из хранилища или продолжить работу на свой риск без
+  takeover чужого lock.
 - Добавлены DTO/service/provider и unit tests для acquire/release логики,
   включая same-owner refresh и замену stale lock старше 24 часов.
 
