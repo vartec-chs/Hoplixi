@@ -5,7 +5,7 @@ import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hoplixi/features/password_manager/dashboard/screens/duplicate_passwords_screen.dart';
+import 'package:hoplixi/features/password_manager/duplicate_passwords/screen/duplicate_passwords_screen.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 
 void main() {

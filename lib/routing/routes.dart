@@ -24,8 +24,8 @@ import 'package:hoplixi/features/password_manager/close_store/close_store_sync_s
 import 'package:hoplixi/features/password_manager/create_store/create_store_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_screen.dart';
-import 'package:hoplixi/features/password_manager/dashboard/screens/duplicate_passwords_screen.dart';
-import 'package:hoplixi/features/password_manager/dashboard/screens/notes_graph_screen.dart';
+import 'package:hoplixi/features/password_manager/duplicate_passwords/screen/duplicate_passwords_screen.dart';
+import 'package:hoplixi/features/password_manager/notes_graph/notes_graph_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_layout/index.dart';
 import 'package:hoplixi/features/password_manager/forms/entity_add_edit.dart';
 import 'package:hoplixi/features/password_manager/forms/entity_view.dart';
