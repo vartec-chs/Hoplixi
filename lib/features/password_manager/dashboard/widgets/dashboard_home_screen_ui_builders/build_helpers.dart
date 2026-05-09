@@ -21,86 +21,100 @@ Widget _buildDashboardHomeScreen(
   _listenDashboardHomeListChanges(state);
   _listenDashboardHomeViewModeChanges(state, asyncValue);
 
-  return PopScope(
-    canPop: false,
-    onPopInvokedWithResult: (didPop, result) {
-      if (!didPop) {
-        if (state._isBulkMode) {
-          state._exitBulkMode();
-          return;
-        }
-        state._showCloseDatabaseDialog();
+  return NotificationListener<ScrollNotification>(
+    onNotification: (notification) {
+      final isScrolled = notification.metrics.pixels > 0;
+
+      if (isScrolled != state._isScrolled) {
+        state.setState(() {
+          state._isScrolled = isScrolled;
+        });
       }
+
+      return false;
     },
-    child: Scaffold(
-      backgroundColor: Colors.transparent,
-      body: RefreshIndicator(
-        onRefresh: () => state.ref
-            .read(paginatedListProvider(state.widget.entityType).notifier)
-            .refresh(),
-        child: CustomScrollView(
-          controller: state._scrollController,
-          slivers: [
-            DashboardSliverAppBar(
-              entityType: state.widget.entityType,
-              expandedHeight: 176.0,
-              collapsedHeight: 60.0,
-              pinned: true,
-              floating: false,
-              snap: false,
-              showEntityTypeSelector: true,
-              onMenuPressed: !disableAppBarMenu
-                  ? null
-                  : () {
-                      final scope = DashboardDrawerScope.of(context);
-                      if (scope != null) {
-                        scope.openDrawer();
-                      } else {
-                        Scaffold.of(context).openDrawer();
-                      }
-                    },
-            ),
-            SliverToBoxAdapter(
-              child: DashboardListToolBar(
+    child: PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          if (state._isBulkMode) {
+            state._exitBulkMode();
+            return;
+          }
+          state._showCloseDatabaseDialog();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: RefreshIndicator(
+          onRefresh: () => state.ref
+              .read(paginatedListProvider(state.widget.entityType).notifier)
+              .refresh(),
+          child: CustomScrollView(
+            controller: state._scrollController,
+            slivers: [
+              DashboardSliverAppBar(
                 entityType: state.widget.entityType,
-                viewMode: viewMode,
-                listState: asyncValue,
-                isBulkMode: state._isBulkMode,
-                selectedCount: state._selectedIds.length,
-                onExitBulkMode: state._isApplyingBulkAction
+                expandedHeight: 176.0,
+                collapsedHeight: 60.0,
+                pinned: true,
+                floating: false,
+                snap: false,
+                showEntityTypeSelector: true,
+                onMenuPressed: !disableAppBarMenu
                     ? null
-                    : state._exitBulkMode,
-                onBulkDelete: state._isApplyingBulkAction
-                    ? null
-                    : state._showBulkDeleteDialog,
-                onBulkFavorite: state._isApplyingBulkAction
-                    ? null
-                    : state._applyBulkFavorite,
-                bulkFavoriteLabel: state._shouldFavoriteSelection
-                    ? 'В избранное'
-                    : 'Убрать из избранного',
-                onBulkPin: state._isApplyingBulkAction
-                    ? null
-                    : state._applyBulkPin,
-                bulkPinLabel: state._shouldPinSelection
-                    ? 'Закрепить'
-                    : 'Открепить',
-                onBulkArchive: state._isApplyingBulkAction
-                    ? null
-                    : state._applyBulkArchive,
-                bulkArchiveLabel: state._shouldArchiveSelection
-                    ? 'В архив'
-                    : 'Из архива',
-                onBulkAssignCategory: state._isApplyingBulkAction
-                    ? null
-                    : state._showBulkAssignCategoryDialog,
-                onBulkAssignTags: state._isApplyingBulkAction
-                    ? null
-                    : state._showBulkAssignTagsDialog,
+                    : () {
+                        final scope = DashboardDrawerScope.of(context);
+                        if (scope != null) {
+                          scope.openDrawer();
+                        } else {
+                          Scaffold.of(context).openDrawer();
+                        }
+                      },
+                      isScrolled: state._isScrolled,
               ),
-            ),
-            state._buildContentSliver(asyncValue, viewMode),
-          ],
+              SliverToBoxAdapter(
+                child: DashboardListToolBar(
+                  entityType: state.widget.entityType,
+                  viewMode: viewMode,
+                  listState: asyncValue,
+                  isBulkMode: state._isBulkMode,
+                  selectedCount: state._selectedIds.length,
+                  onExitBulkMode: state._isApplyingBulkAction
+                      ? null
+                      : state._exitBulkMode,
+                  onBulkDelete: state._isApplyingBulkAction
+                      ? null
+                      : state._showBulkDeleteDialog,
+                  onBulkFavorite: state._isApplyingBulkAction
+                      ? null
+                      : state._applyBulkFavorite,
+                  bulkFavoriteLabel: state._shouldFavoriteSelection
+                      ? 'В избранное'
+                      : 'Убрать из избранного',
+                  onBulkPin: state._isApplyingBulkAction
+                      ? null
+                      : state._applyBulkPin,
+                  bulkPinLabel: state._shouldPinSelection
+                      ? 'Закрепить'
+                      : 'Открепить',
+                  onBulkArchive: state._isApplyingBulkAction
+                      ? null
+                      : state._applyBulkArchive,
+                  bulkArchiveLabel: state._shouldArchiveSelection
+                      ? 'В архив'
+                      : 'Из архива',
+                  onBulkAssignCategory: state._isApplyingBulkAction
+                      ? null
+                      : state._showBulkAssignCategoryDialog,
+                  onBulkAssignTags: state._isApplyingBulkAction
+                      ? null
+                      : state._showBulkAssignTagsDialog,
+                ),
+              ),
+              state._buildContentSliver(asyncValue, viewMode),
+            ],
+          ),
         ),
       ),
     ),

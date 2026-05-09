@@ -499,14 +499,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             'Это центральное место для управления всеми аспектами облачной синхронизации, включая настройку аккаунта, управление токенами доступа и дополнительным функциям облачных сервисов.',
         onTap: () => context.push(AppRoutesPaths.cloudSync),
       ),
-      if (!MainConstants.isProduction) ...[
-        ActionItem(
-          icon: LucideIcons.box,
-          label: 'Component Showcase',
-          description: 'Тестовый экран для UI-компонентов',
-          onTap: () => context.push(AppRoutesPaths.componentShowcase),
-        ),
-      ],
+
+      ActionItem(
+        icon: LucideIcons.box,
+        label: 'Component Showcase',
+        description: 'Тестовый экран для UI-компонентов',
+        isDevModeOnly: true,
+        onTap: () => context.push(AppRoutesPaths.componentShowcase),
+      ),
     ];
   }
 

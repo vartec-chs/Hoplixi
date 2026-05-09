@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-05-09
+
+### home
+
+- `HomeActionGrid` теперь отделяет `isDevModeOnly`-действия в отдельный блок под
+  divider с подписью `dev` и показывает его только вне production-сборок.
+
 ## 2026-05-08
 
 ### cloud_sync

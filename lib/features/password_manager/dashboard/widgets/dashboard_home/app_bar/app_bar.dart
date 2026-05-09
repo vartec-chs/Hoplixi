@@ -50,6 +50,8 @@ class DashboardSliverAppBar extends ConsumerStatefulWidget {
   /// Должен ли AppBar плавать при прокрутке
   final bool floating;
 
+  final bool isScrolled;
+
   /// Должен ли AppBar быстро появляться при прокрутке вверх
   final bool snap;
 
@@ -68,13 +70,13 @@ class DashboardSliverAppBar extends ConsumerStatefulWidget {
     this.onMenuPressed,
     this.expandedHeight = 160.0,
     this.collapsedHeight = 60.0,
-
     this.pinned = true,
     this.floating = false,
     this.snap = false,
     this.showEntityTypeSelector = true,
     this.additionalActions,
     this.onFilterApplied,
+    this.isScrolled = false,
   });
 
   @override
@@ -265,7 +267,10 @@ class _DashboardSliverAppBarState extends ConsumerState<DashboardSliverAppBar> {
     return SliverAppBar(
       expandedHeight: widget.expandedHeight,
       collapsedHeight: widget.collapsedHeight,
-      backgroundColor: Colors.transparent,
+      backgroundColor: widget.isScrolled
+          ? theme.scaffoldBackgroundColor
+          : Colors.transparent,
+      surfaceTintColor: Colors.transparent,
 
       pinned: widget.pinned,
       floating: widget.floating,

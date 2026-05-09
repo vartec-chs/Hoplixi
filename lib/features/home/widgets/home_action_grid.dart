@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/home/models/action_item.dart';
 import 'package:hoplixi/features/home/widgets/action_button.dart';
 import 'package:hoplixi/features/home/widgets/action_button_compact.dart';
@@ -32,30 +33,22 @@ class _CompactActionGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
+    return _buildActionSections(
+      context,
+      visibleItems: items.where((item) => !item.isDevModeOnly).toList(),
+      devItems: MainConstants.isProduction
+          ? const <ActionItem>[]
+          : items.where((item) => item.isDevModeOnly).toList(),
+      showcaseScope: showcaseScope,
       childAspectRatio: 1,
-      children: items
-          .map(
-            (item) => _wrapShowcase(
-              context,
-              item,
-              showcaseScope,
-              ActionButtonCompact(
-                icon: item.icon,
-                label: item.label,
-                description: item.description,
-                isPrimary: item.isPrimary,
-                disabled: item.disabled,
-                onTap: item.onTap,
-              ),
-            ),
-          )
-          .toList(),
+      childBuilder: (item) => ActionButtonCompact(
+        icon: item.icon,
+        label: item.label,
+        description: item.description,
+        isPrimary: item.isPrimary,
+        disabled: item.disabled,
+        onTap: item.onTap,
+      ),
     );
   }
 }
@@ -68,30 +61,119 @@ class _WideActionGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
+    return _buildActionSections(
+      context,
+      visibleItems: items.where((item) => !item.isDevModeOnly).toList(),
+      devItems: MainConstants.isProduction
+          ? const <ActionItem>[]
+          : items.where((item) => item.isDevModeOnly).toList(),
+      showcaseScope: showcaseScope,
       childAspectRatio: 2.8,
-      children: items
-          .map(
-            (item) => _wrapShowcase(
-              context,
-              item,
-              showcaseScope,
-              ActionButton(
-                icon: item.icon,
-                label: item.label,
-                description: item.description,
-                isPrimary: item.isPrimary,
-                disabled: item.disabled,
-                onTap: item.onTap,
+      childBuilder: (item) => ActionButton(
+        icon: item.icon,
+        label: item.label,
+        description: item.description,
+        isPrimary: item.isPrimary,
+        disabled: item.disabled,
+        onTap: item.onTap,
+      ),
+    );
+  }
+}
+
+Widget _buildActionSections(
+  BuildContext context, {
+  required List<ActionItem> visibleItems,
+  required List<ActionItem> devItems,
+  required String? showcaseScope,
+  required double childAspectRatio,
+  required Widget Function(ActionItem item) childBuilder,
+}) {
+  final sections = <Widget>[];
+
+  if (visibleItems.isNotEmpty) {
+    sections.add(
+      GridView.count(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: childAspectRatio,
+        children: visibleItems
+            .map(
+              (item) => _wrapShowcase(
+                context,
+                item,
+                showcaseScope,
+                childBuilder(item),
               ),
+            )
+            .toList(),
+      ),
+    );
+  }
+
+  if (!MainConstants.isProduction && devItems.isNotEmpty) {
+    if (sections.isNotEmpty) {
+      sections.add(const SizedBox(height: 8));
+    }
+
+    sections.add(const _DevDividerLabel());
+    sections.add(const SizedBox(height: 8));
+    sections.add(
+      GridView.count(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: childAspectRatio,
+        children: devItems
+            .map(
+              (item) => _wrapShowcase(
+                context,
+                item,
+                showcaseScope,
+                childBuilder(item),
+              ),
+            )
+            .toList(),
+      ),
+    );
+    sections.add(const SizedBox(height: 8));
+  }
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: sections,
+  );
+}
+
+class _DevDividerLabel extends StatelessWidget {
+  const _DevDividerLabel();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Row(
+      children: [
+        Expanded(child: Divider(color: colorScheme.outlineVariant)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            'Dev',
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.2,
             ),
-          )
-          .toList(),
+          ),
+        ),
+        Expanded(child: Divider(color: colorScheme.outlineVariant)),
+      ],
     );
   }
 }

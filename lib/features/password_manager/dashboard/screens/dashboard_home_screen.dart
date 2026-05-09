@@ -59,6 +59,7 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
 
   /// Флаг очистки списка (для анимации пустого состояния).
   bool _isClearing = false;
+  bool _isScrolled = false;
 
   /// Флаг первого построения — для начальной синхронизации.
   bool _isFirstBuild = true;

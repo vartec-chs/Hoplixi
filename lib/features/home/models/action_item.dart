@@ -8,6 +8,7 @@ class ActionItem {
     this.description,
     this.isPrimary = false,
     this.disabled = false,
+    this.isDevModeOnly = false,
     this.onTap,
     this.showcaseKey,
     this.showcaseTitle,
@@ -17,6 +18,7 @@ class ActionItem {
   final IconData icon;
   final String label;
   final String? description;
+  final bool isDevModeOnly;
   final bool isPrimary;
   final bool disabled;
   final VoidCallback? onTap;
