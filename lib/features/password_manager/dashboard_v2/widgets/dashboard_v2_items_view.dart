@@ -35,11 +35,12 @@ final class DashboardV2ItemsView extends StatelessWidget {
     if (items.isEmpty) return const _EmptyDashboardList();
 
     if (viewMode.isGrid) {
-      return LayoutBuilder(
+      return SliverLayoutBuilder(
         builder: (context, constraints) {
-          final columns = (constraints.maxWidth / 360).floor().clamp(1, 4);
-          return GridView.builder(
-            padding: const EdgeInsets.only(bottom: 96),
+          final columns = (constraints.crossAxisExtent / 360)
+              .floor()
+              .clamp(1, 4);
+          return SliverGrid.builder(
             itemCount: items.length,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: columns,
@@ -53,11 +54,12 @@ final class DashboardV2ItemsView extends StatelessWidget {
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.only(bottom: 96),
-      itemCount: items.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 6),
-      itemBuilder: (context, index) => _itemCard(items[index]),
+    return SliverList.builder(
+      itemCount: items.length * 2 - 1,
+      itemBuilder: (context, index) {
+        if (index.isOdd) return const SizedBox(height: 6);
+        return _itemCard(items[index ~/ 2]);
+      },
     );
   }
 
@@ -87,14 +89,17 @@ final class _EmptyDashboardList extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Text(
-          'Ничего не найдено',
-          textAlign: TextAlign.center,
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: colors.onSurfaceVariant,
+    return SliverFillRemaining(
+      hasScrollBody: false,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            'Ничего не найдено',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: colors.onSurfaceVariant,
+            ),
           ),
         ),
       ),

@@ -9,6 +9,12 @@
   `DashboardHomeScreen`.
 - `dashboard_v2` переведен с универсальной карточки `DashboardV2ItemCard` на
   entity-specific list/grid карточки через `DashboardV2EntityCardBuilder`.
+- В `dashboard_v2` возвращен sliver app bar в стиле старого dashboard app bar:
+  поиск, вкладки, выбор типа записи, меню хранилища и действия без
+  `showcaseview`.
+- `DashboardV2HomeScreen` переведен на единый `CustomScrollView`, а список и
+  сетка карточек теперь строятся через `SliverList`/`SliverGrid` без вложенных
+  scrollable-виджетов.
 
 ### home
 

@@ -4,14 +4,14 @@ import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../models/dashboard_entity_type.dart';
-import '../models/dashboard_filter_state.dart';
+import '../models/dashboard_view_mode.dart';
 import '../providers/dashboard_filter_provider.dart';
 import '../providers/dashboard_list_controller.dart';
 import '../providers/dashboard_selection_provider.dart';
+import '../widgets/app_bar/app_bar.dart';
 import '../widgets/dashboard_v2_bulk_bar.dart';
 import '../widgets/dashboard_v2_error_banner.dart';
 import '../widgets/dashboard_v2_items_view.dart';
-import '../widgets/dashboard_v2_toolbar.dart';
 
 final class DashboardV2HomeScreen extends ConsumerStatefulWidget {
   const DashboardV2HomeScreen({
@@ -30,7 +30,8 @@ final class DashboardV2HomeScreen extends ConsumerStatefulWidget {
       _DashboardV2HomeScreenState();
 }
 
-final class _DashboardV2HomeScreenState extends ConsumerState<DashboardV2HomeScreen> {
+final class _DashboardV2HomeScreenState
+    extends ConsumerState<DashboardV2HomeScreen> {
   late DashboardEntityType _entityType;
 
   @override
@@ -51,125 +52,102 @@ final class _DashboardV2HomeScreenState extends ConsumerState<DashboardV2HomeScr
         onPressed: () => widget.onCreateItem?.call(_entityType),
         child: const Icon(LucideIcons.plus),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: listState.when(
-            loading: () => _buildLoading(filters),
-            error: (error, _) => _buildFatalError(error),
-            data: (data) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  DashboardV2Toolbar(
-                    entityType: _entityType,
-                    query: filters.query,
-                    tab: filters.tab,
-                    viewMode: filters.viewMode,
-                    totalCount: data.totalCount,
-                    onEntityTypeChanged: _setEntityType,
-                    onQueryChanged: (value) => ref
-                        .read(dashboardFilterProvider.notifier)
-                        .setQuery(value),
-                    onTabChanged: (value) => ref
-                        .read(dashboardFilterProvider.notifier)
-                        .setTab(value),
-                    onViewModeChanged: (value) => ref
-                        .read(dashboardFilterProvider.notifier)
-                        .setViewMode(value),
-                    onRefresh: () => ref
-                        .read(dashboardListControllerProvider(_entityType).notifier)
-                        .refresh(),
-                  ),
-                  if (data.lastError != null) ...[
-                    const SizedBox(height: 12),
-                    DashboardV2ErrorBanner(
-                      error: data.lastError!,
-                      onRetry: () => ref
-                          .read(
-                            dashboardListControllerProvider(_entityType).notifier,
-                          )
-                          .refresh(),
-                    ),
-                  ],
-                  if (selectedIds.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    DashboardV2BulkBar(
-                      selectedCount: selectedIds.length,
-                      onClear: () => ref
-                          .read(dashboardSelectionProvider(_entityType).notifier)
-                          .clear(),
-                    ),
-                  ],
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: NotificationListener<ScrollNotification>(
-                      onNotification: (notification) {
-                        if (notification.metrics.extentAfter < 520) {
-                          _loadMore();
-                        }
-                        return false;
-                      },
-                      child: DashboardV2ItemsView(
-                        items: data.items,
-                        viewMode: filters.viewMode,
-                        selectedIds: selectedIds,
-                        onOpen: _openItem,
-                        onToggleSelection: _toggleSelection,
-                        onStartSelection: _startSelection,
-                        onToggleFavorite: _toggleFavorite,
-                        onTogglePinned: _togglePinned,
-                        onToggleArchived: _toggleArchived,
-                        onDelete: _deleteItem,
+      body: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          if (notification.metrics.extentAfter < 520) _loadMore();
+          return false;
+        },
+        child: CustomScrollView(
+          slivers: [
+            DashboardV2SliverAppBar(
+              entityType: _entityType,
+              onEntityTypeChanged: _setEntityType,
+              additionalActions: [_ViewModeAction(viewMode: filters.viewMode)],
+              onFilterApplied: () => ref
+                  .read(dashboardListControllerProvider(_entityType).notifier)
+                  .refresh(),
+            ),
+            ...listState.when(
+              loading: () => [_buildLoading()],
+              error: (error, _) => [_buildFatalError(error)],
+              data: (data) => [
+                if (data.lastError != null)
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                    sliver: SliverToBoxAdapter(
+                      child: DashboardV2ErrorBanner(
+                        error: data.lastError!,
+                        onRetry: () => ref
+                            .read(
+                              dashboardListControllerProvider(
+                                _entityType,
+                              ).notifier,
+                            )
+                            .refresh(),
                       ),
                     ),
                   ),
-                  if (data.isLoadingMore)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 8),
+                if (selectedIds.isNotEmpty)
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                    sliver: SliverToBoxAdapter(
+                      child: DashboardV2BulkBar(
+                        selectedCount: selectedIds.length,
+                        onClear: () => ref
+                            .read(
+                              dashboardSelectionProvider(_entityType).notifier,
+                            )
+                            .clear(),
+                      ),
+                    ),
+                  ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
+                  sliver: DashboardV2ItemsView(
+                    items: data.items,
+                    viewMode: filters.viewMode,
+                    selectedIds: selectedIds,
+                    onOpen: _openItem,
+                    onToggleSelection: _toggleSelection,
+                    onStartSelection: _startSelection,
+                    onToggleFavorite: _toggleFavorite,
+                    onTogglePinned: _togglePinned,
+                    onToggleArchived: _toggleArchived,
+                    onDelete: _deleteItem,
+                  ),
+                ),
+                if (data.isLoadingMore)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
                       child: LinearProgressIndicator(),
                     ),
-                ],
-              );
-            },
-          ),
+                  ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildLoading(DashboardFilterState filters) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        DashboardV2Toolbar(
-          entityType: _entityType,
-          query: filters.query,
-          tab: filters.tab,
-          viewMode: filters.viewMode,
-          totalCount: 0,
-          onEntityTypeChanged: _setEntityType,
-          onQueryChanged: (value) =>
-              ref.read(dashboardFilterProvider.notifier).setQuery(value),
-          onTabChanged: (value) =>
-              ref.read(dashboardFilterProvider.notifier).setTab(value),
-          onViewModeChanged: (value) =>
-              ref.read(dashboardFilterProvider.notifier).setViewMode(value),
-          onRefresh: () {},
-        ),
-        const SizedBox(height: 24),
-        const Expanded(child: Center(child: CircularProgressIndicator())),
-      ],
+  Widget _buildLoading() {
+    return const SliverFillRemaining(
+      hasScrollBody: false,
+      child: Center(child: CircularProgressIndicator()),
     );
   }
 
   Widget _buildFatalError(Object error) {
-    return Center(
+    return SliverFillRemaining(
+      hasScrollBody: false,
       child: Padding(
         padding: const EdgeInsets.all(24),
-        child: Text(
-          'Dashboard v2 не смог загрузиться: $error',
-          textAlign: TextAlign.center,
+        child: Center(
+          child: Text(
+            'Dashboard v2 не смог загрузиться: $error',
+            textAlign: TextAlign.center,
+          ),
         ),
       ),
     );
@@ -231,8 +209,31 @@ final class _DashboardV2HomeScreenState extends ConsumerState<DashboardV2HomeScr
 
   Future<void> _showMutationErrorIfNeeded(dynamic error) async {
     if (!mounted || error == null) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(error.message)),
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(error.message)));
+  }
+}
+
+final class _ViewModeAction extends ConsumerWidget {
+  const _ViewModeAction({required this.viewMode});
+
+  final DashboardViewMode viewMode;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isGrid = viewMode.isGrid;
+
+    return IconButton(
+      tooltip: isGrid ? 'Показать списком' : 'Показать сеткой',
+      icon: Icon(isGrid ? Icons.view_list : Icons.grid_view),
+      onPressed: () {
+        ref
+            .read(dashboardFilterProvider.notifier)
+            .setViewMode(
+              isGrid ? DashboardViewMode.list : DashboardViewMode.grid,
+            );
+      },
     );
   }
 }
