@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/theme/theme.dart';
 
@@ -64,6 +65,11 @@ final class DashboardV2EntityTypeCompactDropdown extends ConsumerWidget {
             'DashboardV2EntityTypeCompactDropdown: Изменен тип сущности',
             data: {'from': currentType.id, 'to': newType.id},
           );
+          String newPath = '/dashboard/${newType.id}';
+          if (GoRouterState.of(context).fullPath!.contains('/add')) {
+            newPath += '/add';
+          }
+          context.go(newPath);
           onEntityTypeChanged(newType);
         },
       ),
