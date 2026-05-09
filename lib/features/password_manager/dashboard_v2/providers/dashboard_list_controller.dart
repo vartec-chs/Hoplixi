@@ -117,7 +117,8 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
     final filters = ref.read(dashboardFilterProvider);
     final isNowArchived = !item.isArchived;
     final removeFromList =
-        filters.tab == DashboardFilterTab.archived && !isNowArchived;
+        (filters.tab == DashboardFilterTab.archived && !isNowArchived) ||
+        (filters.tab != DashboardFilterTab.archived && isNowArchived);
 
     return _applyItemMutation(
       item,
