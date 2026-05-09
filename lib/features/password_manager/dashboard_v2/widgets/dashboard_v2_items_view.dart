@@ -10,6 +10,7 @@ final class DashboardV2ItemsView extends StatelessWidget {
     required this.viewMode,
     required this.selectedIds,
     required this.onOpen,
+    required this.onOpenEdit,
     required this.onToggleSelection,
     required this.onStartSelection,
     required this.onToggleFavorite,
@@ -26,6 +27,7 @@ final class DashboardV2ItemsView extends StatelessWidget {
   final DashboardViewMode viewMode;
   final Set<String> selectedIds;
   final ValueChanged<BaseCardDto> onOpen;
+  final ValueChanged<BaseCardDto> onOpenEdit;
   final ValueChanged<String> onToggleSelection;
   final ValueChanged<String> onStartSelection;
   final ValueChanged<BaseCardDto> onToggleFavorite;
@@ -77,6 +79,7 @@ final class DashboardV2ItemsView extends StatelessWidget {
       selectedIds: selectedIds,
       actions: DashboardV2EntityCardActions(
         onOpen: onOpen,
+        onOpenEdit: onOpenEdit,
         onToggleSelection: onToggleSelection,
         onStartSelection: onStartSelection,
         onToggleFavorite: onToggleFavorite,

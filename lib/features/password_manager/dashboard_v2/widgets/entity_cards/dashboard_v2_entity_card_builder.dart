@@ -41,6 +41,7 @@ typedef DashboardV2SelectionCallback = void Function(String id);
 final class DashboardV2EntityCardActions {
   const DashboardV2EntityCardActions({
     required this.onOpen,
+    required this.onOpenEdit,
     required this.onToggleSelection,
     required this.onStartSelection,
     required this.onToggleFavorite,
@@ -53,6 +54,7 @@ final class DashboardV2EntityCardActions {
   });
 
   final DashboardV2CardCallback onOpen;
+  final DashboardV2CardCallback onOpenEdit;
   final DashboardV2SelectionCallback onToggleSelection;
   final DashboardV2SelectionCallback onStartSelection;
   final DashboardV2CardCallback onToggleFavorite;
@@ -449,12 +451,12 @@ final class _SelectableEntityCard extends StatelessWidget {
         ? Icons.restore_from_trash
         : item.isArchived
         ? Icons.unarchive
-        : Icons.archive;
+        : Icons.edit;
     final archiveOrRestoreLabel = item.isDeleted
         ? 'Восстановить'
         : item.isArchived
         ? 'Вернуть из архива'
-        : 'В архив';
+        : 'Редактировать';
 
     final decoratedChild = GestureDetector(
       behavior: HitTestBehavior.translucent,
@@ -500,10 +502,14 @@ final class _SelectableEntityCard extends StatelessWidget {
         alignment: Alignment.centerLeft,
         color: item.isDeleted
             ? colors.tertiaryContainer
-            : colors.secondaryContainer,
+            : item.isArchived
+            ? colors.secondaryContainer
+            : colors.primaryContainer,
         foregroundColor: item.isDeleted
             ? colors.onTertiaryContainer
-            : colors.onSecondaryContainer,
+            : item.isArchived
+            ? colors.onSecondaryContainer
+            : colors.onPrimaryContainer,
         icon: archiveOrRestoreIcon,
         label: archiveOrRestoreLabel,
       ),
@@ -516,9 +522,13 @@ final class _SelectableEntityCard extends StatelessWidget {
       ),
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
-          item.isDeleted
-              ? actions.onRestore(item)
-              : actions.onToggleArchived(item);
+          if (item.isDeleted) {
+            actions.onRestore(item);
+          } else if (item.isArchived) {
+            actions.onToggleArchived(item);
+          } else {
+            actions.onOpenEdit(item);
+          }
         } else if (direction == DismissDirection.endToStart) {
           actions.onDelete(item);
         }

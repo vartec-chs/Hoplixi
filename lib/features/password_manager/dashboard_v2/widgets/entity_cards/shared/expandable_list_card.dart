@@ -421,6 +421,7 @@ class _ExpandableListCardState extends State<ExpandableListCard>
               onRestore: widget.onRestore,
               onDelete: widget.onDelete,
               onToggleArchive: widget.onToggleArchive,
+              onOpenHistory: widget.onOpenHistory,
             ),
           ],
         ),

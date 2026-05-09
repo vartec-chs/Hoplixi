@@ -106,6 +106,7 @@ final class _DashboardV2HomeScreenState
                     viewMode: filters.viewMode,
                     selectedIds: selectedIds,
                     onOpen: _openItem,
+                    onOpenEdit: _openEditItem,
                     onToggleSelection: _toggleSelection,
                     onStartSelection: _startSelection,
                     onToggleFavorite: _toggleFavorite,
@@ -114,14 +115,7 @@ final class _DashboardV2HomeScreenState
                     onDelete: _deleteItem,
                     onRestore: _restoreItem,
                     onOpenView: _openViewItem,
-                    onOpenHistory: (item) => context.push(
-                      AppRoutesPaths.dashboardHistoryWithParams(
-                        EntityType.values.firstWhere(
-                          (e) => e.id == _entityType.id,
-                        ),
-                        item.id,
-                      ),
-                    ),
+                    onOpenHistory: _openHistoryItem,
                   ),
                 ),
                 if (data.isLoadingMore)
@@ -173,6 +167,16 @@ final class _DashboardV2HomeScreenState
 
   void _openItem(BaseCardDto item) {
     widget.onOpenItem?.call(_entityType, item.id);
+  }
+
+  void _openEditItem(BaseCardDto item) {
+    final editPath = AppRoutesPaths.dashboardEntityEdit(
+      EntityType.values.firstWhere((e) => e.id == _entityType.id),
+      item.id,
+    );
+    if (GoRouter.of(context).state.matchedLocation != editPath) {
+      context.push(editPath);
+    }
   }
 
   void _startSelection(String id) {
@@ -231,6 +235,16 @@ final class _DashboardV2HomeScreenState
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(error.message)));
+  }
+
+  void _openHistoryItem(BaseCardDto item) {
+    final historyPath = AppRoutesPaths.dashboardHistoryWithParams(
+      EntityType.values.firstWhere((e) => e.id == _entityType.id),
+      item.id,
+    );
+    if (GoRouter.of(context).state.matchedLocation != historyPath) {
+      context.push(historyPath);
+    }
   }
 
   void _openViewItem(BaseCardDto item) {

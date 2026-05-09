@@ -99,7 +99,7 @@ class CardActionButtons extends StatelessWidget {
         ),
         if (onOpenHistory != null) ...[
           const SizedBox(height: 8),
-          SmoothButton.tonal(
+          SmoothButton.text(
             label: 'История изменений',
             onPressed: onOpenHistory,
             size: SmoothButtonSize.small,

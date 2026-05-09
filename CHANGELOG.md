@@ -7,6 +7,13 @@
 - Добавлен новый изолированный модуль `dashboard_v2` с разделением на модели,
   repository/controller слой и небольшие UI-виджеты для чистой замены старого
   `DashboardHomeScreen`.
+- В `DashboardV2HomeScreen` открытие истории вынесено в отдельный метод с
+  проверкой текущего пути перед `push`, чтобы не дублировать переход на уже
+  открытый экран.
+- `DashboardV2EntityCardActions` получил отдельный `onOpenEdit`, а свайп вправо
+  для обычной записи теперь открывает редактирование через callback экрана.
+- `dashboardFilterProvider.setQuery` переведен на debounce, чтобы поиск в
+  dashboard v2 не дергал фильтрацию на каждый символ.
 - `dashboard_v2` переведен с универсальной карточки `DashboardV2ItemCard` на
   entity-specific list/grid карточки через `DashboardV2EntityCardBuilder`.
 - В `dashboard_v2` возвращен sliver app bar в стиле старого dashboard app bar:
@@ -15,9 +22,9 @@
 - `DashboardV2HomeScreen` переведен на единый `CustomScrollView`, а список и
   сетка карточек теперь строятся через `SliverList`/`SliverGrid` без вложенных
   scrollable-виджетов.
-- В `DashboardV2EntityCardBuilder` восстановлена прокидка `onRestore`,
-  добавлены горизонтальные swipe-действия для архивации/восстановления и
-  удаления, а удаленные элементы теперь используют permanent delete.
+- В `DashboardV2EntityCardBuilder` восстановлена прокидка `onRestore`, добавлены
+  горизонтальные swipe-действия для архивации/восстановления и удаления, а
+  удаленные элементы теперь используют permanent delete.
 
 ### home
 

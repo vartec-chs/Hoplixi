@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/dashboard_filter_state.dart';
@@ -10,11 +12,31 @@ final dashboardFilterProvider =
     );
 
 final class DashboardFilterNotifier extends Notifier<DashboardFilterState> {
+  Timer? _debounceTimer;
+  static const _debounceDuration = Duration(milliseconds: 300);
+
   @override
-  DashboardFilterState build() => const DashboardFilterState();
+  DashboardFilterState build() {
+    ref.onDispose(() {
+      _debounceTimer?.cancel();
+    });
+    return const DashboardFilterState();
+  }
 
   void setQuery(String query) {
-    state = state.copyWith(query: query.trim());
+    final normalizedQuery = query.trim();
+
+    _debounceTimer?.cancel();
+
+    if (normalizedQuery.isEmpty) {
+      state = state.copyWith(query: normalizedQuery);
+      return;
+    }
+
+    _debounceTimer = Timer(_debounceDuration, () {
+      state = state.copyWith(query: normalizedQuery);
+      _debounceTimer = null;
+    });
   }
 
   void setTab(DashboardFilterTab tab) {
