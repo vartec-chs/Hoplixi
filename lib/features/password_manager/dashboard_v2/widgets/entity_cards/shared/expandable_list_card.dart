@@ -1,10 +1,16 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
 import 'package:hoplixi/shared/widgets/icon_ref_preview.dart';
+
+import 'card_action_buttons.dart';
+import 'card_category_badge.dart';
+import 'card_meta_info.dart';
+import 'card_status_indicators.dart';
+import 'card_tags_list.dart';
+import 'horizontal_scrollable_actions.dart';
 
 class ExpandableListCard extends StatefulWidget {
   final String title;
@@ -322,12 +328,6 @@ class _ExpandableListCardState extends State<ExpandableListCard>
                   onPressed: widget.onTogglePin,
                   tooltip: widget.isPinned ? 'Открепить' : 'Закрепить',
                 ),
-                if (widget.onOpenHistory != null)
-                  IconButton(
-                    icon: const Icon(Icons.history, size: 18),
-                    onPressed: widget.onOpenHistory,
-                    tooltip: 'История',
-                  ),
               ],
             ),
           ),

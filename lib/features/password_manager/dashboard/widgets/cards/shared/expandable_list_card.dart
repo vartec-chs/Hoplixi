@@ -322,12 +322,6 @@ class _ExpandableListCardState extends State<ExpandableListCard>
                   onPressed: widget.onTogglePin,
                   tooltip: widget.isPinned ? 'Открепить' : 'Закрепить',
                 ),
-                if (widget.onOpenHistory != null)
-                  IconButton(
-                    icon: const Icon(Icons.history, size: 18),
-                    onPressed: widget.onOpenHistory,
-                    tooltip: 'История',
-                  ),
               ],
             ),
           ),
@@ -421,6 +415,7 @@ class _ExpandableListCardState extends State<ExpandableListCard>
               onRestore: widget.onRestore,
               onDelete: widget.onDelete,
               onToggleArchive: widget.onToggleArchive,
+              onOpenHistory: widget.onOpenHistory,
             ),
           ],
         ),

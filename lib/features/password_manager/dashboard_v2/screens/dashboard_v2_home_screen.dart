@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
+import 'package:hoplixi/routing/paths.dart';
 
 import '../models/dashboard_entity_type.dart';
 import '../models/dashboard_view_mode.dart';
@@ -110,6 +113,15 @@ final class _DashboardV2HomeScreenState
                     onToggleArchived: _toggleArchived,
                     onDelete: _deleteItem,
                     onRestore: _restoreItem,
+                    onOpenView: _openViewItem,
+                    onOpenHistory: (item) => context.push(
+                      AppRoutesPaths.dashboardHistoryWithParams(
+                        EntityType.values.firstWhere(
+                          (e) => e.id == _entityType.id,
+                        ),
+                        item.id,
+                      ),
+                    ),
                   ),
                 ),
                 if (data.isLoadingMore)
@@ -219,6 +231,16 @@ final class _DashboardV2HomeScreenState
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(error.message)));
+  }
+
+  void _openViewItem(BaseCardDto item) {
+    final viewPath = AppRoutesPaths.dashboardEntityView(
+      EntityType.values.firstWhere((e) => e.id == _entityType.id),
+      item.id,
+    );
+    if (GoRouter.of(context).state.matchedLocation != viewPath) {
+      context.push(viewPath);
+    }
   }
 }
 

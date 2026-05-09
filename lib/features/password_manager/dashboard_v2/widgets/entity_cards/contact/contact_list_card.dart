@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/index.dart';
+import '../shared/shared.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
 
 class ContactListCard extends StatelessWidget {

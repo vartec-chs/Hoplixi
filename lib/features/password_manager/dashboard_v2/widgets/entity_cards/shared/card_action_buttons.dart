@@ -18,6 +18,9 @@ class CardActionButtons extends StatelessWidget {
   /// Колбэк переключения архивации
   final VoidCallback? onToggleArchive;
 
+  /// Колбэк открытия истории изменений
+  final VoidCallback? onOpenHistory;
+
   const CardActionButtons({
     super.key,
     required this.isDeleted,
@@ -25,6 +28,7 @@ class CardActionButtons extends StatelessWidget {
     this.onRestore,
     this.onDelete,
     this.onToggleArchive,
+    this.onOpenHistory,
   });
 
   @override
@@ -59,31 +63,51 @@ class CardActionButtons extends StatelessWidget {
       );
     }
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+
       children: [
-        Expanded(
-          child: SmoothButton(
-            label: isArchived ? 'Разархивировать' : 'Архивировать',
-            onPressed: onToggleArchive,
+        Row(
+          children: [
+            Expanded(
+              child: SmoothButton(
+                label: isArchived ? 'Разархивировать' : 'Архивировать',
+                onPressed: onToggleArchive,
+                size: SmoothButtonSize.small,
+                type: SmoothButtonType.text,
+                variant: SmoothButtonVariant.info,
+                icon: Icon(
+                  isArchived ? Icons.unarchive : Icons.archive,
+                  size: 16,
+                ),
+                iconPosition: SmoothButtonIconPosition.start,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: SmoothButton(
+                label: 'Удалить',
+                onPressed: onDelete,
+                size: SmoothButtonSize.small,
+                type: SmoothButtonType.text,
+                variant: SmoothButtonVariant.error,
+                icon: const Icon(Icons.delete_outline, size: 16),
+                iconPosition: SmoothButtonIconPosition.start,
+              ),
+            ),
+          ],
+        ),
+        if (onOpenHistory != null) ...[
+          const SizedBox(height: 8),
+          SmoothButton.tonal(
+            label: 'История изменений',
+            onPressed: onOpenHistory,
             size: SmoothButtonSize.small,
-            type: SmoothButtonType.text,
             variant: SmoothButtonVariant.info,
-            icon: Icon(isArchived ? Icons.unarchive : Icons.archive, size: 16),
+            icon: const Icon(Icons.history, size: 16),
             iconPosition: SmoothButtonIconPosition.start,
           ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: SmoothButton(
-            label: 'Удалить',
-            onPressed: onDelete,
-            size: SmoothButtonSize.small,
-            type: SmoothButtonType.text,
-            variant: SmoothButtonVariant.error,
-            icon: const Icon(Icons.delete_outline, size: 16),
-            iconPosition: SmoothButtonIconPosition.start,
-          ),
-        ),
+        ],
       ],
     );
   }

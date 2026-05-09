@@ -17,6 +17,8 @@ final class DashboardV2ItemsView extends StatelessWidget {
     required this.onToggleArchived,
     required this.onDelete,
     required this.onRestore,
+    required this.onOpenView,
+    required this.onOpenHistory,
     super.key,
   });
 
@@ -31,6 +33,8 @@ final class DashboardV2ItemsView extends StatelessWidget {
   final ValueChanged<BaseCardDto> onToggleArchived;
   final ValueChanged<BaseCardDto> onDelete;
   final ValueChanged<BaseCardDto> onRestore;
+  final ValueChanged<BaseCardDto> onOpenView;
+  final ValueChanged<BaseCardDto> onOpenHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +84,8 @@ final class DashboardV2ItemsView extends StatelessWidget {
         onToggleArchived: onToggleArchived,
         onDelete: onDelete,
         onRestore: onRestore,
+        onOpenView: onOpenView,
+        onOpenHistory: onOpenHistory,
       ),
     );
   }
