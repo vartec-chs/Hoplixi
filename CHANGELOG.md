@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 2026-05-10
+
+### password_manager
+
+- `dashboard_v2` подключён к возвращённым entity-specific фильтрам и
+  `FilterModal`: app bar открывает Wolt-модалку фильтров, список подписан на
+  фильтр текущего типа сущности, а repository передаёт в DAO реальные typed
+  filters вместе с общими search/tab/page ограничениями.
+
 ## 2026-05-09
 
 ### password_manager
@@ -14,6 +23,8 @@
   для обычной записи теперь открывает редактирование через callback экрана.
 - `dashboardFilterProvider.setQuery` переведен на debounce, чтобы поиск в
   dashboard v2 не дергал фильтрацию на каждый символ.
+- Все провайдеры в `dashboard_v2/providers/filter_providers` переведены на
+  `NotifierProvider.autoDispose`, чтобы фильтры очищались вместе с экраном.
 - `dashboard_v2` переведен с универсальной карточки `DashboardV2ItemCard` на
   entity-specific list/grid карточки через `DashboardV2EntityCardBuilder`.
 - В `dashboard_v2` возвращен sliver app bar в стиле старого dashboard app bar:

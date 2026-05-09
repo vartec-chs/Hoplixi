@@ -5,6 +5,7 @@ import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/store_settings/index.dart';
+import 'package:hoplixi/main_db/core/models/filter/index.dart';
 import 'package:hoplixi/main_db/providers/main_store_backup_orchestrator_provider.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -14,8 +15,11 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:typed_prefs/typed_prefs.dart';
 
 import '../../models/dashboard_entity_type.dart';
+import '../../models/dashboard_filter_state.dart';
 import '../../models/dashboard_filter_tab.dart';
 import '../../providers/dashboard_filter_provider.dart';
+import '../../providers/filter_providers/filter_providers.dart';
+import '../filters_modal/filters_modal.dart';
 import 'entity_type_compact_dropdown.dart';
 import 'filter_tabs.dart';
 
@@ -90,8 +94,7 @@ final class _DashboardV2SliverAppBarState
     final theme = Theme.of(context);
     final filters = ref.watch(dashboardFilterProvider);
     final currentType = widget.entityType;
-    final hasActiveFilters =
-        filters.query.isNotEmpty || filters.tab != DashboardFilterTab.active;
+    final hasActiveFilters = _hasActiveFilters(filters);
     final isStoreOpen = ref
         .watch(mainStoreProvider)
         .maybeWhen(data: (state) => state.isOpen, orElse: () => false);
@@ -321,70 +324,61 @@ final class _DashboardV2SliverAppBarState
     );
   }
 
-  void _openFilter() {
+  Future<void> _openFilter() async {
     logInfo('DashboardV2SliverAppBar: Открытие фильтров');
     if (widget.onFilterPressed != null) {
       widget.onFilterPressed?.call();
+      return;
     } else {
-      _showFilterSheet();
+      await FilterModal.show(
+        context: context,
+        entityType: widget.entityType,
+        onFilterApplied: widget.onFilterApplied,
+      );
     }
-    widget.onFilterApplied?.call();
   }
 
-  Future<void> _showFilterSheet() async {
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) {
-        return Consumer(
-          builder: (context, ref, _) {
-            final filters = ref.watch(dashboardFilterProvider);
+  bool _hasActiveFilters(DashboardFilterState filters) {
+    final hasDashboardFilters =
+        filters.query.isNotEmpty || filters.tab != DashboardFilterTab.active;
+    return hasDashboardFilters || _hasEntityFilterConstraints();
+  }
 
-            return SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'Фильтры',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 16),
-                    SegmentedButton<DashboardFilterTab>(
-                      segments: [
-                        for (final tab in DashboardFilterTab.values)
-                          ButtonSegment(value: tab, label: Text(tab.label)),
-                      ],
-                      selected: {filters.tab},
-                      onSelectionChanged: (value) {
-                        ref
-                            .read(dashboardFilterProvider.notifier)
-                            .setTab(value.first);
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        _searchController.clear();
-                        ref.read(dashboardFilterProvider.notifier).setQuery('');
-                        ref
-                            .read(dashboardFilterProvider.notifier)
-                            .setTab(DashboardFilterTab.active);
-                        Navigator.of(context).pop();
-                      },
-                      icon: const Icon(Icons.clear),
-                      label: const Text('Сбросить фильтры'),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
+  bool _hasEntityFilterConstraints() {
+    return switch (widget.entityType) {
+      DashboardEntityType.password =>
+        ref.watch(passwordsFilterProvider).hasActiveConstraints,
+      DashboardEntityType.note =>
+        ref.watch(notesFilterProvider).hasActiveConstraints,
+      DashboardEntityType.otp =>
+        ref.watch(otpsFilterProvider).hasActiveConstraints,
+      DashboardEntityType.bankCard =>
+        ref.watch(bankCardsFilterProvider).hasActiveConstraints,
+      DashboardEntityType.file =>
+        ref.watch(filesFilterProvider).hasActiveConstraints,
+      DashboardEntityType.document =>
+        ref.watch(documentsFilterProvider).hasActiveConstraints,
+      DashboardEntityType.contact =>
+        ref.watch(contactsFilterProvider).hasActiveConstraints,
+      DashboardEntityType.apiKey =>
+        ref.watch(apiKeysFilterProvider).hasActiveConstraints,
+      DashboardEntityType.sshKey =>
+        ref.watch(sshKeysFilterProvider).hasActiveConstraints,
+      DashboardEntityType.certificate =>
+        ref.watch(certificatesFilterProvider).hasActiveConstraints,
+      DashboardEntityType.cryptoWallet =>
+        ref.watch(cryptoWalletsFilterProvider).hasActiveConstraints,
+      DashboardEntityType.wifi =>
+        ref.watch(wifisFilterProvider).hasActiveConstraints,
+      DashboardEntityType.identity =>
+        ref.watch(identitiesFilterProvider).hasActiveConstraints,
+      DashboardEntityType.licenseKey =>
+        ref.watch(licenseKeysFilterProvider).hasActiveConstraints,
+      DashboardEntityType.recoveryCodes =>
+        ref.watch(recoveryCodesFilterProvider).hasActiveConstraints,
+      DashboardEntityType.loyaltyCard =>
+        ref.watch(loyaltyCardsFilterProvider).hasActiveConstraints,
+    };
   }
 
   Future<void> _openStoreSettingsModal() async {

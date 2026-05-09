@@ -30,8 +30,16 @@ final class MainDbDashboardRepository implements DashboardRepository {
     return ResultUtils.tryCatchAsync(
       () async {
         final baseFilter = _buildBaseFilter(query);
-        final items = await _loadItems(query.entityType, baseFilter);
-        final totalCount = await _countItems(query.entityType, baseFilter);
+        final items = await _loadItems(
+          query.entityType,
+          query.entityFilter,
+          baseFilter,
+        );
+        final totalCount = await _countItems(
+          query.entityType,
+          query.entityFilter,
+          baseFilter,
+        );
         return (items: items, totalCount: totalCount);
       },
       (error, stackTrace) => _mapError(
@@ -95,6 +103,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
   }
 
   BaseFilter _buildBaseFilter(DashboardQuery query) {
+    final sourceBase = _entityBaseFilter(query.entityFilter);
     final tabFilter = switch (query.filters.tab) {
       DashboardFilterTab.active => (
         isArchived: false,
@@ -127,130 +136,259 @@ final class MainDbDashboardRepository implements DashboardRepository {
         isPinned: null,
       ),
     };
+    final tabOverridesStatus = query.filters.tab != DashboardFilterTab.active;
 
-    return BaseFilter.create(
-      query: query.filters.query,
-      isArchived: tabFilter.isArchived,
-      isDeleted: tabFilter.isDeleted,
-      isFavorite: tabFilter.isFavorite,
-      isPinned: tabFilter.isPinned,
+    return sourceBase.copyWith(
+      query: query.filters.query.isNotEmpty
+          ? query.filters.query
+          : sourceBase.query,
+      isArchived: tabOverridesStatus
+          ? tabFilter.isArchived
+          : sourceBase.isArchived ?? tabFilter.isArchived,
+      isDeleted: tabOverridesStatus
+          ? tabFilter.isDeleted
+          : sourceBase.isDeleted ?? tabFilter.isDeleted,
+      isFavorite: tabOverridesStatus
+          ? tabFilter.isFavorite
+          : sourceBase.isFavorite ?? tabFilter.isFavorite,
+      isPinned: tabOverridesStatus
+          ? tabFilter.isPinned
+          : sourceBase.isPinned ?? tabFilter.isPinned,
       limit: query.filters.pageSize,
       offset: query.page * query.filters.pageSize,
-      sortBy: SortBy.modifiedAt,
-      sortDirection: SortDirection.desc,
     );
   }
 
   Future<List<BaseCardDto>> _loadItems(
     DashboardEntityType entityType,
+    Object entityFilter,
     BaseFilter base,
   ) async {
     return switch (entityType) {
       DashboardEntityType.password => await (await _ref.read(
         passwordFilterDaoProvider.future,
-      )).getFiltered(PasswordsFilter.create(base: base)),
+      )).getFiltered(_passwordsFilter(entityFilter, base)),
       DashboardEntityType.note => await (await _ref.read(
         noteFilterDaoProvider.future,
-      )).getFiltered(NotesFilter.create(base: base)),
+      )).getFiltered(_notesFilter(entityFilter, base)),
       DashboardEntityType.bankCard => await (await _ref.read(
         bankCardFilterDaoProvider.future,
-      )).getFiltered(BankCardsFilter.create(base: base)),
+      )).getFiltered(_bankCardsFilter(entityFilter, base)),
       DashboardEntityType.file => await (await _ref.read(
         fileFilterDaoProvider.future,
-      )).getFiltered(FilesFilter.create(base: base)),
+      )).getFiltered(_filesFilter(entityFilter, base)),
       DashboardEntityType.otp => await (await _ref.read(
         otpFilterDaoProvider.future,
-      )).getFiltered(OtpsFilter.create(base: base)),
+      )).getFiltered(_otpsFilter(entityFilter, base)),
       DashboardEntityType.document => await (await _ref.read(
         documentFilterDaoProvider.future,
-      )).getFiltered(DocumentsFilter.create(base: base)),
+      )).getFiltered(_documentsFilter(entityFilter, base)),
       DashboardEntityType.contact => await (await _ref.read(
         contactFilterDaoProvider.future,
-      )).getFiltered(ContactsFilter.create(base: base)),
+      )).getFiltered(_contactsFilter(entityFilter, base)),
       DashboardEntityType.apiKey => await (await _ref.read(
         apiKeyFilterDaoProvider.future,
-      )).getFiltered(ApiKeysFilter.create(base: base)),
+      )).getFiltered(_apiKeysFilter(entityFilter, base)),
       DashboardEntityType.sshKey => await (await _ref.read(
         sshKeyFilterDaoProvider.future,
-      )).getFiltered(SshKeysFilter.create(base: base)),
+      )).getFiltered(_sshKeysFilter(entityFilter, base)),
       DashboardEntityType.certificate => await (await _ref.read(
         certificateFilterDaoProvider.future,
-      )).getFiltered(CertificatesFilter.create(base: base)),
+      )).getFiltered(_certificatesFilter(entityFilter, base)),
       DashboardEntityType.cryptoWallet => await (await _ref.read(
         cryptoWalletFilterDaoProvider.future,
-      )).getFiltered(CryptoWalletsFilter.create(base: base)),
+      )).getFiltered(_cryptoWalletsFilter(entityFilter, base)),
       DashboardEntityType.wifi => await (await _ref.read(
         wifiFilterDaoProvider.future,
-      )).getFiltered(WifisFilter.create(base: base)),
+      )).getFiltered(_wifisFilter(entityFilter, base)),
       DashboardEntityType.identity => await (await _ref.read(
         identityFilterDaoProvider.future,
-      )).getFiltered(IdentitiesFilter.create(base: base)),
+      )).getFiltered(_identitiesFilter(entityFilter, base)),
       DashboardEntityType.licenseKey => await (await _ref.read(
         licenseKeyFilterDaoProvider.future,
-      )).getFiltered(LicenseKeysFilter.create(base: base)),
+      )).getFiltered(_licenseKeysFilter(entityFilter, base)),
       DashboardEntityType.recoveryCodes => await (await _ref.read(
         recoveryCodesFilterDaoProvider.future,
-      )).getFiltered(RecoveryCodesFilter.create(base: base)),
+      )).getFiltered(_recoveryCodesFilter(entityFilter, base)),
       DashboardEntityType.loyaltyCard => await (await _ref.read(
         loyaltyCardFilterDaoProvider.future,
-      )).getFiltered(LoyaltyCardsFilter.create(base: base)),
+      )).getFiltered(_loyaltyCardsFilter(entityFilter, base)),
     };
   }
 
   Future<int> _countItems(
     DashboardEntityType entityType,
+    Object entityFilter,
     BaseFilter base,
   ) async {
     return switch (entityType) {
       DashboardEntityType.password => await (await _ref.read(
         passwordFilterDaoProvider.future,
-      )).countFiltered(PasswordsFilter.create(base: base)),
+      )).countFiltered(_passwordsFilter(entityFilter, base)),
       DashboardEntityType.note => await (await _ref.read(
         noteFilterDaoProvider.future,
-      )).countFiltered(NotesFilter.create(base: base)),
+      )).countFiltered(_notesFilter(entityFilter, base)),
       DashboardEntityType.bankCard => await (await _ref.read(
         bankCardFilterDaoProvider.future,
-      )).countFiltered(BankCardsFilter.create(base: base)),
+      )).countFiltered(_bankCardsFilter(entityFilter, base)),
       DashboardEntityType.file => await (await _ref.read(
         fileFilterDaoProvider.future,
-      )).countFiltered(FilesFilter.create(base: base)),
+      )).countFiltered(_filesFilter(entityFilter, base)),
       DashboardEntityType.otp => await (await _ref.read(
         otpFilterDaoProvider.future,
-      )).countFiltered(OtpsFilter.create(base: base)),
+      )).countFiltered(_otpsFilter(entityFilter, base)),
       DashboardEntityType.document => await (await _ref.read(
         documentFilterDaoProvider.future,
-      )).countFiltered(DocumentsFilter.create(base: base)),
+      )).countFiltered(_documentsFilter(entityFilter, base)),
       DashboardEntityType.contact => await (await _ref.read(
         contactFilterDaoProvider.future,
-      )).countFiltered(ContactsFilter.create(base: base)),
+      )).countFiltered(_contactsFilter(entityFilter, base)),
       DashboardEntityType.apiKey => await (await _ref.read(
         apiKeyFilterDaoProvider.future,
-      )).countFiltered(ApiKeysFilter.create(base: base)),
+      )).countFiltered(_apiKeysFilter(entityFilter, base)),
       DashboardEntityType.sshKey => await (await _ref.read(
         sshKeyFilterDaoProvider.future,
-      )).countFiltered(SshKeysFilter.create(base: base)),
+      )).countFiltered(_sshKeysFilter(entityFilter, base)),
       DashboardEntityType.certificate => await (await _ref.read(
         certificateFilterDaoProvider.future,
-      )).countFiltered(CertificatesFilter.create(base: base)),
+      )).countFiltered(_certificatesFilter(entityFilter, base)),
       DashboardEntityType.cryptoWallet => await (await _ref.read(
         cryptoWalletFilterDaoProvider.future,
-      )).countFiltered(CryptoWalletsFilter.create(base: base)),
+      )).countFiltered(_cryptoWalletsFilter(entityFilter, base)),
       DashboardEntityType.wifi => await (await _ref.read(
         wifiFilterDaoProvider.future,
-      )).countFiltered(WifisFilter.create(base: base)),
+      )).countFiltered(_wifisFilter(entityFilter, base)),
       DashboardEntityType.identity => await (await _ref.read(
         identityFilterDaoProvider.future,
-      )).countFiltered(IdentitiesFilter.create(base: base)),
+      )).countFiltered(_identitiesFilter(entityFilter, base)),
       DashboardEntityType.licenseKey => await (await _ref.read(
         licenseKeyFilterDaoProvider.future,
-      )).countFiltered(LicenseKeysFilter.create(base: base)),
+      )).countFiltered(_licenseKeysFilter(entityFilter, base)),
       DashboardEntityType.recoveryCodes => await (await _ref.read(
         recoveryCodesFilterDaoProvider.future,
-      )).countFiltered(RecoveryCodesFilter.create(base: base)),
+      )).countFiltered(_recoveryCodesFilter(entityFilter, base)),
       DashboardEntityType.loyaltyCard => await (await _ref.read(
         loyaltyCardFilterDaoProvider.future,
-      )).countFiltered(LoyaltyCardsFilter.create(base: base)),
+      )).countFiltered(_loyaltyCardsFilter(entityFilter, base)),
     };
+  }
+
+  BaseFilter _entityBaseFilter(Object entityFilter) {
+    return switch (entityFilter) {
+      PasswordsFilter(:final base) => base,
+      NotesFilter(:final base) => base,
+      OtpsFilter(:final base) => base,
+      BankCardsFilter(:final base) => base,
+      FilesFilter(:final base) => base,
+      DocumentsFilter(:final base) => base,
+      ContactsFilter(:final base) => base,
+      ApiKeysFilter(:final base) => base,
+      SshKeysFilter(:final base) => base,
+      CertificatesFilter(:final base) => base,
+      CryptoWalletsFilter(:final base) => base,
+      WifisFilter(:final base) => base,
+      IdentitiesFilter(:final base) => base,
+      LicenseKeysFilter(:final base) => base,
+      RecoveryCodesFilter(:final base) => base,
+      LoyaltyCardsFilter(:final base) => base,
+      _ => const BaseFilter(),
+    };
+  }
+
+  PasswordsFilter _passwordsFilter(Object filter, BaseFilter base) {
+    return filter is PasswordsFilter
+        ? filter.copyWith(base: base)
+        : PasswordsFilter.create(base: base);
+  }
+
+  NotesFilter _notesFilter(Object filter, BaseFilter base) {
+    return filter is NotesFilter
+        ? filter.copyWith(base: base)
+        : NotesFilter.create(base: base);
+  }
+
+  OtpsFilter _otpsFilter(Object filter, BaseFilter base) {
+    return filter is OtpsFilter
+        ? filter.copyWith(base: base)
+        : OtpsFilter.create(base: base);
+  }
+
+  BankCardsFilter _bankCardsFilter(Object filter, BaseFilter base) {
+    return filter is BankCardsFilter
+        ? filter.copyWith(base: base)
+        : BankCardsFilter.create(base: base);
+  }
+
+  FilesFilter _filesFilter(Object filter, BaseFilter base) {
+    return filter is FilesFilter
+        ? filter.copyWith(base: base)
+        : FilesFilter.create(base: base);
+  }
+
+  DocumentsFilter _documentsFilter(Object filter, BaseFilter base) {
+    return filter is DocumentsFilter
+        ? filter.copyWith(base: base)
+        : DocumentsFilter.create(base: base);
+  }
+
+  ContactsFilter _contactsFilter(Object filter, BaseFilter base) {
+    return filter is ContactsFilter
+        ? filter.copyWith(base: base)
+        : ContactsFilter.create(base: base);
+  }
+
+  ApiKeysFilter _apiKeysFilter(Object filter, BaseFilter base) {
+    return filter is ApiKeysFilter
+        ? filter.copyWith(base: base)
+        : ApiKeysFilter.create(base: base);
+  }
+
+  SshKeysFilter _sshKeysFilter(Object filter, BaseFilter base) {
+    return filter is SshKeysFilter
+        ? filter.copyWith(base: base)
+        : SshKeysFilter.create(base: base);
+  }
+
+  CertificatesFilter _certificatesFilter(Object filter, BaseFilter base) {
+    return filter is CertificatesFilter
+        ? filter.copyWith(base: base)
+        : CertificatesFilter.create(base: base);
+  }
+
+  CryptoWalletsFilter _cryptoWalletsFilter(Object filter, BaseFilter base) {
+    return filter is CryptoWalletsFilter
+        ? filter.copyWith(base: base)
+        : CryptoWalletsFilter.create(base: base);
+  }
+
+  WifisFilter _wifisFilter(Object filter, BaseFilter base) {
+    return filter is WifisFilter
+        ? filter.copyWith(base: base)
+        : WifisFilter.create(base: base);
+  }
+
+  IdentitiesFilter _identitiesFilter(Object filter, BaseFilter base) {
+    return filter is IdentitiesFilter
+        ? filter.copyWith(base: base)
+        : IdentitiesFilter.create(base: base);
+  }
+
+  LicenseKeysFilter _licenseKeysFilter(Object filter, BaseFilter base) {
+    return filter is LicenseKeysFilter
+        ? filter.copyWith(base: base)
+        : LicenseKeysFilter.create(base: base);
+  }
+
+  RecoveryCodesFilter _recoveryCodesFilter(Object filter, BaseFilter base) {
+    return filter is RecoveryCodesFilter
+        ? filter.copyWith(base: base)
+        : RecoveryCodesFilter.create(base: base);
+  }
+
+  LoyaltyCardsFilter _loyaltyCardsFilter(Object filter, BaseFilter base) {
+    return filter is LoyaltyCardsFilter
+        ? filter.copyWith(base: base)
+        : LoyaltyCardsFilter.create(base: base);
   }
 
   Future<ResultDart<bool, AppError>> _mutate(

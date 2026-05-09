@@ -11,6 +11,7 @@ import '../models/dashboard_filter_state.dart';
 import '../models/dashboard_list_state.dart';
 import '../models/dashboard_query.dart';
 import 'dashboard_filter_provider.dart';
+import 'filter_providers/filter_providers.dart';
 
 final dashboardListControllerProvider = AsyncNotifierProvider.autoDispose
     .family<DashboardListController, DashboardListState, DashboardEntityType>(
@@ -27,13 +28,15 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
   @override
   Future<DashboardListState> build() async {
     final filters = ref.watch(dashboardFilterProvider);
-    return _loadFirstPage(filters);
+    final entityFilter = _watchEntityFilter();
+    return _loadFirstPage(filters, entityFilter);
   }
 
   Future<void> refresh() async {
     final filters = ref.read(dashboardFilterProvider);
+    final entityFilter = _readEntityFilter();
     state = const AsyncLoading<DashboardListState>();
-    state = await AsyncValue.guard(() => _loadFirstPage(filters));
+    state = await AsyncValue.guard(() => _loadFirstPage(filters, entityFilter));
   }
 
   Future<void> loadMore() async {
@@ -45,12 +48,14 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
     );
 
     final filters = ref.read(dashboardFilterProvider);
+    final entityFilter = _readEntityFilter();
     final result = await ref
         .read(dashboardRepositoryProvider)
         .load(
           DashboardQuery(
             entityType: entityType,
             filters: filters,
+            entityFilter: entityFilter,
             page: current.page + 1,
           ),
         );
@@ -150,11 +155,17 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
 
   Future<DashboardListState> _loadFirstPage(
     DashboardFilterState filters,
+    Object entityFilter,
   ) async {
     final result = await ref
         .read(dashboardRepositoryProvider)
         .load(
-          DashboardQuery(entityType: entityType, filters: filters, page: 0),
+          DashboardQuery(
+            entityType: entityType,
+            filters: filters,
+            entityFilter: entityFilter,
+            page: 0,
+          ),
         );
 
     return result.fold(
@@ -175,6 +186,54 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
         ).copyWith(lastError: error);
       },
     );
+  }
+
+  Object _watchEntityFilter() {
+    return switch (entityType) {
+      DashboardEntityType.password => ref.watch(passwordsFilterProvider),
+      DashboardEntityType.note => ref.watch(notesFilterProvider),
+      DashboardEntityType.otp => ref.watch(otpsFilterProvider),
+      DashboardEntityType.bankCard => ref.watch(bankCardsFilterProvider),
+      DashboardEntityType.file => ref.watch(filesFilterProvider),
+      DashboardEntityType.document => ref.watch(documentsFilterProvider),
+      DashboardEntityType.contact => ref.watch(contactsFilterProvider),
+      DashboardEntityType.apiKey => ref.watch(apiKeysFilterProvider),
+      DashboardEntityType.sshKey => ref.watch(sshKeysFilterProvider),
+      DashboardEntityType.certificate => ref.watch(certificatesFilterProvider),
+      DashboardEntityType.cryptoWallet => ref.watch(
+        cryptoWalletsFilterProvider,
+      ),
+      DashboardEntityType.wifi => ref.watch(wifisFilterProvider),
+      DashboardEntityType.identity => ref.watch(identitiesFilterProvider),
+      DashboardEntityType.licenseKey => ref.watch(licenseKeysFilterProvider),
+      DashboardEntityType.recoveryCodes => ref.watch(
+        recoveryCodesFilterProvider,
+      ),
+      DashboardEntityType.loyaltyCard => ref.watch(loyaltyCardsFilterProvider),
+    };
+  }
+
+  Object _readEntityFilter() {
+    return switch (entityType) {
+      DashboardEntityType.password => ref.read(passwordsFilterProvider),
+      DashboardEntityType.note => ref.read(notesFilterProvider),
+      DashboardEntityType.otp => ref.read(otpsFilterProvider),
+      DashboardEntityType.bankCard => ref.read(bankCardsFilterProvider),
+      DashboardEntityType.file => ref.read(filesFilterProvider),
+      DashboardEntityType.document => ref.read(documentsFilterProvider),
+      DashboardEntityType.contact => ref.read(contactsFilterProvider),
+      DashboardEntityType.apiKey => ref.read(apiKeysFilterProvider),
+      DashboardEntityType.sshKey => ref.read(sshKeysFilterProvider),
+      DashboardEntityType.certificate => ref.read(certificatesFilterProvider),
+      DashboardEntityType.cryptoWallet => ref.read(cryptoWalletsFilterProvider),
+      DashboardEntityType.wifi => ref.read(wifisFilterProvider),
+      DashboardEntityType.identity => ref.read(identitiesFilterProvider),
+      DashboardEntityType.licenseKey => ref.read(licenseKeysFilterProvider),
+      DashboardEntityType.recoveryCodes => ref.read(
+        recoveryCodesFilterProvider,
+      ),
+      DashboardEntityType.loyaltyCard => ref.read(loyaltyCardsFilterProvider),
+    };
   }
 
   Future<AppError?> _applyItemMutation(
