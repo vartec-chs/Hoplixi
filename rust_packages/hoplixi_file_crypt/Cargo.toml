@@ -23,7 +23,7 @@ argon2 = "0.5.3"
 hkdf = "0.13.0"
 sha2 = "0.11.0"
 rand = "0.10.1"
-tokio = { version = "1.52.1", features = ["full"] }
+tokio = { version = "1.52.3", features = ["full"] }
 uuid = { version = "1.23.1", features = ["v4"] }
 serde = { version = "1.0.228", features = ["derive"] }
 bincode = { version = "2.0.1", features = ["serde"] }
