@@ -12,7 +12,7 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/list_provi
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home_screen_ui_builders/builders/dashboard_home_builders.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/app_bar/app_bar_widgets.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_list_toolbar.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_layout/dashboard_drawer_scope.dart';
+import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer_scope.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/widgets/tag_picker_field.dart';
 import 'package:hoplixi/features/settings/providers/settings_prefs_providers.dart';
