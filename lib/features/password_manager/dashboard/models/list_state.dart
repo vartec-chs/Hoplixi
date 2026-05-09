@@ -4,7 +4,6 @@ import 'package:hoplixi/main_db/core/models/dto/index.dart';
 part 'list_state.freezed.dart';
 
 @freezed
-@immutable
 abstract class DashboardListState<T extends BaseCardDto>
     with _$DashboardListState<T> {
   const factory DashboardListState({
