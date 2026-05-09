@@ -15,6 +15,9 @@
 - `DashboardV2HomeScreen` переведен на единый `CustomScrollView`, а список и
   сетка карточек теперь строятся через `SliverList`/`SliverGrid` без вложенных
   scrollable-виджетов.
+- В `DashboardV2EntityCardBuilder` восстановлена прокидка `onRestore`,
+  добавлены горизонтальные swipe-действия для архивации/восстановления и
+  удаления, а удаленные элементы теперь используют permanent delete.
 
 ### home
 

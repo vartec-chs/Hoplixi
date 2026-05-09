@@ -5,10 +5,7 @@ import 'package:result_dart/result_dart.dart';
 import '../models/dashboard_entity_type.dart';
 import '../models/dashboard_query.dart';
 
-typedef DashboardLoadResult = ({
-  List<BaseCardDto> items,
-  int totalCount,
-});
+typedef DashboardLoadResult = ({List<BaseCardDto> items, int totalCount});
 
 abstract interface class DashboardRepository {
   Future<ResultDart<DashboardLoadResult, AppError>> load(DashboardQuery query);
@@ -32,6 +29,16 @@ abstract interface class DashboardRepository {
   });
 
   Future<ResultDart<bool, AppError>> softDelete({
+    required DashboardEntityType entityType,
+    required String id,
+  });
+
+  Future<ResultDart<bool, AppError>> restore({
+    required DashboardEntityType entityType,
+    required String id,
+  });
+
+  Future<ResultDart<bool, AppError>> permanentDelete({
     required DashboardEntityType entityType,
     required String id,
   });

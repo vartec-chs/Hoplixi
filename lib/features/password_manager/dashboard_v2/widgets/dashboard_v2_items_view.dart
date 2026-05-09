@@ -16,6 +16,7 @@ final class DashboardV2ItemsView extends StatelessWidget {
     required this.onTogglePinned,
     required this.onToggleArchived,
     required this.onDelete,
+    required this.onRestore,
     super.key,
   });
 
@@ -29,6 +30,7 @@ final class DashboardV2ItemsView extends StatelessWidget {
   final ValueChanged<BaseCardDto> onTogglePinned;
   final ValueChanged<BaseCardDto> onToggleArchived;
   final ValueChanged<BaseCardDto> onDelete;
+  final ValueChanged<BaseCardDto> onRestore;
 
   @override
   Widget build(BuildContext context) {
@@ -37,9 +39,10 @@ final class DashboardV2ItemsView extends StatelessWidget {
     if (viewMode.isGrid) {
       return SliverLayoutBuilder(
         builder: (context, constraints) {
-          final columns = (constraints.crossAxisExtent / 360)
-              .floor()
-              .clamp(1, 4);
+          final columns = (constraints.crossAxisExtent / 360).floor().clamp(
+            1,
+            4,
+          );
           return SliverGrid.builder(
             itemCount: items.length,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -76,6 +79,7 @@ final class DashboardV2ItemsView extends StatelessWidget {
         onTogglePinned: onTogglePinned,
         onToggleArchived: onToggleArchived,
         onDelete: onDelete,
+        onRestore: onRestore,
       ),
     );
   }

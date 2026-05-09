@@ -18,7 +18,7 @@ final class DashboardV2BulkBar extends StatelessWidget {
 
     return Material(
       color: colors.secondaryContainer,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(16),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Row(

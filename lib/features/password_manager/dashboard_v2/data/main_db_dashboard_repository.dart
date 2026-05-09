@@ -26,9 +26,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
   final Ref _ref;
 
   @override
-  Future<ResultDart<DashboardLoadResult, AppError>> load(
-    DashboardQuery query,
-  ) {
+  Future<ResultDart<DashboardLoadResult, AppError>> load(DashboardQuery query) {
     return ResultUtils.tryCatchAsync(
       () async {
         final baseFilter = _buildBaseFilter(query);
@@ -78,6 +76,22 @@ final class MainDbDashboardRepository implements DashboardRepository {
     required String id,
   }) {
     return _mutate(entityType, id, (dao) => dao.softDelete(id));
+  }
+
+  @override
+  Future<ResultDart<bool, AppError>> restore({
+    required DashboardEntityType entityType,
+    required String id,
+  }) {
+    return _mutate(entityType, id, (dao) => dao.restoreFromDeleted(id));
+  }
+
+  @override
+  Future<ResultDart<bool, AppError>> permanentDelete({
+    required DashboardEntityType entityType,
+    required String id,
+  }) {
+    return _mutate(entityType, id, (dao) => dao.permanentDelete(id));
   }
 
   BaseFilter _buildBaseFilter(DashboardQuery query) {
@@ -183,7 +197,10 @@ final class MainDbDashboardRepository implements DashboardRepository {
     };
   }
 
-  Future<int> _countItems(DashboardEntityType entityType, BaseFilter base) async {
+  Future<int> _countItems(
+    DashboardEntityType entityType,
+    BaseFilter base,
+  ) async {
     return switch (entityType) {
       DashboardEntityType.password => await (await _ref.read(
         passwordFilterDaoProvider.future,

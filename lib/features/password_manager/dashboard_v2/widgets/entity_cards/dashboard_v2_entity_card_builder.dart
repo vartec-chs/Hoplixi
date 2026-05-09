@@ -47,6 +47,7 @@ final class DashboardV2EntityCardActions {
     required this.onTogglePinned,
     required this.onToggleArchived,
     required this.onDelete,
+    required this.onRestore,
   });
 
   final DashboardV2CardCallback onOpen;
@@ -56,6 +57,7 @@ final class DashboardV2EntityCardActions {
   final DashboardV2CardCallback onTogglePinned;
   final DashboardV2CardCallback onToggleArchived;
   final DashboardV2CardCallback onDelete;
+  final DashboardV2CardCallback onRestore;
 }
 
 final class DashboardV2EntityCardBuilder {
@@ -93,6 +95,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       NoteCardDto() => NoteListCard(
@@ -102,6 +105,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       BankCardCardDto() => BankCardListCard(
@@ -111,6 +115,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       FileCardDto() => FileListCard(
@@ -120,6 +125,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       OtpCardDto() => TotpListCard(
@@ -129,6 +135,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       DocumentCardDto() => DocumentListCard(
@@ -138,6 +145,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       ContactCardDto() => ContactListCard(
@@ -146,6 +154,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       ApiKeyCardDto() => ApiKeyListCard(
@@ -154,6 +163,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       SshKeyCardDto() => SshKeyListCard(
@@ -162,6 +172,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       CertificateCardDto() => CertificateListCard(
@@ -170,6 +181,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       CryptoWalletCardDto() => CryptoWalletListCard(
@@ -178,6 +190,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       WifiCardDto() => WifiListCard(
@@ -186,6 +199,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       IdentityCardDto() => IdentityListCard(
@@ -194,6 +208,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       LicenseKeyCardDto() => LicenseKeyListCard(
@@ -202,6 +217,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       RecoveryCodesCardDto() => RecoveryCodesListCard(
@@ -210,6 +226,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       LoyaltyCardCardDto() => LoyaltyCardListCard(
@@ -219,6 +236,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       _ => _UnsupportedEntityCard(item: item),
@@ -237,6 +255,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       NoteCardDto() => NoteGridCard(
@@ -246,6 +265,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       BankCardCardDto() => BankCardGridCard(
@@ -255,6 +275,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       FileCardDto() => FileGridCard(
@@ -264,6 +285,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       OtpCardDto() => TotpGridCard(
@@ -273,6 +295,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       DocumentCardDto() => DocumentGridCard(
@@ -282,6 +305,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       ContactCardDto() => ContactGridCard(
@@ -291,6 +315,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       ApiKeyCardDto() => ApiKeyGridCard(
@@ -300,6 +325,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       SshKeyCardDto() => SshKeyGridCard(
@@ -308,6 +334,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       CertificateCardDto() => CertificateGridCard(
@@ -316,6 +343,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       CryptoWalletCardDto() => CryptoWalletGridCard(
@@ -324,6 +352,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       WifiCardDto() => WifiGridCard(
@@ -332,6 +361,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       IdentityCardDto() => IdentityGridCard(
@@ -340,6 +370,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       LicenseKeyCardDto() => LicenseKeyGridCard(
@@ -348,6 +379,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       RecoveryCodesCardDto() => RecoveryCodesGridCard(
@@ -356,6 +388,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       LoyaltyCardCardDto() => LoyaltyCardGridCard(
@@ -365,6 +398,7 @@ final class DashboardV2EntityCardBuilder {
         onTogglePin: () => actions.onTogglePinned(item),
         onToggleArchive: () => actions.onToggleArchived(item),
         onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpen(item),
       ),
       _ => _UnsupportedEntityCard(item: item),
@@ -391,8 +425,18 @@ final class _SelectableEntityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final archiveOrRestoreIcon = item.isDeleted
+        ? Icons.restore_from_trash
+        : item.isArchived
+        ? Icons.unarchive
+        : Icons.archive;
+    final archiveOrRestoreLabel = item.isDeleted
+        ? 'Восстановить'
+        : item.isArchived
+        ? 'Вернуть из архива'
+        : 'В архив';
 
-    return GestureDetector(
+    final decoratedChild = GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () => isSelecting
           ? actions.onToggleSelection(item.id)
@@ -405,7 +449,7 @@ final class _SelectableEntityCard extends StatelessWidget {
             color: isSelected ? colors.primary : Colors.transparent,
             width: 2,
           ),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Stack(
           children: [
@@ -423,6 +467,90 @@ final class _SelectableEntityCard extends StatelessWidget {
                 ),
               ),
           ],
+        ),
+      ),
+    );
+
+    return Dismissible(
+      key: ValueKey('dashboard-v2-swipe-${item.id}'),
+      direction: isSelecting
+          ? DismissDirection.none
+          : DismissDirection.horizontal,
+      background: _SwipeActionBackground(
+        alignment: Alignment.centerLeft,
+        color: item.isDeleted
+            ? colors.tertiaryContainer
+            : colors.secondaryContainer,
+        foregroundColor: item.isDeleted
+            ? colors.onTertiaryContainer
+            : colors.onSecondaryContainer,
+        icon: archiveOrRestoreIcon,
+        label: archiveOrRestoreLabel,
+      ),
+      secondaryBackground: _SwipeActionBackground(
+        alignment: Alignment.centerRight,
+        color: colors.errorContainer,
+        foregroundColor: colors.onErrorContainer,
+        icon: item.isDeleted ? Icons.delete_forever : Icons.delete,
+        label: item.isDeleted ? 'Удалить навсегда' : 'Удалить',
+      ),
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          item.isDeleted
+              ? actions.onRestore(item)
+              : actions.onToggleArchived(item);
+        } else if (direction == DismissDirection.endToStart) {
+          actions.onDelete(item);
+        }
+        return false;
+      },
+      child: decoratedChild,
+    );
+  }
+}
+
+final class _SwipeActionBackground extends StatelessWidget {
+  const _SwipeActionBackground({
+    required this.alignment,
+    required this.color,
+    required this.foregroundColor,
+    required this.icon,
+    required this.label,
+  });
+
+  final Alignment alignment;
+  final Color color;
+  final Color foregroundColor;
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final isLeft = alignment == Alignment.centerLeft;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Align(
+          alignment: alignment,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            textDirection: isLeft ? TextDirection.ltr : TextDirection.rtl,
+            children: [
+              Icon(icon, color: foregroundColor),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(color: foregroundColor),
+              ),
+            ],
+          ),
         ),
       ),
     );

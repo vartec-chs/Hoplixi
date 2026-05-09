@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../models/dashboard_entity_type.dart';
 import '../models/dashboard_view_mode.dart';
@@ -47,11 +46,7 @@ final class _DashboardV2HomeScreenState
     final selectedIds = ref.watch(dashboardSelectionProvider(_entityType));
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        tooltip: 'Создать',
-        onPressed: () => widget.onCreateItem?.call(_entityType),
-        child: const Icon(LucideIcons.plus),
-      ),
+      backgroundColor: Colors.transparent,
       body: NotificationListener<ScrollNotification>(
         onNotification: (notification) {
           if (notification.metrics.extentAfter < 520) _loadMore();
@@ -114,6 +109,7 @@ final class _DashboardV2HomeScreenState
                     onTogglePinned: _togglePinned,
                     onToggleArchived: _toggleArchived,
                     onDelete: _deleteItem,
+                    onRestore: _restoreItem,
                   ),
                 ),
                 if (data.isLoadingMore)
@@ -200,10 +196,21 @@ final class _DashboardV2HomeScreenState
   }
 
   Future<void> _deleteItem(BaseCardDto item) async {
+    final controller = ref.read(
+      dashboardListControllerProvider(_entityType).notifier,
+    );
+    await _showMutationErrorIfNeeded(
+      await (item.isDeleted
+          ? controller.permanentDelete(item)
+          : controller.softDelete(item)),
+    );
+  }
+
+  Future<void> _restoreItem(BaseCardDto item) async {
     await _showMutationErrorIfNeeded(
       await ref
           .read(dashboardListControllerProvider(_entityType).notifier)
-          .softDelete(item),
+          .restore(item),
     );
   }
 

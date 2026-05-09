@@ -13,11 +13,9 @@ import '../models/dashboard_query.dart';
 import 'dashboard_filter_provider.dart';
 
 final dashboardListControllerProvider = AsyncNotifierProvider.autoDispose
-    .family<
-      DashboardListController,
-      DashboardListState,
-      DashboardEntityType
-    >(DashboardListController.new);
+    .family<DashboardListController, DashboardListState, DashboardEntityType>(
+      DashboardListController.new,
+    );
 
 final class DashboardListController extends AsyncNotifier<DashboardListState> {
   DashboardListController(this.entityType);
@@ -42,12 +40,20 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
     final current = state.value;
     if (current == null || current.isLoadingMore || !current.hasMore) return;
 
-    state = AsyncData(current.copyWith(isLoadingMore: true, clearLastError: true));
+    state = AsyncData(
+      current.copyWith(isLoadingMore: true, clearLastError: true),
+    );
 
     final filters = ref.read(dashboardFilterProvider);
-    final result = await ref.read(dashboardRepositoryProvider).load(
-      DashboardQuery(entityType: entityType, filters: filters, page: current.page + 1),
-    );
+    final result = await ref
+        .read(dashboardRepositoryProvider)
+        .load(
+          DashboardQuery(
+            entityType: entityType,
+            filters: filters,
+            page: current.page + 1,
+          ),
+        );
 
     result.fold(
       (page) {
@@ -62,7 +68,9 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
         );
       },
       (error) {
-        state = AsyncData(current.copyWith(isLoadingMore: false, lastError: error));
+        state = AsyncData(
+          current.copyWith(isLoadingMore: false, lastError: error),
+        );
       },
     );
   }
@@ -71,11 +79,13 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
     return _applyItemMutation(
       item,
       optimisticValue: item.copyWithBase(isFavorite: !item.isFavorite),
-      operation: () => ref.read(dashboardRepositoryProvider).setFavorite(
-        entityType: entityType,
-        id: item.id,
-        value: !item.isFavorite,
-      ),
+      operation: () => ref
+          .read(dashboardRepositoryProvider)
+          .setFavorite(
+            entityType: entityType,
+            id: item.id,
+            value: !item.isFavorite,
+          ),
     );
   }
 
@@ -83,11 +93,13 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
     return _applyItemMutation(
       item,
       optimisticValue: item.copyWithBase(isPinned: !item.isPinned),
-      operation: () => ref.read(dashboardRepositoryProvider).setPinned(
-        entityType: entityType,
-        id: item.id,
-        value: !item.isPinned,
-      ),
+      operation: () => ref
+          .read(dashboardRepositoryProvider)
+          .setPinned(
+            entityType: entityType,
+            id: item.id,
+            value: !item.isPinned,
+          ),
     );
   }
 
@@ -95,11 +107,13 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
     return _applyItemMutation(
       item,
       optimisticValue: item.copyWithBase(isArchived: !item.isArchived),
-      operation: () => ref.read(dashboardRepositoryProvider).setArchived(
-        entityType: entityType,
-        id: item.id,
-        value: !item.isArchived,
-      ),
+      operation: () => ref
+          .read(dashboardRepositoryProvider)
+          .setArchived(
+            entityType: entityType,
+            id: item.id,
+            value: !item.isArchived,
+          ),
     );
   }
 
@@ -107,17 +121,41 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
     return _applyItemMutation(
       item,
       removeFromList: true,
-      operation: () => ref.read(dashboardRepositoryProvider).softDelete(
-        entityType: entityType,
-        id: item.id,
-      ),
+      operation: () => ref
+          .read(dashboardRepositoryProvider)
+          .softDelete(entityType: entityType, id: item.id),
     );
   }
 
-  Future<DashboardListState> _loadFirstPage(DashboardFilterState filters) async {
-    final result = await ref.read(dashboardRepositoryProvider).load(
-      DashboardQuery(entityType: entityType, filters: filters, page: 0),
+  Future<AppError?> permanentDelete(BaseCardDto item) {
+    return _applyItemMutation(
+      item,
+      removeFromList: true,
+      operation: () => ref
+          .read(dashboardRepositoryProvider)
+          .permanentDelete(entityType: entityType, id: item.id),
     );
+  }
+
+  Future<AppError?> restore(BaseCardDto item) {
+    return _applyItemMutation(
+      item,
+      optimisticValue: item.copyWithBase(isDeleted: false),
+      removeFromList: true,
+      operation: () => ref
+          .read(dashboardRepositoryProvider)
+          .restore(entityType: entityType, id: item.id),
+    );
+  }
+
+  Future<DashboardListState> _loadFirstPage(
+    DashboardFilterState filters,
+  ) async {
+    final result = await ref
+        .read(dashboardRepositoryProvider)
+        .load(
+          DashboardQuery(entityType: entityType, filters: filters, page: 0),
+        );
 
     return result.fold(
       (page) => DashboardListState(
@@ -132,9 +170,9 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
           tag: _logTag,
           data: {'entityType': entityType.id, 'error': error.message},
         );
-        return DashboardListState.empty(pageSize: filters.pageSize).copyWith(
-          lastError: error,
-        );
+        return DashboardListState.empty(
+          pageSize: filters.pageSize,
+        ).copyWith(lastError: error);
       },
     );
   }
@@ -152,13 +190,18 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
         ? current.items.where((candidate) => candidate.id != item.id).toList()
         : [
             for (final candidate in current.items)
-              if (candidate.id == item.id) optimisticValue ?? candidate else candidate,
+              if (candidate.id == item.id)
+                optimisticValue ?? candidate
+              else
+                candidate,
           ];
 
     state = AsyncData(
       current.copyWith(
         items: optimisticItems,
-        totalCount: removeFromList ? current.totalCount - 1 : current.totalCount,
+        totalCount: removeFromList
+            ? current.totalCount - 1
+            : current.totalCount,
         clearLastError: true,
       ),
     );
