@@ -7,6 +7,10 @@
 - В `dashboard_v2` реализована логика массовых действий из старого dashboard:
   delete/permanent delete, favorite, pin, archive, назначение категории и
   тегов через `DashboardV2BulkBar`, controller и repository.
+- В `DashboardV2ItemsView` возвращены sliver-анимации списка/сетки и локальная
+  синхронизация карточек при удалении, добавлении и перемещении.
+- Исправлено резкое первое появление карточек в `DashboardV2ItemsView`: вход
+  элемента теперь дополнительно анимируется fade/slide/scale переходом.
 - `dashboard_v2` подключён к возвращённым entity-specific фильтрам и
   `FilterModal`: app bar открывает Wolt-модалку фильтров, список подписан на
   фильтр текущего типа сущности, а repository передаёт в DAO реальные typed
