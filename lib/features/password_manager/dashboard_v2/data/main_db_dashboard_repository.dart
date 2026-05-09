@@ -233,11 +233,11 @@ final class MainDbDashboardRepository implements DashboardRepository {
         isFavorite: true,
         isPinned: null,
       ),
-      DashboardFilterTab.pinned => (
+      DashboardFilterTab.frequentlyUsed => (
         isArchived: false,
         isDeleted: false,
         isFavorite: null,
-        isPinned: true,
+        isPinned: null,
       ),
       DashboardFilterTab.archived => (
         isArchived: true,

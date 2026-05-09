@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/errors/app_error.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/main_db/core/models/dto/base_card_extensions.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/models/dashboard_filter_tab.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:result_dart/result_dart.dart';
 
@@ -81,43 +81,54 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
   }
 
   Future<AppError?> toggleFavorite(BaseCardDto item) {
+    final filters = ref.read(dashboardFilterProvider);
+    final isNowFavorite = !item.isFavorite;
+    final removeFromList =
+        filters.tab == DashboardFilterTab.favorites && !isNowFavorite;
+
     return _applyItemMutation(
       item,
-      optimisticValue: item.copyWithBase(isFavorite: !item.isFavorite),
+      optimisticValue: item.copyWithBase(isFavorite: isNowFavorite),
+      removeFromList: removeFromList,
       operation: () => ref
           .read(dashboardRepositoryProvider)
           .setFavorite(
             entityType: entityType,
             id: item.id,
-            value: !item.isFavorite,
+            value: isNowFavorite,
           ),
     );
   }
 
   Future<AppError?> togglePinned(BaseCardDto item) {
+    final isNowPinned = !item.isPinned;
     return _applyItemMutation(
       item,
-      optimisticValue: item.copyWithBase(isPinned: !item.isPinned),
+      optimisticValue: item.copyWithBase(isPinned: isNowPinned),
+      moveToFront: isNowPinned,
+      moveToEnd: !isNowPinned,
       operation: () => ref
           .read(dashboardRepositoryProvider)
-          .setPinned(
-            entityType: entityType,
-            id: item.id,
-            value: !item.isPinned,
-          ),
+          .setPinned(entityType: entityType, id: item.id, value: isNowPinned),
     );
   }
 
   Future<AppError?> toggleArchived(BaseCardDto item) {
+    final filters = ref.read(dashboardFilterProvider);
+    final isNowArchived = !item.isArchived;
+    final removeFromList =
+        filters.tab == DashboardFilterTab.archived && !isNowArchived;
+
     return _applyItemMutation(
       item,
-      optimisticValue: item.copyWithBase(isArchived: !item.isArchived),
+      optimisticValue: item.copyWithBase(isArchived: isNowArchived),
+      removeFromList: removeFromList,
       operation: () => ref
           .read(dashboardRepositoryProvider)
           .setArchived(
             entityType: entityType,
             id: item.id,
-            value: !item.isArchived,
+            value: isNowArchived,
           ),
     );
   }
@@ -301,20 +312,35 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
     BaseCardDto item, {
     BaseCardDto? optimisticValue,
     bool removeFromList = false,
+    bool moveToFront = false,
+    bool moveToEnd = false,
     required AsyncResultDart<bool, AppError> Function() operation,
   }) async {
     final current = state.value;
     if (current == null) return null;
 
-    final optimisticItems = removeFromList
-        ? current.items.where((candidate) => candidate.id != item.id).toList()
-        : [
-            for (final candidate in current.items)
-              if (candidate.id == item.id)
-                optimisticValue ?? candidate
-              else
-                candidate,
-          ];
+    List<BaseCardDto> optimisticItems;
+    if (removeFromList) {
+      optimisticItems = current.items
+          .where((candidate) => candidate.id != item.id)
+          .toList();
+    } else {
+      optimisticItems = [...current.items];
+      final index = optimisticItems.indexWhere(
+        (candidate) => candidate.id == item.id,
+      );
+      if (index != -1) {
+        final updatedItem = optimisticValue ?? optimisticItems[index];
+        optimisticItems.removeAt(index);
+        if (moveToFront) {
+          optimisticItems.insert(0, updatedItem);
+        } else if (moveToEnd) {
+          optimisticItems.add(updatedItem);
+        } else {
+          optimisticItems.insert(index, updatedItem);
+        }
+      }
+    }
 
     state = AsyncData(
       current.copyWith(

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:showcaseview/showcaseview.dart';
-import 'package:universal_platform/universal_platform.dart';
 
 void registerAppGuideShowcase({
   required String scope,

@@ -86,7 +86,7 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
       if (storePath != null) {
         final manifest = await StoreManifestService.readFrom(storePath);
         if (manifest?.useKeyFile == true) {
-          if (keyFile == null) {
+
             final result = await const VaultKeyFileService().pickAndRead();
             keyFile = result.fold((value) => value, (error) {
               if (mounted) {
@@ -94,8 +94,7 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
               }
               return null;
             });
-          }
-          if (keyFile == null) {
+                    if (keyFile == null) {
             return;
           }
           if (keyFile.id != manifest!.keyFileId) {

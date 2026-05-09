@@ -131,8 +131,8 @@ class DbKeyDerivationService {
     final passwordKey = await _argon2DeriveBytes(password, vaultSalt);
     final ikm = _concat([
       passwordKey,
-      if (deviceSecret != null) deviceSecret,
-      if (keyFileSecret != null) keyFileSecret,
+      ?deviceSecret,
+      ?keyFileSecret,
     ]);
 
     return _hkdfExtract(salt: vaultSalt, ikm: ikm);

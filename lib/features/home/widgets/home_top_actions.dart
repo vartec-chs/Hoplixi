@@ -27,7 +27,7 @@ class HomeTopActions extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (helpButton != null) helpButton!,
+          ?helpButton,
           _wrapSettingsButton(
             context,
             IconButton(

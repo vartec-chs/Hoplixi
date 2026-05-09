@@ -131,7 +131,7 @@ final class _DashboardV2FilterTabsState
     return switch (tab) {
       DashboardFilterTab.active => Icons.list,
       DashboardFilterTab.favorites => Icons.star,
-      DashboardFilterTab.pinned => Icons.push_pin_outlined,
+      DashboardFilterTab.frequentlyUsed => Icons.access_time,
       DashboardFilterTab.archived => Icons.archive,
       DashboardFilterTab.deleted => Icons.delete,
     };

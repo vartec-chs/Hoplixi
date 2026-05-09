@@ -1,7 +1,7 @@
 enum DashboardFilterTab {
   active('Активные'),
   favorites('Избранные'),
-  pinned('Закрепленные'),
+  frequentlyUsed('Часто используемые'),
   archived('Архив'),
   deleted('Удаленные');
 

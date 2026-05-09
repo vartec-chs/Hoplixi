@@ -81,7 +81,7 @@ class CloudSyncProgressPanel extends StatelessWidget {
               transfer!.currentFileName!.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
-              'Текущий файл: ${transfer!.currentFileName}',
+              'Текущий файл: ${transfer.currentFileName}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(

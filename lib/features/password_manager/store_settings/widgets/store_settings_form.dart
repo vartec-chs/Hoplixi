@@ -235,7 +235,7 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
                   const TextSpan(
                     text:
                         'Рекомендуется оставить её включённой, если для вас важна корректная сортировка и отображение часто используемых элементов.',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   const TextSpan(text: '\n\n'),
                   const TextSpan(

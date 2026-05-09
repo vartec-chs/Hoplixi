@@ -9,18 +9,18 @@ import 'package:share_plus/share_plus.dart';
 void main() {
   group('buildShareText', () {
     test('keeps selected fields in order and skips unselected fields', () {
-      final entity = ShareableEntity(
+      final entity = const ShareableEntity(
         title: 'Example',
         entityTypeLabel: 'Password',
         fields: [
-          const ShareableField(id: 'login', label: 'Login', value: 'alice'),
-          const ShareableField(
+          ShareableField(id: 'login', label: 'Login', value: 'alice'),
+          ShareableField(
             id: 'password',
             label: 'Password',
             value: 'secret',
             isSensitive: true,
           ),
-          const ShareableField(
+          ShareableField(
             id: 'url',
             label: 'URL',
             value: 'https://a.test',
@@ -34,11 +34,11 @@ void main() {
     });
 
     test('formats multiline values without losing line breaks', () {
-      final entity = ShareableEntity(
+      final entity = const ShareableEntity(
         title: 'Note',
         entityTypeLabel: 'Note',
         fields: [
-          const ShareableField(
+          ShareableField(
             id: 'content',
             label: 'Content',
             value: 'first\nsecond',
