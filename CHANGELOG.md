@@ -4,9 +4,16 @@
 
 ### password_manager
 
+- В `EntityType` добавлены явные методы `toCategoryType()` и `toTagType()`,
+  чтобы `dashboard_v2` и связанные экраны использовали единый маппинг на legacy
+  category/tag типы.
+- В `EntityType` также добавлен обратный маппинг `VaultItemType.toEntityType()`,
+  чтобы заметки и picker-виджеты могли строить ссылки и подписи без локальных
+  switch-выражений.
+
 - В `dashboard_v2` реализована логика массовых действий из старого dashboard:
-  delete/permanent delete, favorite, pin, archive, назначение категории и
-  тегов через `DashboardV2BulkBar`, controller и repository.
+  delete/permanent delete, favorite, pin, archive, назначение категории и тегов
+  через `DashboardV2BulkBar`, controller и repository.
 - В `DashboardV2ItemsView` возвращены sliver-анимации списка/сетки и локальная
   синхронизация карточек при удалении, добавлении и перемещении.
 - Исправлено резкое первое появление карточек в `DashboardV2ItemsView`: вход
@@ -16,9 +23,9 @@
   фильтр текущего типа сущности, а repository передаёт в DAO реальные typed
   filters вместе с общими search/tab/page ограничениями.
 - Исправлены history triggers main DB: type-specific history больше не ищет
-  последнюю запись `vault_item_history` по `action_at`, а привязывается к
-  только что вставленной записи через `last_insert_rowid()`. Добавлена
-  migration v3 для переустановки триггеров в существующих хранилищах.
+  последнюю запись `vault_item_history` по `action_at`, а привязывается к только
+  что вставленной записи через `last_insert_rowid()`. Добавлена migration v3 для
+  переустановки триггеров в существующих хранилищах.
 
 ## 2026-05-09
 

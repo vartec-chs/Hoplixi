@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/dashboard_drawer.dart';
 import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
 
@@ -124,9 +123,7 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
             Expanded(
               child: DashboardV2HomeScreen(
                 key: ValueKey('desktop_home_${widget.entityType.id}'),
-                initialEntityType: DashboardEntityType.fromId(
-                  widget.entityType.id,
-                )!,
+                initialEntityType: EntityType.fromId(widget.entityType.id)!,
               ),
             ),
             AnimatedBuilder(

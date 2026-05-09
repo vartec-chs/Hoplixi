@@ -11,9 +11,9 @@ import 'package:hoplixi/features/onboarding/domain/guide_start_mode.dart';
 import 'package:hoplixi/features/onboarding/presentation/custom_showcase_tooltip.dart';
 import 'package:hoplixi/features/onboarding/presentation/dashboard_guide_scope.dart';
 import 'package:hoplixi/features/onboarding/presentation/showcase_registration.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/screen_protection_provider.dart';
+
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/dashboard_drawer.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
 import 'package:hoplixi/features/settings/providers/settings_prefs_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/background/app_animated_background.dart';
@@ -71,9 +71,9 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
 
   String _currentEntity() {
     final ent = widget.state.pathParameters['entity'];
-    return (ent != null && EntityType.allTypesString.contains(ent))
+    return (ent != null && EntityType.values.map((e) => e.id).contains(ent))
         ? ent
-        : EntityType.allTypesString.first;
+        : EntityType.values.first.id;
   }
 
   bool _isFullCenter(String location) => _fullCenterPaths.contains(location);

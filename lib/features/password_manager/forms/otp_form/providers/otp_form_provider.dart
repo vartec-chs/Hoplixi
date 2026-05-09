@@ -1,15 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/smart_converter_base.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/providers/dashboard_list_refresh_trigger_provider.dart';
+import 'package:hoplixi/features/password_manager/forms/otp_form/utils/otp_uri_parser.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/main_db/core/models/dto/icon_ref_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/otp_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
-import 'package:hoplixi/features/password_manager/forms/otp_form/utils/otp_uri_parser.dart';
-import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
-import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 
 import '../models/otp_form_state.dart';
 
@@ -311,7 +311,7 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
 
           // Триггерим обновление списка
           ref
-              .read(dataRefreshTriggerProvider.notifier)
+              .read(dashboardListRefreshTriggerProvider.notifier)
               .triggerEntityUpdate(
                 EntityType.otp,
                 entityId: state.editingOtpId,
@@ -363,7 +363,7 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
 
         // Триггерим обновление списка
         ref
-            .read(dataRefreshTriggerProvider.notifier)
+            .read(dashboardListRefreshTriggerProvider.notifier)
             .triggerEntityAdd(EntityType.otp, entityId: otpId);
 
         return true;

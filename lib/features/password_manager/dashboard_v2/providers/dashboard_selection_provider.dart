@@ -1,16 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../models/dashboard_entity_type.dart';
+import '../models/entity_type.dart';
 
 final dashboardSelectionProvider = NotifierProvider.autoDispose
-    .family<DashboardSelectionNotifier, Set<String>, DashboardEntityType>(
+    .family<DashboardSelectionNotifier, Set<String>, EntityType>(
       DashboardSelectionNotifier.new,
     );
 
 final class DashboardSelectionNotifier extends Notifier<Set<String>> {
   DashboardSelectionNotifier(this.entityType);
 
-  final DashboardEntityType entityType;
+  final EntityType entityType;
 
   @override
   Set<String> build() => <String>{};

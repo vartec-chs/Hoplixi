@@ -4,16 +4,16 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/smart_converter_base.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/import/otp/otp_extractor.dart';
 import 'package:hoplixi/features/password_manager/import/otp/providers/import_otp_state.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_db/core/models/dto/otp_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:zxing2/qrcode.dart';
-import 'package:image/image.dart' as img;
 
 class ImportOtpNotifier extends Notifier<ImportOtpState> {
   final _smartConverter = SmartConverter();
@@ -218,7 +218,7 @@ class ImportOtpNotifier extends Notifier<ImportOtpState> {
 
       // Триггерим обновление списка OTP (не заметок!)
       ref
-          .read(dataRefreshTriggerProvider.notifier)
+          .read(dashboardListRefreshTriggerProvider.notifier)
           .triggerEntityAdd(EntityType.otp);
 
       return true;

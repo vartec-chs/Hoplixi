@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
 import 'package:hoplixi/main_db/core/models/filter/categories_filter.dart';
 
@@ -127,21 +127,21 @@ class CategoryFilterNotifier extends Notifier<CategoriesFilter> {
   /// Уведомить о добавлении категории
   void notifyCategoryAdded({String? categoryId}) {
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerCategoryAdd(categoryId: categoryId);
   }
 
   /// Уведомить об обновлении категории
   void notifyCategoryUpdated({String? categoryId}) {
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerCategoryUpdate(categoryId: categoryId);
   }
 
   /// Уведомить об удалении категории
   void notifyCategoryDeleted({String? categoryId}) {
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerCategoryDelete(categoryId: categoryId);
   }
 }

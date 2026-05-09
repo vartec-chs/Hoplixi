@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
 import 'package:hoplixi/main_db/config/store_settings_keys.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 
@@ -12,20 +12,20 @@ final pinnedEntityTypesProvider = FutureProvider<List<EntityType>>((ref) async {
 
   final raw = await dao.getSetting(StoreSettingsKeys.pinnedEntityTypes);
   if (raw == null || raw.isEmpty) {
-    return EntityType.allTypes;
+    return EntityType.values;
   }
 
   try {
     final ids = (jsonDecode(raw) as List).cast<String>();
-    if (ids.isEmpty) return EntityType.allTypes;
+    if (ids.isEmpty) return EntityType.values;
 
     final types = ids
         .map((id) => EntityType.fromId(id))
         .whereType<EntityType>()
         .toList();
 
-    return types.isEmpty ? EntityType.allTypes : types;
+    return types.isEmpty ? EntityType.values : types;
   } catch (_) {
-    return EntityType.allTypes;
+    return EntityType.values;
   }
 });

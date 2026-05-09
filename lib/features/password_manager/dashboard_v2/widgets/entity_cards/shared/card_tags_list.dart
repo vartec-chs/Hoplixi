@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/card_utils.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/widgets/entity_cards/shared/shared.dart';
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
 
 /// Универсальный компонент для отображения списка тегов в карточке

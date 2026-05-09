@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/forms/form_close_button.dart';
 import 'package:hoplixi/features/password_manager/import/passwords/providers/password_migration_provider.dart';
 import 'package:hoplixi/main_db/core/models/dto/password_dto.dart';
@@ -147,7 +147,7 @@ class _PasswordMigrationScreenState
     }
 
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerEntityAdd(EntityType.password);
 
     _resetDrafts(clearMessage: false);

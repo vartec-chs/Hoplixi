@@ -5,15 +5,15 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_doc_scanner/flutter_doc_scanner.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/providers/dashboard_list_refresh_trigger_provider.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/main_db/core/daos/daos.dart';
 import 'package:hoplixi/main_db/core/models/dto/document_dto.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/main_db/providers/other/service_providers.dart';
 import 'package:hoplixi/main_db/services/other/document_storage_service.dart';
-import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
-import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
@@ -554,7 +554,7 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
     state = state.copyWith(isSaving: false, isSaved: true);
 
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerEntityAdd(EntityType.document, entityId: documentId);
 
     return true;
@@ -614,7 +614,7 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
     state = state.copyWith(isSaving: false, isSaved: true);
 
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerEntityUpdate(EntityType.document, entityId: documentId);
 
     return true;

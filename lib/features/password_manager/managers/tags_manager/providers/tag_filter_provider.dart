@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
 import 'package:hoplixi/main_db/core/models/filter/tags_filter.dart';
 
@@ -96,20 +96,22 @@ class TagFilterNotifier extends Notifier<TagsFilter> {
 
   /// Уведомить о добавлении тега
   void notifyTagAdded({String? tagId}) {
-    ref.read(dataRefreshTriggerProvider.notifier).triggerTagAdd(tagId: tagId);
+    ref
+        .read(dashboardListRefreshTriggerProvider.notifier)
+        .triggerTagAdd(tagId: tagId);
   }
 
   /// Уведомить об обновлении тега
   void notifyTagUpdated({String? tagId}) {
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerTagUpdate(tagId: tagId);
   }
 
   /// Уведомить об удалении тега
   void notifyTagDeleted({String? tagId}) {
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerTagDelete(tagId: tagId);
   }
 }

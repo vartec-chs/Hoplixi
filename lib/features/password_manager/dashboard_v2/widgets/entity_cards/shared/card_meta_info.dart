@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/cards/shared/card_utils.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/widgets/entity_cards/shared/shared.dart';
 
 /// Универсальный компонент для отображения метаинформации карточки
 class CardMetaInfo extends StatelessWidget {

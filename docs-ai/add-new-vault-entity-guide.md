@@ -257,7 +257,7 @@
 - секретные поля в View не грузить автоматически в открытом виде: получать
   отдельным DAO-запросом по явному действию пользователя (например, тап/кнопка
   «Показать» или «Скопировать»)
-- `dataRefreshTriggerProvider` после create/update/delete
+- `dashboardListRefreshTriggerProvider` после create/update/delete
 
 Интеграция роутинга-обёрток:
 

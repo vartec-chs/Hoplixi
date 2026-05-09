@@ -10,7 +10,7 @@ import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/main_db/providers/other/service_providers.dart';
 import 'package:result_dart/result_dart.dart';
 
-import '../models/dashboard_entity_type.dart';
+import '../models/entity_type.dart';
 import '../models/dashboard_filter_tab.dart';
 import '../models/dashboard_query.dart';
 import 'dashboard_repository.dart';
@@ -54,7 +54,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
 
   @override
   Future<ResultDart<bool, AppError>> setFavorite({
-    required DashboardEntityType entityType,
+    required EntityType entityType,
     required String id,
     required bool value,
   }) {
@@ -63,7 +63,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
 
   @override
   Future<ResultDart<bool, AppError>> setPinned({
-    required DashboardEntityType entityType,
+    required EntityType entityType,
     required String id,
     required bool value,
   }) {
@@ -72,7 +72,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
 
   @override
   Future<ResultDart<bool, AppError>> setArchived({
-    required DashboardEntityType entityType,
+    required EntityType entityType,
     required String id,
     required bool value,
   }) {
@@ -81,7 +81,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
 
   @override
   Future<ResultDart<bool, AppError>> softDelete({
-    required DashboardEntityType entityType,
+    required EntityType entityType,
     required String id,
   }) {
     return _mutate(entityType, id, (dao) => dao.softDelete(id));
@@ -89,7 +89,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
 
   @override
   Future<ResultDart<bool, AppError>> restore({
-    required DashboardEntityType entityType,
+    required EntityType entityType,
     required String id,
   }) {
     return _mutate(entityType, id, (dao) => dao.restoreFromDeleted(id));
@@ -97,7 +97,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
 
   @override
   Future<ResultDart<bool, AppError>> permanentDelete({
-    required DashboardEntityType entityType,
+    required EntityType entityType,
     required String id,
   }) {
     return ResultUtils.tryCatchAsync(
@@ -113,7 +113,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
 
   @override
   AsyncResultDart<int, AppError> bulkSetFavorite({
-    required DashboardEntityType entityType,
+    required EntityType entityType,
     required List<String> ids,
     required bool value,
   }) {
@@ -126,7 +126,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
 
   @override
   AsyncResultDart<int, AppError> bulkSetPinned({
-    required DashboardEntityType entityType,
+    required EntityType entityType,
     required List<String> ids,
     required bool value,
   }) {
@@ -139,7 +139,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
 
   @override
   AsyncResultDart<int, AppError> bulkSetArchived({
-    required DashboardEntityType entityType,
+    required EntityType entityType,
     required List<String> ids,
     required bool value,
   }) {
@@ -152,7 +152,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
 
   @override
   AsyncResultDart<int, AppError> bulkSoftDelete({
-    required DashboardEntityType entityType,
+    required EntityType entityType,
     required List<String> ids,
   }) {
     return _bulkMutate(
@@ -164,7 +164,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
 
   @override
   AsyncResultDart<int, AppError> bulkPermanentDelete({
-    required DashboardEntityType entityType,
+    required EntityType entityType,
     required List<String> ids,
   }) {
     return ResultUtils.tryCatchAsync(
@@ -186,7 +186,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
 
   @override
   AsyncResultDart<int, AppError> bulkAssignCategory({
-    required DashboardEntityType entityType,
+    required EntityType entityType,
     required List<String> ids,
     required String? categoryId,
   }) {
@@ -199,7 +199,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
 
   @override
   AsyncResultDart<bool, AppError> bulkAssignTags({
-    required DashboardEntityType entityType,
+    required EntityType entityType,
     required List<String> ids,
     required List<String> tagIds,
   }) {
@@ -276,114 +276,114 @@ final class MainDbDashboardRepository implements DashboardRepository {
   }
 
   Future<List<BaseCardDto>> _loadItems(
-    DashboardEntityType entityType,
+    EntityType entityType,
     Object entityFilter,
     BaseFilter base,
   ) async {
     return switch (entityType) {
-      DashboardEntityType.password => await (await _ref.read(
+      EntityType.password => await (await _ref.read(
         passwordFilterDaoProvider.future,
       )).getFiltered(_passwordsFilter(entityFilter, base)),
-      DashboardEntityType.note => await (await _ref.read(
+      EntityType.note => await (await _ref.read(
         noteFilterDaoProvider.future,
       )).getFiltered(_notesFilter(entityFilter, base)),
-      DashboardEntityType.bankCard => await (await _ref.read(
+      EntityType.bankCard => await (await _ref.read(
         bankCardFilterDaoProvider.future,
       )).getFiltered(_bankCardsFilter(entityFilter, base)),
-      DashboardEntityType.file => await (await _ref.read(
+      EntityType.file => await (await _ref.read(
         fileFilterDaoProvider.future,
       )).getFiltered(_filesFilter(entityFilter, base)),
-      DashboardEntityType.otp => await (await _ref.read(
+      EntityType.otp => await (await _ref.read(
         otpFilterDaoProvider.future,
       )).getFiltered(_otpsFilter(entityFilter, base)),
-      DashboardEntityType.document => await (await _ref.read(
+      EntityType.document => await (await _ref.read(
         documentFilterDaoProvider.future,
       )).getFiltered(_documentsFilter(entityFilter, base)),
-      DashboardEntityType.contact => await (await _ref.read(
+      EntityType.contact => await (await _ref.read(
         contactFilterDaoProvider.future,
       )).getFiltered(_contactsFilter(entityFilter, base)),
-      DashboardEntityType.apiKey => await (await _ref.read(
+      EntityType.apiKey => await (await _ref.read(
         apiKeyFilterDaoProvider.future,
       )).getFiltered(_apiKeysFilter(entityFilter, base)),
-      DashboardEntityType.sshKey => await (await _ref.read(
+      EntityType.sshKey => await (await _ref.read(
         sshKeyFilterDaoProvider.future,
       )).getFiltered(_sshKeysFilter(entityFilter, base)),
-      DashboardEntityType.certificate => await (await _ref.read(
+      EntityType.certificate => await (await _ref.read(
         certificateFilterDaoProvider.future,
       )).getFiltered(_certificatesFilter(entityFilter, base)),
-      DashboardEntityType.cryptoWallet => await (await _ref.read(
+      EntityType.cryptoWallet => await (await _ref.read(
         cryptoWalletFilterDaoProvider.future,
       )).getFiltered(_cryptoWalletsFilter(entityFilter, base)),
-      DashboardEntityType.wifi => await (await _ref.read(
+      EntityType.wifi => await (await _ref.read(
         wifiFilterDaoProvider.future,
       )).getFiltered(_wifisFilter(entityFilter, base)),
-      DashboardEntityType.identity => await (await _ref.read(
+      EntityType.identity => await (await _ref.read(
         identityFilterDaoProvider.future,
       )).getFiltered(_identitiesFilter(entityFilter, base)),
-      DashboardEntityType.licenseKey => await (await _ref.read(
+      EntityType.licenseKey => await (await _ref.read(
         licenseKeyFilterDaoProvider.future,
       )).getFiltered(_licenseKeysFilter(entityFilter, base)),
-      DashboardEntityType.recoveryCodes => await (await _ref.read(
+      EntityType.recoveryCodes => await (await _ref.read(
         recoveryCodesFilterDaoProvider.future,
       )).getFiltered(_recoveryCodesFilter(entityFilter, base)),
-      DashboardEntityType.loyaltyCard => await (await _ref.read(
+      EntityType.loyaltyCard => await (await _ref.read(
         loyaltyCardFilterDaoProvider.future,
       )).getFiltered(_loyaltyCardsFilter(entityFilter, base)),
     };
   }
 
   Future<int> _countItems(
-    DashboardEntityType entityType,
+    EntityType entityType,
     Object entityFilter,
     BaseFilter base,
   ) async {
     return switch (entityType) {
-      DashboardEntityType.password => await (await _ref.read(
+      EntityType.password => await (await _ref.read(
         passwordFilterDaoProvider.future,
       )).countFiltered(_passwordsFilter(entityFilter, base)),
-      DashboardEntityType.note => await (await _ref.read(
+      EntityType.note => await (await _ref.read(
         noteFilterDaoProvider.future,
       )).countFiltered(_notesFilter(entityFilter, base)),
-      DashboardEntityType.bankCard => await (await _ref.read(
+      EntityType.bankCard => await (await _ref.read(
         bankCardFilterDaoProvider.future,
       )).countFiltered(_bankCardsFilter(entityFilter, base)),
-      DashboardEntityType.file => await (await _ref.read(
+      EntityType.file => await (await _ref.read(
         fileFilterDaoProvider.future,
       )).countFiltered(_filesFilter(entityFilter, base)),
-      DashboardEntityType.otp => await (await _ref.read(
+      EntityType.otp => await (await _ref.read(
         otpFilterDaoProvider.future,
       )).countFiltered(_otpsFilter(entityFilter, base)),
-      DashboardEntityType.document => await (await _ref.read(
+      EntityType.document => await (await _ref.read(
         documentFilterDaoProvider.future,
       )).countFiltered(_documentsFilter(entityFilter, base)),
-      DashboardEntityType.contact => await (await _ref.read(
+      EntityType.contact => await (await _ref.read(
         contactFilterDaoProvider.future,
       )).countFiltered(_contactsFilter(entityFilter, base)),
-      DashboardEntityType.apiKey => await (await _ref.read(
+      EntityType.apiKey => await (await _ref.read(
         apiKeyFilterDaoProvider.future,
       )).countFiltered(_apiKeysFilter(entityFilter, base)),
-      DashboardEntityType.sshKey => await (await _ref.read(
+      EntityType.sshKey => await (await _ref.read(
         sshKeyFilterDaoProvider.future,
       )).countFiltered(_sshKeysFilter(entityFilter, base)),
-      DashboardEntityType.certificate => await (await _ref.read(
+      EntityType.certificate => await (await _ref.read(
         certificateFilterDaoProvider.future,
       )).countFiltered(_certificatesFilter(entityFilter, base)),
-      DashboardEntityType.cryptoWallet => await (await _ref.read(
+      EntityType.cryptoWallet => await (await _ref.read(
         cryptoWalletFilterDaoProvider.future,
       )).countFiltered(_cryptoWalletsFilter(entityFilter, base)),
-      DashboardEntityType.wifi => await (await _ref.read(
+      EntityType.wifi => await (await _ref.read(
         wifiFilterDaoProvider.future,
       )).countFiltered(_wifisFilter(entityFilter, base)),
-      DashboardEntityType.identity => await (await _ref.read(
+      EntityType.identity => await (await _ref.read(
         identityFilterDaoProvider.future,
       )).countFiltered(_identitiesFilter(entityFilter, base)),
-      DashboardEntityType.licenseKey => await (await _ref.read(
+      EntityType.licenseKey => await (await _ref.read(
         licenseKeyFilterDaoProvider.future,
       )).countFiltered(_licenseKeysFilter(entityFilter, base)),
-      DashboardEntityType.recoveryCodes => await (await _ref.read(
+      EntityType.recoveryCodes => await (await _ref.read(
         recoveryCodesFilterDaoProvider.future,
       )).countFiltered(_recoveryCodesFilter(entityFilter, base)),
-      DashboardEntityType.loyaltyCard => await (await _ref.read(
+      EntityType.loyaltyCard => await (await _ref.read(
         loyaltyCardFilterDaoProvider.future,
       )).countFiltered(_loyaltyCardsFilter(entityFilter, base)),
     };
@@ -508,7 +508,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
   }
 
   Future<ResultDart<bool, AppError>> _mutate(
-    DashboardEntityType entityType,
+    EntityType entityType,
     String id,
     Future<bool> Function(VaultItemDao dao) action,
   ) {
@@ -524,7 +524,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
   }
 
   AsyncResultDart<int, AppError> _bulkMutate({
-    required DashboardEntityType entityType,
+    required EntityType entityType,
     required List<String> ids,
     required Future<int> Function(VaultItemDao dao) action,
   }) {
@@ -539,11 +539,8 @@ final class MainDbDashboardRepository implements DashboardRepository {
     );
   }
 
-  Future<bool> _permanentDeleteItem(
-    DashboardEntityType entityType,
-    String id,
-  ) async {
-    if (entityType == DashboardEntityType.file) {
+  Future<bool> _permanentDeleteItem(EntityType entityType, String id) async {
+    if (entityType == EntityType.file) {
       await _deleteFilePayloads(id);
     }
 

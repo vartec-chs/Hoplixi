@@ -1,9 +1,9 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/import/keepass/services/keepass_import_service.dart';
+import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/rust/api/keepass_api.dart';
 import 'package:hoplixi/rust/api/keepass_api/types.dart';
 
@@ -304,7 +304,7 @@ class KeepassImportNotifier extends Notifier<KeepassImportState> {
         ),
       );
 
-      final refresh = ref.read(dataRefreshTriggerProvider.notifier);
+      final refresh = ref.read(dashboardListRefreshTriggerProvider.notifier);
       if (summary.importedPasswords > 0) {
         refresh.triggerEntityAdd(EntityType.password);
       }

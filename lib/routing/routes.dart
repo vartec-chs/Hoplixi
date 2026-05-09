@@ -22,7 +22,6 @@ import 'package:hoplixi/features/local_send/screens/local_send_transfer_screen.d
 import 'package:hoplixi/features/logs_viewer/screens/logs_tabs_screen.dart';
 import 'package:hoplixi/features/password_manager/close_store/close_store_sync_screen.dart';
 import 'package:hoplixi/features/password_manager/create_store/create_store_screen.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_layout.dart';
 import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
 import 'package:hoplixi/features/password_manager/duplicate_passwords/screen/duplicate_passwords_screen.dart';
@@ -68,7 +67,7 @@ Page<void> buildResponsivePage({
 }
 
 final String _dashboardEntityRoutePattern =
-    '/dashboard/:entity(${EntityType.allTypesString.join('|')})';
+    '/dashboard/:entity(${EntityType.values.map((t) => t.id).join('|')})';
 
 final List<RouteBase> appRoutes = [
   GoRoute(
@@ -202,7 +201,7 @@ final List<RouteBase> appRoutes = [
             state: state,
             isBaseRoute: true,
             child: DashboardV2HomeScreen(
-              initialEntityType: DashboardEntityType.fromId(entity.id)!,
+              initialEntityType: EntityType.fromId(entity.id)!,
             ),
           );
         },

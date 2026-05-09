@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hoplixi/main_db/core/models/filter/index.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
 import 'package:hoplixi/features/password_manager/managers/category_manager/providers/category_filter_provider.dart';
 import 'package:hoplixi/features/password_manager/managers/category_manager/providers/category_pagination_provider.dart';
 import 'package:hoplixi/features/password_manager/managers/category_manager/providers/category_tree_provider.dart';
+import 'package:hoplixi/main_db/core/models/filter/index.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 import '../widgets/category_manager_app_bar.dart';

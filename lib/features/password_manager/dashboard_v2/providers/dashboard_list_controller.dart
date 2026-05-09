@@ -6,7 +6,7 @@ import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:result_dart/result_dart.dart';
 
 import '../data/main_db_dashboard_repository.dart';
-import '../models/dashboard_entity_type.dart';
+import '../models/entity_type.dart';
 import '../models/dashboard_filter_state.dart';
 import '../models/dashboard_list_state.dart';
 import '../models/dashboard_query.dart';
@@ -14,7 +14,7 @@ import 'dashboard_filter_provider.dart';
 import 'filter_providers/filter_providers.dart';
 
 final dashboardListControllerProvider = AsyncNotifierProvider.autoDispose
-    .family<DashboardListController, DashboardListState, DashboardEntityType>(
+    .family<DashboardListController, DashboardListState, EntityType>(
       DashboardListController.new,
     );
 
@@ -23,7 +23,7 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
 
   static const _logTag = 'DashboardV2ListController';
 
-  final DashboardEntityType entityType;
+  final EntityType entityType;
 
   @override
   Future<DashboardListState> build() async {
@@ -263,49 +263,43 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
 
   Object _watchEntityFilter() {
     return switch (entityType) {
-      DashboardEntityType.password => ref.watch(passwordsFilterProvider),
-      DashboardEntityType.note => ref.watch(notesFilterProvider),
-      DashboardEntityType.otp => ref.watch(otpsFilterProvider),
-      DashboardEntityType.bankCard => ref.watch(bankCardsFilterProvider),
-      DashboardEntityType.file => ref.watch(filesFilterProvider),
-      DashboardEntityType.document => ref.watch(documentsFilterProvider),
-      DashboardEntityType.contact => ref.watch(contactsFilterProvider),
-      DashboardEntityType.apiKey => ref.watch(apiKeysFilterProvider),
-      DashboardEntityType.sshKey => ref.watch(sshKeysFilterProvider),
-      DashboardEntityType.certificate => ref.watch(certificatesFilterProvider),
-      DashboardEntityType.cryptoWallet => ref.watch(
-        cryptoWalletsFilterProvider,
-      ),
-      DashboardEntityType.wifi => ref.watch(wifisFilterProvider),
-      DashboardEntityType.identity => ref.watch(identitiesFilterProvider),
-      DashboardEntityType.licenseKey => ref.watch(licenseKeysFilterProvider),
-      DashboardEntityType.recoveryCodes => ref.watch(
-        recoveryCodesFilterProvider,
-      ),
-      DashboardEntityType.loyaltyCard => ref.watch(loyaltyCardsFilterProvider),
+      EntityType.password => ref.watch(passwordsFilterProvider),
+      EntityType.note => ref.watch(notesFilterProvider),
+      EntityType.otp => ref.watch(otpsFilterProvider),
+      EntityType.bankCard => ref.watch(bankCardsFilterProvider),
+      EntityType.file => ref.watch(filesFilterProvider),
+      EntityType.document => ref.watch(documentsFilterProvider),
+      EntityType.contact => ref.watch(contactsFilterProvider),
+      EntityType.apiKey => ref.watch(apiKeysFilterProvider),
+      EntityType.sshKey => ref.watch(sshKeysFilterProvider),
+      EntityType.certificate => ref.watch(certificatesFilterProvider),
+      EntityType.cryptoWallet => ref.watch(cryptoWalletsFilterProvider),
+      EntityType.wifi => ref.watch(wifisFilterProvider),
+      EntityType.identity => ref.watch(identitiesFilterProvider),
+      EntityType.licenseKey => ref.watch(licenseKeysFilterProvider),
+      EntityType.recoveryCodes => ref.watch(recoveryCodesFilterProvider),
+      EntityType.loyaltyCard => ref.watch(loyaltyCardsFilterProvider),
     };
   }
 
   Object _readEntityFilter() {
     return switch (entityType) {
-      DashboardEntityType.password => ref.read(passwordsFilterProvider),
-      DashboardEntityType.note => ref.read(notesFilterProvider),
-      DashboardEntityType.otp => ref.read(otpsFilterProvider),
-      DashboardEntityType.bankCard => ref.read(bankCardsFilterProvider),
-      DashboardEntityType.file => ref.read(filesFilterProvider),
-      DashboardEntityType.document => ref.read(documentsFilterProvider),
-      DashboardEntityType.contact => ref.read(contactsFilterProvider),
-      DashboardEntityType.apiKey => ref.read(apiKeysFilterProvider),
-      DashboardEntityType.sshKey => ref.read(sshKeysFilterProvider),
-      DashboardEntityType.certificate => ref.read(certificatesFilterProvider),
-      DashboardEntityType.cryptoWallet => ref.read(cryptoWalletsFilterProvider),
-      DashboardEntityType.wifi => ref.read(wifisFilterProvider),
-      DashboardEntityType.identity => ref.read(identitiesFilterProvider),
-      DashboardEntityType.licenseKey => ref.read(licenseKeysFilterProvider),
-      DashboardEntityType.recoveryCodes => ref.read(
-        recoveryCodesFilterProvider,
-      ),
-      DashboardEntityType.loyaltyCard => ref.read(loyaltyCardsFilterProvider),
+      EntityType.password => ref.read(passwordsFilterProvider),
+      EntityType.note => ref.read(notesFilterProvider),
+      EntityType.otp => ref.read(otpsFilterProvider),
+      EntityType.bankCard => ref.read(bankCardsFilterProvider),
+      EntityType.file => ref.read(filesFilterProvider),
+      EntityType.document => ref.read(documentsFilterProvider),
+      EntityType.contact => ref.read(contactsFilterProvider),
+      EntityType.apiKey => ref.read(apiKeysFilterProvider),
+      EntityType.sshKey => ref.read(sshKeysFilterProvider),
+      EntityType.certificate => ref.read(certificatesFilterProvider),
+      EntityType.cryptoWallet => ref.read(cryptoWalletsFilterProvider),
+      EntityType.wifi => ref.read(wifisFilterProvider),
+      EntityType.identity => ref.read(identitiesFilterProvider),
+      EntityType.licenseKey => ref.read(licenseKeysFilterProvider),
+      EntityType.recoveryCodes => ref.read(recoveryCodesFilterProvider),
+      EntityType.loyaltyCard => ref.read(loyaltyCardsFilterProvider),
     };
   }
 

@@ -6,14 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/forms/note_form/models/note_form_state.dart';
 import 'package:hoplixi/features/password_manager/forms/note_form/widgets/expandable_quill_modal.dart';
 import 'package:hoplixi/features/password_manager/pickers/vault_item_picker/vault_item_picker_modal.dart';
-import 'package:hoplixi/shared/utils/vault_link_utils.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/modal_sheet_close_button.dart';
+import 'package:hoplixi/shared/utils/vault_link_utils.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 import '../providers/note_form_provider.dart';

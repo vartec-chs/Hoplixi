@@ -3,14 +3,14 @@ import 'dart:convert';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/providers/dashboard_list_refresh_trigger_provider.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/main_db/core/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
 import 'package:hoplixi/main_db/core/models/dto/note_dto.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/shared/utils/vault_link_utils.dart';
-import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
-import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 
 import '../models/note_form_state.dart';
 
@@ -288,7 +288,7 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
 
           // Триггерим обновление списка заметок
           ref
-              .read(dataRefreshTriggerProvider.notifier)
+              .read(dashboardListRefreshTriggerProvider.notifier)
               .triggerEntityUpdate(
                 EntityType.note,
                 entityId: state.editingNoteId,
@@ -337,7 +337,7 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
 
         // Триггерим обновление списка заметок
         ref
-            .read(dataRefreshTriggerProvider.notifier)
+            .read(dashboardListRefreshTriggerProvider.notifier)
             .triggerEntityAdd(EntityType.note, entityId: noteId);
 
         return true;

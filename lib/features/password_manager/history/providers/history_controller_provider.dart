@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/history/models/history_v2_models.dart';
 import 'package:hoplixi/features/password_manager/history/services/history_repository.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
@@ -106,7 +106,7 @@ class HistoryController extends AsyncNotifier<HistoryScreenState> {
         history: _history.cast(),
       );
       ref
-          .read(dataRefreshTriggerProvider.notifier)
+          .read(dashboardListRefreshTriggerProvider.notifier)
           .triggerEntityUpdate(scope.entityType, entityId: scope.entityId);
       final reloaded = await _load(currentState.query);
       state = AsyncValue.data(reloaded);

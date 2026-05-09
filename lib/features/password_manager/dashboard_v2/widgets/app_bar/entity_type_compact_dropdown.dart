@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/theme/theme.dart';
 
-import '../../models/dashboard_entity_type.dart';
+import '../../models/entity_type.dart';
 
 final class DashboardV2EntityTypeCompactDropdown extends ConsumerWidget {
   const DashboardV2EntityTypeCompactDropdown({
@@ -15,8 +15,8 @@ final class DashboardV2EntityTypeCompactDropdown extends ConsumerWidget {
     this.textStyle,
   });
 
-  final DashboardEntityType currentType;
-  final ValueChanged<DashboardEntityType> onEntityTypeChanged;
+  final EntityType currentType;
+  final ValueChanged<EntityType> onEntityTypeChanged;
   final bool showIcons;
   final TextStyle? textStyle;
 
@@ -31,7 +31,7 @@ final class DashboardV2EntityTypeCompactDropdown extends ConsumerWidget {
         color: fillColor,
         borderRadius: BorderRadius.circular(14),
       ),
-      child: DropdownButton<DashboardEntityType>(
+      child: DropdownButton<EntityType>(
         value: currentType,
         underline: const SizedBox.shrink(),
         isDense: true,
@@ -43,8 +43,8 @@ final class DashboardV2EntityTypeCompactDropdown extends ConsumerWidget {
         dropdownColor: fillColor,
         menuMaxHeight: MediaQuery.of(context).size.height * 0.8,
         items: [
-          for (final type in DashboardEntityType.values)
-            DropdownMenuItem<DashboardEntityType>(
+          for (final type in EntityType.values)
+            DropdownMenuItem<EntityType>(
               value: type,
               child: Row(
                 mainAxisSize: MainAxisSize.min,

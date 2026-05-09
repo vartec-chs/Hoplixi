@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
 import 'package:hoplixi/features/password_manager/history/models/history_v2_models.dart';
 import 'package:hoplixi/features/password_manager/history/providers/history_controller_provider.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
@@ -374,7 +374,6 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 ref.read(historyControllerProvider(_scope).notifier).refresh(),
           ),
           PopupMenuButton<_HistoryAppBarAction>(
-        
             onSelected: (action) {
               switch (action) {
                 case _HistoryAppBarAction.clearAllHistory:

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/widgets/tag_picker_field.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
@@ -10,8 +9,8 @@ import 'package:hoplixi/main_db/core/models/enums/index.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 
-import '../models/dashboard_entity_type.dart';
 import '../models/dashboard_view_mode.dart';
+import '../models/entity_type.dart';
 import '../providers/dashboard_filter_provider.dart';
 import '../providers/dashboard_list_controller.dart';
 import '../providers/dashboard_selection_provider.dart';
@@ -23,14 +22,14 @@ import '../widgets/dashboard_v2_items_view.dart';
 final class DashboardV2HomeScreen extends ConsumerStatefulWidget {
   const DashboardV2HomeScreen({
     super.key,
-    this.initialEntityType = DashboardEntityType.password,
+    this.initialEntityType = EntityType.password,
     this.onOpenItem,
     this.onCreateItem,
   });
 
-  final DashboardEntityType initialEntityType;
-  final void Function(DashboardEntityType entityType, String id)? onOpenItem;
-  final void Function(DashboardEntityType entityType)? onCreateItem;
+  final EntityType initialEntityType;
+  final void Function(EntityType entityType, String id)? onOpenItem;
+  final void Function(EntityType entityType)? onCreateItem;
 
   @override
   ConsumerState<DashboardV2HomeScreen> createState() =>
@@ -39,7 +38,7 @@ final class DashboardV2HomeScreen extends ConsumerStatefulWidget {
 
 final class _DashboardV2HomeScreenState
     extends ConsumerState<DashboardV2HomeScreen> {
-  late DashboardEntityType _entityType;
+  late EntityType _entityType;
   bool _isApplyingBulkAction = false;
 
   @override
@@ -195,7 +194,7 @@ final class _DashboardV2HomeScreenState
     );
   }
 
-  void _setEntityType(DashboardEntityType entityType) {
+  void _setEntityType(EntityType entityType) {
     if (entityType == _entityType) return;
     ref.read(dashboardSelectionProvider(_entityType).notifier).clear();
     setState(() => _entityType = entityType);
@@ -210,10 +209,7 @@ final class _DashboardV2HomeScreenState
   }
 
   void _openEditItem(BaseCardDto item) {
-    final editPath = AppRoutesPaths.dashboardEntityEdit(
-      EntityType.values.firstWhere((e) => e.id == _entityType.id),
-      item.id,
-    );
+    final editPath = AppRoutesPaths.dashboardEntityEdit(_entityType, item.id);
     if (GoRouter.of(context).state.matchedLocation != editPath) {
       context.push(editPath);
     }

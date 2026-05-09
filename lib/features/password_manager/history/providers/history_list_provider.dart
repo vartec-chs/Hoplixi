@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
 import 'package:hoplixi/features/password_manager/history/models/history_item.dart';
 import 'package:hoplixi/features/password_manager/history/models/history_list_state.dart';
 import 'package:hoplixi/features/password_manager/history/providers/history_search_provider.dart';

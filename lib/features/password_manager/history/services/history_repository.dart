@@ -1,8 +1,7 @@
 import 'dart:io';
 
 import 'package:drift/drift.dart';
-
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
 import 'package:hoplixi/features/password_manager/history/models/history_v2_models.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';

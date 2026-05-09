@@ -14,7 +14,7 @@ import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:typed_prefs/typed_prefs.dart';
 
-import '../../models/dashboard_entity_type.dart';
+import '../../models/entity_type.dart';
 import '../../models/dashboard_filter_state.dart';
 import '../../models/dashboard_filter_tab.dart';
 import '../../providers/dashboard_filter_provider.dart';
@@ -49,8 +49,8 @@ final class DashboardV2SliverAppBar extends ConsumerStatefulWidget {
   });
 
   final VoidCallback? onMenuPressed;
-  final DashboardEntityType entityType;
-  final ValueChanged<DashboardEntityType> onEntityTypeChanged;
+  final EntityType entityType;
+  final ValueChanged<EntityType> onEntityTypeChanged;
   final double expandedHeight;
   final double collapsedHeight;
   final bool pinned;
@@ -346,37 +346,33 @@ final class _DashboardV2SliverAppBarState
 
   bool _hasEntityFilterConstraints() {
     return switch (widget.entityType) {
-      DashboardEntityType.password =>
+      EntityType.password =>
         ref.watch(passwordsFilterProvider).hasActiveConstraints,
-      DashboardEntityType.note =>
-        ref.watch(notesFilterProvider).hasActiveConstraints,
-      DashboardEntityType.otp =>
-        ref.watch(otpsFilterProvider).hasActiveConstraints,
-      DashboardEntityType.bankCard =>
+      EntityType.note => ref.watch(notesFilterProvider).hasActiveConstraints,
+      EntityType.otp => ref.watch(otpsFilterProvider).hasActiveConstraints,
+      EntityType.bankCard =>
         ref.watch(bankCardsFilterProvider).hasActiveConstraints,
-      DashboardEntityType.file =>
-        ref.watch(filesFilterProvider).hasActiveConstraints,
-      DashboardEntityType.document =>
+      EntityType.file => ref.watch(filesFilterProvider).hasActiveConstraints,
+      EntityType.document =>
         ref.watch(documentsFilterProvider).hasActiveConstraints,
-      DashboardEntityType.contact =>
+      EntityType.contact =>
         ref.watch(contactsFilterProvider).hasActiveConstraints,
-      DashboardEntityType.apiKey =>
+      EntityType.apiKey =>
         ref.watch(apiKeysFilterProvider).hasActiveConstraints,
-      DashboardEntityType.sshKey =>
+      EntityType.sshKey =>
         ref.watch(sshKeysFilterProvider).hasActiveConstraints,
-      DashboardEntityType.certificate =>
+      EntityType.certificate =>
         ref.watch(certificatesFilterProvider).hasActiveConstraints,
-      DashboardEntityType.cryptoWallet =>
+      EntityType.cryptoWallet =>
         ref.watch(cryptoWalletsFilterProvider).hasActiveConstraints,
-      DashboardEntityType.wifi =>
-        ref.watch(wifisFilterProvider).hasActiveConstraints,
-      DashboardEntityType.identity =>
+      EntityType.wifi => ref.watch(wifisFilterProvider).hasActiveConstraints,
+      EntityType.identity =>
         ref.watch(identitiesFilterProvider).hasActiveConstraints,
-      DashboardEntityType.licenseKey =>
+      EntityType.licenseKey =>
         ref.watch(licenseKeysFilterProvider).hasActiveConstraints,
-      DashboardEntityType.recoveryCodes =>
+      EntityType.recoveryCodes =>
         ref.watch(recoveryCodesFilterProvider).hasActiveConstraints,
-      DashboardEntityType.loyaltyCard =>
+      EntityType.loyaltyCard =>
         ref.watch(loyaltyCardsFilterProvider).hasActiveConstraints,
     };
   }
@@ -428,31 +424,24 @@ final class _DashboardV2SliverAppBarState
     Toaster.success(title: 'Бэкап создан', description: result.backupPath);
   }
 
-  String _getSearchHint(DashboardEntityType entityType) {
+  String _getSearchHint(EntityType entityType) {
     return switch (entityType) {
-      DashboardEntityType.password =>
-        'Поиск паролей по названию, URL, пользователю...',
-      DashboardEntityType.note => 'Поиск заметок по заголовку, содержимому...',
-      DashboardEntityType.otp => 'Поиск OTP по издателю, аккаунту...',
-      DashboardEntityType.bankCard => 'Поиск карт по названию, номеру...',
-      DashboardEntityType.file => 'Поиск файлов по имени...',
-      DashboardEntityType.document => 'Поиск документов по названию, типу...',
-      DashboardEntityType.contact =>
-        'Поиск контактов по имени, компании, телефону...',
-      DashboardEntityType.apiKey =>
-        'Поиск API-ключей по сервису, типу токена...',
-      DashboardEntityType.sshKey =>
-        'Поиск SSH-ключей по комментарию, отпечатку...',
-      DashboardEntityType.certificate =>
-        'Поиск сертификатов по issuer, subject...',
-      DashboardEntityType.cryptoWallet => 'Поиск кошельков по сети, адресу...',
-      DashboardEntityType.wifi => 'Поиск Wi-Fi по SSID, security...',
-      DashboardEntityType.identity => 'Поиск ID по типу документа, номеру...',
-      DashboardEntityType.licenseKey => 'Поиск лицензий по продукту, ключу...',
-      DashboardEntityType.recoveryCodes =>
-        'Поиск recovery codes по заметкам...',
-      DashboardEntityType.loyaltyCard =>
-        'Поиск карт лояльности по названию, номеру...',
+      EntityType.password => 'Поиск паролей по названию, URL, пользователю...',
+      EntityType.note => 'Поиск заметок по заголовку, содержимому...',
+      EntityType.otp => 'Поиск OTP по издателю, аккаунту...',
+      EntityType.bankCard => 'Поиск карт по названию, номеру...',
+      EntityType.file => 'Поиск файлов по имени...',
+      EntityType.document => 'Поиск документов по названию, типу...',
+      EntityType.contact => 'Поиск контактов по имени, компании, телефону...',
+      EntityType.apiKey => 'Поиск API-ключей по сервису, типу токена...',
+      EntityType.sshKey => 'Поиск SSH-ключей по комментарию, отпечатку...',
+      EntityType.certificate => 'Поиск сертификатов по issuer, subject...',
+      EntityType.cryptoWallet => 'Поиск кошельков по сети, адресу...',
+      EntityType.wifi => 'Поиск Wi-Fi по SSID, security...',
+      EntityType.identity => 'Поиск ID по типу документа, номеру...',
+      EntityType.licenseKey => 'Поиск лицензий по продукту, ключу...',
+      EntityType.recoveryCodes => 'Поиск recovery codes по заметкам...',
+      EntityType.loyaltyCard => 'Поиск карт лояльности по названию, номеру...',
     };
   }
 }

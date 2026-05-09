@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
 
 /// Секция выбора закреплённых типов сущностей.
 /// Если ничего не выбрано — отображаются все типы.
@@ -61,7 +61,7 @@ class PinnedEntityTypesSelector extends StatelessWidget {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: EntityType.allTypes.map((type) {
+          children: EntityType.values.map((type) {
             final isSelected = allSelected || selected.contains(type.id);
             return FilterChip(
               avatar: Icon(
@@ -74,30 +74,30 @@ class PinnedEntityTypesSelector extends StatelessWidget {
               label: Text(type.label),
               selected: isSelected,
               onSelected: enabled
-                ? (checked) {
-                  final current = selected;
-                  // Если сейчас «все выбраны» (пустой список) — при
-                  // снятии чипа переходим в явный режим: все, кроме
-                  // снятого.
-                  final base = current.isEmpty
-                    ? EntityType.allTypes.map((t) => t.id).toSet()
-                    : current;
+                  ? (checked) {
+                      final current = selected;
+                      // Если сейчас «все выбраны» (пустой список) — при
+                      // снятии чипа переходим в явный режим: все, кроме
+                      // снятого.
+                      final base = current.isEmpty
+                          ? EntityType.values.map((t) => t.id).toSet()
+                          : current;
 
-                  final updated = checked
-                    ? {...base, type.id}
-                    : base.difference({type.id});
+                      final updated = checked
+                          ? {...base, type.id}
+                          : base.difference({type.id});
 
-                  // Если отмечены все — храним пустой список.
-                  final allIds = EntityType.allTypes
-                    .map((t) => t.id)
-                    .toSet();
-                  final result = updated.containsAll(allIds)
-                    ? <String>[]
-                    : updated.toList();
+                      // Если отмечены все — храним пустой список.
+                      final allIds = EntityType.values
+                          .map((t) => t.id)
+                          .toSet();
+                      final result = updated.containsAll(allIds)
+                          ? <String>[]
+                          : updated.toList();
 
-                  onChanged(result);
-                  }
-                : null,
+                      onChanged(result);
+                    }
+                  : null,
             );
           }).toList(),
         ),

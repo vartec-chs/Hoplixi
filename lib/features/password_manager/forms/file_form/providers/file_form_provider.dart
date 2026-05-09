@@ -4,15 +4,15 @@ import 'package:cross_file/cross_file.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/providers/data_refresh_trigger_provider.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/providers/dashboard_list_refresh_trigger_provider.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/main_db/core/models/dto/file_dto.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/main_db/providers/other/service_providers.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
-import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
-import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 
 import '../models/file_form_state.dart';
 
@@ -305,7 +305,7 @@ class FileFormNotifier extends Notifier<FileFormState> {
 
           // Триггерим обновление списка файлов
           ref
-              .read(dataRefreshTriggerProvider.notifier)
+              .read(dashboardListRefreshTriggerProvider.notifier)
               .triggerEntityUpdate(
                 EntityType.file,
                 entityId: state.editingFileId,
@@ -347,7 +347,7 @@ class FileFormNotifier extends Notifier<FileFormState> {
 
         // Триггерим обновление списка файлов
         ref
-            .read(dataRefreshTriggerProvider.notifier)
+            .read(dashboardListRefreshTriggerProvider.notifier)
             .triggerEntityAdd(EntityType.file, entityId: fileId);
 
         return true;

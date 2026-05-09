@@ -1,20 +1,22 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/data_refresh_state.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/models/dashboard_list_refresh_state.dart';
 
 /// Провайдер для триггера обновления данных
 /// Используется для оповещения о том, что данные изменились и нужно перезапросить
-final dataRefreshTriggerProvider =
-    NotifierProvider<DataRefreshTriggerNotifier, DataRefreshState>(
-      () => DataRefreshTriggerNotifier(),
-    );
+final dashboardListRefreshTriggerProvider =
+    NotifierProvider<
+      DashboardListRefreshTriggerNotifier,
+      DashboardListRefreshState
+    >(() => DashboardListRefreshTriggerNotifier());
 
-class DataRefreshTriggerNotifier extends Notifier<DataRefreshState> {
+class DashboardListRefreshTriggerNotifier
+    extends Notifier<DashboardListRefreshState> {
   @override
-  DataRefreshState build() {
-    logDebug('DataRefreshTriggerNotifier: Инициализация');
-    return DataRefreshState(
+  DashboardListRefreshState build() {
+    logDebug('DashboardListRefreshTriggerNotifier: Инициализация');
+    return DashboardListRefreshState(
       type: DataRefreshType.add,
       timestamp: DateTime.now(),
     );
@@ -33,7 +35,7 @@ class DataRefreshTriggerNotifier extends Notifier<DataRefreshState> {
       'DataRefreshTriggerNotifier: ${reason ?? 'Триггер обновления'}$entityTag в $now | Data: $data',
       data: data,
     );
-    state = DataRefreshState(
+    state = DashboardListRefreshState(
       type: type,
       timestamp: now,
       entityId: entityId ?? entityType?.toString(),
@@ -183,14 +185,14 @@ class DataRefreshTriggerNotifier extends Notifier<DataRefreshState> {
 
 /// Провайдер для отслеживания последнего обновления
 /// Удобен для отображения времени последнего обновления в UI
-final lastDataRefreshProvider = Provider<DataRefreshState>((ref) {
-  return ref.watch(dataRefreshTriggerProvider);
+final lastDataRefreshProvider = Provider<DashboardListRefreshState>((ref) {
+  return ref.watch(dashboardListRefreshTriggerProvider);
 });
 
 /// Провайдер для проверки необходимости обновления
 /// Возвращает true если данные устарели (старше указанного времени)
 final isDataStaleProvider = Provider.family<bool, Duration>((ref, maxAge) {
-  final lastRefresh = ref.watch(dataRefreshTriggerProvider);
+  final lastRefresh = ref.watch(dashboardListRefreshTriggerProvider);
   final now = DateTime.now();
   final isStale = now.difference(lastRefresh.timestamp) > maxAge;
   return isStale;
@@ -201,48 +203,48 @@ class DataRefreshHelper {
   /// Обновляет данные паролей
   static void refreshPasswords(WidgetRef ref) {
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerEntityUpdate(EntityType.password);
   }
 
   /// Обновляет данные заметок
   static void refreshNotes(WidgetRef ref) {
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerEntityUpdate(EntityType.note);
   }
 
   /// Обновляет данные OTP
   static void refreshOtp(WidgetRef ref) {
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerEntityUpdate(EntityType.otp);
   }
 
   /// Обновляет данные банковских карт
   static void refreshBankCards(WidgetRef ref) {
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerEntityUpdate(EntityType.bankCard);
   }
 
   /// Обновляет данные файлов
   static void refreshFiles(WidgetRef ref) {
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerEntityUpdate(EntityType.file);
   }
 
   /// Обновляет данные документов
   static void refreshDocuments(WidgetRef ref) {
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerEntityUpdate(EntityType.document);
   }
 
   /// Обновляет все данные
   static void refreshAll(WidgetRef ref) {
-    ref.read(dataRefreshTriggerProvider.notifier).triggerRefreshAll();
+    ref.read(dashboardListRefreshTriggerProvider.notifier).triggerRefreshAll();
   }
 
   /// Обновляет данные после создания элемента
@@ -252,7 +254,7 @@ class DataRefreshHelper {
     String id,
   ) {
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerEntityAdd(entityType, entityId: id);
   }
 
@@ -263,7 +265,7 @@ class DataRefreshHelper {
     String id,
   ) {
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerEntityUpdate(entityType, entityId: id);
   }
 
@@ -274,7 +276,7 @@ class DataRefreshHelper {
     String id,
   ) {
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerEntityDelete(entityType, entityId: id);
   }
 
@@ -288,7 +290,7 @@ class DataRefreshHelper {
     Map<String, dynamic>? data,
   }) {
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerRefreshWithInfo(
           reason,
           entityType: entityType,
@@ -305,21 +307,21 @@ class DataRefreshHelper {
   /// Обновляет данные после создания категории
   static void refreshAfterCategoryCreate(WidgetRef ref, {String? categoryId}) {
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerCategoryAdd(categoryId: categoryId);
   }
 
   /// Обновляет данные после обновления категории
   static void refreshAfterCategoryUpdate(WidgetRef ref, {String? categoryId}) {
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerCategoryUpdate(categoryId: categoryId);
   }
 
   /// Обновляет данные после удаления категории
   static void refreshAfterCategoryDelete(WidgetRef ref, {String? categoryId}) {
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerCategoryDelete(categoryId: categoryId);
   }
 
@@ -329,20 +331,22 @@ class DataRefreshHelper {
 
   /// Обновляет данные после создания тега
   static void refreshAfterTagCreate(WidgetRef ref, {String? tagId}) {
-    ref.read(dataRefreshTriggerProvider.notifier).triggerTagAdd(tagId: tagId);
+    ref
+        .read(dashboardListRefreshTriggerProvider.notifier)
+        .triggerTagAdd(tagId: tagId);
   }
 
   /// Обновляет данные после обновления тега
   static void refreshAfterTagUpdate(WidgetRef ref, {String? tagId}) {
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerTagUpdate(tagId: tagId);
   }
 
   /// Обновляет данные после удаления тега
   static void refreshAfterTagDelete(WidgetRef ref, {String? tagId}) {
     ref
-        .read(dataRefreshTriggerProvider.notifier)
+        .read(dashboardListRefreshTriggerProvider.notifier)
         .triggerTagDelete(tagId: tagId);
   }
 }

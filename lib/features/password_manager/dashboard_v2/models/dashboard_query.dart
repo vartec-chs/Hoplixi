@@ -1,4 +1,4 @@
-import 'dashboard_entity_type.dart';
+import 'entity_type.dart';
 import 'dashboard_filter_state.dart';
 
 final class DashboardQuery {
@@ -9,7 +9,7 @@ final class DashboardQuery {
     required this.page,
   });
 
-  final DashboardEntityType entityType;
+  final EntityType entityType;
   final DashboardFilterState filters;
   final Object entityFilter;
   final int page;
