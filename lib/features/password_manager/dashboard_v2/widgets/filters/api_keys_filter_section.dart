@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/main_db/core/models/filter/index.dart';
-import 'controller_sync.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+
+import 'controller_sync.dart';
 
 class ApiKeysFilterSection extends StatefulWidget {
   const ApiKeysFilterSection({
