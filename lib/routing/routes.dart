@@ -23,10 +23,9 @@ import 'package:hoplixi/features/logs_viewer/screens/logs_tabs_screen.dart';
 import 'package:hoplixi/features/password_manager/close_store/close_store_sync_screen.dart';
 import 'package:hoplixi/features/password_manager/create_store/create_store_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_screen.dart';
-import 'package:hoplixi/features/password_manager/duplicate_passwords/screen/duplicate_passwords_screen.dart';
-import 'package:hoplixi/features/password_manager/notes_graph/notes_graph_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_layout/index.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
+import 'package:hoplixi/features/password_manager/duplicate_passwords/screen/duplicate_passwords_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/entity_add_edit.dart';
 import 'package:hoplixi/features/password_manager/forms/entity_view.dart';
 import 'package:hoplixi/features/password_manager/history/ui/screens/history_screen.dart';
@@ -40,6 +39,7 @@ import 'package:hoplixi/features/password_manager/managers/icon_manager/icon_for
 import 'package:hoplixi/features/password_manager/managers/icon_manager/icon_manager_screen.dart';
 import 'package:hoplixi/features/password_manager/managers/tags_manager/tag_form_screen.dart';
 import 'package:hoplixi/features/password_manager/managers/tags_manager/tags_manager_screen.dart';
+import 'package:hoplixi/features/password_manager/notes_graph/notes_graph_screen.dart';
 import 'package:hoplixi/features/password_manager/open_store/open_store_cloud_import_screen.dart';
 import 'package:hoplixi/features/password_manager/open_store/open_store_screen.dart';
 import 'package:hoplixi/features/settings/screens/settings_screen.dart';
@@ -201,7 +201,9 @@ final List<RouteBase> appRoutes = [
             context: context,
             state: state,
             isBaseRoute: true,
-            child: DashboardHomeScreen(entityType: entity),
+            child: DashboardV2HomeScreen(
+              initialEntityType: DashboardEntityType.fromId(entity.id)!,
+            ),
           );
         },
         routes: [

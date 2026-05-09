@@ -28,22 +28,6 @@ class CategoryDao extends DatabaseAccessor<MainStore> with _$CategoryDaoMixin {
     return row.read(countExpr) ?? 0;
   }
 
-  /// Создать [CategoryCardDto] из [CategoriesData].
-  Future<CategoryCardDto> _toCardDto(CategoriesData c) async {
-    final itemsCount = await countItemsInCategory(c.id);
-    return CategoryCardDto(
-      id: c.id,
-      name: c.name,
-      type: c.type.value,
-      color: c.color,
-      iconId: c.iconId,
-      iconSource: c.iconSource,
-      iconValue: c.iconValue,
-      parentId: c.parentId,
-      itemsCount: itemsCount,
-    );
-  }
-
   Future<Map<String, int>> _countItemsForCategories(
     List<String> categoryIds,
   ) async {

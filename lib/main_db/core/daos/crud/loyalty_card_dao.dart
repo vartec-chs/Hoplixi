@@ -1,5 +1,5 @@
 ﻿import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/daos/base_main_entity_dao.dart';
+
 import 'package:hoplixi/main_db/core/daos/crud/crud_types.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/loyalty_card_dto.dart';
@@ -12,8 +12,7 @@ part 'loyalty_card_dao.g.dart';
 
 @DriftAccessor(tables: [VaultItems, LoyaltyCardItems])
 class LoyaltyCardDao extends DatabaseAccessor<MainStore>
-    with _$LoyaltyCardDaoMixin
-    implements BaseMainEntityDao {
+    with _$LoyaltyCardDaoMixin {
   LoyaltyCardDao(super.db);
 
   Future<List<VaultItemWith<LoyaltyCardItemsData>>> getAllLoyaltyCards() async {
@@ -149,30 +148,4 @@ class LoyaltyCardDao extends DatabaseAccessor<MainStore>
       return true;
     });
   }
-
-  @override
-  Future<bool> incrementUsage(String id) => db.vaultItemDao.incrementUsage(id);
-
-  @override
-  Future<bool> permanentDelete(String id) =>
-      db.vaultItemDao.permanentDelete(id);
-
-  @override
-  Future<bool> restoreFromDeleted(String id) =>
-      db.vaultItemDao.restoreFromDeleted(id);
-
-  @override
-  Future<bool> softDelete(String id) => db.vaultItemDao.softDelete(id);
-
-  @override
-  Future<bool> toggleArchive(String id, bool isArchived) =>
-      db.vaultItemDao.toggleArchive(id, isArchived);
-
-  @override
-  Future<bool> toggleFavorite(String id, bool isFavorite) =>
-      db.vaultItemDao.toggleFavorite(id, isFavorite);
-
-  @override
-  Future<bool> togglePin(String id, bool isPinned) =>
-      db.vaultItemDao.togglePin(id, isPinned);
 }

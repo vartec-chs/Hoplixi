@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
-import 'package:hoplixi/features/password_manager/dashboard/screens/dashboard_home_screen.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/dashboard_drawer.dart';
+import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
 
 import 'config/dashboard_layout_constants.dart';
 
@@ -122,9 +122,11 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
           children: [
             _buildLeftPanel(context, canShowBoth),
             Expanded(
-              child: DashboardHomeScreen(
+              child: DashboardV2HomeScreen(
                 key: ValueKey('desktop_home_${widget.entityType.id}'),
-                entityType: widget.entityType,
+                initialEntityType: DashboardEntityType.fromId(
+                  widget.entityType.id,
+                )!,
               ),
             ),
             AnimatedBuilder(

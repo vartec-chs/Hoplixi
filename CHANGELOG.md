@@ -2,6 +2,14 @@
 
 ## 2026-05-09
 
+### password_manager
+
+- Добавлен новый изолированный модуль `dashboard_v2` с разделением на модели,
+  repository/controller слой и небольшие UI-виджеты для чистой замены старого
+  `DashboardHomeScreen`.
+- `dashboard_v2` переведен с универсальной карточки `DashboardV2ItemCard` на
+  entity-specific list/grid карточки через `DashboardV2EntityCardBuilder`.
+
 ### home
 
 - `HomeActionGrid` теперь отделяет `isDevModeOnly`-действия в отдельный блок под

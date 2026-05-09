@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/daos/base_main_entity_dao.dart';
+
 import 'package:hoplixi/main_db/core/daos/crud/crud_types.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/ssh_key_dto.dart';
@@ -11,9 +11,7 @@ import 'package:uuid/uuid.dart';
 part 'ssh_key_dao.g.dart';
 
 @DriftAccessor(tables: [VaultItems, SshKeyItems])
-class SshKeyDao extends DatabaseAccessor<MainStore>
-    with _$SshKeyDaoMixin
-    implements BaseMainEntityDao {
+class SshKeyDao extends DatabaseAccessor<MainStore> with _$SshKeyDaoMixin {
   SshKeyDao(super.db);
 
   Future<List<VaultItemWith<SshKeyItemsData>>> getAllSshKeys() async {
@@ -152,30 +150,4 @@ class SshKeyDao extends DatabaseAccessor<MainStore>
     final result = await query.getSingleOrNull();
     return result?.read(sshKeyItems.privateKey);
   }
-
-  @override
-  Future<bool> incrementUsage(String id) => db.vaultItemDao.incrementUsage(id);
-
-  @override
-  Future<bool> permanentDelete(String id) =>
-      db.vaultItemDao.permanentDelete(id);
-
-  @override
-  Future<bool> restoreFromDeleted(String id) =>
-      db.vaultItemDao.restoreFromDeleted(id);
-
-  @override
-  Future<bool> softDelete(String id) => db.vaultItemDao.softDelete(id);
-
-  @override
-  Future<bool> toggleArchive(String id, bool isArchived) =>
-      db.vaultItemDao.toggleArchive(id, isArchived);
-
-  @override
-  Future<bool> toggleFavorite(String id, bool isFavorite) =>
-      db.vaultItemDao.toggleFavorite(id, isFavorite);
-
-  @override
-  Future<bool> togglePin(String id, bool isPinned) =>
-      db.vaultItemDao.togglePin(id, isPinned);
 }

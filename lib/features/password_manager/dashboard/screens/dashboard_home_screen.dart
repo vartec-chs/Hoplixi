@@ -34,17 +34,17 @@ const kAnimationDuration = Duration(milliseconds: 180);
 ///
 /// Использует [SliverAnimatedList]/[SliverAnimatedGrid] для анимированного
 /// отображения элементов с поддержкой diff-обновлений.
-class DashboardHomeScreen extends ConsumerStatefulWidget {
-  const DashboardHomeScreen({super.key, required this.entityType});
+class DashboardHomeScreenOld extends ConsumerStatefulWidget {
+  const DashboardHomeScreenOld({super.key, required this.entityType});
 
   final EntityType entityType;
 
   @override
-  ConsumerState<DashboardHomeScreen> createState() =>
+  ConsumerState<DashboardHomeScreenOld> createState() =>
       _DashboardHomeScreenState();
 }
 
-class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
+class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreenOld> {
   static const _kScrollThreshold = 200.0;
 
   late final ScrollController _scrollController;
@@ -86,7 +86,7 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
   }
 
   @override
-  void didUpdateWidget(covariant DashboardHomeScreen oldWidget) {
+  void didUpdateWidget(covariant DashboardHomeScreenOld oldWidget) {
     super.didUpdateWidget(oldWidget);
     _dashboardHomeDidUpdateWidget(this, oldWidget);
   }

@@ -11,7 +11,7 @@ void _dashboardHomeDispose(_DashboardHomeScreenState state) {
 
 void _dashboardHomeDidUpdateWidget(
   _DashboardHomeScreenState state,
-  DashboardHomeScreen oldWidget,
+  DashboardHomeScreenOld oldWidget,
 ) {
   if (oldWidget.entityType != state.widget.entityType) {
     state._resetList();
