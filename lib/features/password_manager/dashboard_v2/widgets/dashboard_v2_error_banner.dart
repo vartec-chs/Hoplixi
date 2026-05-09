@@ -19,7 +19,7 @@ final class DashboardV2ErrorBanner extends StatelessWidget {
 
     return Material(
       color: colors.errorContainer,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(16),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(

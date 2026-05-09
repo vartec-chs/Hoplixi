@@ -39,7 +39,7 @@ OLD.icon_value,
         revoked, rotation_period_days, last_rotated_at, metadata
       )
       SELECT
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         a.service, a.key, a.masked_key, a.token_type, a.environment, a.expires_at,
         a.revoked, a.rotation_period_days, a.last_rotated_at, a.metadata
       FROM api_key_items a
@@ -87,7 +87,7 @@ v.icon_value,
         history_id, service, key, masked_key, token_type, environment, expires_at,
         revoked, rotation_period_days, last_rotated_at, metadata
       ) VALUES (
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         OLD.service, OLD.key, OLD.masked_key, OLD.token_type, OLD.environment,
         OLD.expires_at, OLD.revoked, OLD.rotation_period_days,
         OLD.last_rotated_at, OLD.metadata
@@ -123,7 +123,7 @@ OLD.icon_value,
         revoked, rotation_period_days, last_rotated_at, metadata
       )
       SELECT
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         a.service, a.key, a.masked_key, a.token_type, a.environment, a.expires_at,
         a.revoked, a.rotation_period_days, a.last_rotated_at, a.metadata
       FROM api_key_items a

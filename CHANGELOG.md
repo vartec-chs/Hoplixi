@@ -4,10 +4,17 @@
 
 ### password_manager
 
+- В `dashboard_v2` реализована логика массовых действий из старого dashboard:
+  delete/permanent delete, favorite, pin, archive, назначение категории и
+  тегов через `DashboardV2BulkBar`, controller и repository.
 - `dashboard_v2` подключён к возвращённым entity-specific фильтрам и
   `FilterModal`: app bar открывает Wolt-модалку фильтров, список подписан на
   фильтр текущего типа сущности, а repository передаёт в DAO реальные typed
   filters вместе с общими search/tab/page ограничениями.
+- Исправлены history triggers main DB: type-specific history больше не ищет
+  последнюю запись `vault_item_history` по `action_at`, а привязывается к
+  только что вставленной записи через `last_insert_rowid()`. Добавлена
+  migration v3 для переустановки триггеров в существующих хранилищах.
 
 ## 2026-05-09
 

@@ -49,7 +49,7 @@ OLD.icon_value,
         barcode_type, points_balance, tier, expiry_date, website, phone_number, password
       )
       SELECT
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         lci.program_name,
         lci.card_number,
         lci.holder_name,
@@ -119,7 +119,7 @@ v.icon_value,
         history_id, program_name, card_number, holder_name, barcode_value,
         barcode_type, points_balance, tier, expiry_date, website, phone_number, password
       ) VALUES (
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         OLD.program_name,
         OLD.card_number,
         OLD.holder_name,
@@ -174,7 +174,7 @@ OLD.icon_value,
         barcode_type, points_balance, tier, expiry_date, website, phone_number, password
       )
       SELECT
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         lci.program_name,
         lci.card_number,
         lci.holder_name,

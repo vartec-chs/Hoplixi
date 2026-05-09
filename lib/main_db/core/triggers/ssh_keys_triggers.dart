@@ -40,7 +40,7 @@ OLD.icon_value,
         public_key_file_id, private_key_file_id, metadata
       )
       SELECT
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         s.public_key, s.private_key, s.key_type, s.key_size, s.passphrase_hint,
         s.comment, s.fingerprint, s.created_by, s.added_to_agent, s.usage,
         s.public_key_file_id, s.private_key_file_id, s.metadata
@@ -93,7 +93,7 @@ v.icon_value,
         comment, fingerprint, created_by, added_to_agent, usage,
         public_key_file_id, private_key_file_id, metadata
       ) VALUES (
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         OLD.public_key, OLD.private_key, OLD.key_type, OLD.key_size,
         OLD.passphrase_hint, OLD.comment, OLD.fingerprint, OLD.created_by,
         OLD.added_to_agent, OLD.usage, OLD.public_key_file_id,
@@ -131,7 +131,7 @@ OLD.icon_value,
         public_key_file_id, private_key_file_id, metadata
       )
       SELECT
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         s.public_key, s.private_key, s.key_type, s.key_size, s.passphrase_hint,
         s.comment, s.fingerprint, s.created_by, s.added_to_agent, s.usage,
         s.public_key_file_id, s.private_key_file_id, s.metadata

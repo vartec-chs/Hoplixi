@@ -41,7 +41,7 @@ OLD.icon_value,
         photo_attachment_id, verified
       )
       SELECT
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         i.id_type, i.id_number, i.full_name, i.date_of_birth,
         i.place_of_birth, i.nationality, i.issuing_authority,
         i.issue_date, i.expiry_date, i.mrz, i.scan_attachment_id,
@@ -96,7 +96,7 @@ v.icon_value,
         issue_date, expiry_date, mrz, scan_attachment_id,
         photo_attachment_id, verified
       ) VALUES (
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         OLD.id_type, OLD.id_number, OLD.full_name, OLD.date_of_birth,
         OLD.place_of_birth, OLD.nationality, OLD.issuing_authority,
         OLD.issue_date, OLD.expiry_date, OLD.mrz, OLD.scan_attachment_id,
@@ -135,7 +135,7 @@ OLD.icon_value,
         photo_attachment_id, verified
       )
       SELECT
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         i.id_type, i.id_number, i.full_name, i.date_of_birth,
         i.place_of_birth, i.nationality, i.issuing_authority,
         i.issue_date, i.expiry_date, i.mrz, i.scan_attachment_id,

@@ -75,8 +75,7 @@ OLD.icon_value,
         expire_at
       )
       SELECT
-        (SELECT id FROM vault_item_history
-         WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         pi.login,
         pi.email,
         pi.password,
@@ -155,8 +154,7 @@ v.icon_value,
         url,
         expire_at
       ) VALUES (
-        (SELECT id FROM vault_item_history
-         WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         OLD.login,
         OLD.email,
         OLD.password,
@@ -225,8 +223,7 @@ OLD.icon_value,
         expire_at
       )
       SELECT
-        (SELECT id FROM vault_item_history
-         WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         pi.login,
         pi.email,
         pi.password,

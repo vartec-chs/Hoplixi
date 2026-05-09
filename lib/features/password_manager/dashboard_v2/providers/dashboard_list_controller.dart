@@ -153,6 +153,67 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
     );
   }
 
+  Future<AppError?> bulkDelete(List<String> ids, {required bool permanently}) {
+    return _applyBulkMutation(
+      ids,
+      operation: () {
+        final repository = ref.read(dashboardRepositoryProvider);
+        return permanently
+            ? repository.bulkPermanentDelete(entityType: entityType, ids: ids)
+            : repository.bulkSoftDelete(entityType: entityType, ids: ids);
+      },
+    );
+  }
+
+  Future<AppError?> bulkAssignCategory(List<String> ids, String? categoryId) {
+    return _applyBulkMutation(
+      ids,
+      operation: () => ref
+          .read(dashboardRepositoryProvider)
+          .bulkAssignCategory(
+            entityType: entityType,
+            ids: ids,
+            categoryId: categoryId,
+          ),
+    );
+  }
+
+  Future<AppError?> bulkAssignTags(List<String> ids, List<String> tagIds) {
+    return _applyBulkMutation(
+      ids,
+      operation: () => ref
+          .read(dashboardRepositoryProvider)
+          .bulkAssignTags(entityType: entityType, ids: ids, tagIds: tagIds),
+    );
+  }
+
+  Future<AppError?> bulkSetArchived(List<String> ids, bool isArchived) {
+    return _applyBulkMutation(
+      ids,
+      operation: () => ref
+          .read(dashboardRepositoryProvider)
+          .bulkSetArchived(entityType: entityType, ids: ids, value: isArchived),
+    );
+  }
+
+  Future<AppError?> bulkSetFavorite(List<String> ids, bool isFavorite) {
+    return _applyBulkMutation(
+      ids,
+      operation: () => ref
+          .read(dashboardRepositoryProvider)
+          .bulkSetFavorite(entityType: entityType, ids: ids, value: isFavorite),
+    );
+  }
+
+  Future<AppError?> bulkSetPinned(List<String> ids, bool isPinned) {
+    return _applyBulkMutation(
+      ids,
+      operation: () => ref
+          .read(dashboardRepositoryProvider)
+          .bulkSetPinned(entityType: entityType, ids: ids, value: isPinned),
+    );
+  }
+
   Future<DashboardListState> _loadFirstPage(
     DashboardFilterState filters,
     Object entityFilter,
@@ -274,5 +335,31 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
     }
 
     return error;
+  }
+
+  Future<AppError?> _applyBulkMutation<T extends Object>(
+    List<String> ids, {
+    required AsyncResultDart<T, AppError> Function() operation,
+  }) async {
+    if (ids.isEmpty) return null;
+
+    final current = state.value;
+    if (current != null) {
+      state = AsyncData(current.copyWith(clearLastError: true));
+    }
+
+    AppError? error;
+    final result = await operation();
+    result.fold((_) {}, (failure) => error = failure);
+
+    if (error != null) {
+      if (current != null) {
+        state = AsyncData(current.copyWith(lastError: error));
+      }
+      return error;
+    }
+
+    await refresh();
+    return null;
   }
 }

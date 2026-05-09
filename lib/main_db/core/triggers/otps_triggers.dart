@@ -79,8 +79,7 @@ OLD.icon_value,
         counter
       )
       SELECT
-        (SELECT id FROM vault_item_history
-         WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         oi.password_item_id,
         oi.type,
         oi.issuer,
@@ -174,8 +173,7 @@ v.icon_value,
         period,
         counter
       ) VALUES (
-        (SELECT id FROM vault_item_history
-         WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         OLD.password_item_id,
         OLD.type,
         OLD.issuer,
@@ -254,8 +252,7 @@ OLD.icon_value,
         counter
       )
       SELECT
-        (SELECT id FROM vault_item_history
-         WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         oi.password_item_id,
         oi.type,
         oi.issuer,

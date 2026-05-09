@@ -42,4 +42,44 @@ abstract interface class DashboardRepository {
     required DashboardEntityType entityType,
     required String id,
   });
+
+  AsyncResultDart<int, AppError> bulkSetFavorite({
+    required DashboardEntityType entityType,
+    required List<String> ids,
+    required bool value,
+  });
+
+  AsyncResultDart<int, AppError> bulkSetPinned({
+    required DashboardEntityType entityType,
+    required List<String> ids,
+    required bool value,
+  });
+
+  AsyncResultDart<int, AppError> bulkSetArchived({
+    required DashboardEntityType entityType,
+    required List<String> ids,
+    required bool value,
+  });
+
+  AsyncResultDart<int, AppError> bulkSoftDelete({
+    required DashboardEntityType entityType,
+    required List<String> ids,
+  });
+
+  AsyncResultDart<int, AppError> bulkPermanentDelete({
+    required DashboardEntityType entityType,
+    required List<String> ids,
+  });
+
+  AsyncResultDart<int, AppError> bulkAssignCategory({
+    required DashboardEntityType entityType,
+    required List<String> ids,
+    required String? categoryId,
+  });
+
+  AsyncResultDart<bool, AppError> bulkAssignTags({
+    required DashboardEntityType entityType,
+    required List<String> ids,
+    required List<String> tagIds,
+  });
 }

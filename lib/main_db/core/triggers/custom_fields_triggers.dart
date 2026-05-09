@@ -63,8 +63,7 @@ v.icon_value,
           substr(lower(hex(randomblob(2))),2) || '-' ||
           substr('ab89', abs(random()) % 4 + 1, 1) ||
           substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
-        (SELECT id FROM vault_item_history
-          WHERE item_id = NEW.item_id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         cf.id, cf.label, cf.value, cf.field_type, cf.sort_order
       FROM vault_item_custom_fields cf
       WHERE cf.item_id = NEW.item_id;
@@ -116,8 +115,7 @@ v.icon_value,
           substr(lower(hex(randomblob(2))),2) || '-' ||
           substr('ab89', abs(random()) % 4 + 1, 1) ||
           substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
-        (SELECT id FROM vault_item_history
-          WHERE item_id = NEW.item_id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         cf.id, cf.label, cf.value, cf.field_type, cf.sort_order
       FROM vault_item_custom_fields cf
       WHERE cf.item_id = NEW.item_id;
@@ -170,8 +168,7 @@ v.icon_value,
           substr(lower(hex(randomblob(2))),2) || '-' ||
           substr('ab89', abs(random()) % 4 + 1, 1) ||
           substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
-        (SELECT id FROM vault_item_history
-          WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         cf.id, cf.label, cf.value, cf.field_type, cf.sort_order
       FROM vault_item_custom_fields cf
       WHERE cf.item_id = OLD.item_id;

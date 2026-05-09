@@ -7,6 +7,7 @@ import 'package:hoplixi/main_db/core/daos/crud/vault_item_dao.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
 import 'package:hoplixi/main_db/core/models/filter/index.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/main_db/providers/other/service_providers.dart';
 import 'package:result_dart/result_dart.dart';
 
 import '../models/dashboard_entity_type.dart';
@@ -26,7 +27,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
   final Ref _ref;
 
   @override
-  Future<ResultDart<DashboardLoadResult, AppError>> load(DashboardQuery query) {
+  AsyncResultDart<DashboardLoadResult, AppError> load(DashboardQuery query) {
     return ResultUtils.tryCatchAsync(
       () async {
         final baseFilter = _buildBaseFilter(query);
@@ -99,7 +100,122 @@ final class MainDbDashboardRepository implements DashboardRepository {
     required DashboardEntityType entityType,
     required String id,
   }) {
-    return _mutate(entityType, id, (dao) => dao.permanentDelete(id));
+    return ResultUtils.tryCatchAsync(
+      () async => _permanentDeleteItem(entityType, id),
+      (error, stackTrace) => _mapError(
+        'Не удалось окончательно удалить элемент dashboard',
+        error,
+        stackTrace,
+        {'entityType': entityType.id, 'id': id},
+      ),
+    );
+  }
+
+  @override
+  AsyncResultDart<int, AppError> bulkSetFavorite({
+    required DashboardEntityType entityType,
+    required List<String> ids,
+    required bool value,
+  }) {
+    return _bulkMutate(
+      entityType: entityType,
+      ids: ids,
+      action: (dao) => dao.bulkSetFavorite(ids, value),
+    );
+  }
+
+  @override
+  AsyncResultDart<int, AppError> bulkSetPinned({
+    required DashboardEntityType entityType,
+    required List<String> ids,
+    required bool value,
+  }) {
+    return _bulkMutate(
+      entityType: entityType,
+      ids: ids,
+      action: (dao) => dao.bulkSetPin(ids, value),
+    );
+  }
+
+  @override
+  AsyncResultDart<int, AppError> bulkSetArchived({
+    required DashboardEntityType entityType,
+    required List<String> ids,
+    required bool value,
+  }) {
+    return _bulkMutate(
+      entityType: entityType,
+      ids: ids,
+      action: (dao) => dao.bulkSetArchive(ids, value),
+    );
+  }
+
+  @override
+  AsyncResultDart<int, AppError> bulkSoftDelete({
+    required DashboardEntityType entityType,
+    required List<String> ids,
+  }) {
+    return _bulkMutate(
+      entityType: entityType,
+      ids: ids,
+      action: (dao) => dao.bulkSoftDelete(ids),
+    );
+  }
+
+  @override
+  AsyncResultDart<int, AppError> bulkPermanentDelete({
+    required DashboardEntityType entityType,
+    required List<String> ids,
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        var deletedCount = 0;
+        for (final id in ids) {
+          if (await _permanentDeleteItem(entityType, id)) deletedCount++;
+        }
+        return deletedCount;
+      },
+      (error, stackTrace) => _mapError(
+        'Не удалось окончательно удалить элементы dashboard',
+        error,
+        stackTrace,
+        {'entityType': entityType.id, 'ids': ids},
+      ),
+    );
+  }
+
+  @override
+  AsyncResultDart<int, AppError> bulkAssignCategory({
+    required DashboardEntityType entityType,
+    required List<String> ids,
+    required String? categoryId,
+  }) {
+    return _bulkMutate(
+      entityType: entityType,
+      ids: ids,
+      action: (dao) => dao.bulkSetCategory(ids, categoryId),
+    );
+  }
+
+  @override
+  AsyncResultDart<bool, AppError> bulkAssignTags({
+    required DashboardEntityType entityType,
+    required List<String> ids,
+    required List<String> tagIds,
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final dao = await _ref.read(vaultItemDaoProvider.future);
+        await dao.bulkSyncTags(ids, tagIds);
+        return true;
+      },
+      (error, stackTrace) => _mapError(
+        'Не удалось назначить теги элементам dashboard',
+        error,
+        stackTrace,
+        {'entityType': entityType.id, 'ids': ids},
+      ),
+    );
   }
 
   BaseFilter _buildBaseFilter(DashboardQuery query) {
@@ -405,6 +521,58 @@ final class MainDbDashboardRepository implements DashboardRepository {
         {'entityType': entityType.id, 'id': id},
       ),
     );
+  }
+
+  AsyncResultDart<int, AppError> _bulkMutate({
+    required DashboardEntityType entityType,
+    required List<String> ids,
+    required Future<int> Function(VaultItemDao dao) action,
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async => action(await _ref.read(vaultItemDaoProvider.future)),
+      (error, stackTrace) => _mapError(
+        'Не удалось выполнить массовое действие dashboard',
+        error,
+        stackTrace,
+        {'entityType': entityType.id, 'ids': ids},
+      ),
+    );
+  }
+
+  Future<bool> _permanentDeleteItem(
+    DashboardEntityType entityType,
+    String id,
+  ) async {
+    if (entityType == DashboardEntityType.file) {
+      await _deleteFilePayloads(id);
+    }
+
+    final dao = await _ref.read(vaultItemDaoProvider.future);
+    return dao.permanentDelete(id);
+  }
+
+  Future<void> _deleteFilePayloads(String id) async {
+    final fileService = await _ref.read(fileStorageServiceProvider.future);
+    final fileHistoryDao = await _ref.read(fileHistoryDaoProvider.future);
+    final fileDao = await _ref.read(fileDaoProvider.future);
+    final historyRecords = await fileHistoryDao.getFileHistoryByOriginalId(id);
+
+    for (final (_, fileRecord) in historyRecords) {
+      final metadataId = fileRecord?.metadataId;
+      if (metadataId == null) continue;
+
+      final metadata = await (fileDao.attachedDatabase.select(
+        fileDao.attachedDatabase.fileMetadata,
+      )..where((metadata) => metadata.id.equals(metadataId))).getSingleOrNull();
+
+      final filePath = metadata?.filePath;
+      if (filePath == null) continue;
+
+      await fileService.deleteHistoryFileFromDisk(filePath);
+    }
+
+    await fileHistoryDao.deleteFileHistoryByFileId(id);
+    await fileService.deleteFileFromDisk(id);
   }
 
   AppError _mapError(

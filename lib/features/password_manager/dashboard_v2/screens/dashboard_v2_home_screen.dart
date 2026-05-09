@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/entity_type.dart';
+import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_field.dart';
+import 'package:hoplixi/features/password_manager/pickers/tags_picker/widgets/tag_picker_field.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
+import 'package:hoplixi/main_db/core/models/enums/index.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/ui/button.dart';
 
 import '../models/dashboard_entity_type.dart';
 import '../models/dashboard_view_mode.dart';
@@ -35,6 +40,7 @@ final class DashboardV2HomeScreen extends ConsumerStatefulWidget {
 final class _DashboardV2HomeScreenState
     extends ConsumerState<DashboardV2HomeScreen> {
   late DashboardEntityType _entityType;
+  bool _isApplyingBulkAction = false;
 
   @override
   void initState() {
@@ -68,64 +74,98 @@ final class _DashboardV2HomeScreenState
             ...listState.when(
               loading: () => [_buildLoading()],
               error: (error, _) => [_buildFatalError(error)],
-              data: (data) => [
-                if (data.lastError != null)
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-                    sliver: SliverToBoxAdapter(
-                      child: DashboardV2ErrorBanner(
-                        error: data.lastError!,
-                        onRetry: () => ref
-                            .read(
-                              dashboardListControllerProvider(
-                                _entityType,
-                              ).notifier,
-                            )
-                            .refresh(),
+              data: (data) {
+                final selectedItems = data.items
+                    .where((item) => selectedIds.contains(item.id))
+                    .toList(growable: false);
+                final shouldFavorite = selectedItems.any(
+                  (item) => !item.isFavorite,
+                );
+                final shouldPin = selectedItems.any((item) => !item.isPinned);
+                final shouldArchive = selectedItems.any(
+                  (item) => !item.isArchived,
+                );
+
+                return [
+                  if (data.lastError != null)
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                      sliver: SliverToBoxAdapter(
+                        child: DashboardV2ErrorBanner(
+                          error: data.lastError!,
+                          onRetry: () => ref
+                              .read(
+                                dashboardListControllerProvider(
+                                  _entityType,
+                                ).notifier,
+                              )
+                              .refresh(),
+                        ),
                       ),
                     ),
-                  ),
-                if (selectedIds.isNotEmpty)
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-                    sliver: SliverToBoxAdapter(
-                      child: DashboardV2BulkBar(
-                        selectedCount: selectedIds.length,
-                        onClear: () => ref
-                            .read(
-                              dashboardSelectionProvider(_entityType).notifier,
-                            )
-                            .clear(),
+                  if (selectedIds.isNotEmpty)
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                      sliver: SliverToBoxAdapter(
+                        child: DashboardV2BulkBar(
+                          selectedCount: selectedIds.length,
+                          onClear: _clearSelection,
+                          onBulkDelete: _isApplyingBulkAction
+                              ? null
+                              : () => _showBulkDeleteDialog(selectedItems),
+                          onBulkFavorite: _isApplyingBulkAction
+                              ? null
+                              : () => _applyBulkFavorite(shouldFavorite),
+                          bulkFavoriteLabel: shouldFavorite
+                              ? 'В избранное'
+                              : 'Убрать из избранного',
+                          onBulkPin: _isApplyingBulkAction
+                              ? null
+                              : () => _applyBulkPin(shouldPin),
+                          bulkPinLabel: shouldPin ? 'Закрепить' : 'Открепить',
+                          onBulkArchive: _isApplyingBulkAction
+                              ? null
+                              : () => _applyBulkArchive(shouldArchive),
+                          bulkArchiveLabel: shouldArchive
+                              ? 'В архив'
+                              : 'Из архива',
+                          onBulkAssignCategory: _isApplyingBulkAction
+                              ? null
+                              : _showBulkAssignCategoryDialog,
+                          onBulkAssignTags: _isApplyingBulkAction
+                              ? null
+                              : _showBulkAssignTagsDialog,
+                        ),
                       ),
                     ),
-                  ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
-                  sliver: DashboardV2ItemsView(
-                    items: data.items,
-                    viewMode: filters.viewMode,
-                    selectedIds: selectedIds,
-                    onOpen: _openItem,
-                    onOpenEdit: _openEditItem,
-                    onToggleSelection: _toggleSelection,
-                    onStartSelection: _startSelection,
-                    onToggleFavorite: _toggleFavorite,
-                    onTogglePinned: _togglePinned,
-                    onToggleArchived: _toggleArchived,
-                    onDelete: _deleteItem,
-                    onRestore: _restoreItem,
-                    onOpenView: _openViewItem,
-                    onOpenHistory: _openHistoryItem,
-                  ),
-                ),
-                if (data.isLoadingMore)
-                  const SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
-                      child: LinearProgressIndicator(),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
+                    sliver: DashboardV2ItemsView(
+                      items: data.items,
+                      viewMode: filters.viewMode,
+                      selectedIds: selectedIds,
+                      onOpen: _openItem,
+                      onOpenEdit: _openEditItem,
+                      onToggleSelection: _toggleSelection,
+                      onStartSelection: _startSelection,
+                      onToggleFavorite: _toggleFavorite,
+                      onTogglePinned: _togglePinned,
+                      onToggleArchived: _toggleArchived,
+                      onDelete: _deleteItem,
+                      onRestore: _restoreItem,
+                      onOpenView: _openViewItem,
+                      onOpenHistory: _openHistoryItem,
                     ),
                   ),
-              ],
+                  if (data.isLoadingMore)
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
+                        child: LinearProgressIndicator(),
+                      ),
+                    ),
+                ];
+              },
             ),
           ],
         ),
@@ -187,6 +227,248 @@ final class _DashboardV2HomeScreenState
     ref.read(dashboardSelectionProvider(_entityType).notifier).toggle(id);
   }
 
+  void _clearSelection() {
+    ref.read(dashboardSelectionProvider(_entityType).notifier).clear();
+  }
+
+  EntityType get _legacyEntityType =>
+      EntityType.values.firstWhere((type) => type.id == _entityType.id);
+
+  Future<void> _applyBulkArchive(bool shouldArchive) async {
+    await _runBulkAction(
+      action: (controller, ids) =>
+          controller.bulkSetArchived(ids, shouldArchive),
+      successTitle: shouldArchive
+          ? 'Элементы перенесены в архив'
+          : 'Элементы извлечены из архива',
+    );
+  }
+
+  Future<void> _applyBulkFavorite(bool shouldFavorite) async {
+    await _runBulkAction(
+      action: (controller, ids) =>
+          controller.bulkSetFavorite(ids, shouldFavorite),
+      successTitle: shouldFavorite
+          ? 'Элементы добавлены в избранное'
+          : 'Элементы удалены из избранного',
+    );
+  }
+
+  Future<void> _applyBulkPin(bool shouldPin) async {
+    await _runBulkAction(
+      action: (controller, ids) => controller.bulkSetPinned(ids, shouldPin),
+      successTitle: shouldPin ? 'Элементы закреплены' : 'Элементы откреплены',
+    );
+  }
+
+  Future<void> _showBulkDeleteDialog(List<BaseCardDto> selectedItems) async {
+    final selectedIds = ref
+        .read(dashboardSelectionProvider(_entityType))
+        .toList(growable: false);
+    if (selectedIds.isEmpty || _isApplyingBulkAction) return;
+
+    final isPermanentDelete =
+        selectedItems.isNotEmpty &&
+        selectedItems.every((item) => item.isDeleted);
+
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(
+            isPermanentDelete ? 'Удалить навсегда?' : 'Удалить элементы?',
+          ),
+          content: Text(
+            isPermanentDelete
+                ? 'Будет безвозвратно удалено элементов: ${selectedIds.length}.'
+                : 'Будет перемещено в удалённые элементов: ${selectedIds.length}.',
+          ),
+          actions: [
+            SmoothButton(
+              type: SmoothButtonType.text,
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              label: 'Отмена',
+            ),
+            SmoothButton(
+              variant: SmoothButtonVariant.error,
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              label: isPermanentDelete ? 'Удалить навсегда' : 'Удалить',
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true) return;
+
+    await _runBulkAction(
+      action: (controller, ids) =>
+          controller.bulkDelete(ids, permanently: isPermanentDelete),
+      successTitle: isPermanentDelete
+          ? 'Элементы удалены навсегда'
+          : 'Элементы перемещены в удалённые',
+    );
+  }
+
+  Future<void> _showBulkAssignCategoryDialog() async {
+    if (ref.read(dashboardSelectionProvider(_entityType)).isEmpty ||
+        _isApplyingBulkAction) {
+      return;
+    }
+
+    String? selectedCategoryId;
+    String? selectedCategoryName;
+    final legacyType = _legacyEntityType;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            return AlertDialog(
+              title: const Text('Назначить категорию'),
+              content: SizedBox(
+                height: 54,
+                child: CategoryPickerField(
+                  selectedCategoryId: selectedCategoryId,
+                  selectedCategoryName: selectedCategoryName,
+                  filterByType: [
+                    legacyType.toCategoryType(),
+                    CategoryType.mixed,
+                  ],
+                  onCategorySelected: (categoryId, categoryName) {
+                    setDialogState(() {
+                      selectedCategoryId = categoryId;
+                      selectedCategoryName = categoryName;
+                    });
+                  },
+                ),
+              ),
+              actions: [
+                SmoothButton(
+                  type: SmoothButtonType.text,
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  label: 'Отмена',
+                ),
+                SmoothButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  label: 'Применить',
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    await _runBulkAction(
+      action: (controller, ids) =>
+          controller.bulkAssignCategory(ids, selectedCategoryId),
+      successTitle: selectedCategoryId == null
+          ? 'Категория очищена'
+          : 'Категория назначена',
+    );
+  }
+
+  Future<void> _showBulkAssignTagsDialog() async {
+    if (ref.read(dashboardSelectionProvider(_entityType)).isEmpty ||
+        _isApplyingBulkAction) {
+      return;
+    }
+
+    var selectedTagIds = <String>[];
+    var selectedTagNames = <String>[];
+    final legacyType = _legacyEntityType;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            return AlertDialog(
+              title: const Text('Назначить теги'),
+              content: SizedBox(
+                height: 54,
+                child: TagPickerField(
+                  selectedTagIds: selectedTagIds,
+                  selectedTagNames: selectedTagNames,
+                  filterByType: [legacyType.toTagType(), TagType.mixed],
+                  onTagsSelected: (tagIds, tagNames) {
+                    setDialogState(() {
+                      selectedTagIds = List<String>.from(tagIds);
+                      selectedTagNames = List<String>.from(tagNames);
+                    });
+                  },
+                ),
+              ),
+              actions: [
+                SmoothButton(
+                  type: SmoothButtonType.text,
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  label: 'Отмена',
+                ),
+                SmoothButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  label: 'Применить',
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    await _runBulkAction(
+      action: (controller, ids) =>
+          controller.bulkAssignTags(ids, selectedTagIds),
+      successTitle: selectedTagIds.isEmpty ? 'Теги очищены' : 'Теги обновлены',
+    );
+  }
+
+  Future<void> _runBulkAction({
+    required Future<Object?> Function(
+      DashboardListController controller,
+      List<String> ids,
+    )
+    action,
+    required String successTitle,
+  }) async {
+    final selectedIds = ref
+        .read(dashboardSelectionProvider(_entityType))
+        .toList(growable: false);
+    if (selectedIds.isEmpty || _isApplyingBulkAction) return;
+
+    setState(() => _isApplyingBulkAction = true);
+
+    try {
+      final error = await action(
+        ref.read(dashboardListControllerProvider(_entityType).notifier),
+        selectedIds,
+      );
+
+      if (!mounted) return;
+
+      if (error != null) {
+        Toaster.error(
+          title: 'Не удалось выполнить массовое действие',
+          description: error.toString(),
+        );
+        return;
+      }
+
+      _clearSelection();
+      Toaster.success(title: successTitle);
+    } finally {
+      if (mounted) {
+        setState(() => _isApplyingBulkAction = false);
+      }
+    }
+  }
+
   Future<void> _toggleFavorite(BaseCardDto item) async {
     await _showMutationErrorIfNeeded(
       await ref
@@ -232,9 +514,10 @@ final class _DashboardV2HomeScreenState
 
   Future<void> _showMutationErrorIfNeeded(dynamic error) async {
     if (!mounted || error == null) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(error.message)));
+    Toaster.error(
+      title: 'Не удалось выполнить действие',
+      description: error.toString(),
+    );
   }
 
   void _openHistoryItem(BaseCardDto item) {

@@ -40,7 +40,7 @@ OLD.icon_value,
         expires_at, support_contact
       )
       SELECT
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         l.product, l.license_key, l.license_type, l.seats, l.max_activations,
         l.activated_on, l.purchase_date, l.purchase_from, l.order_id,
         l.license_file_id, l.expires_at, l.support_contact
@@ -92,7 +92,7 @@ v.icon_value,
         activated_on, purchase_date, purchase_from, order_id, license_file_id,
         expires_at, support_contact
       ) VALUES (
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         OLD.product, OLD.license_key, OLD.license_type, OLD.seats,
         OLD.max_activations, OLD.activated_on, OLD.purchase_date,
         OLD.purchase_from, OLD.order_id, OLD.license_file_id, OLD.expires_at,
@@ -130,7 +130,7 @@ OLD.icon_value,
         expires_at, support_contact
       )
       SELECT
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         l.product, l.license_key, l.license_type, l.seats, l.max_activations,
         l.activated_on, l.purchase_date, l.purchase_from, l.order_id,
         l.license_file_id, l.expires_at, l.support_contact

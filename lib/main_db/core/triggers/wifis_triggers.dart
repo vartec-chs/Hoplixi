@@ -40,7 +40,7 @@ OLD.icon_value,
         last_connected_bssid, priority, qr_code_payload
       )
       SELECT
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         w.ssid, w.password, w.security, w.hidden,
         w.eap_method, w.username, w.identity, w.domain,
         w.last_connected_bssid, w.priority, w.qr_code_payload
@@ -91,7 +91,7 @@ v.icon_value,
         eap_method, username, identity, domain,
         last_connected_bssid, priority, qr_code_payload
       ) VALUES (
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         OLD.ssid, OLD.password, OLD.security, OLD.hidden,
         OLD.eap_method, OLD.username, OLD.identity, OLD.domain,
         OLD.last_connected_bssid, OLD.priority, OLD.qr_code_payload
@@ -128,7 +128,7 @@ OLD.icon_value,
         last_connected_bssid, priority, qr_code_payload
       )
       SELECT
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         w.ssid, w.password, w.security, w.hidden,
         w.eap_method, w.username, w.identity, w.domain,
         w.last_connected_bssid, w.priority, w.qr_code_payload

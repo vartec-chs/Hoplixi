@@ -71,8 +71,7 @@ OLD.icon_value,
         content
       )
       SELECT
-        (SELECT id FROM vault_item_history
-         WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         ni.delta_json,
         ni.content
       FROM note_items ni
@@ -141,8 +140,7 @@ v.icon_value,
         delta_json,
         content
       ) VALUES (
-        (SELECT id FROM vault_item_history
-         WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         OLD.delta_json,
         OLD.content
       );
@@ -205,8 +203,7 @@ OLD.icon_value,
         content
       )
       SELECT
-        (SELECT id FROM vault_item_history
-         WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         ni.delta_json,
         ni.content
       FROM note_items ni

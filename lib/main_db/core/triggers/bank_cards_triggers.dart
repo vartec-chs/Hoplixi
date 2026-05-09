@@ -80,8 +80,7 @@ OLD.icon_value,
         routing_number
       )
       SELECT
-        (SELECT id FROM vault_item_history
-         WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         bci.cardholder_name,
         bci.card_number,
         bci.card_type,
@@ -174,8 +173,7 @@ v.icon_value,
         account_number,
         routing_number
       ) VALUES (
-        (SELECT id FROM vault_item_history
-         WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         OLD.cardholder_name,
         OLD.card_number,
         OLD.card_type,
@@ -254,8 +252,7 @@ OLD.icon_value,
         routing_number
       )
       SELECT
-        (SELECT id FROM vault_item_history
-         WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         bci.cardholder_name,
         bci.card_number,
         bci.card_type,

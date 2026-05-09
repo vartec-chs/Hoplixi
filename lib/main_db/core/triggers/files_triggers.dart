@@ -71,8 +71,7 @@ OLD.icon_value,
         metadata_id
       )
       SELECT
-        (SELECT id FROM vault_item_history
-         WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         fi.metadata_id
       FROM file_items fi
       WHERE fi.item_id = OLD.id;
@@ -138,8 +137,7 @@ v.icon_value,
         history_id,
         metadata_id
       ) VALUES (
-        (SELECT id FROM vault_item_history
-         WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         OLD.metadata_id
       );
     END;
@@ -200,8 +198,7 @@ OLD.icon_value,
         metadata_id
       )
       SELECT
-        (SELECT id FROM vault_item_history
-         WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         fi.metadata_id
       FROM file_items fi
       WHERE fi.item_id = OLD.id;

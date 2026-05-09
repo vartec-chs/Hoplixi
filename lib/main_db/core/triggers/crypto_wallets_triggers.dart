@@ -40,7 +40,7 @@ OLD.icon_value,
         last_balance_checked_at, watch_only, derivation_scheme
       )
       SELECT
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         c.wallet_type, c.mnemonic, c.private_key, c.derivation_path,
         c.network, c.addresses, c.xpub, c.xprv, c.hardware_device,
         c.last_balance_checked_at, c.watch_only,
@@ -93,7 +93,7 @@ v.icon_value,
         network, addresses, xpub, xprv, hardware_device,
         last_balance_checked_at, watch_only, derivation_scheme
       ) VALUES (
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         OLD.wallet_type, OLD.mnemonic, OLD.private_key, OLD.derivation_path,
         OLD.network, OLD.addresses, OLD.xpub, OLD.xprv, OLD.hardware_device,
         OLD.last_balance_checked_at, OLD.watch_only,
@@ -131,7 +131,7 @@ OLD.icon_value,
         last_balance_checked_at, watch_only, derivation_scheme
       )
       SELECT
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         c.wallet_type, c.mnemonic, c.private_key, c.derivation_path,
         c.network, c.addresses, c.xpub, c.xprv, c.hardware_device,
         c.last_balance_checked_at, c.watch_only,

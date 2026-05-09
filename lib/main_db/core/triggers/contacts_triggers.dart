@@ -72,7 +72,7 @@ OLD.icon_value,
         is_emergency_contact
       )
       SELECT
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         c.phone,
         c.email,
         c.company,
@@ -157,7 +157,7 @@ v.icon_value,
         birthday,
         is_emergency_contact
       ) VALUES (
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         OLD.phone,
         OLD.email,
         OLD.company,
@@ -231,7 +231,7 @@ OLD.icon_value,
         is_emergency_contact
       )
       SELECT
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         c.phone,
         c.email,
         c.company,

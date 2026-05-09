@@ -40,7 +40,7 @@ OLD.icon_value,
         password_for_pfx, ocsp_url, crl_url, auto_renew, last_checked_at
       )
       SELECT
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         c.certificate_pem, c.private_key, c.serial_number, c.issuer, c.subject,
         c.valid_from, c.valid_to, c.fingerprint, c.key_usage, c.extensions,
         c.pfx_blob, c.password_for_pfx, c.ocsp_url, c.crl_url, c.auto_renew,
@@ -97,7 +97,7 @@ v.icon_value,
         valid_from, valid_to, fingerprint, key_usage, extensions, pfx_blob,
         password_for_pfx, ocsp_url, crl_url, auto_renew, last_checked_at
       ) VALUES (
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.item_id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         OLD.certificate_pem, OLD.private_key, OLD.serial_number, OLD.issuer,
         OLD.subject, OLD.valid_from, OLD.valid_to, OLD.fingerprint,
         OLD.key_usage, OLD.extensions, OLD.pfx_blob, OLD.password_for_pfx,
@@ -135,7 +135,7 @@ OLD.icon_value,
         password_for_pfx, ocsp_url, crl_url, auto_renew, last_checked_at
       )
       SELECT
-        (SELECT id FROM vault_item_history WHERE item_id = OLD.id ORDER BY action_at DESC LIMIT 1),
+        (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
         c.certificate_pem, c.private_key, c.serial_number, c.issuer, c.subject,
         c.valid_from, c.valid_to, c.fingerprint, c.key_usage, c.extensions,
         c.pfx_blob, c.password_for_pfx, c.ocsp_url, c.crl_url, c.auto_renew,
