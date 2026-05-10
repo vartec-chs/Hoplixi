@@ -6,7 +6,7 @@ import 'package:hoplixi/main_db/core/main_store_history_triggers_installer.dart'
 import 'package:hoplixi/main_db/core/main_store_indexes_installer.dart';
 import 'package:hoplixi/main_db/core/migrations/index.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
-import 'package:hoplixi/main_db/core/tables/index.dart';
+import 'package:hoplixi/main_db/core/tables/tables.dart';
 import 'package:uuid/uuid.dart';
 
 part 'main_store.g.dart';

@@ -9,16 +9,16 @@ that reference the base table via `item_id → vault_items.id ON DELETE CASCADE`
 
 ## Important
 
-When changing tables, check and update triggers in `main_store.dart` to ensure
-history tracking and timestamp maintenance. Triggers folder
-./lib/db_core/triggers.
+When changing tables, check and update triggers in
+`lib/main_db/core/main_store.dart` to ensure history tracking and timestamp
+maintenance. Triggers folder: `lib/main_db/core/triggers`.
 
 ## Table: vault_items
 
-Base table for all vault entities (passwords, notes, OTPs, bank cards, files,
-documents, API keys, SSH keys, certificates, crypto wallets, Wi‑Fi, identities,
-license keys, recovery codes). Contains only the common fields shared by every
-entity type.
+Base table for all vault entities (passwords, notes, OTPs, bank cards,
+documents, files, contacts, API keys, SSH keys, certificates, crypto wallets,
+Wi‑Fi, identities, license keys, recovery codes, loyalty cards). Contains only
+the common fields shared by every entity type.
 
 | Column      | Type     | Constraints                             | Description            |
 | ----------- | -------- | --------------------------------------- | ---------------------- |
@@ -28,6 +28,8 @@ entity type.
 | description | Text     | nullable                                | Description            |
 | categoryId  | Text     | nullable, FK to categories.id (setNull) | Category reference     |
 | noteId      | Text     | nullable                                | Linked note reference  |
+| iconSource  | Text     | nullable                                | Icon source            |
+| iconValue   | Text     | nullable                                | Icon value             |
 | usedCount   | Int      | default: 0                              | Usage count            |
 | isFavorite  | Bool     | default: false                          | Favorite flag          |
 | isArchived  | Bool     | default: false                          | Archived flag          |
@@ -39,8 +41,8 @@ entity type.
 | lastUsedAt  | DateTime | nullable                                | Last used timestamp    |
 
 **VaultItemType enum values:** `password`, `otp`, `note`, `bankCard`,
-`document`, `file`, `apiKey`, `sshKey`, `certificate`, `cryptoWallet`, `wifi`,
-`identity`, `licenseKey`, `recoveryCodes`
+`document`, `file`, `contact`, `apiKey`, `sshKey`, `certificate`,
+`cryptoWallet`, `wifi`, `identity`, `licenseKey`, `recoveryCodes`, `loyaltyCard`
 
 ---
 
@@ -59,6 +61,8 @@ moment of each action. Type-specific history tables reference this table via
 | description        | Text     | nullable              | Description snapshot         |
 | categoryId         | Text     | nullable              | Category ID snapshot         |
 | categoryName       | Text     | nullable              | Category name at action time |
+| iconSource         | Text     | nullable              | Icon source snapshot         |
+| iconValue          | Text     | nullable              | Icon value snapshot          |
 | action             | Text     | enum: ActionInHistory | Action performed             |
 | usedCount          | Int      | default: 0            | Usage count snapshot         |
 | isFavorite         | Bool     | default: false        | Favorite flag snapshot       |
@@ -216,6 +220,84 @@ History table for bank card-specific fields.
 
 ---
 
+## Table: contact_items
+
+Type-specific table for contacts.
+
+| Column             | Type     | Constraints                                 | Description            |
+| ------------------ | -------- | ------------------------------------------- | ---------------------- |
+| itemId             | Text     | Primary Key, FK to vault_items.id (cascade) | Vault item ref         |
+| phone              | Text     | nullable                                    | Phone number           |
+| email              | Text     | nullable                                    | Email address          |
+| company            | Text     | nullable                                    | Company name           |
+| jobTitle           | Text     | nullable                                    | Job title              |
+| address            | Text     | nullable                                    | Postal address         |
+| website            | Text     | nullable                                    | Website URL            |
+| birthday           | DateTime | nullable                                    | Birthday               |
+| isEmergencyContact | Bool     | default: false                              | Emergency contact flag |
+
+---
+
+## Table: contact_history
+
+History table for contact-specific fields.
+
+| Column             | Type     | Constraints                                        | Description                |
+| ------------------ | -------- | -------------------------------------------------- | -------------------------- |
+| historyId          | Text     | Primary Key, FK to vault_item_history.id (cascade) | History record ref         |
+| phone              | Text     | nullable                                           | Phone snapshot             |
+| email              | Text     | nullable                                           | Email snapshot             |
+| company            | Text     | nullable                                           | Company snapshot           |
+| jobTitle           | Text     | nullable                                           | Job title snapshot         |
+| address            | Text     | nullable                                           | Address snapshot           |
+| website            | Text     | nullable                                           | Website snapshot           |
+| birthday           | DateTime | nullable                                           | Birthday snapshot          |
+| isEmergencyContact | Bool     | default: false                                     | Emergency contact snapshot |
+
+---
+
+## Table: loyalty_card_items
+
+Type-specific table for loyalty cards.
+
+| Column        | Type     | Constraints                                 | Description          |
+| ------------- | -------- | ------------------------------------------- | -------------------- |
+| itemId        | Text     | Primary Key, FK to vault_items.id (cascade) | Vault item ref       |
+| programName   | Text     | min: 1, max: 255                            | Loyalty program name |
+| cardNumber    | Text     | min: 0, max: 255, nullable                  | Card number          |
+| holderName    | Text     | nullable                                    | Card holder name     |
+| barcodeValue  | Text     | nullable                                    | Barcode payload      |
+| barcodeType   | Text     | nullable                                    | Barcode type         |
+| password      | Text     | nullable                                    | Card password/PIN    |
+| pointsBalance | Text     | nullable                                    | Points balance       |
+| tier          | Text     | nullable                                    | Membership tier      |
+| expiryDate    | DateTime | nullable                                    | Card expiration date |
+| website       | Text     | nullable                                    | Program website      |
+| phoneNumber   | Text     | nullable                                    | Support phone number |
+
+---
+
+## Table: loyalty_card_history
+
+History table for loyalty card-specific fields.
+
+| Column        | Type     | Constraints                                        | Description              |
+| ------------- | -------- | -------------------------------------------------- | ------------------------ |
+| historyId     | Text     | Primary Key, FK to vault_item_history.id (cascade) | History record ref       |
+| programName   | Text     | min: 1, max: 255                                   | Program name snapshot    |
+| cardNumber    | Text     | min: 0, max: 255, nullable                         | Card number snapshot     |
+| holderName    | Text     | nullable                                           | Holder name snapshot     |
+| barcodeValue  | Text     | nullable                                           | Barcode payload snapshot |
+| barcodeType   | Text     | nullable                                           | Barcode type snapshot    |
+| password      | Text     | nullable                                           | Password snapshot        |
+| pointsBalance | Text     | nullable                                           | Points balance snapshot  |
+| tier          | Text     | nullable                                           | Tier snapshot            |
+| expiryDate    | DateTime | nullable                                           | Expiry date snapshot     |
+| website       | Text     | nullable                                           | Website snapshot         |
+| phoneNumber   | Text     | nullable                                           | Phone number snapshot    |
+
+---
+
 ## Table: file_items
 
 Type-specific table for files.
@@ -304,6 +386,23 @@ stored encrypted in `value`.
 
 **CustomFieldType enum values:** `text`, `concealed`, `url`, `email`, `phone`,
 `date`, `number`
+
+---
+
+## Table: vault_item_custom_fields_history
+
+History table for custom fields. One history action can create multiple rows,
+one per field snapshot.
+
+| Column    | Type | Constraints                            | Description                      |
+| --------- | ---- | -------------------------------------- | -------------------------------- |
+| id        | Text | Primary Key, UUID v4                   | Unique history row identifier    |
+| historyId | Text | FK to vault_item_history.id (cascade)  | History record ref               |
+| fieldId   | Text | -                                      | Original custom field identifier |
+| label     | Text | min: 1, max: 255                       | Field label snapshot             |
+| value     | Text | nullable                               | Field value snapshot             |
+| fieldType | Text | enum: CustomFieldType, default: 'text' | Field type snapshot              |
+| sortOrder | Int  | default: 0                             | Display order snapshot           |
 
 ---
 
@@ -635,6 +734,21 @@ History table for recovery code-specific fields.
 
 ---
 
+## Table: recovery_codes
+
+Individual recovery-code rows linked to a recovery codes item.
+
+| Column   | Type     | Constraints                                 | Description              |
+| -------- | -------- | ------------------------------------------- | ------------------------ |
+| id       | Int      | Primary Key, auto-increment                 | Row identifier           |
+| itemId   | Text     | FK to recovery_codes_items.itemId (cascade) | Recovery codes container |
+| code     | Text     | -                                           | Recovery code            |
+| used     | Bool     | default: false                              | Used flag                |
+| usedAt   | DateTime | nullable                                    | Usage timestamp          |
+| position | Int      | nullable                                    | Code order               |
+
+---
+
 ## Table: item_tags
 
 Unified join table linking vault items to tags. Replaces the previous separate
@@ -792,6 +906,7 @@ vault_items (base)
 ├── bank_card_items  (itemId → vault_items.id CASCADE)
 ├── file_items       (itemId → vault_items.id CASCADE)
 ├── document_items   (itemId → vault_items.id CASCADE)
+├── contact_items    (itemId → vault_items.id CASCADE)
 ├── api_key_items    (itemId → vault_items.id CASCADE)
 ├── ssh_key_items    (itemId → vault_items.id CASCADE)
 ├── certificate_items (itemId → vault_items.id CASCADE)
@@ -799,7 +914,9 @@ vault_items (base)
 ├── wifi_items       (itemId → vault_items.id CASCADE)
 ├── identity_items   (itemId → vault_items.id CASCADE)
 ├── license_key_items (itemId → vault_items.id CASCADE)
+├── loyalty_card_items (itemId → vault_items.id CASCADE)
 └── recovery_codes_items (itemId → vault_items.id CASCADE)
+    └── recovery_codes (itemId → recovery_codes_items.itemId CASCADE)
 
 vault_item_history (base history)
 ├── password_history  (historyId → vault_item_history.id CASCADE)
@@ -808,6 +925,7 @@ vault_item_history (base history)
 ├── bank_card_history (historyId → vault_item_history.id CASCADE)
 ├── file_history      (historyId → vault_item_history.id CASCADE)
 ├── document_history  (historyId → vault_item_history.id CASCADE)
+├── contact_history   (historyId → vault_item_history.id CASCADE)
 ├── api_key_history   (historyId → vault_item_history.id CASCADE)
 ├── ssh_key_history   (historyId → vault_item_history.id CASCADE)
 ├── certificate_history (historyId → vault_item_history.id CASCADE)
@@ -815,6 +933,8 @@ vault_item_history (base history)
 ├── wifi_history      (historyId → vault_item_history.id CASCADE)
 ├── identity_history  (historyId → vault_item_history.id CASCADE)
 ├── license_key_history (historyId → vault_item_history.id CASCADE)
+├── loyalty_card_history (historyId → vault_item_history.id CASCADE)
+├── vault_item_custom_fields_history (historyId → vault_item_history.id CASCADE)
 └── recovery_codes_history (historyId → vault_item_history.id CASCADE)
 
 item_tags (unified tags join)

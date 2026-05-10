@@ -2,6 +2,12 @@
 
 ## 2026-05-10
 
+### docs
+
+- Обновлено описание схемы БД в `lib/main_db/core/tables/tables_schema.md`:
+  добавлены `contact`, `loyaltyCard`, `recovery_codes`,
+  `vault_item_custom_fields_history` и поля `iconSource` / `iconValue`.
+
 ### password_manager
 
 - В app bar `dashboard_v2` добавлен пункт меню для переключения `viewMode` между
