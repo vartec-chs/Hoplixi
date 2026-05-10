@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
-import 'package:hoplixi/features/password_manager/dashboard/widgets/dashboard_home/dashboard_drawer/dashboard_drawer.dart';
+import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer/dashboard_drawer.dart';
 import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
 
 import 'config/dashboard_layout_constants.dart';
