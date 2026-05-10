@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer/models/drawer_category_filter_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer/providers/drawer_category_filter_provider.dart';
-import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
+import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/main_db/core/models/dto/category_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/category_tree_node.dart';
 import 'package:hoplixi/shared/ui/button.dart';

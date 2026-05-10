@@ -1,4 +1,4 @@
-import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
+import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 
 class AppRoutesPaths {
   static const String splash = '/splash';

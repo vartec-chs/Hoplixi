@@ -93,7 +93,7 @@ class DbKeyDerivationService {
         keyFileSecret: keyFileSecret,
       );
     } else if (kdfVersion == currentKdfVersion) {
-      finalKey = await _deriveV2ContextKey(
+      finalKey = await _deriveContextKey(
         password: password,
         salt: salt,
         useDeviceKey: useDeviceKey,
@@ -129,11 +129,7 @@ class DbKeyDerivationService {
     );
 
     final passwordKey = await _argon2DeriveBytes(password, vaultSalt);
-    final ikm = _concat([
-      passwordKey,
-      ?deviceSecret,
-      ?keyFileSecret,
-    ]);
+    final ikm = _concat([passwordKey, ?deviceSecret, ?keyFileSecret]);
 
     return _hkdfExtract(salt: vaultSalt, ikm: ikm);
   }
@@ -204,7 +200,7 @@ class DbKeyDerivationService {
     return finalKey;
   }
 
-  Future<Uint8List> _deriveV2ContextKey({
+  Future<Uint8List> _deriveContextKey({
     required String password,
     required String salt,
     required bool useDeviceKey,

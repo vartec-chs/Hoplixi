@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
+import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 
 /// Секция выбора закреплённых типов сущностей.
 /// Если ничего не выбрано — отображаются все типы.
@@ -88,9 +88,7 @@ class PinnedEntityTypesSelector extends StatelessWidget {
                           : base.difference({type.id});
 
                       // Если отмечены все — храним пустой список.
-                      final allIds = EntityType.values
-                          .map((t) => t.id)
-                          .toSet();
+                      final allIds = EntityType.values.map((t) => t.id).toSet();
                       final result = updated.containsAll(allIds)
                           ? <String>[]
                           : updated.toList();

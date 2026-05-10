@@ -5,7 +5,7 @@ import 'package:hoplixi/main_db/core/migrations/versions/migration_v2.dart';
 import 'package:hoplixi/main_db/core/migrations/versions/migration_v3.dart';
 
 final Map<int, MainStoreMigration> _mainStoreMigrationsByVersion = {
-  2: migrateToV2,
+  2: migrateTo,
   3: migrateToV3,
 };
 

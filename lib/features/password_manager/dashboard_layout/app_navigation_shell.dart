@@ -13,7 +13,7 @@ import 'package:hoplixi/features/onboarding/presentation/dashboard_guide_scope.d
 import 'package:hoplixi/features/onboarding/presentation/showcase_registration.dart';
 import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer/dashboard_drawer.dart';
 import 'package:hoplixi/features/password_manager/dashboard_layout/providers/screen_protection_provider.dart';
-import 'package:hoplixi/features/password_manager/dashboard_v2/dashboard_v2.dart';
+import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/settings/providers/settings_prefs_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/background/app_animated_background.dart';
