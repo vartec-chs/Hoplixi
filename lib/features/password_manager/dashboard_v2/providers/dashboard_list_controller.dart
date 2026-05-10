@@ -9,8 +9,10 @@ import '../data/main_db_dashboard_repository.dart';
 import '../models/entity_type.dart';
 import '../models/dashboard_filter_state.dart';
 import '../models/dashboard_list_state.dart';
+import '../models/dashboard_list_refresh_state.dart';
 import '../models/dashboard_query.dart';
 import 'dashboard_filter_provider.dart';
+import 'dashboard_list_refresh_trigger_provider.dart';
 import 'filter_providers/filter_providers.dart';
 
 final dashboardListControllerProvider = AsyncNotifierProvider.autoDispose
@@ -27,9 +29,32 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
 
   @override
   Future<DashboardListState> build() async {
+    ref.listen(dashboardListRefreshTriggerProvider, (previous, next) {
+      if (!ref.mounted) return;
+      if (previous?.timestamp == next.timestamp) return;
+      if (!_shouldHandleRefreshTrigger(next)) return;
+
+      logDebug(
+        'Получен внешний триггер обновления списка',
+        tag: _logTag,
+        data: {
+          'entityType': entityType.id,
+          'triggerEntityType': next.entityType?.id,
+          'type': next.type.name,
+          'entityId': next.entityId,
+        },
+      );
+      refresh();
+    });
+
     final filters = ref.watch(dashboardFilterProvider);
     final entityFilter = _watchEntityFilter();
     return _loadFirstPage(filters, entityFilter);
+  }
+
+  bool _shouldHandleRefreshTrigger(DashboardListRefreshState trigger) {
+    final triggerEntityType = trigger.entityType;
+    return triggerEntityType == null || triggerEntityType == entityType;
   }
 
   Future<void> refresh() async {

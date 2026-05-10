@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer_scope.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/widgets/tag_picker_field.dart';
 import 'package:hoplixi/main_db/core/models/dto/index.dart';
@@ -52,6 +53,7 @@ final class _DashboardV2HomeScreenState
     final filters = ref.watch(dashboardFilterProvider);
     final listState = ref.watch(dashboardListControllerProvider(_entityType));
     final selectedIds = ref.watch(dashboardSelectionProvider(_entityType));
+    final drawerScope = DashboardDrawerScope.of(context);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -65,7 +67,8 @@ final class _DashboardV2HomeScreenState
             DashboardV2SliverAppBar(
               entityType: _entityType,
               onEntityTypeChanged: _setEntityType,
-              additionalActions: [_ViewModeAction(viewMode: filters.viewMode)],
+              onMenuPressed: drawerScope?.openDrawer,
+
               onFilterApplied: () => ref
                   .read(dashboardListControllerProvider(_entityType).notifier)
                   .refresh(),

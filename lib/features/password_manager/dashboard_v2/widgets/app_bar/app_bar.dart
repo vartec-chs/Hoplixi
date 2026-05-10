@@ -14,9 +14,10 @@ import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:typed_prefs/typed_prefs.dart';
 
-import '../../models/entity_type.dart';
 import '../../models/dashboard_filter_state.dart';
 import '../../models/dashboard_filter_tab.dart';
+import '../../models/dashboard_view_mode.dart';
+import '../../models/entity_type.dart';
 import '../../providers/dashboard_filter_provider.dart';
 import '../../providers/filter_providers/filter_providers.dart';
 import '../filters_modal/filters_modal.dart';
@@ -24,6 +25,7 @@ import 'entity_type_compact_dropdown.dart';
 import 'filter_tabs.dart';
 
 enum _DashboardMenuAction {
+  toggleViewMode,
   storeSettings,
   pinnedEntityTypes,
   backupNow,
@@ -164,6 +166,15 @@ final class _DashboardV2SliverAppBarState
           ),
           onSelected: (action) async {
             switch (action) {
+              case _DashboardMenuAction.toggleViewMode:
+                ref
+                    .read(dashboardFilterProvider.notifier)
+                    .setViewMode(
+                      filters.viewMode.isGrid
+                          ? DashboardViewMode.list
+                          : DashboardViewMode.grid,
+                    );
+                break;
               case _DashboardMenuAction.storeSettings:
                 await _openStoreSettingsModal();
                 break;
@@ -186,6 +197,23 @@ final class _DashboardV2SliverAppBarState
             }
           },
           itemBuilder: (context) => [
+            PopupMenuItem<_DashboardMenuAction>(
+              value: _DashboardMenuAction.toggleViewMode,
+              child: Row(
+                children: [
+                  Icon(
+                    filters.viewMode.isGrid ? Icons.view_list : Icons.grid_view,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    filters.viewMode.isGrid
+                        ? 'Показать список'
+                        : 'Показать сетку',
+                  ),
+                ],
+              ),
+            ),
             const PopupMenuItem<_DashboardMenuAction>(
               value: _DashboardMenuAction.storeSettings,
               child: Row(

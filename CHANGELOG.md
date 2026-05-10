@@ -4,6 +4,8 @@
 
 ### password_manager
 
+- В app bar `dashboard_v2` добавлен пункт меню для переключения `viewMode` между
+  списком и сеткой.
 - В `EntityType` добавлены явные методы `toCategoryType()` и `toTagType()`,
   чтобы `dashboard_v2` и связанные экраны использовали единый маппинг на legacy
   category/tag типы.
@@ -18,6 +20,11 @@
   синхронизация карточек при удалении, добавлении и перемещении.
 - Исправлено резкое первое появление карточек в `DashboardV2ItemsView`: вход
   элемента теперь дополнительно анимируется fade/slide/scale переходом.
+- На мобильном `DashboardV2HomeScreen` подключена кнопка открытия drawer через
+  существующий `DashboardDrawerScope`.
+- `DashboardListController` теперь слушает `DashboardListRefreshTriggerNotifier`
+  и перезагружает активный список при внешних refresh-событиях для текущего типа
+  сущности или общих событиях.
 - `dashboard_v2` подключён к возвращённым entity-specific фильтрам и
   `FilterModal`: app bar открывает Wolt-модалку фильтров, список подписан на
   фильтр текущего типа сущности, а repository передаёт в DAO реальные typed
