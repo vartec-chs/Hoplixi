@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:hoplixi/shared/ui/background_utils.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
@@ -222,6 +223,7 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
     _syncControllers(state);
 
     return Scaffold(
+      backgroundColor: getScreenBackgroundColor(context, ref),
       appBar: AppBar(
         leading: const FormCloseButton(),
         title: Text(

@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:hoplixi/shared/ui/background_utils.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
@@ -92,9 +93,12 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
     });
 
     return stateAsync.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => Scaffold(
+        backgroundColor: getScreenBackgroundColor(context, ref),
+        body: const Center(child: CircularProgressIndicator()),
+      ),
       error: (error, _) => Scaffold(
+        backgroundColor: getScreenBackgroundColor(context, ref),
         appBar: AppBar(
           leading: const FormCloseButton(),
           title: Text(context.t.dashboard_forms.form_error),
@@ -127,6 +131,7 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
         final notifier = ref.read(sshKeyFormProvider(widget.sshKeyId).notifier);
 
         return Scaffold(
+          backgroundColor: getScreenBackgroundColor(context, ref),
           appBar: AppBar(
             leading: const FormCloseButton(),
             title: Text(

@@ -1,3 +1,4 @@
+import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -174,6 +175,7 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: getScreenBackgroundColor(context, ref),
       appBar: AppBar(
         title: Text(context.t.dashboard_forms.view_api_key),
         actions: [

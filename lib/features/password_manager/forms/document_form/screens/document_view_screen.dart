@@ -1,3 +1,4 @@
+import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -159,6 +160,7 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
     final title = _document?.$1.name ?? 'Документ';
 
     return Scaffold(
+      backgroundColor: getScreenBackgroundColor(context, ref),
       appBar: AppBar(
         title: Text(title),
         actions: [

@@ -1,3 +1,4 @@
+import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -249,6 +250,7 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
     final l10n = context.t.dashboard_forms;
 
     return Scaffold(
+      backgroundColor: getScreenBackgroundColor(context, ref),
       appBar: AppBar(
         title: Text(l10n.view_certificate),
         actions: [

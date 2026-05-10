@@ -1,3 +1,4 @@
+import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -191,6 +192,7 @@ class _IdentityViewScreenState extends ConsumerState<IdentityViewScreen> {
     final l10n = context.t.dashboard_forms;
 
     return Scaffold(
+      backgroundColor: getScreenBackgroundColor(context, ref),
       appBar: AppBar(
         title: Text(l10n.view_identity),
         actions: [

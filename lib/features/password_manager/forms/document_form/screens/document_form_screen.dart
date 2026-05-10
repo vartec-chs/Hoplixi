@@ -1,3 +1,4 @@
+import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'dart:io';
 
 import 'package:desktop_drop/desktop_drop.dart';
@@ -113,6 +114,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
     }
 
     return Scaffold(
+      backgroundColor: getScreenBackgroundColor(context, ref),
       appBar: AppBar(
         title: Text(
           widget.documentId != null

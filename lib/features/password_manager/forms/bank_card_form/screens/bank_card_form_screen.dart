@@ -1,3 +1,4 @@
+import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'package:card_scanner/card_scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -369,6 +370,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
     });
 
     return Scaffold(
+      backgroundColor: getScreenBackgroundColor(context, ref),
       appBar: AppBar(
         title: Text(
           widget.bankCardId != null

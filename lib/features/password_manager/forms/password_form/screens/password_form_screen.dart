@@ -1,3 +1,4 @@
+import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -287,6 +288,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
     });
 
     return Scaffold(
+      backgroundColor: getScreenBackgroundColor(context, ref),
       appBar: AppBar(
         title: Text(
           widget.passwordId != null

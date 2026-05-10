@@ -1,3 +1,4 @@
+import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -242,6 +243,7 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
     final cs = theme.colorScheme;
 
     return Scaffold(
+      backgroundColor: getScreenBackgroundColor(context, ref),
       appBar: AppBar(
         title: Text(_otp?.$1.name ?? 'OTP'),
         actions: [

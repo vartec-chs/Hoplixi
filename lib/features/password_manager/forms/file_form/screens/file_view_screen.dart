@@ -1,3 +1,4 @@
+import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -206,6 +207,7 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
     final ext = _metadata?.fileExtension;
 
     return Scaffold(
+      backgroundColor: getScreenBackgroundColor(context, ref),
       appBar: AppBar(
         title: Text(_file?.$1.name ?? 'Файл'),
         actions: [

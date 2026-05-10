@@ -1,3 +1,4 @@
+import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -285,6 +286,7 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
+      backgroundColor: getScreenBackgroundColor(context, ref),
       appBar: AppBar(
         title: Text(_loyaltyCard?.$1.name ?? 'Карта лояльности'),
         actions: [

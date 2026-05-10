@@ -1,3 +1,4 @@
+import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -160,6 +161,7 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
+      backgroundColor: getScreenBackgroundColor(context, ref),
       appBar: AppBar(
         title: Text(_note?.$1.name ?? 'Заметка'),
         actions: [
