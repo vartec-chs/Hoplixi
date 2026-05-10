@@ -17,6 +17,7 @@ class PasswordGridCard extends ConsumerStatefulWidget {
   final VoidCallback? onToggleArchive;
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
+  final VoidCallback? onOpenHistory;
   final VoidCallback? onOpenView;
 
   const PasswordGridCard({
@@ -28,6 +29,7 @@ class PasswordGridCard extends ConsumerStatefulWidget {
     this.onToggleArchive,
     this.onDelete,
     this.onRestore,
+    this.onOpenHistory,
     this.onOpenView,
   });
 
@@ -38,6 +40,7 @@ class PasswordGridCard extends ConsumerStatefulWidget {
 class _PasswordGridCardState extends ConsumerState<PasswordGridCard> {
   bool _passwordCopied = false;
   bool _loginCopied = false;
+  bool _urlCopied = false;
 
   Future<void> _copyPassword() async {
     final passwordDao = await ref.read(passwordDaoProvider.future);
@@ -79,6 +82,22 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard> {
     });
   }
 
+  Future<void> _copyUrl() async {
+    final text = widget.password.url;
+    if (text == null || text.isEmpty) return;
+    final copied = await copyCardValue(
+      ref: ref,
+      itemId: widget.password.id,
+      text: text,
+    );
+    if (!copied) return;
+    setState(() => _urlCopied = true);
+    Toaster.success(title: 'URL скопирован');
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _urlCopied = false);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final password = widget.password;
@@ -94,13 +113,16 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard> {
 
     return BaseGridCard(
       title: password.name,
-      subtitle: displayLogin ?? (hostUrl.isEmpty ? null : hostUrl),
+      subtitle: displayLogin,
+      trailingSubtitle: hostUrl.isEmpty ? null : hostUrl,
       fallbackIcon: Icons.lock,
       iconSource: password.iconSource,
       iconValue: password.iconValue,
       category: password.category,
+      description: password.description,
       tags: password.tags,
       usedCount: password.usedCount,
+      modifiedAt: password.modifiedAt,
       isFavorite: password.isFavorite,
       isPinned: password.isPinned,
       isArchived: password.isArchived,
@@ -113,6 +135,7 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard> {
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
+      onOpenHistory: widget.onOpenHistory,
       onOpenView: widget.onOpenView,
       onEdit: () {
         context.push(
@@ -127,13 +150,21 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard> {
           successIcon: Icons.check,
           isSuccess: _passwordCopied,
         ),
-        if (displayLogin != null)
+        if (displayLogin != null && displayLogin.isNotEmpty)
           CardActionItem(
             label: 'Логин',
             onPressed: _copyLogin,
             icon: Icons.person,
             successIcon: Icons.check,
             isSuccess: _loginCopied,
+          ),
+        if ((password.url ?? '').isNotEmpty)
+          CardActionItem(
+            label: 'URL',
+            onPressed: _copyUrl,
+            icon: Icons.link,
+            successIcon: Icons.check,
+            isSuccess: _urlCopied,
           ),
       ],
     );

@@ -103,7 +103,7 @@ final class _DashboardItemsViewState extends ConsumerState<DashboardItemsView> {
           initialItemCount: _displayedItems.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columns,
-            mainAxisExtent: 168,
+            mainAxisExtent: 220,
             crossAxisSpacing: 8,
             mainAxisSpacing: 8,
           ),
@@ -147,7 +147,7 @@ final class _DashboardItemsViewState extends ConsumerState<DashboardItemsView> {
           itemCount: _displayedItems.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columns,
-            mainAxisExtent: 168,
+            mainAxisExtent: 220,
             crossAxisSpacing: 8,
             mainAxisSpacing: 8,
           ),
