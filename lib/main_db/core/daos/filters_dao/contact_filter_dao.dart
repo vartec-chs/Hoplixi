@@ -6,11 +6,11 @@ import 'package:hoplixi/main_db/core/models/dto/contact_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
 import 'package:hoplixi/main_db/core/models/filter/contacts_filter.dart';
-import 'package:hoplixi/main_db/core/tables/categories.dart';
+import 'package:hoplixi/main_db/core/tables/system/categories.dart';
 import 'package:hoplixi/main_db/core/tables/contact/contact_items.dart';
-import 'package:hoplixi/main_db/core/tables/item_tags.dart';
+import 'package:hoplixi/main_db/core/tables/system/item_tags.dart';
 import 'package:hoplixi/main_db/core/tables/note/note_items.dart';
-import 'package:hoplixi/main_db/core/tables/tags.dart';
+import 'package:hoplixi/main_db/core/tables/system/tags.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
 
 part 'contact_filter_dao.g.dart';

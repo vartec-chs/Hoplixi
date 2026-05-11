@@ -4,7 +4,7 @@ import 'package:hoplixi/main_db/core/models/dto/category_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/category_tree_node.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
 import 'package:hoplixi/main_db/core/models/filter/categories_filter.dart';
-import 'package:hoplixi/main_db/core/tables/categories.dart';
+import 'package:hoplixi/main_db/core/tables/system/categories.dart';
 import 'package:uuid/uuid.dart';
 
 part 'category_dao.g.dart';

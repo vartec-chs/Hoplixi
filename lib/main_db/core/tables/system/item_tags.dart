@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
 import 'tags.dart';
-import 'vault_items/vault_items.dart';
+import '../vault_items/vault_items.dart';
 
 /// Единая таблица связи элементов хранилища и тегов.
 ///

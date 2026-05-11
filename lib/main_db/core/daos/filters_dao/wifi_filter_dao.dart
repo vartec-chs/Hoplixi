@@ -6,10 +6,10 @@ import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/wifi_dto.dart';
 import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
 import 'package:hoplixi/main_db/core/models/filter/wifis_filter.dart';
-import 'package:hoplixi/main_db/core/tables/categories.dart';
-import 'package:hoplixi/main_db/core/tables/item_tags.dart';
+import 'package:hoplixi/main_db/core/tables/system/categories.dart';
+import 'package:hoplixi/main_db/core/tables/system/item_tags.dart';
 import 'package:hoplixi/main_db/core/tables/note/note_items.dart';
-import 'package:hoplixi/main_db/core/tables/tags.dart';
+import 'package:hoplixi/main_db/core/tables/system/tags.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
 import 'package:hoplixi/main_db/core/tables/wifi/wifi_items.dart';
 

@@ -6,11 +6,11 @@ import 'package:hoplixi/main_db/core/models/dto/license_key_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
 import 'package:hoplixi/main_db/core/models/filter/license_keys_filter.dart';
-import 'package:hoplixi/main_db/core/tables/categories.dart';
-import 'package:hoplixi/main_db/core/tables/item_tags.dart';
+import 'package:hoplixi/main_db/core/tables/system/categories.dart';
+import 'package:hoplixi/main_db/core/tables/system/item_tags.dart';
 import 'package:hoplixi/main_db/core/tables/license_key/license_key_items.dart';
 import 'package:hoplixi/main_db/core/tables/note/note_items.dart';
-import 'package:hoplixi/main_db/core/tables/tags.dart';
+import 'package:hoplixi/main_db/core/tables/system/tags.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
 
 part 'license_key_filter_dao.g.dart';

@@ -6,11 +6,11 @@ import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_db/core/models/graph_data.dart';
 import 'package:hoplixi/shared/utils/vault_link_utils.dart';
-import 'package:hoplixi/main_db/core/tables/categories.dart';
-import 'package:hoplixi/main_db/core/tables/item_tags.dart';
+import 'package:hoplixi/main_db/core/tables/system/categories.dart';
+import 'package:hoplixi/main_db/core/tables/system/item_tags.dart';
 import 'package:hoplixi/main_db/core/tables/note/note_items.dart';
 import 'package:hoplixi/main_db/core/tables/note/note_links.dart';
-import 'package:hoplixi/main_db/core/tables/tags.dart';
+import 'package:hoplixi/main_db/core/tables/system/tags.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
 
 part 'note_link_dao.g.dart';

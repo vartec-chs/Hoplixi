@@ -6,11 +6,11 @@ import 'package:hoplixi/main_db/core/models/dto/loyalty_card_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
 import 'package:hoplixi/main_db/core/models/filter/loyalty_cards_filter.dart';
-import 'package:hoplixi/main_db/core/tables/categories.dart';
-import 'package:hoplixi/main_db/core/tables/item_tags.dart';
+import 'package:hoplixi/main_db/core/tables/system/categories.dart';
+import 'package:hoplixi/main_db/core/tables/system/item_tags.dart';
 import 'package:hoplixi/main_db/core/tables/loyalty_card/loyalty_card_items.dart';
 import 'package:hoplixi/main_db/core/tables/note/note_items.dart';
-import 'package:hoplixi/main_db/core/tables/tags.dart';
+import 'package:hoplixi/main_db/core/tables/system/tags.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
 
 part 'loyalty_card_filter_dao.g.dart';

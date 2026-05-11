@@ -6,12 +6,12 @@ import 'package:hoplixi/main_db/core/models/dto/file_dto.dart';
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
 import 'package:hoplixi/main_db/core/models/filter/files_filter.dart';
-import 'package:hoplixi/main_db/core/tables/categories.dart';
+import 'package:hoplixi/main_db/core/tables/system/categories.dart';
 import 'package:hoplixi/main_db/core/tables/file/file_items.dart';
 import 'package:hoplixi/main_db/core/tables/file/file_metadata.dart';
-import 'package:hoplixi/main_db/core/tables/item_tags.dart';
+import 'package:hoplixi/main_db/core/tables/system/item_tags.dart';
 import 'package:hoplixi/main_db/core/tables/note/note_items.dart';
-import 'package:hoplixi/main_db/core/tables/tags.dart';
+import 'package:hoplixi/main_db/core/tables/system/tags.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
 
 part 'file_filter_dao.g.dart';
