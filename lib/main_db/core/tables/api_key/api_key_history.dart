@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
-import 'api_key_items.dart';
 import '../vault_items/vault_item_history.dart';
+import 'api_key_items.dart';
 
 @DataClassName('ApiKeyHistoryData')
 class ApiKeyHistory extends Table {
@@ -40,8 +40,6 @@ class ApiKeyHistory extends Table {
   TextColumn get baseUrl => text().withLength(min: 1, max: 2048).nullable()();
 
   /// JSON object string snapshot.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {historyId};
 

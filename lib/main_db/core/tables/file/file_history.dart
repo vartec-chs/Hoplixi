@@ -18,8 +18,6 @@ class FileHistory extends Table {
   TextColumn get metadataId => text().nullable()();
 
   /// Дополнительные метаданные snapshot.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {historyId};
 

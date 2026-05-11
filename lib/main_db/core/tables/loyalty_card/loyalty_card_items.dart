@@ -47,7 +47,6 @@ class LoyaltyCardItems extends Table {
   /// Секретное значение.
   TextColumn get password => text().nullable()();
 
-
   /// Уровень программы: Silver, Gold, Premium и т.д.
   TextColumn get tier => text().withLength(min: 1, max: 255).nullable()();
 
@@ -64,8 +63,6 @@ class LoyaltyCardItems extends Table {
   ///
   /// Например: storeName, country, appLogin, membershipId,
   /// termsUrl, lastPointsUpdateAt.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -160,21 +157,13 @@ class LoyaltyCardItems extends Table {
 }
 
 enum LoyaltyCardItemConstraint {
-  programNameNotBlank(
-    'chk_loyalty_card_items_program_name_not_blank',
-  ),
+  programNameNotBlank('chk_loyalty_card_items_program_name_not_blank'),
 
-  cardNumberNotBlank(
-    'chk_loyalty_card_items_card_number_not_blank',
-  ),
+  cardNumberNotBlank('chk_loyalty_card_items_card_number_not_blank'),
 
-  holderNameNotBlank(
-    'chk_loyalty_card_items_holder_name_not_blank',
-  ),
+  holderNameNotBlank('chk_loyalty_card_items_holder_name_not_blank'),
 
-  barcodeValueNotBlank(
-    'chk_loyalty_card_items_barcode_value_not_blank',
-  ),
+  barcodeValueNotBlank('chk_loyalty_card_items_barcode_value_not_blank'),
 
   barcodeTypeOtherRequired(
     'chk_loyalty_card_items_barcode_type_other_required',
@@ -184,21 +173,13 @@ enum LoyaltyCardItemConstraint {
     'chk_loyalty_card_items_barcode_type_other_must_be_null',
   ),
 
-  passwordNotBlank(
-    'chk_loyalty_card_items_password_not_blank',
-  ),
+  passwordNotBlank('chk_loyalty_card_items_password_not_blank'),
 
-  tierNotBlank(
-    'chk_loyalty_card_items_tier_not_blank',
-  ),
+  tierNotBlank('chk_loyalty_card_items_tier_not_blank'),
 
-  websiteNotBlank(
-    'chk_loyalty_card_items_website_not_blank',
-  ),
+  websiteNotBlank('chk_loyalty_card_items_website_not_blank'),
 
-  phoneNumberNotBlank(
-    'chk_loyalty_card_items_phone_number_not_blank',
-  );
+  phoneNumberNotBlank('chk_loyalty_card_items_phone_number_not_blank');
 
   const LoyaltyCardItemConstraint(this.constraintName);
 

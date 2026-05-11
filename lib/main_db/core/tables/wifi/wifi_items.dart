@@ -2,15 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../vault_items/vault_items.dart';
 
-enum WifiSecurityType {
-  open,
-  wep,
-  wpa,
-  wpa2,
-  wpa3,
-  wpaEnterprise,
-  other,
-}
+enum WifiSecurityType { open, wep, wpa, wpa2, wpa3, wpaEnterprise, other }
 
 @DataClassName('WifiItemsData')
 class WifiItems extends Table {
@@ -91,25 +83,15 @@ class WifiItems extends Table {
 }
 
 enum WifiItemConstraint {
-  ssidNotBlank(
-    'chk_wifi_items_ssid_not_blank',
-  ),
+  ssidNotBlank('chk_wifi_items_ssid_not_blank'),
 
-  passwordNotBlank(
-    'chk_wifi_items_password_not_blank',
-  ),
+  passwordNotBlank('chk_wifi_items_password_not_blank'),
 
-  securityOtherRequired(
-    'chk_wifi_items_security_other_required',
-  ),
+  securityOtherRequired('chk_wifi_items_security_other_required'),
 
-  securityOtherMustBeNull(
-    'chk_wifi_items_security_other_must_be_null',
-  ),
+  securityOtherMustBeNull('chk_wifi_items_security_other_must_be_null'),
 
-  usernameNotBlank(
-    'chk_wifi_items_username_not_blank',
-  );
+  usernameNotBlank('chk_wifi_items_username_not_blank');
 
   const WifiItemConstraint(this.constraintName);
 

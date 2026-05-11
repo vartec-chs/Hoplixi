@@ -24,8 +24,6 @@ class RecoveryCodesHistory extends Table {
   BoolColumn get oneTime => boolean().withDefault(const Constant(false))();
 
   /// Дополнительные метаданные snapshot.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {historyId};
 

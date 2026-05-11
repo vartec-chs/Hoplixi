@@ -26,8 +26,6 @@ class NoteItems extends Table {
   ///
   /// Например: editorVersion, contentHash, wordCount, language,
   /// pinnedRanges, formattingMigrationVersion.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -53,13 +51,9 @@ class NoteItems extends Table {
 }
 
 enum NoteItemConstraint {
-  deltaJsonNotBlank(
-    'chk_note_items_delta_json_not_blank',
-  ),
+  deltaJsonNotBlank('chk_note_items_delta_json_not_blank'),
 
-  contentNotNull(
-    'chk_note_items_content_not_null',
-  );
+  contentNotNull('chk_note_items_content_not_null');
 
   const NoteItemConstraint(this.constraintName);
 

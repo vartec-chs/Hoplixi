@@ -38,8 +38,6 @@ class ContactItems extends Table {
   ///
   /// Например: дополнительные телефоны, мессенджеры, соцсети,
   /// timezone, preferredContactMethod и т.д.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {itemId};
 

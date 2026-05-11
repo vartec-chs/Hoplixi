@@ -29,10 +29,10 @@ class Tags extends Table {
   /// Название тега.
   TextColumn get name => text().withLength(min: 1, max: 100)();
 
-  /// Цвет тега в формате #AARRGGBB.
+  /// Цвет тега в формате AARRGGBB.
   TextColumn get color => text()
-      .withLength(min: 9, max: 9)
-      .withDefault(const Constant('#FFFFFFFF'))();
+      .withLength(min: 8, max: 8)
+      .withDefault(const Constant('FFFFFFFF'))();
 
   /// Тип тега: password, note, totp, mixed и т.д.
   TextColumn get type => textEnum<TagType>()();
@@ -42,11 +42,6 @@ class Tags extends Table {
 
   DateTimeColumn get modifiedAt =>
       dateTime().clientDefault(() => DateTime.now())();
-
-  /// Дополнительные метаданные в JSON-формате.
-  ///
-  /// Например: displayOrder, importInfo, UI preferences.
-  TextColumn get metadata => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -71,7 +66,7 @@ class Tags extends Table {
     '''
     CONSTRAINT ${TagConstraint.colorArgbHex.constraintName}
     CHECK (
-      color GLOB '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'
+      color GLOB '[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'
     )
     ''',
   ];

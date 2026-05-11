@@ -1,5 +1,452 @@
 # Database Schema
 
+This document reflects the current Drift tables under `lib/main_db/core/tables`.
+
+Rules used in the current schema:
+
+- Generic `metadata` columns were removed from entity and history tables.
+- `file_metadata.metadata` and `store_meta.metadata` remain on purpose because
+  they are the actual payload for those support tables.
+- Color values in `tags`, `categories`, and `icon_refs` are stored as `AARRGGBB`
+  without a leading `#`.
+- `icon_refs` unique index SQL now uses `icon_value` and `icon_source_type`.
+
+## Core Vault Tables
+
+### vault_items
+
+Shared base table for all vault entities.
+
+Columns: `id`, `type`, `name`, `description`, `categoryId`, `iconRefId`,
+`usedCount`, `isFavorite`, `isArchived`, `isPinned`, `isDeleted`, `createdAt`,
+`modifiedAt`, `recentScore`, `lastUsedAt`.
+
+Notes: `id` is a UUID v4 primary key. `type` is `VaultItemType`. `name` is
+required. `usedCount` and `recentScore` are non-negative. `categoryId` and
+`iconRefId` are nullable references with `setNull` on delete.
+
+### vault_item_history
+
+Snapshot table for the shared vault item fields.
+
+Columns: `id`, `itemId`, `action`, `type`, `name`, `description`, `categoryId`,
+`iconRefId`, `usedCount`, `isFavorite`, `isArchived`, `isPinned`, `isDeleted`,
+`createdAt`, `modifiedAt`, `recentScore`, `lastUsedAt`, `historyCreatedAt`.
+
+Notes: `itemId` cascades from `vault_items`. `historyCreatedAt` records when the
+history row was written. No generic metadata fields remain here.
+
+### vault_item_custom_fields
+
+Custom fields that can be attached to any vault item.
+
+Columns: `id`, `itemId`, `label`, `value`, `fieldType`, `fieldTypeOther`,
+`sortOrder`.
+
+Notes: `itemId` cascades from `vault_items`. `label` is required. `fieldType` is
+`CustomFieldType`. `sortOrder` is non-negative.
+
+### vault_item_custom_fields_history
+
+Snapshot table for custom fields.
+
+Columns: `id`, `historyId`, `originalFieldId`, `label`, `value`, `fieldType`,
+`fieldTypeOther`, `sortOrder`.
+
+Notes: `historyId` cascades from `vault_item_history`. `originalFieldId` is
+stored as a plain snapshot value, not a foreign key.
+
+## Classification and Link Tables
+
+### categories
+
+Category tree for grouping vault items.
+
+Columns: `id`, `name`, `description`, `iconRefId`, `color`, `type`, `parentId`,
+`createdAt`, `modifiedAt`.
+
+Notes: `color` is `AARRGGBB` without `#`. `type` is `CategoryType`. `parentId`
+is a self-reference with `setNull`. Root and child uniqueness is enforced by
+partial unique indexes.
+
+### tags
+
+Flat tag table used for item classification.
+
+Columns: `id`, `name`, `color`, `type`, `createdAt`, `modifiedAt`.
+
+Notes: `color` is `AARRGGBB` without `#`. `type` is `TagType`. The table
+enforces uniqueness on `(name, type)`.
+
+### item_tags
+
+Join table between vault items and tags.
+
+Columns: `itemId`, `tagId`, `createdAt`.
+
+Notes: composite primary key on `(itemId, tagId)`; both foreign keys cascade on
+delete.
+
+### icon_refs
+
+Reusable icon references.
+
+Columns: `id`, `iconSourceType`, `iconPackId`, `iconValue`, `customIconId`,
+`color`, `backgroundColor`, `createdAt`, `modifiedAt`.
+
+Notes: `color` and `backgroundColor` are stored as 8 hex chars without `#`.
+`iconSourceType` is `IconSourceType`. The unique SQL uses `icon_value` and
+`icon_source_type`.
+
+### custom_icons
+
+User-provided icon blobs.
+
+Columns: `id`, `name`, `format`, `data`, `createdAt`, `modifiedAt`.
+
+Notes: `format` is `CustomIconFormat`. `data` stores the binary image payload.
+
+### note_links
+
+Links from a note to another vault item.
+
+Columns: `id`, `sourceNoteId`, `targetVaultItemId`, `createdAt`.
+
+Notes: both references cascade on delete. The pair
+`(sourceNoteId, targetVaultItemId)` is unique.
+
+## File, Document, and Store Tables
+
+### file_metadata
+
+Actual file-domain metadata container.
+
+Columns: `id`, `fileName`, `fileExtension`, `filePath`, `mimeType`, `fileSize`,
+`fileHash`, `metadata`.
+
+Notes: `metadata` is kept here intentionally. `fileName` and `mimeType` are
+required. `fileSize` is non-negative.
+
+### file_items
+
+Link from a vault item of type `file` to `file_metadata`.
+
+Columns: `itemId`, `metadataId`.
+
+Notes: `itemId` cascades from `vault_items`; `metadataId` is nullable and set
+null on delete.
+
+### file_history
+
+Snapshot table for file links.
+
+Columns: `historyId`, `metadataId`.
+
+Notes: `metadataId` is stored as a snapshot value, not a foreign key.
+
+### document_items
+
+Type-specific fields for documents.
+
+Columns: `itemId`, `documentType`, `documentTypeOther`, `aggregatedText`,
+`aggregateHash`, `pageCount`.
+
+Notes: `documentType` is `DocumentType`. `pageCount` is non-negative.
+
+### document_pages
+
+Per-page OCR and file linkage for documents.
+
+Columns: `id`, `documentId`, `metadataId`, `pageNumber`, `extractedText`,
+`pageHash`, `isPrimary`, `usedCount`, `createdAt`, `modifiedAt`, `lastUsedAt`.
+
+Notes: `documentId` cascades from `vault_items`. `metadataId` references
+`file_metadata` with `setNull`. `(documentId, pageNumber)` is unique and only
+one page per document can be primary.
+
+### document_history
+
+Snapshot table for document-specific fields.
+
+Columns: `historyId`, `documentType`, `documentTypeOther`, `aggregatedText`,
+`aggregateHash`, `pageCount`.
+
+### store_settings
+
+Generic typed settings table.
+
+Columns: `key`, `value`, `valueType`, `description`, `createdAt`, `modifiedAt`.
+
+Notes: `valueType` is `StoreSettingValueType`.
+
+### store_meta
+
+Singleton table with store-wide secrets and identifiers.
+
+Columns: `singletonId`, `id`, `name`, `description`, `passwordHash`, `salt`,
+`attachmentKey`, `createdAt`, `modifiedAt`, `lastOpenedAt`, `metadata`.
+
+Notes: `singletonId` must always be `1`. `metadata` is intentionally kept here.
+
+## Password, OTP, Recovery, Notes, and Wi-Fi
+
+### password_items
+
+Password-specific fields.
+
+Columns: `itemId`, `login`, `email`, `password`, `url`, `expiresAt`.
+
+### password_history
+
+Snapshot table for password-specific fields.
+
+Columns: `historyId`, `login`, `email`, `password`, `url`, `expiresAt`.
+
+### otp_items
+
+OTP/TOTP/HOTP specific fields.
+
+Columns: `itemId`, `passwordItemId`, `type`, `issuer`, `accountName`, `secret`,
+`algorithm`, `digits`, `period`, `counter`.
+
+Notes: `type` is `OtpType`, `algorithm` is `OtpHashAlgorithm`. `counter` is
+required for HOTP and null for TOTP.
+
+### otp_history
+
+Snapshot table for OTP fields.
+
+Columns: `historyId`, `passwordItemId`, `type`, `issuer`, `accountName`,
+`secret`, `algorithm`, `digits`, `period`, `counter`.
+
+### recovery_codes_items
+
+Summary table for a recovery-codes set.
+
+Columns: `itemId`, `codesCount`, `usedCount`, `generatedAt`, `oneTime`.
+
+### recovery_codes
+
+One row per recovery code.
+
+Columns: `id`, `itemId`, `code`, `used`, `usedAt`, `position`.
+
+### recovery_codes_history
+
+Snapshot table for recovery-code set summary fields.
+
+Columns: `historyId`, `codesCount`, `usedCount`, `generatedAt`, `oneTime`.
+
+### note_items
+
+Note body storage.
+
+Columns: `itemId`, `deltaJson`, `content`.
+
+### note_history
+
+Snapshot table for note fields.
+
+Columns: `historyId`, `deltaJson`, `content`.
+
+### wifi_items
+
+Wi-Fi credentials.
+
+Columns: `itemId`, `ssid`, `password`, `security`, `securityOther`, `hidden`,
+`username`.
+
+Notes: `security` is `WifiSecurityType`; `securityOther` is required when
+`security = other`.
+
+### wifi_history
+
+Snapshot table for Wi-Fi fields.
+
+Columns: `historyId`, `ssid`, `password`, `security`, `securityOther`, `hidden`,
+`username`.
+
+## Cards, Contacts, Identity, Keys, and Vaulted Documents
+
+### bank_card_items
+
+Bank card details.
+
+Columns: `itemId`, `cardholderName`, `cardNumber`, `cardType`, `cardTypeOther`,
+`cardNetwork`, `cardNetworkOther`, `expiryMonth`, `expiryYear`, `cvv`,
+`bankName`, `accountNumber`, `routingNumber`.
+
+Notes: `cardType` is `CardType`; `cardNetwork` is `CardNetwork`. `cardTypeOther`
+and `cardNetworkOther` are required for `other`. `expiryMonth` and `expiryYear`
+must be both set or both null.
+
+### bank_card_history
+
+Snapshot table for bank card fields.
+
+Columns: `historyId`, `cardholderName`, `cardNumber`, `cardType`,
+`cardTypeOther`, `cardNetwork`, `cardNetworkOther`, `expiryMonth`, `expiryYear`,
+`cvv`, `bankName`, `accountNumber`, `routingNumber`.
+
+### contact_items
+
+Contact details.
+
+Columns: `itemId`, `phone`, `email`, `company`, `jobTitle`, `address`,
+`website`, `birthday`, `isEmergencyContact`.
+
+### contact_history
+
+Snapshot table for contact details.
+
+Columns: `historyId`, `phone`, `email`, `company`, `jobTitle`, `address`,
+`website`, `birthday`, `isEmergencyContact`.
+
+### identity_items
+
+Identity document data.
+
+Columns: `itemId`, `idType`, `idTypeOther`, `idNumber`, `fullName`,
+`dateOfBirth`, `placeOfBirth`, `nationality`, `issuingAuthority`, `issueDate`,
+`expiryDate`, `mrz`, `scanAttachmentId`, `photoAttachmentId`, `verified`.
+
+Notes: `idType` is `IdentityDocumentType`. `scanAttachmentId` and
+`photoAttachmentId` are nullable vault item links.
+
+### identity_history
+
+Snapshot table for identity document data.
+
+Columns: `historyId`, `idType`, `idTypeOther`, `idNumber`, `fullName`,
+`dateOfBirth`, `placeOfBirth`, `nationality`, `issuingAuthority`, `issueDate`,
+`expiryDate`, `mrz`, `scanAttachmentId`, `photoAttachmentId`, `verified`.
+
+### license_key_items
+
+License and purchase tracking.
+
+Columns: `itemId`, `product`, `licenseKey`, `licenseType`, `licenseTypeOther`,
+`seats`, `maxActivations`, `activatedOn`, `purchaseDate`, `purchaseFrom`,
+`orderId`, `licenseFileId`, `expiresAt`, `supportContactItemId`.
+
+Notes: `licenseType` is `LicenseType`. `licenseTypeOther` is required when
+`licenseType = other`.
+
+### license_key_history
+
+Snapshot table for license-key fields.
+
+Columns: `historyId`, `product`, `licenseKey`, `licenseType`,
+`licenseTypeOther`, `seats`, `maxActivations`, `activatedOn`, `purchaseDate`,
+`purchaseFrom`, `orderId`, `expiresAt`, `supportContact`.
+
+### certificate_items
+
+Certificate storage.
+
+Columns: `itemId`, `certificateFormat`, `certificateFormatOther`,
+`certificatePem`, `certificateBlob`, `privateKey`, `privateKeyPassword`,
+`passwordForPfx`, `keyAlgorithm`, `keyAlgorithmOther`, `keySize`,
+`serialNumber`, `issuer`, `subject`, `validFrom`, `validTo`, `ocspUrl`,
+`crlUrl`.
+
+Notes: `certificateFormat` is `CertificateFormat`; `keyAlgorithm` is
+`CertificateKeyAlgorithm`. Either `certificatePem` or `certificateBlob` must be
+present.
+
+### certificate_history
+
+Snapshot table for certificate fields.
+
+Columns: `historyId`, `certificateFormat`, `certificateFormatOther`,
+`certificatePem`, `certificateBlob`, `privateKey`, `privateKeyPassword`,
+`passwordForPfx`, `keyAlgorithm`, `keyAlgorithmOther`, `keySize`,
+`serialNumber`, `issuer`, `subject`, `validFrom`, `validTo`, `ocspUrl`,
+`crlUrl`.
+
+### ssh_key_items
+
+SSH key storage.
+
+Columns: `itemId`, `publicKey`, `privateKey`, `keyType`, `keyTypeOther`,
+`keySize`, `fingerprint`, `createdBy`, `addedToAgent`, `usage`.
+
+Notes: `keyType` is `SshKeyType`. `fingerprint`, `createdBy`, and `usage` are
+optional but non-blank if present.
+
+### ssh_key_history
+
+Snapshot table for SSH key fields.
+
+Columns: `historyId`, `publicKey`, `privateKey`, `keyType`, `keyTypeOther`,
+`keySize`, `fingerprint`, `createdBy`, `addedToAgent`, `usage`.
+
+### crypto_wallet_items
+
+Crypto wallet storage.
+
+Columns: `itemId`, `walletType`, `walletTypeOther`, `network`, `networkOther`,
+`mnemonic`, `privateKey`, `derivationPath`, `derivationScheme`,
+`derivationSchemeOther`, `addresses`, `xpub`, `xprv`, `hardwareDevice`,
+`watchOnly`.
+
+Notes: `walletType` is `CryptoWalletType`, `network` is `CryptoNetwork`,
+`derivationScheme` is `CryptoDerivationScheme`.
+
+### crypto_wallet_history
+
+Snapshot table for crypto wallet fields.
+
+Columns: `historyId`, `walletType`, `walletTypeOther`, `network`,
+`networkOther`, `mnemonic`, `privateKey`, `derivationPath`, `derivationScheme`,
+`derivationSchemeOther`, `addresses`, `xpub`, `xprv`, `hardwareDevice`,
+`watchOnly`.
+
+### api_key_items
+
+API key storage.
+
+Columns: `itemId`, `service`, `key`, `tokenType`, `tokenTypeOther`,
+`environment`, `environmentOther`, `expiresAt`, `revoked`, `rotationPeriodDays`,
+`lastRotatedAt`, `scopes`, `owner`, `baseUrl`.
+
+Notes: `tokenType` is `ApiKeyTokenType`, `environment` is `ApiKeyEnvironment`.
+
+### api_key_history
+
+Snapshot table for API key fields.
+
+Columns: `historyId`, `service`, `key`, `tokenType`, `tokenTypeOther`,
+`environment`, `environmentOther`, `expiresAt`, `revoked`, `rotationPeriodDays`,
+`lastRotatedAt`, `scopes`, `owner`, `baseUrl`.
+
+### loyalty_card_items
+
+Loyalty card storage.
+
+Columns: `itemId`, `programName`, `cardNumber`, `holderName`, `barcodeValue`,
+`barcodeType`, `barcodeTypeOther`, `password`, `tier`, `expiryDate`, `website`,
+`phoneNumber`.
+
+Notes: `barcodeType` is `LoyaltyBarcodeType`.
+
+### loyalty_card_history
+
+Snapshot table for loyalty card fields.
+
+Columns: `historyId`, `programName`, `cardNumber`, `holderName`, `barcodeValue`,
+`barcodeType`, `barcodeTypeOther`, `password`, `tier`, `expiryDate`, `website`,
+`phoneNumber`.
+
+## Quick Naming Notes
+
+- `icon_refs` index SQL now uses `icon_value` and `icon_source_type` instead of
+  the old broken names.
+- `tags.color`, `categories.color`, and `icon_refs.color/backgroundColor` all
+  use 8-char `AARRGGBB` values without `#`.
+- `metadata` columns were removed from entity/history tables; only
+  `file_metadata` and `store_meta` keep them.
+
 This document describes the schema of all tables in the Hoplixi database.
 
 The database uses a **normalized EAV-like architecture**: all vault entities

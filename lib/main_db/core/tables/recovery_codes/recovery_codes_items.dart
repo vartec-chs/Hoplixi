@@ -27,8 +27,6 @@ class RecoveryCodesItems extends Table {
   ///
   /// Например: sourceService, importInfo, generationPolicy,
   /// originalFormat, displayHint.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {itemId};
 

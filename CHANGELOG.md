@@ -2,12 +2,26 @@
 
 ## 2026-05-11
 
+### docs
+
+- Обновлён `lib/main_db/core/tables/tables_schema.md` под текущую схему: убраны
+  `metadata` из entity/history таблиц, зафиксирован формат цветов `AARRGGBB` без
+  `#`, а также отражены актуальные таблицы `item_tags`, `note_links`,
+  `store_settings`, `store_meta` и `custom_icons`.
+
 ### main_db
 
+- Из всех entity/history таблиц `lib/main_db/core/tables` удалены лишние
+  `metadata`-поля; исключения оставлены только для `file_metadata` и
+  `store_meta`, где это доменные данные.
+- Цвета в `tags`, `categories` и `icon_refs` переведены на хранение в формате
+  `AARRGGBB` без ведущего `#`.
+- Исправлен `icon_refs`: уникальные индексы теперь используют реальные имена
+  колонок `icon_value` и `icon_source_type` вместо сломанных `icon_key` и
+  `source_type`.
+
 - `api_key_history` расширена до полного snapshot набора для API-ключей:
-  добавлены `tokenTypeOther`, `environmentOther`, `scopes`, `owner` и `baseUrl`,
-  а history-триггеры теперь сохраняют эти поля вместе с `maskedKey` и
-  `metadata`.
+  добавлены `tokenTypeOther`, `environmentOther`, `scopes`, `owner` и `baseUrl`.
 
 - Добавлена таблица `icon_refs` для нового формата ссылок на иконки: `builtin`,
   `pack` и `custom` с CHECK-ограничением на допустимые комбинации `iconValue`,

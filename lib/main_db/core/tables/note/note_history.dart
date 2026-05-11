@@ -25,8 +25,6 @@ class NoteHistory extends Table {
   TextColumn get content => text().nullable()();
 
   /// Дополнительные метаданные snapshot.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -54,13 +52,9 @@ class NoteHistory extends Table {
 }
 
 enum NoteHistoryConstraint {
-  deltaJsonNotBlank(
-    'chk_note_history_delta_json_not_blank',
-  ),
+  deltaJsonNotBlank('chk_note_history_delta_json_not_blank'),
 
-  contentNotBlank(
-    'chk_note_history_content_not_blank',
-  );
+  contentNotBlank('chk_note_history_content_not_blank');
 
   const NoteHistoryConstraint(this.constraintName);
 

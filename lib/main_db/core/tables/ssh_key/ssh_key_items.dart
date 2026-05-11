@@ -2,13 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../vault_items/vault_items.dart';
 
-enum SshKeyType {
-  rsa,
-  ed25519,
-  ecdsa,
-  dsa,
-  other,
-}
+enum SshKeyType { rsa, ed25519, ecdsa, dsa, other }
 
 @DataClassName('SshKeyItemsData')
 class SshKeyItems extends Table {
@@ -44,8 +38,7 @@ class SshKeyItems extends Table {
       text().withLength(min: 1, max: 255).nullable()();
 
   /// Кто/что создало ключ: user, ssh-keygen, imported, GitHub, server name.
-  TextColumn get createdBy =>
-      text().withLength(min: 1, max: 255).nullable()();
+  TextColumn get createdBy => text().withLength(min: 1, max: 255).nullable()();
 
   /// Добавлен ли ключ в ssh-agent.
   ///
@@ -59,8 +52,6 @@ class SshKeyItems extends Table {
   ///
   /// Например: host, username, port, knownHostsEntry, sourceFileName,
   /// importInfo, agentIdentity, certificateInfo, comment.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -149,41 +140,23 @@ class SshKeyItems extends Table {
 }
 
 enum SshKeyItemConstraint {
-  keyMaterialRequired(
-    'chk_ssh_key_items_key_material_required',
-  ),
+  keyMaterialRequired('chk_ssh_key_items_key_material_required'),
 
-  publicKeyNotBlank(
-    'chk_ssh_key_items_public_key_not_blank',
-  ),
+  publicKeyNotBlank('chk_ssh_key_items_public_key_not_blank'),
 
-  privateKeyNotBlank(
-    'chk_ssh_key_items_private_key_not_blank',
-  ),
+  privateKeyNotBlank('chk_ssh_key_items_private_key_not_blank'),
 
-  keyTypeOtherRequired(
-    'chk_ssh_key_items_key_type_other_required',
-  ),
+  keyTypeOtherRequired('chk_ssh_key_items_key_type_other_required'),
 
-  keyTypeOtherMustBeNull(
-    'chk_ssh_key_items_key_type_other_must_be_null',
-  ),
+  keyTypeOtherMustBeNull('chk_ssh_key_items_key_type_other_must_be_null'),
 
-  keySizePositive(
-    'chk_ssh_key_items_key_size_positive',
-  ),
+  keySizePositive('chk_ssh_key_items_key_size_positive'),
 
-  fingerprintNotBlank(
-    'chk_ssh_key_items_fingerprint_not_blank',
-  ),
+  fingerprintNotBlank('chk_ssh_key_items_fingerprint_not_blank'),
 
-  createdByNotBlank(
-    'chk_ssh_key_items_created_by_not_blank',
-  ),
+  createdByNotBlank('chk_ssh_key_items_created_by_not_blank'),
 
-  usageNotBlank(
-    'chk_ssh_key_items_usage_not_blank',
-  );
+  usageNotBlank('chk_ssh_key_items_usage_not_blank');
 
   const SshKeyItemConstraint(this.constraintName);
 

@@ -30,12 +30,12 @@ class IconRefs extends Table {
     onDelete: KeyAction.restrict,
   )();
 
-  /// Цвет иконки, например #FFFFFF или AARRGGBB.
-  TextColumn get color => text().withLength(min: 1, max: 16).nullable()();
+  /// Цвет иконки в формате AARRGGBB.
+  TextColumn get color => text().withLength(min: 8, max: 8).nullable()();
 
-  /// Цвет фона, например #000000 или AARRGGBB.
+  /// Цвет фона в формате AARRGGBB.
   TextColumn get backgroundColor =>
-      text().withLength(min: 1, max: 16).nullable()();
+      text().withLength(min: 8, max: 8).nullable()();
 
   DateTimeColumn get createdAt =>
       dateTime().clientDefault(() => DateTime.now())();
@@ -81,43 +81,24 @@ class IconRefs extends Table {
         ''',
 
     '''
-        CONSTRAINT ${IconRefConstraint.colorNotBlank.constraintName}
+        CONSTRAINT ${IconRefConstraint.colorArgbHex.constraintName}
         CHECK (
           color IS NULL
-          OR length(trim(color)) > 0
+          OR color GLOB '[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'
         )
         ''',
-
     '''
-        CONSTRAINT ${IconRefConstraint.backgroundColorNotBlank.constraintName}
+        CONSTRAINT ${IconRefConstraint.backgroundColorArgbHex.constraintName}
         CHECK (
           background_color IS NULL
-          OR length(trim(background_color)) > 0
+          OR background_color GLOB '[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'
         )
         ''',
-    '''
-CONSTRAINT ${IconRefConstraint.colorArgbHex.constraintName}
-CHECK (
-  color IS NULL
-  OR color GLOB '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'
-)
-''',
-    '''
-CONSTRAINT ${IconRefConstraint.backgroundColorArgbHex.constraintName}
-CHECK (
-  background_color IS NULL
-  OR background_color GLOB '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'
-)
-''',
   ];
 }
 
 enum IconRefConstraint {
   validIconSource('chk_icon_refs_valid_icon_source'),
-
-  colorNotBlank('chk_icon_refs_color_not_blank'),
-
-  backgroundColorNotBlank('chk_icon_refs_background_color_not_blank'),
 
   colorArgbHex('chk_icon_refs_color_argb_hex'),
 
@@ -151,22 +132,22 @@ final List<String> iconRefsTableIndexes = [
   '''
   CREATE UNIQUE INDEX IF NOT EXISTS ${IconRefIndex.uniqueBuiltin.indexName}
   ON icon_refs(
-    icon_key,
+    icon_value,
     COALESCE(color, ''),
     COALESCE(background_color, '')
   )
-  WHERE source_type = 'builtin';
+  WHERE icon_source_type = 'builtin';
   ''',
 
   '''
   CREATE UNIQUE INDEX IF NOT EXISTS ${IconRefIndex.uniquePack.indexName}
   ON icon_refs(
     icon_pack_id,
-    icon_key,
+    icon_value,
     COALESCE(color, ''),
     COALESCE(background_color, '')
   )
-  WHERE source_type = 'pack';
+  WHERE icon_source_type = 'pack';
   ''',
 
   '''
@@ -176,7 +157,7 @@ final List<String> iconRefsTableIndexes = [
     COALESCE(color, ''),
     COALESCE(background_color, '')
   )
-  WHERE source_type = 'custom';
+  WHERE icon_source_type = 'custom';
   ''',
 ];
 

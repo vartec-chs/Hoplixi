@@ -35,8 +35,6 @@ class PasswordItems extends Table {
   ///
   /// Например: passwordStrength, breachCheckAt, importedFrom,
   /// passwordGeneratorProfile, oldUrlAliases.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {itemId};
 

@@ -46,8 +46,6 @@ class SshKeyHistory extends Table {
   TextColumn get usage => text().withLength(min: 1, max: 255).nullable()();
 
   /// Дополнительные метаданные snapshot.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {historyId};
 

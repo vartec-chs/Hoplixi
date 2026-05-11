@@ -49,9 +49,6 @@ class VaultItemCustomFieldsHistory extends Table {
   /// Порядок отображения поля snapshot.
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
-  /// Дополнительные метаданные snapshot.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {id};
 

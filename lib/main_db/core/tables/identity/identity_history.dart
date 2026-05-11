@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
-import 'identity_items.dart';
 import '../vault_items/vault_item_history.dart';
+import 'identity_items.dart';
 
 /// History-таблица для специфичных полей identity-документа.
 ///
@@ -71,8 +71,6 @@ class IdentityHistory extends Table {
   BoolColumn get verified => boolean().withDefault(const Constant(false))();
 
   /// Дополнительные метаданные snapshot.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -160,41 +158,23 @@ class IdentityHistory extends Table {
 }
 
 enum IdentityHistoryConstraint {
-  idTypeOtherRequired(
-    'chk_identity_history_id_type_other_required',
-  ),
+  idTypeOtherRequired('chk_identity_history_id_type_other_required'),
 
-  idTypeOtherMustBeNull(
-    'chk_identity_history_id_type_other_must_be_null',
-  ),
+  idTypeOtherMustBeNull('chk_identity_history_id_type_other_must_be_null'),
 
-  idNumberNotBlank(
-    'chk_identity_history_id_number_not_blank',
-  ),
+  idNumberNotBlank('chk_identity_history_id_number_not_blank'),
 
-  fullNameNotBlank(
-    'chk_identity_history_full_name_not_blank',
-  ),
+  fullNameNotBlank('chk_identity_history_full_name_not_blank'),
 
-  placeOfBirthNotBlank(
-    'chk_identity_history_place_of_birth_not_blank',
-  ),
+  placeOfBirthNotBlank('chk_identity_history_place_of_birth_not_blank'),
 
-  nationalityNotBlank(
-    'chk_identity_history_nationality_not_blank',
-  ),
+  nationalityNotBlank('chk_identity_history_nationality_not_blank'),
 
-  issuingAuthorityNotBlank(
-    'chk_identity_history_issuing_authority_not_blank',
-  ),
+  issuingAuthorityNotBlank('chk_identity_history_issuing_authority_not_blank'),
 
-  mrzNotBlank(
-    'chk_identity_history_mrz_not_blank',
-  ),
+  mrzNotBlank('chk_identity_history_mrz_not_blank'),
 
-  issueExpiryRange(
-    'chk_identity_history_issue_expiry_range',
-  );
+  issueExpiryRange('chk_identity_history_issue_expiry_range');
 
   const IdentityHistoryConstraint(this.constraintName);
 

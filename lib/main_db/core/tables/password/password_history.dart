@@ -32,8 +32,6 @@ class PasswordHistory extends Table {
   DateTimeColumn get expiresAt => dateTime().nullable()();
 
   /// Дополнительные метаданные snapshot.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {historyId};
 

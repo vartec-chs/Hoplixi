@@ -2,14 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../vault_items/vault_items.dart';
 
-enum CryptoWalletType {
-  software,
-  hardware,
-  paper,
-  watchOnly,
-  multisig,
-  other,
-}
+enum CryptoWalletType { software, hardware, paper, watchOnly, multisig, other }
 
 enum CryptoNetwork {
   bitcoin,
@@ -101,8 +94,6 @@ class CryptoWalletItems extends Table {
   ///
   /// Например: account index, coin type, chain id, wallet app,
   /// contract addresses, notes about backup location.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -217,25 +208,17 @@ class CryptoWalletItems extends Table {
 }
 
 enum CryptoWalletItemConstraint {
-  walletContentRequired(
-    'chk_crypto_wallet_items_content_required',
-  ),
+  walletContentRequired('chk_crypto_wallet_items_content_required'),
 
-  walletTypeOtherRequired(
-    'chk_crypto_wallet_items_wallet_type_other_required',
-  ),
+  walletTypeOtherRequired('chk_crypto_wallet_items_wallet_type_other_required'),
 
   walletTypeOtherMustBeNull(
     'chk_crypto_wallet_items_wallet_type_other_must_be_null',
   ),
 
-  networkOtherRequired(
-    'chk_crypto_wallet_items_network_other_required',
-  ),
+  networkOtherRequired('chk_crypto_wallet_items_network_other_required'),
 
-  networkOtherMustBeNull(
-    'chk_crypto_wallet_items_network_other_must_be_null',
-  ),
+  networkOtherMustBeNull('chk_crypto_wallet_items_network_other_must_be_null'),
 
   derivationSchemeOtherRequired(
     'chk_crypto_wallet_items_derivation_scheme_other_required',
@@ -245,17 +228,11 @@ enum CryptoWalletItemConstraint {
     'chk_crypto_wallet_items_derivation_scheme_other_must_be_null',
   ),
 
-  derivationPathNotBlank(
-    'chk_crypto_wallet_items_derivation_path_not_blank',
-  ),
+  derivationPathNotBlank('chk_crypto_wallet_items_derivation_path_not_blank'),
 
-  hardwareDeviceNotBlank(
-    'chk_crypto_wallet_items_hardware_device_not_blank',
-  ),
+  hardwareDeviceNotBlank('chk_crypto_wallet_items_hardware_device_not_blank'),
 
-  watchOnlyHasPublicData(
-    'chk_crypto_wallet_items_watch_only_has_public_data',
-  );
+  watchOnlyHasPublicData('chk_crypto_wallet_items_watch_only_has_public_data');
 
   const CryptoWalletItemConstraint(this.constraintName);
 

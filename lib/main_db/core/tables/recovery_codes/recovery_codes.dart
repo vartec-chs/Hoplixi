@@ -7,10 +7,10 @@ class RecoveryCodes extends Table {
   IntColumn get id => integer().autoIncrement()();
 
   TextColumn get itemId => text().references(
-        RecoveryCodesItems,
-        #itemId,
-        onDelete: KeyAction.cascade,
-      )();
+    RecoveryCodesItems,
+    #itemId,
+    onDelete: KeyAction.cascade,
+  )();
 
   /// Recovery code.
   ///
@@ -30,8 +30,6 @@ class RecoveryCodes extends Table {
   /// Дополнительные метаданные в JSON-формате.
   ///
   /// Например: importInfo, originalLine, label, group.
-  TextColumn get metadata => text().nullable()();
-
   @override
   String get tableName => 'recovery_codes';
 
@@ -62,17 +60,11 @@ class RecoveryCodes extends Table {
 }
 
 enum RecoveryCodeConstraint {
-  codeNotBlank(
-    'chk_recovery_codes_code_not_blank',
-  ),
+  codeNotBlank('chk_recovery_codes_code_not_blank'),
 
-  usedAtConsistency(
-    'chk_recovery_codes_used_at_consistency',
-  ),
+  usedAtConsistency('chk_recovery_codes_used_at_consistency'),
 
-  positionPositive(
-    'chk_recovery_codes_position_positive',
-  );
+  positionPositive('chk_recovery_codes_position_positive');
 
   const RecoveryCodeConstraint(this.constraintName);
 

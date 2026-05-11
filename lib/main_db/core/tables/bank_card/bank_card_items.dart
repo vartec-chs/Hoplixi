@@ -87,8 +87,6 @@ class BankCardItems extends Table {
   ///
   /// Например: страна выпуска, валюта, лимит, BIN-информация,
   /// кастомные банковские параметры.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {itemId};
 

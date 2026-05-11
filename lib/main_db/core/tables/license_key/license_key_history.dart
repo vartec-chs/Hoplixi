@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
-import 'license_key_items.dart';
 import '../vault_items/vault_item_history.dart';
+import 'license_key_items.dart';
 
 /// History-таблица для специфичных полей лицензионного ключа.
 ///
@@ -56,8 +56,6 @@ class LicenseKeyHistory extends Table {
       text().withLength(min: 1, max: 255).nullable()();
 
   /// Дополнительные метаданные snapshot.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -162,13 +160,9 @@ class LicenseKeyHistory extends Table {
 }
 
 enum LicenseKeyHistoryConstraint {
-  productNotBlank(
-    'chk_license_key_history_product_not_blank',
-  ),
+  productNotBlank('chk_license_key_history_product_not_blank'),
 
-  licenseKeyNotBlank(
-    'chk_license_key_history_license_key_not_blank',
-  ),
+  licenseKeyNotBlank('chk_license_key_history_license_key_not_blank'),
 
   licenseTypeOtherRequired(
     'chk_license_key_history_license_type_other_required',
@@ -178,33 +172,19 @@ enum LicenseKeyHistoryConstraint {
     'chk_license_key_history_license_type_other_must_be_null',
   ),
 
-  seatsPositive(
-    'chk_license_key_history_seats_positive',
-  ),
+  seatsPositive('chk_license_key_history_seats_positive'),
 
-  maxActivationsPositive(
-    'chk_license_key_history_max_activations_positive',
-  ),
+  maxActivationsPositive('chk_license_key_history_max_activations_positive'),
 
-  purchaseFromNotBlank(
-    'chk_license_key_history_purchase_from_not_blank',
-  ),
+  purchaseFromNotBlank('chk_license_key_history_purchase_from_not_blank'),
 
-  orderIdNotBlank(
-    'chk_license_key_history_order_id_not_blank',
-  ),
+  orderIdNotBlank('chk_license_key_history_order_id_not_blank'),
 
-  supportContactNotBlank(
-    'chk_license_key_history_support_contact_not_blank',
-  ),
+  supportContactNotBlank('chk_license_key_history_support_contact_not_blank'),
 
-  purchaseActivationRange(
-    'chk_license_key_history_purchase_activation_range',
-  ),
+  purchaseActivationRange('chk_license_key_history_purchase_activation_range'),
 
-  purchaseExpiryRange(
-    'chk_license_key_history_purchase_expiry_range',
-  );
+  purchaseExpiryRange('chk_license_key_history_purchase_expiry_range');
 
   const LicenseKeyHistoryConstraint(this.constraintName);
 

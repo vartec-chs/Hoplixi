@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
-import 'bank_card_items.dart';
 import '../vault_items/vault_item_history.dart';
+import 'bank_card_items.dart';
 
 /// History-таблица для специфичных полей банковской карты.
 ///
@@ -62,8 +62,6 @@ class BankCardHistory extends Table {
       text().withLength(min: 1, max: 255).nullable()();
 
   /// Дополнительные метаданные в JSON-формате snapshot.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {historyId};
 

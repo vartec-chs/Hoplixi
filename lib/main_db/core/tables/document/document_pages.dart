@@ -55,8 +55,6 @@ class DocumentPages extends Table {
   ///
   /// Например: OCR language, dimensions, rotation, confidence,
   /// source page id, import metadata.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {id};
 

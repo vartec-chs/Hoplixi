@@ -65,8 +65,6 @@ class VaultItems extends Table {
 
   DateTimeColumn get lastUsedAt => dateTime().nullable()();
 
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {id};
 

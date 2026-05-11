@@ -80,17 +80,9 @@ class VaultItemHistory extends Table {
   /// Дата последнего использования snapshot.
   DateTimeColumn get lastUsedAt => dateTime().nullable()();
 
-  /// Дополнительные метаданные исходного item snapshot.
-  TextColumn get metadata => text().nullable()();
-
   /// Когда создана запись истории.
   DateTimeColumn get historyCreatedAt =>
       dateTime().clientDefault(() => DateTime.now())();
-
-  /// Дополнительные метаданные самой записи истории.
-  ///
-  /// Например: source, actor, migrationInfo, triggerName, diff summary.
-  TextColumn get historyMetadata => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -132,21 +124,13 @@ class VaultItemHistory extends Table {
 }
 
 enum VaultItemHistoryConstraint {
-  nameNotBlank(
-    'chk_vault_item_history_name_not_blank',
-  ),
+  nameNotBlank('chk_vault_item_history_name_not_blank'),
 
-  usedCountNonNegative(
-    'chk_vault_item_history_used_count_non_negative',
-  ),
+  usedCountNonNegative('chk_vault_item_history_used_count_non_negative'),
 
-  recentScoreNonNegative(
-    'chk_vault_item_history_recent_score_non_negative',
-  ),
+  recentScoreNonNegative('chk_vault_item_history_recent_score_non_negative'),
 
-  createdModifiedRange(
-    'chk_vault_item_history_created_modified_range',
-  );
+  createdModifiedRange('chk_vault_item_history_created_modified_range');
 
   const VaultItemHistoryConstraint(this.constraintName);
 

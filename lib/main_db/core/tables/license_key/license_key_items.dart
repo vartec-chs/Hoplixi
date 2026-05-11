@@ -74,8 +74,6 @@ class LicenseKeyItems extends Table {
   ///
   /// Например: vendorAccount, portalUrl, invoiceId, deviceLimit,
   /// activationEmail, renewalInfo.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {itemId};
 

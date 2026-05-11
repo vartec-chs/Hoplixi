@@ -36,37 +36,31 @@ class Categories extends Table {
 
   /// Ссылка на иконку категории.
   TextColumn get iconRefId => text().nullable().references(
-        IconRefs,
-        #id,
-        onDelete: KeyAction.setNull,
-      )();
+    IconRefs,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
 
-  /// Цвет категории в формате #AARRGGBB.
-  TextColumn get color =>
-      text().withLength(min: 9, max: 9).withDefault(
-            const Constant('#FFFFFFFF'),
-          )();
+  /// Цвет категории в формате AARRGGBB.
+  TextColumn get color => text()
+      .withLength(min: 8, max: 8)
+      .withDefault(const Constant('FFFFFFFF'))();
 
   /// Тип категории: password, note, mixed и т.д.
   TextColumn get type => textEnum<CategoryType>()();
 
   /// Родительская категория.
   TextColumn get parentId => text().nullable().references(
-        Categories,
-        #id,
-        onDelete: KeyAction.setNull,
-      )();
+    Categories,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
 
   DateTimeColumn get createdAt =>
       dateTime().clientDefault(() => DateTime.now())();
 
   DateTimeColumn get modifiedAt =>
       dateTime().clientDefault(() => DateTime.now())();
-
-  /// Дополнительные метаданные в JSON-формате.
-  ///
-  /// Например: displayOrder, importInfo, UI preferences.
-  TextColumn get metadata => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -94,7 +88,7 @@ class Categories extends Table {
     '''
     CONSTRAINT ${CategoryConstraint.colorArgbHex.constraintName}
     CHECK (
-      color GLOB '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'
+      color GLOB '[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'
     )
     ''',
 
@@ -109,21 +103,13 @@ class Categories extends Table {
 }
 
 enum CategoryConstraint {
-  nameNotBlank(
-    'chk_categories_name_not_blank',
-  ),
+  nameNotBlank('chk_categories_name_not_blank'),
 
-  descriptionNotBlank(
-    'chk_categories_description_not_blank',
-  ),
+  descriptionNotBlank('chk_categories_description_not_blank'),
 
-  colorArgbHex(
-    'chk_categories_color_argb_hex',
-  ),
+  colorArgbHex('chk_categories_color_argb_hex'),
 
-  noSelfParent(
-    'chk_categories_no_self_parent',
-  );
+  noSelfParent('chk_categories_no_self_parent');
 
   const CategoryConstraint(this.constraintName);
 

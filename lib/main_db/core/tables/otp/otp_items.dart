@@ -37,8 +37,6 @@ class OtpItems extends Table {
 
   IntColumn get counter => integer().nullable()();
 
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {itemId};
 

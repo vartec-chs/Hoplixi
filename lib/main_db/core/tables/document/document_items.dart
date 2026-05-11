@@ -53,8 +53,6 @@ class DocumentItems extends Table {
   ///
   /// Например: страна, номер документа, issuing authority, OCR language,
   /// source, import info, classification confidence.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -109,25 +107,17 @@ class DocumentItems extends Table {
 }
 
 enum DocumentItemConstraint {
-  documentTypeOtherRequired(
-    'chk_document_items_document_type_other_required',
-  ),
+  documentTypeOtherRequired('chk_document_items_document_type_other_required'),
 
   documentTypeOtherMustBeNull(
     'chk_document_items_document_type_other_must_be_null',
   ),
 
-  aggregatedTextNotBlank(
-    'chk_document_items_aggregated_text_not_blank',
-  ),
+  aggregatedTextNotBlank('chk_document_items_aggregated_text_not_blank'),
 
-  aggregateHashNotBlank(
-    'chk_document_items_aggregate_hash_not_blank',
-  ),
+  aggregateHashNotBlank('chk_document_items_aggregate_hash_not_blank'),
 
-  pageCountNonNegative(
-    'chk_document_items_page_count_non_negative',
-  );
+  pageCountNonNegative('chk_document_items_page_count_non_negative');
 
   const DocumentItemConstraint(this.constraintName);
 

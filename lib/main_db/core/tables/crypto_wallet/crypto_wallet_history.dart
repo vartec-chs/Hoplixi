@@ -70,8 +70,6 @@ class CryptoWalletHistory extends Table {
   BoolColumn get watchOnly => boolean().withDefault(const Constant(false))();
 
   /// Дополнительные метаданные snapshot.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {historyId};
 

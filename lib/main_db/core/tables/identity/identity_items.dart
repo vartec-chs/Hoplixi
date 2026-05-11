@@ -87,8 +87,6 @@ class IdentityItems extends Table {
   ///
   /// Например: страна выдачи, серия документа, пол, address,
   /// document category, OCR confidence, extra MRZ parsed fields.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -175,41 +173,23 @@ class IdentityItems extends Table {
 }
 
 enum IdentityItemConstraint {
-  idTypeOtherRequired(
-    'chk_identity_items_id_type_other_required',
-  ),
+  idTypeOtherRequired('chk_identity_items_id_type_other_required'),
 
-  idTypeOtherMustBeNull(
-    'chk_identity_items_id_type_other_must_be_null',
-  ),
+  idTypeOtherMustBeNull('chk_identity_items_id_type_other_must_be_null'),
 
-  idNumberNotBlank(
-    'chk_identity_items_id_number_not_blank',
-  ),
+  idNumberNotBlank('chk_identity_items_id_number_not_blank'),
 
-  fullNameNotBlank(
-    'chk_identity_items_full_name_not_blank',
-  ),
+  fullNameNotBlank('chk_identity_items_full_name_not_blank'),
 
-  placeOfBirthNotBlank(
-    'chk_identity_items_place_of_birth_not_blank',
-  ),
+  placeOfBirthNotBlank('chk_identity_items_place_of_birth_not_blank'),
 
-  nationalityNotBlank(
-    'chk_identity_items_nationality_not_blank',
-  ),
+  nationalityNotBlank('chk_identity_items_nationality_not_blank'),
 
-  issuingAuthorityNotBlank(
-    'chk_identity_items_issuing_authority_not_blank',
-  ),
+  issuingAuthorityNotBlank('chk_identity_items_issuing_authority_not_blank'),
 
-  mrzNotBlank(
-    'chk_identity_items_mrz_not_blank',
-  ),
+  mrzNotBlank('chk_identity_items_mrz_not_blank'),
 
-  issueExpiryRange(
-    'chk_identity_items_issue_expiry_range',
-  );
+  issueExpiryRange('chk_identity_items_issue_expiry_range');
 
   const IdentityItemConstraint(this.constraintName);
 

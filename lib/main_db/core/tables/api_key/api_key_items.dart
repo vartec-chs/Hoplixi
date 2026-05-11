@@ -60,8 +60,6 @@ class ApiKeyItems extends Table {
   TextColumn get baseUrl => text().withLength(min: 1, max: 2048).nullable()();
 
   // Дополнительные метаданные в виде JSON-строки (например, IP-ограничения, описание использования и т.д.)
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {itemId};
 

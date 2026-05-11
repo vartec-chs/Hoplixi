@@ -2,21 +2,9 @@ import 'package:drift/drift.dart';
 
 import '../vault_items/vault_items.dart';
 
-enum CertificateFormat {
-  pem,
-  der,
-  pfx,
-  pkcs12,
-  other,
-}
+enum CertificateFormat { pem, der, pfx, pkcs12, other }
 
-enum CertificateKeyAlgorithm {
-  rsa,
-  ecdsa,
-  ed25519,
-  dsa,
-  other,
-}
+enum CertificateKeyAlgorithm { rsa, ecdsa, ed25519, dsa, other }
 
 @DataClassName('CertificateItemsData')
 class CertificateItems extends Table {
@@ -87,8 +75,6 @@ class CertificateItems extends Table {
   ///
   /// Сюда можно положить keyUsage, extensions, SAN, fingerprint,
   /// certificate chain info и другие редко используемые детали.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -213,13 +199,9 @@ class CertificateItems extends Table {
 }
 
 enum CertificateItemConstraint {
-  certificateContentRequired(
-    'chk_certificate_items_content_required',
-  ),
+  certificateContentRequired('chk_certificate_items_content_required'),
 
-  certificatePemNotBlank(
-    'chk_certificate_items_certificate_pem_not_blank',
-  ),
+  certificatePemNotBlank('chk_certificate_items_certificate_pem_not_blank'),
 
   certificateFormatOtherRequired(
     'chk_certificate_items_certificate_format_other_required',
@@ -237,33 +219,19 @@ enum CertificateItemConstraint {
     'chk_certificate_items_key_algorithm_other_must_be_null',
   ),
 
-  keySizePositive(
-    'chk_certificate_items_key_size_positive',
-  ),
+  keySizePositive('chk_certificate_items_key_size_positive'),
 
-  serialNumberNotBlank(
-    'chk_certificate_items_serial_number_not_blank',
-  ),
+  serialNumberNotBlank('chk_certificate_items_serial_number_not_blank'),
 
-  issuerNotBlank(
-    'chk_certificate_items_issuer_not_blank',
-  ),
+  issuerNotBlank('chk_certificate_items_issuer_not_blank'),
 
-  subjectNotBlank(
-    'chk_certificate_items_subject_not_blank',
-  ),
+  subjectNotBlank('chk_certificate_items_subject_not_blank'),
 
-  validRange(
-    'chk_certificate_items_valid_range',
-  ),
+  validRange('chk_certificate_items_valid_range'),
 
-  ocspUrlNotBlank(
-    'chk_certificate_items_ocsp_url_not_blank',
-  ),
+  ocspUrlNotBlank('chk_certificate_items_ocsp_url_not_blank'),
 
-  crlUrlNotBlank(
-    'chk_certificate_items_crl_url_not_blank',
-  );
+  crlUrlNotBlank('chk_certificate_items_crl_url_not_blank');
 
   const CertificateItemConstraint(this.constraintName);
 

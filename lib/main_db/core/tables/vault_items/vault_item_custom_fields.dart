@@ -69,12 +69,6 @@ class VaultItemCustomFields extends Table {
   /// Порядок отображения поля.
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
-  /// Дополнительные метаданные в JSON-формате.
-  ///
-  /// Например: placeholder, validationRule, source, importInfo,
-  /// displayMode, copiedCount.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {id};
 
@@ -127,13 +121,9 @@ class VaultItemCustomFields extends Table {
 }
 
 enum VaultItemCustomFieldConstraint {
-  labelNotBlank(
-    'chk_vault_item_custom_fields_label_not_blank',
-  ),
+  labelNotBlank('chk_vault_item_custom_fields_label_not_blank'),
 
-  valueNotBlank(
-    'chk_vault_item_custom_fields_value_not_blank',
-  ),
+  valueNotBlank('chk_vault_item_custom_fields_value_not_blank'),
 
   fieldTypeOtherRequired(
     'chk_vault_item_custom_fields_field_type_other_required',
@@ -143,9 +133,7 @@ enum VaultItemCustomFieldConstraint {
     'chk_vault_item_custom_fields_field_type_other_must_be_null',
   ),
 
-  sortOrderNonNegative(
-    'chk_vault_item_custom_fields_sort_order_non_negative',
-  );
+  sortOrderNonNegative('chk_vault_item_custom_fields_sort_order_non_negative');
 
   const VaultItemCustomFieldConstraint(this.constraintName);
 

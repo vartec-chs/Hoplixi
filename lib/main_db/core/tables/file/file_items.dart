@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
-import 'file_metadata.dart';
 import '../vault_items/vault_items.dart';
+import 'file_metadata.dart';
 
 /// Type-specific таблица для файлов.
 ///
@@ -22,17 +22,15 @@ class FileItems extends Table {
   /// Nullable, чтобы vault item мог временно существовать без файла,
   /// например при ошибке импорта, отложенной загрузке или восстановлении.
   TextColumn get metadataId => text().nullable().references(
-        FileMetadata,
-        #id,
-        onDelete: KeyAction.setNull,
-      )();
+    FileMetadata,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
 
   /// Дополнительные метаданные в JSON-формате.
   ///
   /// Например: original source, import info, user file note,
   /// attachment flags, preview settings.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {itemId};
 

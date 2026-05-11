@@ -36,8 +36,6 @@ class ContactHistory extends Table {
       boolean().withDefault(const Constant(false))();
 
   /// Дополнительные данные в JSON-формате snapshot.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {historyId};
 

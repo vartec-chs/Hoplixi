@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
-import 'otp_items.dart';
 import '../vault_items/vault_item_history.dart';
+import 'otp_items.dart';
 
 /// History-таблица для специфичных полей OTP.
 ///
@@ -51,8 +51,6 @@ class OtpHistory extends Table {
   IntColumn get counter => integer().nullable()();
 
   /// Дополнительные метаданные snapshot.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -119,33 +117,19 @@ class OtpHistory extends Table {
 }
 
 enum OtpHistoryConstraint {
-  typeCounterConsistency(
-    'chk_otp_history_type_counter_consistency',
-  ),
+  typeCounterConsistency('chk_otp_history_type_counter_consistency'),
 
-  issuerNotBlank(
-    'chk_otp_history_issuer_not_blank',
-  ),
+  issuerNotBlank('chk_otp_history_issuer_not_blank'),
 
-  accountNameNotBlank(
-    'chk_otp_history_account_name_not_blank',
-  ),
+  accountNameNotBlank('chk_otp_history_account_name_not_blank'),
 
-  secretNotEmpty(
-    'chk_otp_history_secret_not_empty',
-  ),
+  secretNotEmpty('chk_otp_history_secret_not_empty'),
 
-  digitsValid(
-    'chk_otp_history_digits_valid',
-  ),
+  digitsValid('chk_otp_history_digits_valid'),
 
-  periodPositive(
-    'chk_otp_history_period_positive',
-  ),
+  periodPositive('chk_otp_history_period_positive'),
 
-  counterNonNegative(
-    'chk_otp_history_counter_non_negative',
-  );
+  counterNonNegative('chk_otp_history_counter_non_negative');
 
   const OtpHistoryConstraint(this.constraintName);
 

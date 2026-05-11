@@ -1,7 +1,7 @@
 ﻿import 'package:drift/drift.dart';
 
-import 'loyalty_card_items.dart';
 import '../vault_items/vault_item_history.dart';
+import 'loyalty_card_items.dart';
 
 /// History-таблица для специфичных полей карты лояльности.
 ///
@@ -51,8 +51,6 @@ class LoyaltyCardHistory extends Table {
   TextColumn get phoneNumber => text().withLength(min: 1, max: 64).nullable()();
 
   /// Дополнительные метаданные snapshot.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -138,21 +136,13 @@ class LoyaltyCardHistory extends Table {
 }
 
 enum LoyaltyCardHistoryConstraint {
-  programNameNotBlank(
-    'chk_loyalty_card_history_program_name_not_blank',
-  ),
+  programNameNotBlank('chk_loyalty_card_history_program_name_not_blank'),
 
-  cardNumberNotBlank(
-    'chk_loyalty_card_history_card_number_not_blank',
-  ),
+  cardNumberNotBlank('chk_loyalty_card_history_card_number_not_blank'),
 
-  holderNameNotBlank(
-    'chk_loyalty_card_history_holder_name_not_blank',
-  ),
+  holderNameNotBlank('chk_loyalty_card_history_holder_name_not_blank'),
 
-  barcodeValueNotBlank(
-    'chk_loyalty_card_history_barcode_value_not_blank',
-  ),
+  barcodeValueNotBlank('chk_loyalty_card_history_barcode_value_not_blank'),
 
   barcodeTypeOtherRequired(
     'chk_loyalty_card_history_barcode_type_other_required',
@@ -162,21 +152,13 @@ enum LoyaltyCardHistoryConstraint {
     'chk_loyalty_card_history_barcode_type_other_must_be_null',
   ),
 
-  passwordNotBlank(
-    'chk_loyalty_card_history_password_not_blank',
-  ),
+  passwordNotBlank('chk_loyalty_card_history_password_not_blank'),
 
-  tierNotBlank(
-    'chk_loyalty_card_history_tier_not_blank',
-  ),
+  tierNotBlank('chk_loyalty_card_history_tier_not_blank'),
 
-  websiteNotBlank(
-    'chk_loyalty_card_history_website_not_blank',
-  ),
+  websiteNotBlank('chk_loyalty_card_history_website_not_blank'),
 
-  phoneNumberNotBlank(
-    'chk_loyalty_card_history_phone_number_not_blank',
-  );
+  phoneNumberNotBlank('chk_loyalty_card_history_phone_number_not_blank');
 
   const LoyaltyCardHistoryConstraint(this.constraintName);
 

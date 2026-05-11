@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
-import 'document_items.dart';
 import '../vault_items/vault_item_history.dart';
+import 'document_items.dart';
 
 /// History-таблица для специфичных полей документа.
 ///
@@ -33,8 +33,6 @@ class DocumentHistory extends Table {
   IntColumn get pageCount => integer().withDefault(const Constant(0))();
 
   /// Дополнительные метаданные snapshot.
-  TextColumn get metadata => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -97,17 +95,11 @@ enum DocumentHistoryConstraint {
     'chk_document_history_document_type_other_must_be_null',
   ),
 
-  aggregatedTextNotBlank(
-    'chk_document_history_aggregated_text_not_blank',
-  ),
+  aggregatedTextNotBlank('chk_document_history_aggregated_text_not_blank'),
 
-  aggregateHashNotBlank(
-    'chk_document_history_aggregate_hash_not_blank',
-  ),
+  aggregateHashNotBlank('chk_document_history_aggregate_hash_not_blank'),
 
-  pageCountNonNegative(
-    'chk_document_history_page_count_non_negative',
-  );
+  pageCountNonNegative('chk_document_history_page_count_non_negative');
 
   const DocumentHistoryConstraint(this.constraintName);
 
