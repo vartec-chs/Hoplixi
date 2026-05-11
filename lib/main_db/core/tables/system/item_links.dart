@@ -199,8 +199,8 @@ final List<String> itemLinksTableTriggers = [
       JOIN vault_items target
         ON target.id = NEW.target_item_id
       WHERE source.id = NEW.source_item_id
-        AND source.type = 'password'
-        AND target.type = 'otp'
+        AND source.type = '${VaultItemType.password.name}'
+        AND target.type = '${VaultItemType.otp.name}'
     );
   END;
   ''',
@@ -219,8 +219,8 @@ final List<String> itemLinksTableTriggers = [
       JOIN vault_items target
         ON target.id = NEW.target_item_id
       WHERE source.id = NEW.source_item_id
-        AND source.type = 'password'
-        AND target.type = 'otp'
+        AND source.type = '${VaultItemType.password.name}'
+        AND target.type = '${VaultItemType.otp.name}'
     );
   END;
   ''',
@@ -239,7 +239,7 @@ final List<String> itemLinksTableTriggers = [
       SELECT 1
       FROM vault_items target
       WHERE target.id = NEW.target_item_id
-        AND target.type = 'contact'
+        AND target.type = '${VaultItemType.contact.name}'
     );
   END;
   ''',
@@ -256,7 +256,7 @@ final List<String> itemLinksTableTriggers = [
       SELECT 1
       FROM vault_items target
       WHERE target.id = NEW.target_item_id
-        AND target.type = 'contact'
+        AND target.type = '${VaultItemType.contact.name}'
     );
   END;
   ''',
@@ -277,8 +277,8 @@ final List<String> itemLinksTableTriggers = [
       JOIN vault_items target
         ON target.id = NEW.target_item_id
       WHERE source.id = NEW.source_item_id
-        AND source.type = 'licenseKey'
-        AND target.type IN ('file', 'document')
+        AND source.type = '${VaultItemType.licenseKey.name}'
+        AND target.type IN ('${VaultItemType.file.name}', '${VaultItemType.document.name}')
     );
   END;
   ''',
@@ -297,8 +297,8 @@ final List<String> itemLinksTableTriggers = [
       JOIN vault_items target
         ON target.id = NEW.target_item_id
       WHERE source.id = NEW.source_item_id
-        AND source.type = 'licenseKey'
-        AND target.type IN ('file', 'document')
+        AND source.type = '${VaultItemType.licenseKey.name}'
+        AND target.type IN ('${VaultItemType.file.name}', '${VaultItemType.document.name}')
     );
   END;
   ''',
@@ -319,8 +319,8 @@ final List<String> itemLinksTableTriggers = [
       JOIN vault_items target
         ON target.id = NEW.target_item_id
       WHERE source.id = NEW.source_item_id
-        AND source.type = 'identity'
-        AND target.type = 'document'
+        AND source.type = '${VaultItemType.identity.name}'
+        AND target.type = '${VaultItemType.document.name}'
     );
   END;
   ''',
@@ -339,8 +339,8 @@ final List<String> itemLinksTableTriggers = [
       JOIN vault_items target
         ON target.id = NEW.target_item_id
       WHERE source.id = NEW.source_item_id
-        AND source.type = 'identity'
-        AND target.type = 'document'
+        AND source.type = '${VaultItemType.identity.name}'
+        AND target.type = '${VaultItemType.document.name}'
     );
   END;
   ''',
@@ -361,8 +361,8 @@ final List<String> itemLinksTableTriggers = [
       JOIN vault_items target
         ON target.id = NEW.target_item_id
       WHERE source.id = NEW.source_item_id
-        AND source.type = 'identity'
-        AND target.type = 'file'
+        AND source.type = '${VaultItemType.identity.name}'
+        AND target.type = '${VaultItemType.file.name}'
     );
   END;
   ''',
@@ -381,8 +381,8 @@ final List<String> itemLinksTableTriggers = [
       JOIN vault_items target
         ON target.id = NEW.target_item_id
       WHERE source.id = NEW.source_item_id
-        AND source.type = 'identity'
-        AND target.type = 'file'
+        AND source.type = '${VaultItemType.identity.name}'
+        AND target.type = '${VaultItemType.file.name}'
     );
   END;
   ''',
@@ -403,8 +403,8 @@ final List<String> itemLinksTableTriggers = [
       JOIN vault_items target
         ON target.id = NEW.target_item_id
       WHERE source.id = NEW.source_item_id
-        AND source.type = 'sshKey'
-        AND target.type = 'file'
+        AND source.type = '${VaultItemType.sshKey.name}'
+        AND target.type = '${VaultItemType.file.name}'
     );
   END;
   ''',
@@ -423,8 +423,8 @@ final List<String> itemLinksTableTriggers = [
       JOIN vault_items target
         ON target.id = NEW.target_item_id
       WHERE source.id = NEW.source_item_id
-        AND source.type = 'sshKey'
-        AND target.type = 'file'
+        AND source.type = '${VaultItemType.sshKey.name}'
+        AND target.type = '${VaultItemType.file.name}'
     );
   END;
   ''',
@@ -443,8 +443,8 @@ final List<String> itemLinksTableTriggers = [
       JOIN vault_items target
         ON target.id = NEW.target_item_id
       WHERE source.id = NEW.source_item_id
-        AND source.type = 'sshKey'
-        AND target.type = 'file'
+        AND source.type = '${VaultItemType.sshKey.name}'
+        AND target.type = '${VaultItemType.file.name}'
     );
   END;
   ''',
@@ -463,8 +463,8 @@ final List<String> itemLinksTableTriggers = [
       JOIN vault_items target
         ON target.id = NEW.target_item_id
       WHERE source.id = NEW.source_item_id
-        AND source.type = 'sshKey'
-        AND target.type = 'file'
+        AND source.type = '${VaultItemType.sshKey.name}'
+        AND target.type = '${VaultItemType.file.name}'
     );
   END;
   ''',
@@ -485,8 +485,8 @@ final List<String> itemLinksTableTriggers = [
       JOIN vault_items target
         ON target.id = NEW.target_item_id
       WHERE source.id = NEW.source_item_id
-        AND source.type = 'certificate'
-        AND target.type IN ('file', 'document')
+        AND source.type = '${VaultItemType.certificate.name}'
+        AND target.type IN ('${VaultItemType.file.name}', '${VaultItemType.document.name}')
     );
   END;
   ''',
@@ -505,8 +505,8 @@ final List<String> itemLinksTableTriggers = [
       JOIN vault_items target
         ON target.id = NEW.target_item_id
       WHERE source.id = NEW.source_item_id
-        AND source.type = 'certificate'
-        AND target.type IN ('file', 'document')
+        AND source.type = '${VaultItemType.certificate.name}'
+        AND target.type IN ('${VaultItemType.file.name}', '${VaultItemType.document.name}')
     );
   END;
   ''',
@@ -527,8 +527,8 @@ final List<String> itemLinksTableTriggers = [
       JOIN vault_items target
         ON target.id = NEW.target_item_id
       WHERE source.id = NEW.source_item_id
-        AND source.type = 'certificate'
-        AND target.type = 'file'
+        AND source.type = '${VaultItemType.certificate.name}'
+        AND target.type = '${VaultItemType.file.name}'
     );
   END;
   ''',
@@ -547,8 +547,8 @@ final List<String> itemLinksTableTriggers = [
       JOIN vault_items target
         ON target.id = NEW.target_item_id
       WHERE source.id = NEW.source_item_id
-        AND source.type = 'certificate'
-        AND target.type = 'file'
+        AND source.type = '${VaultItemType.certificate.name}'
+        AND target.type = '${VaultItemType.file.name}'
     );
   END;
   ''',
@@ -567,7 +567,7 @@ final List<String> itemLinksTableTriggers = [
       SELECT 1
       FROM vault_items target
       WHERE target.id = NEW.target_item_id
-        AND target.type = 'note'
+        AND target.type = '${VaultItemType.note.name}'
     );
   END;
   ''',
@@ -584,7 +584,7 @@ final List<String> itemLinksTableTriggers = [
       SELECT 1
       FROM vault_items target
       WHERE target.id = NEW.target_item_id
-        AND target.type = 'note'
+        AND target.type = '${VaultItemType.note.name}'
     );
   END;
   ''',
@@ -603,7 +603,7 @@ final List<String> itemLinksTableTriggers = [
       SELECT 1
       FROM vault_items target
       WHERE target.id = NEW.target_item_id
-        AND target.type IN ('file', 'document')
+        AND target.type IN ('${VaultItemType.file.name}', '${VaultItemType.document.name}')
     );
   END;
   ''',
@@ -620,7 +620,7 @@ final List<String> itemLinksTableTriggers = [
       SELECT 1
       FROM vault_items target
       WHERE target.id = NEW.target_item_id
-        AND target.type IN ('file', 'document')
+        AND target.type IN ('${VaultItemType.file.name}', '${VaultItemType.document.name}')
     );
   END;
   ''',

@@ -42,8 +42,6 @@ class StoreMetaTable extends Table {
   DateTimeColumn get lastOpenedAt =>
       dateTime().clientDefault(() => DateTime.now())();
 
-  /// Дополнительные внутренние метаданные в JSON-формате.
-  TextColumn get metadata => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {singletonId};

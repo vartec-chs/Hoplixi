@@ -8,6 +8,8 @@
   `metadata` из entity/history таблиц, зафиксирован формат цветов `AARRGGBB` без
   `#`, а также отражены актуальные таблицы `item_tags`, `note_links`,
   `store_settings`, `store_meta` и `custom_icons`.
+- В `tables_schema.md` добавлен полный каталог enum-ов из
+  `lib/main_db/core/tables` с разделением на доменные и технические enum-ы.
 
 ### main_db
 

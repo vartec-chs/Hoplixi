@@ -27,11 +27,6 @@ class FileMetadata extends Table {
   /// SHA-256 хэш для проверки целостности.
   TextColumn get fileHash => text().withLength(min: 1, max: 255).nullable()();
 
-  /// Дополнительные метаданные в JSON-формате.
-  ///
-  /// Например: originalSource, importInfo, encryptedSize,
-  /// compression, preview info, image dimensions.
-  TextColumn get metadata => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

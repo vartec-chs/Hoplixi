@@ -24,7 +24,6 @@ export 'loyalty_card/loyalty_card_history.dart';
 export 'loyalty_card/loyalty_card_items.dart';
 export 'note/note_history.dart';
 export 'note/note_items.dart';
-export 'note/note_links.dart';
 export 'otp/otp_history.dart';
 export 'otp/otp_items.dart';
 export 'password/password_history.dart';
