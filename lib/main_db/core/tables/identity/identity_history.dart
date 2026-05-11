@@ -56,17 +56,6 @@ class IdentityHistory extends Table {
   /// Nullable intentionally.
   TextColumn get mrz => text().nullable()();
 
-  /// Ссылка на scan/document attachment snapshot.
-  ///
-  /// Не FK специально: history должна хранить снимок значения,
-  /// даже если связанный vault item позже удалён.
-  TextColumn get scanAttachmentId => text().nullable()();
-
-  /// Ссылка на photo/file attachment snapshot.
-  ///
-  /// Не FK специально.
-  TextColumn get photoAttachmentId => text().nullable()();
-
   /// Проверен ли документ snapshot.
   BoolColumn get verified => boolean().withDefault(const Constant(false))();
 
@@ -186,9 +175,7 @@ enum IdentityHistoryIndex {
   fullName('idx_identity_history_full_name'),
   nationality('idx_identity_history_nationality'),
   expiryDate('idx_identity_history_expiry_date'),
-  verified('idx_identity_history_verified'),
-  scanAttachmentId('idx_identity_history_scan_attachment_id'),
-  photoAttachmentId('idx_identity_history_photo_attachment_id');
+  verified('idx_identity_history_verified');
 
   const IdentityHistoryIndex(this.indexName);
 
@@ -201,6 +188,4 @@ final List<String> identityHistoryTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${IdentityHistoryIndex.nationality.indexName} ON identity_history(nationality);',
   'CREATE INDEX IF NOT EXISTS ${IdentityHistoryIndex.expiryDate.indexName} ON identity_history(expiry_date);',
   'CREATE INDEX IF NOT EXISTS ${IdentityHistoryIndex.verified.indexName} ON identity_history(verified);',
-  'CREATE INDEX IF NOT EXISTS ${IdentityHistoryIndex.scanAttachmentId.indexName} ON identity_history(scan_attachment_id);',
-  'CREATE INDEX IF NOT EXISTS ${IdentityHistoryIndex.photoAttachmentId.indexName} ON identity_history(photo_attachment_id);',
 ];

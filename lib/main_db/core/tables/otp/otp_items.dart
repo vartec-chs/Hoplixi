@@ -12,11 +12,6 @@ class OtpItems extends Table {
   TextColumn get itemId =>
       text().references(VaultItems, #id, onDelete: KeyAction.cascade)();
 
-  @ReferenceName('linkedPasswordItem')
-  TextColumn get passwordItemId => text()
-      .references(VaultItems, #id, onDelete: KeyAction.setNull)
-      .nullable()();
-
   TextColumn get type =>
       textEnum<OtpType>().withDefault(const Constant('totp'))();
 
@@ -122,7 +117,6 @@ enum OtpItemConstraint {
 }
 
 enum OtpItemIndex {
-  passwordItemId('idx_otp_items_password_item_id'),
   type('idx_otp_items_type'),
   issuer('idx_otp_items_issuer'),
   accountName('idx_otp_items_account_name'),
@@ -134,7 +128,6 @@ enum OtpItemIndex {
 }
 
 final List<String> otpItemsTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${OtpItemIndex.passwordItemId.indexName} ON otp_items(password_item_id);',
   'CREATE INDEX IF NOT EXISTS ${OtpItemIndex.type.indexName} ON otp_items(type);',
   'CREATE INDEX IF NOT EXISTS ${OtpItemIndex.issuer.indexName} ON otp_items(issuer);',
   'CREATE INDEX IF NOT EXISTS ${OtpItemIndex.accountName.indexName} ON otp_items(account_name);',

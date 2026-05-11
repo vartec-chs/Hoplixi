@@ -63,23 +63,6 @@ class IdentityItems extends Table {
   /// Чувствительное значение, поэтому без жёсткого лимита.
   TextColumn get mrz => text().nullable()();
 
-  /// Ссылка на скан-документ в хранилище.
-  ///
-  /// Логически должен ссылаться на vault item типа document.
-  /// Это лучше проверять на уровне сервиса/репозитория или trigger'ом.
-  @ReferenceName('identityItemScanAttachment')
-  TextColumn get scanAttachmentId => text()
-      .references(VaultItems, #id, onDelete: KeyAction.setNull)
-      .nullable()();
-
-  /// Ссылка на фото-файл в хранилище.
-  ///
-  /// Логически должен ссылаться на vault item типа file.
-  @ReferenceName('identityItemPhotoAttachment')
-  TextColumn get photoAttachmentId => text()
-      .references(VaultItems, #id, onDelete: KeyAction.setNull)
-      .nullable()();
-
   /// Проверен ли документ пользователем/системой.
   BoolColumn get verified => boolean().withDefault(const Constant(false))();
 
@@ -201,9 +184,7 @@ enum IdentityItemIndex {
   fullName('idx_identity_items_full_name'),
   nationality('idx_identity_items_nationality'),
   expiryDate('idx_identity_items_expiry_date'),
-  verified('idx_identity_items_verified'),
-  scanAttachmentId('idx_identity_items_scan_attachment_id'),
-  photoAttachmentId('idx_identity_items_photo_attachment_id');
+  verified('idx_identity_items_verified');
 
   const IdentityItemIndex(this.indexName);
 
@@ -216,6 +197,4 @@ final List<String> identityItemsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${IdentityItemIndex.nationality.indexName} ON identity_items(nationality);',
   'CREATE INDEX IF NOT EXISTS ${IdentityItemIndex.expiryDate.indexName} ON identity_items(expiry_date);',
   'CREATE INDEX IF NOT EXISTS ${IdentityItemIndex.verified.indexName} ON identity_items(verified);',
-  'CREATE INDEX IF NOT EXISTS ${IdentityItemIndex.scanAttachmentId.indexName} ON identity_items(scan_attachment_id);',
-  'CREATE INDEX IF NOT EXISTS ${IdentityItemIndex.photoAttachmentId.indexName} ON identity_items(photo_attachment_id);',
 ];

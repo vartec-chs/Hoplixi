@@ -3,10 +3,7 @@ library;
 export 'api_key/api_key_history.dart';
 export 'api_key/api_key_items.dart';
 export 'bank_card/bank_card_history.dart';
-// --- Type-specific таблицы ---
 export 'bank_card/bank_card_items.dart';
-// --- Вспомогательные (без изменений) ---
-export 'system/categories.dart';
 export 'certificate/certificate_history.dart';
 export 'certificate/certificate_items.dart';
 export 'contact/contact_history.dart';
@@ -19,12 +16,8 @@ export 'document/document_pages.dart';
 export 'file/file_history.dart';
 export 'file/file_items.dart';
 export 'file/file_metadata.dart';
-export 'system/icon_refs.dart';
-export 'system/icons.dart';
 export 'identity/identity_history.dart';
 export 'identity/identity_items.dart';
-// --- Теги (единая таблица) ---
-export 'system/item_tags.dart';
 export 'license_key/license_key_history.dart';
 export 'license_key/license_key_items.dart';
 export 'loyalty_card/loyalty_card_history.dart';
@@ -41,15 +34,17 @@ export 'recovery_codes/recovery_codes_history.dart';
 export 'recovery_codes/recovery_codes_items.dart';
 export 'ssh_key/ssh_key_history.dart';
 export 'ssh_key/ssh_key_items.dart';
+export 'system/categories.dart';
+export 'system/icon_refs.dart';
+export 'system/icons.dart';
+export 'system/item_links.dart';
+export 'system/item_tags.dart';
 export 'system/store_meta_table.dart';
 export 'system/store_settings.dart';
 export 'system/tags.dart';
-// --- Кастомные поля ---
 export 'vault_items/vault_item_custom_fields.dart';
 export 'vault_items/vault_item_custom_fields_history.dart';
-// --- История ---
 export 'vault_items/vault_item_history.dart';
-// --- Базовая таблица ---
 export 'vault_items/vault_items.dart';
 export 'wifi/wifi_history.dart';
 export 'wifi/wifi_items.dart';

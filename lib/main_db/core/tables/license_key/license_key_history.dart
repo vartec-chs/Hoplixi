@@ -51,10 +51,6 @@ class LicenseKeyHistory extends Table {
   /// Дата окончания действия лицензии snapshot.
   DateTimeColumn get expiresAt => dateTime().nullable()();
 
-  /// Контакт поддержки snapshot.
-  TextColumn get supportContact =>
-      text().withLength(min: 1, max: 255).nullable()();
-
   /// Дополнительные метаданные snapshot.
   @override
   Set<Column> get primaryKey => {historyId};
@@ -132,14 +128,6 @@ class LicenseKeyHistory extends Table {
     ''',
 
     '''
-    CONSTRAINT ${LicenseKeyHistoryConstraint.supportContactNotBlank.constraintName}
-    CHECK (
-      support_contact IS NULL
-      OR length(trim(support_contact)) > 0
-    )
-    ''',
-
-    '''
     CONSTRAINT ${LicenseKeyHistoryConstraint.purchaseActivationRange.constraintName}
     CHECK (
       purchase_date IS NULL
@@ -179,8 +167,6 @@ enum LicenseKeyHistoryConstraint {
   purchaseFromNotBlank('chk_license_key_history_purchase_from_not_blank'),
 
   orderIdNotBlank('chk_license_key_history_order_id_not_blank'),
-
-  supportContactNotBlank('chk_license_key_history_support_contact_not_blank'),
 
   purchaseActivationRange('chk_license_key_history_purchase_activation_range'),
 

@@ -53,22 +53,8 @@ class LicenseKeyItems extends Table {
   /// Номер заказа/чека/инвойса.
   TextColumn get orderId => text().withLength(min: 1, max: 255).nullable()();
 
-  /// Ссылка на файл лицензии/чек/инвойс в vault_items.
-  ///
-  /// Логически должен ссылаться на file/document item.
-  /// Это лучше проверять на уровне сервиса или trigger'ом.
-  TextColumn get licenseFileId => text()
-      .references(VaultItems, #id, onDelete: KeyAction.setNull)
-      .nullable()();
-
   /// Дата окончания действия лицензии.
   DateTimeColumn get expiresAt => dateTime().nullable()();
-
-  /// Контакт поддержки.
-  @ReferenceName('licenseKeySupportContact')
-  TextColumn get supportContactItemId => text()
-      .references(VaultItems, #id, onDelete: KeyAction.setNull)
-      .nullable()();
 
   /// Дополнительные метаданные в JSON-формате.
   ///
@@ -199,8 +185,7 @@ enum LicenseKeyItemIndex {
   product('idx_license_key_items_product'),
   licenseType('idx_license_key_items_license_type'),
   purchaseDate('idx_license_key_items_purchase_date'),
-  expiresAt('idx_license_key_items_expires_at'),
-  licenseFileId('idx_license_key_items_license_file_id');
+  expiresAt('idx_license_key_items_expires_at');
 
   const LicenseKeyItemIndex(this.indexName);
 
@@ -212,5 +197,4 @@ final List<String> licenseKeyItemsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${LicenseKeyItemIndex.licenseType.indexName} ON license_key_items(license_type);',
   'CREATE INDEX IF NOT EXISTS ${LicenseKeyItemIndex.purchaseDate.indexName} ON license_key_items(purchase_date);',
   'CREATE INDEX IF NOT EXISTS ${LicenseKeyItemIndex.expiresAt.indexName} ON license_key_items(expires_at);',
-  'CREATE INDEX IF NOT EXISTS ${LicenseKeyItemIndex.licenseFileId.indexName} ON license_key_items(license_file_id);',
 ];

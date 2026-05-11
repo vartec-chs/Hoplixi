@@ -14,12 +14,6 @@ class OtpHistory extends Table {
   TextColumn get historyId =>
       text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
 
-  /// Связь с password item snapshot.
-  ///
-  /// Не FK специально: history должна хранить снимок значения,
-  /// даже если связанный vault item позже удалён.
-  TextColumn get passwordItemId => text().nullable()();
-
   /// Тип OTP snapshot: TOTP или HOTP.
   TextColumn get type =>
       textEnum<OtpType>().withDefault(const Constant('totp'))();
@@ -137,7 +131,6 @@ enum OtpHistoryConstraint {
 }
 
 enum OtpHistoryIndex {
-  passwordItemId('idx_otp_history_password_item_id'),
   type('idx_otp_history_type'),
   issuer('idx_otp_history_issuer'),
   accountName('idx_otp_history_account_name'),
@@ -149,7 +142,6 @@ enum OtpHistoryIndex {
 }
 
 final List<String> otpHistoryTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${OtpHistoryIndex.passwordItemId.indexName} ON otp_history(password_item_id);',
   'CREATE INDEX IF NOT EXISTS ${OtpHistoryIndex.type.indexName} ON otp_history(type);',
   'CREATE INDEX IF NOT EXISTS ${OtpHistoryIndex.issuer.indexName} ON otp_history(issuer);',
   'CREATE INDEX IF NOT EXISTS ${OtpHistoryIndex.accountName.indexName} ON otp_history(account_name);',
