@@ -98,6 +98,21 @@ const _mainStoreIndexes = [
   'CREATE INDEX IF NOT EXISTS idx_doc_pages_primary '
       'ON document_pages (document_id, is_primary)',
 
+  // --- document_versions ---
+  // WHERE document_id = ? AND is_current = 1 (получение активной версии).
+  'CREATE INDEX IF NOT EXISTS idx_doc_versions_current '
+      'ON document_versions (document_id, is_current)',
+
+  // --- document_version_pages ---
+  // WHERE version_id = ? ORDER BY page_number ASC.
+  'CREATE INDEX IF NOT EXISTS idx_doc_version_pages_version_page '
+      'ON document_version_pages (version_id, page_number)',
+
+  // --- file_metadata_history ---
+  // Быстрый поиск snapshot по исходной metadata-записи.
+  'CREATE INDEX IF NOT EXISTS idx_fmh_metadata_id '
+      'ON file_metadata_history (metadata_id)',
+
   // --- categories ---
   // WHERE type IN (...) в category DAO
   'CREATE INDEX IF NOT EXISTS idx_categories_type '

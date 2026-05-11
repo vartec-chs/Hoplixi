@@ -5,6 +5,7 @@ library;
 
 import 'categories_timestamps.dart';
 import 'document_pages_timestamps.dart';
+import 'document_versions_timestamps.dart';
 import 'icons_timestamps.dart';
 import 'passwords_timestamps.dart';
 import 'store_meta_timestamps.dart';
@@ -12,6 +13,7 @@ import 'tags_timestamps.dart';
 
 export 'categories_timestamps.dart';
 export 'document_pages_timestamps.dart';
+export 'document_versions_timestamps.dart';
 export 'icons_timestamps.dart';
 export 'meta_touch_triggers.dart';
 export 'passwords_timestamps.dart';
@@ -29,6 +31,8 @@ final List<String> allInsertTimestampTriggers = [
   ...vaultItemsInsertTimestampTriggers,
   // Document Pages
   ...documentPagesInsertTimestampTriggers,
+  // Document Versions
+  ...documentVersionsInsertTimestampTriggers,
   // Categories
   ...categoriesInsertTimestampTriggers,
   // Tags
@@ -45,6 +49,8 @@ final List<String> allModifiedAtTriggers = [
   ...vaultItemsModifiedAtTriggers,
   // Document Pages
   ...documentPagesModifiedAtTriggers,
+  // Document Versions
+  ...documentVersionsModifiedAtTriggers,
   // Categories
   ...categoriesModifiedAtTriggers,
   // Tags
@@ -66,6 +72,8 @@ final List<String> allTimestampDropTriggers = [
 
   // Document Pages
   ...documentPagesTimestampDropTriggers,
+  // Document Versions
+  ...documentVersionsTimestampDropTriggers,
   // Categories
   ...categoriesTimestampDropTriggers,
   // Tags

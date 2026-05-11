@@ -32,7 +32,6 @@ class DocumentHistory extends Table {
   /// Количество страниц snapshot.
   IntColumn get pageCount => integer().withDefault(const Constant(0))();
 
-  /// Дополнительные метаданные snapshot.
   @override
   Set<Column> get primaryKey => {historyId};
 

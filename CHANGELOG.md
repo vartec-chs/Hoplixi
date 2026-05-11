@@ -13,6 +13,12 @@
 
 ### main_db
 
+- Добавлены таблицы нового формата документов: `document_versions`,
+  `document_version_pages` и `file_metadata_history`, включая Drift-схемы,
+  индексы, timestamp-триггеры, подключение к `MainStore` и миграцию v5.
+  `document_versions` хранит snapshot типа документа, а файловые snapshot-ссылки
+  вынесены на уровень страниц версии; страницы версии не хранят usage и
+  modified/last-used timestamps.
 - Из всех entity/history таблиц `lib/main_db/core/tables` удалены лишние
   `metadata`-поля; исключения оставлены только для `file_metadata` и
   `store_meta`, где это доменные данные.

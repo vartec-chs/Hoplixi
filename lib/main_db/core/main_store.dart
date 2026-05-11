@@ -36,8 +36,11 @@ part 'main_store.g.dart';
     BankCardItems,
     FileItems,
     FileMetadata,
+    FileMetadataHistory,
     DocumentItems,
     DocumentPages,
+    DocumentVersions,
+    DocumentVersionPages,
     // --- Теги (единая таблица) ---
     ItemTags,
     // --- Кастомные поля ---
@@ -248,8 +251,11 @@ class MainStore extends _$MainStore {
         bankCardHistory,
         fileItems,
         fileHistory,
+        fileMetadataHistory,
         documentItems,
         documentPages,
+        documentVersions,
+        documentVersionPages,
         documentHistory,
         itemTags,
         vaultItemCustomFields,

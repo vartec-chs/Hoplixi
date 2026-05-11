@@ -87,6 +87,14 @@ class FileMetadata extends Table {
       OR length(sha256) = 64
     )
     ''',
+
+    '''
+    CONSTRAINT ${FileMetadataConstraint.sha256Hex.constraintName}
+    CHECK (
+      sha256 IS NULL
+      OR sha256 GLOB '[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'
+    )
+    ''',
   ];
 }
 
@@ -103,7 +111,9 @@ enum FileMetadataConstraint {
 
   sha256NotBlank('chk_file_metadata_sha256_not_blank'),
 
-  sha256Length('chk_file_metadata_sha256_length');
+  sha256Length('chk_file_metadata_sha256_length'),
+
+  sha256Hex('chk_file_metadata_sha256_hex');
 
   const FileMetadataConstraint(this.constraintName);
 
@@ -114,7 +124,7 @@ enum FileMetadataIndex {
   fileName('idx_file_metadata_file_name'),
   fileExtension('idx_file_metadata_file_extension'),
   mimeType('idx_file_metadata_mime_type'),
-  fileHash('idx_file_metadata_file_hash');
+  sha256('idx_file_metadata_sha256');
 
   const FileMetadataIndex(this.indexName);
 
@@ -125,5 +135,5 @@ final List<String> fileMetadataTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.fileName.indexName} ON file_metadata(file_name);',
   'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.fileExtension.indexName} ON file_metadata(file_extension);',
   'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.mimeType.indexName} ON file_metadata(mime_type);',
-  'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.fileHash.indexName} ON file_metadata(file_hash);',
+  'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.sha256.indexName} ON file_metadata(sha256);',
 ];
