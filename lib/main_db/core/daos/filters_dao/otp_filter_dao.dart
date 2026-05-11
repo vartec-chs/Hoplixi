@@ -8,10 +8,10 @@ import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
 import 'package:hoplixi/main_db/core/models/filter/otps_filter.dart';
 import 'package:hoplixi/main_db/core/tables/categories.dart';
 import 'package:hoplixi/main_db/core/tables/item_tags.dart';
-import 'package:hoplixi/main_db/core/tables/note_items.dart';
-import 'package:hoplixi/main_db/core/tables/otp_items.dart';
+import 'package:hoplixi/main_db/core/tables/note/note_items.dart';
+import 'package:hoplixi/main_db/core/tables/otp/otp_items.dart';
 import 'package:hoplixi/main_db/core/tables/tags.dart';
-import 'package:hoplixi/main_db/core/tables/vault_items.dart';
+import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
 
 part 'otp_filter_dao.g.dart';
 
@@ -50,8 +50,6 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
 
       return OtpCardDto(
         id: item.id,
-        iconSource: item.iconSource,
-        iconValue: item.iconValue,
         issuer: otp.issuer,
         accountName: otp.accountName,
         type: otp.type.name,
@@ -64,8 +62,6 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
                 type: category.type.name,
                 color: category.color,
                 iconId: category.iconId,
-                iconSource: category.iconSource,
-                iconValue: category.iconValue,
               )
             : null,
         tags: tagsMap[item.id] ?? [],

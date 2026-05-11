@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/custom_field_dto.dart';
-import 'package:hoplixi/main_db/core/tables/vault_item_custom_fields.dart';
+import 'package:hoplixi/main_db/core/tables/vault_items/vault_item_custom_fields.dart';
 import 'package:uuid/uuid.dart';
 
 part 'custom_field_dao.g.dart';

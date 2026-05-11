@@ -4,8 +4,8 @@ import 'package:hoplixi/main_db/core/daos/crud/crud_types.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/wifi_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
-import 'package:hoplixi/main_db/core/tables/vault_items.dart';
-import 'package:hoplixi/main_db/core/tables/wifi_items.dart';
+import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
+import 'package:hoplixi/main_db/core/tables/wifi/wifi_items.dart';
 import 'package:uuid/uuid.dart';
 
 part 'wifi_dao.g.dart';

@@ -8,9 +8,9 @@ import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
 import 'package:hoplixi/main_db/core/models/filter/notes_filter.dart';
 import 'package:hoplixi/main_db/core/tables/categories.dart';
 import 'package:hoplixi/main_db/core/tables/item_tags.dart';
-import 'package:hoplixi/main_db/core/tables/note_items.dart';
+import 'package:hoplixi/main_db/core/tables/note/note_items.dart';
 import 'package:hoplixi/main_db/core/tables/tags.dart';
-import 'package:hoplixi/main_db/core/tables/vault_items.dart';
+import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
 
 part 'note_filter_dao.g.dart';
 
@@ -47,8 +47,6 @@ class NoteFilterDao extends DatabaseAccessor<MainStore>
         id: item.id,
         title: item.name,
         description: item.description,
-        iconSource: item.iconSource,
-        iconValue: item.iconValue,
         category: category != null
             ? CategoryInCardDto(
                 id: category.id,
@@ -56,8 +54,6 @@ class NoteFilterDao extends DatabaseAccessor<MainStore>
                 type: category.type.name,
                 color: category.color,
                 iconId: category.iconId,
-                iconSource: category.iconSource,
-                iconValue: category.iconValue,
               )
             : null,
         isFavorite: item.isFavorite,

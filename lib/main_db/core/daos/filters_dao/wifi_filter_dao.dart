@@ -8,10 +8,10 @@ import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
 import 'package:hoplixi/main_db/core/models/filter/wifis_filter.dart';
 import 'package:hoplixi/main_db/core/tables/categories.dart';
 import 'package:hoplixi/main_db/core/tables/item_tags.dart';
-import 'package:hoplixi/main_db/core/tables/note_items.dart';
+import 'package:hoplixi/main_db/core/tables/note/note_items.dart';
 import 'package:hoplixi/main_db/core/tables/tags.dart';
-import 'package:hoplixi/main_db/core/tables/vault_items.dart';
-import 'package:hoplixi/main_db/core/tables/wifi_items.dart';
+import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
+import 'package:hoplixi/main_db/core/tables/wifi/wifi_items.dart';
 
 part 'wifi_filter_dao.g.dart';
 
@@ -50,8 +50,6 @@ class WifiFilterDao extends DatabaseAccessor<MainStore>
       return WifiCardDto(
         id: item.id,
         name: item.name,
-        iconSource: item.iconSource,
-        iconValue: item.iconValue,
         ssid: wifi.ssid,
         security: wifi.security,
         hidden: wifi.hidden,
@@ -67,8 +65,6 @@ class WifiFilterDao extends DatabaseAccessor<MainStore>
                 type: category.type.name,
                 color: category.color,
                 iconId: category.iconId,
-                iconSource: category.iconSource,
-                iconValue: category.iconValue,
               )
             : null,
         tags: tagsMap[item.id] ?? [],

@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## 2026-05-11
+
+### main_db
+
+- `api_key_history` расширена до полного snapshot набора для API-ключей:
+  добавлены `tokenTypeOther`, `environmentOther`, `scopes`, `owner` и `baseUrl`,
+  а history-триггеры теперь сохраняют эти поля вместе с `maskedKey` и
+  `metadata`.
+
+- Добавлена таблица `icon_refs` для нового формата ссылок на иконки: `builtin`,
+  `pack` и `custom` с CHECK-ограничением на допустимые комбинации `iconValue`,
+  `iconPackId` и `customIconId`.
+- В `vault_items` и `categories` добавлена ссылка на `icon_refs`; legacy
+  `categories.iconId` удалён из схемы таблицы.
+- В `vault_item_history` добавлен snapshot `iconRefId`, history-триггеры теперь
+  сохраняют `icon_ref_id` из `vault_items`.
+- `MainStore` переведен на schema version 4 без отдельной versioned migration,
+  так как новый формат иконок несовместим со старой моделью.
+
 ## 2026-05-10
 
 ### docs

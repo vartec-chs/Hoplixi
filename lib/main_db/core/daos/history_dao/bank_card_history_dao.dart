@@ -2,8 +2,8 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/bank_card_history_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
-import 'package:hoplixi/main_db/core/tables/bank_card_history.dart';
-import 'package:hoplixi/main_db/core/tables/vault_item_history.dart';
+import 'package:hoplixi/main_db/core/tables/bank_card/bank_card_history.dart';
+import 'package:hoplixi/main_db/core/tables/vault_items/vault_item_history.dart';
 
 part 'bank_card_history_dao.g.dart';
 

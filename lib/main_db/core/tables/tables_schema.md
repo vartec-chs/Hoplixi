@@ -28,8 +28,7 @@ the common fields shared by every entity type.
 | description | Text     | nullable                                | Description            |
 | categoryId  | Text     | nullable, FK to categories.id (setNull) | Category reference     |
 | noteId      | Text     | nullable                                | Linked note reference  |
-| iconSource  | Text     | nullable                                | Icon source            |
-| iconValue   | Text     | nullable                                | Icon value             |
+| iconRefId   | Text     | nullable, FK to icon_refs.id (setNull)  | Icon reference         |
 | usedCount   | Int      | default: 0                              | Usage count            |
 | isFavorite  | Bool     | default: false                          | Favorite flag          |
 | isArchived  | Bool     | default: false                          | Archived flag          |
@@ -61,8 +60,7 @@ moment of each action. Type-specific history tables reference this table via
 | description        | Text     | nullable              | Description snapshot         |
 | categoryId         | Text     | nullable              | Category ID snapshot         |
 | categoryName       | Text     | nullable              | Category name at action time |
-| iconSource         | Text     | nullable              | Icon source snapshot         |
-| iconValue          | Text     | nullable              | Icon value snapshot          |
+| iconRefId          | Text     | nullable              | Icon reference ID snapshot   |
 | action             | Text     | enum: ActionInHistory | Action performed             |
 | usedCount          | Int      | default: 0            | Usage count snapshot         |
 | isFavorite         | Bool     | default: false        | Favorite flag snapshot       |
@@ -417,11 +415,16 @@ History table for API key-specific fields.
 | key                | Text     | nullable                                           | Encrypted key snapshot      |
 | maskedKey          | Text     | nullable                                           | Masked key snapshot         |
 | tokenType          | Text     | nullable                                           | Token type snapshot         |
+| tokenTypeOther     | Text     | nullable                                           | Custom token type snapshot  |
 | environment        | Text     | nullable                                           | Environment snapshot        |
+| environmentOther   | Text     | nullable                                           | Custom environment snapshot |
 | expiresAt          | DateTime | nullable                                           | Expiration snapshot         |
 | revoked            | Bool     | default: false                                     | Revoked flag snapshot       |
 | rotationPeriodDays | Int      | nullable                                           | Rotation policy snapshot    |
 | lastRotatedAt      | DateTime | nullable                                           | Rotation timestamp snapshot |
+| scopes             | Text     | nullable                                           | Scope snapshot              |
+| owner              | Text     | nullable                                           | Owner snapshot              |
+| baseUrl            | Text     | nullable                                           | Base URL snapshot           |
 | metadata           | Text     | nullable                                           | JSON metadata snapshot      |
 
 ---
@@ -772,7 +775,7 @@ tables (`password_tags`, `note_tags`, `otp_tags`, `bank_cards_tags`,
 | id          | Text     | Primary Key, UUID v4                    | Unique identifier                           |
 | name        | Text     | unique, min: 1, max: 100                | Category name                               |
 | description | Text     | nullable                                | Description                                 |
-| iconId      | Text     | nullable, FK to icons.id (setNull)      | Icon reference                              |
+| iconRefId   | Text     | nullable, FK to icon_refs.id (setNull)  | Icon reference                              |
 | color       | Text     | default: 'FFFFFF'                       | Hex color code                              |
 | type        | Text     | enum: CategoryType                      | Category type (all supported entity groups) |
 | parentId    | Text     | nullable, FK to categories.id (setNull) | Parent category (subcategory support)       |
@@ -804,6 +807,30 @@ tables (`password_tags`, `note_tags`, `otp_tags`, `bank_cards_tags`,
 | data       | Blob     | -                    | Binary image data               |
 | createdAt  | DateTime | default: now         | Creation timestamp              |
 | modifiedAt | DateTime | default: now         | Modification timestamp          |
+
+---
+
+## Table: icon_refs
+
+Reusable icon reference rows for builtin, pack-based and custom icons.
+
+| Column          | Type     | Constraints              | Description                |
+| --------------- | -------- | ------------------------ | -------------------------- |
+| id              | Text     | Primary Key, UUID v4     | Unique identifier          |
+| iconType        | Text     | enum: VaultItemIconType  | Icon reference type        |
+| iconPackId      | Text     | nullable                 | Icon pack identifier       |
+| iconValue       | Text     | nullable                 | Builtin or pack icon value |
+| customIconId    | Text     | nullable, FK to icons.id | Custom icon reference      |
+| color           | Text     | nullable                 | Foreground color override  |
+| backgroundColor | Text     | nullable                 | Background color override  |
+| createdAt       | DateTime | default: now             | Creation timestamp         |
+| modifiedAt      | DateTime | default: now             | Modification timestamp     |
+
+**CHECK:** exactly one valid reference shape:
+
+- `builtin`: `iconValue` only.
+- `pack`: `iconPackId + iconValue`.
+- `custom`: `customIconId` only.
 
 ---
 
@@ -940,6 +967,9 @@ vault_item_history (base history)
 item_tags (unified tags join)
 └── itemId → vault_items.id CASCADE
 └── tagId  → tags.id CASCADE
+
+icon_refs
+└── customIconId → icons.id RESTRICT
 ```
 
 ### Triggers

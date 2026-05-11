@@ -47,6 +47,7 @@ part 'main_store.g.dart';
     Categories,
     Tags,
     Icons,
+    IconRefs,
     // --- История (Table-Per-Type) ---
     VaultItemHistory,
     PasswordHistory,
@@ -159,14 +160,8 @@ class MainStore extends _$MainStore {
           customStatement: (sql) => customStatement(sql),
           reinstallHistoryTriggers: _installHistoryTriggers,
           categoriesTable: categories,
-          categoriesIconSource: categories.iconSource,
-          categoriesIconValue: categories.iconValue,
           vaultItemsTable: vaultItems,
-          vaultItemsIconSource: vaultItems.iconSource,
-          vaultItemsIconValue: vaultItems.iconValue,
           vaultItemHistoryTable: vaultItemHistory,
-          vaultItemHistoryIconSource: vaultItemHistory.iconSource,
-          vaultItemHistoryIconValue: vaultItemHistory.iconValue,
         );
 
         currentVersion = await runMainStoreKnownMigrations(
@@ -262,6 +257,7 @@ class MainStore extends _$MainStore {
         categories,
         tags,
         icons,
+        iconRefs,
         vaultItemHistory,
         fileMetadata,
       },

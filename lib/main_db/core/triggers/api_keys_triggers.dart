@@ -18,8 +18,7 @@ const List<String> apiKeysHistoryCreateTriggers = [
     BEGIN
       INSERT INTO vault_item_history (
         id, item_id, type, name, description, category_id, category_name,
-        icon_source,
-        icon_value,
+        icon_ref_id,
         action,
 used_count, is_favorite, is_archived, is_pinned, is_deleted,
         recent_score, last_used_at, original_created_at, original_modified_at, action_at
@@ -27,21 +26,23 @@ used_count, is_favorite, is_archived, is_pinned, is_deleted,
         lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
         OLD.id, OLD.type, OLD.name, OLD.description, OLD.category_id,
         (SELECT name FROM categories WHERE id = OLD.category_id),
-OLD.icon_source,
-OLD.icon_value,
+        OLD.icon_ref_id,
 'modified', OLD.used_count, OLD.is_favorite, OLD.is_archived,
         OLD.is_pinned, OLD.is_deleted, OLD.recent_score, OLD.last_used_at,
         OLD.created_at, OLD.modified_at, strftime('%s','now')
       );
 
       INSERT INTO api_key_history (
-        history_id, service, key, masked_key, token_type, environment, expires_at,
-        revoked, rotation_period_days, last_rotated_at, metadata
+        history_id, service, key, masked_key, token_type, token_type_other,
+        environment, environment_other, expires_at, revoked,
+        rotation_period_days, last_rotated_at, scopes, owner, base_url, metadata
       )
       SELECT
         (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
-        a.service, a.key, a.masked_key, a.token_type, a.environment, a.expires_at,
-        a.revoked, a.rotation_period_days, a.last_rotated_at, a.metadata
+        a.service, a.key, a.masked_key, a.token_type, a.token_type_other,
+        a.environment, a.environment_other, a.expires_at, a.revoked,
+        a.rotation_period_days, a.last_rotated_at, a.scopes, a.owner,
+        a.base_url, a.metadata
       FROM api_key_items a
       WHERE a.item_id = OLD.id;
     END;
@@ -55,18 +56,22 @@ OLD.icon_value,
       OLD.key != NEW.key OR
       OLD.masked_key IS NOT NEW.masked_key OR
       OLD.token_type IS NOT NEW.token_type OR
+      OLD.token_type_other IS NOT NEW.token_type_other OR
       OLD.environment IS NOT NEW.environment OR
+      OLD.environment_other IS NOT NEW.environment_other OR
       OLD.expires_at IS NOT NEW.expires_at OR
       OLD.revoked != NEW.revoked OR
       OLD.rotation_period_days IS NOT NEW.rotation_period_days OR
       OLD.last_rotated_at IS NOT NEW.last_rotated_at OR
+      OLD.scopes IS NOT NEW.scopes OR
+      OLD.owner IS NOT NEW.owner OR
+      OLD.base_url IS NOT NEW.base_url OR
       OLD.metadata IS NOT NEW.metadata
     ) AND COALESCE((SELECT value FROM store_settings WHERE key = 'history_enabled'), 'true') = 'true'
     BEGIN
       INSERT INTO vault_item_history (
         id, item_id, type, name, description, category_id, category_name,
-        icon_source,
-        icon_value,
+        icon_ref_id,
         action,
 used_count, is_favorite, is_archived, is_pinned, is_deleted,
         recent_score, last_used_at, original_created_at, original_modified_at, action_at
@@ -75,8 +80,7 @@ used_count, is_favorite, is_archived, is_pinned, is_deleted,
         lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
         v.id, v.type, v.name, v.description, v.category_id,
         (SELECT name FROM categories WHERE id = v.category_id),
-v.icon_source,
-v.icon_value,
+        v.icon_ref_id,
 'modified', v.used_count, v.is_favorite, v.is_archived, v.is_pinned,
         v.is_deleted, v.recent_score, v.last_used_at, v.created_at,
         v.modified_at, strftime('%s','now')
@@ -84,13 +88,15 @@ v.icon_value,
       WHERE v.id = OLD.item_id;
 
       INSERT INTO api_key_history (
-        history_id, service, key, masked_key, token_type, environment, expires_at,
-        revoked, rotation_period_days, last_rotated_at, metadata
+        history_id, service, key, masked_key, token_type, token_type_other,
+        environment, environment_other, expires_at, revoked,
+        rotation_period_days, last_rotated_at, scopes, owner, base_url, metadata
       ) VALUES (
         (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
-        OLD.service, OLD.key, OLD.masked_key, OLD.token_type, OLD.environment,
-        OLD.expires_at, OLD.revoked, OLD.rotation_period_days,
-        OLD.last_rotated_at, OLD.metadata
+        OLD.service, OLD.key, OLD.masked_key, OLD.token_type, OLD.token_type_other,
+        OLD.environment, OLD.environment_other, OLD.expires_at, OLD.revoked,
+        OLD.rotation_period_days, OLD.last_rotated_at, OLD.scopes, OLD.owner,
+        OLD.base_url, OLD.metadata
       );
     END;
   ''',
@@ -102,8 +108,7 @@ v.icon_value,
     BEGIN
       INSERT INTO vault_item_history (
         id, item_id, type, name, description, category_id, category_name,
-        icon_source,
-        icon_value,
+        icon_ref_id,
         action,
 used_count, is_favorite, is_archived, is_pinned, is_deleted,
         recent_score, last_used_at, original_created_at, original_modified_at, action_at
@@ -111,21 +116,23 @@ used_count, is_favorite, is_archived, is_pinned, is_deleted,
         lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
         OLD.id, OLD.type, OLD.name, OLD.description, OLD.category_id,
         (SELECT name FROM categories WHERE id = OLD.category_id),
-OLD.icon_source,
-OLD.icon_value,
+        OLD.icon_ref_id,
 'deleted', OLD.used_count, OLD.is_favorite, OLD.is_archived,
         OLD.is_pinned, OLD.is_deleted, OLD.recent_score, OLD.last_used_at,
         OLD.created_at, OLD.modified_at, strftime('%s','now')
       );
 
       INSERT INTO api_key_history (
-        history_id, service, key, masked_key, token_type, environment, expires_at,
-        revoked, rotation_period_days, last_rotated_at, metadata
+        history_id, service, key, masked_key, token_type, token_type_other,
+        environment, environment_other, expires_at, revoked,
+        rotation_period_days, last_rotated_at, scopes, owner, base_url, metadata
       )
       SELECT
         (SELECT id FROM vault_item_history WHERE rowid = last_insert_rowid()),
-        a.service, a.key, a.masked_key, a.token_type, a.environment, a.expires_at,
-        a.revoked, a.rotation_period_days, a.last_rotated_at, a.metadata
+        a.service, a.key, a.masked_key, a.token_type, a.token_type_other,
+        a.environment, a.environment_other, a.expires_at, a.revoked,
+        a.rotation_period_days, a.last_rotated_at, a.scopes, a.owner,
+        a.base_url, a.metadata
       FROM api_key_items a
       WHERE a.item_id = OLD.id;
     END;

@@ -15,8 +15,6 @@ sealed class CreateCategoryDto with _$CreateCategoryDto {
     String? description,
     String? color,
     String? iconId,
-    String? iconSource,
-    String? iconValue,
     String? parentId,
   }) = _CreateCategoryDto;
 
@@ -34,8 +32,6 @@ sealed class GetCategoryDto with _$GetCategoryDto {
     String? description,
     String? color,
     String? iconId,
-    String? iconSource,
-    String? iconValue,
     String? parentId,
     required int itemsCount,
     required DateTime createdAt,
@@ -55,8 +51,6 @@ sealed class CategoryCardDto with _$CategoryCardDto {
     required String type,
     String? color,
     String? iconId,
-    String? iconSource,
-    String? iconValue,
     String? parentId,
     required int itemsCount,
   }) = _CategoryCardDto;
@@ -73,8 +67,6 @@ sealed class CategoryInCardDto with _$CategoryInCardDto {
     required String type,
     String? color,
     String? iconId,
-    String? iconSource,
-    String? iconValue,
   }) = _CategoryInCardDto;
 
   factory CategoryInCardDto.fromJson(Map<String, dynamic> json) =>
@@ -92,8 +84,6 @@ class UpdateCategoryDto {
     this.description,
     this.color,
     this.iconId,
-    this.iconSource,
-    this.iconValue,
     this.parentId = const drift.Value.absent(),
   });
 
@@ -101,8 +91,6 @@ class UpdateCategoryDto {
   final String? description;
   final String? color;
   final String? iconId;
-  final String? iconSource;
-  final String? iconValue;
 
   /// Использует [Value] для семантики Drift:
   /// - [Value.absent()] — не обновлять поле
@@ -115,40 +103,27 @@ class UpdateCategoryDto {
     String? description,
     String? color,
     String? iconId,
-    String? iconSource,
-    String? iconValue,
     drift.Value<String?>? parentId,
   }) => UpdateCategoryDto(
     name: name ?? this.name,
     description: description ?? this.description,
     color: color ?? this.color,
     iconId: iconId ?? this.iconId,
-    iconSource: iconSource ?? this.iconSource,
-    iconValue: iconValue ?? this.iconValue,
     parentId: parentId ?? this.parentId,
   );
 }
 
 extension CategoryDtoIconRefX on GetCategoryDto {
-  IconRefDto? get effectiveIconRef => IconRefDto.fromFields(
-    iconSource: iconSource,
-    iconValue: iconValue,
-    legacyIconId: iconId,
-  );
+  IconRefDto? get effectiveIconRef =>
+      IconRefDto.fromFields(legacyIconId: iconId);
 }
 
 extension CategoryCardDtoIconRefX on CategoryCardDto {
-  IconRefDto? get effectiveIconRef => IconRefDto.fromFields(
-    iconSource: iconSource,
-    iconValue: iconValue,
-    legacyIconId: iconId,
-  );
+  IconRefDto? get effectiveIconRef =>
+      IconRefDto.fromFields(legacyIconId: iconId);
 }
 
 extension CategoryInCardDtoIconRefX on CategoryInCardDto {
-  IconRefDto? get effectiveIconRef => IconRefDto.fromFields(
-    iconSource: iconSource,
-    iconValue: iconValue,
-    legacyIconId: iconId,
-  );
+  IconRefDto? get effectiveIconRef =>
+      IconRefDto.fromFields(legacyIconId: iconId);
 }

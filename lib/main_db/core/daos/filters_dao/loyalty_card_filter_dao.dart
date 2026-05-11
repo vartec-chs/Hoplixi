@@ -1,4 +1,4 @@
-﻿import 'package:drift/drift.dart';
+import 'package:drift/drift.dart';
 import 'package:hoplixi/main_db/core/daos/filters_dao/filter.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/category_dto.dart';
@@ -8,10 +8,10 @@ import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
 import 'package:hoplixi/main_db/core/models/filter/loyalty_cards_filter.dart';
 import 'package:hoplixi/main_db/core/tables/categories.dart';
 import 'package:hoplixi/main_db/core/tables/item_tags.dart';
-import 'package:hoplixi/main_db/core/tables/loyalty_card_items.dart';
-import 'package:hoplixi/main_db/core/tables/note_items.dart';
+import 'package:hoplixi/main_db/core/tables/loyalty_card/loyalty_card_items.dart';
+import 'package:hoplixi/main_db/core/tables/note/note_items.dart';
 import 'package:hoplixi/main_db/core/tables/tags.dart';
-import 'package:hoplixi/main_db/core/tables/vault_items.dart';
+import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
 
 part 'loyalty_card_filter_dao.g.dart';
 
@@ -55,8 +55,6 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
       return LoyaltyCardCardDto(
         id: item.id,
         name: item.name,
-        iconSource: item.iconSource,
-        iconValue: item.iconValue,
         programName: loyalty.programName,
         cardNumber: loyalty.cardNumber,
         holderName: loyalty.holderName,
@@ -73,8 +71,6 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
                 type: category.type.name,
                 color: category.color,
                 iconId: category.iconId,
-                iconSource: category.iconSource,
-                iconValue: category.iconValue,
               )
             : null,
         tags: tagsMap[item.id] ?? [],

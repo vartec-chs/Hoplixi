@@ -7,7 +7,7 @@ import 'package:hoplixi/main_db/core/models/dto/linked_vault_item_card_dto.dart'
 import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/tables/item_tags.dart';
-import 'package:hoplixi/main_db/core/tables/vault_items.dart';
+import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
 
 part 'vault_item_dao.g.dart';
 
@@ -118,13 +118,7 @@ class VaultItemDao extends DatabaseAccessor<MainStore>
 
   Future<bool> setIconRef(String id, IconRefDto? iconRef) async {
     final result = await (update(vaultItems)..where((v) => v.id.equals(id)))
-        .write(
-          VaultItemsCompanion(
-            iconSource: Value(iconRef?.sourceValue),
-            iconValue: Value(iconRef?.value),
-            modifiedAt: Value(DateTime.now()),
-          ),
-        );
+        .write(VaultItemsCompanion(modifiedAt: Value(DateTime.now())));
     return result > 0;
   }
 
@@ -299,8 +293,6 @@ class VaultItemDao extends DatabaseAccessor<MainStore>
                 type: category.type.name,
                 color: category.color,
                 iconId: category.iconId,
-                iconSource: category.iconSource,
-                iconValue: category.iconValue,
               )
             : null,
         tags: tagsMap[item.id] ?? const <TagInCardDto>[],

@@ -18,8 +18,7 @@ const List<String> wifisHistoryCreateTriggers = [
     BEGIN
       INSERT INTO vault_item_history (
         id, item_id, type, name, description, category_id, category_name,
-        icon_source,
-        icon_value,
+        icon_ref_id,
         action,
 used_count, is_favorite, is_archived, is_pinned, is_deleted,
         recent_score, last_used_at, original_created_at, original_modified_at, action_at
@@ -27,8 +26,7 @@ used_count, is_favorite, is_archived, is_pinned, is_deleted,
         lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
         OLD.id, OLD.type, OLD.name, OLD.description, OLD.category_id,
         (SELECT name FROM categories WHERE id = OLD.category_id),
-OLD.icon_source,
-OLD.icon_value,
+        OLD.icon_ref_id,
 'modified', OLD.used_count, OLD.is_favorite, OLD.is_archived,
         OLD.is_pinned, OLD.is_deleted, OLD.recent_score, OLD.last_used_at,
         OLD.created_at, OLD.modified_at, strftime('%s','now')
@@ -68,8 +66,7 @@ OLD.icon_value,
     BEGIN
       INSERT INTO vault_item_history (
         id, item_id, type, name, description, category_id, category_name,
-        icon_source,
-        icon_value,
+        icon_ref_id,
         action,
 used_count, is_favorite, is_archived, is_pinned, is_deleted,
         recent_score, last_used_at, original_created_at, original_modified_at, action_at
@@ -78,8 +75,7 @@ used_count, is_favorite, is_archived, is_pinned, is_deleted,
         lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
         v.id, v.type, v.name, v.description, v.category_id,
         (SELECT name FROM categories WHERE id = v.category_id),
-v.icon_source,
-v.icon_value,
+        v.icon_ref_id,
 'modified', v.used_count, v.is_favorite, v.is_archived, v.is_pinned,
         v.is_deleted, v.recent_score, v.last_used_at, v.created_at,
         v.modified_at, strftime('%s','now')
@@ -106,8 +102,7 @@ v.icon_value,
     BEGIN
       INSERT INTO vault_item_history (
         id, item_id, type, name, description, category_id, category_name,
-        icon_source,
-        icon_value,
+        icon_ref_id,
         action,
 used_count, is_favorite, is_archived, is_pinned, is_deleted,
         recent_score, last_used_at, original_created_at, original_modified_at, action_at
@@ -115,8 +110,7 @@ used_count, is_favorite, is_archived, is_pinned, is_deleted,
         lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('ab89',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))),
         OLD.id, OLD.type, OLD.name, OLD.description, OLD.category_id,
         (SELECT name FROM categories WHERE id = OLD.category_id),
-OLD.icon_source,
-OLD.icon_value,
+        OLD.icon_ref_id,
 'deleted', OLD.used_count, OLD.is_favorite, OLD.is_archived,
         OLD.is_pinned, OLD.is_deleted, OLD.recent_score, OLD.last_used_at,
         OLD.created_at, OLD.modified_at, strftime('%s','now')

@@ -8,10 +8,10 @@ import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
 import 'package:hoplixi/main_db/core/models/filter/ssh_keys_filter.dart';
 import 'package:hoplixi/main_db/core/tables/categories.dart';
 import 'package:hoplixi/main_db/core/tables/item_tags.dart';
-import 'package:hoplixi/main_db/core/tables/note_items.dart';
-import 'package:hoplixi/main_db/core/tables/ssh_key_items.dart';
+import 'package:hoplixi/main_db/core/tables/note/note_items.dart';
+import 'package:hoplixi/main_db/core/tables/ssh_key/ssh_key_items.dart';
 import 'package:hoplixi/main_db/core/tables/tags.dart';
-import 'package:hoplixi/main_db/core/tables/vault_items.dart';
+import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
 
 part 'ssh_key_filter_dao.g.dart';
 
@@ -50,8 +50,6 @@ class SshKeyFilterDao extends DatabaseAccessor<MainStore>
       return SshKeyCardDto(
         id: item.id,
         name: item.name,
-        iconSource: item.iconSource,
-        iconValue: item.iconValue,
         publicKey: ssh.publicKey,
         keyType: ssh.keyType,
         keySize: ssh.keySize,
@@ -67,8 +65,6 @@ class SshKeyFilterDao extends DatabaseAccessor<MainStore>
                 type: category.type.name,
                 color: category.color,
                 iconId: category.iconId,
-                iconSource: category.iconSource,
-                iconValue: category.iconValue,
               )
             : null,
         tags: tagsMap[item.id] ?? [],

@@ -7,11 +7,11 @@ import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
 import 'package:hoplixi/main_db/core/models/filter/base_filter.dart';
 import 'package:hoplixi/main_db/core/models/filter/crypto_wallets_filter.dart';
 import 'package:hoplixi/main_db/core/tables/categories.dart';
-import 'package:hoplixi/main_db/core/tables/crypto_wallet_items.dart';
+import 'package:hoplixi/main_db/core/tables/crypto_wallet/crypto_wallet_items.dart';
 import 'package:hoplixi/main_db/core/tables/item_tags.dart';
-import 'package:hoplixi/main_db/core/tables/note_items.dart';
+import 'package:hoplixi/main_db/core/tables/note/note_items.dart';
 import 'package:hoplixi/main_db/core/tables/tags.dart';
-import 'package:hoplixi/main_db/core/tables/vault_items.dart';
+import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
 
 part 'crypto_wallet_filter_dao.g.dart';
 
@@ -81,8 +81,6 @@ class CryptoWalletFilterDao extends DatabaseAccessor<MainStore>
                 type: category.type.name,
                 color: category.color,
                 iconId: category.iconId,
-                iconSource: category.iconSource,
-                iconValue: category.iconValue,
               )
             : null,
         tags: tagsMap[item.id] ?? [],
