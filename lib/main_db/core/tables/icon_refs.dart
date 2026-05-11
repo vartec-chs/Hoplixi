@@ -3,13 +3,13 @@ import 'package:uuid/uuid.dart';
 
 import 'icons.dart';
 
-enum VaultItemIconType { builtin, pack, custom }
+enum IconSourceType { builtin, pack, custom }
 
 @DataClassName('IconRefsData')
 class IconRefs extends Table {
   TextColumn get id => text().clientDefault(() => const Uuid().v4())();
 
-  TextColumn get iconType => textEnum<VaultItemIconType>()();
+  TextColumn get iconSourceType => textEnum<IconSourceType>()();
 
   /// ID пака иконок, если iconType = pack.
   ///
@@ -55,7 +55,7 @@ class IconRefs extends Table {
         CONSTRAINT ${IconRefConstraint.validIconSource.constraintName}
         CHECK (
           (
-            icon_type = 'builtin'
+            icon_source_type = 'builtin'
             AND icon_pack_id IS NULL
             AND icon_value IS NOT NULL
             AND length(trim(icon_value)) > 0
@@ -63,7 +63,7 @@ class IconRefs extends Table {
           )
           OR
           (
-            icon_type = 'pack'
+            icon_source_type = 'pack'
             AND icon_pack_id IS NOT NULL
             AND length(trim(icon_pack_id)) > 0
             AND icon_value IS NOT NULL
@@ -72,7 +72,7 @@ class IconRefs extends Table {
           )
           OR
           (
-            icon_type = 'custom'
+            icon_source_type = 'custom'
             AND icon_pack_id IS NULL
             AND icon_value IS NULL
             AND custom_icon_id IS NOT NULL
@@ -129,10 +129,14 @@ enum IconRefConstraint {
 }
 
 enum IconRefIndex {
-  iconType('idx_icon_refs_icon_type'),
+  iconSourceType('idx_icon_refs_icon_source_type'),
   iconPackId('idx_icon_refs_icon_pack_id'),
   customIconId('idx_icon_refs_custom_icon_id'),
-  iconValue('idx_icon_refs_icon_value');
+  iconValue('idx_icon_refs_icon_value'),
+
+  uniqueBuiltin('uq_icon_refs_builtin'),
+  uniquePack('uq_icon_refs_pack'),
+  uniqueCustom('uq_icon_refs_custom');
 
   const IconRefIndex(this.indexName);
 
@@ -140,8 +144,45 @@ enum IconRefIndex {
 }
 
 final List<String> iconRefsTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${IconRefIndex.iconType.indexName} ON icon_refs(icon_type);',
+  'CREATE INDEX IF NOT EXISTS ${IconRefIndex.iconSourceType.indexName} ON icon_refs(icon_source_type);',
   'CREATE INDEX IF NOT EXISTS ${IconRefIndex.iconPackId.indexName} ON icon_refs(icon_pack_id);',
   'CREATE INDEX IF NOT EXISTS ${IconRefIndex.customIconId.indexName} ON icon_refs(custom_icon_id);',
   'CREATE INDEX IF NOT EXISTS ${IconRefIndex.iconValue.indexName} ON icon_refs(icon_value);',
+  '''
+  CREATE UNIQUE INDEX IF NOT EXISTS ${IconRefIndex.uniqueBuiltin.indexName}
+  ON icon_refs(
+    icon_key,
+    COALESCE(color, ''),
+    COALESCE(background_color, '')
+  )
+  WHERE source_type = 'builtin';
+  ''',
+
+  '''
+  CREATE UNIQUE INDEX IF NOT EXISTS ${IconRefIndex.uniquePack.indexName}
+  ON icon_refs(
+    icon_pack_id,
+    icon_key,
+    COALESCE(color, ''),
+    COALESCE(background_color, '')
+  )
+  WHERE source_type = 'pack';
+  ''',
+
+  '''
+  CREATE UNIQUE INDEX IF NOT EXISTS ${IconRefIndex.uniqueCustom.indexName}
+  ON icon_refs(
+    custom_icon_id,
+    COALESCE(color, ''),
+    COALESCE(background_color, '')
+  )
+  WHERE source_type = 'custom';
+  ''',
 ];
+
+///ПРАВИЛО
+///
+//если icon_ref полностью совпадает по sourceType/iconPackId/iconKey/customIconId/color/backgroundColor
+//→ переиспользовать существующий icon_ref
+//если отличается хотя бы цвет
+//→ создать новый icon_ref
