@@ -66,6 +66,11 @@ class Categories extends Table {
   Set<Column> get primaryKey => {id};
 
   @override
+  List<Set<Column>> get uniqueKeys => [
+    {name, type},
+  ];
+
+  @override
   String get tableName => 'categories';
 
   @override

@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
-import 'icons.dart';
+import 'custom_icons.dart';
 
 enum IconSourceType { builtin, pack, custom }
 

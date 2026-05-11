@@ -3,7 +3,7 @@ import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/icon_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/index.dart';
 import 'package:hoplixi/main_db/core/models/filter/icons_filter.dart';
-import 'package:hoplixi/main_db/core/tables/system/icons.dart';
+import 'package:hoplixi/main_db/core/tables/system/custom_icons.dart';
 import 'package:uuid/uuid.dart';
 
 part 'icon_dao.g.dart';

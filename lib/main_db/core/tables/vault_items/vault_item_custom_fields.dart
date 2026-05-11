@@ -4,37 +4,16 @@ import 'package:uuid/uuid.dart';
 import 'vault_items.dart';
 
 enum CustomFieldType {
-  /// Обычный текст.
   text,
-
-  /// Скрытое/чувствительное значение.
   concealed,
-
-  /// URL-адрес.
   url,
-
-  /// Email.
   email,
-
-  /// Номер телефона.
   phone,
-
-  /// Дата.
   date,
-
-  /// Числовое значение.
   number,
-
-  /// Многострочный текст.
   multiline,
-
-  /// Boolean/checkbox.
   boolean,
-
-  /// JSON/string для сложных значений.
   json,
-
-  /// Прочее.
   other,
 }
 

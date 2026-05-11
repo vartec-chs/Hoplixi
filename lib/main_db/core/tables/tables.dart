@@ -35,7 +35,7 @@ export 'ssh_key/ssh_key_history.dart';
 export 'ssh_key/ssh_key_items.dart';
 export 'system/categories.dart';
 export 'system/icon_refs.dart';
-export 'system/icons.dart';
+export 'system/custom_icons.dart';
 export 'system/item_links.dart';
 export 'system/item_tags.dart';
 export 'system/store_meta_table.dart';

@@ -25,8 +25,7 @@ class FileMetadata extends Table {
   IntColumn get fileSize => integer()();
 
   /// SHA-256 хэш для проверки целостности.
-  TextColumn get fileHash => text().withLength(min: 1, max: 255).nullable()();
-
+  TextColumn get sha256 => text().withLength(min: 64, max: 64).nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -74,10 +73,18 @@ class FileMetadata extends Table {
     ''',
 
     '''
-    CONSTRAINT ${FileMetadataConstraint.fileHashNotBlank.constraintName}
+    CONSTRAINT ${FileMetadataConstraint.sha256NotBlank.constraintName}
     CHECK (
-      file_hash IS NULL
-      OR length(trim(file_hash)) > 0
+      sha256 IS NULL
+      OR length(trim(sha256)) > 0 
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${FileMetadataConstraint.sha256Length.constraintName}
+    CHECK (
+      sha256 IS NULL
+      OR length(sha256) = 64
     )
     ''',
   ];
@@ -94,7 +101,9 @@ enum FileMetadataConstraint {
 
   fileSizeNonNegative('chk_file_metadata_file_size_non_negative'),
 
-  fileHashNotBlank('chk_file_metadata_file_hash_not_blank');
+  sha256NotBlank('chk_file_metadata_sha256_not_blank'),
+
+  sha256Length('chk_file_metadata_sha256_length');
 
   const FileMetadataConstraint(this.constraintName);
 
