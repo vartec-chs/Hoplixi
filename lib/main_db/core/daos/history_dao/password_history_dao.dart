@@ -181,7 +181,6 @@ class PasswordHistoryDao extends DatabaseAccessor<MainStore>
         action: ActionInHistoryX.fromString(dto.action),
         name: dto.name,
         description: Value(dto.description),
-        categoryName: Value(dto.categoryName),
         usedCount: Value(dto.usedCount ?? 0),
         isArchived: Value(dto.isArchived ?? false),
         isPinned: Value(dto.isPinned ?? false),

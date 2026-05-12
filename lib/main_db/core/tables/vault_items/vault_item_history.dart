@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
-import '../system/categories.dart';
+import '../system/item_category_history.dart';
 import 'vault_items.dart';
 
 enum VaultItemHistoryKind {
@@ -39,8 +39,9 @@ class VaultItemHistory extends Table {
       text().references(VaultItems, #id, onDelete: KeyAction.cascade)();
 
   /// Тип записи истории: snapshot или event.
-  TextColumn get kind => textEnum<VaultItemHistoryKind>()
-      .withDefault(const Constant('snapshot'))();
+  TextColumn get kind => textEnum<VaultItemHistoryKind>().withDefault(
+    const Constant('snapshot'),
+  )();
 
   /// Тип действия.
   TextColumn get action => textEnum<VaultItemHistoryAction>()();
@@ -56,37 +57,16 @@ class VaultItemHistory extends Table {
 
   /// ID категории на момент snapshot.
   ///
-  /// Не FK: категория может быть удалена.
+  /// Не FK: категория может быть удалена. Данные самой категории snapshot-ятся
+  /// в item_category_history.
   TextColumn get categoryId => text().nullable()();
 
-  /// Snapshot имени категории.
-  TextColumn get categoryName =>
-      text().withLength(min: 1, max: 255).nullable()();
-
-  /// Snapshot типа категории.
-  TextColumn get categoryType => textEnum<CategoryType>().nullable()();
-
-  /// Snapshot цвета категории.
-  TextColumn get categoryColor => text().nullable()();
-
-  /// Snapshot icon_ref категории.
-  TextColumn get categoryIconRefId => text().nullable()();
-
-  /// Snapshot тегов на момент истории.
-  ///
-  /// Формат задаётся приложением, SQLite его не валидирует.
-  ///
-  /// Пример:
-  /// [
-  ///   {
-  ///     "id": "tag-1",
-  ///     "name": "Work",
-  ///     "type": "password",
-  ///     "color": "#FFAA00",
-  ///     "iconRefId": null
-  ///   }
-  /// ]
-  TextColumn get tagsSnapshotJson => text().withDefault(const Constant('[]'))();
+  /// Snapshot категории, связанный с этой историей item.
+  TextColumn get categoryHistoryId => text().nullable().references(
+    ItemCategoryHistory,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
 
   /// ID icon_ref snapshot.
   ///
@@ -143,56 +123,6 @@ class VaultItemHistory extends Table {
     ''',
 
     '''
-    CONSTRAINT ${VaultItemHistoryConstraint.categoryNameNotBlank.constraintName}
-    CHECK (
-      category_name IS NULL
-      OR length(trim(category_name)) > 0
-    )
-    ''',
-
-    '''
-    CONSTRAINT ${VaultItemHistoryConstraint.categoryColorNotBlank.constraintName}
-    CHECK (
-      category_color IS NULL
-      OR length(trim(category_color)) > 0
-    )
-    ''',
-
-    '''
-    CONSTRAINT ${VaultItemHistoryConstraint.categoryIconRefIdNotBlank.constraintName}
-    CHECK (
-      category_icon_ref_id IS NULL
-      OR length(trim(category_icon_ref_id)) > 0
-    )
-    ''',
-
-    '''
-    CONSTRAINT ${VaultItemHistoryConstraint.categorySnapshotConsistency.constraintName}
-    CHECK (
-      (
-        category_id IS NULL
-        AND category_name IS NULL
-        AND category_type IS NULL
-        AND category_color IS NULL
-        AND category_icon_ref_id IS NULL
-      )
-      OR
-      (
-        category_id IS NOT NULL
-        AND category_name IS NOT NULL
-        AND category_type IS NOT NULL
-      )
-    )
-    ''',
-
-    '''
-    CONSTRAINT ${VaultItemHistoryConstraint.tagsSnapshotJsonNotBlank.constraintName}
-    CHECK (
-      length(trim(tags_snapshot_json)) > 0
-    )
-    ''',
-
-    '''
     CONSTRAINT ${VaultItemHistoryConstraint.iconRefIdNotBlank.constraintName}
     CHECK (
       icon_ref_id IS NULL
@@ -242,22 +172,6 @@ class VaultItemHistory extends Table {
 enum VaultItemHistoryConstraint {
   nameNotBlank('chk_vault_item_history_name_not_blank'),
 
-  categoryNameNotBlank('chk_vault_item_history_category_name_not_blank'),
-
-  categoryColorNotBlank('chk_vault_item_history_category_color_not_blank'),
-
-  categoryIconRefIdNotBlank(
-    'chk_vault_item_history_category_icon_ref_id_not_blank',
-  ),
-
-  categorySnapshotConsistency(
-    'chk_vault_item_history_category_snapshot_consistency',
-  ),
-
-  tagsSnapshotJsonNotBlank(
-    'chk_vault_item_history_tags_snapshot_json_not_blank',
-  ),
-
   iconRefIdNotBlank('chk_vault_item_history_icon_ref_id_not_blank'),
 
   usedCountNonNegative('chk_vault_item_history_used_count_non_negative'),
@@ -284,9 +198,7 @@ enum VaultItemHistoryIndex {
   name('idx_vault_item_history_name'),
 
   categoryId('idx_vault_item_history_category_id'),
-  categoryName('idx_vault_item_history_category_name'),
-  categoryType('idx_vault_item_history_category_type'),
-  categoryIconRefId('idx_vault_item_history_category_icon_ref_id'),
+  categoryHistoryId('idx_vault_item_history_category_history_id'),
 
   iconRefId('idx_vault_item_history_icon_ref_id'),
 
@@ -322,9 +234,7 @@ final List<String> vaultItemHistoryTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${VaultItemHistoryIndex.name.indexName} ON vault_item_history(name);',
 
   'CREATE INDEX IF NOT EXISTS ${VaultItemHistoryIndex.categoryId.indexName} ON vault_item_history(category_id);',
-  'CREATE INDEX IF NOT EXISTS ${VaultItemHistoryIndex.categoryName.indexName} ON vault_item_history(category_name);',
-  'CREATE INDEX IF NOT EXISTS ${VaultItemHistoryIndex.categoryType.indexName} ON vault_item_history(category_type);',
-  'CREATE INDEX IF NOT EXISTS ${VaultItemHistoryIndex.categoryIconRefId.indexName} ON vault_item_history(category_icon_ref_id);',
+  'CREATE INDEX IF NOT EXISTS ${VaultItemHistoryIndex.categoryHistoryId.indexName} ON vault_item_history(category_history_id);',
 
   'CREATE INDEX IF NOT EXISTS ${VaultItemHistoryIndex.iconRefId.indexName} ON vault_item_history(icon_ref_id);',
 

@@ -125,7 +125,6 @@ class LoyaltyCardHistoryDao extends DatabaseAccessor<MainStore>
         name: dto.name,
         description: Value(dto.description),
         categoryId: Value(dto.categoryId),
-        categoryName: Value(dto.categoryName),
         usedCount: Value(dto.usedCount),
         isFavorite: Value(dto.isFavorite),
         isArchived: Value(dto.isArchived),

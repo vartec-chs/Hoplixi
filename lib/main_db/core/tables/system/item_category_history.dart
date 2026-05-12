@@ -1,19 +1,12 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
-import '../vault_items/vault_item_history.dart';
 import 'categories.dart';
 
 /// Snapshot категории vault item для восстановления по snapshotId.
 @DataClassName('ItemCategoryHistoryData')
 class ItemCategoryHistory extends Table {
   TextColumn get id => text().clientDefault(() => const Uuid().v4())();
-
-  TextColumn get historyId => text().nullable().references(
-    VaultItemHistory,
-    #id,
-    onDelete: KeyAction.cascade,
-  )();
 
   /// UUID снимка для группировки связанных записей.
   TextColumn get snapshotId => text().nullable()();
@@ -85,7 +78,6 @@ enum ItemCategoryHistoryConstraint {
 
 enum ItemCategoryHistoryIndex {
   snapshotId('idx_item_category_history_snapshot_id'),
-  historyId('idx_item_category_history_history_id'),
   itemId('idx_item_category_history_item_id'),
   categoryId('idx_item_category_history_category_id'),
   type('idx_item_category_history_type'),
@@ -98,7 +90,6 @@ enum ItemCategoryHistoryIndex {
 
 final List<String> itemCategoryHistoryTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${ItemCategoryHistoryIndex.snapshotId.indexName} ON item_category_history(snapshot_id);',
-  'CREATE INDEX IF NOT EXISTS ${ItemCategoryHistoryIndex.historyId.indexName} ON item_category_history(history_id);',
   'CREATE INDEX IF NOT EXISTS ${ItemCategoryHistoryIndex.itemId.indexName} ON item_category_history(item_id);',
   'CREATE INDEX IF NOT EXISTS ${ItemCategoryHistoryIndex.categoryId.indexName} ON item_category_history(category_id);',
   'CREATE INDEX IF NOT EXISTS ${ItemCategoryHistoryIndex.type.indexName} ON item_category_history(type);',

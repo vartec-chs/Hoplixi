@@ -167,7 +167,6 @@ class OtpHistoryDao extends DatabaseAccessor<MainStore>
         type: VaultItemType.otp,
         action: ActionInHistoryX.fromString(dto.action),
         name: dto.issuer ?? dto.accountName ?? '',
-        categoryName: Value(dto.categoryName),
         usedCount: Value(dto.usedCount),
         isFavorite: Value(dto.isFavorite),
         isPinned: Value(dto.isPinned),

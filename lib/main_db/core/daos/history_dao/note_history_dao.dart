@@ -168,7 +168,6 @@ class NoteHistoryDao extends DatabaseAccessor<MainStore>
         action: ActionInHistoryX.fromString(dto.action),
         name: dto.title,
         description: Value(dto.description),
-        categoryName: Value(dto.categoryName),
         usedCount: Value(dto.usedCount ?? 0),
         isFavorite: Value(dto.isFavorite ?? false),
         isArchived: Value(dto.isArchived ?? false),

@@ -1,6 +1,8 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
+enum FileIntegrityStatus { unknown, ok, missing, corrupted, deleted }
+
 @DataClassName('FileMetadataData')
 class FileMetadata extends Table {
   /// UUID метаданных.
@@ -26,6 +28,28 @@ class FileMetadata extends Table {
 
   /// SHA-256 хэш для проверки целостности.
   TextColumn get sha256 => text().withLength(min: 64, max: 64).nullable()();
+
+  /// Файл не найден по ожидаемому пути.
+  BoolColumn get isMissing => boolean().withDefault(const Constant(false))();
+
+  /// Файл штатно удалён через приложение.
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+
+  /// Когда впервые обнаружено отсутствие файла.
+  DateTimeColumn get missingDetectedAt => dateTime().nullable()();
+
+  /// Когда файл штатно удалён через приложение.
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  /// Последний известный путь, если текущий `filePath` уже невалиден.
+  TextColumn get lastKnownPath => text().nullable()();
+
+  /// Время последней проверки наличия и SHA-256.
+  DateTimeColumn get lastIntegrityCheckAt => dateTime().nullable()();
+
+  /// Последний известный результат проверки физического файла.
+  TextColumn get integrityStatus =>
+      textEnum<FileIntegrityStatus>().withDefault(const Constant('unknown'))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -95,6 +119,59 @@ class FileMetadata extends Table {
       OR sha256 GLOB '[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'
     )
     ''',
+
+    '''
+    CONSTRAINT ${FileMetadataConstraint.lastKnownPathNotBlank.constraintName}
+    CHECK (
+      last_known_path IS NULL
+      OR length(trim(last_known_path)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${FileMetadataConstraint.integrityStatusKnown.constraintName}
+    CHECK (
+      integrity_status IN (
+        'unknown',
+        'ok',
+        'missing',
+        'corrupted',
+        'deleted'
+      )
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${FileMetadataConstraint.missingDetectedAtRequired.constraintName}
+    CHECK (
+      is_missing = 0
+      OR missing_detected_at IS NOT NULL
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${FileMetadataConstraint.deletedAtRequired.constraintName}
+    CHECK (
+      is_deleted = 0
+      OR deleted_at IS NOT NULL
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${FileMetadataConstraint.integrityStatusMatchesMissing.constraintName}
+    CHECK (
+      (integrity_status = 'missing' AND is_missing = 1 AND is_deleted = 0)
+      OR (integrity_status != 'missing' AND is_missing = 0)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${FileMetadataConstraint.integrityStatusMatchesDeleted.constraintName}
+    CHECK (
+      (integrity_status = 'deleted' AND is_deleted = 1 AND is_missing = 0)
+      OR (integrity_status != 'deleted' AND is_deleted = 0)
+    )
+    ''',
   ];
 }
 
@@ -113,7 +190,23 @@ enum FileMetadataConstraint {
 
   sha256Length('chk_file_metadata_sha256_length'),
 
-  sha256Hex('chk_file_metadata_sha256_hex');
+  sha256Hex('chk_file_metadata_sha256_hex'),
+
+  lastKnownPathNotBlank('chk_file_metadata_last_known_path_not_blank'),
+
+  integrityStatusKnown('chk_file_metadata_integrity_status_known'),
+
+  missingDetectedAtRequired('chk_file_metadata_missing_detected_at_required'),
+
+  deletedAtRequired('chk_file_metadata_deleted_at_required'),
+
+  integrityStatusMatchesMissing(
+    'chk_file_metadata_integrity_status_matches_missing',
+  ),
+
+  integrityStatusMatchesDeleted(
+    'chk_file_metadata_integrity_status_matches_deleted',
+  );
 
   const FileMetadataConstraint(this.constraintName);
 
@@ -124,7 +217,9 @@ enum FileMetadataIndex {
   fileName('idx_file_metadata_file_name'),
   fileExtension('idx_file_metadata_file_extension'),
   mimeType('idx_file_metadata_mime_type'),
-  sha256('idx_file_metadata_sha256');
+  sha256('idx_file_metadata_sha256'),
+  integrityStatus('idx_file_metadata_integrity_status'),
+  lastIntegrityCheckAt('idx_file_metadata_last_integrity_check_at');
 
   const FileMetadataIndex(this.indexName);
 
@@ -136,4 +231,6 @@ final List<String> fileMetadataTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.fileExtension.indexName} ON file_metadata(file_extension);',
   'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.mimeType.indexName} ON file_metadata(mime_type);',
   'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.sha256.indexName} ON file_metadata(sha256);',
+  'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.integrityStatus.indexName} ON file_metadata(integrity_status);',
+  'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.lastIntegrityCheckAt.indexName} ON file_metadata(last_integrity_check_at);',
 ];

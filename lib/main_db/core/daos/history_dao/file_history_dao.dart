@@ -186,7 +186,6 @@ class FileHistoryDao extends DatabaseAccessor<MainStore>
         action: ActionInHistoryX.fromString(dto.action),
         name: dto.name,
         description: Value(dto.description),
-        categoryName: Value(dto.categoryName),
         usedCount: Value(dto.usedCount),
         isFavorite: Value(dto.isFavorite),
         isArchived: Value(dto.isArchived),

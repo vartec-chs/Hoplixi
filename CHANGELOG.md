@@ -28,12 +28,22 @@
   проверки принадлежности version-page тому же документу.
 - Добавлены `item_category_history` и `vault_item_tag_history` для
   восстановления категории и тегов по `snapshotId`.
+- Из `vault_item_history` убраны дублирующие snapshot-поля категории и тегов:
+  данные категории теперь восстанавливаются из `item_category_history`, теги —
+  из `vault_item_tag_history`.
+- `vault_item_history` получила прямую ссылку `categoryHistoryId` на
+  `item_category_history`; теги остаются связаны как one-to-many через
+  `vault_item_tag_history.historyId`.
 - В history/snapshot таблицы добавлен `snapshotId` для группировки связанных
   записей одного снимка.
 - `file_metadata_history` получила явного владельца snapshot через
   `ownerKind/ownerId` (`fileItemHistory`, `documentVersionPage`,
   `attachmentSnapshot`, `standalone`), чтобы nullable `historyId` не скрывал
   назначение blob snapshot.
+- `file_metadata` расширена physical-layer состоянием файла:
+  `isMissing/isDeleted`, timestamps обнаружения/удаления, `lastKnownPath`,
+  `lastIntegrityCheckAt` и `integrityStatus` (`unknown`, `ok`, `missing`,
+  `corrupted`, `deleted`).
 - Из всех entity/history таблиц `lib/main_db/core/tables` удалены лишние
   `metadata`-поля; исключения оставлены только для `file_metadata` и
   `store_meta`, где это доменные данные.
