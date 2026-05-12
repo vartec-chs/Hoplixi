@@ -6,7 +6,7 @@ import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_dra
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/filter_providers.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
-import 'package:hoplixi/main_db/core/models/filter/index.dart';
+import 'package:hoplixi/main_db/core/old/models/filter/index.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 
 const int _kPageSize = 20;

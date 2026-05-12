@@ -5,7 +5,7 @@ import 'package:cryptography/cryptography.dart';
 import 'package:drift/drift.dart';
 import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
-import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/main_store_dto.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 

@@ -4,7 +4,7 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/core/models/dto/index.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 
 import '../models/ssh_key_form_state.dart';

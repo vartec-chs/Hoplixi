@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/core/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/main_db/core/models/enums/icon_source.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/icon_ref_dto.dart';
+import 'package:hoplixi/main_db/core/old/models/enums/icon_source.dart';
 import 'package:hoplixi/features/custom_icon_packs/picker/icon_pack_picker_modal.dart';
 import 'package:hoplixi/features/password_manager/pickers/icon_picker/icon_picker.dart';
 import 'package:hoplixi/shared/ui/button.dart';

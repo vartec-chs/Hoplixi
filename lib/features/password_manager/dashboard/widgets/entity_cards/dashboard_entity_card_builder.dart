@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/main_db/core/models/dto/index.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
 
 import '../../models/dashboard_view_mode.dart';
 import 'api_key/api_key_grid_card.dart';

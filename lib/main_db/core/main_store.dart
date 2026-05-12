@@ -1,11 +1,10 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/main_db/core/daos/daos.dart';
-import 'package:hoplixi/main_db/core/main_store_history_triggers_installer.dart';
+import 'package:hoplixi/main_db/core/old/daos/daos.dart';
 import 'package:hoplixi/main_db/core/main_store_indexes_installer.dart';
 import 'package:hoplixi/main_db/core/migrations/index.dart';
-import 'package:hoplixi/main_db/core/models/enums/index.dart';
+import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
 import 'package:hoplixi/main_db/core/tables/tables.dart';
 import 'package:uuid/uuid.dart';
 
@@ -276,20 +275,20 @@ class MainStore extends _$MainStore {
 
   /// Установка триггеров для автоматической записи истории
   /// изменений и управления временными метками.
-  Future<void> _installHistoryTriggers() {
-    return installMainStoreHistoryTriggers(
-      executeStatement: customStatement,
-      logTag: _logTag,
-    );
-  }
+  // Future<void> _installHistoryTriggers() {
+  //   return installMainStoreHistoryTriggers(
+  //     executeStatement: customStatement,
+  //     logTag: _logTag,
+  //   );
+  // }
 
   /// Создание индексов для оптимизации запросов.
   ///
   /// Вызывается один раз при [onCreate] после [createAll].
-  Future<void> _installIndexes() {
-    return installMainStoreIndexes(
-      executeStatement: customStatement,
-      logTag: _logTag,
-    );
-  }
+  // Future<void> _installIndexes() {
+  //   return installMainStoreIndexes(
+  //     executeStatement: customStatement,
+  //     logTag: _logTag,
+  //   );
+  // }
 }

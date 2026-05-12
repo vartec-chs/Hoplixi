@@ -4,7 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
 import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/logger.dart' hide Session;
-import 'package:hoplixi/main_db/core/models/dto/index.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
 import 'package:hoplixi/main_db/models/session.dart';
 import 'package:hoplixi/main_db/usecases/utils/error_handling.dart';
 import 'package:result_dart/result_dart.dart';

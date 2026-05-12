@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
-import 'package:hoplixi/main_db/core/models/dto/file_dto.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/file_dto.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 import '../shared/shared.dart';

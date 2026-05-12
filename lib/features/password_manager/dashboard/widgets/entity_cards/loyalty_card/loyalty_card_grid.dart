@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/main_db/core/models/dto/loyalty_card_dto.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/loyalty_card_dto.dart';
 import '../shared/shared.dart';
 
 class LoyaltyCardGridCard extends ConsumerStatefulWidget {

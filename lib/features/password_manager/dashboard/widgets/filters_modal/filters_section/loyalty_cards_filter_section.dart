@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/main_db/core/models/filter/loyalty_cards_filter.dart';
+import 'package:hoplixi/main_db/core/old/models/filter/loyalty_cards_filter.dart';
 import 'controller_sync.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 

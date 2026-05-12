@@ -5,8 +5,8 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer_scope.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/widgets/tag_picker_field.dart';
-import 'package:hoplixi/main_db/core/models/dto/index.dart';
-import 'package:hoplixi/main_db/core/models/enums/index.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
+import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 

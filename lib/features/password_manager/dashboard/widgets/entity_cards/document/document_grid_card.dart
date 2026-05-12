@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import '../shared/shared.dart';
-import 'package:hoplixi/main_db/core/models/dto/document_dto.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/document_dto.dart';
 
 class DocumentGridCard extends ConsumerStatefulWidget {
   final DocumentCardDto document;

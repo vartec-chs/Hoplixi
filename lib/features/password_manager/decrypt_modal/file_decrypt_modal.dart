@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/main_db/core/models/dto/file_dto.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/file_dto.dart';
 import 'package:hoplixi/main_db/providers/decrypted_files_guard_provider.dart';
 import 'package:hoplixi/main_db/providers/other/service_providers.dart';
 import 'package:hoplixi/shared/ui/button.dart';

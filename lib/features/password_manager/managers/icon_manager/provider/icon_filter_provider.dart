@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/core/models/filter/icons_filter.dart';
+import 'package:hoplixi/main_db/core/old/models/filter/icons_filter.dart';
 
 /// Провайдер для управления состоянием фильтра иконок
 final iconFilterProvider = NotifierProvider<IconFilterNotifier, IconsFilter>(

@@ -5,9 +5,9 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer/models/drawer_category_filter_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/filter_providers.dart';
-import 'package:hoplixi/main_db/core/models/dto/category_tree_node.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/category_tree_node.dart';
 import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
-import 'package:hoplixi/main_db/core/models/filter/index.dart';
+import 'package:hoplixi/main_db/core/old/models/filter/index.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';

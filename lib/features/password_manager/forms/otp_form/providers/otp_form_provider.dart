@@ -6,8 +6,8 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_
 import 'package:hoplixi/features/password_manager/forms/otp_form/utils/otp_uri_parser.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
-import 'package:hoplixi/main_db/core/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/main_db/core/models/dto/otp_dto.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/icon_ref_dto.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/otp_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 

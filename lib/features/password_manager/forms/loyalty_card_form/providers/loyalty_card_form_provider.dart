@@ -4,8 +4,8 @@ import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
-import 'package:hoplixi/main_db/core/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/main_db/core/models/dto/loyalty_card_dto.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/icon_ref_dto.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/loyalty_card_dto.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 
 import '../models/loyalty_card_form_state.dart';

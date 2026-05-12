@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import '../shared/shared.dart';
-import 'package:hoplixi/main_db/core/models/dto/index.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 
 class CertificateListCard extends ConsumerStatefulWidget {

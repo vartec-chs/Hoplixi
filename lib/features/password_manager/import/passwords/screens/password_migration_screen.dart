@@ -5,7 +5,7 @@ import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/forms/form_close_button.dart';
 import 'package:hoplixi/features/password_manager/import/passwords/providers/password_migration_provider.dart';
-import 'package:hoplixi/main_db/core/models/dto/password_dto.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/password_dto.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/notification_card.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';

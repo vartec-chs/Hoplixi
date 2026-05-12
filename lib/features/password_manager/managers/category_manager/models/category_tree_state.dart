@@ -1,4 +1,4 @@
-import 'package:hoplixi/main_db/core/models/dto/category_tree_node.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/category_tree_node.dart';
 
 class CategoryTreeState {
   const CategoryTreeState({

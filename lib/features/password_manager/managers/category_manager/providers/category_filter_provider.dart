@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_list_refresh_trigger_provider.dart';
-import 'package:hoplixi/main_db/core/models/enums/index.dart';
-import 'package:hoplixi/main_db/core/models/filter/categories_filter.dart';
+import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
+import 'package:hoplixi/main_db/core/old/models/filter/categories_filter.dart';
 
 /// Провайдер для управления состоянием фильтра категорий
 final categoryFilterProvider =

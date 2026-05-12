@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/errors/app_error.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_filter_tab.dart';
-import 'package:hoplixi/main_db/core/models/dto/index.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
 import 'package:result_dart/result_dart.dart';
 
 import '../data/main_db_dashboard_repository.dart';

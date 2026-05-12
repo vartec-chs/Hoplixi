@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/core/models/dto/index.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 
 final duplicatePasswordsAnalysisProvider =

@@ -8,7 +8,7 @@ import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/import/otp/otp_extractor.dart';
 import 'package:hoplixi/features/password_manager/import/otp/providers/import_otp_state.dart';
-import 'package:hoplixi/main_db/core/models/dto/otp_dto.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/otp_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:image/image.dart' as img;

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/pickers/file_picker/models/file_picker_models.dart';
 import 'package:hoplixi/features/password_manager/pickers/file_picker/providers/file_picker_providers.dart';
 import 'package:hoplixi/features/password_manager/pickers/file_picker/widgets/file_list_tile.dart';
-import 'package:hoplixi/main_db/core/models/dto/file_dto.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/file_dto.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';

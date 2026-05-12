@@ -14,7 +14,7 @@ import 'package:hoplixi/features/onboarding/domain/guide_start_mode.dart';
 import 'package:hoplixi/features/onboarding/presentation/showcase_help_button.dart';
 import 'package:hoplixi/features/onboarding/presentation/showcase_registration.dart';
 import 'package:hoplixi/features/password_generator/password_generator_widget.dart';
-import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_db/providers/db_history_provider.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/main_db/ui/store_open_migration_dialog.dart';

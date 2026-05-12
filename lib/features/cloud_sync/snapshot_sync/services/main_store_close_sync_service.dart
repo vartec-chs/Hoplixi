@@ -3,7 +3,7 @@ import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.
 import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_exception.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
-import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/main_store_dto.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/close_sync_state.dart';
 
 class CloseSyncService {

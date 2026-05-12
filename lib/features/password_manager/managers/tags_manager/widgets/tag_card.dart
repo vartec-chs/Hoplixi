@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/main_db/core/models/dto/tag_dto.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/tag_dto.dart';
 
 /// Современная карточка тега с градиентным фоном и анимациями.
 ///

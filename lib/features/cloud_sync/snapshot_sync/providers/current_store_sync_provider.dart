@@ -7,7 +7,7 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_m
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_service.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
-import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_db/models/db_state.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hoplixi/main_db/core/models/filter/index.dart';
+import 'package:hoplixi/main_db/core/old/models/filter/index.dart';
 import 'controller_sync.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 

@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/models.dart' as logger_models;
-import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_db/services/main_store_storage_service.dart';
 import 'package:hoplixi/main_db/services/store_manifest_service/model/store_manifest.dart';
 import 'package:hoplixi/main_db/services/store_manifest_service/store_manifest_service.dart';

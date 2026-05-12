@@ -4,7 +4,7 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/settings/providers/settings_prefs_providers.dart';
-import 'package:hoplixi/main_db/core/models/dto/index.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
 
 import '../models/dashboard_view_mode.dart';
 import 'entity_cards/dashboard_entity_card_builder.dart';

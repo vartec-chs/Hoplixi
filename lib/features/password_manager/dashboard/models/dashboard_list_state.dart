@@ -1,5 +1,5 @@
 import 'package:hoplixi/core/errors/app_error.dart';
-import 'package:hoplixi/main_db/core/models/dto/index.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
 
 final class DashboardListState {
   const DashboardListState({

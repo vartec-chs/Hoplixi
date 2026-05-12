@@ -1,5 +1,5 @@
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
-import 'package:hoplixi/main_db/core/models/enums/index.dart';
+import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
 
 const int kHistoryPageSize = 20;
 

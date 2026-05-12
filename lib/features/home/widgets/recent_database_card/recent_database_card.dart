@@ -16,7 +16,7 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_syn
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/features/home/providers/recent_database_provider.dart';
 import 'package:hoplixi/features/password_manager/open_store/services/store_password_attempt_limiter_service.dart';
-import 'package:hoplixi/main_db/core/models/dto/main_store_dto.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/main_store_dto.dart';
 import 'package:hoplixi/main_db/providers/db_history_provider.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/main_db/services/db_history_services/model/db_history_model.dart';

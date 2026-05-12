@@ -5,7 +5,7 @@ import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/store_settings/index.dart';
-import 'package:hoplixi/main_db/core/models/filter/index.dart';
+import 'package:hoplixi/main_db/core/old/models/filter/index.dart';
 import 'package:hoplixi/main_db/providers/main_store_backup_orchestrator_provider.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
