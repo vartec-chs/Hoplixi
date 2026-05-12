@@ -20,13 +20,20 @@
   вынесены на уровень страниц версии; страницы версии не хранят usage и
   modified/last-used timestamps.
 - `document_items` сведена к `itemId/currentVersionId`; источником
-  восстановления документа теперь является `document_versions`.
+  восстановления документа теперь является `document_versions`, а флаг
+  `document_versions.isCurrent` удалён как дублирующий.
 - `document_pages` сведена к `id/documentId/currentVersionPageId`; источником
   восстановления страницы теперь является `document_version_pages`.
+  Добавлены уникальность `(documentId, currentVersionPageId)` и триггеры
+  проверки принадлежности version-page тому же документу.
 - Добавлены `item_category_history` и `vault_item_tag_history` для
   восстановления категории и тегов по `snapshotId`.
 - В history/snapshot таблицы добавлен `snapshotId` для группировки связанных
   записей одного снимка.
+- `file_metadata_history` получила явного владельца snapshot через
+  `ownerKind/ownerId` (`fileItemHistory`, `documentVersionPage`,
+  `attachmentSnapshot`, `standalone`), чтобы nullable `historyId` не скрывал
+  назначение blob snapshot.
 - Из всех entity/history таблиц `lib/main_db/core/tables` удалены лишние
   `metadata`-поля; исключения оставлены только для `file_metadata` и
   `store_meta`, где это доменные данные.

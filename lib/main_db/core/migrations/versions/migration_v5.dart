@@ -54,6 +54,8 @@ const List<String> _documentSnapshotTables = [
     CREATE TABLE IF NOT EXISTS file_metadata_history (
       id TEXT NOT NULL PRIMARY KEY,
       history_id TEXT NULL REFERENCES vault_item_history(id) ON DELETE CASCADE,
+      owner_kind TEXT NOT NULL DEFAULT 'standalone',
+      owner_id TEXT NULL,
       metadata_id TEXT NULL,
       file_name TEXT NOT NULL,
       file_extension TEXT NULL,
@@ -69,7 +71,12 @@ const List<String> _documentSnapshotTables = [
       CONSTRAINT chk_file_metadata_history_mime_type_not_blank CHECK (length(trim(mime_type)) > 0),
       CONSTRAINT chk_file_metadata_history_file_size_non_negative CHECK (file_size >= 0),
       CONSTRAINT chk_file_metadata_history_sha256_not_blank CHECK (sha256 IS NULL OR length(trim(sha256)) > 0),
-      CONSTRAINT chk_file_metadata_history_sha256_length CHECK (sha256 IS NULL OR length(sha256) = 64)
+      CONSTRAINT chk_file_metadata_history_sha256_length CHECK (sha256 IS NULL OR length(sha256) = 64),
+      CONSTRAINT chk_file_metadata_history_owner_kind_known CHECK (owner_kind IN ('fileItemHistory', 'documentVersionPage', 'attachmentSnapshot', 'standalone')),
+      CONSTRAINT chk_file_metadata_history_owner_id_required CHECK (owner_kind = 'standalone' OR (owner_id IS NOT NULL AND length(trim(owner_id)) > 0)),
+      CONSTRAINT chk_file_metadata_history_owner_id_must_be_null_for_standalone CHECK (owner_kind != 'standalone' OR owner_id IS NULL),
+      CONSTRAINT chk_file_metadata_history_history_id_must_be_null_for_standalone CHECK (owner_kind != 'standalone' OR history_id IS NULL),
+      CONSTRAINT chk_file_metadata_history_file_item_owner_matches_history CHECK (owner_kind != 'fileItemHistory' OR (history_id IS NOT NULL AND owner_id = history_id))
     );
   ''',
   '''
@@ -82,7 +89,6 @@ const List<String> _documentSnapshotTables = [
       document_type_other TEXT NULL,
       aggregate_sha256_hash TEXT NULL,
       page_count INTEGER NOT NULL DEFAULT 0,
-      is_current INTEGER NOT NULL DEFAULT 0,
       snapshot_id TEXT NULL,
       created_at INTEGER NOT NULL,
       modified_at INTEGER NOT NULL,
@@ -167,6 +173,7 @@ const List<String> _documentSnapshotIndexes = [
   'CREATE INDEX IF NOT EXISTS idx_document_items_current_version_id ON document_items(current_version_id);',
   'CREATE INDEX IF NOT EXISTS idx_document_pages_current_version_page_id ON document_pages(current_version_page_id);',
   'CREATE INDEX IF NOT EXISTS idx_doc_pages_current_version_page ON document_pages(current_version_page_id);',
+  'CREATE UNIQUE INDEX IF NOT EXISTS uq_document_pages_document_id_current_version_page_id ON document_pages(document_id, current_version_page_id);',
   'CREATE INDEX IF NOT EXISTS idx_vault_item_history_snapshot_id ON vault_item_history(snapshot_id);',
   'CREATE INDEX IF NOT EXISTS idx_password_history_snapshot_id ON password_history(snapshot_id);',
   'CREATE INDEX IF NOT EXISTS idx_api_key_history_snapshot_id ON api_key_history(snapshot_id);',
@@ -186,6 +193,9 @@ const List<String> _documentSnapshotIndexes = [
   'CREATE INDEX IF NOT EXISTS idx_vault_item_custom_fields_history_snapshot_id ON vault_item_custom_fields_history(snapshot_id);',
   'CREATE INDEX IF NOT EXISTS idx_file_metadata_history_snapshot_id ON file_metadata_history(snapshot_id);',
   'CREATE INDEX IF NOT EXISTS idx_file_metadata_history_history_id ON file_metadata_history(history_id);',
+  'CREATE INDEX IF NOT EXISTS idx_file_metadata_history_owner_kind ON file_metadata_history(owner_kind);',
+  'CREATE INDEX IF NOT EXISTS idx_file_metadata_history_owner_id ON file_metadata_history(owner_id);',
+  'CREATE INDEX IF NOT EXISTS idx_file_metadata_history_owner ON file_metadata_history(owner_kind, owner_id);',
   'CREATE INDEX IF NOT EXISTS idx_file_metadata_history_metadata_id ON file_metadata_history(metadata_id);',
   'CREATE INDEX IF NOT EXISTS idx_file_metadata_history_mime_type ON file_metadata_history(mime_type);',
   'CREATE INDEX IF NOT EXISTS idx_file_metadata_history_sha256 ON file_metadata_history(sha256);',
@@ -195,7 +205,6 @@ const List<String> _documentSnapshotIndexes = [
   'CREATE INDEX IF NOT EXISTS idx_document_versions_document_type ON document_versions(document_type);',
   'CREATE INDEX IF NOT EXISTS idx_document_versions_aggregate_sha256_hash ON document_versions(aggregate_sha256_hash);',
   'CREATE INDEX IF NOT EXISTS idx_document_versions_created_at ON document_versions(created_at);',
-  'CREATE UNIQUE INDEX IF NOT EXISTS uq_document_versions_one_current_per_document ON document_versions(document_id) WHERE is_current = 1;',
   'CREATE INDEX IF NOT EXISTS idx_document_version_pages_snapshot_id ON document_version_pages(snapshot_id);',
   'CREATE INDEX IF NOT EXISTS idx_document_version_pages_version_id ON document_version_pages(version_id);',
   'CREATE INDEX IF NOT EXISTS idx_document_version_pages_metadata_history_id ON document_version_pages(metadata_history_id);',

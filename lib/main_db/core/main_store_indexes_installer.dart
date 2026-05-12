@@ -97,11 +97,6 @@ const _mainStoreIndexes = [
   'CREATE INDEX IF NOT EXISTS idx_doc_pages_current_version_page '
       'ON document_pages (current_version_page_id)',
 
-  // --- document_versions ---
-  // WHERE document_id = ? AND is_current = 1 (получение активной версии).
-  'CREATE INDEX IF NOT EXISTS idx_doc_versions_current '
-      'ON document_versions (document_id, is_current)',
-
   // --- document_version_pages ---
   // WHERE version_id = ? ORDER BY page_number ASC.
   'CREATE INDEX IF NOT EXISTS idx_doc_version_pages_version_page '

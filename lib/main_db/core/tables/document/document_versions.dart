@@ -19,9 +19,11 @@ class DocumentVersions extends Table {
       text().references(VaultItems, #id, onDelete: KeyAction.cascade)();
 
   /// Ссылка на историю изменений документа.
-  TextColumn get itemHistoryId => text()
-    .nullable()
-    .references(VaultItemHistory, #id, onDelete: KeyAction.setNull)();
+  TextColumn get itemHistoryId => text().nullable().references(
+    VaultItemHistory,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
 
   /// Номер версии документа, начиная с 1.
   IntColumn get versionNumber => integer()();
@@ -39,9 +41,6 @@ class DocumentVersions extends Table {
 
   /// Количество страниц в версии.
   IntColumn get pageCount => integer().withDefault(const Constant(0))();
-
-  /// Текущая активная версия документа.
-  BoolColumn get isCurrent => boolean().withDefault(const Constant(false))();
 
   /// UUID снимка для группировки связанных записей.
   TextColumn get snapshotId => text().nullable()();
@@ -132,8 +131,7 @@ enum DocumentVersionIndex {
   documentId('idx_document_versions_document_id'),
   documentType('idx_document_versions_document_type'),
   aggregateSha256Hash('idx_document_versions_aggregate_sha256_hash'),
-  createdAt('idx_document_versions_created_at'),
-  uniqueCurrentPerDocument('uq_document_versions_one_current_per_document');
+  createdAt('idx_document_versions_created_at');
 
   const DocumentVersionIndex(this.indexName);
 
@@ -146,8 +144,4 @@ final List<String> documentVersionsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${DocumentVersionIndex.documentType.indexName} ON document_versions(document_type);',
   'CREATE INDEX IF NOT EXISTS ${DocumentVersionIndex.aggregateSha256Hash.indexName} ON document_versions(aggregate_sha256_hash);',
   'CREATE INDEX IF NOT EXISTS ${DocumentVersionIndex.createdAt.indexName} ON document_versions(created_at);',
-
-  // Только одна current-версия на документ.
-  'CREATE UNIQUE INDEX IF NOT EXISTS ${DocumentVersionIndex.uniqueCurrentPerDocument.indexName} '
-      'ON document_versions(document_id) WHERE is_current = 1;',
 ];

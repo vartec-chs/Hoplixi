@@ -1,4 +1,5 @@
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/main_db/core/tables/document/document_pages.dart';
 import 'package:hoplixi/main_db/core/triggers/index.dart';
 
 typedef SqlStatementExecutor = Future<void> Function(String sql);
@@ -28,6 +29,7 @@ Future<void> installMainStoreHistoryTriggers({
       ...filesHistoryDropTriggers,
       ...bankCardsHistoryDropTriggers,
       ...documentsDropTriggers,
+      ...documentPagesTableDropTriggers,
       ...loyaltyCardsHistoryDropTriggers,
       ...customFieldsHistoryDropTriggers,
     ]) {
@@ -63,6 +65,7 @@ Future<void> installMainStoreHistoryTriggers({
       ...bankCardsHistoryCreateTriggers,
       ...documentsHistoryCreateTriggers,
       ...documentsTriggers,
+      ...documentPagesTableTriggers,
       ...loyaltyCardsHistoryCreateTriggers,
       ...customFieldsHistoryCreateTriggers,
     ]) {
