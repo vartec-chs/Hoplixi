@@ -40,6 +40,9 @@ class ApiKeyHistory extends Table {
   TextColumn get baseUrl => text().withLength(min: 1, max: 2048).nullable()();
 
   /// JSON object string snapshot.
+  /// UUID снимка для группировки связанных записей.
+  TextColumn get snapshotId => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -113,10 +116,24 @@ enum ApiKeyHistoryConstraint {
   final String constraintName;
 }
 
-const List<String> apiKeyHistoryTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS idx_api_key_history_service ON api_key_history(service);',
-  'CREATE INDEX IF NOT EXISTS idx_api_key_history_token_type ON api_key_history(token_type);',
-  'CREATE INDEX IF NOT EXISTS idx_api_key_history_environment ON api_key_history(environment);',
-  'CREATE INDEX IF NOT EXISTS idx_api_key_history_expires_at ON api_key_history(expires_at);',
-  'CREATE INDEX IF NOT EXISTS idx_api_key_history_revoked ON api_key_history(revoked);',
+enum ApiKeyHistoryIndex {
+  snapshotId('idx_api_key_history_snapshot_id'),
+  service('idx_api_key_history_service'),
+  tokenType('idx_api_key_history_token_type'),
+  environment('idx_api_key_history_environment'),
+  expiresAt('idx_api_key_history_expires_at'),
+  revoked('idx_api_key_history_revoked');
+
+  const ApiKeyHistoryIndex(this.indexName);
+
+  final String indexName;
+}
+
+final List<String> apiKeyHistoryTableIndexes = [
+  'CREATE INDEX IF NOT EXISTS ${ApiKeyHistoryIndex.snapshotId.indexName} ON api_key_history(snapshot_id);',
+  'CREATE INDEX IF NOT EXISTS ${ApiKeyHistoryIndex.service.indexName} ON api_key_history(service);',
+  'CREATE INDEX IF NOT EXISTS ${ApiKeyHistoryIndex.tokenType.indexName} ON api_key_history(token_type);',
+  'CREATE INDEX IF NOT EXISTS ${ApiKeyHistoryIndex.environment.indexName} ON api_key_history(environment);',
+  'CREATE INDEX IF NOT EXISTS ${ApiKeyHistoryIndex.expiresAt.indexName} ON api_key_history(expires_at);',
+  'CREATE INDEX IF NOT EXISTS ${ApiKeyHistoryIndex.revoked.indexName} ON api_key_history(revoked);',
 ];

@@ -11,6 +11,9 @@ class RecoveryCodesHistory extends Table {
   TextColumn get historyId =>
       text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
 
+  /// UUID снимка для группировки связанных записей.
+  TextColumn get snapshotId => text().nullable()();
+
   /// Snapshot общего количества кодов.
   IntColumn get codesCount => integer().withDefault(const Constant(0))();
 

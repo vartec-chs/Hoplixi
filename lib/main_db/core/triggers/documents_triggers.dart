@@ -221,37 +221,11 @@ const List<String> documentsHistoryCreateTriggers = [
   ''',
 ];
 
-/// Каскадные триггеры для очистки метаданных страниц документа.
+/// Дополнительные триггеры документов.
 ///
-/// `document_pages.document_id` ссылается на `vault_items.id` с CASCADE,
-/// поэтому страницы удаляются автоматически. Эти триггеры обеспечивают
-/// дополнительную очистку `file_metadata`.
-const List<String> documentsTriggers = [
-  // Триггер для удаления метаданных файла при удалении страницы
-  '''
-    CREATE TRIGGER IF NOT EXISTS document_page_delete_cleanup
-    AFTER DELETE ON document_pages
-    FOR EACH ROW
-    WHEN OLD.metadata_id IS NOT NULL
-    BEGIN
-      -- Удаляем метаданные, так как страница удалена
-      DELETE FROM file_metadata WHERE id = OLD.metadata_id;
-    END;
-  ''',
-
-  // Триггер для удаления старых метаданных файла при обновлении страницы
-  '''
-    CREATE TRIGGER IF NOT EXISTS document_page_update_cleanup
-    AFTER UPDATE ON document_pages
-    FOR EACH ROW
-    WHEN OLD.metadata_id IS NOT NULL
-      AND (NEW.metadata_id IS NULL OR OLD.metadata_id != NEW.metadata_id)
-    BEGIN
-      -- Удаляем старые метаданные, так как ссылка изменилась или удалена
-      DELETE FROM file_metadata WHERE id = OLD.metadata_id;
-    END;
-  ''',
-];
+/// Live-таблица document_pages больше не владеет file_metadata, поэтому cleanup
+/// метаданных страницы здесь не выполняется.
+const List<String> documentsTriggers = [];
 
 /// Операторы для удаления триггеров документов.
 const List<String> documentsDropTriggers = [

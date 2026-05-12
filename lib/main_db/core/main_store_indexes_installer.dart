@@ -87,16 +87,15 @@ const _mainStoreIndexes = [
   'CREATE INDEX IF NOT EXISTS idx_vih_item_type_action_at '
       'ON vault_item_history (item_id, type, action_at DESC)',
 
-  // --- note_links ---
-  // Индекс на target_vault_item_id ускоряет входящие note -> item ссылки.
-  'CREATE INDEX IF NOT EXISTS idx_note_links_target '
-      'ON note_links (target_vault_item_id)',
+  // --- item_links ---
+  // Индекс на target_item_id ускоряет входящие item -> item ссылки.
+  'CREATE INDEX IF NOT EXISTS idx_item_links_target '
+      'ON item_links (target_item_id)',
 
   // --- document_pages ---
-  // WHERE document_id = ? AND is_primary = 1 (получение обложки).
-  // UNIQUE (document_id, page_number) не покрывает is_primary.
-  'CREATE INDEX IF NOT EXISTS idx_doc_pages_primary '
-      'ON document_pages (document_id, is_primary)',
+  // Live-указатель текущей версии страницы.
+  'CREATE INDEX IF NOT EXISTS idx_doc_pages_current_version_page '
+      'ON document_pages (current_version_page_id)',
 
   // --- document_versions ---
   // WHERE document_id = ? AND is_current = 1 (получение активной версии).

@@ -52,6 +52,9 @@ class ItemLinkHistory extends Table {
   /// Snapshot даты изменения исходной связи.
   DateTimeColumn get modifiedAt => dateTime()();
 
+  /// UUID снимка для группировки связанных записей.
+  TextColumn get snapshotId => text().nullable()();
+
   /// Когда был создан snapshot.
   DateTimeColumn get snapshotCreatedAt =>
       dateTime().clientDefault(() => DateTime.now())();
@@ -137,6 +140,7 @@ enum ItemLinkHistoryConstraint {
 }
 
 enum ItemLinkHistoryIndex {
+  snapshotId('idx_item_link_history_snapshot_id'),
   historyId('idx_item_link_history_history_id'),
   sourceLinkId('idx_item_link_history_source_link_id'),
   sourceItemId('idx_item_link_history_source_item_id'),
@@ -153,6 +157,7 @@ enum ItemLinkHistoryIndex {
 }
 
 final List<String> itemLinkHistoryTableIndexes = [
+  'CREATE INDEX IF NOT EXISTS ${ItemLinkHistoryIndex.snapshotId.indexName} ON item_link_history(snapshot_id);',
   'CREATE INDEX IF NOT EXISTS ${ItemLinkHistoryIndex.historyId.indexName} ON item_link_history(history_id);',
   'CREATE INDEX IF NOT EXISTS ${ItemLinkHistoryIndex.sourceLinkId.indexName} ON item_link_history(source_link_id);',
   'CREATE INDEX IF NOT EXISTS ${ItemLinkHistoryIndex.sourceItemId.indexName} ON item_link_history(source_item_id);',

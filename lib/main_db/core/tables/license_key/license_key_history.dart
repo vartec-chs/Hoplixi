@@ -13,6 +13,9 @@ class LicenseKeyHistory extends Table {
   TextColumn get historyId =>
       text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
 
+  /// UUID снимка для группировки связанных записей.
+  TextColumn get snapshotId => text().nullable()();
+
   /// Продукт/приложение snapshot.
   TextColumn get product => text().withLength(min: 1, max: 255)();
 

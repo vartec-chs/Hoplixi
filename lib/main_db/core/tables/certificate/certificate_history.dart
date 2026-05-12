@@ -8,6 +8,9 @@ class CertificateHistory extends Table {
   TextColumn get historyId =>
       text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
 
+  /// UUID снимка для группировки связанных записей.
+  TextColumn get snapshotId => text().nullable()();
+
   /// Формат сертификата snapshot.
   TextColumn get certificateFormat =>
       textEnum<CertificateFormat>().nullable()();

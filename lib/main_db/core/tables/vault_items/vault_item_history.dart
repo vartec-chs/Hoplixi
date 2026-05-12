@@ -120,6 +120,9 @@ class VaultItemHistory extends Table {
   /// Дата последнего использования snapshot.
   DateTimeColumn get lastUsedAt => dateTime().nullable()();
 
+  /// UUID снимка для группировки связанных записей.
+  TextColumn get snapshotId => text().nullable()();
+
   /// Когда создана запись истории.
   DateTimeColumn get historyCreatedAt =>
       dateTime().clientDefault(() => DateTime.now())();
@@ -273,6 +276,7 @@ enum VaultItemHistoryConstraint {
 }
 
 enum VaultItemHistoryIndex {
+  snapshotId('idx_vault_item_history_snapshot_id'),
   itemId('idx_vault_item_history_item_id'),
   kind('idx_vault_item_history_kind'),
   action('idx_vault_item_history_action'),
@@ -310,6 +314,7 @@ enum VaultItemHistoryIndex {
 }
 
 final List<String> vaultItemHistoryTableIndexes = [
+  'CREATE INDEX IF NOT EXISTS ${VaultItemHistoryIndex.snapshotId.indexName} ON vault_item_history(snapshot_id);',
   'CREATE INDEX IF NOT EXISTS ${VaultItemHistoryIndex.itemId.indexName} ON vault_item_history(item_id);',
   'CREATE INDEX IF NOT EXISTS ${VaultItemHistoryIndex.kind.indexName} ON vault_item_history(kind);',
   'CREATE INDEX IF NOT EXISTS ${VaultItemHistoryIndex.action.indexName} ON vault_item_history(action);',

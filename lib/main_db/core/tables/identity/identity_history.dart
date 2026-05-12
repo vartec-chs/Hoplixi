@@ -14,6 +14,9 @@ class IdentityHistory extends Table {
   TextColumn get historyId =>
       text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
 
+  /// UUID снимка для группировки связанных записей.
+  TextColumn get snapshotId => text().nullable()();
+
   /// Тип документа snapshot.
   TextColumn get idType => textEnum<IdentityDocumentType>()();
 

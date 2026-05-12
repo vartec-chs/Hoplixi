@@ -10,6 +10,9 @@ class ContactHistory extends Table {
   TextColumn get historyId =>
       text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
 
+  /// UUID снимка для группировки связанных записей.
+  TextColumn get snapshotId => text().nullable()();
+
   /// Основной телефон snapshot.
   TextColumn get phone => text().withLength(min: 1, max: 64).nullable()();
 

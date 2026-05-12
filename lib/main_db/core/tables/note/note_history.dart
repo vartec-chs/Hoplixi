@@ -13,6 +13,9 @@ class NoteHistory extends Table {
   TextColumn get historyId =>
       text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
 
+  /// UUID снимка для группировки связанных записей.
+  TextColumn get snapshotId => text().nullable()();
+
   /// Quill Delta JSON snapshot.
   ///
   /// Nullable intentionally:

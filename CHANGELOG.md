@@ -19,6 +19,14 @@
   `document_versions` хранит snapshot типа документа, а файловые snapshot-ссылки
   вынесены на уровень страниц версии; страницы версии не хранят usage и
   modified/last-used timestamps.
+- `document_items` сведена к `itemId/currentVersionId`; источником
+  восстановления документа теперь является `document_versions`.
+- `document_pages` сведена к `id/documentId/currentVersionPageId`; источником
+  восстановления страницы теперь является `document_version_pages`.
+- Добавлены `item_category_history` и `vault_item_tag_history` для
+  восстановления категории и тегов по `snapshotId`.
+- В history/snapshot таблицы добавлен `snapshotId` для группировки связанных
+  записей одного снимка.
 - Из всех entity/history таблиц `lib/main_db/core/tables` удалены лишние
   `metadata`-поля; исключения оставлены только для `file_metadata` и
   `store_meta`, где это доменные данные.

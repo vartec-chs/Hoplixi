@@ -1,119 +1,36 @@
 import 'package:drift/drift.dart';
 
 import '../vault_items/vault_items.dart';
+import 'document_versions.dart';
 
-enum DocumentType {
-  passport,
-  idCard,
-  driverLicense,
-  contract,
-  invoice,
-  receipt,
-  certificate,
-  insurance,
-  tax,
-  medical,
-  legal,
-  financial,
-  other,
-}
+export 'document_types.dart';
 
 /// Type-specific таблица для документов.
 ///
-/// Содержит только поля, специфичные для документа.
-/// Общие поля: name/title, description, categoryId, isFavorite и т.д.
-/// хранятся в vault_items.
+/// Все восстанавливаемые данные документа хранятся в document_versions.
+/// Здесь остаётся только ссылка на текущую версию.
 @DataClassName('DocumentItemsData')
 class DocumentItems extends Table {
-  /// PK и FK → vault_items.id ON DELETE CASCADE
+  /// PK и FK → vault_items.id ON DELETE CASCADE.
   TextColumn get itemId =>
       text().references(VaultItems, #id, onDelete: KeyAction.cascade)();
 
-  /// Тип документа: passport, contract, invoice и т.д.
-  TextColumn get documentType => textEnum<DocumentType>().nullable()();
+  /// Текущая активная версия документа.
+  TextColumn get currentVersionId => text().nullable().references(
+    DocumentVersions,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
 
-  /// Дополнительный тип документа, если documentType = other.
-  TextColumn get documentTypeOther =>
-      text().withLength(min: 1, max: 255).nullable()();
-
-  /// Хэш текущей агрегированной версии документа/страниц.
-  TextColumn get aggregateSha256Hash =>
-      text().withLength(min: 1, max: 255).nullable()();
-
-  /// Количество страниц.
-  IntColumn get pageCount => integer().withDefault(const Constant(0))();
-
-  /// Дополнительные метаданные в JSON-формате.
-  ///
-  /// Например: страна, номер документа, issuing authority, OCR language,
-  /// source, import info, classification confidence.
   @override
   Set<Column> get primaryKey => {itemId};
 
   @override
   String get tableName => 'document_items';
-
-  @override
-  List<String> get customConstraints => [
-    '''
-    CONSTRAINT ${DocumentItemConstraint.documentTypeOtherRequired.constraintName}
-    CHECK (
-      document_type IS NULL
-      OR document_type != 'other'
-      OR (
-        document_type_other IS NOT NULL
-        AND length(trim(document_type_other)) > 0
-      )
-    )
-    ''',
-
-    '''
-    CONSTRAINT ${DocumentItemConstraint.documentTypeOtherMustBeNull.constraintName}
-    CHECK (
-      document_type = 'other'
-      OR document_type_other IS NULL
-    )
-    ''',
-
-
-    '''
-    CONSTRAINT ${DocumentItemConstraint.aggregateSha256HashNotBlank.constraintName}
-    CHECK (
-      aggregate_sha256_hash IS NULL
-      OR length(trim(aggregate_sha256_hash)) > 0
-    )
-    ''',
-
-    '''
-    CONSTRAINT ${DocumentItemConstraint.pageCountNonNegative.constraintName}
-    CHECK (
-      page_count >= 0
-    )
-    ''',
-  ];
-}
-
-enum DocumentItemConstraint {
-  documentTypeOtherRequired('chk_document_items_document_type_other_required'),
-
-  documentTypeOtherMustBeNull(
-    'chk_document_items_document_type_other_must_be_null',
-  ),
-
-  aggregateSha256HashNotBlank('chk_document_items_aggregate_sha256_hash_not_blank'),
-
-
-  pageCountNonNegative('chk_document_items_page_count_non_negative');
-
-  const DocumentItemConstraint(this.constraintName);
-
-  final String constraintName;
 }
 
 enum DocumentItemIndex {
-  documentType('idx_document_items_document_type'),
-  pageCount('idx_document_items_page_count'),
-  aggregateSha256Hash('idx_document_items_aggregate_sha256_hash');
+  currentVersionId('idx_document_items_current_version_id');
 
   const DocumentItemIndex(this.indexName);
 
@@ -121,7 +38,5 @@ enum DocumentItemIndex {
 }
 
 final List<String> documentItemsTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${DocumentItemIndex.documentType.indexName} ON document_items(document_type);',
-  'CREATE INDEX IF NOT EXISTS ${DocumentItemIndex.pageCount.indexName} ON document_items(page_count);',
-  'CREATE INDEX IF NOT EXISTS ${DocumentItemIndex.aggregateSha256Hash.indexName} ON document_items(aggregate_sha256_hash);',
+  'CREATE INDEX IF NOT EXISTS ${DocumentItemIndex.currentVersionId.indexName} ON document_items(current_version_id);',
 ];

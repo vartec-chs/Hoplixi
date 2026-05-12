@@ -31,6 +31,9 @@ class PasswordHistory extends Table {
   /// Дата истечения срока действия пароля snapshot.
   DateTimeColumn get expiresAt => dateTime().nullable()();
 
+  /// UUID снимка для группировки связанных записей.
+  TextColumn get snapshotId => text().nullable()();
+
   /// Дополнительные метаданные snapshot.
   @override
   Set<Column> get primaryKey => {historyId};
@@ -89,6 +92,7 @@ enum PasswordHistoryConstraint {
 }
 
 enum PasswordHistoryIndex {
+  snapshotId('idx_password_history_snapshot_id'),
   login('idx_password_history_login'),
   email('idx_password_history_email'),
   url('idx_password_history_url'),
@@ -100,6 +104,7 @@ enum PasswordHistoryIndex {
 }
 
 final List<String> passwordHistoryTableIndexes = [
+  'CREATE INDEX IF NOT EXISTS ${PasswordHistoryIndex.snapshotId.indexName} ON password_history(snapshot_id);',
   'CREATE INDEX IF NOT EXISTS ${PasswordHistoryIndex.login.indexName} ON password_history(login);',
   'CREATE INDEX IF NOT EXISTS ${PasswordHistoryIndex.email.indexName} ON password_history(email);',
   'CREATE INDEX IF NOT EXISTS ${PasswordHistoryIndex.url.indexName} ON password_history(url);',

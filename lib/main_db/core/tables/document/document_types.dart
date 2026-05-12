@@ -1,0 +1,15 @@
+enum DocumentType {
+  passport,
+  idCard,
+  driverLicense,
+  contract,
+  invoice,
+  receipt,
+  certificate,
+  insurance,
+  tax,
+  medical,
+  legal,
+  financial,
+  other,
+}

@@ -12,6 +12,9 @@ class CryptoWalletHistory extends Table {
   TextColumn get historyId =>
       text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
 
+  /// UUID снимка для группировки связанных записей.
+  TextColumn get snapshotId => text().nullable()();
+
   /// Тип кошелька snapshot.
   TextColumn get walletType => textEnum<CryptoWalletType>().nullable()();
 

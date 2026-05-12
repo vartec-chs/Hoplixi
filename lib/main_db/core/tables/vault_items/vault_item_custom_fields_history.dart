@@ -49,6 +49,9 @@ class VaultItemCustomFieldsHistory extends Table {
   /// Порядок отображения поля snapshot.
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
+  /// UUID снимка для группировки связанных записей.
+  TextColumn get snapshotId => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 
@@ -123,6 +126,7 @@ enum VaultItemCustomFieldHistoryConstraint {
 }
 
 enum VaultItemCustomFieldHistoryIndex {
+  snapshotId('idx_vault_item_custom_fields_history_snapshot_id'),
   historyId('idx_vault_item_custom_fields_history_history_id'),
   originalFieldId('idx_vault_item_custom_fields_history_original_field_id'),
   fieldType('idx_vault_item_custom_fields_history_field_type'),
@@ -137,6 +141,7 @@ enum VaultItemCustomFieldHistoryIndex {
 }
 
 final List<String> vaultItemCustomFieldsHistoryTableIndexes = [
+  'CREATE INDEX IF NOT EXISTS ${VaultItemCustomFieldHistoryIndex.snapshotId.indexName} ON vault_item_custom_fields_history(snapshot_id);',
   'CREATE INDEX IF NOT EXISTS ${VaultItemCustomFieldHistoryIndex.historyId.indexName} ON vault_item_custom_fields_history(history_id);',
   'CREATE INDEX IF NOT EXISTS ${VaultItemCustomFieldHistoryIndex.originalFieldId.indexName} ON vault_item_custom_fields_history(original_field_id);',
   'CREATE INDEX IF NOT EXISTS ${VaultItemCustomFieldHistoryIndex.fieldType.indexName} ON vault_item_custom_fields_history(field_type);',

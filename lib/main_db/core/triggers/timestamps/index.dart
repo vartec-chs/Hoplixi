@@ -4,7 +4,6 @@
 library;
 
 import 'categories_timestamps.dart';
-import 'document_pages_timestamps.dart';
 import 'document_versions_timestamps.dart';
 import 'icons_timestamps.dart';
 import 'passwords_timestamps.dart';
@@ -12,7 +11,6 @@ import 'store_meta_timestamps.dart';
 import 'tags_timestamps.dart';
 
 export 'categories_timestamps.dart';
-export 'document_pages_timestamps.dart';
 export 'document_versions_timestamps.dart';
 export 'icons_timestamps.dart';
 export 'meta_touch_triggers.dart';
@@ -29,8 +27,6 @@ final List<String> allInsertTimestampTriggers = [
   ...storeMetaInsertTimestampTriggers,
   // Vault Items (все сущности: passwords, notes, otps, bank cards, files, docs)
   ...vaultItemsInsertTimestampTriggers,
-  // Document Pages
-  ...documentPagesInsertTimestampTriggers,
   // Document Versions
   ...documentVersionsInsertTimestampTriggers,
   // Categories
@@ -47,8 +43,6 @@ final List<String> allModifiedAtTriggers = [
   ...storeMetaModifiedAtTriggers,
   // Vault Items (все сущности)
   ...vaultItemsModifiedAtTriggers,
-  // Document Pages
-  ...documentPagesModifiedAtTriggers,
   // Document Versions
   ...documentVersionsModifiedAtTriggers,
   // Categories
@@ -71,7 +65,8 @@ final List<String> allTimestampDropTriggers = [
   // Устаревшие триггеры старой схемы (для миграции)
 
   // Document Pages
-  ...documentPagesTimestampDropTriggers,
+  'DROP TRIGGER IF EXISTS insert_document_pages_timestamps;',
+  'DROP TRIGGER IF EXISTS update_document_pages_modified_at;',
   // Document Versions
   ...documentVersionsTimestampDropTriggers,
   // Categories

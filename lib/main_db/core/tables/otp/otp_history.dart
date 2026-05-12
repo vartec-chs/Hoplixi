@@ -14,6 +14,9 @@ class OtpHistory extends Table {
   TextColumn get historyId =>
       text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
 
+  /// UUID снимка для группировки связанных записей.
+  TextColumn get snapshotId => text().nullable()();
+
   /// Тип OTP snapshot: TOTP или HOTP.
   TextColumn get type =>
       textEnum<OtpType>().withDefault(const Constant('totp'))();

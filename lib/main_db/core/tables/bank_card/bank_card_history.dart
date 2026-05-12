@@ -62,6 +62,9 @@ class BankCardHistory extends Table {
       text().withLength(min: 1, max: 255).nullable()();
 
   /// Дополнительные метаданные в JSON-формате snapshot.
+  /// UUID снимка для группировки связанных записей.
+  TextColumn get snapshotId => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -205,6 +208,7 @@ enum BankCardHistoryConstraint {
 }
 
 enum BankCardHistoryIndex {
+  snapshotId('idx_bank_card_history_snapshot_id'),
   cardType('idx_bank_card_history_card_type'),
   cardNetwork('idx_bank_card_history_card_network'),
   expiryYearMonth('idx_bank_card_history_expiry_year_month'),
@@ -216,6 +220,7 @@ enum BankCardHistoryIndex {
 }
 
 final List<String> bankCardHistoryTableIndexes = [
+  'CREATE INDEX IF NOT EXISTS ${BankCardHistoryIndex.snapshotId.indexName} ON bank_card_history(snapshot_id);',
   'CREATE INDEX IF NOT EXISTS ${BankCardHistoryIndex.cardType.indexName} ON bank_card_history(card_type);',
   'CREATE INDEX IF NOT EXISTS ${BankCardHistoryIndex.cardNetwork.indexName} ON bank_card_history(card_network);',
   'CREATE INDEX IF NOT EXISTS ${BankCardHistoryIndex.expiryYearMonth.indexName} ON bank_card_history(expiry_year, expiry_month);',

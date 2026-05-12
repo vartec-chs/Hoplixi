@@ -30,6 +30,9 @@ class DocumentVersionPages extends Table {
   /// Главная страница/обложка версии.
   BoolColumn get isPrimary => boolean().withDefault(const Constant(false))();
 
+  /// UUID снимка для группировки связанных записей.
+  TextColumn get snapshotId => text().nullable()();
+
   DateTimeColumn get createdAt =>
       dateTime().clientDefault(() => DateTime.now())();
 
@@ -54,14 +57,6 @@ class DocumentVersionPages extends Table {
         ''',
 
     '''
-        CONSTRAINT ${DocumentVersionPageConstraint.extractedTextNotBlank.constraintName}
-        CHECK (
-          extracted_text IS NULL
-          OR length(trim(extracted_text)) > 0
-        )
-        ''',
-
-    '''
         CONSTRAINT ${DocumentVersionPageConstraint.pageSha256HashNotBlank.constraintName}
         CHECK (
           page_sha256_hash IS NULL
@@ -73,7 +68,6 @@ class DocumentVersionPages extends Table {
 
 enum DocumentVersionPageConstraint {
   pageNumberPositive('chk_document_version_pages_page_number_positive'),
-  extractedTextNotBlank('chk_document_version_pages_extracted_text_not_blank'),
   pageSha256HashNotBlank('chk_document_version_pages_page_sha256_hash_not_blank');
 
   const DocumentVersionPageConstraint(this.constraintName);
@@ -82,6 +76,7 @@ enum DocumentVersionPageConstraint {
 }
 
 enum DocumentVersionPageIndex {
+  snapshotId('idx_document_version_pages_snapshot_id'),
   versionId('idx_document_version_pages_version_id'),
   metadataHistoryId('idx_document_version_pages_metadata_history_id'),
   pageSha256Hash('idx_document_version_pages_page_sha256_hash'),
@@ -93,6 +88,7 @@ enum DocumentVersionPageIndex {
 }
 
 final List<String> documentVersionPagesTableIndexes = [
+  'CREATE INDEX IF NOT EXISTS ${DocumentVersionPageIndex.snapshotId.indexName} ON document_version_pages(snapshot_id);',
   'CREATE INDEX IF NOT EXISTS ${DocumentVersionPageIndex.versionId.indexName} ON document_version_pages(version_id);',
   'CREATE INDEX IF NOT EXISTS ${DocumentVersionPageIndex.metadataHistoryId.indexName} ON document_version_pages(metadata_history_id);',
   'CREATE INDEX IF NOT EXISTS ${DocumentVersionPageIndex.pageSha256Hash.indexName} ON document_version_pages(page_sha256_hash);',

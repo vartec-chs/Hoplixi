@@ -1,9 +1,9 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/tables/tables.dart';
 import 'package:uuid/uuid.dart';
 
+import '../vault_items/vault_item_history.dart';
 import '../vault_items/vault_items.dart';
-import 'document_items.dart';
+import 'document_types.dart';
 
 /// Версии документа one-to-many: document -> versions.
 ///
@@ -42,6 +42,9 @@ class DocumentVersions extends Table {
 
   /// Текущая активная версия документа.
   BoolColumn get isCurrent => boolean().withDefault(const Constant(false))();
+
+  /// UUID снимка для группировки связанных записей.
+  TextColumn get snapshotId => text().nullable()();
 
   DateTimeColumn get createdAt =>
       dateTime().clientDefault(() => DateTime.now())();
@@ -125,6 +128,7 @@ enum DocumentVersionConstraint {
 }
 
 enum DocumentVersionIndex {
+  snapshotId('idx_document_versions_snapshot_id'),
   documentId('idx_document_versions_document_id'),
   documentType('idx_document_versions_document_type'),
   aggregateSha256Hash('idx_document_versions_aggregate_sha256_hash'),
@@ -137,6 +141,7 @@ enum DocumentVersionIndex {
 }
 
 final List<String> documentVersionsTableIndexes = [
+  'CREATE INDEX IF NOT EXISTS ${DocumentVersionIndex.snapshotId.indexName} ON document_versions(snapshot_id);',
   'CREATE INDEX IF NOT EXISTS ${DocumentVersionIndex.documentId.indexName} ON document_versions(document_id);',
   'CREATE INDEX IF NOT EXISTS ${DocumentVersionIndex.documentType.indexName} ON document_versions(document_type);',
   'CREATE INDEX IF NOT EXISTS ${DocumentVersionIndex.aggregateSha256Hash.indexName} ON document_versions(aggregate_sha256_hash);',

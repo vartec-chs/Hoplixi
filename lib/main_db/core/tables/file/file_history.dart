@@ -12,6 +12,9 @@ class FileHistory extends Table {
   TextColumn get historyId =>
       text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
 
+  /// UUID снимка для группировки связанных записей.
+  TextColumn get snapshotId => text().nullable()();
+
   /// Ссылка на snapshot file_metadata_history.
   ///
   /// FK можно ставить, потому что это ссылка не на live file_metadata,

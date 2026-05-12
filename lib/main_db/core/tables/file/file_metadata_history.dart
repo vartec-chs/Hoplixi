@@ -42,6 +42,9 @@ class FileMetadataHistory extends Table {
   /// Snapshot SHA-256 хэша для проверки целостности.
   TextColumn get sha256 => text().withLength(min: 64, max: 64).nullable()();
 
+  /// UUID снимка для группировки связанных записей.
+  TextColumn get snapshotId => text().nullable()();
+
   /// Когда создан snapshot.
   DateTimeColumn get snapshotCreatedAt =>
       dateTime().clientDefault(() => DateTime.now())();
@@ -124,6 +127,7 @@ enum FileMetadataHistoryConstraint {
 }
 
 enum FileMetadataHistoryIndex {
+  snapshotId('idx_file_metadata_history_snapshot_id'),
   historyId('idx_file_metadata_history_history_id'),
   metadataId('idx_file_metadata_history_metadata_id'),
   mimeType('idx_file_metadata_history_mime_type'),
@@ -136,6 +140,7 @@ enum FileMetadataHistoryIndex {
 }
 
 final List<String> fileMetadataHistoryTableIndexes = [
+  'CREATE INDEX IF NOT EXISTS ${FileMetadataHistoryIndex.snapshotId.indexName} ON file_metadata_history(snapshot_id);',
   'CREATE INDEX IF NOT EXISTS ${FileMetadataHistoryIndex.historyId.indexName} ON file_metadata_history(history_id);',
   'CREATE INDEX IF NOT EXISTS ${FileMetadataHistoryIndex.metadataId.indexName} ON file_metadata_history(metadata_id);',
   'CREATE INDEX IF NOT EXISTS ${FileMetadataHistoryIndex.mimeType.indexName} ON file_metadata_history(mime_type);',
