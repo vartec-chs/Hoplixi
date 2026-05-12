@@ -4,6 +4,14 @@ import 'package:uuid/uuid.dart';
 import '../system/categories.dart';
 import 'vault_items.dart';
 
+enum VaultItemHistoryKind {
+  /// Снимок состояния элемента, который можно восстановить.
+  snapshot,
+
+  /// Запись о действии без полного снимка данных (только журнал).
+  event,
+}
+
 enum VaultItemHistoryAction {
   created,
   updated,
@@ -29,6 +37,10 @@ class VaultItemHistory extends Table {
   /// убери FK и оставь обычный text().
   TextColumn get itemId =>
       text().references(VaultItems, #id, onDelete: KeyAction.cascade)();
+
+  /// Тип записи истории: snapshot или event.
+  TextColumn get kind => textEnum<VaultItemHistoryKind>()
+      .withDefault(const Constant('snapshot'))();
 
   /// Тип действия.
   TextColumn get action => textEnum<VaultItemHistoryAction>()();
@@ -262,6 +274,7 @@ enum VaultItemHistoryConstraint {
 
 enum VaultItemHistoryIndex {
   itemId('idx_vault_item_history_item_id'),
+  kind('idx_vault_item_history_kind'),
   action('idx_vault_item_history_action'),
   type('idx_vault_item_history_type'),
   name('idx_vault_item_history_name'),
@@ -298,6 +311,7 @@ enum VaultItemHistoryIndex {
 
 final List<String> vaultItemHistoryTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${VaultItemHistoryIndex.itemId.indexName} ON vault_item_history(item_id);',
+  'CREATE INDEX IF NOT EXISTS ${VaultItemHistoryIndex.kind.indexName} ON vault_item_history(kind);',
   'CREATE INDEX IF NOT EXISTS ${VaultItemHistoryIndex.action.indexName} ON vault_item_history(action);',
   'CREATE INDEX IF NOT EXISTS ${VaultItemHistoryIndex.type.indexName} ON vault_item_history(type);',
   'CREATE INDEX IF NOT EXISTS ${VaultItemHistoryIndex.name.indexName} ON vault_item_history(name);',

@@ -21,14 +21,14 @@ licenseKey, recoveryCodes, loyaltyCard, }
 ### vault_item_history
 
 Таблица истории изменений базовых полей элементов. Columns: `id`, `itemId`,
-`action`, `type`, `name`, `description`, `categoryId`, `categoryName`,
+`kind`, `action`, `type`, `name`, `description`, `categoryId`, `categoryName`,
 `categoryType`, `categoryColor`, `categoryIconRefId`, `tagsSnapshotJson`,
 `iconRefId`, `usedCount`, `isFavorite`, `isArchived`, `isPinned`, `isDeleted`,
 `createdAt`, `modifiedAt`, `recentScore`, `lastUsedAt`, `historyCreatedAt`.
 Notes: Снимок состояния `vault_items` на момент действия `action`. Содержит
-снимки данных категории и тегов. enum VaultItemHistoryAction { created,
-updated, archived, restored, deleted, recovered, favorited, unfavorited,
-pinned, unpinned, }
+снимки данных категории и тегов. enum VaultItemHistoryKind { snapshot, event, }
+enum VaultItemHistoryAction { created, updated, archived, restored, deleted,
+recovered, favorited, unfavorited, pinned, unpinned, }
 
 ### vault_item_custom_fields
 
