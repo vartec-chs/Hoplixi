@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:hoplixi/main_db/core/tables/tables.dart';
 import 'package:uuid/uuid.dart';
 
 import '../vault_items/vault_items.dart';
@@ -17,6 +18,11 @@ class DocumentVersions extends Table {
   TextColumn get documentId =>
       text().references(VaultItems, #id, onDelete: KeyAction.cascade)();
 
+  /// Ссылка на историю изменений документа.
+  TextColumn get itemHistoryId => text()
+    .nullable()
+    .references(VaultItemHistory, #id, onDelete: KeyAction.setNull)();
+
   /// Номер версии документа, начиная с 1.
   IntColumn get versionNumber => integer()();
 
@@ -27,11 +33,8 @@ class DocumentVersions extends Table {
   TextColumn get documentTypeOther =>
       text().withLength(min: 1, max: 255).nullable()();
 
-  /// Агрегированный OCR-текст всех страниц версии.
-  TextColumn get aggregatedText => text().nullable()();
-
   /// Хэш агрегированной версии документа/страниц.
-  TextColumn get aggregateHash =>
+  TextColumn get aggregateSha256Hash =>
       text().withLength(min: 1, max: 255).nullable()();
 
   /// Количество страниц в версии.
@@ -87,18 +90,10 @@ class DocumentVersions extends Table {
         ''',
 
     '''
-        CONSTRAINT ${DocumentVersionConstraint.aggregatedTextNotBlank.constraintName}
+        CONSTRAINT ${DocumentVersionConstraint.aggregateSha256HashNotBlank.constraintName}
         CHECK (
-          aggregated_text IS NULL
-          OR length(trim(aggregated_text)) > 0
-        )
-        ''',
-
-    '''
-        CONSTRAINT ${DocumentVersionConstraint.aggregateHashNotBlank.constraintName}
-        CHECK (
-          aggregate_hash IS NULL
-          OR length(trim(aggregate_hash)) > 0
+          aggregate_sha256_hash IS NULL
+          OR length(trim(aggregate_sha256_hash)) > 0
         )
         ''',
 
@@ -119,8 +114,9 @@ enum DocumentVersionConstraint {
   documentTypeOtherMustBeNull(
     'chk_document_versions_document_type_other_must_be_null',
   ),
-  aggregatedTextNotBlank('chk_document_versions_aggregated_text_not_blank'),
-  aggregateHashNotBlank('chk_document_versions_aggregate_hash_not_blank'),
+  aggregateSha256HashNotBlank(
+    'chk_document_versions_aggregate_sha256_hash_not_blank',
+  ),
   pageCountNonNegative('chk_document_versions_page_count_non_negative');
 
   const DocumentVersionConstraint(this.constraintName);
@@ -131,7 +127,7 @@ enum DocumentVersionConstraint {
 enum DocumentVersionIndex {
   documentId('idx_document_versions_document_id'),
   documentType('idx_document_versions_document_type'),
-  aggregateHash('idx_document_versions_aggregate_hash'),
+  aggregateSha256Hash('idx_document_versions_aggregate_sha256_hash'),
   createdAt('idx_document_versions_created_at'),
   uniqueCurrentPerDocument('uq_document_versions_one_current_per_document');
 
@@ -143,7 +139,7 @@ enum DocumentVersionIndex {
 final List<String> documentVersionsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${DocumentVersionIndex.documentId.indexName} ON document_versions(document_id);',
   'CREATE INDEX IF NOT EXISTS ${DocumentVersionIndex.documentType.indexName} ON document_versions(document_type);',
-  'CREATE INDEX IF NOT EXISTS ${DocumentVersionIndex.aggregateHash.indexName} ON document_versions(aggregate_hash);',
+  'CREATE INDEX IF NOT EXISTS ${DocumentVersionIndex.aggregateSha256Hash.indexName} ON document_versions(aggregate_sha256_hash);',
   'CREATE INDEX IF NOT EXISTS ${DocumentVersionIndex.createdAt.indexName} ON document_versions(created_at);',
 
   // Только одна current-версия на документ.

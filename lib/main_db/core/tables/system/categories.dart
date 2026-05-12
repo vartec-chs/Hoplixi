@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
-import 'icon_refs.dart';
+import 'icons/icon_refs.dart';
 
 enum CategoryType {
   note,

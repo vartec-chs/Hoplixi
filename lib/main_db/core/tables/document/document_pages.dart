@@ -35,7 +35,7 @@ class DocumentPages extends Table {
   TextColumn get extractedText => text().nullable()();
 
   /// Хэш страницы для контроля изменений.
-  TextColumn get pageHash => text().withLength(min: 1, max: 255).nullable()();
+  TextColumn get pageSha256Hash => text().withLength(min: 1, max: 255).nullable()();
 
   /// Главная страница/обложка.
   BoolColumn get isPrimary => boolean().withDefault(const Constant(false))();
@@ -84,10 +84,10 @@ class DocumentPages extends Table {
         ''',
 
     '''
-        CONSTRAINT ${DocumentPageConstraint.pageHashNotBlank.constraintName}
+        CONSTRAINT ${DocumentPageConstraint.pageSha256HashNotBlank.constraintName}
         CHECK (
-          page_hash IS NULL
-          OR length(trim(page_hash)) > 0
+          page_sha256_hash IS NULL
+          OR length(trim(page_sha256_hash)) > 0
         )
         ''',
 
@@ -105,7 +105,7 @@ enum DocumentPageConstraint {
 
   extractedTextNotBlank('chk_document_pages_extracted_text_not_blank'),
 
-  pageHashNotBlank('chk_document_pages_page_hash_not_blank'),
+  pageSha256HashNotBlank('chk_document_pages_page_sha256_hash_not_blank'),
 
   usedCountNonNegative('chk_document_pages_used_count_non_negative');
 
@@ -117,7 +117,7 @@ enum DocumentPageConstraint {
 enum DocumentPageIndex {
   documentId('idx_document_pages_document_id'),
   metadataId('idx_document_pages_metadata_id'),
-  pageHash('idx_document_pages_page_hash'),
+  pageSha256Hash('idx_document_pages_page_sha256_hash'),
   lastUsedAt('idx_document_pages_last_used_at'),
   uniquePrimaryPerDocument('uq_document_pages_one_primary_per_document');
 
@@ -129,7 +129,7 @@ enum DocumentPageIndex {
 final List<String> documentPagesTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${DocumentPageIndex.documentId.indexName} ON document_pages(document_id);',
   'CREATE INDEX IF NOT EXISTS ${DocumentPageIndex.metadataId.indexName} ON document_pages(metadata_id);',
-  'CREATE INDEX IF NOT EXISTS ${DocumentPageIndex.pageHash.indexName} ON document_pages(page_hash);',
+  'CREATE INDEX IF NOT EXISTS ${DocumentPageIndex.pageSha256Hash.indexName} ON document_pages(page_sha256_hash);',
   'CREATE INDEX IF NOT EXISTS ${DocumentPageIndex.lastUsedAt.indexName} ON document_pages(last_used_at);',
 
   // Только одна primary-страница на документ.

@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
-import 'package:hoplixi/main_db/core/tables/system/store_settings.dart';
+import 'package:hoplixi/main_db/core/tables/system/store/store_settings.dart';
 
 part 'store_settings_dao.g.dart';
 

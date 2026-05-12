@@ -36,14 +36,8 @@ class DocumentItems extends Table {
   TextColumn get documentTypeOther =>
       text().withLength(min: 1, max: 255).nullable()();
 
-  /// Агрегированный OCR-текст всех страниц.
-  ///
-  /// Может быть NULL, если OCR отключён или пользователь не хочет хранить
-  /// распознанный текст.
-  TextColumn get aggregatedText => text().nullable()();
-
   /// Хэш текущей агрегированной версии документа/страниц.
-  TextColumn get aggregateHash =>
+  TextColumn get aggregateSha256Hash =>
       text().withLength(min: 1, max: 255).nullable()();
 
   /// Количество страниц.
@@ -81,19 +75,12 @@ class DocumentItems extends Table {
     )
     ''',
 
-    '''
-    CONSTRAINT ${DocumentItemConstraint.aggregatedTextNotBlank.constraintName}
-    CHECK (
-      aggregated_text IS NULL
-      OR length(trim(aggregated_text)) > 0
-    )
-    ''',
 
     '''
-    CONSTRAINT ${DocumentItemConstraint.aggregateHashNotBlank.constraintName}
+    CONSTRAINT ${DocumentItemConstraint.aggregateSha256HashNotBlank.constraintName}
     CHECK (
-      aggregate_hash IS NULL
-      OR length(trim(aggregate_hash)) > 0
+      aggregate_sha256_hash IS NULL
+      OR length(trim(aggregate_sha256_hash)) > 0
     )
     ''',
 
@@ -113,9 +100,8 @@ enum DocumentItemConstraint {
     'chk_document_items_document_type_other_must_be_null',
   ),
 
-  aggregatedTextNotBlank('chk_document_items_aggregated_text_not_blank'),
+  aggregateSha256HashNotBlank('chk_document_items_aggregate_sha256_hash_not_blank'),
 
-  aggregateHashNotBlank('chk_document_items_aggregate_hash_not_blank'),
 
   pageCountNonNegative('chk_document_items_page_count_non_negative');
 
@@ -127,7 +113,7 @@ enum DocumentItemConstraint {
 enum DocumentItemIndex {
   documentType('idx_document_items_document_type'),
   pageCount('idx_document_items_page_count'),
-  aggregateHash('idx_document_items_aggregate_hash');
+  aggregateSha256Hash('idx_document_items_aggregate_sha256_hash');
 
   const DocumentItemIndex(this.indexName);
 
@@ -137,5 +123,5 @@ enum DocumentItemIndex {
 final List<String> documentItemsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${DocumentItemIndex.documentType.indexName} ON document_items(document_type);',
   'CREATE INDEX IF NOT EXISTS ${DocumentItemIndex.pageCount.indexName} ON document_items(page_count);',
-  'CREATE INDEX IF NOT EXISTS ${DocumentItemIndex.aggregateHash.indexName} ON document_items(aggregate_hash);',
+  'CREATE INDEX IF NOT EXISTS ${DocumentItemIndex.aggregateSha256Hash.indexName} ON document_items(aggregate_sha256_hash);',
 ];

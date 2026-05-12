@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../system/categories.dart';
-import '../system/icon_refs.dart';
+import '../system/icons/icon_refs.dart';
 
 enum VaultItemType {
   password,

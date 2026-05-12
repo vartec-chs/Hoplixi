@@ -24,11 +24,8 @@ class DocumentVersionPages extends Table {
   /// Порядковый номер страницы в версии, начиная с 1.
   IntColumn get pageNumber => integer()();
 
-  /// OCR-текст конкретной страницы версии.
-  TextColumn get extractedText => text().nullable()();
-
   /// Хэш страницы для контроля изменений.
-  TextColumn get pageHash => text().withLength(min: 1, max: 255).nullable()();
+  TextColumn get pageSha256Hash => text().withLength(min: 1, max: 255).nullable()();
 
   /// Главная страница/обложка версии.
   BoolColumn get isPrimary => boolean().withDefault(const Constant(false))();
@@ -65,10 +62,10 @@ class DocumentVersionPages extends Table {
         ''',
 
     '''
-        CONSTRAINT ${DocumentVersionPageConstraint.pageHashNotBlank.constraintName}
+        CONSTRAINT ${DocumentVersionPageConstraint.pageSha256HashNotBlank.constraintName}
         CHECK (
-          page_hash IS NULL
-          OR length(trim(page_hash)) > 0
+          page_sha256_hash IS NULL
+          OR length(trim(page_sha256_hash)) > 0
         )
         ''',
   ];
@@ -77,7 +74,7 @@ class DocumentVersionPages extends Table {
 enum DocumentVersionPageConstraint {
   pageNumberPositive('chk_document_version_pages_page_number_positive'),
   extractedTextNotBlank('chk_document_version_pages_extracted_text_not_blank'),
-  pageHashNotBlank('chk_document_version_pages_page_hash_not_blank');
+  pageSha256HashNotBlank('chk_document_version_pages_page_sha256_hash_not_blank');
 
   const DocumentVersionPageConstraint(this.constraintName);
 
@@ -87,7 +84,7 @@ enum DocumentVersionPageConstraint {
 enum DocumentVersionPageIndex {
   versionId('idx_document_version_pages_version_id'),
   metadataHistoryId('idx_document_version_pages_metadata_history_id'),
-  pageHash('idx_document_version_pages_page_hash'),
+  pageSha256Hash('idx_document_version_pages_page_sha256_hash'),
   uniquePrimaryPerVersion('uq_document_version_pages_one_primary_per_version');
 
   const DocumentVersionPageIndex(this.indexName);
@@ -98,7 +95,7 @@ enum DocumentVersionPageIndex {
 final List<String> documentVersionPagesTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${DocumentVersionPageIndex.versionId.indexName} ON document_version_pages(version_id);',
   'CREATE INDEX IF NOT EXISTS ${DocumentVersionPageIndex.metadataHistoryId.indexName} ON document_version_pages(metadata_history_id);',
-  'CREATE INDEX IF NOT EXISTS ${DocumentVersionPageIndex.pageHash.indexName} ON document_version_pages(page_hash);',
+  'CREATE INDEX IF NOT EXISTS ${DocumentVersionPageIndex.pageSha256Hash.indexName} ON document_version_pages(page_sha256_hash);',
 
   // Только одна primary-страница на версию документа.
   'CREATE UNIQUE INDEX IF NOT EXISTS ${DocumentVersionPageIndex.uniquePrimaryPerVersion.indexName} '

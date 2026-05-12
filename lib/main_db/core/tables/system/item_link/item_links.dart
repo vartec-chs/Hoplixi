@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
-import '../vault_items/vault_items.dart';
+import '../../vault_items/vault_items.dart';
 
 enum ItemLinkType {
   related,

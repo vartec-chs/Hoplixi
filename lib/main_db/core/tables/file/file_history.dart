@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../vault_items/vault_item_history.dart';
+import 'file_metadata_history.dart';
 
 /// History-таблица для специфичных полей файла.
 ///
@@ -11,11 +12,15 @@ class FileHistory extends Table {
   TextColumn get historyId =>
       text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
 
-  /// Ссылка на file_metadata snapshot.
+  /// Ссылка на snapshot file_metadata_history.
   ///
-  /// Это не FK специально: история должна хранить снимок значения,
-  /// даже если текущие метаданные файла позже удалены/изменены.
-  TextColumn get metadataId => text().nullable()();
+  /// FK можно ставить, потому что это ссылка не на live file_metadata,
+  /// а на immutable history snapshot.
+  TextColumn get metadataHistoryId => text().nullable().references(
+    FileMetadataHistory,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
 
   /// Дополнительные метаданные snapshot.
   @override
@@ -26,7 +31,7 @@ class FileHistory extends Table {
 }
 
 enum FileHistoryIndex {
-  metadataId('idx_file_history_metadata_id');
+  metadataHistoryId('idx_file_history_metadata_history_id');
 
   const FileHistoryIndex(this.indexName);
 
@@ -34,5 +39,5 @@ enum FileHistoryIndex {
 }
 
 final List<String> fileHistoryTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${FileHistoryIndex.metadataId.indexName} ON file_history(metadata_id);',
+  'CREATE INDEX IF NOT EXISTS ${FileHistoryIndex.metadataHistoryId.indexName} ON file_history(metadata_history_id);',
 ];
