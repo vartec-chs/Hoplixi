@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 
-import '../vault_items/vault_item_history.dart';
+import '../vault_items/vault_snapshots_history.dart';
 import 'crypto_wallet_items.dart';
 
 /// History-таблица для специфичных полей криптокошелька.
@@ -10,7 +10,7 @@ import 'crypto_wallet_items.dart';
 @DataClassName('CryptoWalletHistoryData')
 class CryptoWalletHistory extends Table {
   TextColumn get historyId =>
-      text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
+      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
 
   /// UUID снимка для группировки связанных записей.
   TextColumn get snapshotId => text().nullable()();

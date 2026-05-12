@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
-import '../vault_items/vault_item_history.dart';
+import '../vault_items/vault_snapshots_history.dart';
 import '../vault_items/vault_items.dart';
 import 'document_types.dart';
 
@@ -20,7 +20,7 @@ class DocumentVersions extends Table {
 
   /// Ссылка на историю изменений документа.
   TextColumn get itemHistoryId => text().nullable().references(
-    VaultItemHistory,
+    VaultSnapshotsHistory,
     #id,
     onDelete: KeyAction.setNull,
   )();

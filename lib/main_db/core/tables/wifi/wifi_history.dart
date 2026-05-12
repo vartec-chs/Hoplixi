@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 
-import '../vault_items/vault_item_history.dart';
+import '../vault_items/vault_snapshots_history.dart';
 import 'wifi_items.dart';
 
 /// History-таблица для специфичных полей Wi-Fi.
@@ -11,7 +11,7 @@ import 'wifi_items.dart';
 @DataClassName('WifiHistoryData')
 class WifiHistory extends Table {
   TextColumn get historyId =>
-      text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
+      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
 
   /// UUID снимка для группировки связанных записей.
   TextColumn get snapshotId => text().nullable()();

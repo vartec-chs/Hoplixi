@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
-import '../vault_items/vault_item_history.dart';
+import '../vault_items/vault_snapshots_history.dart';
 import 'tags.dart';
 
 /// Snapshot тегов vault item для восстановления по snapshotId.
@@ -10,7 +10,7 @@ class VaultItemTagHistory extends Table {
   TextColumn get id => text().clientDefault(() => const Uuid().v4())();
 
   TextColumn get historyId => text().nullable().references(
-    VaultItemHistory,
+    VaultSnapshotsHistory,
     #id,
     onDelete: KeyAction.cascade,
   )();

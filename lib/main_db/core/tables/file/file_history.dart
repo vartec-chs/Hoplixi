@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 
-import '../vault_items/vault_item_history.dart';
+import '../vault_items/vault_snapshots_history.dart';
 import 'file_metadata_history.dart';
 
 /// History-таблица для специфичных полей файла.
@@ -8,9 +8,9 @@ import 'file_metadata_history.dart';
 /// Данные вставляются только триггерами.
 @DataClassName('FileHistoryData')
 class FileHistory extends Table {
-  /// PK и FK → vault_item_history.id ON DELETE CASCADE.
+  /// PK и FK → vault_snapshots_history.id ON DELETE CASCADE.
   TextColumn get historyId =>
-      text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
+      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
 
   /// UUID снимка для группировки связанных записей.
   TextColumn get snapshotId => text().nullable()();

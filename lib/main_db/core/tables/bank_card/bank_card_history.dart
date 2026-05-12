@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 
-import '../vault_items/vault_item_history.dart';
+import '../vault_items/vault_snapshots_history.dart';
 import 'bank_card_items.dart';
 
 /// History-таблица для специфичных полей банковской карты.
@@ -10,9 +10,9 @@ import 'bank_card_items.dart';
 /// если включён режим истории без сохранения секретов.
 @DataClassName('BankCardHistoryData')
 class BankCardHistory extends Table {
-  /// PK и FK → vault_item_history.id ON DELETE CASCADE
+  /// PK и FK → vault_snapshots_history.id ON DELETE CASCADE
   TextColumn get historyId =>
-      text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
+      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
 
   /// Имя владельца карты snapshot.
   TextColumn get cardholderName =>

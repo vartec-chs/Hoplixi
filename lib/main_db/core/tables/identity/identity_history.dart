@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 
-import '../vault_items/vault_item_history.dart';
+import '../vault_items/vault_snapshots_history.dart';
 import 'identity_items.dart';
 
 /// History-таблица для специфичных полей identity-документа.
@@ -12,7 +12,7 @@ import 'identity_items.dart';
 class IdentityHistory extends Table {
   @ReferenceName('identityHistory')
   TextColumn get historyId =>
-      text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
+      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
 
   /// UUID снимка для группировки связанных записей.
   TextColumn get snapshotId => text().nullable()();

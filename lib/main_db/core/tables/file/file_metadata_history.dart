@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
-import '../vault_items/vault_item_history.dart';
+import '../vault_items/vault_snapshots_history.dart';
 
 enum FileMetadataHistoryOwnerKind {
   fileItemHistory,
@@ -22,7 +22,7 @@ class FileMetadataHistory extends Table {
 
   /// История vault item, если snapshot создан для history-события.
   TextColumn get historyId => text().nullable().references(
-    VaultItemHistory,
+    VaultSnapshotsHistory,
     #id,
     onDelete: KeyAction.cascade,
   )();

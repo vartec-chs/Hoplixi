@@ -2,13 +2,14 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import 'vault_item_custom_fields.dart';
-import 'vault_item_history.dart';
+import 'vault_snapshots_history.dart';
 
 /// History-таблица для кастомных полей vault item.
 ///
-/// Данные вставляются только триггерами.
 /// Значение value может быть NULL, если включён режим истории
 /// без сохранения чувствительных/пользовательских данных.
+///
+/// Таблица append-only: UPDATE запрещён триггером.
 @DataClassName('VaultItemCustomFieldsHistoryData')
 class VaultItemCustomFieldsHistory extends Table {
   /// Уникальный идентификатор snapshot-записи кастомного поля.
@@ -16,12 +17,15 @@ class VaultItemCustomFieldsHistory extends Table {
   /// Не равен id оригинального custom field.
   TextColumn get id => text().clientDefault(() => const Uuid().v4())();
 
-  /// FK → vault_item_history.id ON DELETE CASCADE.
+  /// FK → vault_snapshots_history.id ON DELETE CASCADE.
   ///
-  /// Одна запись истории vault item может иметь несколько snapshot
+  /// Один snapshot item может иметь несколько snapshot-записей
   /// кастомных полей.
-  TextColumn get historyId =>
-      text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
+  TextColumn get snapshotHistoryId => text().references(
+    VaultSnapshotsHistory,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
 
   /// ID исходного custom field.
   ///
@@ -46,11 +50,21 @@ class VaultItemCustomFieldsHistory extends Table {
   TextColumn get fieldTypeOther =>
       text().withLength(min: 1, max: 255).nullable()();
 
+  /// Быстрый флаг секретности поля на момент snapshot.
+  BoolColumn get isSecret => boolean().withDefault(const Constant(false))();
+
   /// Порядок отображения поля snapshot.
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
-  /// UUID снимка для группировки связанных записей.
-  TextColumn get snapshotId => text().nullable()();
+  /// Дата создания исходного custom field snapshot.
+  DateTimeColumn get createdAt => dateTime()();
+
+  /// Дата последнего изменения исходного custom field snapshot.
+  DateTimeColumn get modifiedAt => dateTime()();
+
+  /// Когда создана запись истории.
+  DateTimeColumn get historyCreatedAt =>
+      dateTime().clientDefault(() => DateTime.now())();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -61,50 +75,152 @@ class VaultItemCustomFieldsHistory extends Table {
   @override
   List<String> get customConstraints => [
     '''
-    CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.labelNotBlank.constraintName}
-    CHECK (
-      length(trim(label)) > 0
-    )
-    ''',
+        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.idNotBlank.constraintName}
+        CHECK (
+          length(trim(id)) > 0
+        )
+        ''',
 
     '''
-    CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.valueNotBlank.constraintName}
-    CHECK (
-      value IS NULL
-      OR length(trim(value)) > 0
-    )
-    ''',
+        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.snapshotHistoryIdNotBlank.constraintName}
+        CHECK (
+          length(trim(snapshot_history_id)) > 0
+        )
+        ''',
 
     '''
-    CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.fieldTypeOtherRequired.constraintName}
-    CHECK (
-      field_type != 'other'
-      OR (
-        field_type_other IS NOT NULL
-        AND length(trim(field_type_other)) > 0
-      )
-    )
-    ''',
+        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.originalFieldIdNotBlank.constraintName}
+        CHECK (
+          original_field_id IS NULL
+          OR length(trim(original_field_id)) > 0
+        )
+        ''',
 
     '''
-    CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.fieldTypeOtherMustBeNull.constraintName}
-    CHECK (
-      field_type = 'other'
-      OR field_type_other IS NULL
-    )
-    ''',
+        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.labelNotBlank.constraintName}
+        CHECK (
+          length(trim(label)) > 0
+        )
+        ''',
 
     '''
-    CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.sortOrderNonNegative.constraintName}
-    CHECK (
-      sort_order >= 0
-    )
-    ''',
+        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.labelNoOuterWhitespace.constraintName}
+        CHECK (
+          label = trim(label)
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.valueNotBlank.constraintName}
+        CHECK (
+          value IS NULL
+          OR length(trim(value)) > 0
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.fieldTypeOtherRequired.constraintName}
+        CHECK (
+          field_type != 'other'
+          OR (
+            field_type_other IS NOT NULL
+            AND length(trim(field_type_other)) > 0
+          )
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.fieldTypeOtherMustBeNull.constraintName}
+        CHECK (
+          field_type = 'other'
+          OR field_type_other IS NULL
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.fieldTypeOtherNoOuterWhitespace.constraintName}
+        CHECK (
+          field_type_other IS NULL
+          OR field_type_other = trim(field_type_other)
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.booleanValueFormat.constraintName}
+        CHECK (
+          field_type != 'boolean'
+          OR value IS NULL
+          OR value IN ('true', 'false')
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.dateValueFormat.constraintName}
+        CHECK (
+          field_type != 'date'
+          OR value IS NULL
+          OR (
+            length(value) = 10
+            AND value GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'
+          )
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.sortOrderNonNegative.constraintName}
+        CHECK (
+          sort_order >= 0
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.modifiedAtAfterCreatedAt.constraintName}
+        CHECK (
+          modified_at >= created_at
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.historyCreatedAtAfterCreatedAt.constraintName}
+        CHECK (
+          history_created_at >= created_at
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.uniqueSnapshotHistorySortOrder.constraintName}
+        UNIQUE (
+          snapshot_history_id,
+          sort_order
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.uniqueSnapshotHistoryOriginalFieldId.constraintName}
+        UNIQUE (
+          snapshot_history_id,
+          original_field_id
+        )
+        ''',
   ];
 }
 
 enum VaultItemCustomFieldHistoryConstraint {
+  idNotBlank('chk_vault_item_custom_fields_history_id_not_blank'),
+
+  snapshotHistoryIdNotBlank(
+    'chk_vault_item_custom_fields_history_snapshot_history_id_not_blank',
+  ),
+
+  originalFieldIdNotBlank(
+    'chk_vault_item_custom_fields_history_original_field_id_not_blank',
+  ),
+
   labelNotBlank('chk_vault_item_custom_fields_history_label_not_blank'),
+
+  labelNoOuterWhitespace(
+    'chk_vault_item_custom_fields_history_label_no_outer_whitespace',
+  ),
 
   valueNotBlank('chk_vault_item_custom_fields_history_value_not_blank'),
 
@@ -116,8 +232,34 @@ enum VaultItemCustomFieldHistoryConstraint {
     'chk_vault_item_custom_fields_history_field_type_other_must_be_null',
   ),
 
+  fieldTypeOtherNoOuterWhitespace(
+    'chk_vault_item_custom_fields_history_field_type_other_no_outer_whitespace',
+  ),
+
+  booleanValueFormat(
+    'chk_vault_item_custom_fields_history_boolean_value_format',
+  ),
+
+  dateValueFormat('chk_vault_item_custom_fields_history_date_value_format'),
+
   sortOrderNonNegative(
     'chk_vault_item_custom_fields_history_sort_order_non_negative',
+  ),
+
+  modifiedAtAfterCreatedAt(
+    'chk_vault_item_custom_fields_history_modified_at_after_created_at',
+  ),
+
+  historyCreatedAtAfterCreatedAt(
+    'chk_vault_item_custom_fields_history_history_created_at_after_created_at',
+  ),
+
+  uniqueSnapshotHistorySortOrder(
+    'uq_vault_item_custom_fields_history_snapshot_history_id_sort_order',
+  ),
+
+  uniqueSnapshotHistoryOriginalFieldId(
+    'uq_vault_item_custom_fields_history_snapshot_history_id_original_field_id',
   );
 
   const VaultItemCustomFieldHistoryConstraint(this.constraintName);
@@ -126,14 +268,17 @@ enum VaultItemCustomFieldHistoryConstraint {
 }
 
 enum VaultItemCustomFieldHistoryIndex {
-  snapshotId('idx_vault_item_custom_fields_history_snapshot_id'),
-  historyId('idx_vault_item_custom_fields_history_history_id'),
+  snapshotHistoryId('idx_vault_item_custom_fields_history_snapshot_history_id'),
+
   originalFieldId('idx_vault_item_custom_fields_history_original_field_id'),
-  fieldType('idx_vault_item_custom_fields_history_field_type'),
-  sortOrder('idx_vault_item_custom_fields_history_sort_order'),
-  historySortOrder(
-    'idx_vault_item_custom_fields_history_history_id_sort_order',
-  );
+
+  snapshotHistoryFieldType(
+    'idx_vault_item_custom_fields_history_snapshot_history_id_field_type',
+  ),
+
+  secretFields('idx_vault_item_custom_fields_history_secret_fields'),
+
+  historyCreatedAt('idx_vault_item_custom_fields_history_history_created_at');
 
   const VaultItemCustomFieldHistoryIndex(this.indexName);
 
@@ -141,10 +286,60 @@ enum VaultItemCustomFieldHistoryIndex {
 }
 
 final List<String> vaultItemCustomFieldsHistoryTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${VaultItemCustomFieldHistoryIndex.snapshotId.indexName} ON vault_item_custom_fields_history(snapshot_id);',
-  'CREATE INDEX IF NOT EXISTS ${VaultItemCustomFieldHistoryIndex.historyId.indexName} ON vault_item_custom_fields_history(history_id);',
-  'CREATE INDEX IF NOT EXISTS ${VaultItemCustomFieldHistoryIndex.originalFieldId.indexName} ON vault_item_custom_fields_history(original_field_id);',
-  'CREATE INDEX IF NOT EXISTS ${VaultItemCustomFieldHistoryIndex.fieldType.indexName} ON vault_item_custom_fields_history(field_type);',
-  'CREATE INDEX IF NOT EXISTS ${VaultItemCustomFieldHistoryIndex.sortOrder.indexName} ON vault_item_custom_fields_history(sort_order);',
-  'CREATE INDEX IF NOT EXISTS ${VaultItemCustomFieldHistoryIndex.historySortOrder.indexName} ON vault_item_custom_fields_history(history_id, sort_order);',
+  '''
+  CREATE INDEX IF NOT EXISTS ${VaultItemCustomFieldHistoryIndex.snapshotHistoryId.indexName}
+  ON vault_item_custom_fields_history(snapshot_history_id);
+  ''',
+
+  '''
+  CREATE INDEX IF NOT EXISTS ${VaultItemCustomFieldHistoryIndex.originalFieldId.indexName}
+  ON vault_item_custom_fields_history(original_field_id)
+  WHERE original_field_id IS NOT NULL;
+  ''',
+
+  '''
+  CREATE INDEX IF NOT EXISTS ${VaultItemCustomFieldHistoryIndex.snapshotHistoryFieldType.indexName}
+  ON vault_item_custom_fields_history(snapshot_history_id, field_type);
+  ''',
+
+  '''
+  CREATE INDEX IF NOT EXISTS ${VaultItemCustomFieldHistoryIndex.secretFields.indexName}
+  ON vault_item_custom_fields_history(snapshot_history_id, sort_order)
+  WHERE is_secret = 1 OR field_type = 'concealed';
+  ''',
+
+  '''
+  CREATE INDEX IF NOT EXISTS ${VaultItemCustomFieldHistoryIndex.historyCreatedAt.indexName}
+  ON vault_item_custom_fields_history(history_created_at DESC);
+  ''',
+];
+
+enum VaultItemCustomFieldHistoryTrigger {
+  preventUpdate('trg_vault_item_custom_fields_history_prevent_update');
+
+  const VaultItemCustomFieldHistoryTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum VaultItemCustomFieldHistoryRaise {
+  historyIsImmutable('vault_item_custom_fields_history rows are immutable');
+
+  const VaultItemCustomFieldHistoryRaise(this.message);
+
+  final String message;
+}
+
+final List<String> vaultItemCustomFieldsHistoryTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${VaultItemCustomFieldHistoryTrigger.preventUpdate.triggerName}
+  BEFORE UPDATE ON vault_item_custom_fields_history
+  FOR EACH ROW
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${VaultItemCustomFieldHistoryRaise.historyIsImmutable.message}'
+    );
+  END;
+  ''',
 ];

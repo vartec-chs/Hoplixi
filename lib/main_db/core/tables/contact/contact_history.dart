@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 
-import '../vault_items/vault_item_history.dart';
+import '../vault_items/vault_snapshots_history.dart';
 
 /// History-таблица для специфичных полей контакта.
 ///
@@ -8,7 +8,7 @@ import '../vault_items/vault_item_history.dart';
 @DataClassName('ContactHistoryData')
 class ContactHistory extends Table {
   TextColumn get historyId =>
-      text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
+      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
 
   /// UUID снимка для группировки связанных записей.
   TextColumn get snapshotId => text().nullable()();

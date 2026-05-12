@@ -1,12 +1,12 @@
 import 'package:drift/drift.dart';
 
-import '../vault_items/vault_item_history.dart';
+import '../vault_items/vault_snapshots_history.dart';
 import 'api_key_items.dart';
 
 @DataClassName('ApiKeyHistoryData')
 class ApiKeyHistory extends Table {
   TextColumn get historyId =>
-      text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
+      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
 
   TextColumn get service => text().withLength(min: 1, max: 255)();
 

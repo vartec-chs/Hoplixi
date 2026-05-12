@@ -13,7 +13,6 @@ class MainStoreMigrationRuntime {
     required this.reinstallHistoryTriggers,
     required this.categoriesTable,
     required this.vaultItemsTable,
-    required this.vaultItemHistoryTable,
   });
 
   final Future<void> Function(String sql) customStatement;
@@ -21,5 +20,4 @@ class MainStoreMigrationRuntime {
 
   final TableInfo<Table, dynamic> categoriesTable;
   final TableInfo<Table, dynamic> vaultItemsTable;
-  final TableInfo<Table, dynamic> vaultItemHistoryTable;
 }

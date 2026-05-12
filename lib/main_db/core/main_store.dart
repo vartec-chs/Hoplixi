@@ -51,10 +51,11 @@ part 'main_store.g.dart';
     Icons,
     IconRefs,
     ItemCategoryHistory,
+    VaultEventsHistory,
+    VaultSnapshotsHistory,
     VaultItemTagHistory,
     ItemLinkHistory,
     // --- История (Table-Per-Type) ---
-    VaultItemHistory,
     PasswordHistory,
     ApiKeyHistory,
     SshKeyHistory,
@@ -165,7 +166,6 @@ class MainStore extends _$MainStore {
           reinstallHistoryTriggers: _installHistoryTriggers,
           categoriesTable: categories,
           vaultItemsTable: vaultItems,
-          vaultItemHistoryTable: vaultItemHistory,
         );
 
         currentVersion = await runMainStoreKnownMigrations(
@@ -267,7 +267,8 @@ class MainStore extends _$MainStore {
         tags,
         icons,
         iconRefs,
-        vaultItemHistory,
+        vaultSnapshotsHistory,
+        vaultEventsHistory,
         fileMetadata,
       },
     ).watch().map((_) {});

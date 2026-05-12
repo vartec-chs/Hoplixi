@@ -1,6 +1,6 @@
 ﻿import 'package:drift/drift.dart';
 
-import '../vault_items/vault_item_history.dart';
+import '../vault_items/vault_snapshots_history.dart';
 import 'loyalty_card_items.dart';
 
 /// History-таблица для специфичных полей карты лояльности.
@@ -11,7 +11,7 @@ import 'loyalty_card_items.dart';
 @DataClassName('LoyaltyCardHistoryData')
 class LoyaltyCardHistory extends Table {
   TextColumn get historyId =>
-      text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
+      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
 
   /// UUID снимка для группировки связанных записей.
   TextColumn get snapshotId => text().nullable()();

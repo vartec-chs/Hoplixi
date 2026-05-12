@@ -1,12 +1,12 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../vault_items/vault_item_history.dart';
+import '../../vault_items/vault_snapshots_history.dart';
 import 'item_links.dart';
 
 /// History/snapshot-таблица для связей между vault items.
 ///
-/// Хранит снимок item_links на момент создания записи vault_item_history.
+/// Хранит снимок item_links на момент создания записи vault_snapshots_history.
 /// FK на live VaultItems специально не используются:
 /// source/target item могут быть удалены или изменены после создания истории.
 @DataClassName('ItemLinkHistoryData')
@@ -14,9 +14,9 @@ class ItemLinkHistory extends Table {
   /// UUID snapshot-записи связи.
   TextColumn get id => text().clientDefault(() => const Uuid().v4())();
 
-  /// FK → vault_item_history.id ON DELETE CASCADE.
+  /// FK → vault_snapshots_history.id ON DELETE CASCADE.
   TextColumn get historyId =>
-      text().references(VaultItemHistory, #id, onDelete: KeyAction.cascade)();
+      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
 
   /// ID исходной live-связи item_links на момент snapshot.
   ///
