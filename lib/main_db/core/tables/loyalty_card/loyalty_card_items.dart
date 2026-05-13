@@ -1,4 +1,4 @@
-﻿import 'package:drift/drift.dart';
+import 'package:drift/drift.dart';
 
 import '../vault_items/vault_items.dart';
 
@@ -58,11 +58,6 @@ class LoyaltyCardItems extends Table {
 
   /// Телефон поддержки.
   TextColumn get phoneNumber => text().withLength(min: 1, max: 64).nullable()();
-
-  /// Дополнительные метаданные в JSON-формате.
-  ///
-  /// Например: storeName, country, appLogin, membershipId,
-  /// termsUrl, lastPointsUpdateAt.
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -202,4 +197,83 @@ final List<String> loyaltyCardItemsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${LoyaltyCardItemIndex.barcodeType.indexName} ON loyalty_card_items(barcode_type);',
   'CREATE INDEX IF NOT EXISTS ${LoyaltyCardItemIndex.expiryDate.indexName} ON loyalty_card_items(expiry_date);',
   'CREATE INDEX IF NOT EXISTS ${LoyaltyCardItemIndex.tier.indexName} ON loyalty_card_items(tier);',
+];
+
+enum LoyaltyCardItemTrigger {
+  validateVaultItemTypeOnInsert(
+    'trg_loyalty_card_items_validate_vault_item_type_on_insert',
+  ),
+
+  validateVaultItemTypeOnUpdate(
+    'trg_loyalty_card_items_validate_vault_item_type_on_update',
+  ),
+
+  preventItemIdUpdate('trg_loyalty_card_items_prevent_item_id_update');
+
+  const LoyaltyCardItemTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum LoyaltyCardItemRaise {
+  invalidVaultItemType(
+    'loyalty_card_items.item_id must reference vault_items.id with type = loyaltyCard',
+  ),
+
+  itemIdImmutable('loyalty_card_items.item_id is immutable');
+
+  const LoyaltyCardItemRaise(this.message);
+
+  final String message;
+}
+
+final List<String> loyaltyCardItemsTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${LoyaltyCardItemTrigger.validateVaultItemTypeOnInsert.triggerName}
+  BEFORE INSERT ON loyalty_card_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'loyaltyCard'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${LoyaltyCardItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${LoyaltyCardItemTrigger.validateVaultItemTypeOnUpdate.triggerName}
+  BEFORE UPDATE ON loyalty_card_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'loyaltyCard'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${LoyaltyCardItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${LoyaltyCardItemTrigger.preventItemIdUpdate.triggerName}
+  BEFORE UPDATE OF item_id ON loyalty_card_items
+  FOR EACH ROW
+  WHEN NEW.item_id <> OLD.item_id
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${LoyaltyCardItemRaise.itemIdImmutable.message}'
+    );
+  END;
+  ''',
 ];

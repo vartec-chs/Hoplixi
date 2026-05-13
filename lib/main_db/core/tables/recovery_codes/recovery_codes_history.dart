@@ -8,11 +8,11 @@ import '../vault_items/vault_snapshots_history.dart';
 /// Сами коды обычно хранятся в отдельной таблице `recovery_codes`.
 @DataClassName('RecoveryCodesHistoryData')
 class RecoveryCodesHistory extends Table {
-  TextColumn get historyId =>
-      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
-
-  /// UUID снимка для группировки связанных записей.
-  TextColumn get snapshotId => text().nullable()();
+  TextColumn get historyId => text().references(
+    VaultSnapshotsHistory,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
 
   /// Snapshot общего количества кодов.
   IntColumn get codesCount => integer().withDefault(const Constant(0))();
@@ -25,8 +25,6 @@ class RecoveryCodesHistory extends Table {
 
   /// Snapshot признака одноразового набора.
   BoolColumn get oneTime => boolean().withDefault(const Constant(false))();
-
-  /// Дополнительные метаданные snapshot.
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -71,8 +69,7 @@ enum RecoveryCodesHistoryConstraint {
 }
 
 enum RecoveryCodesHistoryIndex {
-  generatedAt('idx_recovery_codes_history_generated_at'),
-  oneTime('idx_recovery_codes_history_one_time');
+  generatedAt('idx_recovery_codes_history_generated_at');
 
   const RecoveryCodesHistoryIndex(this.indexName);
 
@@ -81,5 +78,60 @@ enum RecoveryCodesHistoryIndex {
 
 final List<String> recoveryCodesHistoryTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${RecoveryCodesHistoryIndex.generatedAt.indexName} ON recovery_codes_history(generated_at);',
-  'CREATE INDEX IF NOT EXISTS ${RecoveryCodesHistoryIndex.oneTime.indexName} ON recovery_codes_history(one_time);',
+];
+
+enum RecoveryCodesHistoryTrigger {
+  validateSnapshotTypeOnInsert(
+    'trg_recovery_codes_history_validate_snapshot_type_on_insert',
+  ),
+
+  preventUpdate('trg_recovery_codes_history_prevent_update');
+
+  const RecoveryCodesHistoryTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum RecoveryCodesHistoryRaise {
+  invalidSnapshotType(
+    'recovery_codes_history.history_id must reference vault_snapshots_history.id with type = recoveryCodes',
+  ),
+
+  historyIsImmutable('recovery_codes_history rows are immutable');
+
+  const RecoveryCodesHistoryRaise(this.message);
+
+  final String message;
+}
+
+final List<String> recoveryCodesHistoryTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${RecoveryCodesHistoryTrigger.validateSnapshotTypeOnInsert.triggerName}
+  BEFORE INSERT ON recovery_codes_history
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_snapshots_history
+    WHERE id = NEW.history_id
+      AND type = 'recoveryCodes'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${RecoveryCodesHistoryRaise.invalidSnapshotType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${RecoveryCodesHistoryTrigger.preventUpdate.triggerName}
+  BEFORE UPDATE ON recovery_codes_history
+  FOR EACH ROW
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${RecoveryCodesHistoryRaise.historyIsImmutable.message}'
+    );
+  END;
+  ''',
 ];

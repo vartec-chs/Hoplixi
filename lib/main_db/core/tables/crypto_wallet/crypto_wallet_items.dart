@@ -72,7 +72,7 @@ class CryptoWalletItems extends Table {
 
   /// Адреса кошелька.
   ///
-  /// JSON array string.
+  /// Хранятся как plain text; один адрес на строку.
   TextColumn get addresses => text().nullable()();
 
   /// Extended public key.
@@ -89,11 +89,6 @@ class CryptoWalletItems extends Table {
 
   /// Watch-only кошелёк.
   BoolColumn get watchOnly => boolean().withDefault(const Constant(false))();
-
-  /// Дополнительные метаданные в JSON-формате.
-  ///
-  /// Например: account index, coin type, chain id, wallet app,
-  /// contract addresses, notes about backup location.
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -242,8 +237,7 @@ enum CryptoWalletItemConstraint {
 enum CryptoWalletItemIndex {
   walletType('idx_crypto_wallet_items_wallet_type'),
   network('idx_crypto_wallet_items_network'),
-  derivationScheme('idx_crypto_wallet_items_derivation_scheme'),
-  watchOnly('idx_crypto_wallet_items_watch_only');
+  derivationScheme('idx_crypto_wallet_items_derivation_scheme');
 
   const CryptoWalletItemIndex(this.indexName);
 
@@ -254,5 +248,83 @@ final List<String> cryptoWalletItemsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${CryptoWalletItemIndex.walletType.indexName} ON crypto_wallet_items(wallet_type);',
   'CREATE INDEX IF NOT EXISTS ${CryptoWalletItemIndex.network.indexName} ON crypto_wallet_items(network);',
   'CREATE INDEX IF NOT EXISTS ${CryptoWalletItemIndex.derivationScheme.indexName} ON crypto_wallet_items(derivation_scheme);',
-  'CREATE INDEX IF NOT EXISTS ${CryptoWalletItemIndex.watchOnly.indexName} ON crypto_wallet_items(watch_only);',
+];
+
+enum CryptoWalletItemTrigger {
+  validateVaultItemTypeOnInsert(
+    'trg_crypto_wallet_items_validate_vault_item_type_on_insert',
+  ),
+
+  validateVaultItemTypeOnUpdate(
+    'trg_crypto_wallet_items_validate_vault_item_type_on_update',
+  ),
+
+  preventItemIdUpdate('trg_crypto_wallet_items_prevent_item_id_update');
+
+  const CryptoWalletItemTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum CryptoWalletItemRaise {
+  invalidVaultItemType(
+    'crypto_wallet_items.item_id must reference vault_items.id with type = cryptoWallet',
+  ),
+
+  itemIdImmutable('crypto_wallet_items.item_id is immutable');
+
+  const CryptoWalletItemRaise(this.message);
+
+  final String message;
+}
+
+final List<String> cryptoWalletItemsTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${CryptoWalletItemTrigger.validateVaultItemTypeOnInsert.triggerName}
+  BEFORE INSERT ON crypto_wallet_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'cryptoWallet'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${CryptoWalletItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${CryptoWalletItemTrigger.validateVaultItemTypeOnUpdate.triggerName}
+  BEFORE UPDATE ON crypto_wallet_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'cryptoWallet'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${CryptoWalletItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${CryptoWalletItemTrigger.preventItemIdUpdate.triggerName}
+  BEFORE UPDATE OF item_id ON crypto_wallet_items
+  FOR EACH ROW
+  WHEN NEW.item_id <> OLD.item_id
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${CryptoWalletItemRaise.itemIdImmutable.message}'
+    );
+  END;
+  ''',
 ];

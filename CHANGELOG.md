@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## 2026-05-13
+
+### main_db
+
+- Проведена финальная чистка Drift-таблиц сущностей: из type-specific history
+  убраны дублирующие `snapshotId`-поля, так как `historyId` уже ссылается на
+  `vault_snapshots_history.id`.
+- Для type-specific item/history таблиц добавлены недостающие SQL-триггеры
+  проверки типа (`validateVaultItemTypeOnInsert/Update`,
+  `validateSnapshotTypeOnInsert`) и append-only защита history-записей.
+- Удалён generic `metadataJson` из `vault_events_history`; событие оставляет
+  только явные поля и ссылку `snapshotHistoryId`.
+- Сняты одиночные индексы по низкоселективным bool-полям в entity/history
+  таблицах.
+
 ## 2026-05-11
 
 ### docs

@@ -1,4 +1,4 @@
-﻿import 'package:drift/drift.dart';
+import 'package:drift/drift.dart';
 
 import '../vault_items/vault_snapshots_history.dart';
 import 'loyalty_card_items.dart';
@@ -10,11 +10,11 @@ import 'loyalty_card_items.dart';
 /// без сохранения секретов.
 @DataClassName('LoyaltyCardHistoryData')
 class LoyaltyCardHistory extends Table {
-  TextColumn get historyId =>
-      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
-
-  /// UUID снимка для группировки связанных записей.
-  TextColumn get snapshotId => text().nullable()();
+  TextColumn get historyId => text().references(
+    VaultSnapshotsHistory,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
 
   /// Название программы лояльности snapshot.
   TextColumn get programName => text().withLength(min: 1, max: 255)();
@@ -52,8 +52,6 @@ class LoyaltyCardHistory extends Table {
 
   /// Телефон поддержки snapshot.
   TextColumn get phoneNumber => text().withLength(min: 1, max: 64).nullable()();
-
-  /// Дополнительные метаданные snapshot.
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -184,4 +182,60 @@ final List<String> loyaltyCardHistoryTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${LoyaltyCardHistoryIndex.barcodeType.indexName} ON loyalty_card_history(barcode_type);',
   'CREATE INDEX IF NOT EXISTS ${LoyaltyCardHistoryIndex.expiryDate.indexName} ON loyalty_card_history(expiry_date);',
   'CREATE INDEX IF NOT EXISTS ${LoyaltyCardHistoryIndex.tier.indexName} ON loyalty_card_history(tier);',
+];
+
+enum LoyaltyCardHistoryTrigger {
+  validateSnapshotTypeOnInsert(
+    'trg_loyalty_card_history_validate_snapshot_type_on_insert',
+  ),
+
+  preventUpdate('trg_loyalty_card_history_prevent_update');
+
+  const LoyaltyCardHistoryTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum LoyaltyCardHistoryRaise {
+  invalidSnapshotType(
+    'loyalty_card_history.history_id must reference vault_snapshots_history.id with type = loyaltyCard',
+  ),
+
+  historyIsImmutable('loyalty_card_history rows are immutable');
+
+  const LoyaltyCardHistoryRaise(this.message);
+
+  final String message;
+}
+
+final List<String> loyaltyCardHistoryTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${LoyaltyCardHistoryTrigger.validateSnapshotTypeOnInsert.triggerName}
+  BEFORE INSERT ON loyalty_card_history
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_snapshots_history
+    WHERE id = NEW.history_id
+      AND type = 'loyaltyCard'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${LoyaltyCardHistoryRaise.invalidSnapshotType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${LoyaltyCardHistoryTrigger.preventUpdate.triggerName}
+  BEFORE UPDATE ON loyalty_card_history
+  FOR EACH ROW
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${LoyaltyCardHistoryRaise.historyIsImmutable.message}'
+    );
+  END;
+  ''',
 ];

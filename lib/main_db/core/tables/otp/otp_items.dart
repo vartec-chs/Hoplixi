@@ -133,3 +133,82 @@ final List<String> otpItemsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${OtpItemIndex.accountName.indexName} ON otp_items(account_name);',
   'CREATE INDEX IF NOT EXISTS ${OtpItemIndex.algorithm.indexName} ON otp_items(algorithm);',
 ];
+
+enum OtpItemTrigger {
+  validateVaultItemTypeOnInsert(
+    'trg_otp_items_validate_vault_item_type_on_insert',
+  ),
+
+  validateVaultItemTypeOnUpdate(
+    'trg_otp_items_validate_vault_item_type_on_update',
+  ),
+
+  preventItemIdUpdate('trg_otp_items_prevent_item_id_update');
+
+  const OtpItemTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum OtpItemRaise {
+  invalidVaultItemType(
+    'otp_items.item_id must reference vault_items.id with type = otp',
+  ),
+
+  itemIdImmutable('otp_items.item_id is immutable');
+
+  const OtpItemRaise(this.message);
+
+  final String message;
+}
+
+final List<String> otpItemsTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${OtpItemTrigger.validateVaultItemTypeOnInsert.triggerName}
+  BEFORE INSERT ON otp_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'otp'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${OtpItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${OtpItemTrigger.validateVaultItemTypeOnUpdate.triggerName}
+  BEFORE UPDATE ON otp_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'otp'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${OtpItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${OtpItemTrigger.preventItemIdUpdate.triggerName}
+  BEFORE UPDATE OF item_id ON otp_items
+  FOR EACH ROW
+  WHEN NEW.item_id <> OLD.item_id
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${OtpItemRaise.itemIdImmutable.message}'
+    );
+  END;
+  ''',
+];

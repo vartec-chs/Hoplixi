@@ -10,8 +10,11 @@ import '../vault_items/vault_snapshots_history.dart';
 @DataClassName('PasswordHistoryData')
 class PasswordHistory extends Table {
   /// PK и FK → vault_snapshots_history.id ON DELETE CASCADE.
-  TextColumn get historyId =>
-      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
+  TextColumn get historyId => text().references(
+    VaultSnapshotsHistory,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
 
   /// Логин / username snapshot.
   TextColumn get login => text().withLength(min: 1, max: 255).nullable()();
@@ -30,11 +33,6 @@ class PasswordHistory extends Table {
 
   /// Дата истечения срока действия пароля snapshot.
   DateTimeColumn get expiresAt => dateTime().nullable()();
-
-  /// UUID снимка для группировки связанных записей.
-  TextColumn get snapshotId => text().nullable()();
-
-  /// Дополнительные метаданные snapshot.
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -92,7 +90,6 @@ enum PasswordHistoryConstraint {
 }
 
 enum PasswordHistoryIndex {
-  snapshotId('idx_password_history_snapshot_id'),
   login('idx_password_history_login'),
   email('idx_password_history_email'),
   url('idx_password_history_url'),
@@ -104,9 +101,64 @@ enum PasswordHistoryIndex {
 }
 
 final List<String> passwordHistoryTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${PasswordHistoryIndex.snapshotId.indexName} ON password_history(snapshot_id);',
   'CREATE INDEX IF NOT EXISTS ${PasswordHistoryIndex.login.indexName} ON password_history(login);',
   'CREATE INDEX IF NOT EXISTS ${PasswordHistoryIndex.email.indexName} ON password_history(email);',
   'CREATE INDEX IF NOT EXISTS ${PasswordHistoryIndex.url.indexName} ON password_history(url);',
   'CREATE INDEX IF NOT EXISTS ${PasswordHistoryIndex.expiresAt.indexName} ON password_history(expires_at);',
+];
+
+enum PasswordHistoryTrigger {
+  validateSnapshotTypeOnInsert(
+    'trg_password_history_validate_snapshot_type_on_insert',
+  ),
+
+  preventUpdate('trg_password_history_prevent_update');
+
+  const PasswordHistoryTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum PasswordHistoryRaise {
+  invalidSnapshotType(
+    'password_history.history_id must reference vault_snapshots_history.id with type = password',
+  ),
+
+  historyIsImmutable('password_history rows are immutable');
+
+  const PasswordHistoryRaise(this.message);
+
+  final String message;
+}
+
+final List<String> passwordHistoryTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${PasswordHistoryTrigger.validateSnapshotTypeOnInsert.triggerName}
+  BEFORE INSERT ON password_history
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_snapshots_history
+    WHERE id = NEW.history_id
+      AND type = 'password'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${PasswordHistoryRaise.invalidSnapshotType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${PasswordHistoryTrigger.preventUpdate.triggerName}
+  BEFORE UPDATE ON password_history
+  FOR EACH ROW
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${PasswordHistoryRaise.historyIsImmutable.message}'
+    );
+  END;
+  ''',
 ];

@@ -9,11 +9,11 @@ import 'crypto_wallet_items.dart';
 /// Секретные поля могут быть NULL, если включён режим истории без сохранения секретов.
 @DataClassName('CryptoWalletHistoryData')
 class CryptoWalletHistory extends Table {
-  TextColumn get historyId =>
-      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
-
-  /// UUID снимка для группировки связанных записей.
-  TextColumn get snapshotId => text().nullable()();
+  TextColumn get historyId => text().references(
+    VaultSnapshotsHistory,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
 
   /// Тип кошелька snapshot.
   TextColumn get walletType => textEnum<CryptoWalletType>().nullable()();
@@ -54,7 +54,7 @@ class CryptoWalletHistory extends Table {
 
   /// Адреса кошелька snapshot.
   ///
-  /// JSON array string.
+  /// Хранятся как plain text; один адрес на строку.
   TextColumn get addresses => text().nullable()();
 
   /// Extended public key snapshot.
@@ -71,8 +71,6 @@ class CryptoWalletHistory extends Table {
 
   /// Watch-only snapshot.
   BoolColumn get watchOnly => boolean().withDefault(const Constant(false))();
-
-  /// Дополнительные метаданные snapshot.
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -227,8 +225,7 @@ enum CryptoWalletHistoryConstraint {
 enum CryptoWalletHistoryIndex {
   walletType('idx_crypto_wallet_history_wallet_type'),
   network('idx_crypto_wallet_history_network'),
-  derivationScheme('idx_crypto_wallet_history_derivation_scheme'),
-  watchOnly('idx_crypto_wallet_history_watch_only');
+  derivationScheme('idx_crypto_wallet_history_derivation_scheme');
 
   const CryptoWalletHistoryIndex(this.indexName);
 
@@ -239,5 +236,60 @@ final List<String> cryptoWalletHistoryTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${CryptoWalletHistoryIndex.walletType.indexName} ON crypto_wallet_history(wallet_type);',
   'CREATE INDEX IF NOT EXISTS ${CryptoWalletHistoryIndex.network.indexName} ON crypto_wallet_history(network);',
   'CREATE INDEX IF NOT EXISTS ${CryptoWalletHistoryIndex.derivationScheme.indexName} ON crypto_wallet_history(derivation_scheme);',
-  'CREATE INDEX IF NOT EXISTS ${CryptoWalletHistoryIndex.watchOnly.indexName} ON crypto_wallet_history(watch_only);',
+];
+
+enum CryptoWalletHistoryTrigger {
+  validateSnapshotTypeOnInsert(
+    'trg_crypto_wallet_history_validate_snapshot_type_on_insert',
+  ),
+
+  preventUpdate('trg_crypto_wallet_history_prevent_update');
+
+  const CryptoWalletHistoryTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum CryptoWalletHistoryRaise {
+  invalidSnapshotType(
+    'crypto_wallet_history.history_id must reference vault_snapshots_history.id with type = cryptoWallet',
+  ),
+
+  historyIsImmutable('crypto_wallet_history rows are immutable');
+
+  const CryptoWalletHistoryRaise(this.message);
+
+  final String message;
+}
+
+final List<String> cryptoWalletHistoryTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${CryptoWalletHistoryTrigger.validateSnapshotTypeOnInsert.triggerName}
+  BEFORE INSERT ON crypto_wallet_history
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_snapshots_history
+    WHERE id = NEW.history_id
+      AND type = 'cryptoWallet'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${CryptoWalletHistoryRaise.invalidSnapshotType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${CryptoWalletHistoryTrigger.preventUpdate.triggerName}
+  BEFORE UPDATE ON crypto_wallet_history
+  FOR EACH ROW
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${CryptoWalletHistoryRaise.historyIsImmutable.message}'
+    );
+  END;
+  ''',
 ];

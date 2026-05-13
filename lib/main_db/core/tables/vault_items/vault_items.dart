@@ -306,25 +306,15 @@ enum VaultItemTrigger {
 }
 
 enum VaultItemRaise {
-  createdAtImmutable(
-    'vault_items.created_at is immutable',
-  ),
+  createdAtImmutable('vault_items.created_at is immutable'),
 
-  typeImmutable(
-    'vault_items.type is immutable',
-  ),
+  typeImmutable('vault_items.type is immutable'),
 
-  deletedItemCannotBeArchived(
-    'vault_items.deleted item cannot be archived',
-  ),
+  deletedItemCannotBeArchived('vault_items.deleted item cannot be archived'),
 
-  deletedItemCannotBePinned(
-    'vault_items.deleted item cannot be pinned',
-  ),
+  deletedItemCannotBePinned('vault_items.deleted item cannot be pinned'),
 
-  deletedItemCannotBeFavorite(
-    'vault_items.deleted item cannot be favorite',
-  );
+  deletedItemCannotBeFavorite('vault_items.deleted item cannot be favorite');
 
   const VaultItemRaise(this.message);
 

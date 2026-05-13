@@ -42,7 +42,6 @@ class StoreMetaTable extends Table {
   DateTimeColumn get lastOpenedAt =>
       dateTime().clientDefault(() => DateTime.now())();
 
-
   @override
   Set<Column> get primaryKey => {singletonId};
 

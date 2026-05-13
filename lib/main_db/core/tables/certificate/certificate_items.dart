@@ -66,12 +66,6 @@ class CertificateItems extends Table {
   /// Дата окончания действия сертификата.
   DateTimeColumn get validTo => dateTime().nullable()();
 
-  /// OCSP URL.
-  TextColumn get ocspUrl => text().withLength(min: 1, max: 2048).nullable()();
-
-  /// CRL URL.
-  TextColumn get crlUrl => text().withLength(min: 1, max: 2048).nullable()();
-
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -152,65 +146,6 @@ class CertificateItems extends Table {
         CHECK (
           certificate_format_other IS NULL
           OR certificate_format_other = trim(certificate_format_other)
-        )
-        ''',
-
-    '''
-        CONSTRAINT ${CertificateItemConstraint.privateKeyNotBlank.constraintName}
-        CHECK (
-          private_key IS NULL
-          OR length(trim(private_key)) > 0
-        )
-        ''',
-
-    '''
-        CONSTRAINT ${CertificateItemConstraint.privateKeyNoOuterWhitespace.constraintName}
-        CHECK (
-          private_key IS NULL
-          OR private_key = trim(private_key)
-        )
-        ''',
-
-    '''
-        CONSTRAINT ${CertificateItemConstraint.privateKeyPasswordNotBlank.constraintName}
-        CHECK (
-          private_key_password IS NULL
-          OR length(trim(private_key_password)) > 0
-        )
-        ''',
-
-    '''
-        CONSTRAINT ${CertificateItemConstraint.privateKeyPasswordNoOuterWhitespace.constraintName}
-        CHECK (
-          private_key_password IS NULL
-          OR private_key_password = trim(private_key_password)
-        )
-        ''',
-
-    '''
-        CONSTRAINT ${CertificateItemConstraint.passwordForPfxNotBlank.constraintName}
-        CHECK (
-          password_for_pfx IS NULL
-          OR length(trim(password_for_pfx)) > 0
-        )
-        ''',
-
-    '''
-        CONSTRAINT ${CertificateItemConstraint.passwordForPfxNoOuterWhitespace.constraintName}
-        CHECK (
-          password_for_pfx IS NULL
-          OR password_for_pfx = trim(password_for_pfx)
-        )
-        ''',
-
-    '''
-        CONSTRAINT ${CertificateItemConstraint.passwordForPfxRequiresPfxBlob.constraintName}
-        CHECK (
-          password_for_pfx IS NULL
-          OR (
-            certificate_format IN ('pfx', 'pkcs12')
-            AND certificate_blob IS NOT NULL
-          )
         )
         ''',
 
@@ -306,38 +241,6 @@ class CertificateItems extends Table {
           OR valid_from <= valid_to
         )
         ''',
-
-    '''
-        CONSTRAINT ${CertificateItemConstraint.ocspUrlNotBlank.constraintName}
-        CHECK (
-          ocsp_url IS NULL
-          OR length(trim(ocsp_url)) > 0
-        )
-        ''',
-
-    '''
-        CONSTRAINT ${CertificateItemConstraint.ocspUrlNoOuterWhitespace.constraintName}
-        CHECK (
-          ocsp_url IS NULL
-          OR ocsp_url = trim(ocsp_url)
-        )
-        ''',
-
-    '''
-        CONSTRAINT ${CertificateItemConstraint.crlUrlNotBlank.constraintName}
-        CHECK (
-          crl_url IS NULL
-          OR length(trim(crl_url)) > 0
-        )
-        ''',
-
-    '''
-        CONSTRAINT ${CertificateItemConstraint.crlUrlNoOuterWhitespace.constraintName}
-        CHECK (
-          crl_url IS NULL
-          OR crl_url = trim(crl_url)
-        )
-        ''',
   ];
 }
 
@@ -364,30 +267,6 @@ enum CertificateItemConstraint {
 
   certificateFormatOtherNoOuterWhitespace(
     'chk_certificate_items_certificate_format_other_no_outer_whitespace',
-  ),
-
-  privateKeyNotBlank('chk_certificate_items_private_key_not_blank'),
-
-  privateKeyNoOuterWhitespace(
-    'chk_certificate_items_private_key_no_outer_whitespace',
-  ),
-
-  privateKeyPasswordNotBlank(
-    'chk_certificate_items_private_key_password_not_blank',
-  ),
-
-  privateKeyPasswordNoOuterWhitespace(
-    'chk_certificate_items_private_key_password_no_outer_whitespace',
-  ),
-
-  passwordForPfxNotBlank('chk_certificate_items_password_for_pfx_not_blank'),
-
-  passwordForPfxNoOuterWhitespace(
-    'chk_certificate_items_password_for_pfx_no_outer_whitespace',
-  ),
-
-  passwordForPfxRequiresPfxBlob(
-    'chk_certificate_items_password_for_pfx_requires_pfx_blob',
   ),
 
   keyAlgorithmOtherRequired(
@@ -418,17 +297,7 @@ enum CertificateItemConstraint {
 
   subjectNoOuterWhitespace('chk_certificate_items_subject_no_outer_whitespace'),
 
-  validRange('chk_certificate_items_valid_range'),
-
-  ocspUrlNotBlank('chk_certificate_items_ocsp_url_not_blank'),
-
-  ocspUrlNoOuterWhitespace(
-    'chk_certificate_items_ocsp_url_no_outer_whitespace',
-  ),
-
-  crlUrlNotBlank('chk_certificate_items_crl_url_not_blank'),
-
-  crlUrlNoOuterWhitespace('chk_certificate_items_crl_url_no_outer_whitespace');
+  validRange('chk_certificate_items_valid_range');
 
   const CertificateItemConstraint(this.constraintName);
 
@@ -439,8 +308,6 @@ enum CertificateItemIndex {
   certificateFormat('idx_certificate_items_certificate_format'),
 
   keyAlgorithm('idx_certificate_items_key_algorithm'),
-
-  validFrom('idx_certificate_items_valid_from'),
 
   validTo('idx_certificate_items_valid_to'),
 
@@ -464,12 +331,6 @@ final List<String> certificateItemsTableIndexes = [
   CREATE INDEX IF NOT EXISTS ${CertificateItemIndex.keyAlgorithm.indexName}
   ON certificate_items(key_algorithm)
   WHERE key_algorithm IS NOT NULL;
-  ''',
-
-  '''
-  CREATE INDEX IF NOT EXISTS ${CertificateItemIndex.validFrom.indexName}
-  ON certificate_items(valid_from)
-  WHERE valid_from IS NOT NULL;
   ''',
 
   '''

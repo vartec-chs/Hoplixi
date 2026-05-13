@@ -30,11 +30,6 @@ class PasswordItems extends Table {
 
   /// Дата истечения срока действия пароля.
   DateTimeColumn get expiresAt => dateTime().nullable()();
-
-  /// Дополнительные метаданные в JSON-формате.
-  ///
-  /// Например: passwordStrength, breachCheckAt, importedFrom,
-  /// passwordGeneratorProfile, oldUrlAliases.
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -106,4 +101,83 @@ final List<String> passwordItemsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${PasswordItemIndex.email.indexName} ON password_items(email);',
   'CREATE INDEX IF NOT EXISTS ${PasswordItemIndex.url.indexName} ON password_items(url);',
   'CREATE INDEX IF NOT EXISTS ${PasswordItemIndex.expiresAt.indexName} ON password_items(expires_at);',
+];
+
+enum PasswordItemTrigger {
+  validateVaultItemTypeOnInsert(
+    'trg_password_items_validate_vault_item_type_on_insert',
+  ),
+
+  validateVaultItemTypeOnUpdate(
+    'trg_password_items_validate_vault_item_type_on_update',
+  ),
+
+  preventItemIdUpdate('trg_password_items_prevent_item_id_update');
+
+  const PasswordItemTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum PasswordItemRaise {
+  invalidVaultItemType(
+    'password_items.item_id must reference vault_items.id with type = password',
+  ),
+
+  itemIdImmutable('password_items.item_id is immutable');
+
+  const PasswordItemRaise(this.message);
+
+  final String message;
+}
+
+final List<String> passwordItemsTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${PasswordItemTrigger.validateVaultItemTypeOnInsert.triggerName}
+  BEFORE INSERT ON password_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'password'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${PasswordItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${PasswordItemTrigger.validateVaultItemTypeOnUpdate.triggerName}
+  BEFORE UPDATE ON password_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'password'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${PasswordItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${PasswordItemTrigger.preventItemIdUpdate.triggerName}
+  BEFORE UPDATE OF item_id ON password_items
+  FOR EACH ROW
+  WHEN NEW.item_id <> OLD.item_id
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${PasswordItemRaise.itemIdImmutable.message}'
+    );
+  END;
+  ''',
 ];

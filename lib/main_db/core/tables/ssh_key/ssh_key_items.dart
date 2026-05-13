@@ -47,11 +47,6 @@ class SshKeyItems extends Table {
 
   /// Контекст использования: server login, git deploy, backup, CI и т.д.
   TextColumn get usage => text().withLength(min: 1, max: 255).nullable()();
-
-  /// Дополнительные метаданные в JSON-формате.
-  ///
-  /// Например: host, username, port, knownHostsEntry, sourceFileName,
-  /// importInfo, agentIdentity, certificateInfo, comment.
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -166,7 +161,6 @@ enum SshKeyItemConstraint {
 enum SshKeyItemIndex {
   keyType('idx_ssh_key_items_key_type'),
   fingerprint('idx_ssh_key_items_fingerprint'),
-  addedToAgent('idx_ssh_key_items_added_to_agent'),
   createdBy('idx_ssh_key_items_created_by');
 
   const SshKeyItemIndex(this.indexName);
@@ -177,6 +171,84 @@ enum SshKeyItemIndex {
 final List<String> sshKeyItemsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${SshKeyItemIndex.keyType.indexName} ON ssh_key_items(key_type);',
   'CREATE INDEX IF NOT EXISTS ${SshKeyItemIndex.fingerprint.indexName} ON ssh_key_items(fingerprint);',
-  'CREATE INDEX IF NOT EXISTS ${SshKeyItemIndex.addedToAgent.indexName} ON ssh_key_items(added_to_agent);',
   'CREATE INDEX IF NOT EXISTS ${SshKeyItemIndex.createdBy.indexName} ON ssh_key_items(created_by);',
+];
+
+enum SshKeyItemTrigger {
+  validateVaultItemTypeOnInsert(
+    'trg_ssh_key_items_validate_vault_item_type_on_insert',
+  ),
+
+  validateVaultItemTypeOnUpdate(
+    'trg_ssh_key_items_validate_vault_item_type_on_update',
+  ),
+
+  preventItemIdUpdate('trg_ssh_key_items_prevent_item_id_update');
+
+  const SshKeyItemTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum SshKeyItemRaise {
+  invalidVaultItemType(
+    'ssh_key_items.item_id must reference vault_items.id with type = sshKey',
+  ),
+
+  itemIdImmutable('ssh_key_items.item_id is immutable');
+
+  const SshKeyItemRaise(this.message);
+
+  final String message;
+}
+
+final List<String> sshKeyItemsTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${SshKeyItemTrigger.validateVaultItemTypeOnInsert.triggerName}
+  BEFORE INSERT ON ssh_key_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'sshKey'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${SshKeyItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${SshKeyItemTrigger.validateVaultItemTypeOnUpdate.triggerName}
+  BEFORE UPDATE ON ssh_key_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'sshKey'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${SshKeyItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${SshKeyItemTrigger.preventItemIdUpdate.triggerName}
+  BEFORE UPDATE OF item_id ON ssh_key_items
+  FOR EACH ROW
+  WHEN NEW.item_id <> OLD.item_id
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${SshKeyItemRaise.itemIdImmutable.message}'
+    );
+  END;
+  ''',
 ];

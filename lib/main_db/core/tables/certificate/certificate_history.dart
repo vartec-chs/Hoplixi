@@ -5,11 +5,11 @@ import 'certificate_items.dart';
 
 @DataClassName('CertificateHistoryData')
 class CertificateHistory extends Table {
-  TextColumn get historyId =>
-      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
-
-  /// UUID снимка для группировки связанных записей.
-  TextColumn get snapshotId => text().nullable()();
+  TextColumn get historyId => text().references(
+    VaultSnapshotsHistory,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
 
   /// Формат сертификата snapshot.
   TextColumn get certificateFormat =>
@@ -68,13 +68,6 @@ class CertificateHistory extends Table {
   /// Дата окончания действия сертификата snapshot.
   DateTimeColumn get validTo => dateTime().nullable()();
 
-  /// OCSP URL snapshot.
-  TextColumn get ocspUrl => text().withLength(min: 1, max: 2048).nullable()();
-
-  /// CRL URL snapshot.
-  TextColumn get crlUrl => text().withLength(min: 1, max: 2048).nullable()();
-
-  /// Дополнительные метаданные snapshot.
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -100,6 +93,30 @@ class CertificateHistory extends Table {
     ''',
 
     '''
+    CONSTRAINT ${CertificateHistoryConstraint.certificateBlobNotEmpty.constraintName}
+    CHECK (
+      certificate_blob IS NULL
+      OR length(certificate_blob) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${CertificateHistoryConstraint.pemFormatRequiresPem.constraintName}
+    CHECK (
+      certificate_format != 'pem'
+      OR certificate_pem IS NOT NULL
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${CertificateHistoryConstraint.binaryFormatRequiresBlob.constraintName}
+    CHECK (
+      certificate_format NOT IN ('der', 'pfx', 'pkcs12')
+      OR certificate_blob IS NOT NULL
+    )
+    ''',
+
+    '''
     CONSTRAINT ${CertificateHistoryConstraint.certificateFormatOtherRequired.constraintName}
     CHECK (
       certificate_format IS NULL
@@ -116,6 +133,14 @@ class CertificateHistory extends Table {
     CHECK (
       certificate_format = 'other'
       OR certificate_format_other IS NULL
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${CertificateHistoryConstraint.certificateFormatOtherNoOuterWhitespace.constraintName}
+    CHECK (
+      certificate_format_other IS NULL
+      OR certificate_format_other = trim(certificate_format_other)
     )
     ''',
 
@@ -140,6 +165,14 @@ class CertificateHistory extends Table {
     ''',
 
     '''
+    CONSTRAINT ${CertificateHistoryConstraint.keyAlgorithmOtherNoOuterWhitespace.constraintName}
+    CHECK (
+      key_algorithm_other IS NULL
+      OR key_algorithm_other = trim(key_algorithm_other)
+    )
+    ''',
+
+    '''
     CONSTRAINT ${CertificateHistoryConstraint.keySizePositive.constraintName}
     CHECK (
       key_size IS NULL
@@ -156,10 +189,26 @@ class CertificateHistory extends Table {
     ''',
 
     '''
+    CONSTRAINT ${CertificateHistoryConstraint.serialNumberNoOuterWhitespace.constraintName}
+    CHECK (
+      serial_number IS NULL
+      OR serial_number = trim(serial_number)
+    )
+    ''',
+
+    '''
     CONSTRAINT ${CertificateHistoryConstraint.issuerNotBlank.constraintName}
     CHECK (
       issuer IS NULL
       OR length(trim(issuer)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${CertificateHistoryConstraint.issuerNoOuterWhitespace.constraintName}
+    CHECK (
+      issuer IS NULL
+      OR issuer = trim(issuer)
     )
     ''',
 
@@ -172,27 +221,19 @@ class CertificateHistory extends Table {
     ''',
 
     '''
+    CONSTRAINT ${CertificateHistoryConstraint.subjectNoOuterWhitespace.constraintName}
+    CHECK (
+      subject IS NULL
+      OR subject = trim(subject)
+    )
+    ''',
+
+    '''
     CONSTRAINT ${CertificateHistoryConstraint.validRange.constraintName}
     CHECK (
       valid_from IS NULL
       OR valid_to IS NULL
       OR valid_from <= valid_to
-    )
-    ''',
-
-    '''
-    CONSTRAINT ${CertificateHistoryConstraint.ocspUrlNotBlank.constraintName}
-    CHECK (
-      ocsp_url IS NULL
-      OR length(trim(ocsp_url)) > 0
-    )
-    ''',
-
-    '''
-    CONSTRAINT ${CertificateHistoryConstraint.crlUrlNotBlank.constraintName}
-    CHECK (
-      crl_url IS NULL
-      OR length(trim(crl_url)) > 0
     )
     ''',
   ];
@@ -203,12 +244,24 @@ enum CertificateHistoryConstraint {
 
   certificatePemNotBlank('chk_certificate_history_certificate_pem_not_blank'),
 
+  certificateBlobNotEmpty('chk_certificate_history_certificate_blob_not_empty'),
+
+  pemFormatRequiresPem('chk_certificate_history_pem_format_requires_pem'),
+
+  binaryFormatRequiresBlob(
+    'chk_certificate_history_binary_format_requires_blob',
+  ),
+
   certificateFormatOtherRequired(
     'chk_certificate_history_certificate_format_other_required',
   ),
 
   certificateFormatOtherMustBeNull(
     'chk_certificate_history_certificate_format_other_must_be_null',
+  ),
+
+  certificateFormatOtherNoOuterWhitespace(
+    'chk_certificate_history_certificate_format_other_no_outer_whitespace',
   ),
 
   keyAlgorithmOtherRequired(
@@ -219,19 +272,29 @@ enum CertificateHistoryConstraint {
     'chk_certificate_history_key_algorithm_other_must_be_null',
   ),
 
+  keyAlgorithmOtherNoOuterWhitespace(
+    'chk_certificate_history_key_algorithm_other_no_outer_whitespace',
+  ),
+
   keySizePositive('chk_certificate_history_key_size_positive'),
 
   serialNumberNotBlank('chk_certificate_history_serial_number_not_blank'),
 
+  serialNumberNoOuterWhitespace(
+    'chk_certificate_history_serial_number_no_outer_whitespace',
+  ),
+
   issuerNotBlank('chk_certificate_history_issuer_not_blank'),
+
+  issuerNoOuterWhitespace('chk_certificate_history_issuer_no_outer_whitespace'),
 
   subjectNotBlank('chk_certificate_history_subject_not_blank'),
 
-  validRange('chk_certificate_history_valid_range'),
+  subjectNoOuterWhitespace(
+    'chk_certificate_history_subject_no_outer_whitespace',
+  ),
 
-  ocspUrlNotBlank('chk_certificate_history_ocsp_url_not_blank'),
-
-  crlUrlNotBlank('chk_certificate_history_crl_url_not_blank');
+  validRange('chk_certificate_history_valid_range');
 
   const CertificateHistoryConstraint(this.constraintName);
 
@@ -241,7 +304,6 @@ enum CertificateHistoryConstraint {
 enum CertificateHistoryIndex {
   certificateFormat('idx_certificate_history_certificate_format'),
   keyAlgorithm('idx_certificate_history_key_algorithm'),
-  validFrom('idx_certificate_history_valid_from'),
   validTo('idx_certificate_history_valid_to'),
   issuer('idx_certificate_history_issuer'),
   subject('idx_certificate_history_subject');
@@ -254,8 +316,63 @@ enum CertificateHistoryIndex {
 final List<String> certificateHistoryTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${CertificateHistoryIndex.certificateFormat.indexName} ON certificate_history(certificate_format);',
   'CREATE INDEX IF NOT EXISTS ${CertificateHistoryIndex.keyAlgorithm.indexName} ON certificate_history(key_algorithm);',
-  'CREATE INDEX IF NOT EXISTS ${CertificateHistoryIndex.validFrom.indexName} ON certificate_history(valid_from);',
   'CREATE INDEX IF NOT EXISTS ${CertificateHistoryIndex.validTo.indexName} ON certificate_history(valid_to);',
   'CREATE INDEX IF NOT EXISTS ${CertificateHistoryIndex.issuer.indexName} ON certificate_history(issuer);',
   'CREATE INDEX IF NOT EXISTS ${CertificateHistoryIndex.subject.indexName} ON certificate_history(subject);',
+];
+
+enum CertificateHistoryTrigger {
+  validateSnapshotTypeOnInsert(
+    'trg_certificate_history_validate_snapshot_type_on_insert',
+  ),
+
+  preventUpdate('trg_certificate_history_prevent_update');
+
+  const CertificateHistoryTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum CertificateHistoryRaise {
+  invalidSnapshotType(
+    'certificate_history.history_id must reference vault_snapshots_history.id with type = certificate',
+  ),
+
+  historyIsImmutable('certificate_history rows are immutable');
+
+  const CertificateHistoryRaise(this.message);
+
+  final String message;
+}
+
+final List<String> certificateHistoryTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${CertificateHistoryTrigger.validateSnapshotTypeOnInsert.triggerName}
+  BEFORE INSERT ON certificate_history
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_snapshots_history
+    WHERE id = NEW.history_id
+      AND type = 'certificate'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${CertificateHistoryRaise.invalidSnapshotType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${CertificateHistoryTrigger.preventUpdate.triggerName}
+  BEFORE UPDATE ON certificate_history
+  FOR EACH ROW
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${CertificateHistoryRaise.historyIsImmutable.message}'
+    );
+  END;
+  ''',
 ];

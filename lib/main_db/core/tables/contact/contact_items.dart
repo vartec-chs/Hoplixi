@@ -33,11 +33,6 @@ class ContactItems extends Table {
   /// Экстренный контакт.
   BoolColumn get isEmergencyContact =>
       boolean().withDefault(const Constant(false))();
-
-  /// Дополнительные данные в JSON-формате.
-  ///
-  /// Например: дополнительные телефоны, мессенджеры, соцсети,
-  /// timezone, preferredContactMethod и т.д.
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -118,7 +113,6 @@ enum ContactItemIndex {
   phone('idx_contact_items_phone'),
   email('idx_contact_items_email'),
   company('idx_contact_items_company'),
-  isEmergencyContact('idx_contact_items_is_emergency_contact'),
   birthday('idx_contact_items_birthday');
 
   const ContactItemIndex(this.indexName);
@@ -130,6 +124,84 @@ final List<String> contactItemsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${ContactItemIndex.phone.indexName} ON contact_items(phone);',
   'CREATE INDEX IF NOT EXISTS ${ContactItemIndex.email.indexName} ON contact_items(email);',
   'CREATE INDEX IF NOT EXISTS ${ContactItemIndex.company.indexName} ON contact_items(company);',
-  'CREATE INDEX IF NOT EXISTS ${ContactItemIndex.isEmergencyContact.indexName} ON contact_items(is_emergency_contact);',
   'CREATE INDEX IF NOT EXISTS ${ContactItemIndex.birthday.indexName} ON contact_items(birthday);',
+];
+
+enum ContactItemTrigger {
+  validateVaultItemTypeOnInsert(
+    'trg_contact_items_validate_vault_item_type_on_insert',
+  ),
+
+  validateVaultItemTypeOnUpdate(
+    'trg_contact_items_validate_vault_item_type_on_update',
+  ),
+
+  preventItemIdUpdate('trg_contact_items_prevent_item_id_update');
+
+  const ContactItemTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum ContactItemRaise {
+  invalidVaultItemType(
+    'contact_items.item_id must reference vault_items.id with type = contact',
+  ),
+
+  itemIdImmutable('contact_items.item_id is immutable');
+
+  const ContactItemRaise(this.message);
+
+  final String message;
+}
+
+final List<String> contactItemsTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${ContactItemTrigger.validateVaultItemTypeOnInsert.triggerName}
+  BEFORE INSERT ON contact_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'contact'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${ContactItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${ContactItemTrigger.validateVaultItemTypeOnUpdate.triggerName}
+  BEFORE UPDATE ON contact_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'contact'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${ContactItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${ContactItemTrigger.preventItemIdUpdate.triggerName}
+  BEFORE UPDATE OF item_id ON contact_items
+  FOR EACH ROW
+  WHEN NEW.item_id <> OLD.item_id
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${ContactItemRaise.itemIdImmutable.message}'
+    );
+  END;
+  ''',
 ];

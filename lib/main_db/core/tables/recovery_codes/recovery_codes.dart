@@ -26,10 +26,6 @@ class RecoveryCodes extends Table {
 
   /// Позиция кода в исходном списке.
   IntColumn get position => integer().nullable()();
-
-  /// Дополнительные метаданные в JSON-формате.
-  ///
-  /// Например: importInfo, originalLine, label, group.
   @override
   String get tableName => 'recovery_codes';
 

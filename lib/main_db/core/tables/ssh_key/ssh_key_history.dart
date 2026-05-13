@@ -10,11 +10,11 @@ import 'ssh_key_items.dart';
 /// если включён режим истории без сохранения секретов.
 @DataClassName('SshKeyHistoryData')
 class SshKeyHistory extends Table {
-  TextColumn get historyId =>
-      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
-
-  /// UUID снимка для группировки связанных записей.
-  TextColumn get snapshotId => text().nullable()();
+  TextColumn get historyId => text().references(
+    VaultSnapshotsHistory,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
 
   /// Публичный ключ snapshot.
   TextColumn get publicKey => text().nullable()();
@@ -47,8 +47,6 @@ class SshKeyHistory extends Table {
 
   /// Контекст использования snapshot.
   TextColumn get usage => text().withLength(min: 1, max: 255).nullable()();
-
-  /// Дополнительные метаданные snapshot.
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -163,7 +161,6 @@ enum SshKeyHistoryConstraint {
 enum SshKeyHistoryIndex {
   keyType('idx_ssh_key_history_key_type'),
   fingerprint('idx_ssh_key_history_fingerprint'),
-  addedToAgent('idx_ssh_key_history_added_to_agent'),
   createdBy('idx_ssh_key_history_created_by');
 
   const SshKeyHistoryIndex(this.indexName);
@@ -174,6 +171,61 @@ enum SshKeyHistoryIndex {
 final List<String> sshKeyHistoryTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${SshKeyHistoryIndex.keyType.indexName} ON ssh_key_history(key_type);',
   'CREATE INDEX IF NOT EXISTS ${SshKeyHistoryIndex.fingerprint.indexName} ON ssh_key_history(fingerprint);',
-  'CREATE INDEX IF NOT EXISTS ${SshKeyHistoryIndex.addedToAgent.indexName} ON ssh_key_history(added_to_agent);',
   'CREATE INDEX IF NOT EXISTS ${SshKeyHistoryIndex.createdBy.indexName} ON ssh_key_history(created_by);',
+];
+
+enum SshKeyHistoryTrigger {
+  validateSnapshotTypeOnInsert(
+    'trg_ssh_key_history_validate_snapshot_type_on_insert',
+  ),
+
+  preventUpdate('trg_ssh_key_history_prevent_update');
+
+  const SshKeyHistoryTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum SshKeyHistoryRaise {
+  invalidSnapshotType(
+    'ssh_key_history.history_id must reference vault_snapshots_history.id with type = sshKey',
+  ),
+
+  historyIsImmutable('ssh_key_history rows are immutable');
+
+  const SshKeyHistoryRaise(this.message);
+
+  final String message;
+}
+
+final List<String> sshKeyHistoryTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${SshKeyHistoryTrigger.validateSnapshotTypeOnInsert.triggerName}
+  BEFORE INSERT ON ssh_key_history
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_snapshots_history
+    WHERE id = NEW.history_id
+      AND type = 'sshKey'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${SshKeyHistoryRaise.invalidSnapshotType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${SshKeyHistoryTrigger.preventUpdate.triggerName}
+  BEFORE UPDATE ON ssh_key_history
+  FOR EACH ROW
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${SshKeyHistoryRaise.historyIsImmutable.message}'
+    );
+  END;
+  ''',
 ];

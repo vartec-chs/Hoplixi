@@ -101,7 +101,6 @@ enum WifiItemConstraint {
 enum WifiItemIndex {
   ssid('idx_wifi_items_ssid'),
   security('idx_wifi_items_security'),
-  hidden('idx_wifi_items_hidden'),
   username('idx_wifi_items_username');
 
   const WifiItemIndex(this.indexName);
@@ -112,6 +111,84 @@ enum WifiItemIndex {
 final List<String> wifiItemsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${WifiItemIndex.ssid.indexName} ON wifi_items(ssid);',
   'CREATE INDEX IF NOT EXISTS ${WifiItemIndex.security.indexName} ON wifi_items(security);',
-  'CREATE INDEX IF NOT EXISTS ${WifiItemIndex.hidden.indexName} ON wifi_items(hidden);',
   'CREATE INDEX IF NOT EXISTS ${WifiItemIndex.username.indexName} ON wifi_items(username);',
+];
+
+enum WifiItemTrigger {
+  validateVaultItemTypeOnInsert(
+    'trg_wifi_items_validate_vault_item_type_on_insert',
+  ),
+
+  validateVaultItemTypeOnUpdate(
+    'trg_wifi_items_validate_vault_item_type_on_update',
+  ),
+
+  preventItemIdUpdate('trg_wifi_items_prevent_item_id_update');
+
+  const WifiItemTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum WifiItemRaise {
+  invalidVaultItemType(
+    'wifi_items.item_id must reference vault_items.id with type = wifi',
+  ),
+
+  itemIdImmutable('wifi_items.item_id is immutable');
+
+  const WifiItemRaise(this.message);
+
+  final String message;
+}
+
+final List<String> wifiItemsTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${WifiItemTrigger.validateVaultItemTypeOnInsert.triggerName}
+  BEFORE INSERT ON wifi_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'wifi'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${WifiItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${WifiItemTrigger.validateVaultItemTypeOnUpdate.triggerName}
+  BEFORE UPDATE ON wifi_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'wifi'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${WifiItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${WifiItemTrigger.preventItemIdUpdate.triggerName}
+  BEFORE UPDATE OF item_id ON wifi_items
+  FOR EACH ROW
+  WHEN NEW.item_id <> OLD.item_id
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${WifiItemRaise.itemIdImmutable.message}'
+    );
+  END;
+  ''',
 ];

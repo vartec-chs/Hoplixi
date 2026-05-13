@@ -7,11 +7,11 @@ import '../vault_items/vault_snapshots_history.dart';
 /// Данные вставляются только триггерами.
 @DataClassName('ContactHistoryData')
 class ContactHistory extends Table {
-  TextColumn get historyId =>
-      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
-
-  /// UUID снимка для группировки связанных записей.
-  TextColumn get snapshotId => text().nullable()();
+  TextColumn get historyId => text().references(
+    VaultSnapshotsHistory,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
 
   /// Основной телефон snapshot.
   TextColumn get phone => text().withLength(min: 1, max: 64).nullable()();
@@ -38,7 +38,6 @@ class ContactHistory extends Table {
   BoolColumn get isEmergencyContact =>
       boolean().withDefault(const Constant(false))();
 
-  /// Дополнительные данные в JSON-формате snapshot.
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -114,7 +113,6 @@ enum ContactHistoryIndex {
   phone('idx_contact_history_phone'),
   email('idx_contact_history_email'),
   company('idx_contact_history_company'),
-  isEmergencyContact('idx_contact_history_is_emergency_contact'),
   birthday('idx_contact_history_birthday');
 
   const ContactHistoryIndex(this.indexName);
@@ -126,6 +124,61 @@ final List<String> contactHistoryTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${ContactHistoryIndex.phone.indexName} ON contact_history(phone);',
   'CREATE INDEX IF NOT EXISTS ${ContactHistoryIndex.email.indexName} ON contact_history(email);',
   'CREATE INDEX IF NOT EXISTS ${ContactHistoryIndex.company.indexName} ON contact_history(company);',
-  'CREATE INDEX IF NOT EXISTS ${ContactHistoryIndex.isEmergencyContact.indexName} ON contact_history(is_emergency_contact);',
   'CREATE INDEX IF NOT EXISTS ${ContactHistoryIndex.birthday.indexName} ON contact_history(birthday);',
+];
+
+enum ContactHistoryTrigger {
+  validateSnapshotTypeOnInsert(
+    'trg_contact_history_validate_snapshot_type_on_insert',
+  ),
+
+  preventUpdate('trg_contact_history_prevent_update');
+
+  const ContactHistoryTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum ContactHistoryRaise {
+  invalidSnapshotType(
+    'contact_history.history_id must reference vault_snapshots_history.id with type = contact',
+  ),
+
+  historyIsImmutable('contact_history rows are immutable');
+
+  const ContactHistoryRaise(this.message);
+
+  final String message;
+}
+
+final List<String> contactHistoryTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${ContactHistoryTrigger.validateSnapshotTypeOnInsert.triggerName}
+  BEFORE INSERT ON contact_history
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_snapshots_history
+    WHERE id = NEW.history_id
+      AND type = 'contact'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${ContactHistoryRaise.invalidSnapshotType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${ContactHistoryTrigger.preventUpdate.triggerName}
+  BEFORE UPDATE ON contact_history
+  FOR EACH ROW
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${ContactHistoryRaise.historyIsImmutable.message}'
+    );
+  END;
+  ''',
 ];

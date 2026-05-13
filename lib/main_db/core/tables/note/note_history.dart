@@ -10,11 +10,11 @@ import '../vault_items/vault_snapshots_history.dart';
 @DataClassName('NoteHistoryData')
 class NoteHistory extends Table {
   /// PK и FK → vault_snapshots_history.id ON DELETE CASCADE.
-  TextColumn get historyId =>
-      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
-
-  /// UUID снимка для группировки связанных записей.
-  TextColumn get snapshotId => text().nullable()();
+  TextColumn get historyId => text().references(
+    VaultSnapshotsHistory,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
 
   /// Quill Delta JSON snapshot.
   ///
@@ -26,8 +26,6 @@ class NoteHistory extends Table {
   ///
   /// Nullable intentionally.
   TextColumn get content => text().nullable()();
-
-  /// Дополнительные метаданные snapshot.
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -63,3 +61,59 @@ enum NoteHistoryConstraint {
 
   final String constraintName;
 }
+
+enum NoteHistoryTrigger {
+  validateSnapshotTypeOnInsert(
+    'trg_note_history_validate_snapshot_type_on_insert',
+  ),
+
+  preventUpdate('trg_note_history_prevent_update');
+
+  const NoteHistoryTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum NoteHistoryRaise {
+  invalidSnapshotType(
+    'note_history.history_id must reference vault_snapshots_history.id with type = note',
+  ),
+
+  historyIsImmutable('note_history rows are immutable');
+
+  const NoteHistoryRaise(this.message);
+
+  final String message;
+}
+
+final List<String> noteHistoryTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${NoteHistoryTrigger.validateSnapshotTypeOnInsert.triggerName}
+  BEFORE INSERT ON note_history
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_snapshots_history
+    WHERE id = NEW.history_id
+      AND type = 'note'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${NoteHistoryRaise.invalidSnapshotType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${NoteHistoryTrigger.preventUpdate.triggerName}
+  BEFORE UPDATE ON note_history
+  FOR EACH ROW
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${NoteHistoryRaise.historyIsImmutable.message}'
+    );
+  END;
+  ''',
+];

@@ -28,10 +28,8 @@ class FileMetadataHistory extends Table {
   )();
 
   /// Тип владельца snapshot-записи.
-  TextColumn get ownerKind =>
-      textEnum<FileMetadataHistoryOwnerKind>().withDefault(
-        const Constant('standalone'),
-      )();
+  TextColumn get ownerKind => textEnum<FileMetadataHistoryOwnerKind>()
+      .withDefault(const Constant('standalone'))();
 
   /// ID владельца snapshot-записи, если ownerKind не standalone.
   TextColumn get ownerId => text().nullable()();

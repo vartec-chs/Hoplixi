@@ -11,11 +11,11 @@ import 'identity_items.dart';
 @DataClassName('IdentityHistoryData')
 class IdentityHistory extends Table {
   @ReferenceName('identityHistory')
-  TextColumn get historyId =>
-      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
-
-  /// UUID снимка для группировки связанных записей.
-  TextColumn get snapshotId => text().nullable()();
+  TextColumn get historyId => text().references(
+    VaultSnapshotsHistory,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
 
   /// Тип документа snapshot.
   TextColumn get idType => textEnum<IdentityDocumentType>()();
@@ -61,8 +61,6 @@ class IdentityHistory extends Table {
 
   /// Проверен ли документ snapshot.
   BoolColumn get verified => boolean().withDefault(const Constant(false))();
-
-  /// Дополнительные метаданные snapshot.
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -177,8 +175,7 @@ enum IdentityHistoryIndex {
   idType('idx_identity_history_id_type'),
   fullName('idx_identity_history_full_name'),
   nationality('idx_identity_history_nationality'),
-  expiryDate('idx_identity_history_expiry_date'),
-  verified('idx_identity_history_verified');
+  expiryDate('idx_identity_history_expiry_date');
 
   const IdentityHistoryIndex(this.indexName);
 
@@ -190,5 +187,60 @@ final List<String> identityHistoryTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${IdentityHistoryIndex.fullName.indexName} ON identity_history(full_name);',
   'CREATE INDEX IF NOT EXISTS ${IdentityHistoryIndex.nationality.indexName} ON identity_history(nationality);',
   'CREATE INDEX IF NOT EXISTS ${IdentityHistoryIndex.expiryDate.indexName} ON identity_history(expiry_date);',
-  'CREATE INDEX IF NOT EXISTS ${IdentityHistoryIndex.verified.indexName} ON identity_history(verified);',
+];
+
+enum IdentityHistoryTrigger {
+  validateSnapshotTypeOnInsert(
+    'trg_identity_history_validate_snapshot_type_on_insert',
+  ),
+
+  preventUpdate('trg_identity_history_prevent_update');
+
+  const IdentityHistoryTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum IdentityHistoryRaise {
+  invalidSnapshotType(
+    'identity_history.history_id must reference vault_snapshots_history.id with type = identity',
+  ),
+
+  historyIsImmutable('identity_history rows are immutable');
+
+  const IdentityHistoryRaise(this.message);
+
+  final String message;
+}
+
+final List<String> identityHistoryTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${IdentityHistoryTrigger.validateSnapshotTypeOnInsert.triggerName}
+  BEFORE INSERT ON identity_history
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_snapshots_history
+    WHERE id = NEW.history_id
+      AND type = 'identity'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${IdentityHistoryRaise.invalidSnapshotType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${IdentityHistoryTrigger.preventUpdate.triggerName}
+  BEFORE UPDATE ON identity_history
+  FOR EACH ROW
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${IdentityHistoryRaise.historyIsImmutable.message}'
+    );
+  END;
+  ''',
 ];

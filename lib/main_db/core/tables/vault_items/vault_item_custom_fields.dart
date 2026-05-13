@@ -277,9 +277,7 @@ enum VaultItemCustomFieldTrigger {
 }
 
 enum VaultItemCustomFieldRaise {
-  createdAtImmutable(
-    'vault_item_custom_fields.created_at is immutable',
-  );
+  createdAtImmutable('vault_item_custom_fields.created_at is immutable');
 
   const VaultItemCustomFieldRaise(this.message);
 

@@ -15,8 +15,11 @@ class ItemLinkHistory extends Table {
   TextColumn get id => text().clientDefault(() => const Uuid().v4())();
 
   /// FK → vault_snapshots_history.id ON DELETE CASCADE.
-  TextColumn get historyId =>
-      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
+  TextColumn get historyId => text().references(
+    VaultSnapshotsHistory,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
 
   /// ID исходной live-связи item_links на момент snapshot.
   ///

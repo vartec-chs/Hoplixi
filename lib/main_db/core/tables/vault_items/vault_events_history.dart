@@ -92,11 +92,6 @@ class VaultEventsHistory extends Table {
     onDelete: KeyAction.setNull,
   )();
 
-  /// Машиночитаемый контекст события.
-  ///
-  /// JSON валидируется на уровне приложения, чтобы не зависеть от JSON1.
-  TextColumn get metadataJson => text().nullable()();
-
   /// Источник события.
   TextColumn get actorType =>
       textEnum<VaultHistoryActorType>().withDefault(const Constant('user'))();
@@ -176,14 +171,6 @@ class VaultEventsHistory extends Table {
         ''',
 
     '''
-        CONSTRAINT ${VaultEventHistoryConstraint.metadataJsonNotBlank.constraintName}
-        CHECK (
-          metadata_json IS NULL
-          OR length(trim(metadata_json)) > 0
-        )
-        ''',
-
-    '''
         CONSTRAINT ${VaultEventHistoryConstraint.snapshotRequiredForRestorableActions.constraintName}
         CHECK (
           action NOT IN (
@@ -240,8 +227,6 @@ enum VaultEventHistoryConstraint {
   snapshotHistoryIdNotBlank(
     'chk_vault_events_history_snapshot_history_id_not_blank',
   ),
-
-  metadataJsonNotBlank('chk_vault_events_history_metadata_json_not_blank'),
 
   snapshotRequiredForRestorableActions(
     'chk_vault_events_history_snapshot_required_for_restorable_actions',

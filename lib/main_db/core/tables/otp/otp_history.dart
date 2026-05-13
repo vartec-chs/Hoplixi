@@ -11,11 +11,11 @@ import 'otp_items.dart';
 @DataClassName('OtpHistoryData')
 class OtpHistory extends Table {
   /// PK и FK → vault_snapshots_history.id ON DELETE CASCADE.
-  TextColumn get historyId =>
-      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
-
-  /// UUID снимка для группировки связанных записей.
-  TextColumn get snapshotId => text().nullable()();
+  TextColumn get historyId => text().references(
+    VaultSnapshotsHistory,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
 
   /// Тип OTP snapshot: TOTP или HOTP.
   TextColumn get type =>
@@ -46,8 +46,6 @@ class OtpHistory extends Table {
 
   /// Счётчик HOTP snapshot.
   IntColumn get counter => integer().nullable()();
-
-  /// Дополнительные метаданные snapshot.
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -149,4 +147,60 @@ final List<String> otpHistoryTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${OtpHistoryIndex.issuer.indexName} ON otp_history(issuer);',
   'CREATE INDEX IF NOT EXISTS ${OtpHistoryIndex.accountName.indexName} ON otp_history(account_name);',
   'CREATE INDEX IF NOT EXISTS ${OtpHistoryIndex.algorithm.indexName} ON otp_history(algorithm);',
+];
+
+enum OtpHistoryTrigger {
+  validateSnapshotTypeOnInsert(
+    'trg_otp_history_validate_snapshot_type_on_insert',
+  ),
+
+  preventUpdate('trg_otp_history_prevent_update');
+
+  const OtpHistoryTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum OtpHistoryRaise {
+  invalidSnapshotType(
+    'otp_history.history_id must reference vault_snapshots_history.id with type = otp',
+  ),
+
+  historyIsImmutable('otp_history rows are immutable');
+
+  const OtpHistoryRaise(this.message);
+
+  final String message;
+}
+
+final List<String> otpHistoryTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${OtpHistoryTrigger.validateSnapshotTypeOnInsert.triggerName}
+  BEFORE INSERT ON otp_history
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_snapshots_history
+    WHERE id = NEW.history_id
+      AND type = 'otp'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${OtpHistoryRaise.invalidSnapshotType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${OtpHistoryTrigger.preventUpdate.triggerName}
+  BEFORE UPDATE ON otp_history
+  FOR EACH ROW
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${OtpHistoryRaise.historyIsImmutable.message}'
+    );
+  END;
+  ''',
 ];

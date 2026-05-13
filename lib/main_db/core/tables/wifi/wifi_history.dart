@@ -10,11 +10,11 @@ import 'wifi_items.dart';
 /// если включён режим истории без сохранения секретов.
 @DataClassName('WifiHistoryData')
 class WifiHistory extends Table {
-  TextColumn get historyId =>
-      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
-
-  /// UUID снимка для группировки связанных записей.
-  TextColumn get snapshotId => text().nullable()();
+  TextColumn get historyId => text().references(
+    VaultSnapshotsHistory,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
 
   /// SSID сети snapshot.
   TextColumn get ssid => text().withLength(min: 1, max: 255)();
@@ -110,7 +110,6 @@ enum WifiHistoryConstraint {
 enum WifiHistoryIndex {
   ssid('idx_wifi_history_ssid'),
   security('idx_wifi_history_security'),
-  hidden('idx_wifi_history_hidden'),
   username('idx_wifi_history_username');
 
   const WifiHistoryIndex(this.indexName);
@@ -121,6 +120,61 @@ enum WifiHistoryIndex {
 final List<String> wifiHistoryTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${WifiHistoryIndex.ssid.indexName} ON wifi_history(ssid);',
   'CREATE INDEX IF NOT EXISTS ${WifiHistoryIndex.security.indexName} ON wifi_history(security);',
-  'CREATE INDEX IF NOT EXISTS ${WifiHistoryIndex.hidden.indexName} ON wifi_history(hidden);',
   'CREATE INDEX IF NOT EXISTS ${WifiHistoryIndex.username.indexName} ON wifi_history(username);',
+];
+
+enum WifiHistoryTrigger {
+  validateSnapshotTypeOnInsert(
+    'trg_wifi_history_validate_snapshot_type_on_insert',
+  ),
+
+  preventUpdate('trg_wifi_history_prevent_update');
+
+  const WifiHistoryTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum WifiHistoryRaise {
+  invalidSnapshotType(
+    'wifi_history.history_id must reference vault_snapshots_history.id with type = wifi',
+  ),
+
+  historyIsImmutable('wifi_history rows are immutable');
+
+  const WifiHistoryRaise(this.message);
+
+  final String message;
+}
+
+final List<String> wifiHistoryTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${WifiHistoryTrigger.validateSnapshotTypeOnInsert.triggerName}
+  BEFORE INSERT ON wifi_history
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_snapshots_history
+    WHERE id = NEW.history_id
+      AND type = 'wifi'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${WifiHistoryRaise.invalidSnapshotType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${WifiHistoryTrigger.preventUpdate.triggerName}
+  BEFORE UPDATE ON wifi_history
+  FOR EACH ROW
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${WifiHistoryRaise.historyIsImmutable.message}'
+    );
+  END;
+  ''',
 ];

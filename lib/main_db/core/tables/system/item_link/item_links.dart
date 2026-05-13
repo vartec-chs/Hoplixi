@@ -96,7 +96,9 @@ enum ItemLinkConstraint {
 
   relationTypeOtherRequired('chk_item_links_relation_type_other_required'),
 
-  relationTypeOtherMustBeNull('chk_item_links_relation_type_other_must_be_null'),
+  relationTypeOtherMustBeNull(
+    'chk_item_links_relation_type_other_must_be_null',
+  ),
 
   labelNotBlank('chk_item_links_label_not_blank'),
 

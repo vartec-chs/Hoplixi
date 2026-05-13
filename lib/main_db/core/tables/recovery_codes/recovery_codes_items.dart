@@ -22,11 +22,6 @@ class RecoveryCodesItems extends Table {
 
   /// Набор одноразовых кодов.
   BoolColumn get oneTime => boolean().withDefault(const Constant(false))();
-
-  /// Дополнительные метаданные в JSON-формате.
-  ///
-  /// Например: sourceService, importInfo, generationPolicy,
-  /// originalFormat, displayHint.
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -71,8 +66,7 @@ enum RecoveryCodesItemConstraint {
 }
 
 enum RecoveryCodesItemIndex {
-  generatedAt('idx_recovery_codes_items_generated_at'),
-  oneTime('idx_recovery_codes_items_one_time');
+  generatedAt('idx_recovery_codes_items_generated_at');
 
   const RecoveryCodesItemIndex(this.indexName);
 
@@ -81,5 +75,83 @@ enum RecoveryCodesItemIndex {
 
 final List<String> recoveryCodesItemsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${RecoveryCodesItemIndex.generatedAt.indexName} ON recovery_codes_items(generated_at);',
-  'CREATE INDEX IF NOT EXISTS ${RecoveryCodesItemIndex.oneTime.indexName} ON recovery_codes_items(one_time);',
+];
+
+enum RecoveryCodesItemTrigger {
+  validateVaultItemTypeOnInsert(
+    'trg_recovery_codes_items_validate_vault_item_type_on_insert',
+  ),
+
+  validateVaultItemTypeOnUpdate(
+    'trg_recovery_codes_items_validate_vault_item_type_on_update',
+  ),
+
+  preventItemIdUpdate('trg_recovery_codes_items_prevent_item_id_update');
+
+  const RecoveryCodesItemTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum RecoveryCodesItemRaise {
+  invalidVaultItemType(
+    'recovery_codes_items.item_id must reference vault_items.id with type = recoveryCodes',
+  ),
+
+  itemIdImmutable('recovery_codes_items.item_id is immutable');
+
+  const RecoveryCodesItemRaise(this.message);
+
+  final String message;
+}
+
+final List<String> recoveryCodesItemsTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${RecoveryCodesItemTrigger.validateVaultItemTypeOnInsert.triggerName}
+  BEFORE INSERT ON recovery_codes_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'recoveryCodes'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${RecoveryCodesItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${RecoveryCodesItemTrigger.validateVaultItemTypeOnUpdate.triggerName}
+  BEFORE UPDATE ON recovery_codes_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'recoveryCodes'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${RecoveryCodesItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${RecoveryCodesItemTrigger.preventItemIdUpdate.triggerName}
+  BEFORE UPDATE OF item_id ON recovery_codes_items
+  FOR EACH ROW
+  WHEN NEW.item_id <> OLD.item_id
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${RecoveryCodesItemRaise.itemIdImmutable.message}'
+    );
+  END;
+  ''',
 ];

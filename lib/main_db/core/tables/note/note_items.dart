@@ -21,11 +21,6 @@ class NoteItems extends Table {
   ///
   /// Используется для preview, быстрого отображения и возможной индексации.
   TextColumn get content => text()();
-
-  /// Дополнительные метаданные в JSON-формате.
-  ///
-  /// Например: editorVersion, contentHash, wordCount, language,
-  /// pinnedRanges, formattingMigrationVersion.
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -59,3 +54,82 @@ enum NoteItemConstraint {
 
   final String constraintName;
 }
+
+enum NoteItemTrigger {
+  validateVaultItemTypeOnInsert(
+    'trg_note_items_validate_vault_item_type_on_insert',
+  ),
+
+  validateVaultItemTypeOnUpdate(
+    'trg_note_items_validate_vault_item_type_on_update',
+  ),
+
+  preventItemIdUpdate('trg_note_items_prevent_item_id_update');
+
+  const NoteItemTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum NoteItemRaise {
+  invalidVaultItemType(
+    'note_items.item_id must reference vault_items.id with type = note',
+  ),
+
+  itemIdImmutable('note_items.item_id is immutable');
+
+  const NoteItemRaise(this.message);
+
+  final String message;
+}
+
+final List<String> noteItemsTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${NoteItemTrigger.validateVaultItemTypeOnInsert.triggerName}
+  BEFORE INSERT ON note_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'note'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${NoteItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${NoteItemTrigger.validateVaultItemTypeOnUpdate.triggerName}
+  BEFORE UPDATE ON note_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'note'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${NoteItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${NoteItemTrigger.preventItemIdUpdate.triggerName}
+  BEFORE UPDATE OF item_id ON note_items
+  FOR EACH ROW
+  WHEN NEW.item_id <> OLD.item_id
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${NoteItemRaise.itemIdImmutable.message}'
+    );
+  END;
+  ''',
+];

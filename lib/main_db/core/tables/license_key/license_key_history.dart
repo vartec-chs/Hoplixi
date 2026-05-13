@@ -10,11 +10,11 @@ import 'license_key_items.dart';
 /// если включён режим истории без сохранения секретов.
 @DataClassName('LicenseKeyHistoryData')
 class LicenseKeyHistory extends Table {
-  TextColumn get historyId =>
-      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
-
-  /// UUID снимка для группировки связанных записей.
-  TextColumn get snapshotId => text().nullable()();
+  TextColumn get historyId => text().references(
+    VaultSnapshotsHistory,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
 
   /// Продукт/приложение snapshot.
   TextColumn get product => text().withLength(min: 1, max: 255)();
@@ -53,8 +53,6 @@ class LicenseKeyHistory extends Table {
 
   /// Дата окончания действия лицензии snapshot.
   DateTimeColumn get expiresAt => dateTime().nullable()();
-
-  /// Дополнительные метаданные snapshot.
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -196,4 +194,60 @@ final List<String> licenseKeyHistoryTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${LicenseKeyHistoryIndex.licenseType.indexName} ON license_key_history(license_type);',
   'CREATE INDEX IF NOT EXISTS ${LicenseKeyHistoryIndex.purchaseDate.indexName} ON license_key_history(purchase_date);',
   'CREATE INDEX IF NOT EXISTS ${LicenseKeyHistoryIndex.expiresAt.indexName} ON license_key_history(expires_at);',
+];
+
+enum LicenseKeyHistoryTrigger {
+  validateSnapshotTypeOnInsert(
+    'trg_license_key_history_validate_snapshot_type_on_insert',
+  ),
+
+  preventUpdate('trg_license_key_history_prevent_update');
+
+  const LicenseKeyHistoryTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum LicenseKeyHistoryRaise {
+  invalidSnapshotType(
+    'license_key_history.history_id must reference vault_snapshots_history.id with type = licenseKey',
+  ),
+
+  historyIsImmutable('license_key_history rows are immutable');
+
+  const LicenseKeyHistoryRaise(this.message);
+
+  final String message;
+}
+
+final List<String> licenseKeyHistoryTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${LicenseKeyHistoryTrigger.validateSnapshotTypeOnInsert.triggerName}
+  BEFORE INSERT ON license_key_history
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_snapshots_history
+    WHERE id = NEW.history_id
+      AND type = 'licenseKey'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${LicenseKeyHistoryRaise.invalidSnapshotType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${LicenseKeyHistoryTrigger.preventUpdate.triggerName}
+  BEFORE UPDATE ON license_key_history
+  FOR EACH ROW
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${LicenseKeyHistoryRaise.historyIsImmutable.message}'
+    );
+  END;
+  ''',
 ];

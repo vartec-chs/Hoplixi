@@ -55,11 +55,6 @@ class LicenseKeyItems extends Table {
 
   /// Дата окончания действия лицензии.
   DateTimeColumn get expiresAt => dateTime().nullable()();
-
-  /// Дополнительные метаданные в JSON-формате.
-  ///
-  /// Например: vendorAccount, portalUrl, invoiceId, deviceLimit,
-  /// activationEmail, renewalInfo.
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -197,4 +192,83 @@ final List<String> licenseKeyItemsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${LicenseKeyItemIndex.licenseType.indexName} ON license_key_items(license_type);',
   'CREATE INDEX IF NOT EXISTS ${LicenseKeyItemIndex.purchaseDate.indexName} ON license_key_items(purchase_date);',
   'CREATE INDEX IF NOT EXISTS ${LicenseKeyItemIndex.expiresAt.indexName} ON license_key_items(expires_at);',
+];
+
+enum LicenseKeyItemTrigger {
+  validateVaultItemTypeOnInsert(
+    'trg_license_key_items_validate_vault_item_type_on_insert',
+  ),
+
+  validateVaultItemTypeOnUpdate(
+    'trg_license_key_items_validate_vault_item_type_on_update',
+  ),
+
+  preventItemIdUpdate('trg_license_key_items_prevent_item_id_update');
+
+  const LicenseKeyItemTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum LicenseKeyItemRaise {
+  invalidVaultItemType(
+    'license_key_items.item_id must reference vault_items.id with type = licenseKey',
+  ),
+
+  itemIdImmutable('license_key_items.item_id is immutable');
+
+  const LicenseKeyItemRaise(this.message);
+
+  final String message;
+}
+
+final List<String> licenseKeyItemsTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${LicenseKeyItemTrigger.validateVaultItemTypeOnInsert.triggerName}
+  BEFORE INSERT ON license_key_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'licenseKey'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${LicenseKeyItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${LicenseKeyItemTrigger.validateVaultItemTypeOnUpdate.triggerName}
+  BEFORE UPDATE ON license_key_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'licenseKey'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${LicenseKeyItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${LicenseKeyItemTrigger.preventItemIdUpdate.triggerName}
+  BEFORE UPDATE OF item_id ON license_key_items
+  FOR EACH ROW
+  WHEN NEW.item_id <> OLD.item_id
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${LicenseKeyItemRaise.itemIdImmutable.message}'
+    );
+  END;
+  ''',
 ];

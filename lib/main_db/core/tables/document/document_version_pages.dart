@@ -25,7 +25,8 @@ class DocumentVersionPages extends Table {
   IntColumn get pageNumber => integer()();
 
   /// Хэш страницы для контроля изменений.
-  TextColumn get pageSha256Hash => text().withLength(min: 1, max: 255).nullable()();
+  TextColumn get pageSha256Hash =>
+      text().withLength(min: 1, max: 255).nullable()();
 
   /// Главная страница/обложка версии.
   BoolColumn get isPrimary => boolean().withDefault(const Constant(false))();
@@ -68,7 +69,9 @@ class DocumentVersionPages extends Table {
 
 enum DocumentVersionPageConstraint {
   pageNumberPositive('chk_document_version_pages_page_number_positive'),
-  pageSha256HashNotBlank('chk_document_version_pages_page_sha256_hash_not_blank');
+  pageSha256HashNotBlank(
+    'chk_document_version_pages_page_sha256_hash_not_blank',
+  );
 
   const DocumentVersionPageConstraint(this.constraintName);
 

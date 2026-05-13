@@ -389,6 +389,10 @@ final List<String> bankCardHistoryTableIndexes = [
 ];
 
 enum BankCardHistoryTrigger {
+  validateSnapshotTypeOnInsert(
+    'trg_bank_card_history_validate_snapshot_type_on_insert',
+  ),
+
   preventUpdate('trg_bank_card_history_prevent_update');
 
   const BankCardHistoryTrigger(this.triggerName);
@@ -397,6 +401,10 @@ enum BankCardHistoryTrigger {
 }
 
 enum BankCardHistoryRaise {
+  invalidSnapshotType(
+    'bank_card_history.history_id must reference vault_snapshots_history.id with type = bankCard',
+  ),
+
   historyIsImmutable('bank_card_history rows are immutable');
 
   const BankCardHistoryRaise(this.message);
@@ -405,6 +413,23 @@ enum BankCardHistoryRaise {
 }
 
 final List<String> bankCardHistoryTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${BankCardHistoryTrigger.validateSnapshotTypeOnInsert.triggerName}
+  BEFORE INSERT ON bank_card_history
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_snapshots_history
+    WHERE id = NEW.history_id
+      AND type = 'bankCard'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${BankCardHistoryRaise.invalidSnapshotType.message}'
+    );
+  END;
+  ''',
   '''
   CREATE TRIGGER IF NOT EXISTS ${BankCardHistoryTrigger.preventUpdate.triggerName}
   BEFORE UPDATE ON bank_card_history
