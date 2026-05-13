@@ -6,7 +6,7 @@ import 'icons/icon_refs.dart';
 enum CategoryType {
   note,
   password,
-  totp,
+  otp,
   bankCard,
   file,
   document,

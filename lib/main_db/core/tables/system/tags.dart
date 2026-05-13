@@ -4,7 +4,7 @@ import 'package:uuid/uuid.dart';
 enum TagType {
   note,
   password,
-  totp,
+  otp,
   bankCard,
   file,
   document,
@@ -34,7 +34,7 @@ class Tags extends Table {
       .withLength(min: 8, max: 8)
       .withDefault(const Constant('FFFFFFFF'))();
 
-  /// Тип тега: password, note, totp, mixed и т.д.
+  /// Тип тега: password, note, otp, mixed и т.д.
   TextColumn get type => textEnum<TagType>()();
 
   DateTimeColumn get createdAt =>

@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../vault_items/vault_items.dart';
 
-enum OtpType { totp, hotp }
+enum OtpType { otp, hotp }
 
 enum OtpHashAlgorithm { SHA1, SHA256, SHA512 }
 
@@ -13,7 +13,7 @@ class OtpItems extends Table {
       text().references(VaultItems, #id, onDelete: KeyAction.cascade)();
 
   TextColumn get type =>
-      textEnum<OtpType>().withDefault(const Constant('totp'))();
+      textEnum<OtpType>().withDefault(const Constant('otp'))();
 
   TextColumn get issuer => text().withLength(min: 1, max: 255).nullable()();
 
@@ -52,7 +52,7 @@ class OtpItems extends Table {
     CONSTRAINT ${OtpItemConstraint.typeConfigConsistency.constraintName}
     CHECK (
       (
-        type = 'totp'
+        type = 'otp'
         AND period IS NOT NULL
         AND counter IS NULL
       )

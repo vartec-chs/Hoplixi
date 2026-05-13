@@ -4,6 +4,9 @@
 
 ### main_db
 
+- В таблицах `categories`, `tags`, `otp_items` и `otp_history` переименован
+  legacy-тип `totp` в `otp`, включая enum-значения, SQL defaults и type
+  consistency checks.
 - В `categories`, `tags`, `item_category_history`, `item_tags` и
   `vault_item_tag_history` добавлены недостающие blank/whitespace CHECK-правила,
   partial indexes для nullable FK-полей и immutable `created_at` / history

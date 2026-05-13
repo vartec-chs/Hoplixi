@@ -17,9 +17,9 @@ class OtpHistory extends Table {
     onDelete: KeyAction.cascade,
   )();
 
-  /// Тип OTP snapshot: TOTP или HOTP.
+  /// Тип OTP snapshot: OTP или HOTP.
   TextColumn get type =>
-      textEnum<OtpType>().withDefault(const Constant('totp'))();
+      textEnum<OtpType>().withDefault(const Constant('otp'))();
 
   /// Издатель snapshot.
   TextColumn get issuer => text().withLength(min: 1, max: 255).nullable()();
@@ -66,7 +66,7 @@ class OtpHistory extends Table {
     CONSTRAINT ${OtpHistoryConstraint.typeConfigConsistency.constraintName}
     CHECK (
       (
-        type = 'totp'
+        type = 'otp'
         AND period IS NOT NULL
         AND counter IS NULL
       )
