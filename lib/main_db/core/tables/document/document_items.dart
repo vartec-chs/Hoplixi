@@ -26,7 +26,30 @@ class DocumentItems extends Table {
   Set<Column> get primaryKey => {itemId};
 
   @override
-  String get tableName => 'document_items';
+  List<String> get customConstraints => [
+    '''
+    CONSTRAINT ${DocumentItemConstraint.itemIdNotBlank.constraintName}
+    CHECK (length(trim(item_id)) > 0)
+    ''',
+
+    '''
+    CONSTRAINT ${DocumentItemConstraint.currentVersionIdNotBlank.constraintName}
+    CHECK (
+      current_version_id IS NULL
+      OR length(trim(current_version_id)) > 0
+    )
+    ''',
+  ];
+}
+
+enum DocumentItemConstraint {
+  itemIdNotBlank('chk_document_items_item_id_not_blank'),
+
+  currentVersionIdNotBlank('chk_document_items_current_version_id_not_blank');
+
+  const DocumentItemConstraint(this.constraintName);
+
+  final String constraintName;
 }
 
 enum DocumentItemIndex {
@@ -38,7 +61,7 @@ enum DocumentItemIndex {
 }
 
 final List<String> documentItemsTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${DocumentItemIndex.currentVersionId.indexName} ON document_items(current_version_id);',
+  'CREATE INDEX IF NOT EXISTS ${DocumentItemIndex.currentVersionId.indexName} ON document_items(current_version_id) WHERE current_version_id IS NOT NULL;',
 ];
 
 enum DocumentItemTrigger {
@@ -50,7 +73,15 @@ enum DocumentItemTrigger {
     'trg_document_items_validate_vault_item_type_on_update',
   ),
 
-  preventItemIdUpdate('trg_document_items_prevent_item_id_update');
+  preventItemIdUpdate('trg_document_items_prevent_item_id_update'),
+
+  validateCurrentVersionOnInsert(
+    'trg_document_items_validate_current_version_on_insert',
+  ),
+
+  validateCurrentVersionOnUpdate(
+    'trg_document_items_validate_current_version_on_update',
+  );
 
   const DocumentItemTrigger(this.triggerName);
 
@@ -62,7 +93,11 @@ enum DocumentItemRaise {
     'document_items.item_id must reference vault_items.id with type = document',
   ),
 
-  itemIdImmutable('document_items.item_id is immutable');
+  itemIdImmutable('document_items.item_id is immutable'),
+
+  invalidCurrentVersion(
+    'document_items.current_version_id must belong to this document',
+  );
 
   const DocumentItemRaise(this.message);
 
@@ -115,6 +150,44 @@ final List<String> documentItemsTableTriggers = [
     SELECT RAISE(
       ABORT,
       '${DocumentItemRaise.itemIdImmutable.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${DocumentItemTrigger.validateCurrentVersionOnInsert.triggerName}
+  BEFORE INSERT ON document_items
+  FOR EACH ROW
+  WHEN NEW.current_version_id IS NOT NULL
+    AND NOT EXISTS (
+      SELECT 1
+      FROM document_versions
+      WHERE id = NEW.current_version_id
+        AND document_id = NEW.item_id
+    )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${DocumentItemRaise.invalidCurrentVersion.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${DocumentItemTrigger.validateCurrentVersionOnUpdate.triggerName}
+  BEFORE UPDATE OF current_version_id ON document_items
+  FOR EACH ROW
+  WHEN NEW.current_version_id IS NOT NULL
+    AND NOT EXISTS (
+      SELECT 1
+      FROM document_versions
+      WHERE id = NEW.current_version_id
+        AND document_id = NEW.item_id
+    )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${DocumentItemRaise.invalidCurrentVersion.message}'
     );
   END;
   ''',
