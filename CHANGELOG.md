@@ -4,6 +4,16 @@
 
 ### main_db
 
+- В `vault_item_custom_fields` и `vault_item_custom_fields_history` удалён
+  `CustomFieldType.json`.
+- В `vault_item_custom_fields` и `vault_item_custom_fields_history` удалён
+  legacy-тип `other` из `CustomFieldType` вместе с `field_type_other` и всеми
+  связанными CHECK-ограничениями.
+- В `ssh_key_items` и `ssh_key_history` удалено поле `fingerprint` вместе с
+  связанными CHECK-ограничениями и индексами.
+- В `loyalty_card_items` и `loyalty_card_history` убрано поле `points`, а вместо
+  него добавлен nullable `password` для хранения секретного значения карты
+  лояльности.
 - В таблицах `categories`, `tags`, `otp_items` и `otp_history` переименован
   legacy-тип `totp` в `otp`, включая enum-значения, SQL defaults и type
   consistency checks.

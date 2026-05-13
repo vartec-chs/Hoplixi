@@ -13,8 +13,6 @@ enum CustomFieldType {
   number,
   multiline,
   boolean,
-  json,
-  other,
 }
 
 @DataClassName('VaultItemCustomFieldsData')
@@ -40,10 +38,6 @@ class VaultItemCustomFields extends Table {
   /// Тип поля.
   TextColumn get fieldType =>
       textEnum<CustomFieldType>().withDefault(const Constant('text'))();
-
-  /// Дополнительный тип поля, если fieldType = other.
-  TextColumn get fieldTypeOther =>
-      text().withLength(min: 1, max: 255).nullable()();
 
   /// Быстрый флаг секретности поля.
   ///
@@ -106,33 +100,6 @@ class VaultItemCustomFields extends Table {
         ''',
 
     '''
-        CONSTRAINT ${VaultItemCustomFieldConstraint.fieldTypeOtherRequired.constraintName}
-        CHECK (
-          field_type != 'other'
-          OR (
-            field_type_other IS NOT NULL
-            AND length(trim(field_type_other)) > 0
-          )
-        )
-        ''',
-
-    '''
-        CONSTRAINT ${VaultItemCustomFieldConstraint.fieldTypeOtherMustBeNull.constraintName}
-        CHECK (
-          field_type = 'other'
-          OR field_type_other IS NULL
-        )
-        ''',
-
-    '''
-        CONSTRAINT ${VaultItemCustomFieldConstraint.fieldTypeOtherNoOuterWhitespace.constraintName}
-        CHECK (
-          field_type_other IS NULL
-          OR field_type_other = trim(field_type_other)
-        )
-        ''',
-
-    '''
         CONSTRAINT ${VaultItemCustomFieldConstraint.booleanValueFormat.constraintName}
         CHECK (
           field_type != 'boolean'
@@ -181,18 +148,6 @@ enum VaultItemCustomFieldConstraint {
   ),
 
   valueNotBlank('chk_vault_item_custom_fields_value_not_blank'),
-
-  fieldTypeOtherRequired(
-    'chk_vault_item_custom_fields_field_type_other_required',
-  ),
-
-  fieldTypeOtherMustBeNull(
-    'chk_vault_item_custom_fields_field_type_other_must_be_null',
-  ),
-
-  fieldTypeOtherNoOuterWhitespace(
-    'chk_vault_item_custom_fields_field_type_other_no_outer_whitespace',
-  ),
 
   booleanValueFormat('chk_vault_item_custom_fields_boolean_value_format'),
 

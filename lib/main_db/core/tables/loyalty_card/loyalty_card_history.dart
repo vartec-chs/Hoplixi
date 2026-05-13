@@ -25,6 +25,9 @@ class LoyaltyCardHistory extends Table {
   /// Значение штрихкода/QR-кода snapshot.
   TextColumn get barcodeValue => text().nullable()();
 
+  /// Пароль/секрет карты лояльности snapshot.
+  TextColumn get password => text().nullable()();
+
   /// Тип штрихкода/QR-кода snapshot.
   TextColumn get barcodeType => textEnum<LoyaltyBarcodeType>().nullable()();
 
@@ -43,9 +46,6 @@ class LoyaltyCardHistory extends Table {
 
   /// Email поддержки или аккаунта программы snapshot.
   TextColumn get email => text().withLength(min: 1, max: 255).nullable()();
-
-  /// Баллы/очки по карте snapshot.
-  IntColumn get points => integer().nullable()();
 
   /// Дата начала действия карты snapshot.
   DateTimeColumn get validFrom => dateTime().nullable()();
@@ -191,14 +191,6 @@ class LoyaltyCardHistory extends Table {
     ''',
 
     '''
-    CONSTRAINT ${LoyaltyCardHistoryConstraint.pointsNonNegative.constraintName}
-    CHECK (
-      points IS NULL
-      OR points >= 0
-    )
-    ''',
-
-    '''
     CONSTRAINT ${LoyaltyCardHistoryConstraint.validDateRange.constraintName}
     CHECK (
       valid_from IS NULL
@@ -253,8 +245,6 @@ enum LoyaltyCardHistoryConstraint {
   emailNotBlank('chk_loyalty_card_history_email_not_blank'),
 
   emailNoOuterWhitespace('chk_loyalty_card_history_email_no_outer_whitespace'),
-
-  pointsNonNegative('chk_loyalty_card_history_points_non_negative'),
 
   validDateRange('chk_loyalty_card_history_valid_date_range');
 

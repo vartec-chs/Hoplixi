@@ -31,13 +31,6 @@ class SshKeyItems extends Table {
   /// В основном полезно для RSA/DSA и аудита слабых ключей.
   IntColumn get keySize => integer().nullable()();
 
-  /// Fingerprint публичного ключа.
-  ///
-  /// Пользовательское или импортированное значение. Приложение не обязано
-  /// вычислять fingerprint.
-  TextColumn get fingerprint =>
-      text().withLength(min: 1, max: 255).nullable()();
-
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -112,22 +105,6 @@ class SshKeyItems extends Table {
       OR key_size > 0
     )
     ''',
-
-    '''
-    CONSTRAINT ${SshKeyItemConstraint.fingerprintNotBlank.constraintName}
-    CHECK (
-      fingerprint IS NULL
-      OR length(trim(fingerprint)) > 0
-    )
-    ''',
-
-    '''
-    CONSTRAINT ${SshKeyItemConstraint.fingerprintNoOuterWhitespace.constraintName}
-    CHECK (
-      fingerprint IS NULL
-      OR fingerprint = trim(fingerprint)
-    )
-    ''',
   ];
 }
 
@@ -148,13 +125,7 @@ enum SshKeyItemConstraint {
     'chk_ssh_key_items_key_type_other_no_outer_whitespace',
   ),
 
-  keySizePositive('chk_ssh_key_items_key_size_positive'),
-
-  fingerprintNotBlank('chk_ssh_key_items_fingerprint_not_blank'),
-
-  fingerprintNoOuterWhitespace(
-    'chk_ssh_key_items_fingerprint_no_outer_whitespace',
-  );
+  keySizePositive('chk_ssh_key_items_key_size_positive');
 
   const SshKeyItemConstraint(this.constraintName);
 
@@ -162,8 +133,7 @@ enum SshKeyItemConstraint {
 }
 
 enum SshKeyItemIndex {
-  keyType('idx_ssh_key_items_key_type'),
-  fingerprint('idx_ssh_key_items_fingerprint');
+  keyType('idx_ssh_key_items_key_type');
 
   const SshKeyItemIndex(this.indexName);
 
@@ -175,11 +145,6 @@ final List<String> sshKeyItemsTableIndexes = [
   CREATE INDEX IF NOT EXISTS ${SshKeyItemIndex.keyType.indexName}
   ON ssh_key_items(key_type)
   WHERE key_type IS NOT NULL;
-  ''',
-  '''
-  CREATE INDEX IF NOT EXISTS ${SshKeyItemIndex.fingerprint.indexName}
-  ON ssh_key_items(fingerprint)
-  WHERE fingerprint IS NOT NULL;
   ''',
 ];
 

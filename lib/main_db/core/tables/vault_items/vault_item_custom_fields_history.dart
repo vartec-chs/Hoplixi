@@ -46,10 +46,6 @@ class VaultItemCustomFieldsHistory extends Table {
   TextColumn get fieldType =>
       textEnum<CustomFieldType>().withDefault(const Constant('text'))();
 
-  /// Дополнительный тип поля, если fieldType = other.
-  TextColumn get fieldTypeOther =>
-      text().withLength(min: 1, max: 255).nullable()();
-
   /// Быстрый флаг секретности поля на момент snapshot.
   BoolColumn get isSecret => boolean().withDefault(const Constant(false))();
 
@@ -119,33 +115,6 @@ class VaultItemCustomFieldsHistory extends Table {
         ''',
 
     '''
-        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.fieldTypeOtherRequired.constraintName}
-        CHECK (
-          field_type != 'other'
-          OR (
-            field_type_other IS NOT NULL
-            AND length(trim(field_type_other)) > 0
-          )
-        )
-        ''',
-
-    '''
-        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.fieldTypeOtherMustBeNull.constraintName}
-        CHECK (
-          field_type = 'other'
-          OR field_type_other IS NULL
-        )
-        ''',
-
-    '''
-        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.fieldTypeOtherNoOuterWhitespace.constraintName}
-        CHECK (
-          field_type_other IS NULL
-          OR field_type_other = trim(field_type_other)
-        )
-        ''',
-
-    '''
         CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.booleanValueFormat.constraintName}
         CHECK (
           field_type != 'boolean'
@@ -207,18 +176,6 @@ enum VaultItemCustomFieldHistoryConstraint {
   ),
 
   valueNotBlank('chk_vault_item_custom_fields_history_value_not_blank'),
-
-  fieldTypeOtherRequired(
-    'chk_vault_item_custom_fields_history_field_type_other_required',
-  ),
-
-  fieldTypeOtherMustBeNull(
-    'chk_vault_item_custom_fields_history_field_type_other_must_be_null',
-  ),
-
-  fieldTypeOtherNoOuterWhitespace(
-    'chk_vault_item_custom_fields_history_field_type_other_no_outer_whitespace',
-  ),
 
   booleanValueFormat(
     'chk_vault_item_custom_fields_history_boolean_value_format',

@@ -36,6 +36,9 @@ class LoyaltyCardItems extends Table {
   /// outer whitespace.
   TextColumn get barcodeValue => text().nullable()();
 
+  /// Пароль/секрет карты лояльности.
+  TextColumn get password => text().nullable()();
+
   /// Тип штрихкода/QR-кода.
   TextColumn get barcodeType => textEnum<LoyaltyBarcodeType>().nullable()();
 
@@ -54,9 +57,6 @@ class LoyaltyCardItems extends Table {
 
   /// Email поддержки или аккаунта программы.
   TextColumn get email => text().withLength(min: 1, max: 255).nullable()();
-
-  /// Баллы/очки по карте.
-  IntColumn get points => integer().nullable()();
 
   /// Дата начала действия карты.
   DateTimeColumn get validFrom => dateTime().nullable()();
@@ -202,14 +202,6 @@ class LoyaltyCardItems extends Table {
     ''',
 
     '''
-    CONSTRAINT ${LoyaltyCardItemConstraint.pointsNonNegative.constraintName}
-    CHECK (
-      points IS NULL
-      OR points >= 0
-    )
-    ''',
-
-    '''
     CONSTRAINT ${LoyaltyCardItemConstraint.validDateRange.constraintName}
     CHECK (
       valid_from IS NULL
@@ -262,8 +254,6 @@ enum LoyaltyCardItemConstraint {
   emailNotBlank('chk_loyalty_card_items_email_not_blank'),
 
   emailNoOuterWhitespace('chk_loyalty_card_items_email_no_outer_whitespace'),
-
-  pointsNonNegative('chk_loyalty_card_items_points_non_negative'),
 
   validDateRange('chk_loyalty_card_items_valid_date_range');
 
