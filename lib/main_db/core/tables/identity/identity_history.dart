@@ -1,7 +1,6 @@
 import 'package:drift/drift.dart';
 
 import '../vault_items/vault_snapshots_history.dart';
-import 'identity_items.dart';
 
 /// History-таблица для специфичных полей identity.
 ///
@@ -207,15 +206,25 @@ class IdentityHistory extends Table {
 enum IdentityHistoryConstraint {
   historyIdNotBlank('chk_identity_history_history_id_not_blank'),
 
-  firstNameNoOuterWhitespace('chk_identity_history_first_name_no_outer_whitespace'),
+  firstNameNoOuterWhitespace(
+    'chk_identity_history_first_name_no_outer_whitespace',
+  ),
 
-  middleNameNoOuterWhitespace('chk_identity_history_middle_name_no_outer_whitespace'),
+  middleNameNoOuterWhitespace(
+    'chk_identity_history_middle_name_no_outer_whitespace',
+  ),
 
-  lastNameNoOuterWhitespace('chk_identity_history_last_name_no_outer_whitespace'),
+  lastNameNoOuterWhitespace(
+    'chk_identity_history_last_name_no_outer_whitespace',
+  ),
 
-  displayNameNoOuterWhitespace('chk_identity_history_display_name_no_outer_whitespace'),
+  displayNameNoOuterWhitespace(
+    'chk_identity_history_display_name_no_outer_whitespace',
+  ),
 
-  usernameNoOuterWhitespace('chk_identity_history_username_no_outer_whitespace'),
+  usernameNoOuterWhitespace(
+    'chk_identity_history_username_no_outer_whitespace',
+  ),
 
   emailNoOuterWhitespace('chk_identity_history_email_no_outer_whitespace'),
 
@@ -223,19 +232,29 @@ enum IdentityHistoryConstraint {
 
   companyNoOuterWhitespace('chk_identity_history_company_no_outer_whitespace'),
 
-  jobTitleNoOuterWhitespace('chk_identity_history_job_title_no_outer_whitespace'),
+  jobTitleNoOuterWhitespace(
+    'chk_identity_history_job_title_no_outer_whitespace',
+  ),
 
   websiteNoOuterWhitespace('chk_identity_history_website_no_outer_whitespace'),
 
   taxIdNoOuterWhitespace('chk_identity_history_tax_id_no_outer_whitespace'),
 
-  nationalIdNoOuterWhitespace('chk_identity_history_national_id_no_outer_whitespace'),
+  nationalIdNoOuterWhitespace(
+    'chk_identity_history_national_id_no_outer_whitespace',
+  ),
 
-  passportNumberNoOuterWhitespace('chk_identity_history_passport_number_no_outer_whitespace'),
+  passportNumberNoOuterWhitespace(
+    'chk_identity_history_passport_number_no_outer_whitespace',
+  ),
 
-  driverLicenseNumberNoOuterWhitespace('chk_identity_history_driver_license_number_no_outer_whitespace'),
+  driverLicenseNumberNoOuterWhitespace(
+    'chk_identity_history_driver_license_number_no_outer_whitespace',
+  ),
 
-  atLeastOneIdentifyingField('chk_identity_history_at_least_one_identifying_field');
+  atLeastOneIdentifyingField(
+    'chk_identity_history_at_least_one_identifying_field',
+  );
 
   const IdentityHistoryConstraint(this.constraintName);
 

@@ -30,6 +30,11 @@ class NoteItems extends Table {
   @override
   List<String> get customConstraints => [
     '''
+    CONSTRAINT ${NoteItemConstraint.itemIdNotBlank.constraintName}
+    CHECK (length(trim(item_id)) > 0)
+    ''',
+
+    '''
     CONSTRAINT ${NoteItemConstraint.deltaJsonNotBlank.constraintName}
     CHECK (
       length(trim(delta_json)) > 0
@@ -37,18 +42,20 @@ class NoteItems extends Table {
     ''',
 
     '''
-    CONSTRAINT ${NoteItemConstraint.contentNotNull.constraintName}
+    CONSTRAINT ${NoteItemConstraint.contentNotBlank.constraintName}
     CHECK (
-      content IS NOT NULL
+      length(trim(content)) > 0
     )
     ''',
   ];
 }
 
 enum NoteItemConstraint {
+  itemIdNotBlank('chk_note_items_item_id_not_blank'),
+
   deltaJsonNotBlank('chk_note_items_delta_json_not_blank'),
 
-  contentNotNull('chk_note_items_content_not_null');
+  contentNotBlank('chk_note_items_content_not_blank');
 
   const NoteItemConstraint(this.constraintName);
 

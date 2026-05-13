@@ -35,6 +35,11 @@ class NoteHistory extends Table {
   @override
   List<String> get customConstraints => [
     '''
+    CONSTRAINT ${NoteHistoryConstraint.historyIdNotBlank.constraintName}
+    CHECK (length(trim(history_id)) > 0)
+    ''',
+
+    '''
     CONSTRAINT ${NoteHistoryConstraint.deltaJsonNotBlank.constraintName}
     CHECK (
       delta_json IS NULL
@@ -53,6 +58,8 @@ class NoteHistory extends Table {
 }
 
 enum NoteHistoryConstraint {
+  historyIdNotBlank('chk_note_history_history_id_not_blank'),
+
   deltaJsonNotBlank('chk_note_history_delta_json_not_blank'),
 
   contentNotBlank('chk_note_history_content_not_blank');
