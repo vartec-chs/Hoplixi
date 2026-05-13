@@ -192,20 +192,6 @@ class VaultEventsHistory extends Table {
           OR snapshot_history_id IS NOT NULL
         )
         ''',
-
-    '''
-        CONSTRAINT ${VaultEventHistoryConstraint.snapshotNotRequiredForLightActions.constraintName}
-        CHECK (
-          action NOT IN (
-            'favorited',
-            'unfavorited',
-            'pinned',
-            'unpinned',
-            'used'
-          )
-          OR snapshot_history_id IS NULL
-        )
-        ''',
   ];
 }
 
@@ -230,10 +216,6 @@ enum VaultEventHistoryConstraint {
 
   snapshotRequiredForRestorableActions(
     'chk_vault_events_history_snapshot_required_for_restorable_actions',
-  ),
-
-  snapshotNotRequiredForLightActions(
-    'chk_vault_events_history_snapshot_not_required_for_light_actions',
   );
 
   const VaultEventHistoryConstraint(this.constraintName);

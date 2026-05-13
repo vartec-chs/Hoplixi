@@ -52,6 +52,56 @@ class IconRefs extends Table {
   @override
   List<String> get customConstraints => [
     '''
+        CONSTRAINT ${IconRefConstraint.idNotBlank.constraintName}
+        CHECK (length(trim(id)) > 0)
+        ''',
+    '''
+        CONSTRAINT ${IconRefConstraint.iconPackIdNotBlank.constraintName}
+        CHECK (icon_pack_id IS NULL OR length(trim(icon_pack_id)) > 0)
+        ''',
+    '''
+        CONSTRAINT ${IconRefConstraint.iconPackIdNoOuterWhitespace.constraintName}
+        CHECK (icon_pack_id IS NULL OR icon_pack_id = trim(icon_pack_id))
+        ''',
+    '''
+        CONSTRAINT ${IconRefConstraint.iconValueNotBlank.constraintName}
+        CHECK (icon_value IS NULL OR length(trim(icon_value)) > 0)
+        ''',
+    '''
+        CONSTRAINT ${IconRefConstraint.iconValueNoOuterWhitespace.constraintName}
+        CHECK (icon_value IS NULL OR icon_value = trim(icon_value))
+        ''',
+    '''
+        CONSTRAINT ${IconRefConstraint.customIconIdNotBlank.constraintName}
+        CHECK (custom_icon_id IS NULL OR length(trim(custom_icon_id)) > 0)
+        ''',
+    '''
+        CONSTRAINT ${IconRefConstraint.customIconIdNoOuterWhitespace.constraintName}
+        CHECK (custom_icon_id IS NULL OR custom_icon_id = trim(custom_icon_id))
+        ''',
+    '''
+        CONSTRAINT ${IconRefConstraint.colorNotBlank.constraintName}
+        CHECK (color IS NULL OR length(trim(color)) > 0)
+        ''',
+    '''
+        CONSTRAINT ${IconRefConstraint.colorNoOuterWhitespace.constraintName}
+        CHECK (color IS NULL OR color = trim(color))
+        ''',
+    '''
+        CONSTRAINT ${IconRefConstraint.backgroundColorNotBlank.constraintName}
+        CHECK (
+          background_color IS NULL
+          OR length(trim(background_color)) > 0
+        )
+        ''',
+    '''
+        CONSTRAINT ${IconRefConstraint.backgroundColorNoOuterWhitespace.constraintName}
+        CHECK (
+          background_color IS NULL
+          OR background_color = trim(background_color)
+        )
+        ''',
+    '''
         CONSTRAINT ${IconRefConstraint.validIconSource.constraintName}
         CHECK (
           (
@@ -94,15 +144,37 @@ class IconRefs extends Table {
           OR background_color GLOB '[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'
         )
         ''',
+    '''
+        CONSTRAINT ${IconRefConstraint.modifiedAtAfterCreatedAt.constraintName}
+        CHECK (modified_at >= created_at)
+        ''',
   ];
 }
 
 enum IconRefConstraint {
+  idNotBlank('chk_icon_refs_id_not_blank'),
+  iconPackIdNotBlank('chk_icon_refs_icon_pack_id_not_blank'),
+  iconPackIdNoOuterWhitespace('chk_icon_refs_icon_pack_id_no_outer_whitespace'),
+  iconValueNotBlank('chk_icon_refs_icon_value_not_blank'),
+  iconValueNoOuterWhitespace('chk_icon_refs_icon_value_no_outer_whitespace'),
+  customIconIdNotBlank('chk_icon_refs_custom_icon_id_not_blank'),
+  customIconIdNoOuterWhitespace(
+    'chk_icon_refs_custom_icon_id_no_outer_whitespace',
+  ),
+  colorNotBlank('chk_icon_refs_color_not_blank'),
+  colorNoOuterWhitespace('chk_icon_refs_color_no_outer_whitespace'),
+  backgroundColorNotBlank('chk_icon_refs_background_color_not_blank'),
+  backgroundColorNoOuterWhitespace(
+    'chk_icon_refs_background_color_no_outer_whitespace',
+  ),
+
   validIconSource('chk_icon_refs_valid_icon_source'),
 
   colorArgbHex('chk_icon_refs_color_argb_hex'),
 
-  backgroundColorArgbHex('chk_icon_refs_background_color_argb_hex');
+  backgroundColorArgbHex('chk_icon_refs_background_color_argb_hex'),
+
+  modifiedAtAfterCreatedAt('chk_icon_refs_modified_at_after_created_at');
 
   const IconRefConstraint(this.constraintName);
 
@@ -126,9 +198,21 @@ enum IconRefIndex {
 
 final List<String> iconRefsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${IconRefIndex.iconSourceType.indexName} ON icon_refs(icon_source_type);',
-  'CREATE INDEX IF NOT EXISTS ${IconRefIndex.iconPackId.indexName} ON icon_refs(icon_pack_id);',
-  'CREATE INDEX IF NOT EXISTS ${IconRefIndex.customIconId.indexName} ON icon_refs(custom_icon_id);',
-  'CREATE INDEX IF NOT EXISTS ${IconRefIndex.iconValue.indexName} ON icon_refs(icon_value);',
+  '''
+  CREATE INDEX IF NOT EXISTS ${IconRefIndex.iconPackId.indexName}
+  ON icon_refs(icon_pack_id)
+  WHERE icon_pack_id IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${IconRefIndex.customIconId.indexName}
+  ON icon_refs(custom_icon_id)
+  WHERE custom_icon_id IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${IconRefIndex.iconValue.indexName}
+  ON icon_refs(icon_value)
+  WHERE icon_value IS NOT NULL;
+  ''',
   '''
   CREATE UNIQUE INDEX IF NOT EXISTS ${IconRefIndex.uniqueBuiltin.indexName}
   ON icon_refs(
@@ -158,6 +242,34 @@ final List<String> iconRefsTableIndexes = [
     COALESCE(background_color, '')
   )
   WHERE icon_source_type = 'custom';
+  ''',
+];
+
+enum IconRefTrigger {
+  preventCreatedAtUpdate('trg_icon_refs_prevent_created_at_update');
+
+  const IconRefTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum IconRefRaise {
+  createdAtImmutable('icon_refs.created_at is immutable');
+
+  const IconRefRaise(this.message);
+
+  final String message;
+}
+
+final List<String> iconRefsTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${IconRefTrigger.preventCreatedAtUpdate.triggerName}
+  BEFORE UPDATE OF created_at ON icon_refs
+  FOR EACH ROW
+  WHEN NEW.created_at <> OLD.created_at
+  BEGIN
+    SELECT RAISE(ABORT, '${IconRefRaise.createdAtImmutable.message}');
+  END;
   ''',
 ];
 

@@ -4,6 +4,15 @@
 
 ### main_db
 
+- В `custom_icons` и `icon_refs` добавлены CHECK-ограничения для blank/whitespace,
+  blob/date consistency, immutable `created_at` triggers и partial indexes для
+  nullable icon ref полей.
+- Базовый слой `vault_items` усилен CHECK-ограничениями для nullable FK/text
+  полей и deleted-state конфликтов; конфликтные trigger-проверки заменены на
+  CHECK, nullable FK/date индексы сделаны partial.
+- В `vault_events_history` снят запрет snapshot для light actions, а в custom
+  fields/history убраны UNIQUE-ограничения на label/sort-order snapshot-пары,
+  чтобы reorder и повторяющиеся label оставались гибкими.
 - `wifi_items` и `wifi_history` приведены к минимальной Wi-Fi схеме с
   `securityType`, `encryption`, `hiddenSsid`, partial indexes и CHECK-правилами
   для open/personal/enterprise password consistency.

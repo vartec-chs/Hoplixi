@@ -96,6 +96,27 @@ class VaultItems extends Table {
         )
         ''',
     '''
+        CONSTRAINT ${VaultItemConstraint.descriptionNotBlank.constraintName}
+        CHECK (
+          description IS NULL
+          OR length(trim(description)) > 0
+        )
+        ''',
+    '''
+        CONSTRAINT ${VaultItemConstraint.categoryIdNotBlank.constraintName}
+        CHECK (
+          category_id IS NULL
+          OR length(trim(category_id)) > 0
+        )
+        ''',
+    '''
+        CONSTRAINT ${VaultItemConstraint.iconRefIdNotBlank.constraintName}
+        CHECK (
+          icon_ref_id IS NULL
+          OR length(trim(icon_ref_id)) > 0
+        )
+        ''',
+    '''
         CONSTRAINT ${VaultItemConstraint.usedCountNonNegative.constraintName}
         CHECK (
           used_count >= 0
@@ -165,6 +186,33 @@ class VaultItems extends Table {
           )
         )
         ''',
+    '''
+        CONSTRAINT ${VaultItemConstraint.deletedArchivedConflict.constraintName}
+        CHECK (
+          NOT (
+            is_deleted = 1
+            AND is_archived = 1
+          )
+        )
+        ''',
+    '''
+        CONSTRAINT ${VaultItemConstraint.deletedPinnedConflict.constraintName}
+        CHECK (
+          NOT (
+            is_deleted = 1
+            AND is_pinned = 1
+          )
+        )
+        ''',
+    '''
+        CONSTRAINT ${VaultItemConstraint.deletedFavoriteConflict.constraintName}
+        CHECK (
+          NOT (
+            is_deleted = 1
+            AND is_favorite = 1
+          )
+        )
+        ''',
   ];
 }
 
@@ -174,6 +222,12 @@ enum VaultItemConstraint {
   nameNotBlank('chk_vault_items_name_not_blank'),
 
   nameNoOuterWhitespace('chk_vault_items_name_no_outer_whitespace'),
+
+  descriptionNotBlank('chk_vault_items_description_not_blank'),
+
+  categoryIdNotBlank('chk_vault_items_category_id_not_blank'),
+
+  iconRefIdNotBlank('chk_vault_items_icon_ref_id_not_blank'),
 
   usedCountNonNegative('chk_vault_items_used_count_non_negative'),
 
@@ -189,7 +243,13 @@ enum VaultItemConstraint {
 
   archivedAtStateConsistent('chk_vault_items_archived_at_state_consistent'),
 
-  deletedAtStateConsistent('chk_vault_items_deleted_at_state_consistent');
+  deletedAtStateConsistent('chk_vault_items_deleted_at_state_consistent'),
+
+  deletedArchivedConflict('chk_vault_items_deleted_archived_conflict'),
+
+  deletedPinnedConflict('chk_vault_items_deleted_pinned_conflict'),
+
+  deletedFavoriteConflict('chk_vault_items_deleted_favorite_conflict');
 
   const VaultItemConstraint(this.constraintName);
 
@@ -232,11 +292,17 @@ final List<String> vaultItemsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${VaultItemIndex.name.indexName} '
       'ON vault_items(name);',
 
-  'CREATE INDEX IF NOT EXISTS ${VaultItemIndex.categoryId.indexName} '
-      'ON vault_items(category_id);',
+  '''
+  CREATE INDEX IF NOT EXISTS ${VaultItemIndex.categoryId.indexName}
+  ON vault_items(category_id)
+  WHERE category_id IS NOT NULL;
+  ''',
 
-  'CREATE INDEX IF NOT EXISTS ${VaultItemIndex.iconRefId.indexName} '
-      'ON vault_items(icon_ref_id);',
+  '''
+  CREATE INDEX IF NOT EXISTS ${VaultItemIndex.iconRefId.indexName}
+  ON vault_items(icon_ref_id)
+  WHERE icon_ref_id IS NOT NULL;
+  ''',
 
   'CREATE INDEX IF NOT EXISTS ${VaultItemIndex.createdAt.indexName} '
       'ON vault_items(created_at);',
@@ -244,11 +310,17 @@ final List<String> vaultItemsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${VaultItemIndex.modifiedAt.indexName} '
       'ON vault_items(modified_at);',
 
-  'CREATE INDEX IF NOT EXISTS ${VaultItemIndex.deletedAt.indexName} '
-      'ON vault_items(deleted_at);',
+  '''
+  CREATE INDEX IF NOT EXISTS ${VaultItemIndex.deletedAt.indexName}
+  ON vault_items(deleted_at)
+  WHERE is_deleted = 1 AND deleted_at IS NOT NULL;
+  ''',
 
-  'CREATE INDEX IF NOT EXISTS ${VaultItemIndex.archivedAt.indexName} '
-      'ON vault_items(archived_at);',
+  '''
+  CREATE INDEX IF NOT EXISTS ${VaultItemIndex.archivedAt.indexName}
+  ON vault_items(archived_at)
+  WHERE is_archived = 1 AND is_deleted = 0 AND archived_at IS NOT NULL;
+  ''',
 
   '''
   CREATE INDEX IF NOT EXISTS ${VaultItemIndex.activeByType.indexName}
@@ -277,28 +349,20 @@ final List<String> vaultItemsTableIndexes = [
   '''
   CREATE INDEX IF NOT EXISTS ${VaultItemIndex.deletedItems.indexName}
   ON vault_items(deleted_at DESC)
-  WHERE is_deleted = 1;
+  WHERE is_deleted = 1 AND deleted_at IS NOT NULL;
   ''',
 
   '''
   CREATE INDEX IF NOT EXISTS ${VaultItemIndex.archivedItems.indexName}
   ON vault_items(archived_at DESC)
-  WHERE is_archived = 1 AND is_deleted = 0;
+  WHERE is_archived = 1 AND is_deleted = 0 AND archived_at IS NOT NULL;
   ''',
 ];
 
 enum VaultItemTrigger {
   preventCreatedAtUpdate('trg_vault_items_prevent_created_at_update'),
 
-  preventTypeUpdate('trg_vault_items_prevent_type_update'),
-
-  validateDeleteArchiveConflictOnInsert(
-    'trg_vault_items_validate_delete_archive_conflict_on_insert',
-  ),
-
-  validateDeleteArchiveConflictOnUpdate(
-    'trg_vault_items_validate_delete_archive_conflict_on_update',
-  );
+  preventTypeUpdate('trg_vault_items_prevent_type_update');
 
   const VaultItemTrigger(this.triggerName);
 
@@ -308,13 +372,7 @@ enum VaultItemTrigger {
 enum VaultItemRaise {
   createdAtImmutable('vault_items.created_at is immutable'),
 
-  typeImmutable('vault_items.type is immutable'),
-
-  deletedItemCannotBeArchived('vault_items.deleted item cannot be archived'),
-
-  deletedItemCannotBePinned('vault_items.deleted item cannot be pinned'),
-
-  deletedItemCannotBeFavorite('vault_items.deleted item cannot be favorite');
+  typeImmutable('vault_items.type is immutable');
 
   const VaultItemRaise(this.message);
 
@@ -344,84 +402,6 @@ final List<String> vaultItemsTableTriggers = [
     SELECT RAISE(
       ABORT,
       '${VaultItemRaise.typeImmutable.message}'
-    );
-  END;
-  ''',
-
-  '''
-  CREATE TRIGGER IF NOT EXISTS ${VaultItemTrigger.validateDeleteArchiveConflictOnInsert.triggerName}
-  BEFORE INSERT ON vault_items
-  FOR EACH ROW
-  WHEN NEW.is_deleted = 1 AND NEW.is_archived = 1
-  BEGIN
-    SELECT RAISE(
-      ABORT,
-      '${VaultItemRaise.deletedItemCannotBeArchived.message}'
-    );
-  END;
-  ''',
-
-  '''
-  CREATE TRIGGER IF NOT EXISTS ${VaultItemTrigger.validateDeleteArchiveConflictOnUpdate.triggerName}
-  BEFORE UPDATE ON vault_items
-  FOR EACH ROW
-  WHEN NEW.is_deleted = 1 AND NEW.is_archived = 1
-  BEGIN
-    SELECT RAISE(
-      ABORT,
-      '${VaultItemRaise.deletedItemCannotBeArchived.message}'
-    );
-  END;
-  ''',
-
-  '''
-  CREATE TRIGGER IF NOT EXISTS trg_vault_items_deleted_cannot_be_pinned_on_insert
-  BEFORE INSERT ON vault_items
-  FOR EACH ROW
-  WHEN NEW.is_deleted = 1 AND NEW.is_pinned = 1
-  BEGIN
-    SELECT RAISE(
-      ABORT,
-      '${VaultItemRaise.deletedItemCannotBePinned.message}'
-    );
-  END;
-  ''',
-
-  '''
-  CREATE TRIGGER IF NOT EXISTS trg_vault_items_deleted_cannot_be_pinned_on_update
-  BEFORE UPDATE ON vault_items
-  FOR EACH ROW
-  WHEN NEW.is_deleted = 1 AND NEW.is_pinned = 1
-  BEGIN
-    SELECT RAISE(
-      ABORT,
-      '${VaultItemRaise.deletedItemCannotBePinned.message}'
-    );
-  END;
-  ''',
-
-  '''
-  CREATE TRIGGER IF NOT EXISTS trg_vault_items_deleted_cannot_be_favorite_on_insert
-  BEFORE INSERT ON vault_items
-  FOR EACH ROW
-  WHEN NEW.is_deleted = 1 AND NEW.is_favorite = 1
-  BEGIN
-    SELECT RAISE(
-      ABORT,
-      '${VaultItemRaise.deletedItemCannotBeFavorite.message}'
-    );
-  END;
-  ''',
-
-  '''
-  CREATE TRIGGER IF NOT EXISTS trg_vault_items_deleted_cannot_be_favorite_on_update
-  BEFORE UPDATE ON vault_items
-  FOR EACH ROW
-  WHEN NEW.is_deleted = 1 AND NEW.is_favorite = 1
-  BEGIN
-    SELECT RAISE(
-      ABORT,
-      '${VaultItemRaise.deletedItemCannotBeFavorite.message}'
     );
   END;
   ''',

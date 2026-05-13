@@ -166,22 +166,6 @@ class VaultItemCustomFields extends Table {
           modified_at >= created_at
         )
         ''',
-
-    '''
-        CONSTRAINT ${VaultItemCustomFieldConstraint.uniqueItemSortOrder.constraintName}
-        UNIQUE (
-          item_id,
-          sort_order
-        )
-        ''',
-
-    '''
-        CONSTRAINT ${VaultItemCustomFieldConstraint.uniqueItemLabel.constraintName}
-        UNIQUE (
-          item_id,
-          label
-        )
-        ''',
   ];
 }
 
@@ -218,11 +202,7 @@ enum VaultItemCustomFieldConstraint {
 
   modifiedAtAfterCreatedAt(
     'chk_vault_item_custom_fields_modified_at_after_created_at',
-  ),
-
-  uniqueItemSortOrder('uq_vault_item_custom_fields_item_id_sort_order'),
-
-  uniqueItemLabel('uq_vault_item_custom_fields_item_id_label');
+  );
 
   const VaultItemCustomFieldConstraint(this.constraintName);
 

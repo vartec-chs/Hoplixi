@@ -186,22 +186,6 @@ class VaultItemCustomFieldsHistory extends Table {
           history_created_at >= created_at
         )
         ''',
-
-    '''
-        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.uniqueSnapshotHistorySortOrder.constraintName}
-        UNIQUE (
-          snapshot_history_id,
-          sort_order
-        )
-        ''',
-
-    '''
-        CONSTRAINT ${VaultItemCustomFieldHistoryConstraint.uniqueSnapshotHistoryOriginalFieldId.constraintName}
-        UNIQUE (
-          snapshot_history_id,
-          original_field_id
-        )
-        ''',
   ];
 }
 
@@ -252,14 +236,6 @@ enum VaultItemCustomFieldHistoryConstraint {
 
   historyCreatedAtAfterCreatedAt(
     'chk_vault_item_custom_fields_history_history_created_at_after_created_at',
-  ),
-
-  uniqueSnapshotHistorySortOrder(
-    'uq_vault_item_custom_fields_history_snapshot_history_id_sort_order',
-  ),
-
-  uniqueSnapshotHistoryOriginalFieldId(
-    'uq_vault_item_custom_fields_history_snapshot_history_id_original_field_id',
   );
 
   const VaultItemCustomFieldHistoryConstraint(this.constraintName);
