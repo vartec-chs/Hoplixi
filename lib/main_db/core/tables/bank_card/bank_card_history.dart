@@ -5,14 +5,20 @@ import 'bank_card_items.dart';
 
 /// History-таблица для специфичных полей банковской карты.
 ///
-/// Данные вставляются только триггерами.
+/// Данные вставляются только через snapshot-сервис/триггеры.
 /// Секретные поля вроде cardNumber/cvv могут быть NULL,
 /// если включён режим истории без сохранения секретов.
 @DataClassName('BankCardHistoryData')
 class BankCardHistory extends Table {
-  /// PK и FK → vault_snapshots_history.id ON DELETE CASCADE
-  TextColumn get historyId =>
-      text().references(VaultSnapshotsHistory, #id, onDelete: KeyAction.cascade)();
+  /// PK и FK → vault_snapshots_history.id ON DELETE CASCADE.
+  ///
+  /// Один snapshot базового vault item имеет максимум одну
+  /// snapshot-запись банковской карты.
+  TextColumn get historyId => text().references(
+    VaultSnapshotsHistory,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
 
   /// Имя владельца карты snapshot.
   TextColumn get cardholderName =>
@@ -61,10 +67,6 @@ class BankCardHistory extends Table {
   TextColumn get routingNumber =>
       text().withLength(min: 1, max: 255).nullable()();
 
-  /// Дополнительные метаданные в JSON-формате snapshot.
-  /// UUID снимка для группировки связанных записей.
-  TextColumn get snapshotId => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -74,10 +76,41 @@ class BankCardHistory extends Table {
   @override
   List<String> get customConstraints => [
     '''
+        CONSTRAINT ${BankCardHistoryConstraint.historyIdNotBlank.constraintName}
+        CHECK (
+          length(trim(history_id)) > 0
+        )
+        ''',
+
+    '''
         CONSTRAINT ${BankCardHistoryConstraint.cardholderNameNotBlank.constraintName}
         CHECK (
           cardholder_name IS NULL
           OR length(trim(cardholder_name)) > 0
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${BankCardHistoryConstraint.cardholderNameNoOuterWhitespace.constraintName}
+        CHECK (
+          cardholder_name IS NULL
+          OR cardholder_name = trim(cardholder_name)
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${BankCardHistoryConstraint.cardNumberNotBlank.constraintName}
+        CHECK (
+          card_number IS NULL
+          OR length(trim(card_number)) > 0
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${BankCardHistoryConstraint.cardNumberNoOuterWhitespace.constraintName}
+        CHECK (
+          card_number IS NULL
+          OR card_number = trim(card_number)
         )
         ''',
 
@@ -102,6 +135,14 @@ class BankCardHistory extends Table {
         ''',
 
     '''
+        CONSTRAINT ${BankCardHistoryConstraint.cardTypeOtherNoOuterWhitespace.constraintName}
+        CHECK (
+          card_type_other IS NULL
+          OR card_type_other = trim(card_type_other)
+        )
+        ''',
+
+    '''
         CONSTRAINT ${BankCardHistoryConstraint.cardNetworkOtherRequired.constraintName}
         CHECK (
           card_network IS NULL
@@ -118,6 +159,14 @@ class BankCardHistory extends Table {
         CHECK (
           card_network = 'other'
           OR card_network_other IS NULL
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${BankCardHistoryConstraint.cardNetworkOtherNoOuterWhitespace.constraintName}
+        CHECK (
+          card_network_other IS NULL
+          OR card_network_other = trim(card_network_other)
         )
         ''',
 
@@ -143,9 +192,39 @@ class BankCardHistory extends Table {
     '''
         CONSTRAINT ${BankCardHistoryConstraint.expiryMonthYearBothNullOrBothSet.constraintName}
         CHECK (
-          (expiry_month IS NULL AND expiry_year IS NULL)
+          (
+            expiry_month IS NULL
+            AND expiry_year IS NULL
+          )
           OR
-          (expiry_month IS NOT NULL AND expiry_year IS NOT NULL)
+          (
+            expiry_month IS NOT NULL
+            AND expiry_year IS NOT NULL
+          )
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${BankCardHistoryConstraint.cvvNotBlank.constraintName}
+        CHECK (
+          cvv IS NULL
+          OR length(trim(cvv)) > 0
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${BankCardHistoryConstraint.cvvNoOuterWhitespace.constraintName}
+        CHECK (
+          cvv IS NULL
+          OR cvv = trim(cvv)
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${BankCardHistoryConstraint.cvvLengthValid.constraintName}
+        CHECK (
+          cvv IS NULL
+          OR length(cvv) BETWEEN 3 AND 8
         )
         ''',
 
@@ -158,10 +237,26 @@ class BankCardHistory extends Table {
         ''',
 
     '''
+        CONSTRAINT ${BankCardHistoryConstraint.bankNameNoOuterWhitespace.constraintName}
+        CHECK (
+          bank_name IS NULL
+          OR bank_name = trim(bank_name)
+        )
+        ''',
+
+    '''
         CONSTRAINT ${BankCardHistoryConstraint.accountNumberNotBlank.constraintName}
         CHECK (
           account_number IS NULL
           OR length(trim(account_number)) > 0
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${BankCardHistoryConstraint.accountNumberNoOuterWhitespace.constraintName}
+        CHECK (
+          account_number IS NULL
+          OR account_number = trim(account_number)
         )
         ''',
 
@@ -172,20 +267,48 @@ class BankCardHistory extends Table {
           OR length(trim(routing_number)) > 0
         )
         ''',
+
+    '''
+        CONSTRAINT ${BankCardHistoryConstraint.routingNumberNoOuterWhitespace.constraintName}
+        CHECK (
+          routing_number IS NULL
+          OR routing_number = trim(routing_number)
+        )
+        ''',
   ];
 }
 
 enum BankCardHistoryConstraint {
+  historyIdNotBlank('chk_bank_card_history_history_id_not_blank'),
+
   cardholderNameNotBlank('chk_bank_card_history_cardholder_name_not_blank'),
+
+  cardholderNameNoOuterWhitespace(
+    'chk_bank_card_history_cardholder_name_no_outer_whitespace',
+  ),
+
+  cardNumberNotBlank('chk_bank_card_history_card_number_not_blank'),
+
+  cardNumberNoOuterWhitespace(
+    'chk_bank_card_history_card_number_no_outer_whitespace',
+  ),
 
   cardTypeOtherRequired('chk_bank_card_history_card_type_other_required'),
 
   cardTypeOtherMustBeNull('chk_bank_card_history_card_type_other_must_be_null'),
 
+  cardTypeOtherNoOuterWhitespace(
+    'chk_bank_card_history_card_type_other_no_outer_whitespace',
+  ),
+
   cardNetworkOtherRequired('chk_bank_card_history_card_network_other_required'),
 
   cardNetworkOtherMustBeNull(
     'chk_bank_card_history_card_network_other_must_be_null',
+  ),
+
+  cardNetworkOtherNoOuterWhitespace(
+    'chk_bank_card_history_card_network_other_no_outer_whitespace',
   ),
 
   expiryMonthValid('chk_bank_card_history_expiry_month_valid'),
@@ -196,11 +319,29 @@ enum BankCardHistoryConstraint {
     'chk_bank_card_history_expiry_month_year_both_null_or_both_set',
   ),
 
+  cvvNotBlank('chk_bank_card_history_cvv_not_blank'),
+
+  cvvNoOuterWhitespace('chk_bank_card_history_cvv_no_outer_whitespace'),
+
+  cvvLengthValid('chk_bank_card_history_cvv_length_valid'),
+
   bankNameNotBlank('chk_bank_card_history_bank_name_not_blank'),
+
+  bankNameNoOuterWhitespace(
+    'chk_bank_card_history_bank_name_no_outer_whitespace',
+  ),
 
   accountNumberNotBlank('chk_bank_card_history_account_number_not_blank'),
 
-  routingNumberNotBlank('chk_bank_card_history_routing_number_not_blank');
+  accountNumberNoOuterWhitespace(
+    'chk_bank_card_history_account_number_no_outer_whitespace',
+  ),
+
+  routingNumberNotBlank('chk_bank_card_history_routing_number_not_blank'),
+
+  routingNumberNoOuterWhitespace(
+    'chk_bank_card_history_routing_number_no_outer_whitespace',
+  );
 
   const BankCardHistoryConstraint(this.constraintName);
 
@@ -208,10 +349,12 @@ enum BankCardHistoryConstraint {
 }
 
 enum BankCardHistoryIndex {
-  snapshotId('idx_bank_card_history_snapshot_id'),
   cardType('idx_bank_card_history_card_type'),
+
   cardNetwork('idx_bank_card_history_card_network'),
-  expiryYearMonth('idx_bank_card_history_expiry_year_month'),
+
+  expiringCards('idx_bank_card_history_expiring_cards'),
+
   bankName('idx_bank_card_history_bank_name');
 
   const BankCardHistoryIndex(this.indexName);
@@ -220,9 +363,57 @@ enum BankCardHistoryIndex {
 }
 
 final List<String> bankCardHistoryTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${BankCardHistoryIndex.snapshotId.indexName} ON bank_card_history(snapshot_id);',
-  'CREATE INDEX IF NOT EXISTS ${BankCardHistoryIndex.cardType.indexName} ON bank_card_history(card_type);',
-  'CREATE INDEX IF NOT EXISTS ${BankCardHistoryIndex.cardNetwork.indexName} ON bank_card_history(card_network);',
-  'CREATE INDEX IF NOT EXISTS ${BankCardHistoryIndex.expiryYearMonth.indexName} ON bank_card_history(expiry_year, expiry_month);',
-  'CREATE INDEX IF NOT EXISTS ${BankCardHistoryIndex.bankName.indexName} ON bank_card_history(bank_name);',
+  '''
+  CREATE INDEX IF NOT EXISTS ${BankCardHistoryIndex.cardType.indexName}
+  ON bank_card_history(card_type)
+  WHERE card_type IS NOT NULL;
+  ''',
+
+  '''
+  CREATE INDEX IF NOT EXISTS ${BankCardHistoryIndex.cardNetwork.indexName}
+  ON bank_card_history(card_network)
+  WHERE card_network IS NOT NULL;
+  ''',
+
+  '''
+  CREATE INDEX IF NOT EXISTS ${BankCardHistoryIndex.expiringCards.indexName}
+  ON bank_card_history(expiry_year, expiry_month, history_id)
+  WHERE expiry_year IS NOT NULL AND expiry_month IS NOT NULL;
+  ''',
+
+  '''
+  CREATE INDEX IF NOT EXISTS ${BankCardHistoryIndex.bankName.indexName}
+  ON bank_card_history(bank_name)
+  WHERE bank_name IS NOT NULL;
+  ''',
+];
+
+enum BankCardHistoryTrigger {
+  preventUpdate('trg_bank_card_history_prevent_update');
+
+  const BankCardHistoryTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum BankCardHistoryRaise {
+  historyIsImmutable('bank_card_history rows are immutable');
+
+  const BankCardHistoryRaise(this.message);
+
+  final String message;
+}
+
+final List<String> bankCardHistoryTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${BankCardHistoryTrigger.preventUpdate.triggerName}
+  BEFORE UPDATE ON bank_card_history
+  FOR EACH ROW
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${BankCardHistoryRaise.historyIsImmutable.message}'
+    );
+  END;
+  ''',
 ];

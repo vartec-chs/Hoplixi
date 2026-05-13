@@ -15,51 +15,65 @@ enum ApiKeyTokenType { apiKey, bearer, jwt, pat, webhook, other }
 
 @DataClassName('ApiKeyItemsData')
 class ApiKeyItems extends Table {
+  /// PK и FK → vault_items.id ON DELETE CASCADE.
   TextColumn get itemId =>
       text().references(VaultItems, #id, onDelete: KeyAction.cascade)();
 
-  // Название сервиса или приложения, для которого предназначен этот API-ключ. Это может помочь пользователю быстро идентифицировать назначение ключа.
+  /// Название сервиса или приложения.
   TextColumn get service => text().withLength(min: 1, max: 255)();
 
-  // Сам ключ
+  /// Сам API key / token.
+  ///
+  /// Секретное значение внутри зашифрованной БД.
   TextColumn get key => text()();
 
-  // Тип токена может быть полезен для отображения и фильтрации ключей в UI, а также для предоставления пользователю информации о том, какой тип аутентификации используется этим ключом.
+  /// Тип токена.
   TextColumn get tokenType => textEnum<ApiKeyTokenType>().nullable()();
 
-  // Дополнительный тип токена, который не входит в предопределенные значения.
+  /// Дополнительный тип токена, если tokenType = other.
   TextColumn get tokenTypeOther =>
       text().withLength(min: 1, max: 255).nullable()();
 
-  // Может быть полезно для указания, в каком окружении используется этот API-ключ (например, "production", "staging", "development"), что может помочь пользователю быстро идентифицировать назначение ключа.
+  /// Окружение, где используется ключ.
   TextColumn get environment => textEnum<ApiKeyEnvironment>().nullable()();
 
-  // Дополнительный тип окружения, который не входит в предопределенные значения.
+  /// Дополнительное окружение, если environment = other.
   TextColumn get environmentOther =>
       text().withLength(min: 1, max: 255).nullable()();
 
-  // Дата истечения срока действия ключа. Это может быть полезно для автоматического напоминания пользователю о необходимости обновления ключа и для фильтрации активных/неактивных ключей.
+  /// Дата истечения срока действия ключа.
   DateTimeColumn get expiresAt => dateTime().nullable()();
 
-  // Флаг, указывающий, был ли ключ отозван. Это может быть полезно для отображения статуса ключа в UI и для фильтрации активных/неактивных ключей.
+  /// Флаг отозванного ключа.
   BoolColumn get revoked => boolean().withDefault(const Constant(false))();
 
-  // Период ротации ключа в днях. Может быть полезно для автоматического напоминания о необходимости обновления ключа.
+  /// Дата отзыва ключа.
+  DateTimeColumn get revokedAt => dateTime().nullable()();
+
+  /// Период ротации ключа в днях.
   IntColumn get rotationPeriodDays => integer().nullable()();
 
-  // Дата последней ротации ключа. Может быть полезно для отслеживания, когда ключ был в последний раз обновлен.
+  /// Дата последней ротации ключа.
   DateTimeColumn get lastRotatedAt => dateTime().nullable()();
 
-  // Список разрешений, связанных с этим API-ключом (например, "read", "write", "admin") JSON array string
-  TextColumn get scopes => text().nullable()();
-
-  // Может быть полезно для отображения информации о том, кто создал API-ключ или кому он принадлежит
+  /// Владелец ключа / аккаунт / команда.
   TextColumn get owner => text().withLength(min: 1, max: 255).nullable()();
 
-  // Базовый URL или идентификатор сервиса, к которому относится этот API-ключ (например, "GitHub", "AWS", "Stripe")
+  /// Базовый URL сервиса или endpoint.
   TextColumn get baseUrl => text().withLength(min: 1, max: 2048).nullable()();
 
-  // Дополнительные метаданные в виде JSON-строки (например, IP-ограничения, описание использования и т.д.)
+  /// Список разрешений API-ключа через один пробел.
+  ///
+  /// Формат:
+  /// - scopes разделяются одним пробелом;
+  /// - без пробелов в начале и конце;
+  /// - без двойных пробелов;
+  /// - уникальность scopes проверяется в приложении.
+  ///
+  /// Пример:
+  /// read write admin
+  TextColumn get scopesText => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -69,73 +83,237 @@ class ApiKeyItems extends Table {
   @override
   List<String> get customConstraints => [
     '''
-  CONSTRAINT ${ApiKeyItemConstraint.tokenTypeOtherRequired.constraintName}
-  CHECK (
-    token_type != 'other'
-    OR (
-      token_type_other IS NOT NULL
-      AND length(trim(token_type_other)) > 0
-    )
-  )
-  ''',
+        CONSTRAINT ${ApiKeyItemConstraint.itemIdNotBlank.constraintName}
+        CHECK (
+          length(trim(item_id)) > 0
+        )
+        ''',
+
     '''
-  CONSTRAINT ${ApiKeyItemConstraint.tokenTypeOtherMustBeNull.constraintName}
-  CHECK (
-    token_type = 'other'
-    OR token_type_other IS NULL
-  )
-  ''',
+        CONSTRAINT ${ApiKeyItemConstraint.serviceNotBlank.constraintName}
+        CHECK (
+          length(trim(service)) > 0
+        )
+        ''',
+
     '''
-  CONSTRAINT ${ApiKeyItemConstraint.environmentOtherRequired.constraintName}
-  CHECK (
-    environment != 'other'
-    OR (
-      environment_other IS NOT NULL
-      AND length(trim(environment_other)) > 0
-    )
-  )
-  ''',
+        CONSTRAINT ${ApiKeyItemConstraint.serviceNoOuterWhitespace.constraintName}
+        CHECK (
+          service = trim(service)
+        )
+        ''',
+
     '''
-  CONSTRAINT ${ApiKeyItemConstraint.environmentOtherMustBeNull.constraintName}
-  CHECK (
-    environment = 'other'
-    OR environment_other IS NULL
-  )
-  ''',
+        CONSTRAINT ${ApiKeyItemConstraint.keyNotBlank.constraintName}
+        CHECK (
+          length(trim(key)) > 0
+        )
+        ''',
+
     '''
-    CONSTRAINT ${ApiKeyItemConstraint.serviceNotBlank.constraintName}
+        CONSTRAINT ${ApiKeyItemConstraint.keyNoOuterWhitespace.constraintName}
+        CHECK (
+          key = trim(key)
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${ApiKeyItemConstraint.tokenTypeOtherRequired.constraintName}
+        CHECK (
+          token_type IS NULL
+          OR token_type != 'other'
+          OR (
+            token_type_other IS NOT NULL
+            AND length(trim(token_type_other)) > 0
+          )
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${ApiKeyItemConstraint.tokenTypeOtherMustBeNull.constraintName}
+        CHECK (
+          token_type = 'other'
+          OR token_type_other IS NULL
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${ApiKeyItemConstraint.tokenTypeOtherNoOuterWhitespace.constraintName}
+        CHECK (
+          token_type_other IS NULL
+          OR token_type_other = trim(token_type_other)
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${ApiKeyItemConstraint.environmentOtherRequired.constraintName}
+        CHECK (
+          environment IS NULL
+          OR environment != 'other'
+          OR (
+            environment_other IS NOT NULL
+            AND length(trim(environment_other)) > 0
+          )
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${ApiKeyItemConstraint.environmentOtherMustBeNull.constraintName}
+        CHECK (
+          environment = 'other'
+          OR environment_other IS NULL
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${ApiKeyItemConstraint.environmentOtherNoOuterWhitespace.constraintName}
+        CHECK (
+          environment_other IS NULL
+          OR environment_other = trim(environment_other)
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${ApiKeyItemConstraint.revokedAtStateConsistent.constraintName}
+        CHECK (
+          (
+            revoked = 0
+            AND revoked_at IS NULL
+          )
+          OR
+          (
+            revoked = 1
+            AND revoked_at IS NOT NULL
+          )
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${ApiKeyItemConstraint.rotationPeriodPositive.constraintName}
+        CHECK (
+          rotation_period_days IS NULL
+          OR rotation_period_days > 0
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${ApiKeyItemConstraint.lastRotatedRequiresRotationPeriod.constraintName}
+        CHECK (
+          last_rotated_at IS NULL
+          OR rotation_period_days IS NOT NULL
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${ApiKeyItemConstraint.ownerNotBlank.constraintName}
+        CHECK (
+          owner IS NULL
+          OR length(trim(owner)) > 0
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${ApiKeyItemConstraint.ownerNoOuterWhitespace.constraintName}
+        CHECK (
+          owner IS NULL
+          OR owner = trim(owner)
+        )
+        ''',
+
+    '''
+        CONSTRAINT ${ApiKeyItemConstraint.baseUrlNotBlank.constraintName}
+        CHECK (
+          base_url IS NULL
+          OR length(trim(base_url)) > 0
+        )
+        ''',
+
+    '''
+    CONSTRAINT ${ApiKeyItemConstraint.scopesTextNotBlank.constraintName}
     CHECK (
-      length(trim(service)) > 0
+      scopes_text IS NULL
+      OR length(trim(scopes_text)) > 0
     )
-  ''',
+    ''',
+
     '''
-  CONSTRAINT ${ApiKeyItemConstraint.rotationPeriodPositive.constraintName}
-  CHECK (
-    rotation_period_days IS NULL
-    OR rotation_period_days > 0
-  )
-  ''',
+    CONSTRAINT ${ApiKeyItemConstraint.scopesTextNoOuterWhitespace.constraintName}
+    CHECK (
+      scopes_text IS NULL
+      OR scopes_text = trim(scopes_text)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${ApiKeyItemConstraint.scopesTextNoDoubleSpaces.constraintName}
+    CHECK (
+      scopes_text IS NULL
+      OR instr(scopes_text, '  ') = 0
+    )
+    ''',
+
+    '''
+        CONSTRAINT ${ApiKeyItemConstraint.baseUrlNoOuterWhitespace.constraintName}
+        CHECK (
+          base_url IS NULL
+          OR base_url = trim(base_url)
+        )
+        ''',
   ];
 }
 
 enum ApiKeyItemConstraint {
-  // Эти ограничения обеспечивают целостность данных, гарантируя, что если тип токена или окружения установлен как "other", то соответствующее поле с дополнительной информацией должно быть заполнено, и наоборот. Также проверяется, что период ротации ключа, если он указан, является положительным числом.
-  tokenTypeOtherRequired('chk_api_key_token_type_other_required'),
+  itemIdNotBlank('chk_api_key_items_item_id_not_blank'),
 
-  // Гарантирует, что если тип токена не "other", то поле token_type_other должно быть NULL, предотвращая наличие противоречивых данных.
-  tokenTypeOtherMustBeNull('chk_api_key_token_type_other_must_be_null'),
+  serviceNotBlank('chk_api_key_items_service_not_blank'),
 
-  // Гарантирует, что если окружение установлено как "other", то поле environment_other должно быть заполнено, обеспечивая целостность данных.
-  environmentOtherRequired('chk_api_key_environment_other_required'),
+  serviceNoOuterWhitespace('chk_api_key_items_service_no_outer_whitespace'),
 
-  // Гарантирует, что если окружение не "other", то поле environment_other должно быть NULL, предотвращая наличие противоречивых данных.
-  environmentOtherMustBeNull('chk_api_key_environment_other_must_be_null'),
+  keyNotBlank('chk_api_key_items_key_not_blank'),
 
-  // Обеспечивает, что поле service не является пустой строкой или строкой, состоящей только из пробелов, что гарантирует наличие полезной информации о том, для какого сервиса предназначен этот API-ключ.
-  serviceNotBlank('chk_api_key_service_not_blank'),
+  scopesTextNotBlank('chk_api_key_items_scopes_text_not_blank'),
 
-  // Обеспечивает, что если период ротации ключа указан, он должен быть положительным числом, что имеет смысл с точки зрения логики ротации ключей.
-  rotationPeriodPositive('chk_api_key_rotation_period_positive');
+  scopesTextNoOuterWhitespace(
+    'chk_api_key_items_scopes_text_no_outer_whitespace',
+  ),
+
+  scopesTextNoDoubleSpaces('chk_api_key_items_scopes_text_no_double_spaces'),
+
+  keyNoOuterWhitespace('chk_api_key_items_key_no_outer_whitespace'),
+
+  tokenTypeOtherRequired('chk_api_key_items_token_type_other_required'),
+
+  tokenTypeOtherMustBeNull('chk_api_key_items_token_type_other_must_be_null'),
+
+  tokenTypeOtherNoOuterWhitespace(
+    'chk_api_key_items_token_type_other_no_outer_whitespace',
+  ),
+
+  environmentOtherRequired('chk_api_key_items_environment_other_required'),
+
+  environmentOtherMustBeNull(
+    'chk_api_key_items_environment_other_must_be_null',
+  ),
+
+  environmentOtherNoOuterWhitespace(
+    'chk_api_key_items_environment_other_no_outer_whitespace',
+  ),
+
+  revokedAtStateConsistent('chk_api_key_items_revoked_at_state_consistent'),
+
+  rotationPeriodPositive('chk_api_key_items_rotation_period_positive'),
+
+  lastRotatedRequiresRotationPeriod(
+    'chk_api_key_items_last_rotated_requires_rotation_period',
+  ),
+
+  ownerNotBlank('chk_api_key_items_owner_not_blank'),
+
+  ownerNoOuterWhitespace('chk_api_key_items_owner_no_outer_whitespace'),
+
+  baseUrlNotBlank('chk_api_key_items_base_url_not_blank'),
+
+  baseUrlNoOuterWhitespace('chk_api_key_items_base_url_no_outer_whitespace');
 
   const ApiKeyItemConstraint(this.constraintName);
 
@@ -144,10 +322,18 @@ enum ApiKeyItemConstraint {
 
 enum ApiKeyItemIndex {
   service('idx_api_key_items_service'),
+
   tokenType('idx_api_key_items_token_type'),
+
   environment('idx_api_key_items_environment'),
+
   expiresAt('idx_api_key_items_expires_at'),
-  revoked('idx_api_key_items_revoked');
+
+  revokedAt('idx_api_key_items_revoked_at'),
+
+  rotationDue('idx_api_key_items_rotation_due'),
+
+  owner('idx_api_key_items_owner');
 
   const ApiKeyItemIndex(this.indexName);
 
@@ -155,9 +341,123 @@ enum ApiKeyItemIndex {
 }
 
 final List<String> apiKeyItemsTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${ApiKeyItemIndex.service.indexName} ON api_key_items(service);',
-  'CREATE INDEX IF NOT EXISTS ${ApiKeyItemIndex.tokenType.indexName} ON api_key_items(token_type);',
-  'CREATE INDEX IF NOT EXISTS ${ApiKeyItemIndex.environment.indexName} ON api_key_items(environment);',
-  'CREATE INDEX IF NOT EXISTS ${ApiKeyItemIndex.expiresAt.indexName} ON api_key_items(expires_at);',
-  'CREATE INDEX IF NOT EXISTS ${ApiKeyItemIndex.revoked.indexName} ON api_key_items(revoked);',
+  '''
+  CREATE INDEX IF NOT EXISTS ${ApiKeyItemIndex.service.indexName}
+  ON api_key_items(service);
+  ''',
+
+  '''
+  CREATE INDEX IF NOT EXISTS ${ApiKeyItemIndex.tokenType.indexName}
+  ON api_key_items(token_type)
+  WHERE token_type IS NOT NULL;
+  ''',
+
+  '''
+  CREATE INDEX IF NOT EXISTS ${ApiKeyItemIndex.environment.indexName}
+  ON api_key_items(environment)
+  WHERE environment IS NOT NULL;
+  ''',
+
+  '''
+  CREATE INDEX IF NOT EXISTS ${ApiKeyItemIndex.expiresAt.indexName}
+  ON api_key_items(expires_at)
+  WHERE expires_at IS NOT NULL;
+  ''',
+
+  '''
+  CREATE INDEX IF NOT EXISTS ${ApiKeyItemIndex.revokedAt.indexName}
+  ON api_key_items(revoked_at)
+  WHERE revoked = 1 AND revoked_at IS NOT NULL;
+  ''',
+
+  '''
+  CREATE INDEX IF NOT EXISTS ${ApiKeyItemIndex.rotationDue.indexName}
+  ON api_key_items(last_rotated_at, rotation_period_days)
+  WHERE rotation_period_days IS NOT NULL;
+  ''',
+
+  '''
+  CREATE INDEX IF NOT EXISTS ${ApiKeyItemIndex.owner.indexName}
+  ON api_key_items(owner)
+  WHERE owner IS NOT NULL;
+  ''',
+];
+
+enum ApiKeyItemTrigger {
+  validateVaultItemTypeOnInsert(
+    'trg_api_key_items_validate_vault_item_type_on_insert',
+  ),
+
+  validateVaultItemTypeOnUpdate(
+    'trg_api_key_items_validate_vault_item_type_on_update',
+  ),
+
+  preventItemIdUpdate('trg_api_key_items_prevent_item_id_update');
+
+  const ApiKeyItemTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum ApiKeyItemRaise {
+  invalidVaultItemType(
+    'api_key_items.item_id must reference vault_items.id with type = apiKey',
+  ),
+
+  itemIdImmutable('api_key_items.item_id is immutable');
+
+  const ApiKeyItemRaise(this.message);
+
+  final String message;
+}
+
+final List<String> apiKeyItemsTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${ApiKeyItemTrigger.validateVaultItemTypeOnInsert.triggerName}
+  BEFORE INSERT ON api_key_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'apiKey'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${ApiKeyItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${ApiKeyItemTrigger.validateVaultItemTypeOnUpdate.triggerName}
+  BEFORE UPDATE ON api_key_items
+  FOR EACH ROW
+  WHEN NOT EXISTS (
+    SELECT 1
+    FROM vault_items
+    WHERE id = NEW.item_id
+      AND type = 'apiKey'
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${ApiKeyItemRaise.invalidVaultItemType.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${ApiKeyItemTrigger.preventItemIdUpdate.triggerName}
+  BEFORE UPDATE OF item_id ON api_key_items
+  FOR EACH ROW
+  WHEN NEW.item_id <> OLD.item_id
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${ApiKeyItemRaise.itemIdImmutable.message}'
+    );
+  END;
+  ''',
 ];
