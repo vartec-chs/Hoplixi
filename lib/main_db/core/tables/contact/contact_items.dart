@@ -42,10 +42,23 @@ class ContactItems extends Table {
   @override
   List<String> get customConstraints => [
     '''
+    CONSTRAINT ${ContactItemConstraint.itemIdNotBlank.constraintName}
+    CHECK (length(trim(item_id)) > 0)
+    ''',
+
+    '''
     CONSTRAINT ${ContactItemConstraint.phoneNotBlank.constraintName}
     CHECK (
       phone IS NULL
       OR length(trim(phone)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${ContactItemConstraint.phoneNoOuterWhitespace.constraintName}
+    CHECK (
+      phone IS NULL
+      OR phone = trim(phone)
     )
     ''',
 
@@ -58,6 +71,14 @@ class ContactItems extends Table {
     ''',
 
     '''
+    CONSTRAINT ${ContactItemConstraint.emailNoOuterWhitespace.constraintName}
+    CHECK (
+      email IS NULL
+      OR email = trim(email)
+    )
+    ''',
+
+    '''
     CONSTRAINT ${ContactItemConstraint.companyNotBlank.constraintName}
     CHECK (
       company IS NULL
@@ -66,10 +87,26 @@ class ContactItems extends Table {
     ''',
 
     '''
+    CONSTRAINT ${ContactItemConstraint.companyNoOuterWhitespace.constraintName}
+    CHECK (
+      company IS NULL
+      OR company = trim(company)
+    )
+    ''',
+
+    '''
     CONSTRAINT ${ContactItemConstraint.jobTitleNotBlank.constraintName}
     CHECK (
       job_title IS NULL
       OR length(trim(job_title)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${ContactItemConstraint.jobTitleNoOuterWhitespace.constraintName}
+    CHECK (
+      job_title IS NULL
+      OR job_title = trim(job_title)
     )
     ''',
 
@@ -88,21 +125,41 @@ class ContactItems extends Table {
       OR length(trim(website)) > 0
     )
     ''',
+
+    '''
+    CONSTRAINT ${ContactItemConstraint.websiteNoOuterWhitespace.constraintName}
+    CHECK (
+      website IS NULL
+      OR website = trim(website)
+    )
+    ''',
   ];
 }
 
 enum ContactItemConstraint {
+  itemIdNotBlank('chk_contact_items_item_id_not_blank'),
+
   phoneNotBlank('chk_contact_items_phone_not_blank'),
+
+  phoneNoOuterWhitespace('chk_contact_items_phone_no_outer_whitespace'),
 
   emailNotBlank('chk_contact_items_email_not_blank'),
 
+  emailNoOuterWhitespace('chk_contact_items_email_no_outer_whitespace'),
+
   companyNotBlank('chk_contact_items_company_not_blank'),
+
+  companyNoOuterWhitespace('chk_contact_items_company_no_outer_whitespace'),
 
   jobTitleNotBlank('chk_contact_items_job_title_not_blank'),
 
+  jobTitleNoOuterWhitespace('chk_contact_items_job_title_no_outer_whitespace'),
+
   addressNotBlank('chk_contact_items_address_not_blank'),
 
-  websiteNotBlank('chk_contact_items_website_not_blank');
+  websiteNotBlank('chk_contact_items_website_not_blank'),
+
+  websiteNoOuterWhitespace('chk_contact_items_website_no_outer_whitespace');
 
   const ContactItemConstraint(this.constraintName);
 
@@ -121,10 +178,10 @@ enum ContactItemIndex {
 }
 
 final List<String> contactItemsTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${ContactItemIndex.phone.indexName} ON contact_items(phone);',
-  'CREATE INDEX IF NOT EXISTS ${ContactItemIndex.email.indexName} ON contact_items(email);',
-  'CREATE INDEX IF NOT EXISTS ${ContactItemIndex.company.indexName} ON contact_items(company);',
-  'CREATE INDEX IF NOT EXISTS ${ContactItemIndex.birthday.indexName} ON contact_items(birthday);',
+  'CREATE INDEX IF NOT EXISTS ${ContactItemIndex.phone.indexName} ON contact_items(phone) WHERE phone IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${ContactItemIndex.email.indexName} ON contact_items(email) WHERE email IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${ContactItemIndex.company.indexName} ON contact_items(company) WHERE company IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${ContactItemIndex.birthday.indexName} ON contact_items(birthday) WHERE birthday IS NOT NULL;',
 ];
 
 enum ContactItemTrigger {

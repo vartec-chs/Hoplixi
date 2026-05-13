@@ -47,12 +47,26 @@ class ContactHistory extends Table {
   @override
   List<String> get customConstraints => [
     '''
+    CONSTRAINT ${ContactHistoryConstraint.historyIdNotBlank.constraintName}
+    CHECK (length(trim(history_id)) > 0)
+    ''',
+
+    '''
     CONSTRAINT ${ContactHistoryConstraint.phoneNotBlank.constraintName}
     CHECK (
       phone IS NULL
       OR length(trim(phone)) > 0
     )
     ''',
+
+    '''
+    CONSTRAINT ${ContactHistoryConstraint.phoneNoOuterWhitespace.constraintName}
+    CHECK (
+      phone IS NULL
+      OR phone = trim(phone)
+    )
+    ''',
+
     '''
     CONSTRAINT ${ContactHistoryConstraint.emailNotBlank.constraintName}
     CHECK (
@@ -60,6 +74,15 @@ class ContactHistory extends Table {
       OR length(trim(email)) > 0
     )
     ''',
+
+    '''
+    CONSTRAINT ${ContactHistoryConstraint.emailNoOuterWhitespace.constraintName}
+    CHECK (
+      email IS NULL
+      OR email = trim(email)
+    )
+    ''',
+
     '''
     CONSTRAINT ${ContactHistoryConstraint.companyNotBlank.constraintName}
     CHECK (
@@ -67,6 +90,15 @@ class ContactHistory extends Table {
       OR length(trim(company)) > 0
     )
     ''',
+
+    '''
+    CONSTRAINT ${ContactHistoryConstraint.companyNoOuterWhitespace.constraintName}
+    CHECK (
+      company IS NULL
+      OR company = trim(company)
+    )
+    ''',
+
     '''
     CONSTRAINT ${ContactHistoryConstraint.jobTitleNotBlank.constraintName}
     CHECK (
@@ -74,6 +106,15 @@ class ContactHistory extends Table {
       OR length(trim(job_title)) > 0
     )
     ''',
+
+    '''
+    CONSTRAINT ${ContactHistoryConstraint.jobTitleNoOuterWhitespace.constraintName}
+    CHECK (
+      job_title IS NULL
+      OR job_title = trim(job_title)
+    )
+    ''',
+
     '''
     CONSTRAINT ${ContactHistoryConstraint.addressNotBlank.constraintName}
     CHECK (
@@ -81,6 +122,7 @@ class ContactHistory extends Table {
       OR length(trim(address)) > 0
     )
     ''',
+
     '''
     CONSTRAINT ${ContactHistoryConstraint.websiteNotBlank.constraintName}
     CHECK (
@@ -88,21 +130,41 @@ class ContactHistory extends Table {
       OR length(trim(website)) > 0
     )
     ''',
+
+    '''
+    CONSTRAINT ${ContactHistoryConstraint.websiteNoOuterWhitespace.constraintName}
+    CHECK (
+      website IS NULL
+      OR website = trim(website)
+    )
+    ''',
   ];
 }
 
 enum ContactHistoryConstraint {
+  historyIdNotBlank('chk_contact_history_history_id_not_blank'),
+
   phoneNotBlank('chk_contact_history_phone_not_blank'),
+
+  phoneNoOuterWhitespace('chk_contact_history_phone_no_outer_whitespace'),
 
   emailNotBlank('chk_contact_history_email_not_blank'),
 
+  emailNoOuterWhitespace('chk_contact_history_email_no_outer_whitespace'),
+
   companyNotBlank('chk_contact_history_company_not_blank'),
+
+  companyNoOuterWhitespace('chk_contact_history_company_no_outer_whitespace'),
 
   jobTitleNotBlank('chk_contact_history_job_title_not_blank'),
 
+  jobTitleNoOuterWhitespace('chk_contact_history_job_title_no_outer_whitespace'),
+
   addressNotBlank('chk_contact_history_address_not_blank'),
 
-  websiteNotBlank('chk_contact_history_website_not_blank');
+  websiteNotBlank('chk_contact_history_website_not_blank'),
+
+  websiteNoOuterWhitespace('chk_contact_history_website_no_outer_whitespace');
 
   const ContactHistoryConstraint(this.constraintName);
 
@@ -121,10 +183,10 @@ enum ContactHistoryIndex {
 }
 
 final List<String> contactHistoryTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${ContactHistoryIndex.phone.indexName} ON contact_history(phone);',
-  'CREATE INDEX IF NOT EXISTS ${ContactHistoryIndex.email.indexName} ON contact_history(email);',
-  'CREATE INDEX IF NOT EXISTS ${ContactHistoryIndex.company.indexName} ON contact_history(company);',
-  'CREATE INDEX IF NOT EXISTS ${ContactHistoryIndex.birthday.indexName} ON contact_history(birthday);',
+  'CREATE INDEX IF NOT EXISTS ${ContactHistoryIndex.phone.indexName} ON contact_history(phone) WHERE phone IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${ContactHistoryIndex.email.indexName} ON contact_history(email) WHERE email IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${ContactHistoryIndex.company.indexName} ON contact_history(company) WHERE company IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${ContactHistoryIndex.birthday.indexName} ON contact_history(birthday) WHERE birthday IS NOT NULL;',
 ];
 
 enum ContactHistoryTrigger {
