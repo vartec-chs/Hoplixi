@@ -57,6 +57,13 @@ class Tags extends Table {
   @override
   List<String> get customConstraints => [
     '''
+    CONSTRAINT ${TagConstraint.idNotBlank.constraintName}
+    CHECK (
+      length(trim(id)) > 0
+    )
+    ''',
+
+    '''
     CONSTRAINT ${TagConstraint.nameNotBlank.constraintName}
     CHECK (
       length(trim(name)) > 0
@@ -64,18 +71,49 @@ class Tags extends Table {
     ''',
 
     '''
-    CONSTRAINT ${TagConstraint.colorArgbHex.constraintName}
+    CONSTRAINT ${TagConstraint.nameNoOuterWhitespace.constraintName}
     CHECK (
-      color GLOB '[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'
+      name = trim(name)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${TagConstraint.colorNotBlank.constraintName}
+    CHECK (
+      color IS NULL
+      OR length(trim(color)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${TagConstraint.colorNoOuterWhitespace.constraintName}
+    CHECK (
+      color IS NULL
+      OR color = trim(color)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${TagConstraint.modifiedAtAfterCreatedAt.constraintName}
+    CHECK (
+      modified_at >= created_at
     )
     ''',
   ];
 }
 
 enum TagConstraint {
+  idNotBlank('chk_tags_id_not_blank'),
+
   nameNotBlank('chk_tags_name_not_blank'),
 
-  colorArgbHex('chk_tags_color_argb_hex');
+  nameNoOuterWhitespace('chk_tags_name_no_outer_whitespace'),
+
+  colorNotBlank('chk_tags_color_not_blank'),
+
+  colorNoOuterWhitespace('chk_tags_color_no_outer_whitespace'),
+
+  modifiedAtAfterCreatedAt('chk_tags_modified_at_after_created_at');
 
   const TagConstraint(this.constraintName);
 
@@ -100,4 +138,35 @@ final List<String> tagsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${TagIndex.color.indexName} ON tags(color);',
   'CREATE INDEX IF NOT EXISTS ${TagIndex.createdAt.indexName} ON tags(created_at);',
   'CREATE INDEX IF NOT EXISTS ${TagIndex.modifiedAt.indexName} ON tags(modified_at);',
+];
+
+enum TagTrigger {
+  preventCreatedAtUpdate('trg_tags_prevent_created_at_update');
+
+  const TagTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum TagRaise {
+  createdAtImmutable('tags.created_at is immutable');
+
+  const TagRaise(this.message);
+
+  final String message;
+}
+
+final List<String> tagsTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${TagTrigger.preventCreatedAtUpdate.triggerName}
+  BEFORE UPDATE OF created_at ON tags
+  FOR EACH ROW
+  WHEN NEW.created_at <> OLD.created_at
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${TagRaise.createdAtImmutable.message}'
+    );
+  END;
+  ''',
 ];

@@ -53,6 +53,18 @@ class ItemLinks extends Table {
   @override
   List<String> get customConstraints => [
     '''
+    CONSTRAINT ${ItemLinkConstraint.idNotBlank.constraintName}
+    CHECK (length(trim(id)) > 0)
+    ''',
+    '''
+    CONSTRAINT ${ItemLinkConstraint.sourceItemIdNotBlank.constraintName}
+    CHECK (length(trim(source_item_id)) > 0)
+    ''',
+    '''
+    CONSTRAINT ${ItemLinkConstraint.targetItemIdNotBlank.constraintName}
+    CHECK (length(trim(target_item_id)) > 0)
+    ''',
+    '''
     CONSTRAINT ${ItemLinkConstraint.noSelfLink.constraintName}
     CHECK (
       source_item_id != target_item_id
@@ -76,10 +88,24 @@ class ItemLinks extends Table {
     )
     ''',
     '''
+    CONSTRAINT ${ItemLinkConstraint.relationTypeOtherNoOuterWhitespace.constraintName}
+    CHECK (
+      relation_type_other IS NULL 
+      OR relation_type_other = trim(relation_type_other)
+    )
+    ''',
+    '''
     CONSTRAINT ${ItemLinkConstraint.labelNotBlank.constraintName}
     CHECK (
       label IS NULL
       OR length(trim(label)) > 0
+    )
+    ''',
+    '''
+    CONSTRAINT ${ItemLinkConstraint.labelNoOuterWhitespace.constraintName}
+    CHECK (
+      label IS NULL 
+      OR label = trim(label)
     )
     ''',
     '''
@@ -88,10 +114,22 @@ class ItemLinks extends Table {
       sort_order >= 0
     )
     ''',
+    '''
+    CONSTRAINT ${ItemLinkConstraint.modifiedAtAfterCreatedAt.constraintName}
+    CHECK (
+      modified_at >= created_at
+    )
+    ''',
   ];
 }
 
 enum ItemLinkConstraint {
+  idNotBlank('chk_item_links_id_not_blank'),
+
+  sourceItemIdNotBlank('chk_item_links_source_item_id_not_blank'),
+
+  targetItemIdNotBlank('chk_item_links_target_item_id_not_blank'),
+
   noSelfLink('chk_item_links_no_self_link'),
 
   relationTypeOtherRequired('chk_item_links_relation_type_other_required'),
@@ -100,9 +138,17 @@ enum ItemLinkConstraint {
     'chk_item_links_relation_type_other_must_be_null',
   ),
 
+  relationTypeOtherNoOuterWhitespace(
+    'chk_item_links_relation_type_other_no_outer_whitespace',
+  ),
+
   labelNotBlank('chk_item_links_label_not_blank'),
 
-  sortOrderNonNegative('chk_item_links_sort_order_non_negative');
+  labelNoOuterWhitespace('chk_item_links_label_no_outer_whitespace'),
+
+  sortOrderNonNegative('chk_item_links_sort_order_non_negative'),
+
+  modifiedAtAfterCreatedAt('chk_item_links_modified_at_after_created_at');
 
   const ItemLinkConstraint(this.constraintName);
 
@@ -142,6 +188,9 @@ final List<String> itemLinksTableIndexes = [
 ];
 
 enum ItemLinkTrigger {
+  preventCreatedAtUpdate('trg_item_links_prevent_created_at_update'),
+  preventSourceTargetUpdate('trg_item_links_prevent_source_target_update'),
+
   otpForPasswordInsert('trg_item_links_otp_for_password_insert'),
   otpForPasswordUpdate('trg_item_links_otp_for_password_update'),
 
@@ -184,7 +233,43 @@ enum ItemLinkTrigger {
   final String triggerName;
 }
 
+enum ItemLinkRaise {
+  preventCreatedAtUpdate('created_at is immutable'),
+  preventSourceTargetUpdate('source_item_id and target_item_id are immutable'),
+
+  otpForPassword('otpForPassword link must be password -> otp'),
+  supportContact('supportContact target must be contact'),
+  purchaseDocument('purchaseDocument link must be licenseKey -> file/document'),
+  identityScan('identityScan link must be identity -> document'),
+  identityPhoto('identityPhoto link must be identity -> file'),
+  sshPublicKeyFile('sshPublicKeyFile link must be sshKey -> file'),
+  sshPrivateKeyFile('sshPrivateKeyFile link must be sshKey -> file'),
+  certificateFile('certificateFile link must be certificate -> file/document'),
+  certificatePrivateKeyFile('certificatePrivateKeyFile link must be certificate -> file'),
+  note('note link target must be note'),
+  attachment('attachment link target must be file/document');
+
+  const ItemLinkRaise(this.message);
+
+  final String message;
+}
+
 final List<String> itemLinksTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${ItemLinkTrigger.preventCreatedAtUpdate.triggerName}
+  BEFORE UPDATE OF created_at ON item_links
+  BEGIN
+    SELECT RAISE(ABORT, '${ItemLinkRaise.preventCreatedAtUpdate.message}');
+  END;
+  ''',
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${ItemLinkTrigger.preventSourceTargetUpdate.triggerName}
+  BEFORE UPDATE OF source_item_id, target_item_id ON item_links
+  BEGIN
+    SELECT RAISE(ABORT, '${ItemLinkRaise.preventSourceTargetUpdate.message}');
+  END;
+  ''',
+
   // password -> otp
   '''
   CREATE TRIGGER IF NOT EXISTS ${ItemLinkTrigger.otpForPasswordInsert.triggerName}
@@ -193,7 +278,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'otpForPassword link must be password -> otp'
+      '${ItemLinkRaise.otpForPassword.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -213,7 +298,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'otpForPassword link must be password -> otp'
+      '${ItemLinkRaise.otpForPassword.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -235,7 +320,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'supportContact target must be contact'
+      '${ItemLinkRaise.supportContact.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -252,7 +337,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'supportContact target must be contact'
+      '${ItemLinkRaise.supportContact.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -271,7 +356,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'purchaseDocument link must be licenseKey -> file/document'
+      '${ItemLinkRaise.purchaseDocument.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -291,7 +376,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'purchaseDocument link must be licenseKey -> file/document'
+      '${ItemLinkRaise.purchaseDocument.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -313,7 +398,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'identityScan link must be identity -> document'
+      '${ItemLinkRaise.identityScan.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -333,7 +418,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'identityScan link must be identity -> document'
+      '${ItemLinkRaise.identityScan.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -355,7 +440,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'identityPhoto link must be identity -> file'
+      '${ItemLinkRaise.identityPhoto.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -375,7 +460,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'identityPhoto link must be identity -> file'
+      '${ItemLinkRaise.identityPhoto.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -397,7 +482,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'sshPublicKeyFile link must be sshKey -> file'
+      '${ItemLinkRaise.sshPublicKeyFile.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -417,7 +502,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'sshPublicKeyFile link must be sshKey -> file'
+      '${ItemLinkRaise.sshPublicKeyFile.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -437,7 +522,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'sshPrivateKeyFile link must be sshKey -> file'
+      '${ItemLinkRaise.sshPrivateKeyFile.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -457,7 +542,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'sshPrivateKeyFile link must be sshKey -> file'
+      '${ItemLinkRaise.sshPrivateKeyFile.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -479,7 +564,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'certificateFile link must be certificate -> file/document'
+      '${ItemLinkRaise.certificateFile.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -499,7 +584,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'certificateFile link must be certificate -> file/document'
+      '${ItemLinkRaise.certificateFile.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -521,7 +606,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'certificatePrivateKeyFile link must be certificate -> file'
+      '${ItemLinkRaise.certificatePrivateKeyFile.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -541,7 +626,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'certificatePrivateKeyFile link must be certificate -> file'
+      '${ItemLinkRaise.certificatePrivateKeyFile.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -563,7 +648,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'note link target must be note'
+      '${ItemLinkRaise.note.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -580,7 +665,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'note link target must be note'
+      '${ItemLinkRaise.note.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -599,7 +684,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'attachment link target must be file/document'
+      '${ItemLinkRaise.attachment.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1
@@ -616,7 +701,7 @@ final List<String> itemLinksTableTriggers = [
   BEGIN
     SELECT RAISE(
       ABORT,
-      'attachment link target must be file/document'
+      '${ItemLinkRaise.attachment.message}'
     )
     WHERE NOT EXISTS (
       SELECT 1

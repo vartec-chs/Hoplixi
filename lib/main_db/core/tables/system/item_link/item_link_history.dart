@@ -55,9 +55,6 @@ class ItemLinkHistory extends Table {
   /// Snapshot даты изменения исходной связи.
   DateTimeColumn get modifiedAt => dateTime()();
 
-  /// UUID снимка для группировки связанных записей.
-  TextColumn get snapshotId => text().nullable()();
-
   /// Когда был создан snapshot.
   DateTimeColumn get snapshotCreatedAt =>
       dateTime().clientDefault(() => DateTime.now())();
@@ -70,6 +67,26 @@ class ItemLinkHistory extends Table {
 
   @override
   List<String> get customConstraints => [
+    '''
+    CONSTRAINT ${ItemLinkHistoryConstraint.idNotBlank.constraintName}
+    CHECK (length(trim(id)) > 0)
+    ''',
+    '''
+    CONSTRAINT ${ItemLinkHistoryConstraint.historyIdNotBlank.constraintName}
+    CHECK (length(trim(history_id)) > 0)
+    ''',
+    '''
+    CONSTRAINT ${ItemLinkHistoryConstraint.sourceLinkIdNotBlank.constraintName}
+    CHECK (source_link_id IS NULL OR length(trim(source_link_id)) > 0)
+    ''',
+    '''
+    CONSTRAINT ${ItemLinkHistoryConstraint.sourceItemIdNotBlank.constraintName}
+    CHECK (length(trim(source_item_id)) > 0)
+    ''',
+    '''
+    CONSTRAINT ${ItemLinkHistoryConstraint.targetItemIdNotBlank.constraintName}
+    CHECK (length(trim(target_item_id)) > 0)
+    ''',
     '''
     CONSTRAINT ${ItemLinkHistoryConstraint.noSelfLink.constraintName}
     CHECK (
@@ -97,10 +114,26 @@ class ItemLinkHistory extends Table {
     ''',
 
     '''
+    CONSTRAINT ${ItemLinkHistoryConstraint.relationTypeOtherNoOuterWhitespace.constraintName}
+    CHECK (
+      relation_type_other IS NULL 
+      OR relation_type_other = trim(relation_type_other)
+    )
+    ''',
+
+    '''
     CONSTRAINT ${ItemLinkHistoryConstraint.labelNotBlank.constraintName}
     CHECK (
       label IS NULL
       OR length(trim(label)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${ItemLinkHistoryConstraint.labelNoOuterWhitespace.constraintName}
+    CHECK (
+      label IS NULL 
+      OR label = trim(label)
     )
     ''',
 
@@ -117,10 +150,27 @@ class ItemLinkHistory extends Table {
       created_at <= modified_at
     )
     ''',
+
+    '''
+    CONSTRAINT ${ItemLinkHistoryConstraint.snapshotCreatedAtRange.constraintName}
+    CHECK (
+      snapshot_created_at >= created_at
+    )
+    ''',
   ];
 }
 
 enum ItemLinkHistoryConstraint {
+  idNotBlank('chk_item_link_history_id_not_blank'),
+
+  historyIdNotBlank('chk_item_link_history_history_id_not_blank'),
+
+  sourceLinkIdNotBlank('chk_item_link_history_source_link_id_not_blank'),
+
+  sourceItemIdNotBlank('chk_item_link_history_source_item_id_not_blank'),
+
+  targetItemIdNotBlank('chk_item_link_history_target_item_id_not_blank'),
+
   noSelfLink('chk_item_link_history_no_self_link'),
 
   relationTypeOtherRequired(
@@ -131,11 +181,19 @@ enum ItemLinkHistoryConstraint {
     'chk_item_link_history_relation_type_other_must_be_null',
   ),
 
+  relationTypeOtherNoOuterWhitespace(
+    'chk_item_link_history_relation_type_other_no_outer_whitespace',
+  ),
+
   labelNotBlank('chk_item_link_history_label_not_blank'),
+
+  labelNoOuterWhitespace('chk_item_link_history_label_no_outer_whitespace'),
 
   sortOrderNonNegative('chk_item_link_history_sort_order_non_negative'),
 
-  createdModifiedRange('chk_item_link_history_created_modified_range');
+  createdModifiedRange('chk_item_link_history_created_modified_range'),
+
+  snapshotCreatedAtRange('chk_item_link_history_snapshot_created_at_range');
 
   const ItemLinkHistoryConstraint(this.constraintName);
 
@@ -143,7 +201,6 @@ enum ItemLinkHistoryConstraint {
 }
 
 enum ItemLinkHistoryIndex {
-  snapshotId('idx_item_link_history_snapshot_id'),
   historyId('idx_item_link_history_history_id'),
   sourceLinkId('idx_item_link_history_source_link_id'),
   sourceItemId('idx_item_link_history_source_item_id'),
@@ -160,9 +217,8 @@ enum ItemLinkHistoryIndex {
 }
 
 final List<String> itemLinkHistoryTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${ItemLinkHistoryIndex.snapshotId.indexName} ON item_link_history(snapshot_id);',
   'CREATE INDEX IF NOT EXISTS ${ItemLinkHistoryIndex.historyId.indexName} ON item_link_history(history_id);',
-  'CREATE INDEX IF NOT EXISTS ${ItemLinkHistoryIndex.sourceLinkId.indexName} ON item_link_history(source_link_id);',
+  'CREATE INDEX IF NOT EXISTS ${ItemLinkHistoryIndex.sourceLinkId.indexName} ON item_link_history(source_link_id) WHERE source_link_id IS NOT NULL;',
   'CREATE INDEX IF NOT EXISTS ${ItemLinkHistoryIndex.sourceItemId.indexName} ON item_link_history(source_item_id);',
   'CREATE INDEX IF NOT EXISTS ${ItemLinkHistoryIndex.targetItemId.indexName} ON item_link_history(target_item_id);',
   'CREATE INDEX IF NOT EXISTS ${ItemLinkHistoryIndex.relationType.indexName} ON item_link_history(relation_type);',
@@ -170,4 +226,30 @@ final List<String> itemLinkHistoryTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${ItemLinkHistoryIndex.targetRelationType.indexName} ON item_link_history(target_item_id, relation_type);',
   'CREATE INDEX IF NOT EXISTS ${ItemLinkHistoryIndex.sourceSortOrder.indexName} ON item_link_history(source_item_id, sort_order);',
   'CREATE INDEX IF NOT EXISTS ${ItemLinkHistoryIndex.snapshotCreatedAt.indexName} ON item_link_history(snapshot_created_at);',
+];
+
+enum ItemLinkHistoryTrigger {
+  preventUpdate('trg_item_link_history_prevent_update');
+
+  const ItemLinkHistoryTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum ItemLinkHistoryRaise {
+  preventUpdate('Item link history records are immutable');
+
+  const ItemLinkHistoryRaise(this.message);
+
+  final String message;
+}
+
+final List<String> itemLinkHistoryTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${ItemLinkHistoryTrigger.preventUpdate.triggerName}
+  BEFORE UPDATE ON item_link_history
+  BEGIN
+    SELECT RAISE(ABORT, '${ItemLinkHistoryRaise.preventUpdate.message}');
+  END;
+  ''',
 ];

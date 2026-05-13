@@ -4,9 +4,14 @@
 
 ### main_db
 
-- В `custom_icons` и `icon_refs` добавлены CHECK-ограничения для blank/whitespace,
-  blob/date consistency, immutable `created_at` triggers и partial indexes для
-  nullable icon ref полей.
+- В `categories`, `tags`, `item_category_history`, `item_tags` и
+  `vault_item_tag_history` добавлены недостающие blank/whitespace CHECK-правила,
+  partial indexes для nullable FK-полей и immutable `created_at` / history
+  `preventUpdate` триггеры; в `categories` также добавлена защита от parent
+  cycle через recursive CTE.
+- В `custom_icons` и `icon_refs` добавлены CHECK-ограничения для
+  blank/whitespace, blob/date consistency, immutable `created_at` triggers и
+  partial indexes для nullable icon ref полей.
 - Базовый слой `vault_items` усилен CHECK-ограничениями для nullable FK/text
   полей и deleted-state конфликтов; конфликтные trigger-проверки заменены на
   CHECK, nullable FK/date индексы сделаны partial.
@@ -55,9 +60,9 @@
   восстановления документа теперь является `document_versions`, а флаг
   `document_versions.isCurrent` удалён как дублирующий.
 - `document_pages` сведена к `id/documentId/currentVersionPageId`; источником
-  восстановления страницы теперь является `document_version_pages`.
-  Добавлены уникальность `(documentId, currentVersionPageId)` и триггеры
-  проверки принадлежности version-page тому же документу.
+  восстановления страницы теперь является `document_version_pages`. Добавлены
+  уникальность `(documentId, currentVersionPageId)` и триггеры проверки
+  принадлежности version-page тому же документу.
 - Добавлены `item_category_history` и `vault_item_tag_history` для
   восстановления категории и тегов по `snapshotId`.
 - Из `vault_item_history` убраны дублирующие snapshot-поля категории и тегов:

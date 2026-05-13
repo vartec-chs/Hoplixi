@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
-import 'tags.dart';
 import '../vault_items/vault_items.dart';
+import 'tags.dart';
 
 /// Единая таблица связи элементов хранилища и тегов.
 ///
@@ -26,7 +26,71 @@ class ItemTags extends Table {
 
   @override
   String get tableName => 'item_tags';
+
+  @override
+  List<String> get customConstraints => [
+    '''
+    CONSTRAINT ${ItemTagsConstraint.itemIdNotBlank.constraintName}
+    CHECK (
+      length(trim(item_id)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${ItemTagsConstraint.tagIdNotBlank.constraintName}
+    CHECK (
+      length(trim(tag_id)) > 0
+    )
+    ''',
+  ];
 }
+
+enum ItemTagsConstraint {
+  itemIdNotBlank('chk_item_tags_item_id_not_blank'),
+
+  tagIdNotBlank('chk_item_tags_tag_id_not_blank');
+
+  const ItemTagsConstraint(this.constraintName);
+
+  final String constraintName;
+}
+
+enum ItemTagsTrigger {
+  preventCreatedAtUpdate('trg_item_tags_prevent_created_at_update');
+
+  const ItemTagsTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum ItemTagsRaise {
+  createdAtImmutable('item_tags.created_at is immutable');
+
+  const ItemTagsRaise(this.message);
+
+  final String message;
+}
+
+final List<String> itemTagsTableIndexes = [
+  'CREATE INDEX IF NOT EXISTS ${ItemTagIndex.itemId.indexName} ON item_tags(item_id);',
+  'CREATE INDEX IF NOT EXISTS ${ItemTagIndex.tagId.indexName} ON item_tags(tag_id);',
+  'CREATE INDEX IF NOT EXISTS ${ItemTagIndex.createdAt.indexName} ON item_tags(created_at);',
+];
+
+final List<String> itemTagsTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${ItemTagsTrigger.preventCreatedAtUpdate.triggerName}
+  BEFORE UPDATE OF created_at ON item_tags
+  FOR EACH ROW
+  WHEN NEW.created_at <> OLD.created_at
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${ItemTagsRaise.createdAtImmutable.message}'
+    );
+  END;
+  ''',
+];
 
 enum ItemTagIndex {
   itemId('idx_item_tags_item_id'),
@@ -37,9 +101,3 @@ enum ItemTagIndex {
 
   final String indexName;
 }
-
-final List<String> itemTagsTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${ItemTagIndex.itemId.indexName} ON item_tags(item_id);',
-  'CREATE INDEX IF NOT EXISTS ${ItemTagIndex.tagId.indexName} ON item_tags(tag_id);',
-  'CREATE INDEX IF NOT EXISTS ${ItemTagIndex.createdAt.indexName} ON item_tags(created_at);',
-];
