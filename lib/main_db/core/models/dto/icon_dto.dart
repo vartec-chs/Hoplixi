@@ -33,7 +33,7 @@ sealed class CustomIconDto with _$CustomIconDto {
     String? id,
     required String name,
     required CustomIconFormat format,
-    @Uint8ListConverter() required Uint8List data,
+    @Uint8ListBase64Converter() required Uint8List data,
     DateTime? createdAt,
     DateTime? modifiedAt,
   }) = _CustomIconDto;
