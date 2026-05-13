@@ -34,6 +34,10 @@ class RecoveryCodesHistory extends Table {
   @override
   List<String> get customConstraints => [
     '''
+    CONSTRAINT ${RecoveryCodesHistoryConstraint.historyIdNotBlank.constraintName}
+    CHECK (length(trim(history_id)) > 0)
+    ''',
+    '''
     CONSTRAINT ${RecoveryCodesHistoryConstraint.codesCountNonNegative.constraintName}
     CHECK (
       codes_count >= 0
@@ -55,6 +59,8 @@ class RecoveryCodesHistory extends Table {
 }
 
 enum RecoveryCodesHistoryConstraint {
+  historyIdNotBlank('chk_recovery_codes_history_history_id_not_blank'),
+
   codesCountNonNegative('chk_recovery_codes_history_codes_count_non_negative'),
 
   usedCountNonNegative('chk_recovery_codes_history_used_count_non_negative'),
@@ -77,7 +83,7 @@ enum RecoveryCodesHistoryIndex {
 }
 
 final List<String> recoveryCodesHistoryTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${RecoveryCodesHistoryIndex.generatedAt.indexName} ON recovery_codes_history(generated_at);',
+  'CREATE INDEX IF NOT EXISTS ${RecoveryCodesHistoryIndex.generatedAt.indexName} ON recovery_codes_history(generated_at) WHERE generated_at IS NOT NULL;',
 ];
 
 enum RecoveryCodesHistoryTrigger {

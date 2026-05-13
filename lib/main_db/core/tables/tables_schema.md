@@ -295,12 +295,19 @@ perpetual, subscription, trial, volume, oem, educational, openSource, other, }
 
 Группы кодов восстановления. Columns: `itemId`, `codesCount`, `usedCount`,
 `generatedAt`, `oneTime`. Notes: Кэширует количество кодов из таблицы
-`recovery_codes`.
+`recovery_codes` через триггеры.
 
 ### recovery_codes
 
 Отдельные коды восстановления. Columns: `id`, `itemId`, `code`, `used`,
-`usedAt`, `position`. Notes: Связь с `recovery_codes_items`.
+`usedAt`, `position`. Notes: Связь с `recovery_codes_items`. Уникальность по
+`(itemId, position)`. Позиция кодов начинается с 0.
+
+### recovery_code_values_history
+
+Snapshot отдельных recovery codes. Columns: `id`, `historyId`, `originalCodeId`,
+`code`, `used`, `usedAt`, `position`. Notes: Позволяет полностью восстанавливать
+набор кодов из истории. Immutability обеспечивается триггером.
 
 ### loyalty_card_items
 

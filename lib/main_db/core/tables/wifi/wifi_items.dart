@@ -2,7 +2,19 @@ import 'package:drift/drift.dart';
 
 import '../vault_items/vault_items.dart';
 
-enum WifiSecurityType { open, wep, wpa, wpa2, wpa3, wpaEnterprise, other }
+enum WifiSecurityType {
+  open,
+  wep,
+  wpa,
+  wpa2,
+  wpa3,
+  wpaEnterprise,
+  wpa2Enterprise,
+  wpa3Enterprise,
+  other,
+}
+
+enum WifiEncryptionType { none, wep, tkip, aes, ccmp, gcmp, other }
 
 @DataClassName('WifiItemsData')
 class WifiItems extends Table {
@@ -18,20 +30,21 @@ class WifiItems extends Table {
   TextColumn get password => text().nullable()();
 
   /// Тип защиты сети.
-  TextColumn get security => textEnum<WifiSecurityType>().nullable()();
+  TextColumn get securityType => textEnum<WifiSecurityType>().nullable()();
 
-  /// Дополнительный тип защиты, если security = other.
-  TextColumn get securityOther =>
+  /// Дополнительный тип защиты, если securityType = other.
+  TextColumn get securityTypeOther =>
+      text().withLength(min: 1, max: 255).nullable()();
+
+  /// Тип шифрования.
+  TextColumn get encryption => textEnum<WifiEncryptionType>().nullable()();
+
+  /// Дополнительный тип шифрования, если encryption = other.
+  TextColumn get encryptionOther =>
       text().withLength(min: 1, max: 255).nullable()();
 
   /// Скрытая сеть.
-  BoolColumn get hidden => boolean().withDefault(const Constant(false))();
-
-  /// Username для enterprise Wi-Fi.
-  ///
-  /// Остальные enterprise-параметры лучше добавить отдельными колонками позже,
-  /// если появится полноценная поддержка WPA Enterprise.
-  TextColumn get username => text().withLength(min: 1, max: 255).nullable()();
+  BoolColumn get hiddenSsid => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {itemId};
@@ -42,11 +55,19 @@ class WifiItems extends Table {
   @override
   List<String> get customConstraints => [
     '''
+    CONSTRAINT ${WifiItemConstraint.itemIdNotBlank.constraintName}
+    CHECK (
+      length(trim(item_id)) > 0
+    )
+    ''',
+
+    '''
     CONSTRAINT ${WifiItemConstraint.ssidNotBlank.constraintName}
     CHECK (
       length(trim(ssid)) > 0
     )
     ''',
+
     '''
     CONSTRAINT ${WifiItemConstraint.passwordNotBlank.constraintName}
     CHECK (
@@ -54,44 +75,112 @@ class WifiItems extends Table {
       OR length(trim(password)) > 0
     )
     ''',
+
     '''
-    CONSTRAINT ${WifiItemConstraint.securityOtherRequired.constraintName}
+    CONSTRAINT ${WifiItemConstraint.securityTypeOtherRequired.constraintName}
     CHECK (
-      security IS NULL
-      OR security != 'other'
+      security_type IS NULL
+      OR security_type != 'other'
       OR (
-        security_other IS NOT NULL
-        AND length(trim(security_other)) > 0
+        security_type_other IS NOT NULL
+        AND length(trim(security_type_other)) > 0
       )
     )
     ''',
+
     '''
-    CONSTRAINT ${WifiItemConstraint.securityOtherMustBeNull.constraintName}
+    CONSTRAINT ${WifiItemConstraint.securityTypeOtherMustBeNull.constraintName}
     CHECK (
-      security = 'other'
-      OR security_other IS NULL
+      security_type = 'other'
+      OR security_type_other IS NULL
     )
     ''',
+
     '''
-    CONSTRAINT ${WifiItemConstraint.usernameNotBlank.constraintName}
+    CONSTRAINT ${WifiItemConstraint.securityTypeOtherNoOuterWhitespace.constraintName}
     CHECK (
-      username IS NULL
-      OR length(trim(username)) > 0
+      security_type_other IS NULL
+      OR security_type_other = trim(security_type_other)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${WifiItemConstraint.encryptionOtherRequired.constraintName}
+    CHECK (
+      encryption IS NULL
+      OR encryption != 'other'
+      OR (
+        encryption_other IS NOT NULL
+        AND length(trim(encryption_other)) > 0
+      )
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${WifiItemConstraint.encryptionOtherMustBeNull.constraintName}
+    CHECK (
+      encryption = 'other'
+      OR encryption_other IS NULL
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${WifiItemConstraint.encryptionOtherNoOuterWhitespace.constraintName}
+    CHECK (
+      encryption_other IS NULL
+      OR encryption_other = trim(encryption_other)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${WifiItemConstraint.passwordSecurityConsistency.constraintName}
+    CHECK (
+      security_type IS NULL
+      OR (
+        security_type = 'open'
+        AND password IS NULL
+      )
+      OR security_type IN (
+        'wpaEnterprise',
+        'wpa2Enterprise',
+        'wpa3Enterprise',
+        'other'
+      )
+      OR (
+        security_type IN ('wep', 'wpa', 'wpa2', 'wpa3')
+        AND password IS NOT NULL
+      )
     )
     ''',
   ];
 }
 
 enum WifiItemConstraint {
+  itemIdNotBlank('chk_wifi_items_item_id_not_blank'),
+
   ssidNotBlank('chk_wifi_items_ssid_not_blank'),
 
   passwordNotBlank('chk_wifi_items_password_not_blank'),
 
-  securityOtherRequired('chk_wifi_items_security_other_required'),
+  securityTypeOtherRequired('chk_wifi_items_security_type_other_required'),
 
-  securityOtherMustBeNull('chk_wifi_items_security_other_must_be_null'),
+  securityTypeOtherMustBeNull(
+    'chk_wifi_items_security_type_other_must_be_null',
+  ),
 
-  usernameNotBlank('chk_wifi_items_username_not_blank');
+  securityTypeOtherNoOuterWhitespace(
+    'chk_wifi_items_security_type_other_no_outer_whitespace',
+  ),
+
+  encryptionOtherRequired('chk_wifi_items_encryption_other_required'),
+
+  encryptionOtherMustBeNull('chk_wifi_items_encryption_other_must_be_null'),
+
+  encryptionOtherNoOuterWhitespace(
+    'chk_wifi_items_encryption_other_no_outer_whitespace',
+  ),
+
+  passwordSecurityConsistency('chk_wifi_items_password_security_consistency');
 
   const WifiItemConstraint(this.constraintName);
 
@@ -100,8 +189,8 @@ enum WifiItemConstraint {
 
 enum WifiItemIndex {
   ssid('idx_wifi_items_ssid'),
-  security('idx_wifi_items_security'),
-  username('idx_wifi_items_username');
+  securityType('idx_wifi_items_security_type'),
+  encryption('idx_wifi_items_encryption');
 
   const WifiItemIndex(this.indexName);
 
@@ -109,9 +198,21 @@ enum WifiItemIndex {
 }
 
 final List<String> wifiItemsTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${WifiItemIndex.ssid.indexName} ON wifi_items(ssid);',
-  'CREATE INDEX IF NOT EXISTS ${WifiItemIndex.security.indexName} ON wifi_items(security);',
-  'CREATE INDEX IF NOT EXISTS ${WifiItemIndex.username.indexName} ON wifi_items(username);',
+  '''
+  CREATE INDEX IF NOT EXISTS ${WifiItemIndex.ssid.indexName}
+  ON wifi_items(ssid)
+  WHERE ssid IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${WifiItemIndex.securityType.indexName}
+  ON wifi_items(security_type)
+  WHERE security_type IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${WifiItemIndex.encryption.indexName}
+  ON wifi_items(encryption)
+  WHERE encryption IS NOT NULL;
+  ''',
 ];
 
 enum WifiItemTrigger {

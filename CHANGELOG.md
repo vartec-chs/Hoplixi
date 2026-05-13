@@ -4,6 +4,14 @@
 
 ### main_db
 
+- `wifi_items` и `wifi_history` приведены к минимальной Wi-Fi схеме с
+  `securityType`, `encryption`, `hiddenSsid`, partial indexes и CHECK-правилами
+  для open/personal/enterprise password consistency.
+- `ssh_key_items` и `ssh_key_history` сведены к минимальному набору SSH key
+  material-полей, с partial indexes для `key_type` / `fingerprint` и строгими
+  CHECK-ограничениями без нормализации секретных значений.
+- В `password_items` и `password_history` возвращено поле `expiresAt` с partial
+  индексом по `expires_at` для поиска истекающих паролей.
 - Проведена финальная чистка Drift-таблиц сущностей: из type-specific history
   убраны дублирующие `snapshotId`-поля, так как `historyId` уже ссылается на
   `vault_snapshots_history.id`.

@@ -33,20 +33,11 @@ class SshKeyItems extends Table {
 
   /// Fingerprint публичного ключа.
   ///
-  /// Полезен для идентификации, сравнения и поиска дубликатов.
+  /// Пользовательское или импортированное значение. Приложение не обязано
+  /// вычислять fingerprint.
   TextColumn get fingerprint =>
       text().withLength(min: 1, max: 255).nullable()();
 
-  /// Кто/что создало ключ: user, ssh-keygen, imported, GitHub, server name.
-  TextColumn get createdBy => text().withLength(min: 1, max: 255).nullable()();
-
-  /// Добавлен ли ключ в ssh-agent.
-  ///
-  /// Это пользовательская пометка, а не гарантированное текущее состояние агента.
-  BoolColumn get addedToAgent => boolean().withDefault(const Constant(false))();
-
-  /// Контекст использования: server login, git deploy, backup, CI и т.д.
-  TextColumn get usage => text().withLength(min: 1, max: 255).nullable()();
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -56,11 +47,17 @@ class SshKeyItems extends Table {
   @override
   List<String> get customConstraints => [
     '''
-    CONSTRAINT ${SshKeyItemConstraint.keyMaterialRequired.constraintName}
+    CONSTRAINT ${SshKeyItemConstraint.itemIdNotBlank.constraintName}
+    CHECK (
+      length(trim(item_id)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${SshKeyItemConstraint.authMaterialRequired.constraintName}
     CHECK (
       public_key IS NOT NULL
       OR private_key IS NOT NULL
-      OR fingerprint IS NOT NULL
     )
     ''',
 
@@ -101,6 +98,14 @@ class SshKeyItems extends Table {
     ''',
 
     '''
+    CONSTRAINT ${SshKeyItemConstraint.keyTypeOtherNoOuterWhitespace.constraintName}
+    CHECK (
+      key_type_other IS NULL
+      OR key_type_other = trim(key_type_other)
+    )
+    ''',
+
+    '''
     CONSTRAINT ${SshKeyItemConstraint.keySizePositive.constraintName}
     CHECK (
       key_size IS NULL
@@ -117,25 +122,19 @@ class SshKeyItems extends Table {
     ''',
 
     '''
-    CONSTRAINT ${SshKeyItemConstraint.createdByNotBlank.constraintName}
+    CONSTRAINT ${SshKeyItemConstraint.fingerprintNoOuterWhitespace.constraintName}
     CHECK (
-      created_by IS NULL
-      OR length(trim(created_by)) > 0
-    )
-    ''',
-
-    '''
-    CONSTRAINT ${SshKeyItemConstraint.usageNotBlank.constraintName}
-    CHECK (
-      usage IS NULL
-      OR length(trim(usage)) > 0
+      fingerprint IS NULL
+      OR fingerprint = trim(fingerprint)
     )
     ''',
   ];
 }
 
 enum SshKeyItemConstraint {
-  keyMaterialRequired('chk_ssh_key_items_key_material_required'),
+  itemIdNotBlank('chk_ssh_key_items_item_id_not_blank'),
+
+  authMaterialRequired('chk_ssh_key_items_auth_material_required'),
 
   publicKeyNotBlank('chk_ssh_key_items_public_key_not_blank'),
 
@@ -145,13 +144,17 @@ enum SshKeyItemConstraint {
 
   keyTypeOtherMustBeNull('chk_ssh_key_items_key_type_other_must_be_null'),
 
+  keyTypeOtherNoOuterWhitespace(
+    'chk_ssh_key_items_key_type_other_no_outer_whitespace',
+  ),
+
   keySizePositive('chk_ssh_key_items_key_size_positive'),
 
   fingerprintNotBlank('chk_ssh_key_items_fingerprint_not_blank'),
 
-  createdByNotBlank('chk_ssh_key_items_created_by_not_blank'),
-
-  usageNotBlank('chk_ssh_key_items_usage_not_blank');
+  fingerprintNoOuterWhitespace(
+    'chk_ssh_key_items_fingerprint_no_outer_whitespace',
+  );
 
   const SshKeyItemConstraint(this.constraintName);
 
@@ -160,8 +163,7 @@ enum SshKeyItemConstraint {
 
 enum SshKeyItemIndex {
   keyType('idx_ssh_key_items_key_type'),
-  fingerprint('idx_ssh_key_items_fingerprint'),
-  createdBy('idx_ssh_key_items_created_by');
+  fingerprint('idx_ssh_key_items_fingerprint');
 
   const SshKeyItemIndex(this.indexName);
 
@@ -169,9 +171,16 @@ enum SshKeyItemIndex {
 }
 
 final List<String> sshKeyItemsTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${SshKeyItemIndex.keyType.indexName} ON ssh_key_items(key_type);',
-  'CREATE INDEX IF NOT EXISTS ${SshKeyItemIndex.fingerprint.indexName} ON ssh_key_items(fingerprint);',
-  'CREATE INDEX IF NOT EXISTS ${SshKeyItemIndex.createdBy.indexName} ON ssh_key_items(created_by);',
+  '''
+  CREATE INDEX IF NOT EXISTS ${SshKeyItemIndex.keyType.indexName}
+  ON ssh_key_items(key_type)
+  WHERE key_type IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${SshKeyItemIndex.fingerprint.indexName}
+  ON ssh_key_items(fingerprint)
+  WHERE fingerprint IS NOT NULL;
+  ''',
 ];
 
 enum SshKeyItemTrigger {

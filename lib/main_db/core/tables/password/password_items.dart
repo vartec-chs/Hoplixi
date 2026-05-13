@@ -13,7 +13,7 @@ class PasswordItems extends Table {
   TextColumn get itemId =>
       text().references(VaultItems, #id, onDelete: KeyAction.cascade)();
 
-  /// Логин / username.
+  /// Логин.
   TextColumn get login => text().withLength(min: 1, max: 255).nullable()();
 
   /// Email.
@@ -30,6 +30,7 @@ class PasswordItems extends Table {
 
   /// Дата истечения срока действия пароля.
   DateTimeColumn get expiresAt => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -39,6 +40,13 @@ class PasswordItems extends Table {
   @override
   List<String> get customConstraints => [
     '''
+    CONSTRAINT ${PasswordItemConstraint.itemIdNotBlank.constraintName}
+    CHECK (
+      length(trim(item_id)) > 0
+    )
+    ''',
+
+    '''
     CONSTRAINT ${PasswordItemConstraint.loginNotBlank.constraintName}
     CHECK (
       login IS NULL
@@ -47,10 +55,26 @@ class PasswordItems extends Table {
     ''',
 
     '''
+    CONSTRAINT ${PasswordItemConstraint.loginNoOuterWhitespace.constraintName}
+    CHECK (
+      login IS NULL
+      OR login = trim(login)
+    )
+    ''',
+
+    '''
     CONSTRAINT ${PasswordItemConstraint.emailNotBlank.constraintName}
     CHECK (
       email IS NULL
       OR length(trim(email)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${PasswordItemConstraint.emailNoOuterWhitespace.constraintName}
+    CHECK (
+      email IS NULL
+      OR email = trim(email)
     )
     ''',
 
@@ -68,17 +92,33 @@ class PasswordItems extends Table {
       OR length(trim(url)) > 0
     )
     ''',
+
+    '''
+    CONSTRAINT ${PasswordItemConstraint.urlNoOuterWhitespace.constraintName}
+    CHECK (
+      url IS NULL
+      OR url = trim(url)
+    )
+    ''',
   ];
 }
 
 enum PasswordItemConstraint {
+  itemIdNotBlank('chk_password_items_item_id_not_blank'),
+
   loginNotBlank('chk_password_items_login_not_blank'),
+
+  loginNoOuterWhitespace('chk_password_items_login_no_outer_whitespace'),
 
   emailNotBlank('chk_password_items_email_not_blank'),
 
+  emailNoOuterWhitespace('chk_password_items_email_no_outer_whitespace'),
+
   passwordNotBlank('chk_password_items_password_not_blank'),
 
-  urlNotBlank('chk_password_items_url_not_blank');
+  urlNotBlank('chk_password_items_url_not_blank'),
+
+  urlNoOuterWhitespace('chk_password_items_url_no_outer_whitespace');
 
   const PasswordItemConstraint(this.constraintName);
 
@@ -97,10 +137,26 @@ enum PasswordItemIndex {
 }
 
 final List<String> passwordItemsTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${PasswordItemIndex.login.indexName} ON password_items(login);',
-  'CREATE INDEX IF NOT EXISTS ${PasswordItemIndex.email.indexName} ON password_items(email);',
-  'CREATE INDEX IF NOT EXISTS ${PasswordItemIndex.url.indexName} ON password_items(url);',
-  'CREATE INDEX IF NOT EXISTS ${PasswordItemIndex.expiresAt.indexName} ON password_items(expires_at);',
+  '''
+  CREATE INDEX IF NOT EXISTS ${PasswordItemIndex.login.indexName}
+  ON password_items(login)
+  WHERE login IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${PasswordItemIndex.email.indexName}
+  ON password_items(email)
+  WHERE email IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${PasswordItemIndex.url.indexName}
+  ON password_items(url)
+  WHERE url IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${PasswordItemIndex.expiresAt.indexName}
+  ON password_items(expires_at)
+  WHERE expires_at IS NOT NULL;
+  ''',
 ];
 
 enum PasswordItemTrigger {

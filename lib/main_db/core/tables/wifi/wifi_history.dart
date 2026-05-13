@@ -26,17 +26,21 @@ class WifiHistory extends Table {
   TextColumn get password => text().nullable()();
 
   /// Тип защиты сети snapshot.
-  TextColumn get security => textEnum<WifiSecurityType>().nullable()();
+  TextColumn get securityType => textEnum<WifiSecurityType>().nullable()();
 
-  /// Дополнительный тип защиты, если security = other.
-  TextColumn get securityOther =>
+  /// Дополнительный тип защиты, если securityType = other.
+  TextColumn get securityTypeOther =>
+      text().withLength(min: 1, max: 255).nullable()();
+
+  /// Тип шифрования snapshot.
+  TextColumn get encryption => textEnum<WifiEncryptionType>().nullable()();
+
+  /// Дополнительный тип шифрования, если encryption = other.
+  TextColumn get encryptionOther =>
       text().withLength(min: 1, max: 255).nullable()();
 
   /// Скрытая сеть snapshot.
-  BoolColumn get hidden => boolean().withDefault(const Constant(false))();
-
-  /// Username для enterprise Wi-Fi snapshot.
-  TextColumn get username => text().withLength(min: 1, max: 255).nullable()();
+  BoolColumn get hiddenSsid => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {historyId};
@@ -47,9 +51,17 @@ class WifiHistory extends Table {
   @override
   List<String> get customConstraints => [
     '''
+    CONSTRAINT ${WifiHistoryConstraint.historyIdNotBlank.constraintName}
+    CHECK (
+      length(trim(history_id)) > 0
+    )
+    ''',
+
+    '''
     CONSTRAINT ${WifiHistoryConstraint.ssidNotBlank.constraintName}
     CHECK (
-      length(trim(ssid)) > 0
+      ssid IS NULL
+      OR length(trim(ssid)) > 0
     )
     ''',
 
@@ -62,45 +74,110 @@ class WifiHistory extends Table {
     ''',
 
     '''
-    CONSTRAINT ${WifiHistoryConstraint.securityOtherRequired.constraintName}
+    CONSTRAINT ${WifiHistoryConstraint.securityTypeOtherRequired.constraintName}
     CHECK (
-      security IS NULL
-      OR security != 'other'
+      security_type IS NULL
+      OR security_type != 'other'
       OR (
-        security_other IS NOT NULL
-        AND length(trim(security_other)) > 0
+        security_type_other IS NOT NULL
+        AND length(trim(security_type_other)) > 0
       )
     )
     ''',
 
     '''
-    CONSTRAINT ${WifiHistoryConstraint.securityOtherMustBeNull.constraintName}
+    CONSTRAINT ${WifiHistoryConstraint.securityTypeOtherMustBeNull.constraintName}
     CHECK (
-      security = 'other'
-      OR security_other IS NULL
+      security_type = 'other'
+      OR security_type_other IS NULL
     )
     ''',
 
     '''
-    CONSTRAINT ${WifiHistoryConstraint.usernameNotBlank.constraintName}
+    CONSTRAINT ${WifiHistoryConstraint.securityTypeOtherNoOuterWhitespace.constraintName}
     CHECK (
-      username IS NULL
-      OR length(trim(username)) > 0
+      security_type_other IS NULL
+      OR security_type_other = trim(security_type_other)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${WifiHistoryConstraint.encryptionOtherRequired.constraintName}
+    CHECK (
+      encryption IS NULL
+      OR encryption != 'other'
+      OR (
+        encryption_other IS NOT NULL
+        AND length(trim(encryption_other)) > 0
+      )
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${WifiHistoryConstraint.encryptionOtherMustBeNull.constraintName}
+    CHECK (
+      encryption = 'other'
+      OR encryption_other IS NULL
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${WifiHistoryConstraint.encryptionOtherNoOuterWhitespace.constraintName}
+    CHECK (
+      encryption_other IS NULL
+      OR encryption_other = trim(encryption_other)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${WifiHistoryConstraint.passwordSecurityConsistency.constraintName}
+    CHECK (
+      security_type IS NULL
+      OR (
+        security_type = 'open'
+        AND password IS NULL
+      )
+      OR security_type IN (
+        'wpaEnterprise',
+        'wpa2Enterprise',
+        'wpa3Enterprise',
+        'other'
+      )
+      OR (
+        security_type IN ('wep', 'wpa', 'wpa2', 'wpa3')
+        AND password IS NOT NULL
+      )
     )
     ''',
   ];
 }
 
 enum WifiHistoryConstraint {
+  historyIdNotBlank('chk_wifi_history_history_id_not_blank'),
+
   ssidNotBlank('chk_wifi_history_ssid_not_blank'),
 
   passwordNotBlank('chk_wifi_history_password_not_blank'),
 
-  securityOtherRequired('chk_wifi_history_security_other_required'),
+  securityTypeOtherRequired('chk_wifi_history_security_type_other_required'),
 
-  securityOtherMustBeNull('chk_wifi_history_security_other_must_be_null'),
+  securityTypeOtherMustBeNull(
+    'chk_wifi_history_security_type_other_must_be_null',
+  ),
 
-  usernameNotBlank('chk_wifi_history_username_not_blank');
+  securityTypeOtherNoOuterWhitespace(
+    'chk_wifi_history_security_type_other_no_outer_whitespace',
+  ),
+
+  encryptionOtherRequired('chk_wifi_history_encryption_other_required'),
+
+  encryptionOtherMustBeNull('chk_wifi_history_encryption_other_must_be_null'),
+
+  encryptionOtherNoOuterWhitespace(
+    'chk_wifi_history_encryption_other_no_outer_whitespace',
+  ),
+
+  passwordSecurityConsistency('chk_wifi_history_password_security_consistency');
 
   const WifiHistoryConstraint(this.constraintName);
 
@@ -109,8 +186,8 @@ enum WifiHistoryConstraint {
 
 enum WifiHistoryIndex {
   ssid('idx_wifi_history_ssid'),
-  security('idx_wifi_history_security'),
-  username('idx_wifi_history_username');
+  securityType('idx_wifi_history_security_type'),
+  encryption('idx_wifi_history_encryption');
 
   const WifiHistoryIndex(this.indexName);
 
@@ -118,9 +195,21 @@ enum WifiHistoryIndex {
 }
 
 final List<String> wifiHistoryTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${WifiHistoryIndex.ssid.indexName} ON wifi_history(ssid);',
-  'CREATE INDEX IF NOT EXISTS ${WifiHistoryIndex.security.indexName} ON wifi_history(security);',
-  'CREATE INDEX IF NOT EXISTS ${WifiHistoryIndex.username.indexName} ON wifi_history(username);',
+  '''
+  CREATE INDEX IF NOT EXISTS ${WifiHistoryIndex.ssid.indexName}
+  ON wifi_history(ssid)
+  WHERE ssid IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${WifiHistoryIndex.securityType.indexName}
+  ON wifi_history(security_type)
+  WHERE security_type IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${WifiHistoryIndex.encryption.indexName}
+  ON wifi_history(encryption)
+  WHERE encryption IS NOT NULL;
+  ''',
 ];
 
 enum WifiHistoryTrigger {

@@ -39,14 +39,6 @@ class SshKeyHistory extends Table {
   TextColumn get fingerprint =>
       text().withLength(min: 1, max: 255).nullable()();
 
-  /// Кто/что создало ключ snapshot.
-  TextColumn get createdBy => text().withLength(min: 1, max: 255).nullable()();
-
-  /// Добавлен ли ключ в ssh-agent snapshot.
-  BoolColumn get addedToAgent => boolean().withDefault(const Constant(false))();
-
-  /// Контекст использования snapshot.
-  TextColumn get usage => text().withLength(min: 1, max: 255).nullable()();
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -56,11 +48,9 @@ class SshKeyHistory extends Table {
   @override
   List<String> get customConstraints => [
     '''
-    CONSTRAINT ${SshKeyHistoryConstraint.keyMaterialRequired.constraintName}
+    CONSTRAINT ${SshKeyHistoryConstraint.historyIdNotBlank.constraintName}
     CHECK (
-      public_key IS NOT NULL
-      OR private_key IS NOT NULL
-      OR fingerprint IS NOT NULL
+      length(trim(history_id)) > 0
     )
     ''',
 
@@ -101,6 +91,14 @@ class SshKeyHistory extends Table {
     ''',
 
     '''
+    CONSTRAINT ${SshKeyHistoryConstraint.keyTypeOtherNoOuterWhitespace.constraintName}
+    CHECK (
+      key_type_other IS NULL
+      OR key_type_other = trim(key_type_other)
+    )
+    ''',
+
+    '''
     CONSTRAINT ${SshKeyHistoryConstraint.keySizePositive.constraintName}
     CHECK (
       key_size IS NULL
@@ -117,25 +115,17 @@ class SshKeyHistory extends Table {
     ''',
 
     '''
-    CONSTRAINT ${SshKeyHistoryConstraint.createdByNotBlank.constraintName}
+    CONSTRAINT ${SshKeyHistoryConstraint.fingerprintNoOuterWhitespace.constraintName}
     CHECK (
-      created_by IS NULL
-      OR length(trim(created_by)) > 0
-    )
-    ''',
-
-    '''
-    CONSTRAINT ${SshKeyHistoryConstraint.usageNotBlank.constraintName}
-    CHECK (
-      usage IS NULL
-      OR length(trim(usage)) > 0
+      fingerprint IS NULL
+      OR fingerprint = trim(fingerprint)
     )
     ''',
   ];
 }
 
 enum SshKeyHistoryConstraint {
-  keyMaterialRequired('chk_ssh_key_history_key_material_required'),
+  historyIdNotBlank('chk_ssh_key_history_history_id_not_blank'),
 
   publicKeyNotBlank('chk_ssh_key_history_public_key_not_blank'),
 
@@ -145,13 +135,17 @@ enum SshKeyHistoryConstraint {
 
   keyTypeOtherMustBeNull('chk_ssh_key_history_key_type_other_must_be_null'),
 
+  keyTypeOtherNoOuterWhitespace(
+    'chk_ssh_key_history_key_type_other_no_outer_whitespace',
+  ),
+
   keySizePositive('chk_ssh_key_history_key_size_positive'),
 
   fingerprintNotBlank('chk_ssh_key_history_fingerprint_not_blank'),
 
-  createdByNotBlank('chk_ssh_key_history_created_by_not_blank'),
-
-  usageNotBlank('chk_ssh_key_history_usage_not_blank');
+  fingerprintNoOuterWhitespace(
+    'chk_ssh_key_history_fingerprint_no_outer_whitespace',
+  );
 
   const SshKeyHistoryConstraint(this.constraintName);
 
@@ -160,8 +154,7 @@ enum SshKeyHistoryConstraint {
 
 enum SshKeyHistoryIndex {
   keyType('idx_ssh_key_history_key_type'),
-  fingerprint('idx_ssh_key_history_fingerprint'),
-  createdBy('idx_ssh_key_history_created_by');
+  fingerprint('idx_ssh_key_history_fingerprint');
 
   const SshKeyHistoryIndex(this.indexName);
 
@@ -169,9 +162,16 @@ enum SshKeyHistoryIndex {
 }
 
 final List<String> sshKeyHistoryTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${SshKeyHistoryIndex.keyType.indexName} ON ssh_key_history(key_type);',
-  'CREATE INDEX IF NOT EXISTS ${SshKeyHistoryIndex.fingerprint.indexName} ON ssh_key_history(fingerprint);',
-  'CREATE INDEX IF NOT EXISTS ${SshKeyHistoryIndex.createdBy.indexName} ON ssh_key_history(created_by);',
+  '''
+  CREATE INDEX IF NOT EXISTS ${SshKeyHistoryIndex.keyType.indexName}
+  ON ssh_key_history(key_type)
+  WHERE key_type IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${SshKeyHistoryIndex.fingerprint.indexName}
+  ON ssh_key_history(fingerprint)
+  WHERE fingerprint IS NOT NULL;
+  ''',
 ];
 
 enum SshKeyHistoryTrigger {

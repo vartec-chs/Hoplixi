@@ -42,7 +42,8 @@ class OtpHistory extends Table {
   IntColumn get digits => integer().withDefault(const Constant(6))();
 
   /// Период обновления snapshot.
-  IntColumn get period => integer().withDefault(const Constant(30))();
+  IntColumn get period =>
+      integer().nullable().withDefault(const Constant(30))();
 
   /// Счётчик HOTP snapshot.
   IntColumn get counter => integer().nullable()();
@@ -55,11 +56,26 @@ class OtpHistory extends Table {
   @override
   List<String> get customConstraints => [
     '''
-    CONSTRAINT ${OtpHistoryConstraint.typeCounterConsistency.constraintName}
+    CONSTRAINT ${OtpHistoryConstraint.historyIdNotBlank.constraintName}
     CHECK (
-      (type = 'hotp' AND counter IS NOT NULL)
+      length(trim(history_id)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${OtpHistoryConstraint.typeConfigConsistency.constraintName}
+    CHECK (
+      (
+        type = 'totp'
+        AND period IS NOT NULL
+        AND counter IS NULL
+      )
       OR
-      (type = 'totp' AND counter IS NULL)
+      (
+        type = 'hotp'
+        AND period IS NULL
+        AND counter IS NOT NULL
+      )
     )
     ''',
 
@@ -72,10 +88,26 @@ class OtpHistory extends Table {
     ''',
 
     '''
+    CONSTRAINT ${OtpHistoryConstraint.issuerNoOuterWhitespace.constraintName}
+    CHECK (
+      issuer IS NULL
+      OR issuer = trim(issuer)
+    )
+    ''',
+
+    '''
     CONSTRAINT ${OtpHistoryConstraint.accountNameNotBlank.constraintName}
     CHECK (
       account_name IS NULL
       OR length(trim(account_name)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${OtpHistoryConstraint.accountNameNoOuterWhitespace.constraintName}
+    CHECK (
+      account_name IS NULL
+      OR account_name = trim(account_name)
     )
     ''',
 
@@ -90,14 +122,15 @@ class OtpHistory extends Table {
     '''
     CONSTRAINT ${OtpHistoryConstraint.digitsValid.constraintName}
     CHECK (
-      digits BETWEEN 6 AND 10
+      digits IN (6, 7, 8)
     )
     ''',
 
     '''
     CONSTRAINT ${OtpHistoryConstraint.periodPositive.constraintName}
     CHECK (
-      period > 0
+      period IS NULL
+      OR period > 0
     )
     ''',
 
@@ -112,11 +145,19 @@ class OtpHistory extends Table {
 }
 
 enum OtpHistoryConstraint {
-  typeCounterConsistency('chk_otp_history_type_counter_consistency'),
+  historyIdNotBlank('chk_otp_history_history_id_not_blank'),
+
+  typeConfigConsistency('chk_otp_history_type_config_consistency'),
 
   issuerNotBlank('chk_otp_history_issuer_not_blank'),
 
+  issuerNoOuterWhitespace('chk_otp_history_issuer_no_outer_whitespace'),
+
   accountNameNotBlank('chk_otp_history_account_name_not_blank'),
+
+  accountNameNoOuterWhitespace(
+    'chk_otp_history_account_name_no_outer_whitespace',
+  ),
 
   secretNotEmpty('chk_otp_history_secret_not_empty'),
 
@@ -134,8 +175,7 @@ enum OtpHistoryConstraint {
 enum OtpHistoryIndex {
   type('idx_otp_history_type'),
   issuer('idx_otp_history_issuer'),
-  accountName('idx_otp_history_account_name'),
-  algorithm('idx_otp_history_algorithm');
+  accountName('idx_otp_history_account_name');
 
   const OtpHistoryIndex(this.indexName);
 
@@ -144,9 +184,16 @@ enum OtpHistoryIndex {
 
 final List<String> otpHistoryTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${OtpHistoryIndex.type.indexName} ON otp_history(type);',
-  'CREATE INDEX IF NOT EXISTS ${OtpHistoryIndex.issuer.indexName} ON otp_history(issuer);',
-  'CREATE INDEX IF NOT EXISTS ${OtpHistoryIndex.accountName.indexName} ON otp_history(account_name);',
-  'CREATE INDEX IF NOT EXISTS ${OtpHistoryIndex.algorithm.indexName} ON otp_history(algorithm);',
+  '''
+  CREATE INDEX IF NOT EXISTS ${OtpHistoryIndex.issuer.indexName}
+  ON otp_history(issuer)
+  WHERE issuer IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${OtpHistoryIndex.accountName.indexName}
+  ON otp_history(account_name)
+  WHERE account_name IS NOT NULL;
+  ''',
 ];
 
 enum OtpHistoryTrigger {

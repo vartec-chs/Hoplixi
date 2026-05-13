@@ -28,7 +28,8 @@ class OtpItems extends Table {
 
   IntColumn get digits => integer().withDefault(const Constant(6))();
 
-  IntColumn get period => integer().withDefault(const Constant(30))();
+  IntColumn get period =>
+      integer().nullable().withDefault(const Constant(30))();
 
   IntColumn get counter => integer().nullable()();
 
@@ -41,11 +42,26 @@ class OtpItems extends Table {
   @override
   List<String> get customConstraints => [
     '''
-    CONSTRAINT ${OtpItemConstraint.typeCounterConsistency.constraintName}
+    CONSTRAINT ${OtpItemConstraint.itemIdNotBlank.constraintName}
     CHECK (
-      (type = 'hotp' AND counter IS NOT NULL)
+      length(trim(item_id)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${OtpItemConstraint.typeConfigConsistency.constraintName}
+    CHECK (
+      (
+        type = 'totp'
+        AND period IS NOT NULL
+        AND counter IS NULL
+      )
       OR
-      (type = 'totp' AND counter IS NULL)
+      (
+        type = 'hotp'
+        AND period IS NULL
+        AND counter IS NOT NULL
+      )
     )
     ''',
 
@@ -54,6 +70,22 @@ class OtpItems extends Table {
     CHECK (
       issuer IS NULL
       OR length(trim(issuer)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${OtpItemConstraint.issuerNoOuterWhitespace.constraintName}
+    CHECK (
+      issuer IS NULL
+      OR issuer = trim(issuer)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${OtpItemConstraint.accountNameNoOuterWhitespace.constraintName}
+    CHECK (
+      account_name IS NULL
+      OR account_name = trim(account_name)
     )
     ''',
 
@@ -75,14 +107,15 @@ class OtpItems extends Table {
     '''
     CONSTRAINT ${OtpItemConstraint.digitsValid.constraintName}
     CHECK (
-      digits BETWEEN 6 AND 10
+      digits IN (6, 7, 8)
     )
     ''',
 
     '''
     CONSTRAINT ${OtpItemConstraint.periodPositive.constraintName}
     CHECK (
-      period > 0
+      period IS NULL
+      OR period > 0
     )
     ''',
 
@@ -97,11 +130,19 @@ class OtpItems extends Table {
 }
 
 enum OtpItemConstraint {
-  typeCounterConsistency('chk_otp_items_type_counter_consistency'),
+  itemIdNotBlank('chk_otp_items_item_id_not_blank'),
+
+  typeConfigConsistency('chk_otp_items_type_config_consistency'),
 
   issuerNotBlank('chk_otp_items_issuer_not_blank'),
 
+  issuerNoOuterWhitespace('chk_otp_items_issuer_no_outer_whitespace'),
+
   accountNameNotBlank('chk_otp_items_account_name_not_blank'),
+
+  accountNameNoOuterWhitespace(
+    'chk_otp_items_account_name_no_outer_whitespace',
+  ),
 
   secretNotEmpty('chk_otp_items_secret_not_empty'),
 
@@ -119,8 +160,7 @@ enum OtpItemConstraint {
 enum OtpItemIndex {
   type('idx_otp_items_type'),
   issuer('idx_otp_items_issuer'),
-  accountName('idx_otp_items_account_name'),
-  algorithm('idx_otp_items_algorithm');
+  accountName('idx_otp_items_account_name');
 
   const OtpItemIndex(this.indexName);
 
@@ -129,9 +169,16 @@ enum OtpItemIndex {
 
 final List<String> otpItemsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${OtpItemIndex.type.indexName} ON otp_items(type);',
-  'CREATE INDEX IF NOT EXISTS ${OtpItemIndex.issuer.indexName} ON otp_items(issuer);',
-  'CREATE INDEX IF NOT EXISTS ${OtpItemIndex.accountName.indexName} ON otp_items(account_name);',
-  'CREATE INDEX IF NOT EXISTS ${OtpItemIndex.algorithm.indexName} ON otp_items(algorithm);',
+  '''
+  CREATE INDEX IF NOT EXISTS ${OtpItemIndex.issuer.indexName}
+  ON otp_items(issuer)
+  WHERE issuer IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${OtpItemIndex.accountName.indexName}
+  ON otp_items(account_name)
+  WHERE account_name IS NOT NULL;
+  ''',
 ];
 
 enum OtpItemTrigger {

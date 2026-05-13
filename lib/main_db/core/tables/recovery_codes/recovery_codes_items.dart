@@ -31,6 +31,10 @@ class RecoveryCodesItems extends Table {
   @override
   List<String> get customConstraints => [
     '''
+    CONSTRAINT ${RecoveryCodesItemConstraint.itemIdNotBlank.constraintName}
+    CHECK (length(trim(item_id)) > 0)
+    ''',
+    '''
     CONSTRAINT ${RecoveryCodesItemConstraint.codesCountNonNegative.constraintName}
     CHECK (
       codes_count >= 0
@@ -52,6 +56,8 @@ class RecoveryCodesItems extends Table {
 }
 
 enum RecoveryCodesItemConstraint {
+  itemIdNotBlank('chk_recovery_codes_items_item_id_not_blank'),
+
   codesCountNonNegative('chk_recovery_codes_items_codes_count_non_negative'),
 
   usedCountNonNegative('chk_recovery_codes_items_used_count_non_negative'),
@@ -74,7 +80,7 @@ enum RecoveryCodesItemIndex {
 }
 
 final List<String> recoveryCodesItemsTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${RecoveryCodesItemIndex.generatedAt.indexName} ON recovery_codes_items(generated_at);',
+  'CREATE INDEX IF NOT EXISTS ${RecoveryCodesItemIndex.generatedAt.indexName} ON recovery_codes_items(generated_at) WHERE generated_at IS NOT NULL;',
 ];
 
 enum RecoveryCodesItemTrigger {

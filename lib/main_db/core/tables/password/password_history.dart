@@ -16,7 +16,7 @@ class PasswordHistory extends Table {
     onDelete: KeyAction.cascade,
   )();
 
-  /// Логин / username snapshot.
+  /// Логин snapshot.
   TextColumn get login => text().withLength(min: 1, max: 255).nullable()();
 
   /// Email snapshot.
@@ -33,6 +33,7 @@ class PasswordHistory extends Table {
 
   /// Дата истечения срока действия пароля snapshot.
   DateTimeColumn get expiresAt => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -42,6 +43,13 @@ class PasswordHistory extends Table {
   @override
   List<String> get customConstraints => [
     '''
+    CONSTRAINT ${PasswordHistoryConstraint.historyIdNotBlank.constraintName}
+    CHECK (
+      length(trim(history_id)) > 0
+    )
+    ''',
+
+    '''
     CONSTRAINT ${PasswordHistoryConstraint.loginNotBlank.constraintName}
     CHECK (
       login IS NULL
@@ -50,10 +58,26 @@ class PasswordHistory extends Table {
     ''',
 
     '''
+    CONSTRAINT ${PasswordHistoryConstraint.loginNoOuterWhitespace.constraintName}
+    CHECK (
+      login IS NULL
+      OR login = trim(login)
+    )
+    ''',
+
+    '''
     CONSTRAINT ${PasswordHistoryConstraint.emailNotBlank.constraintName}
     CHECK (
       email IS NULL
       OR length(trim(email)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${PasswordHistoryConstraint.emailNoOuterWhitespace.constraintName}
+    CHECK (
+      email IS NULL
+      OR email = trim(email)
     )
     ''',
 
@@ -72,17 +96,33 @@ class PasswordHistory extends Table {
       OR length(trim(url)) > 0
     )
     ''',
+
+    '''
+    CONSTRAINT ${PasswordHistoryConstraint.urlNoOuterWhitespace.constraintName}
+    CHECK (
+      url IS NULL
+      OR url = trim(url)
+    )
+    ''',
   ];
 }
 
 enum PasswordHistoryConstraint {
+  historyIdNotBlank('chk_password_history_history_id_not_blank'),
+
   loginNotBlank('chk_password_history_login_not_blank'),
+
+  loginNoOuterWhitespace('chk_password_history_login_no_outer_whitespace'),
 
   emailNotBlank('chk_password_history_email_not_blank'),
 
+  emailNoOuterWhitespace('chk_password_history_email_no_outer_whitespace'),
+
   passwordNotBlank('chk_password_history_password_not_blank'),
 
-  urlNotBlank('chk_password_history_url_not_blank');
+  urlNotBlank('chk_password_history_url_not_blank'),
+
+  urlNoOuterWhitespace('chk_password_history_url_no_outer_whitespace');
 
   const PasswordHistoryConstraint(this.constraintName);
 
@@ -101,10 +141,26 @@ enum PasswordHistoryIndex {
 }
 
 final List<String> passwordHistoryTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${PasswordHistoryIndex.login.indexName} ON password_history(login);',
-  'CREATE INDEX IF NOT EXISTS ${PasswordHistoryIndex.email.indexName} ON password_history(email);',
-  'CREATE INDEX IF NOT EXISTS ${PasswordHistoryIndex.url.indexName} ON password_history(url);',
-  'CREATE INDEX IF NOT EXISTS ${PasswordHistoryIndex.expiresAt.indexName} ON password_history(expires_at);',
+  '''
+  CREATE INDEX IF NOT EXISTS ${PasswordHistoryIndex.login.indexName}
+  ON password_history(login)
+  WHERE login IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${PasswordHistoryIndex.email.indexName}
+  ON password_history(email)
+  WHERE email IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${PasswordHistoryIndex.url.indexName}
+  ON password_history(url)
+  WHERE url IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${PasswordHistoryIndex.expiresAt.indexName}
+  ON password_history(expires_at)
+  WHERE expires_at IS NOT NULL;
+  ''',
 ];
 
 enum PasswordHistoryTrigger {
