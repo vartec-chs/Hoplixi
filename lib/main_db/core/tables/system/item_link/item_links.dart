@@ -245,7 +245,9 @@ enum ItemLinkRaise {
   sshPublicKeyFile('sshPublicKeyFile link must be sshKey -> file'),
   sshPrivateKeyFile('sshPrivateKeyFile link must be sshKey -> file'),
   certificateFile('certificateFile link must be certificate -> file/document'),
-  certificatePrivateKeyFile('certificatePrivateKeyFile link must be certificate -> file'),
+  certificatePrivateKeyFile(
+    'certificatePrivateKeyFile link must be certificate -> file',
+  ),
   note('note link target must be note'),
   attachment('attachment link target must be file/document');
 

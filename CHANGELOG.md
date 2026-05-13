@@ -4,6 +4,10 @@
 
 ### main_db
 
+- Во всех `enum`-ах в `lib/main_db/core/tables` добавлены
+  `package:json_annotation/json_annotation.dart` и
+  `@JsonEnum(fieldRename: FieldRename.snake)` для унифицированной
+  snake_case-сериализации.
 - В `vault_item_custom_fields` и `vault_item_custom_fields_history` удалён
   `CustomFieldType.json`.
 - В `vault_item_custom_fields` и `vault_item_custom_fields_history` удалён

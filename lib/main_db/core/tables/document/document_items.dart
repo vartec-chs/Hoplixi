@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:json_annotation/json_annotation.dart';
 
 import '../vault_items/vault_items.dart';
 import 'document_versions.dart';
@@ -42,6 +43,7 @@ class DocumentItems extends Table {
   ];
 }
 
+@JsonEnum(fieldRename: FieldRename.snake)
 enum DocumentItemConstraint {
   itemIdNotBlank('chk_document_items_item_id_not_blank'),
 
@@ -52,6 +54,7 @@ enum DocumentItemConstraint {
   final String constraintName;
 }
 
+@JsonEnum(fieldRename: FieldRename.snake)
 enum DocumentItemIndex {
   currentVersionId('idx_document_items_current_version_id');
 
@@ -64,6 +67,7 @@ final List<String> documentItemsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${DocumentItemIndex.currentVersionId.indexName} ON document_items(current_version_id) WHERE current_version_id IS NOT NULL;',
 ];
 
+@JsonEnum(fieldRename: FieldRename.snake)
 enum DocumentItemTrigger {
   validateVaultItemTypeOnInsert(
     'trg_document_items_validate_vault_item_type_on_insert',
@@ -88,6 +92,7 @@ enum DocumentItemTrigger {
   final String triggerName;
 }
 
+@JsonEnum(fieldRename: FieldRename.snake)
 enum DocumentItemRaise {
   invalidVaultItemType(
     'document_items.item_id must reference vault_items.id with type = document',

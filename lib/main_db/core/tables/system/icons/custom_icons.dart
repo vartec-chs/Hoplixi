@@ -1,6 +1,8 @@
 import 'package:drift/drift.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:uuid/uuid.dart';
 
+@JsonEnum(fieldRename: FieldRename.snake)
 enum CustomIconFormat { png, jpg, jpeg, svg, webp, gif }
 
 @DataClassName('CustomIconsData')
@@ -71,6 +73,7 @@ class CustomIcons extends Table {
   ];
 }
 
+@JsonEnum(fieldRename: FieldRename.snake)
 enum CustomIconConstraint {
   idNotBlank('chk_custom_icons_id_not_blank'),
 
@@ -87,6 +90,7 @@ enum CustomIconConstraint {
   final String constraintName;
 }
 
+@JsonEnum(fieldRename: FieldRename.snake)
 enum CustomIconIndex {
   name('idx_custom_icons_name'),
   format('idx_custom_icons_format');
@@ -101,6 +105,7 @@ final List<String> customIconsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${CustomIconIndex.format.indexName} ON custom_icons(format);',
 ];
 
+@JsonEnum(fieldRename: FieldRename.snake)
 enum CustomIconTrigger {
   preventCreatedAtUpdate('trg_custom_icons_prevent_created_at_update');
 
@@ -109,6 +114,7 @@ enum CustomIconTrigger {
   final String triggerName;
 }
 
+@JsonEnum(fieldRename: FieldRename.snake)
 enum CustomIconRaise {
   createdAtImmutable('custom_icons.created_at is immutable');
 

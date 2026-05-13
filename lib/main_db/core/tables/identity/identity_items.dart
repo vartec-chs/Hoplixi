@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:json_annotation/json_annotation.dart';
 
 import '../vault_items/vault_items.dart';
 
@@ -197,16 +198,24 @@ class IdentityItems extends Table {
   ];
 }
 
+@JsonEnum(fieldRename: FieldRename.snake)
+@JsonEnum(fieldRename: FieldRename.snake)
 enum IdentityItemConstraint {
   itemIdNotBlank('chk_identity_items_item_id_not_blank'),
 
-  firstNameNoOuterWhitespace('chk_identity_items_first_name_no_outer_whitespace'),
+  firstNameNoOuterWhitespace(
+    'chk_identity_items_first_name_no_outer_whitespace',
+  ),
 
-  middleNameNoOuterWhitespace('chk_identity_items_middle_name_no_outer_whitespace'),
+  middleNameNoOuterWhitespace(
+    'chk_identity_items_middle_name_no_outer_whitespace',
+  ),
 
   lastNameNoOuterWhitespace('chk_identity_items_last_name_no_outer_whitespace'),
 
-  displayNameNoOuterWhitespace('chk_identity_items_display_name_no_outer_whitespace'),
+  displayNameNoOuterWhitespace(
+    'chk_identity_items_display_name_no_outer_whitespace',
+  ),
 
   usernameNoOuterWhitespace('chk_identity_items_username_no_outer_whitespace'),
 
@@ -222,19 +231,29 @@ enum IdentityItemConstraint {
 
   taxIdNoOuterWhitespace('chk_identity_items_tax_id_no_outer_whitespace'),
 
-  nationalIdNoOuterWhitespace('chk_identity_items_national_id_no_outer_whitespace'),
+  nationalIdNoOuterWhitespace(
+    'chk_identity_items_national_id_no_outer_whitespace',
+  ),
 
-  passportNumberNoOuterWhitespace('chk_identity_items_passport_number_no_outer_whitespace'),
+  passportNumberNoOuterWhitespace(
+    'chk_identity_items_passport_number_no_outer_whitespace',
+  ),
 
-  driverLicenseNumberNoOuterWhitespace('chk_identity_items_driver_license_number_no_outer_whitespace'),
+  driverLicenseNumberNoOuterWhitespace(
+    'chk_identity_items_driver_license_number_no_outer_whitespace',
+  ),
 
-  atLeastOneIdentifyingField('chk_identity_items_at_least_one_identifying_field');
+  atLeastOneIdentifyingField(
+    'chk_identity_items_at_least_one_identifying_field',
+  );
 
   const IdentityItemConstraint(this.constraintName);
 
   final String constraintName;
 }
 
+@JsonEnum(fieldRename: FieldRename.snake)
+@JsonEnum(fieldRename: FieldRename.snake)
 enum IdentityItemIndex {
   username('idx_identity_items_username'),
   email('idx_identity_items_email'),
@@ -255,6 +274,8 @@ final List<String> identityItemsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${IdentityItemIndex.birthday.indexName} ON identity_items(birthday) WHERE birthday IS NOT NULL;',
 ];
 
+@JsonEnum(fieldRename: FieldRename.snake)
+@JsonEnum(fieldRename: FieldRename.snake)
 enum IdentityItemTrigger {
   validateVaultItemTypeOnInsert(
     'trg_identity_items_validate_vault_item_type_on_insert',

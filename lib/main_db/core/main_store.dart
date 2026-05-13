@@ -2,11 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_db/core/old/daos/daos.dart';
-import 'package:hoplixi/main_db/core/main_store_indexes_installer.dart';
-import 'package:hoplixi/main_db/core/migrations/index.dart';
-import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
 import 'package:hoplixi/main_db/core/tables/tables.dart';
-import 'package:uuid/uuid.dart';
 
 part 'main_store.g.dart';
 
@@ -21,6 +17,7 @@ part 'main_store.g.dart';
     PasswordItems,
     ApiKeyItems,
     SshKeyItems,
+    LoyaltyCardItems,
     CertificateItems,
     ContactItems,
     CryptoWalletItems,
@@ -33,9 +30,12 @@ part 'main_store.g.dart';
     NoteItems,
     ItemLinks,
     BankCardItems,
+    // --- Файлы ---
     FileItems,
     FileMetadata,
     FileMetadataHistory,
+    FileHistory,
+    // --- Документы ---
     DocumentItems,
     DocumentPages,
     DocumentVersions,
@@ -48,90 +48,33 @@ part 'main_store.g.dart';
     // --- Вспомогательные ---
     Categories,
     Tags,
-    Icons,
+    // --- Иконки ---
+    CustomIcons,
     IconRefs,
     ItemCategoryHistory,
+    // --- История (Event Sourcing) ---
     VaultEventsHistory,
     VaultSnapshotsHistory,
     VaultItemTagHistory,
     ItemLinkHistory,
     // --- История (Table-Per-Type) ---
-    PasswordHistory,
     ApiKeyHistory,
-    SshKeyHistory,
+    BankCardHistory,
     CertificateHistory,
-    ContactHistory,
     CryptoWalletHistory,
-    WifiHistory,
+    ContactHistory,
     IdentityHistory,
     LicenseKeyHistory,
-    RecoveryCodesHistory,
+    LoyaltyCardHistory,
     OtpHistory,
     NoteHistory,
-    BankCardHistory,
-    FileHistory,
-    LoyaltyCardItems,
-    LoyaltyCardHistory,
+    PasswordHistory,
+    RecoveryCodesHistory,
+    RecoveryCodeValuesHistory,
+    SshKeyHistory,
+    WifiHistory,
   ],
-  daos: [
-    StoreMetaDao,
-    StoreSettingsDao,
-    VaultItemDao,
-    PasswordDao,
-    PasswordHistoryDao,
-    ApiKeyDao,
-    ApiKeyHistoryDao,
-    SshKeyDao,
-    SshKeyHistoryDao,
-    CertificateDao,
-    ContactDao,
-    CertificateHistoryDao,
-    ContactHistoryDao,
-    CryptoWalletDao,
-    CryptoWalletHistoryDao,
-    WifiDao,
-    WifiHistoryDao,
-    LoyaltyCardDao,
-    LoyaltyCardHistoryDao,
-    LoyaltyCardFilterDao,
-    IdentityDao,
-    IdentityHistoryDao,
-    LicenseKeyDao,
-    LicenseKeyHistoryDao,
-    RecoveryCodesDao,
-    RecoveryCodesHistoryDao,
-    OtpDao,
-    OtpHistoryDao,
-    NoteDao,
-    NoteHistoryDao,
-    NoteLinkDao,
-    BankCardDao,
-    BankCardHistoryDao,
-    FileDao,
-    FileHistoryDao,
-    DocumentDao,
-    DocumentHistoryDao,
-    CategoryDao,
-    IconDao,
-    BankCardFilterDao,
-    FileFilterDao,
-    NoteFilterDao,
-    OtpFilterDao,
-    PasswordFilterDao,
-    ApiKeyFilterDao,
-    SshKeyFilterDao,
-    CertificateFilterDao,
-    ContactFilterDao,
-    CryptoWalletFilterDao,
-    WifiFilterDao,
-    IdentityFilterDao,
-    LicenseKeyFilterDao,
-    RecoveryCodesFilterDao,
-    CustomFieldDao,
-    CustomFieldHistoryDao,
-    DocumentFilterDao,
-    TagDao,
-  ],
+  daos: [],
 )
 class MainStore extends _$MainStore {
   static const String _logTag = 'MainStore';
@@ -145,10 +88,10 @@ class MainStore extends _$MainStore {
         await m.createAll();
 
         // Установка индексов для оптимизации запросов
-        await _installIndexes();
+        // await _installIndexes();
 
         // Установка триггеров для записи истории изменений
-        await _installHistoryTriggers();
+        // await _installHistoryTriggers();
       },
       beforeOpen: (details) async {
         await customStatement('PRAGMA foreign_keys = ON');
@@ -161,20 +104,20 @@ class MainStore extends _$MainStore {
 
         var currentVersion = from;
 
-        final migrationRuntime = MainStoreMigrationRuntime(
-          customStatement: (sql) => customStatement(sql),
-          reinstallHistoryTriggers: _installHistoryTriggers,
-          categoriesTable: categories,
-          vaultItemsTable: vaultItems,
-        );
+        // final migrationRuntime = MainStoreMigrationRuntime(
+        //   customStatement: (sql) => customStatement(sql),
+        //   reinstallHistoryTriggers: _installHistoryTriggers,
+        //   categoriesTable: categories,
+        //   vaultItemsTable: vaultItems,
+        // );
 
-        currentVersion = await runMainStoreKnownMigrations(
-          migrator: m,
-          from: currentVersion,
-          to: to,
-          runtime: migrationRuntime,
-          logTag: '${_logTag}Migration',
-        );
+        // currentVersion = await runMainStoreKnownMigrations(
+        //   migrator: m,
+        //   from: currentVersion,
+        //   to: to,
+        //   runtime: migrationRuntime,
+        //   logTag: '${_logTag}Migration',
+        // );
 
         if (currentVersion < to) {
           logWarning(
@@ -198,8 +141,8 @@ class MainStore extends _$MainStore {
           await customStatement('PRAGMA foreign_keys = ON');
 
           await m.createAll();
-          await _installIndexes();
-          await _installHistoryTriggers();
+          // await _installIndexes();
+          // await _installHistoryTriggers();
         }
 
         logInfo('Migration completed', tag: '${_logTag}Migration');
@@ -218,58 +161,58 @@ class MainStore extends _$MainStore {
     return customSelect(
       'SELECT 1',
       readsFrom: {
-        storeSettings,
-        vaultItems,
-        passwordItems,
-        passwordHistory,
-        apiKeyItems,
-        apiKeyHistory,
-        sshKeyItems,
-        sshKeyHistory,
-        certificateItems,
-        certificateHistory,
-        contactItems,
-        contactHistory,
-        cryptoWalletItems,
-        cryptoWalletHistory,
-        wifiItems,
-        wifiHistory,
-        identityItems,
-        identityHistory,
-        licenseKeyItems,
-        licenseKeyHistory,
-        recoveryCodesItems,
-        recoveryCodesHistory,
-        recoveryCodes,
-        loyaltyCardItems,
-        loyaltyCardHistory,
-        otpItems,
-        otpHistory,
-        noteItems,
-        itemLinks,
-        itemLinkHistory,
-        noteHistory,
-        bankCardItems,
-        bankCardHistory,
-        fileItems,
-        fileHistory,
-        fileMetadataHistory,
-        documentItems,
-        documentPages,
-        documentVersions,
-        documentVersionPages,
-        itemTags,
-        itemCategoryHistory,
-        vaultItemTagHistory,
-        vaultItemCustomFields,
-        vaultItemCustomFieldsHistory,
-        categories,
-        tags,
-        icons,
-        iconRefs,
-        vaultSnapshotsHistory,
-        vaultEventsHistory,
-        fileMetadata,
+        // storeSettings,
+        // vaultItems,
+        // passwordItems,
+        // passwordHistory,
+        // apiKeyItems,
+        // apiKeyHistory,
+        // sshKeyItems,
+        // sshKeyHistory,
+        // certificateItems,
+        // certificateHistory,
+        // contactItems,
+        // contactHistory,
+        // cryptoWalletItems,
+        // cryptoWalletHistory,
+        // wifiItems,
+        // wifiHistory,
+        // identityItems,
+        // identityHistory,
+        // licenseKeyItems,
+        // licenseKeyHistory,
+        // recoveryCodesItems,
+        // recoveryCodesHistory,
+        // recoveryCodes,
+        // loyaltyCardItems,
+        // loyaltyCardHistory,
+        // otpItems,
+        // otpHistory,
+        // noteItems,
+        // itemLinks,
+        // itemLinkHistory,
+        // noteHistory,
+        // bankCardItems,
+        // bankCardHistory,
+        // fileItems,
+        // fileHistory,
+        // fileMetadataHistory,
+        // documentItems,
+        // documentPages,
+        // documentVersions,
+        // documentVersionPages,
+        // itemTags,
+        // itemCategoryHistory,
+        // vaultItemTagHistory,
+        // vaultItemCustomFields,
+        // vaultItemCustomFieldsHistory,
+        // categories,
+        // tags,
+        // icons,
+        // iconRefs,
+        // vaultSnapshotsHistory,
+        // vaultEventsHistory,
+        // fileMetadata,
       },
     ).watch().map((_) {});
   }

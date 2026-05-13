@@ -1,8 +1,8 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
-import '../vault_items/vault_snapshots_history.dart';
 import '../vault_items/vault_items.dart';
+import '../vault_items/vault_snapshots_history.dart';
 import 'document_types.dart';
 
 /// Версии документа one-to-many: document -> versions.
@@ -195,8 +195,12 @@ final List<String> documentVersionsTableIndexes = [
 ];
 
 enum DocumentVersionTrigger {
-  validateDocumentTypeOnInsert('trg_document_versions_validate_document_type_on_insert'),
-  validateDocumentTypeOnUpdate('trg_document_versions_validate_document_type_on_update'),
+  validateDocumentTypeOnInsert(
+    'trg_document_versions_validate_document_type_on_insert',
+  ),
+  validateDocumentTypeOnUpdate(
+    'trg_document_versions_validate_document_type_on_update',
+  ),
   preventDocumentIdUpdate('trg_document_versions_prevent_document_id_update');
 
   const DocumentVersionTrigger(this.triggerName);

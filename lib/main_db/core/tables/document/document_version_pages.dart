@@ -88,7 +88,9 @@ class DocumentVersionPages extends Table {
 enum DocumentVersionPageConstraint {
   idNotBlank('chk_document_version_pages_id_not_blank'),
   versionIdNotBlank('chk_document_version_pages_version_id_not_blank'),
-  metadataHistoryIdNotBlank('chk_document_version_pages_metadata_history_id_not_blank'),
+  metadataHistoryIdNotBlank(
+    'chk_document_version_pages_metadata_history_id_not_blank',
+  ),
   pageNumberPositive('chk_document_version_pages_page_number_positive'),
   pageSha256HashNotBlank(
     'chk_document_version_pages_page_sha256_hash_not_blank',
@@ -126,7 +128,9 @@ final List<String> documentVersionPagesTableIndexes = [
 ];
 
 enum DocumentVersionPageTrigger {
-  preventVersionIdUpdate('trg_document_version_pages_prevent_version_id_update'),
+  preventVersionIdUpdate(
+    'trg_document_version_pages_prevent_version_id_update',
+  ),
   preventUpdate('trg_document_version_pages_prevent_update');
 
   const DocumentVersionPageTrigger(this.triggerName);

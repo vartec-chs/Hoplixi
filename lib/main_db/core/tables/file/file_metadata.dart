@@ -36,8 +36,8 @@ class FileMetadata extends Table {
       .withDefault(const Constant('available'))();
 
   /// Статус целостности файла.
-  TextColumn get integrityStatus => textEnum<FileIntegrityStatus>()
-      .withDefault(const Constant('unknown'))();
+  TextColumn get integrityStatus =>
+      textEnum<FileIntegrityStatus>().withDefault(const Constant('unknown'))();
 
   /// Когда впервые обнаружено отсутствие файла.
   DateTimeColumn get missingDetectedAt => dateTime().nullable()();
@@ -223,7 +223,9 @@ enum FileMetadataConstraint {
 
   fileExtensionNotBlank('chk_file_metadata_file_extension_not_blank'),
 
-  fileExtensionNoOuterWhitespace('chk_file_metadata_file_extension_no_outer_whitespace'),
+  fileExtensionNoOuterWhitespace(
+    'chk_file_metadata_file_extension_no_outer_whitespace',
+  ),
 
   filePathNotBlank('chk_file_metadata_file_path_not_blank'),
 
@@ -243,17 +245,27 @@ enum FileMetadataConstraint {
 
   sha256Hex('chk_file_metadata_sha256_hex'),
 
-  availabilityMissingDateConsistent('chk_file_metadata_availability_missing_date_consistent'),
+  availabilityMissingDateConsistent(
+    'chk_file_metadata_availability_missing_date_consistent',
+  ),
 
-  availabilityDeletedDateConsistent('chk_file_metadata_availability_deleted_date_consistent'),
+  availabilityDeletedDateConsistent(
+    'chk_file_metadata_availability_deleted_date_consistent',
+  ),
 
-  availabilityMissingDeletedDatesConflict('chk_file_metadata_availability_missing_deleted_dates_conflict'),
+  availabilityMissingDeletedDatesConflict(
+    'chk_file_metadata_availability_missing_deleted_dates_conflict',
+  ),
 
   integrityRequiresAvailable('chk_file_metadata_integrity_requires_available'),
 
-  validIntegrityRequiresCheckDate('chk_file_metadata_valid_integrity_requires_check_date'),
+  validIntegrityRequiresCheckDate(
+    'chk_file_metadata_valid_integrity_requires_check_date',
+  ),
 
-  corruptedIntegrityRequiresCheckDate('chk_file_metadata_corrupted_integrity_requires_check_date');
+  corruptedIntegrityRequiresCheckDate(
+    'chk_file_metadata_corrupted_integrity_requires_check_date',
+  );
 
   const FileMetadataConstraint(this.constraintName);
 

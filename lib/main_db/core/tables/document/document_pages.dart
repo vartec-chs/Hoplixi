@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:uuid/uuid.dart';
 
 import '../vault_items/vault_items.dart';
@@ -52,6 +53,7 @@ class DocumentPages extends Table {
   ];
 }
 
+@JsonEnum(fieldRename: FieldRename.snake)
 enum DocumentPageConstraint {
   idNotBlank('chk_document_pages_id_not_blank'),
 
@@ -66,6 +68,7 @@ enum DocumentPageConstraint {
   final String constraintName;
 }
 
+@JsonEnum(fieldRename: FieldRename.snake)
 enum DocumentPageIndex {
   documentId('idx_document_pages_document_id'),
   currentVersionPageId('idx_document_pages_current_version_page_id'),
@@ -84,9 +87,14 @@ final List<String> documentPagesTableIndexes = [
   'CREATE UNIQUE INDEX IF NOT EXISTS ${DocumentPageIndex.uniqueDocumentCurrentVersionPage.indexName} ON document_pages(document_id, current_version_page_id);',
 ];
 
+@JsonEnum(fieldRename: FieldRename.snake)
 enum DocumentPageTrigger {
-  validateDocumentTypeOnInsert('trg_document_pages_validate_document_type_on_insert'),
-  validateDocumentTypeOnUpdate('trg_document_pages_validate_document_type_on_update'),
+  validateDocumentTypeOnInsert(
+    'trg_document_pages_validate_document_type_on_insert',
+  ),
+  validateDocumentTypeOnUpdate(
+    'trg_document_pages_validate_document_type_on_update',
+  ),
   preventDocumentIdUpdate('trg_document_pages_prevent_document_id_update'),
   validateCurrentVersionPageInsert(
     'trg_document_pages_validate_current_version_page_insert',
@@ -100,6 +108,7 @@ enum DocumentPageTrigger {
   final String triggerName;
 }
 
+@JsonEnum(fieldRename: FieldRename.snake)
 enum DocumentPageRaise {
   invalidDocumentType(
     'document_pages.document_id must reference vault_items.id with type = document',

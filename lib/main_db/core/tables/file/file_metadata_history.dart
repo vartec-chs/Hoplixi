@@ -4,10 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../vault_items/vault_snapshots_history.dart';
 import 'file_metadata.dart';
 
-enum FileMetadataHistoryOwnerKind {
-  fileItemHistory,
-  documentVersionPage,
-}
+enum FileMetadataHistoryOwnerKind { fileItemHistory, documentVersionPage }
 
 /// Snapshot технических данных файла.
 ///
@@ -60,8 +57,8 @@ class FileMetadataHistory extends Table {
       .withDefault(const Constant('available'))();
 
   /// Snapshot статуса целостности файла.
-  TextColumn get integrityStatus => textEnum<FileIntegrityStatus>()
-      .withDefault(const Constant('unknown'))();
+  TextColumn get integrityStatus =>
+      textEnum<FileIntegrityStatus>().withDefault(const Constant('unknown'))();
 
   /// Когда впервые обнаружено отсутствие файла.
   DateTimeColumn get missingDetectedAt => dateTime().nullable()();
@@ -301,41 +298,69 @@ class FileMetadataHistory extends Table {
   ];
 }
 
+
 enum FileMetadataHistoryConstraint {
   idNotBlank('chk_file_metadata_history_id_not_blank'),
   historyIdNotBlank('chk_file_metadata_history_history_id_not_blank'),
   ownerIdNotBlank('chk_file_metadata_history_owner_id_not_blank'),
   metadataIdNotBlank('chk_file_metadata_history_metadata_id_not_blank'),
   fileNameNotBlank('chk_file_metadata_history_file_name_not_blank'),
-  fileNameNoOuterWhitespace('chk_file_metadata_history_file_name_no_outer_whitespace'),
+  fileNameNoOuterWhitespace(
+    'chk_file_metadata_history_file_name_no_outer_whitespace',
+  ),
   fileExtensionNotBlank('chk_file_metadata_history_file_extension_not_blank'),
-  fileExtensionNoOuterWhitespace('chk_file_metadata_history_file_extension_no_outer_whitespace'),
+  fileExtensionNoOuterWhitespace(
+    'chk_file_metadata_history_file_extension_no_outer_whitespace',
+  ),
   filePathNotBlank('chk_file_metadata_history_file_path_not_blank'),
-  filePathNoOuterWhitespace('chk_file_metadata_history_file_path_no_outer_whitespace'),
+  filePathNoOuterWhitespace(
+    'chk_file_metadata_history_file_path_no_outer_whitespace',
+  ),
   mimeTypeNotBlank('chk_file_metadata_history_mime_type_not_blank'),
-  mimeTypeNoOuterWhitespace('chk_file_metadata_history_mime_type_no_outer_whitespace'),
+  mimeTypeNoOuterWhitespace(
+    'chk_file_metadata_history_mime_type_no_outer_whitespace',
+  ),
   fileSizeNonNegative('chk_file_metadata_history_file_size_non_negative'),
   sha256NotBlank('chk_file_metadata_history_sha256_not_blank'),
-  sha256NoOuterWhitespace('chk_file_metadata_history_sha256_no_outer_whitespace'),
+  sha256NoOuterWhitespace(
+    'chk_file_metadata_history_sha256_no_outer_whitespace',
+  ),
   sha256Length('chk_file_metadata_history_sha256_length'),
   sha256Hex('chk_file_metadata_history_sha256_hex'),
-  availabilityMissingDateConsistent('chk_file_metadata_history_availability_missing_date_consistent'),
-  availabilityDeletedDateConsistent('chk_file_metadata_history_availability_deleted_date_consistent'),
-  availabilityMissingDeletedDatesConflict('chk_file_metadata_history_availability_missing_deleted_dates_conflict'),
-  integrityRequiresAvailable('chk_file_metadata_history_integrity_requires_available'),
-  validIntegrityRequiresCheckDate('chk_file_metadata_history_valid_integrity_requires_check_date'),
-  corruptedIntegrityRequiresCheckDate('chk_file_metadata_history_corrupted_integrity_requires_check_date'),
+  availabilityMissingDateConsistent(
+    'chk_file_metadata_history_availability_missing_date_consistent',
+  ),
+  availabilityDeletedDateConsistent(
+    'chk_file_metadata_history_availability_deleted_date_consistent',
+  ),
+  availabilityMissingDeletedDatesConflict(
+    'chk_file_metadata_history_availability_missing_deleted_dates_conflict',
+  ),
+  integrityRequiresAvailable(
+    'chk_file_metadata_history_integrity_requires_available',
+  ),
+  validIntegrityRequiresCheckDate(
+    'chk_file_metadata_history_valid_integrity_requires_check_date',
+  ),
+  corruptedIntegrityRequiresCheckDate(
+    'chk_file_metadata_history_corrupted_integrity_requires_check_date',
+  ),
   ownerIdRequired('chk_file_metadata_history_owner_id_required'),
   fileItemHistoryOwnerMatchesHistory(
     'chk_file_metadata_history_file_item_owner_matches_history',
   ),
-  historyIdRequiredForFileItemHistory('chk_file_metadata_history_history_id_required_for_file_item_history'),
-  historyIdMustBeNullForNonFileItemHistory('chk_file_metadata_history_history_id_must_be_null_for_non_file_item_history');
+  historyIdRequiredForFileItemHistory(
+    'chk_file_metadata_history_history_id_required_for_file_item_history',
+  ),
+  historyIdMustBeNullForNonFileItemHistory(
+    'chk_file_metadata_history_history_id_must_be_null_for_non_file_item_history',
+  );
 
   const FileMetadataHistoryConstraint(this.constraintName);
 
   final String constraintName;
 }
+
 
 enum FileMetadataHistoryIndex {
   historyId('idx_file_metadata_history_history_id'),
@@ -366,6 +391,7 @@ final List<String> fileMetadataHistoryTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${FileMetadataHistoryIndex.integrityStatus.indexName} ON file_metadata_history(integrity_status);',
   'CREATE INDEX IF NOT EXISTS ${FileMetadataHistoryIndex.snapshotCreatedAt.indexName} ON file_metadata_history(snapshot_created_at) WHERE snapshot_created_at IS NOT NULL;',
 ];
+
 
 enum FileMetadataHistoryTrigger {
   preventUpdate('trg_file_metadata_history_prevent_update');

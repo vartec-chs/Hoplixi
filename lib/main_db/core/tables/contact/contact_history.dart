@@ -158,7 +158,9 @@ enum ContactHistoryConstraint {
 
   jobTitleNotBlank('chk_contact_history_job_title_not_blank'),
 
-  jobTitleNoOuterWhitespace('chk_contact_history_job_title_no_outer_whitespace'),
+  jobTitleNoOuterWhitespace(
+    'chk_contact_history_job_title_no_outer_whitespace',
+  ),
 
   addressNotBlank('chk_contact_history_address_not_blank'),
 

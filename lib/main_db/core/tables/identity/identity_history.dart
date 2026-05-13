@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:json_annotation/json_annotation.dart';
 
 import '../vault_items/vault_snapshots_history.dart';
 
@@ -203,6 +204,7 @@ class IdentityHistory extends Table {
   ];
 }
 
+@JsonEnum(fieldRename: FieldRename.snake)
 enum IdentityHistoryConstraint {
   historyIdNotBlank('chk_identity_history_history_id_not_blank'),
 
@@ -261,6 +263,7 @@ enum IdentityHistoryConstraint {
   final String constraintName;
 }
 
+@JsonEnum(fieldRename: FieldRename.snake)
 enum IdentityHistoryIndex {
   username('idx_identity_history_username'),
   email('idx_identity_history_email'),
@@ -281,6 +284,7 @@ final List<String> identityHistoryTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${IdentityHistoryIndex.birthday.indexName} ON identity_history(birthday) WHERE birthday IS NOT NULL;',
 ];
 
+@JsonEnum(fieldRename: FieldRename.snake)
 enum IdentityHistoryTrigger {
   validateSnapshotTypeOnInsert(
     'trg_identity_history_validate_snapshot_type_on_insert',
@@ -293,6 +297,7 @@ enum IdentityHistoryTrigger {
   final String triggerName;
 }
 
+@JsonEnum(fieldRename: FieldRename.snake)
 enum IdentityHistoryRaise {
   invalidSnapshotType(
     'identity_history.history_id must reference vault_snapshots_history.id with type = identity',
