@@ -2,69 +2,60 @@ import 'package:drift/drift.dart';
 
 import '../vault_items/vault_items.dart';
 
-enum IdentityDocumentType {
-  passport,
-  idCard,
-  driverLicense,
-  residencePermit,
-  birthCertificate,
-  taxId,
-  socialSecurity,
-  insurance,
-  studentId,
-  employeeId,
-  other,
-}
-
 @DataClassName('IdentityItemsData')
 class IdentityItems extends Table {
   @ReferenceName('identityItem')
   TextColumn get itemId =>
       text().references(VaultItems, #id, onDelete: KeyAction.cascade)();
 
-  /// Тип документа: паспорт, ID-карта, водительские права и т.д.
-  TextColumn get idType => textEnum<IdentityDocumentType>()();
+  /// Имя.
+  TextColumn get firstName => text().nullable()();
 
-  /// Дополнительный тип документа, если idType = other.
-  TextColumn get idTypeOther =>
-      text().withLength(min: 1, max: 255).nullable()();
+  /// Отчество / второе имя.
+  TextColumn get middleName => text().nullable()();
 
-  /// Номер документа.
-  ///
-  /// Секретное/чувствительное значение. Не ограничиваем длину слишком жёстко.
-  TextColumn get idNumber => text()();
+  /// Фамилия.
+  TextColumn get lastName => text().nullable()();
 
-  /// Полное имя владельца документа.
-  TextColumn get fullName => text().withLength(min: 1, max: 255).nullable()();
+  /// Отображаемое имя.
+  TextColumn get displayName => text().nullable()();
 
-  /// Дата рождения.
-  DateTimeColumn get dateOfBirth => dateTime().nullable()();
+  /// Имя пользователя.
+  TextColumn get username => text().nullable()();
 
-  /// Место рождения.
-  TextColumn get placeOfBirth =>
-      text().withLength(min: 1, max: 255).nullable()();
+  /// Электронная почта.
+  TextColumn get email => text().nullable()();
 
-  /// Гражданство/национальность.
-  TextColumn get nationality =>
-      text().withLength(min: 1, max: 255).nullable()();
+  /// Телефон.
+  TextColumn get phone => text().nullable()();
 
-  /// Орган, выдавший документ.
-  TextColumn get issuingAuthority =>
-      text().withLength(min: 1, max: 255).nullable()();
+  /// Адрес.
+  TextColumn get address => text().nullable()();
 
-  /// Дата выдачи.
-  DateTimeColumn get issueDate => dateTime().nullable()();
+  /// День рождения.
+  DateTimeColumn get birthday => dateTime().nullable()();
 
-  /// Дата окончания действия.
-  DateTimeColumn get expiryDate => dateTime().nullable()();
+  /// Компания.
+  TextColumn get company => text().nullable()();
 
-  /// MRZ строка/блок.
-  ///
-  /// Чувствительное значение, поэтому без жёсткого лимита.
-  TextColumn get mrz => text().nullable()();
+  /// Должность.
+  TextColumn get jobTitle => text().nullable()();
 
-  /// Проверен ли документ пользователем/системой.
-  BoolColumn get verified => boolean().withDefault(const Constant(false))();
+  /// Веб-сайт.
+  TextColumn get website => text().nullable()();
+
+  /// ИНН / Налоговый номер.
+  TextColumn get taxId => text().nullable()();
+
+  /// Национальный ID / СНИЛС.
+  TextColumn get nationalId => text().nullable()();
+
+  /// Номер паспорта.
+  TextColumn get passportNumber => text().nullable()();
+
+  /// Номер водительского удостоверения.
+  TextColumn get driverLicenseNumber => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -74,100 +65,170 @@ class IdentityItems extends Table {
   @override
   List<String> get customConstraints => [
     '''
-    CONSTRAINT ${IdentityItemConstraint.idTypeOtherRequired.constraintName}
+    CONSTRAINT ${IdentityItemConstraint.itemIdNotBlank.constraintName}
+    CHECK (length(trim(item_id)) > 0)
+    ''',
+
+    '''
+    CONSTRAINT ${IdentityItemConstraint.firstNameNoOuterWhitespace.constraintName}
     CHECK (
-      id_type != 'other'
-      OR (
-        id_type_other IS NOT NULL
-        AND length(trim(id_type_other)) > 0
-      )
+      first_name IS NULL
+      OR first_name = trim(first_name)
     )
     ''',
 
     '''
-    CONSTRAINT ${IdentityItemConstraint.idTypeOtherMustBeNull.constraintName}
+    CONSTRAINT ${IdentityItemConstraint.middleNameNoOuterWhitespace.constraintName}
     CHECK (
-      id_type = 'other'
-      OR id_type_other IS NULL
+      middle_name IS NULL
+      OR middle_name = trim(middle_name)
     )
     ''',
 
     '''
-    CONSTRAINT ${IdentityItemConstraint.idNumberNotBlank.constraintName}
+    CONSTRAINT ${IdentityItemConstraint.lastNameNoOuterWhitespace.constraintName}
     CHECK (
-      length(trim(id_number)) > 0
+      last_name IS NULL
+      OR last_name = trim(last_name)
     )
     ''',
 
     '''
-    CONSTRAINT ${IdentityItemConstraint.fullNameNotBlank.constraintName}
+    CONSTRAINT ${IdentityItemConstraint.displayNameNoOuterWhitespace.constraintName}
     CHECK (
-      full_name IS NULL
-      OR length(trim(full_name)) > 0
+      display_name IS NULL
+      OR display_name = trim(display_name)
     )
     ''',
 
     '''
-    CONSTRAINT ${IdentityItemConstraint.placeOfBirthNotBlank.constraintName}
+    CONSTRAINT ${IdentityItemConstraint.usernameNoOuterWhitespace.constraintName}
     CHECK (
-      place_of_birth IS NULL
-      OR length(trim(place_of_birth)) > 0
+      username IS NULL
+      OR username = trim(username)
     )
     ''',
 
     '''
-    CONSTRAINT ${IdentityItemConstraint.nationalityNotBlank.constraintName}
+    CONSTRAINT ${IdentityItemConstraint.emailNoOuterWhitespace.constraintName}
     CHECK (
-      nationality IS NULL
-      OR length(trim(nationality)) > 0
+      email IS NULL
+      OR email = trim(email)
     )
     ''',
 
     '''
-    CONSTRAINT ${IdentityItemConstraint.issuingAuthorityNotBlank.constraintName}
+    CONSTRAINT ${IdentityItemConstraint.phoneNoOuterWhitespace.constraintName}
     CHECK (
-      issuing_authority IS NULL
-      OR length(trim(issuing_authority)) > 0
+      phone IS NULL
+      OR phone = trim(phone)
     )
     ''',
 
     '''
-    CONSTRAINT ${IdentityItemConstraint.mrzNotBlank.constraintName}
+    CONSTRAINT ${IdentityItemConstraint.companyNoOuterWhitespace.constraintName}
     CHECK (
-      mrz IS NULL
-      OR length(trim(mrz)) > 0
+      company IS NULL
+      OR company = trim(company)
     )
     ''',
 
     '''
-    CONSTRAINT ${IdentityItemConstraint.issueExpiryRange.constraintName}
+    CONSTRAINT ${IdentityItemConstraint.jobTitleNoOuterWhitespace.constraintName}
     CHECK (
-      issue_date IS NULL
-      OR expiry_date IS NULL
-      OR issue_date <= expiry_date
+      job_title IS NULL
+      OR job_title = trim(job_title)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${IdentityItemConstraint.websiteNoOuterWhitespace.constraintName}
+    CHECK (
+      website IS NULL
+      OR website = trim(website)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${IdentityItemConstraint.taxIdNoOuterWhitespace.constraintName}
+    CHECK (
+      tax_id IS NULL
+      OR tax_id = trim(tax_id)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${IdentityItemConstraint.nationalIdNoOuterWhitespace.constraintName}
+    CHECK (
+      national_id IS NULL
+      OR national_id = trim(national_id)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${IdentityItemConstraint.passportNumberNoOuterWhitespace.constraintName}
+    CHECK (
+      passport_number IS NULL
+      OR passport_number = trim(passport_number)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${IdentityItemConstraint.driverLicenseNumberNoOuterWhitespace.constraintName}
+    CHECK (
+      driver_license_number IS NULL
+      OR driver_license_number = trim(driver_license_number)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${IdentityItemConstraint.atLeastOneIdentifyingField.constraintName}
+    CHECK (
+      first_name IS NOT NULL OR
+      middle_name IS NOT NULL OR
+      last_name IS NOT NULL OR
+      display_name IS NOT NULL OR
+      username IS NOT NULL OR
+      email IS NOT NULL OR
+      phone IS NOT NULL OR
+      company IS NOT NULL
     )
     ''',
   ];
 }
 
 enum IdentityItemConstraint {
-  idTypeOtherRequired('chk_identity_items_id_type_other_required'),
+  itemIdNotBlank('chk_identity_items_item_id_not_blank'),
 
-  idTypeOtherMustBeNull('chk_identity_items_id_type_other_must_be_null'),
+  firstNameNoOuterWhitespace('chk_identity_items_first_name_no_outer_whitespace'),
 
-  idNumberNotBlank('chk_identity_items_id_number_not_blank'),
+  middleNameNoOuterWhitespace('chk_identity_items_middle_name_no_outer_whitespace'),
 
-  fullNameNotBlank('chk_identity_items_full_name_not_blank'),
+  lastNameNoOuterWhitespace('chk_identity_items_last_name_no_outer_whitespace'),
 
-  placeOfBirthNotBlank('chk_identity_items_place_of_birth_not_blank'),
+  displayNameNoOuterWhitespace('chk_identity_items_display_name_no_outer_whitespace'),
 
-  nationalityNotBlank('chk_identity_items_nationality_not_blank'),
+  usernameNoOuterWhitespace('chk_identity_items_username_no_outer_whitespace'),
 
-  issuingAuthorityNotBlank('chk_identity_items_issuing_authority_not_blank'),
+  emailNoOuterWhitespace('chk_identity_items_email_no_outer_whitespace'),
 
-  mrzNotBlank('chk_identity_items_mrz_not_blank'),
+  phoneNoOuterWhitespace('chk_identity_items_phone_no_outer_whitespace'),
 
-  issueExpiryRange('chk_identity_items_issue_expiry_range');
+  companyNoOuterWhitespace('chk_identity_items_company_no_outer_whitespace'),
+
+  jobTitleNoOuterWhitespace('chk_identity_items_job_title_no_outer_whitespace'),
+
+  websiteNoOuterWhitespace('chk_identity_items_website_no_outer_whitespace'),
+
+  taxIdNoOuterWhitespace('chk_identity_items_tax_id_no_outer_whitespace'),
+
+  nationalIdNoOuterWhitespace('chk_identity_items_national_id_no_outer_whitespace'),
+
+  passportNumberNoOuterWhitespace('chk_identity_items_passport_number_no_outer_whitespace'),
+
+  driverLicenseNumberNoOuterWhitespace('chk_identity_items_driver_license_number_no_outer_whitespace'),
+
+  atLeastOneIdentifyingField('chk_identity_items_at_least_one_identifying_field');
 
   const IdentityItemConstraint(this.constraintName);
 
@@ -175,10 +236,11 @@ enum IdentityItemConstraint {
 }
 
 enum IdentityItemIndex {
-  idType('idx_identity_items_id_type'),
-  fullName('idx_identity_items_full_name'),
-  nationality('idx_identity_items_nationality'),
-  expiryDate('idx_identity_items_expiry_date');
+  username('idx_identity_items_username'),
+  email('idx_identity_items_email'),
+  phone('idx_identity_items_phone'),
+  company('idx_identity_items_company'),
+  birthday('idx_identity_items_birthday');
 
   const IdentityItemIndex(this.indexName);
 
@@ -186,10 +248,11 @@ enum IdentityItemIndex {
 }
 
 final List<String> identityItemsTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${IdentityItemIndex.idType.indexName} ON identity_items(id_type);',
-  'CREATE INDEX IF NOT EXISTS ${IdentityItemIndex.fullName.indexName} ON identity_items(full_name);',
-  'CREATE INDEX IF NOT EXISTS ${IdentityItemIndex.nationality.indexName} ON identity_items(nationality);',
-  'CREATE INDEX IF NOT EXISTS ${IdentityItemIndex.expiryDate.indexName} ON identity_items(expiry_date);',
+  'CREATE INDEX IF NOT EXISTS ${IdentityItemIndex.username.indexName} ON identity_items(username) WHERE username IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${IdentityItemIndex.email.indexName} ON identity_items(email) WHERE email IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${IdentityItemIndex.phone.indexName} ON identity_items(phone) WHERE phone IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${IdentityItemIndex.company.indexName} ON identity_items(company) WHERE company IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${IdentityItemIndex.birthday.indexName} ON identity_items(birthday) WHERE birthday IS NOT NULL;',
 ];
 
 enum IdentityItemTrigger {

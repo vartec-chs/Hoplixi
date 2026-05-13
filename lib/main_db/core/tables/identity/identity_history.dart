@@ -3,11 +3,9 @@ import 'package:drift/drift.dart';
 import '../vault_items/vault_snapshots_history.dart';
 import 'identity_items.dart';
 
-/// History-таблица для специфичных полей identity-документа.
+/// History-таблица для специфичных полей identity.
 ///
 /// Данные вставляются только триггерами.
-/// Чувствительные поля могут быть NULL, если включён режим истории
-/// без сохранения секретов/персональных данных.
 @DataClassName('IdentityHistoryData')
 class IdentityHistory extends Table {
   @ReferenceName('identityHistory')
@@ -17,50 +15,54 @@ class IdentityHistory extends Table {
     onDelete: KeyAction.cascade,
   )();
 
-  /// Тип документа snapshot.
-  TextColumn get idType => textEnum<IdentityDocumentType>()();
+  /// Имя snapshot.
+  TextColumn get firstName => text().nullable()();
 
-  /// Дополнительный тип документа, если idType = other.
-  TextColumn get idTypeOther =>
-      text().withLength(min: 1, max: 255).nullable()();
+  /// Отчество / второе имя snapshot.
+  TextColumn get middleName => text().nullable()();
 
-  /// Номер документа snapshot.
-  ///
-  /// Nullable intentionally:
-  /// history may store metadata-only snapshots depending on history policy.
-  TextColumn get idNumber => text().nullable()();
+  /// Фамилия snapshot.
+  TextColumn get lastName => text().nullable()();
 
-  /// Полное имя владельца документа snapshot.
-  TextColumn get fullName => text().withLength(min: 1, max: 255).nullable()();
+  /// Отображаемое имя snapshot.
+  TextColumn get displayName => text().nullable()();
 
-  /// Дата рождения snapshot.
-  DateTimeColumn get dateOfBirth => dateTime().nullable()();
+  /// Имя пользователя snapshot.
+  TextColumn get username => text().nullable()();
 
-  /// Место рождения snapshot.
-  TextColumn get placeOfBirth =>
-      text().withLength(min: 1, max: 255).nullable()();
+  /// Электронная почта snapshot.
+  TextColumn get email => text().nullable()();
 
-  /// Гражданство/национальность snapshot.
-  TextColumn get nationality =>
-      text().withLength(min: 1, max: 255).nullable()();
+  /// Телефон snapshot.
+  TextColumn get phone => text().nullable()();
 
-  /// Орган, выдавший документ snapshot.
-  TextColumn get issuingAuthority =>
-      text().withLength(min: 1, max: 255).nullable()();
+  /// Адрес snapshot.
+  TextColumn get address => text().nullable()();
 
-  /// Дата выдачи snapshot.
-  DateTimeColumn get issueDate => dateTime().nullable()();
+  /// День рождения snapshot.
+  DateTimeColumn get birthday => dateTime().nullable()();
 
-  /// Дата окончания действия snapshot.
-  DateTimeColumn get expiryDate => dateTime().nullable()();
+  /// Компания snapshot.
+  TextColumn get company => text().nullable()();
 
-  /// MRZ snapshot.
-  ///
-  /// Nullable intentionally.
-  TextColumn get mrz => text().nullable()();
+  /// Должность snapshot.
+  TextColumn get jobTitle => text().nullable()();
 
-  /// Проверен ли документ snapshot.
-  BoolColumn get verified => boolean().withDefault(const Constant(false))();
+  /// Веб-сайт snapshot.
+  TextColumn get website => text().nullable()();
+
+  /// ИНН / Налоговый номер snapshot.
+  TextColumn get taxId => text().nullable()();
+
+  /// Национальный ID / СНИЛС snapshot.
+  TextColumn get nationalId => text().nullable()();
+
+  /// Номер паспорта snapshot.
+  TextColumn get passportNumber => text().nullable()();
+
+  /// Номер водительского удостоверения snapshot.
+  TextColumn get driverLicenseNumber => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -70,101 +72,170 @@ class IdentityHistory extends Table {
   @override
   List<String> get customConstraints => [
     '''
-    CONSTRAINT ${IdentityHistoryConstraint.idTypeOtherRequired.constraintName}
+    CONSTRAINT ${IdentityHistoryConstraint.historyIdNotBlank.constraintName}
+    CHECK (length(trim(history_id)) > 0)
+    ''',
+
+    '''
+    CONSTRAINT ${IdentityHistoryConstraint.firstNameNoOuterWhitespace.constraintName}
     CHECK (
-      id_type != 'other'
-      OR (
-        id_type_other IS NOT NULL
-        AND length(trim(id_type_other)) > 0
-      )
+      first_name IS NULL
+      OR first_name = trim(first_name)
     )
     ''',
 
     '''
-    CONSTRAINT ${IdentityHistoryConstraint.idTypeOtherMustBeNull.constraintName}
+    CONSTRAINT ${IdentityHistoryConstraint.middleNameNoOuterWhitespace.constraintName}
     CHECK (
-      id_type = 'other'
-      OR id_type_other IS NULL
+      middle_name IS NULL
+      OR middle_name = trim(middle_name)
     )
     ''',
 
     '''
-    CONSTRAINT ${IdentityHistoryConstraint.idNumberNotBlank.constraintName}
+    CONSTRAINT ${IdentityHistoryConstraint.lastNameNoOuterWhitespace.constraintName}
     CHECK (
-      id_number IS NULL
-      OR length(trim(id_number)) > 0
+      last_name IS NULL
+      OR last_name = trim(last_name)
     )
     ''',
 
     '''
-    CONSTRAINT ${IdentityHistoryConstraint.fullNameNotBlank.constraintName}
+    CONSTRAINT ${IdentityHistoryConstraint.displayNameNoOuterWhitespace.constraintName}
     CHECK (
-      full_name IS NULL
-      OR length(trim(full_name)) > 0
+      display_name IS NULL
+      OR display_name = trim(display_name)
     )
     ''',
 
     '''
-    CONSTRAINT ${IdentityHistoryConstraint.placeOfBirthNotBlank.constraintName}
+    CONSTRAINT ${IdentityHistoryConstraint.usernameNoOuterWhitespace.constraintName}
     CHECK (
-      place_of_birth IS NULL
-      OR length(trim(place_of_birth)) > 0
+      username IS NULL
+      OR username = trim(username)
     )
     ''',
 
     '''
-    CONSTRAINT ${IdentityHistoryConstraint.nationalityNotBlank.constraintName}
+    CONSTRAINT ${IdentityHistoryConstraint.emailNoOuterWhitespace.constraintName}
     CHECK (
-      nationality IS NULL
-      OR length(trim(nationality)) > 0
+      email IS NULL
+      OR email = trim(email)
     )
     ''',
 
     '''
-    CONSTRAINT ${IdentityHistoryConstraint.issuingAuthorityNotBlank.constraintName}
+    CONSTRAINT ${IdentityHistoryConstraint.phoneNoOuterWhitespace.constraintName}
     CHECK (
-      issuing_authority IS NULL
-      OR length(trim(issuing_authority)) > 0
+      phone IS NULL
+      OR phone = trim(phone)
     )
     ''',
 
     '''
-    CONSTRAINT ${IdentityHistoryConstraint.mrzNotBlank.constraintName}
+    CONSTRAINT ${IdentityHistoryConstraint.companyNoOuterWhitespace.constraintName}
     CHECK (
-      mrz IS NULL
-      OR length(trim(mrz)) > 0
+      company IS NULL
+      OR company = trim(company)
     )
     ''',
 
     '''
-    CONSTRAINT ${IdentityHistoryConstraint.issueExpiryRange.constraintName}
+    CONSTRAINT ${IdentityHistoryConstraint.jobTitleNoOuterWhitespace.constraintName}
     CHECK (
-      issue_date IS NULL
-      OR expiry_date IS NULL
-      OR issue_date <= expiry_date
+      job_title IS NULL
+      OR job_title = trim(job_title)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${IdentityHistoryConstraint.websiteNoOuterWhitespace.constraintName}
+    CHECK (
+      website IS NULL
+      OR website = trim(website)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${IdentityHistoryConstraint.taxIdNoOuterWhitespace.constraintName}
+    CHECK (
+      tax_id IS NULL
+      OR tax_id = trim(tax_id)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${IdentityHistoryConstraint.nationalIdNoOuterWhitespace.constraintName}
+    CHECK (
+      national_id IS NULL
+      OR national_id = trim(national_id)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${IdentityHistoryConstraint.passportNumberNoOuterWhitespace.constraintName}
+    CHECK (
+      passport_number IS NULL
+      OR passport_number = trim(passport_number)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${IdentityHistoryConstraint.driverLicenseNumberNoOuterWhitespace.constraintName}
+    CHECK (
+      driver_license_number IS NULL
+      OR driver_license_number = trim(driver_license_number)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${IdentityHistoryConstraint.atLeastOneIdentifyingField.constraintName}
+    CHECK (
+      first_name IS NOT NULL OR
+      middle_name IS NOT NULL OR
+      last_name IS NOT NULL OR
+      display_name IS NOT NULL OR
+      username IS NOT NULL OR
+      email IS NOT NULL OR
+      phone IS NOT NULL OR
+      company IS NOT NULL
     )
     ''',
   ];
 }
 
 enum IdentityHistoryConstraint {
-  idTypeOtherRequired('chk_identity_history_id_type_other_required'),
+  historyIdNotBlank('chk_identity_history_history_id_not_blank'),
 
-  idTypeOtherMustBeNull('chk_identity_history_id_type_other_must_be_null'),
+  firstNameNoOuterWhitespace('chk_identity_history_first_name_no_outer_whitespace'),
 
-  idNumberNotBlank('chk_identity_history_id_number_not_blank'),
+  middleNameNoOuterWhitespace('chk_identity_history_middle_name_no_outer_whitespace'),
 
-  fullNameNotBlank('chk_identity_history_full_name_not_blank'),
+  lastNameNoOuterWhitespace('chk_identity_history_last_name_no_outer_whitespace'),
 
-  placeOfBirthNotBlank('chk_identity_history_place_of_birth_not_blank'),
+  displayNameNoOuterWhitespace('chk_identity_history_display_name_no_outer_whitespace'),
 
-  nationalityNotBlank('chk_identity_history_nationality_not_blank'),
+  usernameNoOuterWhitespace('chk_identity_history_username_no_outer_whitespace'),
 
-  issuingAuthorityNotBlank('chk_identity_history_issuing_authority_not_blank'),
+  emailNoOuterWhitespace('chk_identity_history_email_no_outer_whitespace'),
 
-  mrzNotBlank('chk_identity_history_mrz_not_blank'),
+  phoneNoOuterWhitespace('chk_identity_history_phone_no_outer_whitespace'),
 
-  issueExpiryRange('chk_identity_history_issue_expiry_range');
+  companyNoOuterWhitespace('chk_identity_history_company_no_outer_whitespace'),
+
+  jobTitleNoOuterWhitespace('chk_identity_history_job_title_no_outer_whitespace'),
+
+  websiteNoOuterWhitespace('chk_identity_history_website_no_outer_whitespace'),
+
+  taxIdNoOuterWhitespace('chk_identity_history_tax_id_no_outer_whitespace'),
+
+  nationalIdNoOuterWhitespace('chk_identity_history_national_id_no_outer_whitespace'),
+
+  passportNumberNoOuterWhitespace('chk_identity_history_passport_number_no_outer_whitespace'),
+
+  driverLicenseNumberNoOuterWhitespace('chk_identity_history_driver_license_number_no_outer_whitespace'),
+
+  atLeastOneIdentifyingField('chk_identity_history_at_least_one_identifying_field');
 
   const IdentityHistoryConstraint(this.constraintName);
 
@@ -172,10 +243,11 @@ enum IdentityHistoryConstraint {
 }
 
 enum IdentityHistoryIndex {
-  idType('idx_identity_history_id_type'),
-  fullName('idx_identity_history_full_name'),
-  nationality('idx_identity_history_nationality'),
-  expiryDate('idx_identity_history_expiry_date');
+  username('idx_identity_history_username'),
+  email('idx_identity_history_email'),
+  phone('idx_identity_history_phone'),
+  company('idx_identity_history_company'),
+  birthday('idx_identity_history_birthday');
 
   const IdentityHistoryIndex(this.indexName);
 
@@ -183,10 +255,11 @@ enum IdentityHistoryIndex {
 }
 
 final List<String> identityHistoryTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${IdentityHistoryIndex.idType.indexName} ON identity_history(id_type);',
-  'CREATE INDEX IF NOT EXISTS ${IdentityHistoryIndex.fullName.indexName} ON identity_history(full_name);',
-  'CREATE INDEX IF NOT EXISTS ${IdentityHistoryIndex.nationality.indexName} ON identity_history(nationality);',
-  'CREATE INDEX IF NOT EXISTS ${IdentityHistoryIndex.expiryDate.indexName} ON identity_history(expiry_date);',
+  'CREATE INDEX IF NOT EXISTS ${IdentityHistoryIndex.username.indexName} ON identity_history(username) WHERE username IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${IdentityHistoryIndex.email.indexName} ON identity_history(email) WHERE email IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${IdentityHistoryIndex.phone.indexName} ON identity_history(phone) WHERE phone IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${IdentityHistoryIndex.company.indexName} ON identity_history(company) WHERE company IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${IdentityHistoryIndex.birthday.indexName} ON identity_history(birthday) WHERE birthday IS NOT NULL;',
 ];
 
 enum IdentityHistoryTrigger {

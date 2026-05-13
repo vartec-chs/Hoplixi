@@ -3,15 +3,15 @@ import 'package:drift/drift.dart';
 import '../vault_items/vault_items.dart';
 
 enum LoyaltyBarcodeType {
-  qr,
   code128,
   code39,
   ean13,
   ean8,
   upcA,
   upcE,
-  aztec,
+  qr,
   pdf417,
+  aztec,
   dataMatrix,
   other,
 }
@@ -26,13 +26,14 @@ class LoyaltyCardItems extends Table {
 
   /// Номер карты.
   ///
-  /// Может быть чувствительным значением, поэтому не делаем слишком жёсткий max.
+  /// Может быть чувствительным значением, поэтому не делаем слишком жёсткий max
+  /// и не запрещаем outer whitespace.
   TextColumn get cardNumber => text().nullable()();
 
-  /// Имя владельца карты.
-  TextColumn get holderName => text().withLength(min: 1, max: 255).nullable()();
-
   /// Значение штрихкода/QR-кода.
+  ///
+  /// Может быть пользовательским точным значением, поэтому не запрещаем
+  /// outer whitespace.
   TextColumn get barcodeValue => text().nullable()();
 
   /// Тип штрихкода/QR-кода.
@@ -42,22 +43,27 @@ class LoyaltyCardItems extends Table {
   TextColumn get barcodeTypeOther =>
       text().withLength(min: 1, max: 255).nullable()();
 
-  /// Пароль/PIN от личного кабинета или карты.
-  ///
-  /// Секретное значение.
-  TextColumn get password => text().nullable()();
-
-  /// Уровень программы: Silver, Gold, Premium и т.д.
-  TextColumn get tier => text().withLength(min: 1, max: 255).nullable()();
-
-  /// Дата окончания действия карты.
-  DateTimeColumn get expiryDate => dateTime().nullable()();
+  /// Эмитент или оператор программы.
+  TextColumn get issuer => text().withLength(min: 1, max: 255).nullable()();
 
   /// Сайт программы.
   TextColumn get website => text().withLength(min: 1, max: 2048).nullable()();
 
   /// Телефон поддержки.
-  TextColumn get phoneNumber => text().withLength(min: 1, max: 64).nullable()();
+  TextColumn get phone => text().withLength(min: 1, max: 64).nullable()();
+
+  /// Email поддержки или аккаунта программы.
+  TextColumn get email => text().withLength(min: 1, max: 255).nullable()();
+
+  /// Баллы/очки по карте.
+  IntColumn get points => integer().nullable()();
+
+  /// Дата начала действия карты.
+  DateTimeColumn get validFrom => dateTime().nullable()();
+
+  /// Дата окончания действия карты.
+  DateTimeColumn get validTo => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {itemId};
 
@@ -67,9 +73,23 @@ class LoyaltyCardItems extends Table {
   @override
   List<String> get customConstraints => [
     '''
+    CONSTRAINT ${LoyaltyCardItemConstraint.itemIdNotBlank.constraintName}
+    CHECK (
+      length(trim(item_id)) > 0
+    )
+    ''',
+
+    '''
     CONSTRAINT ${LoyaltyCardItemConstraint.programNameNotBlank.constraintName}
     CHECK (
       length(trim(program_name)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LoyaltyCardItemConstraint.programNameNoOuterWhitespace.constraintName}
+    CHECK (
+      program_name = trim(program_name)
     )
     ''',
 
@@ -78,14 +98,6 @@ class LoyaltyCardItems extends Table {
     CHECK (
       card_number IS NULL
       OR length(trim(card_number)) > 0
-    )
-    ''',
-
-    '''
-    CONSTRAINT ${LoyaltyCardItemConstraint.holderNameNotBlank.constraintName}
-    CHECK (
-      holder_name IS NULL
-      OR length(trim(holder_name)) > 0
     )
     ''',
 
@@ -118,18 +130,26 @@ class LoyaltyCardItems extends Table {
     ''',
 
     '''
-    CONSTRAINT ${LoyaltyCardItemConstraint.passwordNotBlank.constraintName}
+    CONSTRAINT ${LoyaltyCardItemConstraint.barcodeTypeOtherNoOuterWhitespace.constraintName}
     CHECK (
-      password IS NULL
-      OR length(trim(password)) > 0
+      barcode_type_other IS NULL
+      OR barcode_type_other = trim(barcode_type_other)
     )
     ''',
 
     '''
-    CONSTRAINT ${LoyaltyCardItemConstraint.tierNotBlank.constraintName}
+    CONSTRAINT ${LoyaltyCardItemConstraint.issuerNotBlank.constraintName}
     CHECK (
-      tier IS NULL
-      OR length(trim(tier)) > 0
+      issuer IS NULL
+      OR length(trim(issuer)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LoyaltyCardItemConstraint.issuerNoOuterWhitespace.constraintName}
+    CHECK (
+      issuer IS NULL
+      OR issuer = trim(issuer)
     )
     ''',
 
@@ -142,21 +162,74 @@ class LoyaltyCardItems extends Table {
     ''',
 
     '''
-    CONSTRAINT ${LoyaltyCardItemConstraint.phoneNumberNotBlank.constraintName}
+    CONSTRAINT ${LoyaltyCardItemConstraint.websiteNoOuterWhitespace.constraintName}
     CHECK (
-      phone_number IS NULL
-      OR length(trim(phone_number)) > 0
+      website IS NULL
+      OR website = trim(website)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LoyaltyCardItemConstraint.phoneNotBlank.constraintName}
+    CHECK (
+      phone IS NULL
+      OR length(trim(phone)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LoyaltyCardItemConstraint.phoneNoOuterWhitespace.constraintName}
+    CHECK (
+      phone IS NULL
+      OR phone = trim(phone)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LoyaltyCardItemConstraint.emailNotBlank.constraintName}
+    CHECK (
+      email IS NULL
+      OR length(trim(email)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LoyaltyCardItemConstraint.emailNoOuterWhitespace.constraintName}
+    CHECK (
+      email IS NULL
+      OR email = trim(email)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LoyaltyCardItemConstraint.pointsNonNegative.constraintName}
+    CHECK (
+      points IS NULL
+      OR points >= 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LoyaltyCardItemConstraint.validDateRange.constraintName}
+    CHECK (
+      valid_from IS NULL
+      OR valid_to IS NULL
+      OR valid_from <= valid_to
     )
     ''',
   ];
 }
 
 enum LoyaltyCardItemConstraint {
+  itemIdNotBlank('chk_loyalty_card_items_item_id_not_blank'),
+
   programNameNotBlank('chk_loyalty_card_items_program_name_not_blank'),
 
-  cardNumberNotBlank('chk_loyalty_card_items_card_number_not_blank'),
+  programNameNoOuterWhitespace(
+    'chk_loyalty_card_items_program_name_no_outer_whitespace',
+  ),
 
-  holderNameNotBlank('chk_loyalty_card_items_holder_name_not_blank'),
+  cardNumberNotBlank('chk_loyalty_card_items_card_number_not_blank'),
 
   barcodeValueNotBlank('chk_loyalty_card_items_barcode_value_not_blank'),
 
@@ -168,13 +241,31 @@ enum LoyaltyCardItemConstraint {
     'chk_loyalty_card_items_barcode_type_other_must_be_null',
   ),
 
-  passwordNotBlank('chk_loyalty_card_items_password_not_blank'),
+  barcodeTypeOtherNoOuterWhitespace(
+    'chk_loyalty_card_items_barcode_type_other_no_outer_whitespace',
+  ),
 
-  tierNotBlank('chk_loyalty_card_items_tier_not_blank'),
+  issuerNotBlank('chk_loyalty_card_items_issuer_not_blank'),
+
+  issuerNoOuterWhitespace('chk_loyalty_card_items_issuer_no_outer_whitespace'),
 
   websiteNotBlank('chk_loyalty_card_items_website_not_blank'),
 
-  phoneNumberNotBlank('chk_loyalty_card_items_phone_number_not_blank');
+  websiteNoOuterWhitespace(
+    'chk_loyalty_card_items_website_no_outer_whitespace',
+  ),
+
+  phoneNotBlank('chk_loyalty_card_items_phone_not_blank'),
+
+  phoneNoOuterWhitespace('chk_loyalty_card_items_phone_no_outer_whitespace'),
+
+  emailNotBlank('chk_loyalty_card_items_email_not_blank'),
+
+  emailNoOuterWhitespace('chk_loyalty_card_items_email_no_outer_whitespace'),
+
+  pointsNonNegative('chk_loyalty_card_items_points_non_negative'),
+
+  validDateRange('chk_loyalty_card_items_valid_date_range');
 
   const LoyaltyCardItemConstraint(this.constraintName);
 
@@ -183,9 +274,9 @@ enum LoyaltyCardItemConstraint {
 
 enum LoyaltyCardItemIndex {
   programName('idx_loyalty_card_items_program_name'),
+  issuer('idx_loyalty_card_items_issuer'),
   barcodeType('idx_loyalty_card_items_barcode_type'),
-  expiryDate('idx_loyalty_card_items_expiry_date'),
-  tier('idx_loyalty_card_items_tier');
+  validTo('idx_loyalty_card_items_valid_to');
 
   const LoyaltyCardItemIndex(this.indexName);
 
@@ -193,10 +284,26 @@ enum LoyaltyCardItemIndex {
 }
 
 final List<String> loyaltyCardItemsTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${LoyaltyCardItemIndex.programName.indexName} ON loyalty_card_items(program_name);',
-  'CREATE INDEX IF NOT EXISTS ${LoyaltyCardItemIndex.barcodeType.indexName} ON loyalty_card_items(barcode_type);',
-  'CREATE INDEX IF NOT EXISTS ${LoyaltyCardItemIndex.expiryDate.indexName} ON loyalty_card_items(expiry_date);',
-  'CREATE INDEX IF NOT EXISTS ${LoyaltyCardItemIndex.tier.indexName} ON loyalty_card_items(tier);',
+  '''
+  CREATE INDEX IF NOT EXISTS ${LoyaltyCardItemIndex.programName.indexName}
+  ON loyalty_card_items(program_name)
+  WHERE program_name IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${LoyaltyCardItemIndex.issuer.indexName}
+  ON loyalty_card_items(issuer)
+  WHERE issuer IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${LoyaltyCardItemIndex.barcodeType.indexName}
+  ON loyalty_card_items(barcode_type)
+  WHERE barcode_type IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${LoyaltyCardItemIndex.validTo.indexName}
+  ON loyalty_card_items(valid_to)
+  WHERE valid_to IS NOT NULL;
+  ''',
 ];
 
 enum LoyaltyCardItemTrigger {

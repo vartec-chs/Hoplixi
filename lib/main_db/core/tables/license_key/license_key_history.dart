@@ -17,7 +17,10 @@ class LicenseKeyHistory extends Table {
   )();
 
   /// Продукт/приложение snapshot.
-  TextColumn get product => text().withLength(min: 1, max: 255)();
+  TextColumn get productName => text().withLength(min: 1, max: 255)();
+
+  /// Производитель или поставщик продукта snapshot.
+  TextColumn get vendor => text().withLength(min: 1, max: 255).nullable()();
 
   /// Лицензионный ключ snapshot.
   ///
@@ -32,27 +35,49 @@ class LicenseKeyHistory extends Table {
   TextColumn get licenseTypeOther =>
       text().withLength(min: 1, max: 255).nullable()();
 
-  /// Количество мест/пользователей snapshot.
-  IntColumn get seats => integer().nullable()();
+  /// Email аккаунта, к которому привязана лицензия snapshot.
+  TextColumn get accountEmail =>
+      text().withLength(min: 1, max: 255).nullable()();
 
-  /// Максимальное количество активаций snapshot.
-  IntColumn get maxActivations => integer().nullable()();
+  /// Имя аккаунта, к которому привязана лицензия snapshot.
+  TextColumn get accountUsername =>
+      text().withLength(min: 1, max: 255).nullable()();
 
-  /// Дата активации snapshot.
-  DateTimeColumn get activatedOn => dateTime().nullable()();
+  /// Email, использованный при покупке snapshot.
+  TextColumn get purchaseEmail =>
+      text().withLength(min: 1, max: 255).nullable()();
+
+  /// Номер заказа/чека/инвойса snapshot.
+  TextColumn get orderNumber =>
+      text().withLength(min: 1, max: 255).nullable()();
 
   /// Дата покупки snapshot.
   DateTimeColumn get purchaseDate => dateTime().nullable()();
 
-  /// Где куплено snapshot.
-  TextColumn get purchaseFrom =>
-      text().withLength(min: 1, max: 255).nullable()();
+  /// Цена покупки snapshot.
+  RealColumn get purchasePrice => real().nullable()();
 
-  /// Номер заказа/чека/инвойса snapshot.
-  TextColumn get orderId => text().withLength(min: 1, max: 255).nullable()();
+  /// Валюта цены покупки snapshot.
+  TextColumn get currency => text().withLength(min: 1, max: 32).nullable()();
+
+  /// Дата начала действия лицензии snapshot.
+  DateTimeColumn get validFrom => dateTime().nullable()();
 
   /// Дата окончания действия лицензии snapshot.
-  DateTimeColumn get expiresAt => dateTime().nullable()();
+  DateTimeColumn get validTo => dateTime().nullable()();
+
+  /// Дата продления snapshot.
+  DateTimeColumn get renewalDate => dateTime().nullable()();
+
+  /// Количество мест/пользователей snapshot.
+  IntColumn get seats => integer().nullable()();
+
+  /// Максимальное количество активаций snapshot.
+  IntColumn get activationLimit => integer().nullable()();
+
+  /// Количество использованных активаций snapshot.
+  IntColumn get activationsUsed => integer().nullable()();
+
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -62,9 +87,9 @@ class LicenseKeyHistory extends Table {
   @override
   List<String> get customConstraints => [
     '''
-    CONSTRAINT ${LicenseKeyHistoryConstraint.productNotBlank.constraintName}
+    CONSTRAINT ${LicenseKeyHistoryConstraint.historyIdNotBlank.constraintName}
     CHECK (
-      length(trim(product)) > 0
+      length(trim(history_id)) > 0
     )
     ''',
 
@@ -73,6 +98,100 @@ class LicenseKeyHistory extends Table {
     CHECK (
       license_key IS NULL
       OR length(trim(license_key)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LicenseKeyHistoryConstraint.productNameNotBlank.constraintName}
+    CHECK (
+      length(trim(product_name)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LicenseKeyHistoryConstraint.productNameNoOuterWhitespace.constraintName}
+    CHECK (
+      product_name = trim(product_name)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LicenseKeyHistoryConstraint.vendorNotBlank.constraintName}
+    CHECK (
+      vendor IS NULL
+      OR length(trim(vendor)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LicenseKeyHistoryConstraint.vendorNoOuterWhitespace.constraintName}
+    CHECK (
+      vendor IS NULL
+      OR vendor = trim(vendor)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LicenseKeyHistoryConstraint.accountEmailNotBlank.constraintName}
+    CHECK (
+      account_email IS NULL
+      OR length(trim(account_email)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LicenseKeyHistoryConstraint.accountEmailNoOuterWhitespace.constraintName}
+    CHECK (
+      account_email IS NULL
+      OR account_email = trim(account_email)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LicenseKeyHistoryConstraint.accountUsernameNotBlank.constraintName}
+    CHECK (
+      account_username IS NULL
+      OR length(trim(account_username)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LicenseKeyHistoryConstraint.accountUsernameNoOuterWhitespace.constraintName}
+    CHECK (
+      account_username IS NULL
+      OR account_username = trim(account_username)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LicenseKeyHistoryConstraint.purchaseEmailNotBlank.constraintName}
+    CHECK (
+      purchase_email IS NULL
+      OR length(trim(purchase_email)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LicenseKeyHistoryConstraint.purchaseEmailNoOuterWhitespace.constraintName}
+    CHECK (
+      purchase_email IS NULL
+      OR purchase_email = trim(purchase_email)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LicenseKeyHistoryConstraint.orderNumberNotBlank.constraintName}
+    CHECK (
+      order_number IS NULL
+      OR length(trim(order_number)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LicenseKeyHistoryConstraint.orderNumberNoOuterWhitespace.constraintName}
+    CHECK (
+      order_number IS NULL
+      OR order_number = trim(order_number)
     )
     ''',
 
@@ -97,6 +216,14 @@ class LicenseKeyHistory extends Table {
     ''',
 
     '''
+    CONSTRAINT ${LicenseKeyHistoryConstraint.licenseTypeOtherNoOuterWhitespace.constraintName}
+    CHECK (
+      license_type_other IS NULL
+      OR license_type_other = trim(license_type_other)
+    )
+    ''',
+
+    '''
     CONSTRAINT ${LicenseKeyHistoryConstraint.seatsPositive.constraintName}
     CHECK (
       seats IS NULL
@@ -105,53 +232,121 @@ class LicenseKeyHistory extends Table {
     ''',
 
     '''
-    CONSTRAINT ${LicenseKeyHistoryConstraint.maxActivationsPositive.constraintName}
+    CONSTRAINT ${LicenseKeyHistoryConstraint.activationLimitPositive.constraintName}
     CHECK (
-      max_activations IS NULL
-      OR max_activations > 0
+      activation_limit IS NULL
+      OR activation_limit > 0
     )
     ''',
 
     '''
-    CONSTRAINT ${LicenseKeyHistoryConstraint.purchaseFromNotBlank.constraintName}
+    CONSTRAINT ${LicenseKeyHistoryConstraint.activationsUsedNonNegative.constraintName}
     CHECK (
-      purchase_from IS NULL
-      OR length(trim(purchase_from)) > 0
+      activations_used IS NULL
+      OR activations_used >= 0
     )
     ''',
 
     '''
-    CONSTRAINT ${LicenseKeyHistoryConstraint.orderIdNotBlank.constraintName}
+    CONSTRAINT ${LicenseKeyHistoryConstraint.activationsUsedWithinLimit.constraintName}
     CHECK (
-      order_id IS NULL
-      OR length(trim(order_id)) > 0
+      activation_limit IS NULL
+      OR activations_used IS NULL
+      OR activations_used <= activation_limit
     )
     ''',
 
     '''
-    CONSTRAINT ${LicenseKeyHistoryConstraint.purchaseActivationRange.constraintName}
+    CONSTRAINT ${LicenseKeyHistoryConstraint.purchasePriceNonNegative.constraintName}
+    CHECK (
+      purchase_price IS NULL
+      OR purchase_price >= 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LicenseKeyHistoryConstraint.currencyNotBlank.constraintName}
+    CHECK (
+      currency IS NULL
+      OR length(trim(currency)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LicenseKeyHistoryConstraint.currencyNoOuterWhitespace.constraintName}
+    CHECK (
+      currency IS NULL
+      OR currency = trim(currency)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LicenseKeyHistoryConstraint.validDateRange.constraintName}
+    CHECK (
+      valid_from IS NULL
+      OR valid_to IS NULL
+      OR valid_from <= valid_to
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LicenseKeyHistoryConstraint.purchaseDateBeforeValidTo.constraintName}
     CHECK (
       purchase_date IS NULL
-      OR activated_on IS NULL
-      OR purchase_date <= activated_on
+      OR valid_to IS NULL
+      OR purchase_date <= valid_to
     )
     ''',
 
     '''
-    CONSTRAINT ${LicenseKeyHistoryConstraint.purchaseExpiryRange.constraintName}
+    CONSTRAINT ${LicenseKeyHistoryConstraint.renewalDateAfterPurchaseDate.constraintName}
     CHECK (
-      purchase_date IS NULL
-      OR expires_at IS NULL
-      OR purchase_date <= expires_at
+      renewal_date IS NULL
+      OR purchase_date IS NULL
+      OR renewal_date >= purchase_date
     )
     ''',
   ];
 }
 
 enum LicenseKeyHistoryConstraint {
-  productNotBlank('chk_license_key_history_product_not_blank'),
+  historyIdNotBlank('chk_license_key_history_history_id_not_blank'),
 
   licenseKeyNotBlank('chk_license_key_history_license_key_not_blank'),
+
+  productNameNotBlank('chk_license_key_history_product_name_not_blank'),
+
+  productNameNoOuterWhitespace(
+    'chk_license_key_history_product_name_no_outer_whitespace',
+  ),
+
+  vendorNotBlank('chk_license_key_history_vendor_not_blank'),
+
+  vendorNoOuterWhitespace('chk_license_key_history_vendor_no_outer_whitespace'),
+
+  accountEmailNotBlank('chk_license_key_history_account_email_not_blank'),
+
+  accountEmailNoOuterWhitespace(
+    'chk_license_key_history_account_email_no_outer_whitespace',
+  ),
+
+  accountUsernameNotBlank('chk_license_key_history_account_username_not_blank'),
+
+  accountUsernameNoOuterWhitespace(
+    'chk_license_key_history_account_username_no_outer_whitespace',
+  ),
+
+  purchaseEmailNotBlank('chk_license_key_history_purchase_email_not_blank'),
+
+  purchaseEmailNoOuterWhitespace(
+    'chk_license_key_history_purchase_email_no_outer_whitespace',
+  ),
+
+  orderNumberNotBlank('chk_license_key_history_order_number_not_blank'),
+
+  orderNumberNoOuterWhitespace(
+    'chk_license_key_history_order_number_no_outer_whitespace',
+  ),
 
   licenseTypeOtherRequired(
     'chk_license_key_history_license_type_other_required',
@@ -161,17 +356,41 @@ enum LicenseKeyHistoryConstraint {
     'chk_license_key_history_license_type_other_must_be_null',
   ),
 
+  licenseTypeOtherNoOuterWhitespace(
+    'chk_license_key_history_license_type_other_no_outer_whitespace',
+  ),
+
   seatsPositive('chk_license_key_history_seats_positive'),
 
-  maxActivationsPositive('chk_license_key_history_max_activations_positive'),
+  activationLimitPositive('chk_license_key_history_activation_limit_positive'),
 
-  purchaseFromNotBlank('chk_license_key_history_purchase_from_not_blank'),
+  activationsUsedNonNegative(
+    'chk_license_key_history_activations_used_non_negative',
+  ),
 
-  orderIdNotBlank('chk_license_key_history_order_id_not_blank'),
+  activationsUsedWithinLimit(
+    'chk_license_key_history_activations_used_within_limit',
+  ),
 
-  purchaseActivationRange('chk_license_key_history_purchase_activation_range'),
+  purchasePriceNonNegative(
+    'chk_license_key_history_purchase_price_non_negative',
+  ),
 
-  purchaseExpiryRange('chk_license_key_history_purchase_expiry_range');
+  currencyNotBlank('chk_license_key_history_currency_not_blank'),
+
+  currencyNoOuterWhitespace(
+    'chk_license_key_history_currency_no_outer_whitespace',
+  ),
+
+  validDateRange('chk_license_key_history_valid_date_range'),
+
+  purchaseDateBeforeValidTo(
+    'chk_license_key_history_purchase_date_before_valid_to',
+  ),
+
+  renewalDateAfterPurchaseDate(
+    'chk_license_key_history_renewal_date_after_purchase_date',
+  );
 
   const LicenseKeyHistoryConstraint(this.constraintName);
 
@@ -179,10 +398,12 @@ enum LicenseKeyHistoryConstraint {
 }
 
 enum LicenseKeyHistoryIndex {
-  product('idx_license_key_history_product'),
+  productName('idx_license_key_history_product_name'),
+  vendor('idx_license_key_history_vendor'),
   licenseType('idx_license_key_history_license_type'),
-  purchaseDate('idx_license_key_history_purchase_date'),
-  expiresAt('idx_license_key_history_expires_at');
+  validTo('idx_license_key_history_valid_to'),
+  renewalDate('idx_license_key_history_renewal_date'),
+  accountEmail('idx_license_key_history_account_email');
 
   const LicenseKeyHistoryIndex(this.indexName);
 
@@ -190,10 +411,36 @@ enum LicenseKeyHistoryIndex {
 }
 
 final List<String> licenseKeyHistoryTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${LicenseKeyHistoryIndex.product.indexName} ON license_key_history(product);',
-  'CREATE INDEX IF NOT EXISTS ${LicenseKeyHistoryIndex.licenseType.indexName} ON license_key_history(license_type);',
-  'CREATE INDEX IF NOT EXISTS ${LicenseKeyHistoryIndex.purchaseDate.indexName} ON license_key_history(purchase_date);',
-  'CREATE INDEX IF NOT EXISTS ${LicenseKeyHistoryIndex.expiresAt.indexName} ON license_key_history(expires_at);',
+  '''
+  CREATE INDEX IF NOT EXISTS ${LicenseKeyHistoryIndex.productName.indexName}
+  ON license_key_history(product_name)
+  WHERE product_name IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${LicenseKeyHistoryIndex.vendor.indexName}
+  ON license_key_history(vendor)
+  WHERE vendor IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${LicenseKeyHistoryIndex.licenseType.indexName}
+  ON license_key_history(license_type)
+  WHERE license_type IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${LicenseKeyHistoryIndex.validTo.indexName}
+  ON license_key_history(valid_to)
+  WHERE valid_to IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${LicenseKeyHistoryIndex.renewalDate.indexName}
+  ON license_key_history(renewal_date)
+  WHERE renewal_date IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${LicenseKeyHistoryIndex.accountEmail.indexName}
+  ON license_key_history(account_email)
+  WHERE account_email IS NOT NULL;
+  ''',
 ];
 
 enum LicenseKeyHistoryTrigger {

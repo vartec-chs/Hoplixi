@@ -6,8 +6,8 @@ import 'loyalty_card_items.dart';
 /// History-таблица для специфичных полей карты лояльности.
 ///
 /// Данные вставляются только триггерами.
-/// Секретные поля могут быть NULL, если включён режим истории
-/// без сохранения секретов.
+/// Секретные поля cardNumber и barcodeValue могут быть NULL, если включён режим
+/// истории без сохранения секретов.
 @DataClassName('LoyaltyCardHistoryData')
 class LoyaltyCardHistory extends Table {
   TextColumn get historyId => text().references(
@@ -22,9 +22,6 @@ class LoyaltyCardHistory extends Table {
   /// Номер карты snapshot.
   TextColumn get cardNumber => text().nullable()();
 
-  /// Имя владельца карты snapshot.
-  TextColumn get holderName => text().withLength(min: 1, max: 255).nullable()();
-
   /// Значение штрихкода/QR-кода snapshot.
   TextColumn get barcodeValue => text().nullable()();
 
@@ -35,23 +32,27 @@ class LoyaltyCardHistory extends Table {
   TextColumn get barcodeTypeOther =>
       text().withLength(min: 1, max: 255).nullable()();
 
-  /// Пароль/PIN snapshot.
-  ///
-  /// Nullable intentionally:
-  /// history may store metadata-only snapshots depending on secret history policy.
-  TextColumn get password => text().nullable()();
-
-  /// Уровень программы snapshot.
-  TextColumn get tier => text().withLength(min: 1, max: 255).nullable()();
-
-  /// Дата окончания действия карты snapshot.
-  DateTimeColumn get expiryDate => dateTime().nullable()();
+  /// Эмитент или оператор программы snapshot.
+  TextColumn get issuer => text().withLength(min: 1, max: 255).nullable()();
 
   /// Сайт программы snapshot.
   TextColumn get website => text().withLength(min: 1, max: 2048).nullable()();
 
   /// Телефон поддержки snapshot.
-  TextColumn get phoneNumber => text().withLength(min: 1, max: 64).nullable()();
+  TextColumn get phone => text().withLength(min: 1, max: 64).nullable()();
+
+  /// Email поддержки или аккаунта программы snapshot.
+  TextColumn get email => text().withLength(min: 1, max: 255).nullable()();
+
+  /// Баллы/очки по карте snapshot.
+  IntColumn get points => integer().nullable()();
+
+  /// Дата начала действия карты snapshot.
+  DateTimeColumn get validFrom => dateTime().nullable()();
+
+  /// Дата окончания действия карты snapshot.
+  DateTimeColumn get validTo => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {historyId};
 
@@ -61,11 +62,26 @@ class LoyaltyCardHistory extends Table {
   @override
   List<String> get customConstraints => [
     '''
+    CONSTRAINT ${LoyaltyCardHistoryConstraint.historyIdNotBlank.constraintName}
+    CHECK (
+      length(trim(history_id)) > 0
+    )
+    ''',
+
+    '''
     CONSTRAINT ${LoyaltyCardHistoryConstraint.programNameNotBlank.constraintName}
     CHECK (
       length(trim(program_name)) > 0
     )
     ''',
+
+    '''
+    CONSTRAINT ${LoyaltyCardHistoryConstraint.programNameNoOuterWhitespace.constraintName}
+    CHECK (
+      program_name = trim(program_name)
+    )
+    ''',
+
     '''
     CONSTRAINT ${LoyaltyCardHistoryConstraint.cardNumberNotBlank.constraintName}
     CHECK (
@@ -73,13 +89,7 @@ class LoyaltyCardHistory extends Table {
       OR length(trim(card_number)) > 0
     )
     ''',
-    '''
-    CONSTRAINT ${LoyaltyCardHistoryConstraint.holderNameNotBlank.constraintName}
-    CHECK (
-      holder_name IS NULL
-      OR length(trim(holder_name)) > 0
-    )
-    ''',
+
     '''
     CONSTRAINT ${LoyaltyCardHistoryConstraint.barcodeValueNotBlank.constraintName}
     CHECK (
@@ -87,6 +97,7 @@ class LoyaltyCardHistory extends Table {
       OR length(trim(barcode_value)) > 0
     )
     ''',
+
     '''
     CONSTRAINT ${LoyaltyCardHistoryConstraint.barcodeTypeOtherRequired.constraintName}
     CHECK (
@@ -98,6 +109,7 @@ class LoyaltyCardHistory extends Table {
       )
     )
     ''',
+
     '''
     CONSTRAINT ${LoyaltyCardHistoryConstraint.barcodeTypeOtherMustBeNull.constraintName}
     CHECK (
@@ -105,20 +117,31 @@ class LoyaltyCardHistory extends Table {
       OR barcode_type_other IS NULL
     )
     ''',
+
     '''
-    CONSTRAINT ${LoyaltyCardHistoryConstraint.passwordNotBlank.constraintName}
+    CONSTRAINT ${LoyaltyCardHistoryConstraint.barcodeTypeOtherNoOuterWhitespace.constraintName}
     CHECK (
-      password IS NULL
-      OR length(trim(password)) > 0
+      barcode_type_other IS NULL
+      OR barcode_type_other = trim(barcode_type_other)
     )
     ''',
+
     '''
-    CONSTRAINT ${LoyaltyCardHistoryConstraint.tierNotBlank.constraintName}
+    CONSTRAINT ${LoyaltyCardHistoryConstraint.issuerNotBlank.constraintName}
     CHECK (
-      tier IS NULL
-      OR length(trim(tier)) > 0
+      issuer IS NULL
+      OR length(trim(issuer)) > 0
     )
     ''',
+
+    '''
+    CONSTRAINT ${LoyaltyCardHistoryConstraint.issuerNoOuterWhitespace.constraintName}
+    CHECK (
+      issuer IS NULL
+      OR issuer = trim(issuer)
+    )
+    ''',
+
     '''
     CONSTRAINT ${LoyaltyCardHistoryConstraint.websiteNotBlank.constraintName}
     CHECK (
@@ -126,22 +149,76 @@ class LoyaltyCardHistory extends Table {
       OR length(trim(website)) > 0
     )
     ''',
+
     '''
-    CONSTRAINT ${LoyaltyCardHistoryConstraint.phoneNumberNotBlank.constraintName}
+    CONSTRAINT ${LoyaltyCardHistoryConstraint.websiteNoOuterWhitespace.constraintName}
     CHECK (
-      phone_number IS NULL
-      OR length(trim(phone_number)) > 0
+      website IS NULL
+      OR website = trim(website)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LoyaltyCardHistoryConstraint.phoneNotBlank.constraintName}
+    CHECK (
+      phone IS NULL
+      OR length(trim(phone)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LoyaltyCardHistoryConstraint.phoneNoOuterWhitespace.constraintName}
+    CHECK (
+      phone IS NULL
+      OR phone = trim(phone)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LoyaltyCardHistoryConstraint.emailNotBlank.constraintName}
+    CHECK (
+      email IS NULL
+      OR length(trim(email)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LoyaltyCardHistoryConstraint.emailNoOuterWhitespace.constraintName}
+    CHECK (
+      email IS NULL
+      OR email = trim(email)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LoyaltyCardHistoryConstraint.pointsNonNegative.constraintName}
+    CHECK (
+      points IS NULL
+      OR points >= 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${LoyaltyCardHistoryConstraint.validDateRange.constraintName}
+    CHECK (
+      valid_from IS NULL
+      OR valid_to IS NULL
+      OR valid_from <= valid_to
     )
     ''',
   ];
 }
 
 enum LoyaltyCardHistoryConstraint {
+  historyIdNotBlank('chk_loyalty_card_history_history_id_not_blank'),
+
   programNameNotBlank('chk_loyalty_card_history_program_name_not_blank'),
 
-  cardNumberNotBlank('chk_loyalty_card_history_card_number_not_blank'),
+  programNameNoOuterWhitespace(
+    'chk_loyalty_card_history_program_name_no_outer_whitespace',
+  ),
 
-  holderNameNotBlank('chk_loyalty_card_history_holder_name_not_blank'),
+  cardNumberNotBlank('chk_loyalty_card_history_card_number_not_blank'),
 
   barcodeValueNotBlank('chk_loyalty_card_history_barcode_value_not_blank'),
 
@@ -153,13 +230,33 @@ enum LoyaltyCardHistoryConstraint {
     'chk_loyalty_card_history_barcode_type_other_must_be_null',
   ),
 
-  passwordNotBlank('chk_loyalty_card_history_password_not_blank'),
+  barcodeTypeOtherNoOuterWhitespace(
+    'chk_loyalty_card_history_barcode_type_other_no_outer_whitespace',
+  ),
 
-  tierNotBlank('chk_loyalty_card_history_tier_not_blank'),
+  issuerNotBlank('chk_loyalty_card_history_issuer_not_blank'),
+
+  issuerNoOuterWhitespace(
+    'chk_loyalty_card_history_issuer_no_outer_whitespace',
+  ),
 
   websiteNotBlank('chk_loyalty_card_history_website_not_blank'),
 
-  phoneNumberNotBlank('chk_loyalty_card_history_phone_number_not_blank');
+  websiteNoOuterWhitespace(
+    'chk_loyalty_card_history_website_no_outer_whitespace',
+  ),
+
+  phoneNotBlank('chk_loyalty_card_history_phone_not_blank'),
+
+  phoneNoOuterWhitespace('chk_loyalty_card_history_phone_no_outer_whitespace'),
+
+  emailNotBlank('chk_loyalty_card_history_email_not_blank'),
+
+  emailNoOuterWhitespace('chk_loyalty_card_history_email_no_outer_whitespace'),
+
+  pointsNonNegative('chk_loyalty_card_history_points_non_negative'),
+
+  validDateRange('chk_loyalty_card_history_valid_date_range');
 
   const LoyaltyCardHistoryConstraint(this.constraintName);
 
@@ -168,9 +265,9 @@ enum LoyaltyCardHistoryConstraint {
 
 enum LoyaltyCardHistoryIndex {
   programName('idx_loyalty_card_history_program_name'),
+  issuer('idx_loyalty_card_history_issuer'),
   barcodeType('idx_loyalty_card_history_barcode_type'),
-  expiryDate('idx_loyalty_card_history_expiry_date'),
-  tier('idx_loyalty_card_history_tier');
+  validTo('idx_loyalty_card_history_valid_to');
 
   const LoyaltyCardHistoryIndex(this.indexName);
 
@@ -178,10 +275,26 @@ enum LoyaltyCardHistoryIndex {
 }
 
 final List<String> loyaltyCardHistoryTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${LoyaltyCardHistoryIndex.programName.indexName} ON loyalty_card_history(program_name);',
-  'CREATE INDEX IF NOT EXISTS ${LoyaltyCardHistoryIndex.barcodeType.indexName} ON loyalty_card_history(barcode_type);',
-  'CREATE INDEX IF NOT EXISTS ${LoyaltyCardHistoryIndex.expiryDate.indexName} ON loyalty_card_history(expiry_date);',
-  'CREATE INDEX IF NOT EXISTS ${LoyaltyCardHistoryIndex.tier.indexName} ON loyalty_card_history(tier);',
+  '''
+  CREATE INDEX IF NOT EXISTS ${LoyaltyCardHistoryIndex.programName.indexName}
+  ON loyalty_card_history(program_name)
+  WHERE program_name IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${LoyaltyCardHistoryIndex.issuer.indexName}
+  ON loyalty_card_history(issuer)
+  WHERE issuer IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${LoyaltyCardHistoryIndex.barcodeType.indexName}
+  ON loyalty_card_history(barcode_type)
+  WHERE barcode_type IS NOT NULL;
+  ''',
+  '''
+  CREATE INDEX IF NOT EXISTS ${LoyaltyCardHistoryIndex.validTo.indexName}
+  ON loyalty_card_history(valid_to)
+  WHERE valid_to IS NOT NULL;
+  ''',
 ];
 
 enum LoyaltyCardHistoryTrigger {
