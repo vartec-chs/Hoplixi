@@ -80,6 +80,11 @@ class CryptoWalletHistory extends Table {
   @override
   List<String> get customConstraints => [
     '''
+    CONSTRAINT ${CryptoWalletHistoryConstraint.historyIdNotBlank.constraintName}
+    CHECK (length(trim(history_id)) > 0)
+    ''',
+
+    '''
     CONSTRAINT ${CryptoWalletHistoryConstraint.walletContentRequired.constraintName}
     CHECK (
       mnemonic IS NOT NULL
@@ -87,6 +92,46 @@ class CryptoWalletHistory extends Table {
       OR xpub IS NOT NULL
       OR xprv IS NOT NULL
       OR addresses IS NOT NULL
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${CryptoWalletHistoryConstraint.mnemonicNotBlank.constraintName}
+    CHECK (
+      mnemonic IS NULL
+      OR length(trim(mnemonic)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${CryptoWalletHistoryConstraint.privateKeyNotBlank.constraintName}
+    CHECK (
+      private_key IS NULL
+      OR length(trim(private_key)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${CryptoWalletHistoryConstraint.addressesNotBlank.constraintName}
+    CHECK (
+      addresses IS NULL
+      OR length(trim(addresses)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${CryptoWalletHistoryConstraint.xpubNotBlank.constraintName}
+    CHECK (
+      xpub IS NULL
+      OR length(trim(xpub)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${CryptoWalletHistoryConstraint.xprvNotBlank.constraintName}
+    CHECK (
+      xprv IS NULL
+      OR length(trim(xprv)) > 0
     )
     ''',
 
@@ -111,6 +156,14 @@ class CryptoWalletHistory extends Table {
     ''',
 
     '''
+    CONSTRAINT ${CryptoWalletHistoryConstraint.walletTypeOtherNoOuterWhitespace.constraintName}
+    CHECK (
+      wallet_type_other IS NULL
+      OR wallet_type_other = trim(wallet_type_other)
+    )
+    ''',
+
+    '''
     CONSTRAINT ${CryptoWalletHistoryConstraint.networkOtherRequired.constraintName}
     CHECK (
       network IS NULL
@@ -127,6 +180,14 @@ class CryptoWalletHistory extends Table {
     CHECK (
       network = 'other'
       OR network_other IS NULL
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${CryptoWalletHistoryConstraint.networkOtherNoOuterWhitespace.constraintName}
+    CHECK (
+      network_other IS NULL
+      OR network_other = trim(network_other)
     )
     ''',
 
@@ -151,6 +212,14 @@ class CryptoWalletHistory extends Table {
     ''',
 
     '''
+    CONSTRAINT ${CryptoWalletHistoryConstraint.derivationSchemeOtherNoOuterWhitespace.constraintName}
+    CHECK (
+      derivation_scheme_other IS NULL
+      OR derivation_scheme_other = trim(derivation_scheme_other)
+    )
+    ''',
+
+    '''
     CONSTRAINT ${CryptoWalletHistoryConstraint.derivationPathNotBlank.constraintName}
     CHECK (
       derivation_path IS NULL
@@ -159,10 +228,26 @@ class CryptoWalletHistory extends Table {
     ''',
 
     '''
+    CONSTRAINT ${CryptoWalletHistoryConstraint.derivationPathNoOuterWhitespace.constraintName}
+    CHECK (
+      derivation_path IS NULL
+      OR derivation_path = trim(derivation_path)
+    )
+    ''',
+
+    '''
     CONSTRAINT ${CryptoWalletHistoryConstraint.hardwareDeviceNotBlank.constraintName}
     CHECK (
       hardware_device IS NULL
       OR length(trim(hardware_device)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${CryptoWalletHistoryConstraint.hardwareDeviceNoOuterWhitespace.constraintName}
+    CHECK (
+      hardware_device IS NULL
+      OR hardware_device = trim(hardware_device)
     )
     ''',
 
@@ -185,7 +270,19 @@ class CryptoWalletHistory extends Table {
 }
 
 enum CryptoWalletHistoryConstraint {
+  historyIdNotBlank('chk_crypto_wallet_history_history_id_not_blank'),
+
   walletContentRequired('chk_crypto_wallet_history_content_required'),
+
+  mnemonicNotBlank('chk_crypto_wallet_history_mnemonic_not_blank'),
+
+  privateKeyNotBlank('chk_crypto_wallet_history_private_key_not_blank'),
+
+  addressesNotBlank('chk_crypto_wallet_history_addresses_not_blank'),
+
+  xpubNotBlank('chk_crypto_wallet_history_xpub_not_blank'),
+
+  xprvNotBlank('chk_crypto_wallet_history_xprv_not_blank'),
 
   walletTypeOtherRequired(
     'chk_crypto_wallet_history_wallet_type_other_required',
@@ -195,10 +292,18 @@ enum CryptoWalletHistoryConstraint {
     'chk_crypto_wallet_history_wallet_type_other_must_be_null',
   ),
 
+  walletTypeOtherNoOuterWhitespace(
+    'chk_crypto_wallet_history_wallet_type_other_no_outer_whitespace',
+  ),
+
   networkOtherRequired('chk_crypto_wallet_history_network_other_required'),
 
   networkOtherMustBeNull(
     'chk_crypto_wallet_history_network_other_must_be_null',
+  ),
+
+  networkOtherNoOuterWhitespace(
+    'chk_crypto_wallet_history_network_other_no_outer_whitespace',
   ),
 
   derivationSchemeOtherRequired(
@@ -209,9 +314,21 @@ enum CryptoWalletHistoryConstraint {
     'chk_crypto_wallet_history_derivation_scheme_other_must_be_null',
   ),
 
+  derivationSchemeOtherNoOuterWhitespace(
+    'chk_crypto_wallet_history_derivation_scheme_other_no_outer_whitespace',
+  ),
+
   derivationPathNotBlank('chk_crypto_wallet_history_derivation_path_not_blank'),
 
+  derivationPathNoOuterWhitespace(
+    'chk_crypto_wallet_history_derivation_path_no_outer_whitespace',
+  ),
+
   hardwareDeviceNotBlank('chk_crypto_wallet_history_hardware_device_not_blank'),
+
+  hardwareDeviceNoOuterWhitespace(
+    'chk_crypto_wallet_history_hardware_device_no_outer_whitespace',
+  ),
 
   watchOnlyHasPublicData(
     'chk_crypto_wallet_history_watch_only_has_public_data',
@@ -233,9 +350,9 @@ enum CryptoWalletHistoryIndex {
 }
 
 final List<String> cryptoWalletHistoryTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${CryptoWalletHistoryIndex.walletType.indexName} ON crypto_wallet_history(wallet_type);',
-  'CREATE INDEX IF NOT EXISTS ${CryptoWalletHistoryIndex.network.indexName} ON crypto_wallet_history(network);',
-  'CREATE INDEX IF NOT EXISTS ${CryptoWalletHistoryIndex.derivationScheme.indexName} ON crypto_wallet_history(derivation_scheme);',
+  'CREATE INDEX IF NOT EXISTS ${CryptoWalletHistoryIndex.walletType.indexName} ON crypto_wallet_history(wallet_type) WHERE wallet_type IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${CryptoWalletHistoryIndex.network.indexName} ON crypto_wallet_history(network) WHERE network IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${CryptoWalletHistoryIndex.derivationScheme.indexName} ON crypto_wallet_history(derivation_scheme) WHERE derivation_scheme IS NOT NULL;',
 ];
 
 enum CryptoWalletHistoryTrigger {

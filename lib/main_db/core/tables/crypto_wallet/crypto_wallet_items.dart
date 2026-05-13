@@ -98,6 +98,11 @@ class CryptoWalletItems extends Table {
   @override
   List<String> get customConstraints => [
     '''
+    CONSTRAINT ${CryptoWalletItemConstraint.itemIdNotBlank.constraintName}
+    CHECK (length(trim(item_id)) > 0)
+    ''',
+
+    '''
     CONSTRAINT ${CryptoWalletItemConstraint.walletContentRequired.constraintName}
     CHECK (
       mnemonic IS NOT NULL
@@ -105,6 +110,46 @@ class CryptoWalletItems extends Table {
       OR xpub IS NOT NULL
       OR xprv IS NOT NULL
       OR addresses IS NOT NULL
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${CryptoWalletItemConstraint.mnemonicNotBlank.constraintName}
+    CHECK (
+      mnemonic IS NULL
+      OR length(trim(mnemonic)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${CryptoWalletItemConstraint.privateKeyNotBlank.constraintName}
+    CHECK (
+      private_key IS NULL
+      OR length(trim(private_key)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${CryptoWalletItemConstraint.addressesNotBlank.constraintName}
+    CHECK (
+      addresses IS NULL
+      OR length(trim(addresses)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${CryptoWalletItemConstraint.xpubNotBlank.constraintName}
+    CHECK (
+      xpub IS NULL
+      OR length(trim(xpub)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${CryptoWalletItemConstraint.xprvNotBlank.constraintName}
+    CHECK (
+      xprv IS NULL
+      OR length(trim(xprv)) > 0
     )
     ''',
 
@@ -129,6 +174,14 @@ class CryptoWalletItems extends Table {
     ''',
 
     '''
+    CONSTRAINT ${CryptoWalletItemConstraint.walletTypeOtherNoOuterWhitespace.constraintName}
+    CHECK (
+      wallet_type_other IS NULL
+      OR wallet_type_other = trim(wallet_type_other)
+    )
+    ''',
+
+    '''
     CONSTRAINT ${CryptoWalletItemConstraint.networkOtherRequired.constraintName}
     CHECK (
       network IS NULL
@@ -145,6 +198,14 @@ class CryptoWalletItems extends Table {
     CHECK (
       network = 'other'
       OR network_other IS NULL
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${CryptoWalletItemConstraint.networkOtherNoOuterWhitespace.constraintName}
+    CHECK (
+      network_other IS NULL
+      OR network_other = trim(network_other)
     )
     ''',
 
@@ -169,6 +230,14 @@ class CryptoWalletItems extends Table {
     ''',
 
     '''
+    CONSTRAINT ${CryptoWalletItemConstraint.derivationSchemeOtherNoOuterWhitespace.constraintName}
+    CHECK (
+      derivation_scheme_other IS NULL
+      OR derivation_scheme_other = trim(derivation_scheme_other)
+    )
+    ''',
+
+    '''
     CONSTRAINT ${CryptoWalletItemConstraint.derivationPathNotBlank.constraintName}
     CHECK (
       derivation_path IS NULL
@@ -177,10 +246,26 @@ class CryptoWalletItems extends Table {
     ''',
 
     '''
+    CONSTRAINT ${CryptoWalletItemConstraint.derivationPathNoOuterWhitespace.constraintName}
+    CHECK (
+      derivation_path IS NULL
+      OR derivation_path = trim(derivation_path)
+    )
+    ''',
+
+    '''
     CONSTRAINT ${CryptoWalletItemConstraint.hardwareDeviceNotBlank.constraintName}
     CHECK (
       hardware_device IS NULL
       OR length(trim(hardware_device)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${CryptoWalletItemConstraint.hardwareDeviceNoOuterWhitespace.constraintName}
+    CHECK (
+      hardware_device IS NULL
+      OR hardware_device = trim(hardware_device)
     )
     ''',
 
@@ -203,7 +288,19 @@ class CryptoWalletItems extends Table {
 }
 
 enum CryptoWalletItemConstraint {
+  itemIdNotBlank('chk_crypto_wallet_items_item_id_not_blank'),
+
   walletContentRequired('chk_crypto_wallet_items_content_required'),
+
+  mnemonicNotBlank('chk_crypto_wallet_items_mnemonic_not_blank'),
+
+  privateKeyNotBlank('chk_crypto_wallet_items_private_key_not_blank'),
+
+  addressesNotBlank('chk_crypto_wallet_items_addresses_not_blank'),
+
+  xpubNotBlank('chk_crypto_wallet_items_xpub_not_blank'),
+
+  xprvNotBlank('chk_crypto_wallet_items_xprv_not_blank'),
 
   walletTypeOtherRequired('chk_crypto_wallet_items_wallet_type_other_required'),
 
@@ -211,9 +308,17 @@ enum CryptoWalletItemConstraint {
     'chk_crypto_wallet_items_wallet_type_other_must_be_null',
   ),
 
+  walletTypeOtherNoOuterWhitespace(
+    'chk_crypto_wallet_items_wallet_type_other_no_outer_whitespace',
+  ),
+
   networkOtherRequired('chk_crypto_wallet_items_network_other_required'),
 
   networkOtherMustBeNull('chk_crypto_wallet_items_network_other_must_be_null'),
+
+  networkOtherNoOuterWhitespace(
+    'chk_crypto_wallet_items_network_other_no_outer_whitespace',
+  ),
 
   derivationSchemeOtherRequired(
     'chk_crypto_wallet_items_derivation_scheme_other_required',
@@ -223,9 +328,21 @@ enum CryptoWalletItemConstraint {
     'chk_crypto_wallet_items_derivation_scheme_other_must_be_null',
   ),
 
+  derivationSchemeOtherNoOuterWhitespace(
+    'chk_crypto_wallet_items_derivation_scheme_other_no_outer_whitespace',
+  ),
+
   derivationPathNotBlank('chk_crypto_wallet_items_derivation_path_not_blank'),
 
+  derivationPathNoOuterWhitespace(
+    'chk_crypto_wallet_items_derivation_path_no_outer_whitespace',
+  ),
+
   hardwareDeviceNotBlank('chk_crypto_wallet_items_hardware_device_not_blank'),
+
+  hardwareDeviceNoOuterWhitespace(
+    'chk_crypto_wallet_items_hardware_device_no_outer_whitespace',
+  ),
 
   watchOnlyHasPublicData('chk_crypto_wallet_items_watch_only_has_public_data');
 
@@ -245,9 +362,9 @@ enum CryptoWalletItemIndex {
 }
 
 final List<String> cryptoWalletItemsTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${CryptoWalletItemIndex.walletType.indexName} ON crypto_wallet_items(wallet_type);',
-  'CREATE INDEX IF NOT EXISTS ${CryptoWalletItemIndex.network.indexName} ON crypto_wallet_items(network);',
-  'CREATE INDEX IF NOT EXISTS ${CryptoWalletItemIndex.derivationScheme.indexName} ON crypto_wallet_items(derivation_scheme);',
+  'CREATE INDEX IF NOT EXISTS ${CryptoWalletItemIndex.walletType.indexName} ON crypto_wallet_items(wallet_type) WHERE wallet_type IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${CryptoWalletItemIndex.network.indexName} ON crypto_wallet_items(network) WHERE network IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${CryptoWalletItemIndex.derivationScheme.indexName} ON crypto_wallet_items(derivation_scheme) WHERE derivation_scheme IS NOT NULL;',
 ];
 
 enum CryptoWalletItemTrigger {
