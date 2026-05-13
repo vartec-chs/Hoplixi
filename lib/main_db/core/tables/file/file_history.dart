@@ -29,6 +29,32 @@ class FileHistory extends Table {
 
   @override
   String get tableName => 'file_history';
+
+  @override
+  List<String> get customConstraints => [
+    '''
+    CONSTRAINT ${FileHistoryConstraint.historyIdNotBlank.constraintName}
+    CHECK (length(trim(history_id)) > 0)
+    ''',
+
+    '''
+    CONSTRAINT ${FileHistoryConstraint.metadataHistoryIdNotBlank.constraintName}
+    CHECK (
+      metadata_history_id IS NULL
+      OR length(trim(metadata_history_id)) > 0
+    )
+    ''',
+  ];
+}
+
+enum FileHistoryConstraint {
+  historyIdNotBlank('chk_file_history_history_id_not_blank'),
+
+  metadataHistoryIdNotBlank('chk_file_history_metadata_history_id_not_blank');
+
+  const FileHistoryConstraint(this.constraintName);
+
+  final String constraintName;
 }
 
 enum FileHistoryIndex {
@@ -40,7 +66,7 @@ enum FileHistoryIndex {
 }
 
 final List<String> fileHistoryTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${FileHistoryIndex.metadataHistoryId.indexName} ON file_history(metadata_history_id);',
+  'CREATE INDEX IF NOT EXISTS ${FileHistoryIndex.metadataHistoryId.indexName} ON file_history(metadata_history_id) WHERE metadata_history_id IS NOT NULL;',
 ];
 
 enum FileHistoryTrigger {

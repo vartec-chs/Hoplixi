@@ -31,6 +31,32 @@ class FileItems extends Table {
 
   @override
   String get tableName => 'file_items';
+
+  @override
+  List<String> get customConstraints => [
+    '''
+    CONSTRAINT ${FileItemConstraint.itemIdNotBlank.constraintName}
+    CHECK (length(trim(item_id)) > 0)
+    ''',
+
+    '''
+    CONSTRAINT ${FileItemConstraint.metadataIdNotBlank.constraintName}
+    CHECK (
+      metadata_id IS NULL
+      OR length(trim(metadata_id)) > 0
+    )
+    ''',
+  ];
+}
+
+enum FileItemConstraint {
+  itemIdNotBlank('chk_file_items_item_id_not_blank'),
+
+  metadataIdNotBlank('chk_file_items_metadata_id_not_blank');
+
+  const FileItemConstraint(this.constraintName);
+
+  final String constraintName;
 }
 
 enum FileItemIndex {
@@ -42,7 +68,7 @@ enum FileItemIndex {
 }
 
 final List<String> fileItemsTableIndexes = [
-  'CREATE INDEX IF NOT EXISTS ${FileItemIndex.metadataId.indexName} ON file_items(metadata_id);',
+  'CREATE INDEX IF NOT EXISTS ${FileItemIndex.metadataId.indexName} ON file_items(metadata_id) WHERE metadata_id IS NOT NULL;',
 ];
 
 enum FileItemTrigger {

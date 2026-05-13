@@ -1,7 +1,9 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
-enum FileIntegrityStatus { unknown, ok, missing, corrupted, deleted }
+enum FileAvailabilityStatus { available, missing, deleted }
+
+enum FileIntegrityStatus { unknown, valid, corrupted }
 
 @DataClassName('FileMetadataData')
 class FileMetadata extends Table {
@@ -29,11 +31,13 @@ class FileMetadata extends Table {
   /// SHA-256 хэш для проверки целостности.
   TextColumn get sha256 => text().withLength(min: 64, max: 64).nullable()();
 
-  /// Файл не найден по ожидаемому пути.
-  BoolColumn get isMissing => boolean().withDefault(const Constant(false))();
+  /// Статус физической доступности файла.
+  TextColumn get availabilityStatus => textEnum<FileAvailabilityStatus>()
+      .withDefault(const Constant('available'))();
 
-  /// Файл штатно удалён через приложение.
-  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  /// Статус целостности файла.
+  TextColumn get integrityStatus => textEnum<FileIntegrityStatus>()
+      .withDefault(const Constant('unknown'))();
 
   /// Когда впервые обнаружено отсутствие файла.
   DateTimeColumn get missingDetectedAt => dateTime().nullable()();
@@ -41,15 +45,8 @@ class FileMetadata extends Table {
   /// Когда файл штатно удалён через приложение.
   DateTimeColumn get deletedAt => dateTime().nullable()();
 
-  /// Последний известный путь, если текущий `filePath` уже невалиден.
-  TextColumn get lastKnownPath => text().nullable()();
-
   /// Время последней проверки наличия и SHA-256.
   DateTimeColumn get lastIntegrityCheckAt => dateTime().nullable()();
-
-  /// Последний известный результат проверки физического файла.
-  TextColumn get integrityStatus =>
-      textEnum<FileIntegrityStatus>().withDefault(const Constant('unknown'))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -60,9 +57,21 @@ class FileMetadata extends Table {
   @override
   List<String> get customConstraints => [
     '''
+    CONSTRAINT ${FileMetadataConstraint.idNotBlank.constraintName}
+    CHECK (length(trim(id)) > 0)
+    ''',
+
+    '''
     CONSTRAINT ${FileMetadataConstraint.fileNameNotBlank.constraintName}
     CHECK (
       length(trim(file_name)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${FileMetadataConstraint.fileNameNoOuterWhitespace.constraintName}
+    CHECK (
+      file_name = trim(file_name)
     )
     ''',
 
@@ -75,6 +84,14 @@ class FileMetadata extends Table {
     ''',
 
     '''
+    CONSTRAINT ${FileMetadataConstraint.fileExtensionNoOuterWhitespace.constraintName}
+    CHECK (
+      file_extension IS NULL
+      OR file_extension = trim(file_extension)
+    )
+    ''',
+
+    '''
     CONSTRAINT ${FileMetadataConstraint.filePathNotBlank.constraintName}
     CHECK (
       file_path IS NULL
@@ -83,9 +100,24 @@ class FileMetadata extends Table {
     ''',
 
     '''
+    CONSTRAINT ${FileMetadataConstraint.filePathNoOuterWhitespace.constraintName}
+    CHECK (
+      file_path IS NULL
+      OR file_path = trim(file_path)
+    )
+    ''',
+
+    '''
     CONSTRAINT ${FileMetadataConstraint.mimeTypeNotBlank.constraintName}
     CHECK (
       length(trim(mime_type)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${FileMetadataConstraint.mimeTypeNoOuterWhitespace.constraintName}
+    CHECK (
+      mime_type = trim(mime_type)
     )
     ''',
 
@@ -101,6 +133,14 @@ class FileMetadata extends Table {
     CHECK (
       sha256 IS NULL
       OR length(trim(sha256)) > 0 
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${FileMetadataConstraint.sha256NoOuterWhitespace.constraintName}
+    CHECK (
+      sha256 IS NULL
+      OR sha256 = trim(sha256)
     )
     ''',
 
@@ -121,92 +161,99 @@ class FileMetadata extends Table {
     ''',
 
     '''
-    CONSTRAINT ${FileMetadataConstraint.lastKnownPathNotBlank.constraintName}
+    CONSTRAINT ${FileMetadataConstraint.availabilityMissingDateConsistent.constraintName}
     CHECK (
-      last_known_path IS NULL
-      OR length(trim(last_known_path)) > 0
+      (availability_status != 'missing' AND missing_detected_at IS NULL)
+      OR
+      (availability_status = 'missing' AND missing_detected_at IS NOT NULL)
     )
     ''',
 
     '''
-    CONSTRAINT ${FileMetadataConstraint.integrityStatusKnown.constraintName}
+    CONSTRAINT ${FileMetadataConstraint.availabilityDeletedDateConsistent.constraintName}
     CHECK (
-      integrity_status IN (
-        'unknown',
-        'ok',
-        'missing',
-        'corrupted',
-        'deleted'
+      (availability_status != 'deleted' AND deleted_at IS NULL)
+      OR
+      (availability_status = 'deleted' AND deleted_at IS NOT NULL)
+    )
+    ''',
+
+    '''
+    CONSTRAINT ${FileMetadataConstraint.availabilityMissingDeletedDatesConflict.constraintName}
+    CHECK (
+      NOT (
+        missing_detected_at IS NOT NULL
+        AND deleted_at IS NOT NULL
       )
     )
     ''',
 
     '''
-    CONSTRAINT ${FileMetadataConstraint.missingDetectedAtRequired.constraintName}
+    CONSTRAINT ${FileMetadataConstraint.integrityRequiresAvailable.constraintName}
     CHECK (
-      is_missing = 0
-      OR missing_detected_at IS NOT NULL
+      integrity_status != 'corrupted'
+      OR availability_status = 'available'
     )
     ''',
 
     '''
-    CONSTRAINT ${FileMetadataConstraint.deletedAtRequired.constraintName}
+    CONSTRAINT ${FileMetadataConstraint.validIntegrityRequiresCheckDate.constraintName}
     CHECK (
-      is_deleted = 0
-      OR deleted_at IS NOT NULL
+      integrity_status != 'valid'
+      OR last_integrity_check_at IS NOT NULL
     )
     ''',
 
     '''
-    CONSTRAINT ${FileMetadataConstraint.integrityStatusMatchesMissing.constraintName}
+    CONSTRAINT ${FileMetadataConstraint.corruptedIntegrityRequiresCheckDate.constraintName}
     CHECK (
-      (integrity_status = 'missing' AND is_missing = 1 AND is_deleted = 0)
-      OR (integrity_status != 'missing' AND is_missing = 0)
-    )
-    ''',
-
-    '''
-    CONSTRAINT ${FileMetadataConstraint.integrityStatusMatchesDeleted.constraintName}
-    CHECK (
-      (integrity_status = 'deleted' AND is_deleted = 1 AND is_missing = 0)
-      OR (integrity_status != 'deleted' AND is_deleted = 0)
+      integrity_status != 'corrupted'
+      OR last_integrity_check_at IS NOT NULL
     )
     ''',
   ];
 }
 
 enum FileMetadataConstraint {
+  idNotBlank('chk_file_metadata_id_not_blank'),
+
   fileNameNotBlank('chk_file_metadata_file_name_not_blank'),
+
+  fileNameNoOuterWhitespace('chk_file_metadata_file_name_no_outer_whitespace'),
 
   fileExtensionNotBlank('chk_file_metadata_file_extension_not_blank'),
 
+  fileExtensionNoOuterWhitespace('chk_file_metadata_file_extension_no_outer_whitespace'),
+
   filePathNotBlank('chk_file_metadata_file_path_not_blank'),
 
+  filePathNoOuterWhitespace('chk_file_metadata_file_path_no_outer_whitespace'),
+
   mimeTypeNotBlank('chk_file_metadata_mime_type_not_blank'),
+
+  mimeTypeNoOuterWhitespace('chk_file_metadata_mime_type_no_outer_whitespace'),
 
   fileSizeNonNegative('chk_file_metadata_file_size_non_negative'),
 
   sha256NotBlank('chk_file_metadata_sha256_not_blank'),
 
+  sha256NoOuterWhitespace('chk_file_metadata_sha256_no_outer_whitespace'),
+
   sha256Length('chk_file_metadata_sha256_length'),
 
   sha256Hex('chk_file_metadata_sha256_hex'),
 
-  lastKnownPathNotBlank('chk_file_metadata_last_known_path_not_blank'),
+  availabilityMissingDateConsistent('chk_file_metadata_availability_missing_date_consistent'),
 
-  integrityStatusKnown('chk_file_metadata_integrity_status_known'),
+  availabilityDeletedDateConsistent('chk_file_metadata_availability_deleted_date_consistent'),
 
-  missingDetectedAtRequired('chk_file_metadata_missing_detected_at_required'),
+  availabilityMissingDeletedDatesConflict('chk_file_metadata_availability_missing_deleted_dates_conflict'),
 
-  deletedAtRequired('chk_file_metadata_deleted_at_required'),
+  integrityRequiresAvailable('chk_file_metadata_integrity_requires_available'),
 
-  integrityStatusMatchesMissing(
-    'chk_file_metadata_integrity_status_matches_missing',
-  ),
+  validIntegrityRequiresCheckDate('chk_file_metadata_valid_integrity_requires_check_date'),
 
-  integrityStatusMatchesDeleted(
-    'chk_file_metadata_integrity_status_matches_deleted',
-  );
+  corruptedIntegrityRequiresCheckDate('chk_file_metadata_corrupted_integrity_requires_check_date');
 
   const FileMetadataConstraint(this.constraintName);
 
@@ -218,6 +265,7 @@ enum FileMetadataIndex {
   fileExtension('idx_file_metadata_file_extension'),
   mimeType('idx_file_metadata_mime_type'),
   sha256('idx_file_metadata_sha256'),
+  availabilityStatus('idx_file_metadata_availability_status'),
   integrityStatus('idx_file_metadata_integrity_status'),
   lastIntegrityCheckAt('idx_file_metadata_last_integrity_check_at');
 
@@ -228,9 +276,10 @@ enum FileMetadataIndex {
 
 final List<String> fileMetadataTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.fileName.indexName} ON file_metadata(file_name);',
-  'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.fileExtension.indexName} ON file_metadata(file_extension);',
-  'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.mimeType.indexName} ON file_metadata(mime_type);',
-  'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.sha256.indexName} ON file_metadata(sha256);',
+  'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.fileExtension.indexName} ON file_metadata(file_extension) WHERE file_extension IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.mimeType.indexName} ON file_metadata(mime_type) WHERE mime_type IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.sha256.indexName} ON file_metadata(sha256) WHERE sha256 IS NOT NULL;',
+  'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.availabilityStatus.indexName} ON file_metadata(availability_status);',
   'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.integrityStatus.indexName} ON file_metadata(integrity_status);',
-  'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.lastIntegrityCheckAt.indexName} ON file_metadata(last_integrity_check_at);',
+  'CREATE INDEX IF NOT EXISTS ${FileMetadataIndex.lastIntegrityCheckAt.indexName} ON file_metadata(last_integrity_check_at) WHERE last_integrity_check_at IS NOT NULL;',
 ];
