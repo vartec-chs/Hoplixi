@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/main_db/core/dao/daos.dart';
 import 'package:hoplixi/main_db/core/old/daos/daos.dart';
 import 'package:hoplixi/main_db/core/tables/tables.dart';
 
@@ -74,7 +75,25 @@ part 'main_store.g.dart';
     SshKeyHistory,
     WifiHistory,
   ],
-  daos: [],
+  daos: [
+    VaultItemsDao,
+    PasswordItemsDao,
+    OtpItemsDao,
+    NoteItemsDao,
+    BankCardItemsDao,
+    DocumentItemsDao,
+    FileItemsDao,
+    ContactItemsDao,
+    ApiKeyItemsDao,
+    SshKeyItemsDao,
+    CertificateItemsDao,
+    CryptoWalletItemsDao,
+    WifiItemsDao,
+    IdentityItemsDao,
+    LicenseKeyItemsDao,
+    RecoveryCodesItemsDao,
+    LoyaltyCardItemsDao,
+  ],
 )
 class MainStore extends _$MainStore {
   static const String _logTag = 'MainStore';
