@@ -8,7 +8,7 @@ export 'crypto_wallet_dto.dart';
 export 'custom_field_dto.dart';
 export 'document_dto.dart';
 export 'dto.dart';
-export 'field_update.dart';
+export '../field_update.dart';
 export 'file_dto.dart';
 export 'file_metadata_dto.dart';
 export 'icon_dto.dart';

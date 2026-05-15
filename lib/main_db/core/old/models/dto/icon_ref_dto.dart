@@ -1,4 +1,4 @@
-import 'package:hoplixi/main_db/core/old/models/enums/icon_source.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/icon_source.dart';
 
 class IconRefDto {
   const IconRefDto({required this.source, required this.value});

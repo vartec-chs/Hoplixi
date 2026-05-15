@@ -41,4 +41,8 @@ class TagsDao extends DatabaseAccessor<MainStore> with _$TagsDaoMixin {
   Future<List<TagsData>> searchTagsByName(String query) {
     return (select(tags)..where((t) => t.name.contains(query))).get();
   }
+
+  Future<List<TagsData>> getTagsByIds(List<String> ids) {
+    return (select(tags)..where((t) => t.id.isIn(ids))).get();
+  }
 }
