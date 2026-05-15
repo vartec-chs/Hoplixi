@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../tables/document/document_types.dart';
+import '../field_update.dart';
 import 'vault_item_base_dto.dart';
 
 part 'document_dto.freezed.dart';
@@ -270,4 +271,19 @@ sealed class DocumentPageCardDto with _$DocumentPageCardDto {
 
   factory DocumentPageCardDto.fromJson(Map<String, dynamic> json) =>
       _$DocumentPageCardDtoFromJson(json);
+}
+
+@freezed
+sealed class PatchDocumentDataDto with _$PatchDocumentDataDto {
+  const factory PatchDocumentDataDto({
+    @Default(FieldUpdate.keep()) FieldUpdate<String> currentVersionId,
+  }) = _PatchDocumentDataDto;
+}
+
+@freezed
+sealed class PatchDocumentDto with _$PatchDocumentDto {
+  const factory PatchDocumentDto({
+    required VaultItemPatchDto item,
+    required PatchDocumentDataDto document,
+  }) = _PatchDocumentDto;
 }

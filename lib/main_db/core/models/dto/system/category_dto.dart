@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../../../tables/system/categories.dart';
+import '../../field_update.dart';
 
 part 'category_dto.freezed.dart';
 part 'category_dto.g.dart';
@@ -77,4 +79,17 @@ sealed class CategoryTreeNodeDto with _$CategoryTreeNodeDto {
 
   factory CategoryTreeNodeDto.fromJson(Map<String, dynamic> json) =>
       _$CategoryTreeNodeDtoFromJson(json);
+}
+
+@freezed
+sealed class PatchCategoryDto with _$PatchCategoryDto {
+  const factory PatchCategoryDto({
+    required String id,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> name,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> description,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> iconRefId,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> color,
+    @Default(FieldUpdate.keep()) FieldUpdate<CategoryType> type,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> parentId,
+  }) = _PatchCategoryDto;
 }

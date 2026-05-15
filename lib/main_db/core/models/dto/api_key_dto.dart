@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../tables/api_key/api_key_items.dart';
+import '../field_update.dart';
 import 'vault_item_base_dto.dart';
 
 part 'api_key_dto.freezed.dart';
@@ -99,6 +100,38 @@ sealed class ApiKeyCardDto with _$ApiKeyCardDto {
 
   factory ApiKeyCardDto.fromJson(Map<String, dynamic> json) =>
       _$ApiKeyCardDtoFromJson(json);
+}
+
+@freezed
+sealed class PatchApiKeyDataDto with _$PatchApiKeyDataDto {
+  const factory PatchApiKeyDataDto({
+    @Default(FieldUpdate.keep()) FieldUpdate<String> service,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> key,
+
+    @Default(FieldUpdate.keep()) FieldUpdate<ApiKeyTokenType> tokenType,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> tokenTypeOther,
+
+    @Default(FieldUpdate.keep()) FieldUpdate<ApiKeyEnvironment> environment,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> environmentOther,
+
+    @Default(FieldUpdate.keep()) FieldUpdate<DateTime> expiresAt,
+    @Default(FieldUpdate.keep()) FieldUpdate<DateTime> revokedAt,
+
+    @Default(FieldUpdate.keep()) FieldUpdate<int> rotationPeriodDays,
+    @Default(FieldUpdate.keep()) FieldUpdate<DateTime> lastRotatedAt,
+
+    @Default(FieldUpdate.keep()) FieldUpdate<String> owner,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> baseUrl,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> scopesText,
+  }) = _PatchApiKeyDataDto;
+}
+
+@freezed
+sealed class PatchApiKeyDto with _$PatchApiKeyDto {
+  const factory PatchApiKeyDto({
+    required VaultItemPatchDto item,
+    required PatchApiKeyDataDto apiKey,
+  }) = _PatchApiKeyDto;
 }
 
 extension ApiKeyDataDtoX on ApiKeyDataDto {

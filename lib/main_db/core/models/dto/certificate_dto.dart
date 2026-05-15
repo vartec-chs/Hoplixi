@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../tables/certificate/certificate_items.dart';
+import '../field_update.dart';
 import 'converters.dart';
 import 'vault_item_base_dto.dart';
 
@@ -97,4 +98,33 @@ sealed class CertificateCardDto with _$CertificateCardDto {
 
   factory CertificateCardDto.fromJson(Map<String, dynamic> json) =>
       _$CertificateCardDtoFromJson(json);
+}
+
+@freezed
+sealed class PatchCertificateDataDto with _$PatchCertificateDataDto {
+  const factory PatchCertificateDataDto({
+    @Default(FieldUpdate.keep()) FieldUpdate<CertificateFormat> certificateFormat,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> certificateFormatOther,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> certificatePem,
+    @Default(FieldUpdate.keep()) FieldUpdate<Uint8List> certificateBlob,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> privateKey,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> privateKeyPassword,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> passwordForPfx,
+    @Default(FieldUpdate.keep()) FieldUpdate<CertificateKeyAlgorithm> keyAlgorithm,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> keyAlgorithmOther,
+    @Default(FieldUpdate.keep()) FieldUpdate<int> keySize,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> serialNumber,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> issuer,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> subject,
+    @Default(FieldUpdate.keep()) FieldUpdate<DateTime> validFrom,
+    @Default(FieldUpdate.keep()) FieldUpdate<DateTime> validTo,
+  }) = _PatchCertificateDataDto;
+}
+
+@freezed
+sealed class PatchCertificateDto with _$PatchCertificateDto {
+  const factory PatchCertificateDto({
+    required VaultItemPatchDto item,
+    required PatchCertificateDataDto certificate,
+  }) = _PatchCertificateDto;
 }

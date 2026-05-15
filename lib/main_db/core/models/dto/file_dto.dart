@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../tables/file/file_metadata.dart';
+import '../field_update.dart';
 import 'vault_item_base_dto.dart';
 
 part 'file_dto.freezed.dart';
@@ -124,4 +125,36 @@ sealed class FileCardDto with _$FileCardDto {
 
   factory FileCardDto.fromJson(Map<String, dynamic> json) =>
       _$FileCardDtoFromJson(json);
+}
+@freezed
+sealed class PatchFileDataDto with _$PatchFileDataDto {
+  const factory PatchFileDataDto({
+    @Default(FieldUpdate.keep()) FieldUpdate<String> metadataId,
+  }) = _PatchFileDataDto;
+}
+
+@freezed
+sealed class PatchFileMetadataDataDto with _$PatchFileMetadataDataDto {
+  const factory PatchFileMetadataDataDto({
+    @Default(FieldUpdate.keep()) FieldUpdate<String> fileName,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> fileExtension,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> filePath,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> mimeType,
+    @Default(FieldUpdate.keep()) FieldUpdate<int> fileSize,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> sha256,
+    @Default(FieldUpdate.keep()) FieldUpdate<FileAvailabilityStatus> availabilityStatus,
+    @Default(FieldUpdate.keep()) FieldUpdate<FileIntegrityStatus> integrityStatus,
+    @Default(FieldUpdate.keep()) FieldUpdate<DateTime> missingDetectedAt,
+    @Default(FieldUpdate.keep()) FieldUpdate<DateTime> deletedAt,
+    @Default(FieldUpdate.keep()) FieldUpdate<DateTime> lastIntegrityCheckAt,
+  }) = _PatchFileMetadataDataDto;
+}
+
+@freezed
+sealed class PatchFileDto with _$PatchFileDto {
+  const factory PatchFileDto({
+    required VaultItemPatchDto item,
+    required PatchFileDataDto file,
+    PatchFileMetadataDataDto? metadata,
+  }) = _PatchFileDto;
 }

@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../field_update.dart';
 import 'vault_item_base_dto.dart';
 
 part 'note_dto.freezed.dart';
@@ -68,4 +69,20 @@ sealed class NoteCardDto with _$NoteCardDto {
 
   factory NoteCardDto.fromJson(Map<String, dynamic> json) =>
       _$NoteCardDtoFromJson(json);
+}
+
+@freezed
+sealed class PatchNoteDataDto with _$PatchNoteDataDto {
+  const factory PatchNoteDataDto({
+    @Default(FieldUpdate.keep()) FieldUpdate<String> deltaJson,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> content,
+  }) = _PatchNoteDataDto;
+}
+
+@freezed
+sealed class PatchNoteDto with _$PatchNoteDto {
+  const factory PatchNoteDto({
+    required VaultItemPatchDto item,
+    required PatchNoteDataDto note,
+  }) = _PatchNoteDto;
 }

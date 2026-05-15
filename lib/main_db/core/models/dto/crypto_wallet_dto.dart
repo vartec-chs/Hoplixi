@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../tables/crypto_wallet/crypto_wallet_items.dart';
+import '../field_update.dart';
 import 'vault_item_base_dto.dart';
 
 part 'crypto_wallet_dto.freezed.dart';
@@ -89,4 +90,32 @@ sealed class CryptoWalletCardDto with _$CryptoWalletCardDto {
 
   factory CryptoWalletCardDto.fromJson(Map<String, dynamic> json) =>
       _$CryptoWalletCardDtoFromJson(json);
+}
+
+@freezed
+sealed class PatchCryptoWalletDataDto with _$PatchCryptoWalletDataDto {
+  const factory PatchCryptoWalletDataDto({
+    @Default(FieldUpdate.keep()) FieldUpdate<CryptoWalletType> walletType,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> walletTypeOther,
+    @Default(FieldUpdate.keep()) FieldUpdate<CryptoNetwork> network,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> networkOther,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> mnemonic,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> privateKey,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> derivationPath,
+    @Default(FieldUpdate.keep()) FieldUpdate<CryptoDerivationScheme> derivationScheme,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> derivationSchemeOther,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> addresses,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> xpub,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> xprv,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> hardwareDevice,
+    @Default(FieldUpdate.keep()) FieldUpdate<bool> watchOnly,
+  }) = _PatchCryptoWalletDataDto;
+}
+
+@freezed
+sealed class PatchCryptoWalletDto with _$PatchCryptoWalletDto {
+  const factory PatchCryptoWalletDto({
+    required VaultItemPatchDto item,
+    required PatchCryptoWalletDataDto cryptoWallet,
+  }) = _PatchCryptoWalletDto;
 }

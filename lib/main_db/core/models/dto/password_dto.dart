@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../field_update.dart';
 import 'vault_item_base_dto.dart';
 
 part 'password_dto.freezed.dart';
@@ -75,4 +76,23 @@ sealed class PasswordCardDto with _$PasswordCardDto {
 
   factory PasswordCardDto.fromJson(Map<String, dynamic> json) =>
       _$PasswordCardDtoFromJson(json);
+}
+
+@freezed
+sealed class PatchPasswordDataDto with _$PatchPasswordDataDto {
+  const factory PatchPasswordDataDto({
+    @Default(FieldUpdate.keep()) FieldUpdate<String> login,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> email,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> password,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> url,
+    @Default(FieldUpdate.keep()) FieldUpdate<DateTime> expiresAt,
+  }) = _PatchPasswordDataDto;
+}
+
+@freezed
+sealed class PatchPasswordDto with _$PatchPasswordDto {
+  const factory PatchPasswordDto({
+    required VaultItemPatchDto item,
+    required PatchPasswordDataDto password,
+  }) = _PatchPasswordDto;
 }

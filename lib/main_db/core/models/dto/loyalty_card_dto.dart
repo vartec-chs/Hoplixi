@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../tables/loyalty_card/loyalty_card_items.dart';
+import '../field_update.dart';
 import 'vault_item_base_dto.dart';
 
 part 'loyalty_card_dto.freezed.dart';
@@ -103,4 +104,30 @@ sealed class LoyaltyCardCardDto with _$LoyaltyCardCardDto {
 
   factory LoyaltyCardCardDto.fromJson(Map<String, dynamic> json) =>
       _$LoyaltyCardCardDtoFromJson(json);
+}
+
+@freezed
+sealed class PatchLoyaltyCardDataDto with _$PatchLoyaltyCardDataDto {
+  const factory PatchLoyaltyCardDataDto({
+    @Default(FieldUpdate.keep()) FieldUpdate<String> programName,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> cardNumber,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> barcodeValue,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> password,
+    @Default(FieldUpdate.keep()) FieldUpdate<LoyaltyBarcodeType> barcodeType,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> barcodeTypeOther,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> issuer,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> website,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> phone,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> email,
+    @Default(FieldUpdate.keep()) FieldUpdate<DateTime> validFrom,
+    @Default(FieldUpdate.keep()) FieldUpdate<DateTime> validTo,
+  }) = _PatchLoyaltyCardDataDto;
+}
+
+@freezed
+sealed class PatchLoyaltyCardDto with _$PatchLoyaltyCardDto {
+  const factory PatchLoyaltyCardDto({
+    required VaultItemPatchDto item,
+    required PatchLoyaltyCardDataDto loyaltyCard,
+  }) = _PatchLoyaltyCardDto;
 }

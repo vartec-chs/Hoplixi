@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../tables/vault_items/vault_item_custom_fields.dart';
+import '../field_update.dart';
 
 part 'custom_field_dto.freezed.dart';
 part 'custom_field_dto.g.dart';
@@ -22,4 +23,15 @@ sealed class CustomFieldDto with _$CustomFieldDto {
 
   factory CustomFieldDto.fromJson(Map<String, dynamic> json) =>
       _$CustomFieldDtoFromJson(json);
+}
+@freezed
+sealed class PatchCustomFieldDto with _$PatchCustomFieldDto {
+  const factory PatchCustomFieldDto({
+    required String id,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> label,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> value,
+    @Default(FieldUpdate.keep()) FieldUpdate<CustomFieldType> fieldType,
+    @Default(FieldUpdate.keep()) FieldUpdate<bool> isSecret,
+    @Default(FieldUpdate.keep()) FieldUpdate<int> sortOrder,
+  }) = _PatchCustomFieldDto;
 }

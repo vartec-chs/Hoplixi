@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'vault_item_base_dto.dart';
+import '../field_update.dart';
 
 part 'identity_dto.freezed.dart';
 part 'identity_dto.g.dart';
@@ -86,4 +87,34 @@ sealed class IdentityCardDto with _$IdentityCardDto {
 
   factory IdentityCardDto.fromJson(Map<String, dynamic> json) =>
       _$IdentityCardDtoFromJson(json);
+}
+
+@freezed
+sealed class PatchIdentityDataDto with _$PatchIdentityDataDto {
+  const factory PatchIdentityDataDto({
+    @Default(FieldUpdate.keep()) FieldUpdate<String> firstName,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> middleName,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> lastName,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> displayName,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> username,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> email,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> phone,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> address,
+    @Default(FieldUpdate.keep()) FieldUpdate<DateTime> birthday,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> company,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> jobTitle,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> website,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> taxId,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> nationalId,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> passportNumber,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> driverLicenseNumber,
+  }) = _PatchIdentityDataDto;
+}
+
+@freezed
+sealed class PatchIdentityDto with _$PatchIdentityDto {
+  const factory PatchIdentityDto({
+    required VaultItemPatchDto item,
+    required PatchIdentityDataDto identity,
+  }) = _PatchIdentityDto;
 }

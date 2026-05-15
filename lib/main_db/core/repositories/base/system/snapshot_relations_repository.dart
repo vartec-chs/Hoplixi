@@ -1,12 +1,12 @@
 import 'package:uuid/uuid.dart';
 import 'package:drift/drift.dart' as drift;
 
-import '../../main_store.dart';
+import '../../../main_store.dart';
 
-class SnapshotRelationsService {
+class SnapshotRelationsRepository {
   final MainStore db;
 
-  SnapshotRelationsService(this.db);
+  SnapshotRelationsRepository(this.db);
 
   Future<String?> snapshotCategoryForItem({
     required String? categoryId,

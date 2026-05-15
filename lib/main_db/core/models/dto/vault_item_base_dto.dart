@@ -1,28 +1,28 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../tables/vault_items/vault_items.dart';
+import '../field_update.dart';
 
 part 'vault_item_base_dto.freezed.dart';
 part 'vault_item_base_dto.g.dart';
 
 @freezed
-sealed class VaultItemCreateDto with _$VaultItemCreateDto {
-  const factory VaultItemCreateDto({
-    required String name,
-    String? description,
-    String? categoryId,
-    String? iconRefId,
+sealed class VaultItemPatchDto with _$VaultItemPatchDto {
+  const factory VaultItemPatchDto({
+    required String itemId,
 
-    @Default(false) bool isFavorite,
-    @Default(false) bool isPinned,
-  }) = _VaultItemCreateDto;
+    @Default(FieldUpdate.keep()) FieldUpdate<String> name,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> description,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> categoryId,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> iconRefId,
 
-  factory VaultItemCreateDto.fromJson(Map<String, dynamic> json) =>
-      _$VaultItemCreateDtoFromJson(json);
+    @Default(FieldUpdate.keep()) FieldUpdate<bool> isFavorite,
+    @Default(FieldUpdate.keep()) FieldUpdate<bool> isPinned,
+  }) = _VaultItemPatchDto;
 }
 
 @freezed
-sealed class VaultItemUpdateDto with _$VaultItemUpdateDto {
+sealed class VaultItemCreateDto with _$VaultItemCreateDto {
   const factory VaultItemUpdateDto({
     required String itemId,
 

@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../tables/wifi/wifi_items.dart';
+import '../field_update.dart';
 import 'vault_item_base_dto.dart';
 
 part 'wifi_dto.freezed.dart';
@@ -78,4 +79,25 @@ sealed class WifiCardDto with _$WifiCardDto {
 
   factory WifiCardDto.fromJson(Map<String, dynamic> json) =>
       _$WifiCardDtoFromJson(json);
+}
+
+@freezed
+sealed class PatchWifiDataDto with _$PatchWifiDataDto {
+  const factory PatchWifiDataDto({
+    @Default(FieldUpdate.keep()) FieldUpdate<String> ssid,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> password,
+    @Default(FieldUpdate.keep()) FieldUpdate<WifiSecurityType> securityType,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> securityTypeOther,
+    @Default(FieldUpdate.keep()) FieldUpdate<WifiEncryptionType> encryption,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> encryptionOther,
+    @Default(FieldUpdate.keep()) FieldUpdate<bool> hiddenSsid,
+  }) = _PatchWifiDataDto;
+}
+
+@freezed
+sealed class PatchWifiDto with _$PatchWifiDto {
+  const factory PatchWifiDto({
+    required VaultItemPatchDto item,
+    required PatchWifiDataDto wifi,
+  }) = _PatchWifiDto;
 }

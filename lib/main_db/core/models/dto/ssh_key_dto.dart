@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../tables/ssh_key/ssh_key_items.dart';
+import '../field_update.dart';
 import 'vault_item_base_dto.dart';
 
 part 'ssh_key_dto.freezed.dart';
@@ -75,4 +76,23 @@ sealed class SshKeyCardDto with _$SshKeyCardDto {
 
   factory SshKeyCardDto.fromJson(Map<String, dynamic> json) =>
       _$SshKeyCardDtoFromJson(json);
+}
+
+@freezed
+sealed class PatchSshKeyDataDto with _$PatchSshKeyDataDto {
+  const factory PatchSshKeyDataDto({
+    @Default(FieldUpdate.keep()) FieldUpdate<String> publicKey,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> privateKey,
+    @Default(FieldUpdate.keep()) FieldUpdate<SshKeyType> keyType,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> keyTypeOther,
+    @Default(FieldUpdate.keep()) FieldUpdate<int> keySize,
+  }) = _PatchSshKeyDataDto;
+}
+
+@freezed
+sealed class PatchSshKeyDto with _$PatchSshKeyDto {
+  const factory PatchSshKeyDto({
+    required VaultItemPatchDto item,
+    required PatchSshKeyDataDto sshKey,
+  }) = _PatchSshKeyDto;
 }

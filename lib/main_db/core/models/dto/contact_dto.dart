@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../field_update.dart';
 import 'vault_item_base_dto.dart';
 
 part 'contact_dto.freezed.dart';
@@ -83,4 +84,29 @@ sealed class ContactCardDto with _$ContactCardDto {
 
   factory ContactCardDto.fromJson(Map<String, dynamic> json) =>
       _$ContactCardDtoFromJson(json);
+}
+
+@freezed
+sealed class PatchContactDataDto with _$PatchContactDataDto {
+  const factory PatchContactDataDto({
+    @Default(FieldUpdate.keep()) FieldUpdate<String> firstName,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> middleName,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> lastName,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> phone,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> email,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> company,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> jobTitle,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> address,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> website,
+    @Default(FieldUpdate.keep()) FieldUpdate<DateTime> birthday,
+    @Default(FieldUpdate.keep()) FieldUpdate<bool> isEmergencyContact,
+  }) = _PatchContactDataDto;
+}
+
+@freezed
+sealed class PatchContactDto with _$PatchContactDto {
+  const factory PatchContactDto({
+    required VaultItemPatchDto item,
+    required PatchContactDataDto contact,
+  }) = _PatchContactDto;
 }

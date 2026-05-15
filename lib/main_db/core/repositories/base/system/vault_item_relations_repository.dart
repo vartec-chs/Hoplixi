@@ -1,17 +1,17 @@
 import 'package:uuid/uuid.dart';
 import 'package:drift/drift.dart' as drift;
 
-import '../../main_store.dart';
-import '../../tables/system/item_link/item_links.dart';
-import '../../models/dto/system/item_link_dto.dart';
-import '../../models/mappers/system/item_link_mapper.dart';
-import '../../models/dto/system/tag_dto.dart';
-import '../../models/mappers/system/tag_mapper.dart';
+import '../../../main_store.dart';
+import '../../../tables/system/item_link/item_links.dart';
+import '../../../models/dto/system/item_link_dto.dart';
+import '../../../models/mappers/system/item_link_mapper.dart';
+import '../../../models/dto/system/tag_dto.dart';
+import '../../../models/mappers/system/tag_mapper.dart';
 
-class VaultItemRelationsService {
+class VaultItemRelationsRepository   {
   final MainStore db;
 
-  VaultItemRelationsService(this.db);
+  VaultItemRelationsRepository(this.db);
 
   Future<void> replaceTags({
     required String itemId,

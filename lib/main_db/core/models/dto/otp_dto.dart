@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../tables/otp/otp_items.dart';
+import '../field_update.dart';
 import 'converters.dart';
 import 'vault_item_base_dto.dart';
 
@@ -85,4 +86,26 @@ sealed class OtpCardDto with _$OtpCardDto {
 
   factory OtpCardDto.fromJson(Map<String, dynamic> json) =>
       _$OtpCardDtoFromJson(json);
+}
+
+@freezed
+sealed class PatchOtpDataDto with _$PatchOtpDataDto {
+  const factory PatchOtpDataDto({
+    @Default(FieldUpdate.keep()) FieldUpdate<OtpType> type,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> issuer,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> accountName,
+    @Default(FieldUpdate.keep()) FieldUpdate<Uint8List> secret,
+    @Default(FieldUpdate.keep()) FieldUpdate<OtpHashAlgorithm> algorithm,
+    @Default(FieldUpdate.keep()) FieldUpdate<int> digits,
+    @Default(FieldUpdate.keep()) FieldUpdate<int> period,
+    @Default(FieldUpdate.keep()) FieldUpdate<int> counter,
+  }) = _PatchOtpDataDto;
+}
+
+@freezed
+sealed class PatchOtpDto with _$PatchOtpDto {
+  const factory PatchOtpDto({
+    required VaultItemPatchDto item,
+    required PatchOtpDataDto otp,
+  }) = _PatchOtpDto;
 }

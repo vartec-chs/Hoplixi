@@ -1,14 +1,14 @@
 import 'package:uuid/uuid.dart';
 import 'package:drift/drift.dart' as drift;
 
-import '../../main_store.dart';
-import '../../models/dto/system/tag_dto.dart';
-import '../../models/mappers/system/tag_mapper.dart';
+import '../../../main_store.dart';
+import '../../../models/dto/system/tag_dto.dart';
+import '../../../models/mappers/system/tag_mapper.dart';
 
-class TagService {
+class TagRepository {
   final MainStore db;
 
-  TagService(this.db);
+  TagRepository(this.db);
 
   Future<String> createTag(CreateTagDto dto) async {
     final name = dto.name.trim();

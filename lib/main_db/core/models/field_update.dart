@@ -23,3 +23,14 @@ extension FieldUpdateDriftX<T> on FieldUpdate<T> {
     };
   }
 }
+
+extension FieldUpdateRequiredDriftX<T extends Object> on FieldUpdate<T> {
+  Value<T> toRequiredValue() {
+    return switch (this) {
+      FieldUpdateKeep<T>() => const Value.absent(),
+      FieldUpdateSet<T>(value: final value) => value == null
+          ? throw ArgumentError('Required field cannot be set to null')
+          : Value(value),
+    };
+  }
+}

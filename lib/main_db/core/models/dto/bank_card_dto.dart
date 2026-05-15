@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../tables/bank_card/bank_card_items.dart';
+import '../field_update.dart';
 import 'vault_item_base_dto.dart';
 
 part 'bank_card_dto.freezed.dart';
@@ -86,4 +87,30 @@ sealed class BankCardCardDto with _$BankCardCardDto {
 
   factory BankCardCardDto.fromJson(Map<String, dynamic> json) =>
       _$BankCardCardDtoFromJson(json);
+}
+
+@freezed
+sealed class PatchBankCardDataDto with _$PatchBankCardDataDto {
+  const factory PatchBankCardDataDto({
+    @Default(FieldUpdate.keep()) FieldUpdate<String> cardholderName,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> cardNumber,
+    @Default(FieldUpdate.keep()) FieldUpdate<CardType> cardType,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> cardTypeOther,
+    @Default(FieldUpdate.keep()) FieldUpdate<CardNetwork> cardNetwork,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> cardNetworkOther,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> expiryMonth,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> expiryYear,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> cvv,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> bankName,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> accountNumber,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> routingNumber,
+  }) = _PatchBankCardDataDto;
+}
+
+@freezed
+sealed class PatchBankCardDto with _$PatchBankCardDto {
+  const factory PatchBankCardDto({
+    required VaultItemPatchDto item,
+    required PatchBankCardDataDto bankCard,
+  }) = _PatchBankCardDto;
 }

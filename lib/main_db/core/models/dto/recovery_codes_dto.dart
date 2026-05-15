@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../field_update.dart';
 import 'vault_item_base_dto.dart';
 
 part 'recovery_codes_dto.freezed.dart';
@@ -111,4 +112,19 @@ sealed class RecoveryCodesCardDto with _$RecoveryCodesCardDto {
 
   factory RecoveryCodesCardDto.fromJson(Map<String, dynamic> json) =>
       _$RecoveryCodesCardDtoFromJson(json);
+}
+@freezed
+sealed class PatchRecoveryCodesDataDto with _$PatchRecoveryCodesDataDto {
+  const factory PatchRecoveryCodesDataDto({
+    @Default(FieldUpdate.keep()) FieldUpdate<DateTime> generatedAt,
+    @Default(FieldUpdate.keep()) FieldUpdate<bool> oneTime,
+  }) = _PatchRecoveryCodesDataDto;
+}
+
+@freezed
+sealed class PatchRecoveryCodesDto with _$PatchRecoveryCodesDto {
+  const factory PatchRecoveryCodesDto({
+    required VaultItemPatchDto item,
+    required PatchRecoveryCodesDataDto recoveryCodes,
+  }) = _PatchRecoveryCodesDto;
 }

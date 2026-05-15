@@ -1,14 +1,14 @@
 import 'package:uuid/uuid.dart';
 import 'package:drift/drift.dart' as drift;
 
-import '../../main_store.dart';
-import '../../models/dto/system/category_dto.dart';
-import '../../models/mappers/system/category_mapper.dart';
+import '../../../main_store.dart';
+import '../../../models/dto/system/category_dto.dart';
+import '../../../models/mappers/system/category_mapper.dart';
 
-class CategoryService {
+class CategoryRepository {
   final MainStore db;
 
-  CategoryService(this.db);
+  CategoryRepository(this.db);
 
   Future<String> createCategory(CreateCategoryDto dto) async {
     final name = dto.name.trim();

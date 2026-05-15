@@ -1,16 +1,16 @@
 import 'package:uuid/uuid.dart';
 import 'package:drift/drift.dart' as drift;
 
-import '../../main_store.dart';
-import '../../models/dto/system/custom_icon_dto.dart';
-import '../../models/dto/system/icon_ref_dto.dart';
-import '../../models/mappers/system/custom_icon_mapper.dart';
-import '../../models/mappers/system/icon_ref_mapper.dart';
+import '../../../main_store.dart';
+import '../../../models/dto/system/custom_icon_dto.dart';
+import '../../../models/dto/system/icon_ref_dto.dart';
+import '../../../models/mappers/system/custom_icon_mapper.dart';
+import '../../../models/mappers/system/icon_ref_mapper.dart';
 
-class IconService {
+class IconRepository   {
   final MainStore db;
 
-  IconService(this.db);
+  IconRepository(this.db);
 
   Future<String> createCustomIcon(CreateCustomIconDto dto) async {
     final id = const Uuid().v4();

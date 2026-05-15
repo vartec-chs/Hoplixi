@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../tables/license_key/license_key_items.dart';
+import '../field_update.dart';
 import 'vault_item_base_dto.dart';
 
 part 'license_key_dto.freezed.dart';
@@ -91,4 +92,35 @@ sealed class LicenseKeyCardDto with _$LicenseKeyCardDto {
 
   factory LicenseKeyCardDto.fromJson(Map<String, dynamic> json) =>
       _$LicenseKeyCardDtoFromJson(json);
+}
+@freezed
+sealed class PatchLicenseKeyDataDto with _$PatchLicenseKeyDataDto {
+  const factory PatchLicenseKeyDataDto({
+    @Default(FieldUpdate.keep()) FieldUpdate<String> productName,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> vendor,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> licenseKey,
+    @Default(FieldUpdate.keep()) FieldUpdate<LicenseType> licenseType,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> licenseTypeOther,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> accountEmail,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> accountUsername,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> purchaseEmail,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> orderNumber,
+    @Default(FieldUpdate.keep()) FieldUpdate<DateTime> purchaseDate,
+    @Default(FieldUpdate.keep()) FieldUpdate<double> purchasePrice,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> currency,
+    @Default(FieldUpdate.keep()) FieldUpdate<DateTime> validFrom,
+    @Default(FieldUpdate.keep()) FieldUpdate<DateTime> validTo,
+    @Default(FieldUpdate.keep()) FieldUpdate<DateTime> renewalDate,
+    @Default(FieldUpdate.keep()) FieldUpdate<int> seats,
+    @Default(FieldUpdate.keep()) FieldUpdate<int> activationLimit,
+    @Default(FieldUpdate.keep()) FieldUpdate<int> activationsUsed,
+  }) = _PatchLicenseKeyDataDto;
+}
+
+@freezed
+sealed class PatchLicenseKeyDto with _$PatchLicenseKeyDto {
+  const factory PatchLicenseKeyDto({
+    required VaultItemPatchDto item,
+    required PatchLicenseKeyDataDto licenseKey,
+  }) = _PatchLicenseKeyDto;
 }
