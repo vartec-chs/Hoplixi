@@ -1,26 +1,45 @@
-import 'package:hoplixi/main_db/core/models/dto/file_dto.dart';
 import '../../main_store.dart';
+import '../dto/file_dto.dart';
 
 extension FileItemsDataMapper on FileItemsData {
   FileDataDto toFileDataDto() {
     return FileDataDto(
-      fileName: fileName,
-      fileSize: fileSize,
-      mimeType: mimeType,
-      extension: extension,
-      blobId: blobId,
       metadataId: metadataId,
-      thumbnailBlobId: thumbnailBlobId,
+    );
+  }
+}
+
+extension FileMetadataDataMapper on FileMetadataData {
+  FileMetadataDataDto toFileMetadataDataDto() {
+    return FileMetadataDataDto(
+      fileName: fileName,
+      fileExtension: fileExtension,
+      filePath: filePath,
+      mimeType: mimeType,
+      fileSize: fileSize,
+      sha256: sha256,
+      availabilityStatus: availabilityStatus,
+      integrityStatus: integrityStatus,
+      missingDetectedAt: missingDetectedAt,
+      deletedAt: deletedAt,
+      lastIntegrityCheckAt: lastIntegrityCheckAt,
     );
   }
 
-  FileCardDataDto toFileCardDataDto() {
-    return FileCardDataDto(
+  FileMetadataViewDto toFileMetadataViewDto() {
+    return FileMetadataViewDto(
+      id: id,
       fileName: fileName,
-      fileSize: fileSize,
+      fileExtension: fileExtension,
+      filePath: filePath,
       mimeType: mimeType,
-      extension: extension,
-      hasThumbnail: thumbnailBlobId != null,
+      fileSize: fileSize,
+      sha256: sha256,
+      availabilityStatus: availabilityStatus,
+      integrityStatus: integrityStatus,
+      missingDetectedAt: missingDetectedAt,
+      deletedAt: deletedAt,
+      lastIntegrityCheckAt: lastIntegrityCheckAt,
     );
   }
 }

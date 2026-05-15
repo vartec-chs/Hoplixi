@@ -1,11 +1,12 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:uuid/uuid.dart';
 
 import '../main_store.dart';
 import '../models/dto/file_dto.dart';
+import '../models/dto/vault_item_base_dto.dart';
 import '../models/mappers/file_mapper.dart';
 import '../models/mappers/vault_item_mapper.dart';
+import '../tables/file/file_metadata.dart';
 import '../tables/vault_items/vault_items.dart';
 
 class FileRepository {
@@ -17,6 +18,29 @@ class FileRepository {
     return db.transaction(() async {
       final now = DateTime.now();
       final itemId = const Uuid().v4();
+
+      String? metadataId = dto.file.metadataId;
+
+      if (dto.metadata != null) {
+        metadataId = const Uuid().v4();
+
+        await db.fileMetadataDao.insertFileMetadata(
+          FileMetadataCompanion.insert(
+            id: Value(metadataId),
+            fileName: dto.metadata!.fileName,
+            fileExtension: Value(dto.metadata!.fileExtension),
+            filePath: Value(dto.metadata!.filePath),
+            mimeType: dto.metadata!.mimeType,
+            fileSize: dto.metadata!.fileSize,
+            sha256: Value(dto.metadata!.sha256),
+            availabilityStatus: Value(dto.metadata!.availabilityStatus),
+            integrityStatus: Value(dto.metadata!.integrityStatus),
+            missingDetectedAt: Value(dto.metadata!.missingDetectedAt),
+            deletedAt: Value(dto.metadata!.deletedAt),
+            lastIntegrityCheckAt: Value(dto.metadata!.lastIntegrityCheckAt),
+          ),
+        );
+      }
 
       await db.into(db.vaultItems).insert(
             VaultItemsCompanion.insert(
@@ -33,18 +57,12 @@ class FileRepository {
             ),
           );
 
-      await db.into(db.fileItems).insert(
-            FileItemsCompanion.insert(
-              itemId: itemId,
-              fileName: dto.file.fileName,
-              fileSize: dto.file.fileSize,
-              mimeType: dto.file.mimeType,
-              extension: Value(dto.file.extension),
-              blobId: dto.file.blobId,
-              metadataId: Value(dto.file.metadataId),
-              thumbnailBlobId: Value(dto.file.thumbnailBlobId),
-            ),
-          );
+      await db.fileItemsDao.insertFileItem(
+        FileItemsCompanion.insert(
+          itemId: itemId,
+          metadataId: Value(metadataId),
+        ),
+      );
 
       return itemId;
     });
@@ -68,18 +86,34 @@ class FileRepository {
         ),
       );
 
-      await (db.update(db.fileItems)..where((tbl) => tbl.itemId.equals(itemId)))
-          .write(
+      await db.fileItemsDao.updateFileItemByItemId(
+        itemId,
         FileItemsCompanion(
-          fileName: Value(dto.file.fileName),
-          fileSize: Value(dto.file.fileSize),
-          mimeType: Value(dto.file.mimeType),
-          extension: Value(dto.file.extension),
-          blobId: Value(dto.file.blobId),
           metadataId: Value(dto.file.metadataId),
-          thumbnailBlobId: Value(dto.file.thumbnailBlobId),
         ),
       );
+
+      if (dto.metadata != null) {
+        if (dto.file.metadataId == null) {
+          throw StateError('Cannot update metadata because metadataId is null');
+        }
+        await db.fileMetadataDao.updateFileMetadataById(
+          dto.file.metadataId!,
+          FileMetadataCompanion(
+            fileName: Value(dto.metadata!.fileName),
+            fileExtension: Value(dto.metadata!.fileExtension),
+            filePath: Value(dto.metadata!.filePath),
+            mimeType: Value(dto.metadata!.mimeType),
+            fileSize: Value(dto.metadata!.fileSize),
+            sha256: Value(dto.metadata!.sha256),
+            availabilityStatus: Value(dto.metadata!.availabilityStatus),
+            integrityStatus: Value(dto.metadata!.integrityStatus),
+            missingDetectedAt: Value(dto.metadata!.missingDetectedAt),
+            deletedAt: Value(dto.metadata!.deletedAt),
+            lastIntegrityCheckAt: Value(dto.metadata!.lastIntegrityCheckAt),
+          ),
+        );
+      }
     });
   }
 
@@ -89,6 +123,10 @@ class FileRepository {
         db.fileItems,
         db.fileItems.itemId.equalsExp(db.vaultItems.id),
       ),
+      leftOuterJoin(
+        db.fileMetadata,
+        db.fileMetadata.id.equalsExp(db.fileItems.metadataId),
+      ),
     ])
       ..where(db.vaultItems.id.equals(itemId))
       ..where(db.vaultItems.type.equalsValue(VaultItemType.file));
@@ -97,11 +135,13 @@ class FileRepository {
     if (row == null) return null;
 
     final item = row.readTable(db.vaultItems);
-    final file = row.readTable(db.fileItems);
+    final fileItem = row.readTable(db.fileItems);
+    final metadata = row.readTableOrNull(db.fileMetadata);
 
     return FileViewDto(
       item: item.toVaultItemViewDto(),
-      file: file.toFileDataDto(),
+      file: fileItem.toFileDataDto(),
+      metadata: metadata?.toFileMetadataViewDto(),
     );
   }
 
@@ -130,6 +170,8 @@ class FileRepository {
   }
 
   Future<void> deletePermanently(String itemId) {
+    // Note: file_items will be deleted by cascade.
+    // metadata is NOT deleted automatically as it might be shared.
     return (db.delete(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
         .go();
   }
@@ -139,6 +181,10 @@ class FileRepository {
       innerJoin(
         db.fileItems,
         db.fileItems.itemId.equalsExp(db.vaultItems.id),
+      ),
+      leftOuterJoin(
+        db.fileMetadata,
+        db.fileMetadata.id.equalsExp(db.fileItems.metadataId),
       ),
     ])
       ..addColumns([
@@ -159,12 +205,17 @@ class FileRepository {
         db.vaultItems.deletedAt,
         db.vaultItems.recentScore,
 
-        db.fileItems.fileName,
-        db.fileItems.fileSize,
-        db.fileItems.mimeType,
-        db.fileItems.extension,
-        db.fileItems.thumbnailBlobId,
-        // blobId is omitted for security/performance in card
+        db.fileItems.metadataId,
+        db.fileMetadata.fileName,
+        db.fileMetadata.fileExtension,
+        db.fileMetadata.mimeType,
+        db.fileMetadata.fileSize,
+        db.fileMetadata.availabilityStatus,
+        db.fileMetadata.integrityStatus,
+        db.fileMetadata.missingDetectedAt,
+        db.fileMetadata.deletedAt,
+        db.fileMetadata.lastIntegrityCheckAt,
+        db.fileMetadata.sha256,
       ]);
   }
 
@@ -172,7 +223,7 @@ class FileRepository {
     return FileCardDto(
       item: VaultItemCardDto(
         itemId: row.read(db.vaultItems.id)!,
-        type: row.read(db.vaultItems.type)!,
+        type: row.readWithConverter<VaultItemType, String>(db.vaultItems.type)!,
         name: row.read(db.vaultItems.name)!,
         description: row.read(db.vaultItems.description),
         categoryId: row.read(db.vaultItems.categoryId),
@@ -189,11 +240,22 @@ class FileRepository {
         recentScore: row.read(db.vaultItems.recentScore),
       ),
       file: FileCardDataDto(
-        fileName: row.read(db.fileItems.fileName)!,
-        fileSize: row.read(db.fileItems.fileSize)!,
-        mimeType: row.read(db.fileItems.mimeType)!,
-        extension: row.read(db.fileItems.extension),
-        hasThumbnail: row.read(db.fileItems.thumbnailBlobId) != null,
+        metadataId: row.read(db.fileItems.metadataId),
+        fileName: row.read(db.fileMetadata.fileName),
+        fileExtension: row.read(db.fileMetadata.fileExtension),
+        mimeType: row.read(db.fileMetadata.mimeType),
+        fileSize: row.read(db.fileMetadata.fileSize),
+        availabilityStatus: row.readWithConverter<FileAvailabilityStatus?, String>(
+          db.fileMetadata.availabilityStatus,
+        ),
+        integrityStatus: row.readWithConverter<FileIntegrityStatus?, String>(
+          db.fileMetadata.integrityStatus,
+        ),
+        missingDetectedAt: row.read(db.fileMetadata.missingDetectedAt),
+        deletedAt: row.read(db.fileMetadata.deletedAt),
+        lastIntegrityCheckAt: row.read(db.fileMetadata.lastIntegrityCheckAt),
+        hasMetadata: row.read(db.fileItems.metadataId) != null,
+        hasSha256: row.read(db.fileMetadata.sha256) != null,
       ),
     );
   }

@@ -24,3 +24,4 @@ extension LoyaltyCardItemsDataMapper on LoyaltyCardItemsData {
     );
   }
 }
+
