@@ -3,7 +3,7 @@ export 'bank_card_items_dao.dart';
 export 'certificate_items_dao.dart';
 export 'contact_items_dao.dart';
 export 'crypto_wallet_items_dao.dart';
-export 'document_items_dao.dart';
+export 'document/daos.dart';
 export 'file_items_dao.dart';
 export 'identity_items_dao.dart';
 export 'license_key_items_dao.dart';

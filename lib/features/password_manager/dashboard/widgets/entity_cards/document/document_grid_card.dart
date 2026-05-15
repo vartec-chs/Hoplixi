@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import '../shared/shared.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/document_dto.dart';
+import 'package:hoplixi/main_db/core/models/dto/document_dto.dart';
 
 class DocumentGridCard extends ConsumerStatefulWidget {
   final DocumentCardDto document;
@@ -36,10 +36,10 @@ class _DocumentGridCardState extends ConsumerState<DocumentGridCard> {
   bool _titleCopied = false;
 
   Future<void> _copyTitle() async {
-    final title = widget.document.title ?? 'Без названия';
+    final title = widget.document.item.name;
     final copied = await copyCardValue(
       ref: ref,
-      itemId: widget.document.id,
+      itemId: widget.document.item.itemId,
       text: title,
     );
     if (!copied) return;
@@ -53,20 +53,20 @@ class _DocumentGridCardState extends ConsumerState<DocumentGridCard> {
   @override
   Widget build(BuildContext context) {
     final document = widget.document;
-    final title = document.title ?? 'Без названия';
-    final typeLabel = document.documentType ?? 'Документ';
+    final title = document.item.name;
+    final typeLabel = document.document.documentType?.name ?? 'Документ';
 
     return BaseGridCard(
       title: title,
-      subtitle: '$typeLabel • ${document.pageCount} стр.',
+      subtitle: '$typeLabel • ${document.document.pageCount ?? 0} стр.',
       fallbackIcon: Icons.description,
-      category: document.category,
-      tags: document.tags,
-      usedCount: document.usedCount,
-      isFavorite: document.isFavorite,
-      isPinned: document.isPinned,
-      isArchived: document.isArchived,
-      isDeleted: document.isDeleted,
+      category: null, // TODO: Map new category structure if needed
+      tags: null, // TODO: Map new tags structure
+      usedCount: 0, 
+      isFavorite: document.item.isFavorite,
+      isPinned: document.item.isPinned,
+      isArchived: document.item.isArchived,
+      isDeleted: document.item.isDeleted,
       onTap: widget.onTap,
       onToggleFavorite: widget.onToggleFavorite,
       onTogglePin: widget.onTogglePin,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import '../shared/shared.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/document_dto.dart';
+import 'package:hoplixi/main_db/core/models/dto/document_dto.dart';
 
 class DocumentListCard extends ConsumerStatefulWidget {
   final DocumentCardDto document;
@@ -38,10 +38,10 @@ class _DocumentListCardState extends ConsumerState<DocumentListCard> {
   bool _titleCopied = false;
 
   Future<void> _copyTitle() async {
-    final title = widget.document.title ?? 'Без названия';
+    final title = widget.document.item.name;
     final copied = await copyCardValue(
       ref: ref,
-      itemId: widget.document.id,
+      itemId: widget.document.item.itemId,
       text: title,
     );
     if (!copied) return;
@@ -55,23 +55,23 @@ class _DocumentListCardState extends ConsumerState<DocumentListCard> {
   @override
   Widget build(BuildContext context) {
     final document = widget.document;
-    final title = document.title ?? 'Без названия';
-    final typeLabel = document.documentType ?? 'Документ';
+    final title = document.item.name;
+    final typeLabel = document.document.documentType?.name ?? 'Документ';
 
     return ExpandableListCard(
       title: title,
       subtitle: typeLabel,
-      trailingSubtitle: '${document.pageCount} стр.',
+      trailingSubtitle: '${document.document.pageCount ?? 0} стр.',
       fallbackIcon: Icons.description,
-      category: document.category,
-      description: document.description,
-      tags: document.tags,
-      usedCount: document.usedCount,
-      modifiedAt: document.modifiedAt,
-      isFavorite: document.isFavorite,
-      isPinned: document.isPinned,
-      isArchived: document.isArchived,
-      isDeleted: document.isDeleted,
+      category: null, // TODO: Map new category structure if needed
+      description: document.item.description,
+      tags: null, // TODO: Map new tags structure
+      usedCount: 0,
+      modifiedAt: document.item.modifiedAt,
+      isFavorite: document.item.isFavorite,
+      isPinned: document.item.isPinned,
+      isArchived: document.item.isArchived,
+      isDeleted: document.item.isDeleted,
       onToggleFavorite: widget.onToggleFavorite,
       onTogglePin: widget.onTogglePin,
       onToggleArchive: widget.onToggleArchive,
