@@ -3,6 +3,7 @@ import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_db/core/dao/daos.dart';
 import 'package:hoplixi/main_db/core/tables/tables.dart';
+import 'package:uuid/uuid.dart';
 
 part 'main_store.g.dart';
 
@@ -112,6 +113,7 @@ part 'main_store.g.dart';
     RecoveryCodesHistoryDao,
     RecoveryCodeValuesHistoryDao,
     LoyaltyCardItemsDao,
+    LoyaltyCardHistoryDao,
   ],
 )
 class MainStore extends _$MainStore {

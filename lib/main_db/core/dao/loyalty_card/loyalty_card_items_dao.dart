@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
-import '../main_store.dart';
-import '../tables/loyalty_card/loyalty_card_items.dart';
+import '../../main_store.dart';
+import '../../tables/loyalty_card/loyalty_card_items.dart';
 
 part 'loyalty_card_items_dao.g.dart';
 
@@ -10,7 +10,9 @@ class LoyaltyCardItemsDao extends DatabaseAccessor<MainStore>
     with _$LoyaltyCardItemsDaoMixin {
   LoyaltyCardItemsDao(super.db);
 
-  Future<void> insertLoyaltyCard(LoyaltyCardItemsCompanion companion) {
+  Future<void> insertLoyaltyCard(
+    LoyaltyCardItemsCompanion companion,
+  ) {
     return into(loyaltyCardItems).insert(companion);
   }
 
@@ -37,8 +39,7 @@ class LoyaltyCardItemsDao extends DatabaseAccessor<MainStore>
   }
 
   Future<int> deleteLoyaltyCardByItemId(String itemId) {
-    return (delete(loyaltyCardItems)
-          ..where((tbl) => tbl.itemId.equals(itemId)))
+    return (delete(loyaltyCardItems)..where((tbl) => tbl.itemId.equals(itemId)))
         .go();
   }
 }

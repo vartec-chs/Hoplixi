@@ -7,7 +7,7 @@ export 'document/daos.dart';
 export 'file/daos.dart';
 export 'identity_items_dao.dart';
 export 'license_key_items_dao.dart';
-export 'loyalty_card_items_dao.dart';
+export 'loyalty_card/daos.dart';
 export 'note_items_dao.dart';
 export 'otp_items_dao.dart';
 export 'password_items_dao.dart';

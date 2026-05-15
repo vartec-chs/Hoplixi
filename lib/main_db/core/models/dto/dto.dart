@@ -16,6 +16,7 @@ export 'identity_dto.dart';
 export 'item_link_dto.dart';
 export 'license_key_dto.dart';
 export 'loyalty_card_dto.dart';
+export 'loyalty_card_history_dto.dart';
 export 'note_dto.dart';
 export 'otp_dto.dart';
 export 'password_dto.dart';

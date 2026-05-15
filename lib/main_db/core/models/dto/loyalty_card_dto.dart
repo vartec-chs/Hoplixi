@@ -10,15 +10,24 @@ part 'loyalty_card_dto.g.dart';
 sealed class LoyaltyCardDataDto with _$LoyaltyCardDataDto {
   const factory LoyaltyCardDataDto({
     required String programName,
+
+    /// Может быть чувствительным значением.
     String? cardNumber,
+
+    /// Может быть точным пользовательским значением.
     String? barcodeValue,
+
+    /// Секрет карты лояльности.
     String? password,
+
     LoyaltyBarcodeType? barcodeType,
     String? barcodeTypeOther,
+
     String? issuer,
     String? website,
     String? phone,
     String? email,
+
     DateTime? validFrom,
     DateTime? validTo,
   }) = _LoyaltyCardDataDto;
@@ -31,12 +40,21 @@ sealed class LoyaltyCardDataDto with _$LoyaltyCardDataDto {
 sealed class LoyaltyCardCardDataDto with _$LoyaltyCardCardDataDto {
   const factory LoyaltyCardCardDataDto({
     required String programName,
-    String? cardNumber,
-    String? barcodeValue,
+
     LoyaltyBarcodeType? barcodeType,
+    String? barcodeTypeOther,
+
     String? issuer,
+    String? website,
+    String? phone,
+    String? email,
+
+    DateTime? validFrom,
     DateTime? validTo,
-    @Default(false) bool hasPassword,
+
+    required bool hasCardNumber,
+    required bool hasBarcodeValue,
+    required bool hasPassword,
   }) = _LoyaltyCardCardDataDto;
 
   factory LoyaltyCardCardDataDto.fromJson(Map<String, dynamic> json) =>

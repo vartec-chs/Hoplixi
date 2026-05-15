@@ -3,9 +3,9 @@ import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:uuid/uuid.dart';
 
 import '../main_store.dart';
-import '../models/dto/loyalty_card_dto.dart';
 import '../models/mappers/loyalty_card_mapper.dart';
 import '../models/mappers/vault_item_mapper.dart';
+import '../tables/loyalty_card/loyalty_card_items.dart';
 import '../tables/vault_items/vault_items.dart';
 
 class LoyaltyCardRepository {
@@ -18,33 +18,38 @@ class LoyaltyCardRepository {
       final now = DateTime.now();
       final itemId = const Uuid().v4();
 
-      await db.into(db.vaultItems).insert(
-            VaultItemsCompanion.insert(
-              id: Value(itemId),
-              type: VaultItemType.loyaltyCard,
-              name: dto.item.name,
-              description: Value(dto.item.description),
-              categoryId: Value(dto.item.categoryId),
-              iconRefId: Value(dto.item.iconRefId),
-              isFavorite: Value(dto.item.isFavorite),
-              isPinned: Value(dto.item.isPinned),
-              createdAt: Value(now),
-              modifiedAt: Value(now),
-            ),
-          );
+      await db.vaultItemsDao.insertVaultItem(
+        VaultItemsCompanion.insert(
+          id: Value(itemId),
+          type: VaultItemType.loyaltyCard,
+          name: dto.item.name,
+          description: Value(dto.item.description),
+          categoryId: Value(dto.item.categoryId),
+          iconRefId: Value(dto.item.iconRefId),
+          isFavorite: Value(dto.item.isFavorite),
+          isPinned: Value(dto.item.isPinned),
+          createdAt: Value(now),
+          modifiedAt: Value(now),
+        ),
+      );
 
-      await db.into(db.loyaltyCardItems).insert(
-            LoyaltyCardItemsCompanion.insert(
-              itemId: itemId,
-              programName: dto.loyaltyCard.programName,
-              cardNumber: dto.loyaltyCard.cardNumber,
-              memberSince: Value(dto.loyaltyCard.memberSince),
-              expiryDate: Value(dto.loyaltyCard.expiryDate),
-              points: Value(dto.loyaltyCard.points),
-              tier: Value(dto.loyaltyCard.tier),
-              notes: Value(dto.loyaltyCard.notes),
-            ),
-          );
+      await db.loyaltyCardItemsDao.insertLoyaltyCard(
+        LoyaltyCardItemsCompanion.insert(
+          itemId: itemId,
+          programName: dto.loyaltyCard.programName,
+          cardNumber: Value(dto.loyaltyCard.cardNumber),
+          barcodeValue: Value(dto.loyaltyCard.barcodeValue),
+          password: Value(dto.loyaltyCard.password),
+          barcodeType: Value(dto.loyaltyCard.barcodeType),
+          barcodeTypeOther: Value(dto.loyaltyCard.barcodeTypeOther),
+          issuer: Value(dto.loyaltyCard.issuer),
+          website: Value(dto.loyaltyCard.website),
+          phone: Value(dto.loyaltyCard.phone),
+          email: Value(dto.loyaltyCard.email),
+          validFrom: Value(dto.loyaltyCard.validFrom),
+          validTo: Value(dto.loyaltyCard.validTo),
+        ),
+      );
 
       return itemId;
     });
@@ -55,8 +60,8 @@ class LoyaltyCardRepository {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
 
-      await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-          .write(
+      await db.vaultItemsDao.updateVaultItemById(
+        itemId,
         VaultItemsCompanion(
           name: Value(dto.item.name),
           description: Value(dto.item.description),
@@ -68,17 +73,21 @@ class LoyaltyCardRepository {
         ),
       );
 
-      await (db.update(db.loyaltyCardItems)
-            ..where((tbl) => tbl.itemId.equals(itemId)))
-          .write(
+      await db.loyaltyCardItemsDao.updateLoyaltyCardByItemId(
+        itemId,
         LoyaltyCardItemsCompanion(
           programName: Value(dto.loyaltyCard.programName),
           cardNumber: Value(dto.loyaltyCard.cardNumber),
-          memberSince: Value(dto.loyaltyCard.memberSince),
-          expiryDate: Value(dto.loyaltyCard.expiryDate),
-          points: Value(dto.loyaltyCard.points),
-          tier: Value(dto.loyaltyCard.tier),
-          notes: Value(dto.loyaltyCard.notes),
+          barcodeValue: Value(dto.loyaltyCard.barcodeValue),
+          password: Value(dto.loyaltyCard.password),
+          barcodeType: Value(dto.loyaltyCard.barcodeType),
+          barcodeTypeOther: Value(dto.loyaltyCard.barcodeTypeOther),
+          issuer: Value(dto.loyaltyCard.issuer),
+          website: Value(dto.loyaltyCard.website),
+          phone: Value(dto.loyaltyCard.phone),
+          email: Value(dto.loyaltyCard.email),
+          validFrom: Value(dto.loyaltyCard.validFrom),
+          validTo: Value(dto.loyaltyCard.validTo),
         ),
       );
     });
@@ -136,6 +145,10 @@ class LoyaltyCardRepository {
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery() {
+    final hasCardNumberExpr = db.loyaltyCardItems.cardNumber.isNotNull();
+    final hasBarcodeValueExpr = db.loyaltyCardItems.barcodeValue.isNotNull();
+    final hasPasswordExpr = db.loyaltyCardItems.password.isNotNull();
+
     return db.selectOnly(db.vaultItems).join([
       innerJoin(
         db.loyaltyCardItems,
@@ -161,18 +174,30 @@ class LoyaltyCardRepository {
         db.vaultItems.recentScore,
 
         db.loyaltyCardItems.programName,
-        db.loyaltyCardItems.cardNumber,
-        db.loyaltyCardItems.expiryDate,
-        db.loyaltyCardItems.points,
-        db.loyaltyCardItems.tier,
+        db.loyaltyCardItems.barcodeType,
+        db.loyaltyCardItems.barcodeTypeOther,
+        db.loyaltyCardItems.issuer,
+        db.loyaltyCardItems.website,
+        db.loyaltyCardItems.phone,
+        db.loyaltyCardItems.email,
+        db.loyaltyCardItems.validFrom,
+        db.loyaltyCardItems.validTo,
+
+        hasCardNumberExpr,
+        hasBarcodeValueExpr,
+        hasPasswordExpr,
       ]);
   }
 
   LoyaltyCardCardDto _mapRowToCardDto(TypedResult row) {
+    final hasCardNumberExpr = db.loyaltyCardItems.cardNumber.isNotNull();
+    final hasBarcodeValueExpr = db.loyaltyCardItems.barcodeValue.isNotNull();
+    final hasPasswordExpr = db.loyaltyCardItems.password.isNotNull();
+
     return LoyaltyCardCardDto(
       item: VaultItemCardDto(
         itemId: row.read(db.vaultItems.id)!,
-        type: row.read(db.vaultItems.type)!,
+        type: row.readWithConverter<VaultItemType, String>(db.vaultItems.type)!,
         name: row.read(db.vaultItems.name)!,
         description: row.read(db.vaultItems.description),
         categoryId: row.read(db.vaultItems.categoryId),
@@ -190,10 +215,19 @@ class LoyaltyCardRepository {
       ),
       loyaltyCard: LoyaltyCardCardDataDto(
         programName: row.read(db.loyaltyCardItems.programName)!,
-        cardNumber: row.read(db.loyaltyCardItems.cardNumber)!,
-        expiryDate: row.read(db.loyaltyCardItems.expiryDate),
-        points: row.read(db.loyaltyCardItems.points),
-        tier: row.read(db.loyaltyCardItems.tier),
+        barcodeType: row.readWithConverter<LoyaltyBarcodeType?, String>(
+          db.loyaltyCardItems.barcodeType,
+        ),
+        barcodeTypeOther: row.read(db.loyaltyCardItems.barcodeTypeOther),
+        issuer: row.read(db.loyaltyCardItems.issuer),
+        website: row.read(db.loyaltyCardItems.website),
+        phone: row.read(db.loyaltyCardItems.phone),
+        email: row.read(db.loyaltyCardItems.email),
+        validFrom: row.read(db.loyaltyCardItems.validFrom),
+        validTo: row.read(db.loyaltyCardItems.validTo),
+        hasCardNumber: row.read(hasCardNumberExpr) ?? false,
+        hasBarcodeValue: row.read(hasBarcodeValueExpr) ?? false,
+        hasPassword: row.read(hasPasswordExpr) ?? false,
       ),
     );
   }
