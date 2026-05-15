@@ -7,6 +7,17 @@ class ContactItems extends Table {
   TextColumn get itemId =>
       text().references(VaultItems, #id, onDelete: KeyAction.cascade)();
 
+  /// Имя.
+  ///
+  /// Обязательное поле контакта.
+  TextColumn get firstName => text().withLength(min: 1, max: 255)();
+
+  /// Отчество.
+  TextColumn get middleName => text().withLength(min: 1, max: 255).nullable()();
+
+  /// Фамилия.
+  TextColumn get lastName => text().withLength(min: 1, max: 255).nullable()();
+
   /// Основной телефон.
   TextColumn get phone => text().withLength(min: 1, max: 64).nullable()();
 
@@ -42,12 +53,56 @@ class ContactItems extends Table {
   @override
   List<String> get customConstraints => [
     '''
-    CONSTRAINT ${ContactItemConstraint.itemIdNotBlank.constraintName}
+    CONSTRAINT chk_contact_items_item_id_not_blank
     CHECK (length(trim(item_id)) > 0)
     ''',
 
     '''
-    CONSTRAINT ${ContactItemConstraint.phoneNotBlank.constraintName}
+    CONSTRAINT chk_contact_items_first_name_not_blank
+    CHECK (length(trim(first_name)) > 0)
+    ''',
+
+    '''
+    CONSTRAINT chk_contact_items_first_name_no_outer_whitespace
+    CHECK (
+      first_name = trim(first_name)
+    )
+    ''',
+
+    '''
+    CONSTRAINT chk_contact_items_middle_name_not_blank
+    CHECK (
+      middle_name IS NULL
+      OR length(trim(middle_name)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT chk_contact_items_middle_name_no_outer_whitespace
+    CHECK (
+      middle_name IS NULL
+      OR middle_name = trim(middle_name)
+    )
+    ''',
+
+    '''
+    CONSTRAINT chk_contact_items_last_name_not_blank
+    CHECK (
+      last_name IS NULL
+      OR length(trim(last_name)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT chk_contact_items_last_name_no_outer_whitespace
+    CHECK (
+      last_name IS NULL
+      OR last_name = trim(last_name)
+    )
+    ''',
+
+    '''
+    CONSTRAINT chk_contact_items_phone_not_blank
     CHECK (
       phone IS NULL
       OR length(trim(phone)) > 0
@@ -55,7 +110,7 @@ class ContactItems extends Table {
     ''',
 
     '''
-    CONSTRAINT ${ContactItemConstraint.phoneNoOuterWhitespace.constraintName}
+    CONSTRAINT chk_contact_items_phone_no_outer_whitespace
     CHECK (
       phone IS NULL
       OR phone = trim(phone)
@@ -63,7 +118,7 @@ class ContactItems extends Table {
     ''',
 
     '''
-    CONSTRAINT ${ContactItemConstraint.emailNotBlank.constraintName}
+    CONSTRAINT chk_contact_items_email_not_blank
     CHECK (
       email IS NULL
       OR length(trim(email)) > 0
@@ -71,7 +126,7 @@ class ContactItems extends Table {
     ''',
 
     '''
-    CONSTRAINT ${ContactItemConstraint.emailNoOuterWhitespace.constraintName}
+    CONSTRAINT chk_contact_items_email_no_outer_whitespace
     CHECK (
       email IS NULL
       OR email = trim(email)
@@ -79,7 +134,7 @@ class ContactItems extends Table {
     ''',
 
     '''
-    CONSTRAINT ${ContactItemConstraint.companyNotBlank.constraintName}
+    CONSTRAINT chk_contact_items_company_not_blank
     CHECK (
       company IS NULL
       OR length(trim(company)) > 0
@@ -87,7 +142,7 @@ class ContactItems extends Table {
     ''',
 
     '''
-    CONSTRAINT ${ContactItemConstraint.companyNoOuterWhitespace.constraintName}
+    CONSTRAINT chk_contact_items_company_no_outer_whitespace
     CHECK (
       company IS NULL
       OR company = trim(company)
@@ -95,7 +150,7 @@ class ContactItems extends Table {
     ''',
 
     '''
-    CONSTRAINT ${ContactItemConstraint.jobTitleNotBlank.constraintName}
+    CONSTRAINT chk_contact_items_job_title_not_blank
     CHECK (
       job_title IS NULL
       OR length(trim(job_title)) > 0
@@ -103,7 +158,7 @@ class ContactItems extends Table {
     ''',
 
     '''
-    CONSTRAINT ${ContactItemConstraint.jobTitleNoOuterWhitespace.constraintName}
+    CONSTRAINT chk_contact_items_job_title_no_outer_whitespace
     CHECK (
       job_title IS NULL
       OR job_title = trim(job_title)
@@ -111,7 +166,7 @@ class ContactItems extends Table {
     ''',
 
     '''
-    CONSTRAINT ${ContactItemConstraint.addressNotBlank.constraintName}
+    CONSTRAINT chk_contact_items_address_not_blank
     CHECK (
       address IS NULL
       OR length(trim(address)) > 0
@@ -119,7 +174,7 @@ class ContactItems extends Table {
     ''',
 
     '''
-    CONSTRAINT ${ContactItemConstraint.websiteNotBlank.constraintName}
+    CONSTRAINT chk_contact_items_website_not_blank
     CHECK (
       website IS NULL
       OR length(trim(website)) > 0
@@ -127,7 +182,7 @@ class ContactItems extends Table {
     ''',
 
     '''
-    CONSTRAINT ${ContactItemConstraint.websiteNoOuterWhitespace.constraintName}
+    CONSTRAINT chk_contact_items_website_no_outer_whitespace
     CHECK (
       website IS NULL
       OR website = trim(website)
@@ -138,6 +193,22 @@ class ContactItems extends Table {
 
 enum ContactItemConstraint {
   itemIdNotBlank('chk_contact_items_item_id_not_blank'),
+
+  firstNameNotBlank('chk_contact_items_first_name_not_blank'),
+
+  firstNameNoOuterWhitespace(
+    'chk_contact_items_first_name_no_outer_whitespace',
+  ),
+
+  middleNameNotBlank('chk_contact_items_middle_name_not_blank'),
+
+  middleNameNoOuterWhitespace(
+    'chk_contact_items_middle_name_no_outer_whitespace',
+  ),
+
+  lastNameNotBlank('chk_contact_items_last_name_not_blank'),
+
+  lastNameNoOuterWhitespace('chk_contact_items_last_name_no_outer_whitespace'),
 
   phoneNotBlank('chk_contact_items_phone_not_blank'),
 

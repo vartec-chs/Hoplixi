@@ -8,6 +8,9 @@ part 'contact_dto.g.dart';
 @freezed
 sealed class ContactDataDto with _$ContactDataDto {
   const factory ContactDataDto({
+    required String firstName,
+    String? middleName,
+    String? lastName,
     String? phone,
     String? email,
     String? company,
@@ -25,9 +28,12 @@ sealed class ContactDataDto with _$ContactDataDto {
 @freezed
 sealed class ContactCardDataDto with _$ContactCardDataDto {
   const factory ContactCardDataDto({
+    required String firstName,
+    String? middleName,
+    String? lastName,
+    String? company,
     String? phone,
     String? email,
-    String? company,
     @Default(false) bool isEmergencyContact,
   }) = _ContactCardDataDto;
 

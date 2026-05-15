@@ -13,6 +13,15 @@ class ContactHistory extends Table {
     onDelete: KeyAction.cascade,
   )();
 
+  /// Имя snapshot.
+  TextColumn get firstName => text().withLength(min: 1, max: 255)();
+
+  /// Отчество snapshot.
+  TextColumn get middleName => text().withLength(min: 1, max: 255).nullable()();
+
+  /// Фамилия snapshot.
+  TextColumn get lastName => text().withLength(min: 1, max: 255).nullable()();
+
   /// Основной телефон snapshot.
   TextColumn get phone => text().withLength(min: 1, max: 64).nullable()();
 
@@ -47,12 +56,56 @@ class ContactHistory extends Table {
   @override
   List<String> get customConstraints => [
     '''
-    CONSTRAINT ${ContactHistoryConstraint.historyIdNotBlank.constraintName}
+    CONSTRAINT chk_contact_history_history_id_not_blank
     CHECK (length(trim(history_id)) > 0)
     ''',
 
     '''
-    CONSTRAINT ${ContactHistoryConstraint.phoneNotBlank.constraintName}
+    CONSTRAINT chk_contact_history_first_name_not_blank
+    CHECK (length(trim(first_name)) > 0)
+    ''',
+
+    '''
+    CONSTRAINT chk_contact_history_first_name_no_outer_whitespace
+    CHECK (
+      first_name = trim(first_name)
+    )
+    ''',
+
+    '''
+    CONSTRAINT chk_contact_history_middle_name_not_blank
+    CHECK (
+      middle_name IS NULL
+      OR length(trim(middle_name)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT chk_contact_history_middle_name_no_outer_whitespace
+    CHECK (
+      middle_name IS NULL
+      OR middle_name = trim(middle_name)
+    )
+    ''',
+
+    '''
+    CONSTRAINT chk_contact_history_last_name_not_blank
+    CHECK (
+      last_name IS NULL
+      OR length(trim(last_name)) > 0
+    )
+    ''',
+
+    '''
+    CONSTRAINT chk_contact_history_last_name_no_outer_whitespace
+    CHECK (
+      last_name IS NULL
+      OR last_name = trim(last_name)
+    )
+    ''',
+
+    '''
+    CONSTRAINT chk_contact_history_phone_not_blank
     CHECK (
       phone IS NULL
       OR length(trim(phone)) > 0
@@ -60,7 +113,7 @@ class ContactHistory extends Table {
     ''',
 
     '''
-    CONSTRAINT ${ContactHistoryConstraint.phoneNoOuterWhitespace.constraintName}
+    CONSTRAINT chk_contact_history_phone_no_outer_whitespace
     CHECK (
       phone IS NULL
       OR phone = trim(phone)
@@ -68,7 +121,7 @@ class ContactHistory extends Table {
     ''',
 
     '''
-    CONSTRAINT ${ContactHistoryConstraint.emailNotBlank.constraintName}
+    CONSTRAINT chk_contact_history_email_not_blank
     CHECK (
       email IS NULL
       OR length(trim(email)) > 0
@@ -76,7 +129,7 @@ class ContactHistory extends Table {
     ''',
 
     '''
-    CONSTRAINT ${ContactHistoryConstraint.emailNoOuterWhitespace.constraintName}
+    CONSTRAINT chk_contact_history_email_no_outer_whitespace
     CHECK (
       email IS NULL
       OR email = trim(email)
@@ -84,7 +137,7 @@ class ContactHistory extends Table {
     ''',
 
     '''
-    CONSTRAINT ${ContactHistoryConstraint.companyNotBlank.constraintName}
+    CONSTRAINT chk_contact_history_company_not_blank
     CHECK (
       company IS NULL
       OR length(trim(company)) > 0
@@ -92,7 +145,7 @@ class ContactHistory extends Table {
     ''',
 
     '''
-    CONSTRAINT ${ContactHistoryConstraint.companyNoOuterWhitespace.constraintName}
+    CONSTRAINT chk_contact_history_company_no_outer_whitespace
     CHECK (
       company IS NULL
       OR company = trim(company)
@@ -100,7 +153,7 @@ class ContactHistory extends Table {
     ''',
 
     '''
-    CONSTRAINT ${ContactHistoryConstraint.jobTitleNotBlank.constraintName}
+    CONSTRAINT chk_contact_history_job_title_not_blank
     CHECK (
       job_title IS NULL
       OR length(trim(job_title)) > 0
@@ -108,7 +161,7 @@ class ContactHistory extends Table {
     ''',
 
     '''
-    CONSTRAINT ${ContactHistoryConstraint.jobTitleNoOuterWhitespace.constraintName}
+    CONSTRAINT chk_contact_history_job_title_no_outer_whitespace
     CHECK (
       job_title IS NULL
       OR job_title = trim(job_title)
@@ -116,7 +169,7 @@ class ContactHistory extends Table {
     ''',
 
     '''
-    CONSTRAINT ${ContactHistoryConstraint.addressNotBlank.constraintName}
+    CONSTRAINT chk_contact_history_address_not_blank
     CHECK (
       address IS NULL
       OR length(trim(address)) > 0
@@ -124,7 +177,7 @@ class ContactHistory extends Table {
     ''',
 
     '''
-    CONSTRAINT ${ContactHistoryConstraint.websiteNotBlank.constraintName}
+    CONSTRAINT chk_contact_history_website_not_blank
     CHECK (
       website IS NULL
       OR length(trim(website)) > 0
@@ -132,7 +185,7 @@ class ContactHistory extends Table {
     ''',
 
     '''
-    CONSTRAINT ${ContactHistoryConstraint.websiteNoOuterWhitespace.constraintName}
+    CONSTRAINT chk_contact_history_website_no_outer_whitespace
     CHECK (
       website IS NULL
       OR website = trim(website)
@@ -143,6 +196,24 @@ class ContactHistory extends Table {
 
 enum ContactHistoryConstraint {
   historyIdNotBlank('chk_contact_history_history_id_not_blank'),
+
+  firstNameNotBlank('chk_contact_history_first_name_not_blank'),
+
+  firstNameNoOuterWhitespace(
+    'chk_contact_history_first_name_no_outer_whitespace',
+  ),
+
+  middleNameNotBlank('chk_contact_history_middle_name_not_blank'),
+
+  middleNameNoOuterWhitespace(
+    'chk_contact_history_middle_name_no_outer_whitespace',
+  ),
+
+  lastNameNotBlank('chk_contact_history_last_name_not_blank'),
+
+  lastNameNoOuterWhitespace(
+    'chk_contact_history_last_name_no_outer_whitespace',
+  ),
 
   phoneNotBlank('chk_contact_history_phone_not_blank'),
 

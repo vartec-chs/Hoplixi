@@ -6,9 +6,9 @@ extension ContactItemsDataMapper on ContactItemsData {
   ContactDataDto toContactDataDto() {
     return ContactDataDto(
       firstName: firstName,
-      lastName: lastName,
       middleName: middleName,
-      organization: organization,
+      lastName: lastName,
+      company: company,
       jobTitle: jobTitle,
       email: email,
       phone: phone,
@@ -21,10 +21,12 @@ extension ContactItemsDataMapper on ContactItemsData {
   ContactCardDataDto toContactCardDataDto() {
     return ContactCardDataDto(
       firstName: firstName,
+      middleName: middleName,
       lastName: lastName,
-      organization: organization,
+      company: company,
       email: email,
       phone: phone,
+      isEmergencyContact: isEmergencyContact,
     );
   }
 }

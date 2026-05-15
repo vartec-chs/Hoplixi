@@ -4,6 +4,14 @@
 
 ### main_db
 
+- В contact-схеме добавлены структурные поля `firstName`, `middleName` и
+  `lastName` в `contact_items` и `contact_history`; имя обязательно, отчество и
+  фамилия nullable.
+- `ContactDataDto`, `ContactCardDataDto`, current `ContactRepository` и mapper
+  синхронизированы с новыми полями контакта и `company`-полем.
+- Схема БД поднята до версии 6, добавлена миграция для backfill новых
+  contact-колонок на существующих хранилищах.
+
 - Во всех `enum`-ах в `lib/main_db/core/tables` добавлены
   `package:json_annotation/json_annotation.dart` и
   `@JsonEnum(fieldRename: FieldRename.snake)` для унифицированной

@@ -2,7 +2,6 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_db/core/dao/daos.dart';
-import 'package:hoplixi/main_db/core/old/daos/daos.dart';
 import 'package:hoplixi/main_db/core/tables/tables.dart';
 
 part 'main_store.g.dart';
@@ -76,6 +75,17 @@ part 'main_store.g.dart';
     WifiHistory,
   ],
   daos: [
+    CategoriesDao,
+    TagsDao,
+    ItemTagsDao,
+    ItemLinksDao,
+    CustomIconsDao,
+    IconRefsDao,
+    StoreSettingsDao,
+    StoreMetaDao,
+    ItemCategoryHistoryDao,
+    VaultItemTagHistoryDao,
+    ItemLinkHistoryDao,
     VaultItemsDao,
     PasswordItemsDao,
     OtpItemsDao,

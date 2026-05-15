@@ -1,8 +1,8 @@
 import 'package:drift/drift.dart';
+import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:uuid/uuid.dart';
 
 import '../main_store.dart';
-import '../models/dto/contact_dto.dart';
 import '../models/mappers/contact_mapper.dart';
 import '../models/mappers/vault_item_mapper.dart';
 import '../tables/vault_items/vault_items.dart';
@@ -17,7 +17,9 @@ class ContactRepository {
       final now = DateTime.now();
       final itemId = const Uuid().v4();
 
-      await db.into(db.vaultItems).insert(
+      await db
+          .into(db.vaultItems)
+          .insert(
             VaultItemsCompanion.insert(
               id: Value(itemId),
               type: VaultItemType.contact,
@@ -32,13 +34,15 @@ class ContactRepository {
             ),
           );
 
-      await db.into(db.contactItems).insert(
+      await db
+          .into(db.contactItems)
+          .insert(
             ContactItemsCompanion.insert(
               itemId: itemId,
-              firstName: Value(dto.contact.firstName),
-              lastName: Value(dto.contact.lastName),
+              firstName: dto.contact.firstName,
               middleName: Value(dto.contact.middleName),
-              organization: Value(dto.contact.organization),
+              lastName: Value(dto.contact.lastName),
+              company: Value(dto.contact.company),
               jobTitle: Value(dto.contact.jobTitle),
               email: Value(dto.contact.email),
               phone: Value(dto.contact.phone),
@@ -57,8 +61,9 @@ class ContactRepository {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
 
-      await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-          .write(
+      await (db.update(
+        db.vaultItems,
+      )..where((tbl) => tbl.id.equals(itemId))).write(
         VaultItemsCompanion(
           name: Value(dto.item.name),
           description: Value(dto.item.description),
@@ -70,14 +75,14 @@ class ContactRepository {
         ),
       );
 
-      await (db.update(db.contactItems)
-            ..where((tbl) => tbl.itemId.equals(itemId)))
-          .write(
+      await (db.update(
+        db.contactItems,
+      )..where((tbl) => tbl.itemId.equals(itemId))).write(
         ContactItemsCompanion(
           firstName: Value(dto.contact.firstName),
-          lastName: Value(dto.contact.lastName),
           middleName: Value(dto.contact.middleName),
-          organization: Value(dto.contact.organization),
+          lastName: Value(dto.contact.lastName),
+          company: Value(dto.contact.company),
           jobTitle: Value(dto.contact.jobTitle),
           email: Value(dto.contact.email),
           phone: Value(dto.contact.phone),
@@ -90,14 +95,15 @@ class ContactRepository {
   }
 
   Future<ContactViewDto?> getViewById(String itemId) async {
-    final query = db.select(db.vaultItems).join([
-      innerJoin(
-        db.contactItems,
-        db.contactItems.itemId.equalsExp(db.vaultItems.id),
-      ),
-    ])
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.contact));
+    final query =
+        db.select(db.vaultItems).join([
+            innerJoin(
+              db.contactItems,
+              db.contactItems.itemId.equalsExp(db.vaultItems.id),
+            ),
+          ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.contact));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
@@ -136,8 +142,9 @@ class ContactRepository {
   }
 
   Future<void> deletePermanently(String itemId) {
-    return (db.delete(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-        .go();
+    return (db.delete(
+      db.vaultItems,
+    )..where((tbl) => tbl.id.equals(itemId))).go();
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery() {
@@ -146,38 +153,39 @@ class ContactRepository {
         db.contactItems,
         db.contactItems.itemId.equalsExp(db.vaultItems.id),
       ),
-    ])
-      ..addColumns([
-        db.vaultItems.id,
-        db.vaultItems.type,
-        db.vaultItems.name,
-        db.vaultItems.description,
-        db.vaultItems.categoryId,
-        db.vaultItems.iconRefId,
-        db.vaultItems.isFavorite,
-        db.vaultItems.isArchived,
-        db.vaultItems.isPinned,
-        db.vaultItems.isDeleted,
-        db.vaultItems.createdAt,
-        db.vaultItems.modifiedAt,
-        db.vaultItems.lastUsedAt,
-        db.vaultItems.archivedAt,
-        db.vaultItems.deletedAt,
-        db.vaultItems.recentScore,
+    ])..addColumns([
+      db.vaultItems.id,
+      db.vaultItems.type,
+      db.vaultItems.name,
+      db.vaultItems.description,
+      db.vaultItems.categoryId,
+      db.vaultItems.iconRefId,
+      db.vaultItems.isFavorite,
+      db.vaultItems.isArchived,
+      db.vaultItems.isPinned,
+      db.vaultItems.isDeleted,
+      db.vaultItems.createdAt,
+      db.vaultItems.modifiedAt,
+      db.vaultItems.lastUsedAt,
+      db.vaultItems.archivedAt,
+      db.vaultItems.deletedAt,
+      db.vaultItems.recentScore,
 
-        db.contactItems.firstName,
-        db.contactItems.lastName,
-        db.contactItems.organization,
-        db.contactItems.email,
-        db.contactItems.phone,
-      ]);
+      db.contactItems.firstName,
+      db.contactItems.middleName,
+      db.contactItems.lastName,
+      db.contactItems.company,
+      db.contactItems.email,
+      db.contactItems.phone,
+      db.contactItems.isEmergencyContact,
+    ]);
   }
 
   ContactCardDto _mapRowToCardDto(TypedResult row) {
     return ContactCardDto(
       item: VaultItemCardDto(
         itemId: row.read(db.vaultItems.id)!,
-        type: row.read(db.vaultItems.type)!,
+        type: row.readWithConverter(db.vaultItems.type)!,
         name: row.read(db.vaultItems.name)!,
         description: row.read(db.vaultItems.description),
         categoryId: row.read(db.vaultItems.categoryId),
@@ -194,11 +202,13 @@ class ContactRepository {
         recentScore: row.read(db.vaultItems.recentScore),
       ),
       contact: ContactCardDataDto(
-        firstName: row.read(db.contactItems.firstName),
+        firstName: row.read(db.contactItems.firstName)!,
+        middleName: row.read(db.contactItems.middleName),
         lastName: row.read(db.contactItems.lastName),
-        organization: row.read(db.contactItems.organization),
+        company: row.read(db.contactItems.company),
         email: row.read(db.contactItems.email),
         phone: row.read(db.contactItems.phone),
+        isEmergencyContact: row.read(db.contactItems.isEmergencyContact)!,
       ),
     );
   }
