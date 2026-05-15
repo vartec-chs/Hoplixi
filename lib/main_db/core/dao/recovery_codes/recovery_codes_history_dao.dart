@@ -24,6 +24,15 @@ class RecoveryCodesHistoryDao extends DatabaseAccessor<MainStore>
         .getSingleOrNull();
   }
 
+  Future<bool> existsRecoveryCodesHistoryByHistoryId(String historyId) async {
+    final row = await (selectOnly(recoveryCodesHistory)
+          ..addColumns([recoveryCodesHistory.historyId])
+          ..where(recoveryCodesHistory.historyId.equals(historyId)))
+        .getSingleOrNull();
+
+    return row != null;
+  }
+
   Future<List<RecoveryCodesHistoryData>>
       getRecoveryCodesHistoryByGeneratedAtRange({
     DateTime? from,

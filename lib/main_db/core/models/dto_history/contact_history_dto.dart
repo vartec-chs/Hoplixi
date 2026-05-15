@@ -8,6 +8,9 @@ part 'contact_history_dto.g.dart';
 @freezed
 sealed class ContactHistoryDataDto with _$ContactHistoryDataDto {
   const factory ContactHistoryDataDto({
+    required String firstName,
+    String? middleName,
+    String? lastName,
     String? phone,
     String? email,
     String? company,
@@ -27,7 +30,7 @@ sealed class ContactHistoryViewDto with _$ContactHistoryViewDto {
   const factory ContactHistoryViewDto({
     required VaultSnapshotViewDto snapshot,
     required ContactHistoryDataDto contact,
-  }) = _ContactHistoryViewDto;
+  }) = _VaultSnapshotContactHistoryViewDto;
 
   factory ContactHistoryViewDto.fromJson(Map<String, dynamic> json) =>
       _$ContactHistoryViewDtoFromJson(json);
@@ -36,12 +39,12 @@ sealed class ContactHistoryViewDto with _$ContactHistoryViewDto {
 @freezed
 sealed class ContactHistoryCardDataDto with _$ContactHistoryCardDataDto {
   const factory ContactHistoryCardDataDto({
+    required String firstName,
+    String? lastName,
     String? phone,
     String? email,
     String? company,
     String? jobTitle,
-    String? address,
-    String? website,
     DateTime? birthday,
     @Default(false) bool isEmergencyContact,
   }) = _ContactHistoryCardDataDto;

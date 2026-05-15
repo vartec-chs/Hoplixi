@@ -7,7 +7,14 @@ enum StoreSettingsKey {
   incrementUsageOnCopy('increment_usage_on_copy'),
   pinnedEntityTypes('pinned_entity_types');
 
-  const StoreSettingsKey(this.key);
+  const StoreSettingsKey(this.storageKey);
 
-  final String key;
+  final String storageKey;
+
+  static StoreSettingsKey? fromStorageKey(String value) {
+    for (final key in values) {
+      if (key.storageKey == value) return key;
+    }
+    return null;
+  }
 }

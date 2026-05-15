@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hoplixi/main_db/core/old/models/db_ciphers.dart';
+import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
 
 part 'store_key_config.freezed.dart';
 part 'store_key_config.g.dart';

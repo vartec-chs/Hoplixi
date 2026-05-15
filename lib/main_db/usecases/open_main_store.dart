@@ -3,7 +3,7 @@ import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/logger.dart' hide Session;
 import 'package:hoplixi/main_db/core/main_store.dart';
-import 'package:hoplixi/main_db/core/old/models/db_ciphers.dart';
+import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
 import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
 import 'package:hoplixi/main_db/models/session.dart';
 import 'package:hoplixi/main_db/models/store_key_config.dart';

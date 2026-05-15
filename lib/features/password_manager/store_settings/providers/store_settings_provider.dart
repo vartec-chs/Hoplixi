@@ -6,7 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/password_manager/store_settings/models/store_settings_state.dart';
 import 'package:hoplixi/main_db/config/store_settings_keys.dart';
-import 'package:hoplixi/main_db/core/old/models/db_ciphers.dart';
+import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
 import 'package:hoplixi/main_db/providers/db_history_provider.dart';
 import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';

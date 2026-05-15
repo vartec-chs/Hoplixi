@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/theme/constants.dart';
 import 'package:hoplixi/features/password_manager/create_store/providers/create_store_form_provider.dart';
-import 'package:hoplixi/main_db/core/old/models/db_ciphers.dart';
+import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:showcaseview/showcaseview.dart';
 

@@ -24,6 +24,15 @@ class LoyaltyCardHistoryDao extends DatabaseAccessor<MainStore>
         .getSingleOrNull();
   }
 
+  Future<bool> existsLoyaltyCardHistoryByHistoryId(String historyId) async {
+    final row = await (selectOnly(loyaltyCardHistory)
+          ..addColumns([loyaltyCardHistory.historyId])
+          ..where(loyaltyCardHistory.historyId.equals(historyId)))
+        .getSingleOrNull();
+
+    return row != null;
+  }
+
   Future<int> deleteLoyaltyCardHistoryByHistoryId(String historyId) {
     return (delete(loyaltyCardHistory)
           ..where((tbl) => tbl.historyId.equals(historyId)))
