@@ -30,32 +30,7 @@ sealed class CreateApiKeyDto with _$CreateApiKeyDto {
       _$CreateApiKeyDtoFromJson(json);
 }
 
-@freezed
-sealed class UpdateApiKeyDto with _$UpdateApiKeyDto {
-  const factory UpdateApiKeyDto({
-    String? name,
-    String? service,
-    String? key,
-    String? maskedKey,
-    String? tokenType,
-    String? environment,
-    DateTime? expiresAt,
-    bool? revoked,
-    int? rotationPeriodDays,
-    DateTime? lastRotatedAt,
-    String? metadata,
-    String? description,
-    String? noteId,
-    String? categoryId,
-    bool? isFavorite,
-    bool? isArchived,
-    bool? isPinned,
-    List<String>? tagsIds,
-  }) = _UpdateApiKeyDto;
 
-  factory UpdateApiKeyDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateApiKeyDtoFromJson(json);
-}
 
 @freezed
 sealed class ApiKeyCardDto with _$ApiKeyCardDto implements BaseCardDto {
@@ -85,3 +60,4 @@ sealed class ApiKeyCardDto with _$ApiKeyCardDto implements BaseCardDto {
   factory ApiKeyCardDto.fromJson(Map<String, dynamic> json) =>
       _$ApiKeyCardDtoFromJson(json);
 }
+

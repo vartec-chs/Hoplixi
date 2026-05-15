@@ -74,17 +74,6 @@ sealed class CreateLoyaltyCardDto with _$CreateLoyaltyCardDto {
 }
 
 @freezed
-sealed class UpdateLoyaltyCardDto with _$UpdateLoyaltyCardDto {
-  const factory UpdateLoyaltyCardDto({
-    required VaultItemUpdateDto item,
-    required LoyaltyCardDataDto loyaltyCard,
-  }) = _UpdateLoyaltyCardDto;
-
-  factory UpdateLoyaltyCardDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateLoyaltyCardDtoFromJson(json);
-}
-
-@freezed
 sealed class LoyaltyCardViewDto with _$LoyaltyCardViewDto {
   const factory LoyaltyCardViewDto({
     required VaultItemViewDto item,
@@ -129,5 +118,6 @@ sealed class PatchLoyaltyCardDto with _$PatchLoyaltyCardDto {
   const factory PatchLoyaltyCardDto({
     required VaultItemPatchDto item,
     required PatchLoyaltyCardDataDto loyaltyCard,
+    @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchLoyaltyCardDto;
 }

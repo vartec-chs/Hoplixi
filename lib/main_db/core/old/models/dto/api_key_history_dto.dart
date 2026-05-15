@@ -20,3 +20,4 @@ sealed class ApiKeyHistoryCardDto with _$ApiKeyHistoryCardDto {
   factory ApiKeyHistoryCardDto.fromJson(Map<String, dynamic> json) =>
       _$ApiKeyHistoryCardDtoFromJson(json);
 }
+

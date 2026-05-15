@@ -1,3 +1,4 @@
+import 'package:hoplixi/main_db/core/models/field_update.dart';
 import 'package:uuid/uuid.dart';
 import 'package:drift/drift.dart' as drift;
 
@@ -7,7 +8,7 @@ import '../../../models/dto/system/icon_ref_dto.dart';
 import '../../../models/mappers/system/custom_icon_mapper.dart';
 import '../../../models/mappers/system/icon_ref_mapper.dart';
 
-class IconRepository   {
+class IconRepository {
   final MainStore db;
 
   IconRepository(this.db);
@@ -30,13 +31,13 @@ class IconRepository   {
     return id;
   }
 
-  Future<void> updateCustomIcon(UpdateCustomIconDto dto) async {
+  Future<void> updateCustomIcon(PatchCustomIconDto dto) async {
     await db.customIconsDao.updateCustomIconById(
       dto.id,
       CustomIconsCompanion(
-        name: dto.name != null ? drift.Value(dto.name!) : const drift.Value.absent(),
-        format: dto.format != null ? drift.Value(dto.format!) : const drift.Value.absent(),
-        data: dto.data != null ? drift.Value(dto.data!) : const drift.Value.absent(),
+        name: dto.name.toRequiredValue(),
+        format: dto.format.toRequiredValue(),
+        data: dto.data.toRequiredValue(),
         modifiedAt: drift.Value(DateTime.now()),
       ),
     );
@@ -77,16 +78,16 @@ class IconRepository   {
     return id;
   }
 
-  Future<void> updateIconRef(UpdateIconRefDto dto) async {
+  Future<void> updateIconRef(PatchIconRefDto dto) async {
     await db.iconRefsDao.updateIconRefById(
       dto.id,
       IconRefsCompanion(
-        iconSourceType: dto.iconSourceType != null ? drift.Value(dto.iconSourceType!) : const drift.Value.absent(),
-        iconPackId: dto.iconPackId != null ? drift.Value(dto.iconPackId) : const drift.Value.absent(),
-        iconValue: dto.iconValue != null ? drift.Value(dto.iconValue) : const drift.Value.absent(),
-        customIconId: dto.customIconId != null ? drift.Value(dto.customIconId) : const drift.Value.absent(),
-        color: dto.color != null ? drift.Value(dto.color) : const drift.Value.absent(),
-        backgroundColor: dto.backgroundColor != null ? drift.Value(dto.backgroundColor) : const drift.Value.absent(),
+        iconSourceType: dto.iconSourceType.toRequiredValue(),
+        iconPackId: dto.iconPackId.toNullableValue(),
+        iconValue: dto.iconValue.toNullableValue(),
+        customIconId: dto.customIconId.toNullableValue(),
+        color: dto.color.toNullableValue(),
+        backgroundColor: dto.backgroundColor.toNullableValue(),
         modifiedAt: drift.Value(DateTime.now()),
       ),
     );

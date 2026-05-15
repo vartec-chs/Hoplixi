@@ -28,30 +28,7 @@ sealed class CreateContactDto with _$CreateContactDto {
       _$CreateContactDtoFromJson(json);
 }
 
-@freezed
-sealed class UpdateContactDto with _$UpdateContactDto {
-  const factory UpdateContactDto({
-    String? name,
-    String? phone,
-    String? email,
-    String? company,
-    String? jobTitle,
-    String? address,
-    String? website,
-    DateTime? birthday,
-    bool? isEmergencyContact,
-    String? description,
-    String? noteId,
-    String? categoryId,
-    bool? isFavorite,
-    bool? isArchived,
-    bool? isPinned,
-    List<String>? tagsIds,
-  }) = _UpdateContactDto;
 
-  factory UpdateContactDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateContactDtoFromJson(json);
-}
 
 @freezed
 sealed class ContactCardDto with _$ContactCardDto implements BaseCardDto {
@@ -78,3 +55,4 @@ sealed class ContactCardDto with _$ContactCardDto implements BaseCardDto {
   factory ContactCardDto.fromJson(Map<String, dynamic> json) =>
       _$ContactCardDtoFromJson(json);
 }
+

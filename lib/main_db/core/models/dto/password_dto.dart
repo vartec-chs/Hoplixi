@@ -46,17 +46,6 @@ sealed class CreatePasswordDto with _$CreatePasswordDto {
 }
 
 @freezed
-sealed class UpdatePasswordDto with _$UpdatePasswordDto {
-  const factory UpdatePasswordDto({
-    required VaultItemUpdateDto item,
-    required PasswordDataDto password,
-  }) = _UpdatePasswordDto;
-
-  factory UpdatePasswordDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdatePasswordDtoFromJson(json);
-}
-
-@freezed
 sealed class PasswordViewDto with _$PasswordViewDto {
   const factory PasswordViewDto({
     required VaultItemViewDto item,
@@ -94,5 +83,6 @@ sealed class PatchPasswordDto with _$PatchPasswordDto {
   const factory PatchPasswordDto({
     required VaultItemPatchDto item,
     required PatchPasswordDataDto password,
+    @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchPasswordDto;
 }

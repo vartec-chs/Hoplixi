@@ -7,3 +7,4 @@ abstract interface class BaseCardDto {
   int get usedCount;
   DateTime get modifiedAt;
 }
+

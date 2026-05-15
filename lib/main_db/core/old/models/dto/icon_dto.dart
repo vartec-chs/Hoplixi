@@ -34,14 +34,7 @@ sealed class CreateIconDto with _$CreateIconDto {
 }
 
 /// DTO для обновления иконки
-@freezed
-sealed class UpdateIconDto with _$UpdateIconDto {
-  const factory UpdateIconDto({String? name, String? type, List<int>? data}) =
-      _UpdateIconDto;
 
-  factory UpdateIconDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateIconDtoFromJson(json);
-}
 
 /// DTO для полной информации об иконке
 @freezed
@@ -58,3 +51,4 @@ sealed class IconDetailDto with _$IconDetailDto {
   factory IconDetailDto.fromJson(Map<String, dynamic> json) =>
       _$IconDetailDtoFromJson(json);
 }
+

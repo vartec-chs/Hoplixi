@@ -20,17 +20,3 @@ sealed class StoreMetaDto with _$StoreMetaDto {
   factory StoreMetaDto.fromJson(Map<String, dynamic> json) =>
       _$StoreMetaDtoFromJson(json);
 }
-
-@freezed
-sealed class UpdateStoreMetaDto with _$UpdateStoreMetaDto {
-  const factory UpdateStoreMetaDto({
-    String? name,
-    String? description,
-    String? passwordHash,
-    String? salt,
-    String? attachmentKey,
-  }) = _UpdateStoreMetaDto;
-
-  factory UpdateStoreMetaDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateStoreMetaDtoFromJson(json);
-}

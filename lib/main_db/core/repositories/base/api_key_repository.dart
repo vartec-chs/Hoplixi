@@ -4,7 +4,6 @@ import 'package:hoplixi/main_db/core/tables/api_key/api_key_items.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../main_store.dart';
-import '../../models/dto/api_key_dto.dart';
 import '../../models/mappers/api_key_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
 import '../../tables/vault_items/vault_items.dart';
@@ -58,7 +57,7 @@ class ApiKeyRepository {
     });
   }
 
-  Future<void> update(UpdateApiKeyDto dto) {
+  Future<void> update(PatchApiKeyDto dto) {
     return db.transaction(() async {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
@@ -66,35 +65,49 @@ class ApiKeyRepository {
       await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
           .write(
         VaultItemsCompanion(
-          name: Value(dto.item.name),
-          description: Value(dto.item.description),
-          categoryId: Value(dto.item.categoryId),
-          iconRefId: Value(dto.item.iconRefId),
-          isFavorite: Value(dto.item.isFavorite),
-          isPinned: Value(dto.item.isPinned),
+          name: dto.item.name.toRequiredValue(),
+          description: dto.item.description.toNullableValue(),
+          categoryId: dto.item.categoryId.toNullableValue(),
+          iconRefId: dto.item.iconRefId.toNullableValue(),
+          isFavorite: dto.item.isFavorite.toRequiredValue(),
+          isPinned: dto.item.isPinned.toRequiredValue(),
           modifiedAt: Value(now),
         ),
       );
 
+      final revokedAtUpdate = dto.apiKey.revokedAt;
+      Value<bool> revokedUpdate = const Value.absent();
+      if (revokedAtUpdate is FieldUpdateSet<DateTime>) {
+        revokedUpdate = Value(revokedAtUpdate.value != null);
+      }
+
       await (db.update(db.apiKeyItems)..where((tbl) => tbl.itemId.equals(itemId)))
           .write(
         ApiKeyItemsCompanion(
-          service: Value(dto.apiKey.service),
-          key: Value(dto.apiKey.key),
-          tokenType: Value(dto.apiKey.tokenType),
-          tokenTypeOther: Value(dto.apiKey.tokenTypeOther),
-          environment: Value(dto.apiKey.environment),
-          environmentOther: Value(dto.apiKey.environmentOther),
-          expiresAt: Value(dto.apiKey.expiresAt),
-          revoked: Value(dto.apiKey.revokedAt != null),
-          revokedAt: Value(dto.apiKey.revokedAt),
-          rotationPeriodDays: Value(dto.apiKey.rotationPeriodDays),
-          lastRotatedAt: Value(dto.apiKey.lastRotatedAt),
-          owner: Value(dto.apiKey.owner),
-          baseUrl: Value(dto.apiKey.baseUrl),
-          scopesText: Value(dto.apiKey.scopesText),
+          service: dto.apiKey.service.toRequiredValue(),
+          key: dto.apiKey.key.toRequiredValue(),
+          tokenType: dto.apiKey.tokenType.toNullableValue(),
+          tokenTypeOther: dto.apiKey.tokenTypeOther.toNullableValue(),
+          environment: dto.apiKey.environment.toNullableValue(),
+          environmentOther: dto.apiKey.environmentOther.toNullableValue(),
+          expiresAt: dto.apiKey.expiresAt.toNullableValue(),
+          revoked: revokedUpdate,
+          revokedAt: dto.apiKey.revokedAt.toNullableValue(),
+          rotationPeriodDays: dto.apiKey.rotationPeriodDays.toNullableValue(),
+          lastRotatedAt: dto.apiKey.lastRotatedAt.toNullableValue(),
+          owner: dto.apiKey.owner.toNullableValue(),
+          baseUrl: dto.apiKey.baseUrl.toNullableValue(),
+          scopesText: dto.apiKey.scopesText.toNullableValue(),
         ),
       );
+
+      final tagsUpdate = dto.tags;
+      if (tagsUpdate is FieldUpdateSet<List<String>>) {
+        await db.itemTagsDao.removeAllTagsFromItem(itemId);
+        for (final tagId in tagsUpdate.value ?? []) {
+          await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
+        }
+      }
     });
   }
 

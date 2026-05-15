@@ -87,23 +87,5 @@ sealed class OtpCardDto with _$OtpCardDto implements BaseCardDto {
 }
 
 /// DTO для обновления OTP
-@freezed
-sealed class UpdateOtpDto with _$UpdateOtpDto {
-  const factory UpdateOtpDto({
-    String? issuer,
-    String? accountName,
-    String? noteId,
-    String? algorithm,
-    int? digits,
-    int? period,
-    int? counter,
-    String? categoryId,
-    String? passwordId,
-    bool? isFavorite,
-    bool? isPinned,
-    List<String>? tagsIds,
-  }) = _UpdateOtpDto;
 
-  factory UpdateOtpDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateOtpDtoFromJson(json);
-}
+

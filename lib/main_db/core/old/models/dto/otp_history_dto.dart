@@ -75,3 +75,4 @@ sealed class OtpHistoryCardDto with _$OtpHistoryCardDto {
   factory OtpHistoryCardDto.fromJson(Map<String, dynamic> json) =>
       _$OtpHistoryCardDtoFromJson(json);
 }
+

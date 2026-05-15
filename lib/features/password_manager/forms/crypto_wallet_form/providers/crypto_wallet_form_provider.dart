@@ -4,8 +4,9 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/main_db/core/models/dto/dto.dart';
+import 'package:hoplixi/main_db/providers/repository_providers.dart';
+import 'package:hoplixi/main_db/core/tables/crypto_wallet/crypto_wallet_items.dart';
 
 import '../models/crypto_wallet_form_state.dart';
 
@@ -26,39 +27,34 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
     }
     final id = cryptoWalletId!;
 
-    final dao = await ref.read(cryptoWalletDaoProvider.future);
-    final row = await dao.getById(id);
-    if (row == null) return const CryptoWalletFormState(isEditMode: false);
+    final repository = await ref.read(cryptoWalletRepositoryProvider.future);
+    final view = await repository.getViewById(id);
+    if (view == null) return const CryptoWalletFormState(isEditMode: false);
 
-    final item = row.$1;
-    final wallet = row.$2;
+    final item = view.item;
+    final wallet = view.cryptoWallet;
 
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    final tagIds = await vaultItemDao.getTagIds(id);
-    final tagDao = await ref.read(tagDaoProvider.future);
-    final tags = await tagDao.getTagsByIds(tagIds);
+    // TODO: handle tags properly
     final customFields = await loadCustomFields(ref, id);
 
     return CryptoWalletFormState(
       isEditMode: true,
       editingCryptoWalletId: id,
       name: item.name,
-      walletType: wallet.walletType,
+      walletType: wallet.walletType?.name ?? '',
       mnemonic: wallet.mnemonic ?? '',
       privateKey: wallet.privateKey ?? '',
       derivationPath: wallet.derivationPath ?? '',
-      network: wallet.network ?? '',
+      network: wallet.network?.name ?? '',
       addresses: wallet.addresses ?? '',
       xpub: wallet.xpub ?? '',
       xprv: wallet.xprv ?? '',
       hardwareDevice: wallet.hardwareDevice ?? '',
-      derivationScheme: wallet.derivationScheme ?? '',
+      derivationScheme: wallet.derivationScheme?.name ?? '',
       description: item.description ?? '',
       watchOnly: wallet.watchOnly,
-      noteId: item.noteId,
       categoryId: item.categoryId,
-      tagIds: tagIds,
-      tagNames: tags.map((t) => t.name).toList(),
+      tagIds: [],
       customFields: customFields,
     );
   }
@@ -138,35 +134,41 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
     }
 
     try {
-      final dao = await ref.read(cryptoWalletDaoProvider.future);
+      final repository = await ref.read(cryptoWalletRepositoryProvider.future);
 
       if (c.isEditMode && c.editingCryptoWalletId != null) {
-        final updated = await dao.updateCryptoWallet(
-          c.editingCryptoWalletId!,
-          UpdateCryptoWalletDto(
-            name: c.name.trim(),
-            walletType: c.walletType.trim(),
-            mnemonic: clean(c.mnemonic),
-            privateKey: clean(c.privateKey),
-            derivationPath: clean(c.derivationPath),
-            network: clean(c.network),
-            addresses: clean(c.addresses),
-            xpub: clean(c.xpub),
-            xprv: clean(c.xprv),
-            hardwareDevice: clean(c.hardwareDevice),
-            derivationScheme: clean(c.derivationScheme),
-            description: clean(c.description),
-            watchOnly: c.watchOnly,
-            noteId: c.noteId,
-            categoryId: c.categoryId,
-            tagsIds: c.tagIds,
+        await repository.update(
+          PatchCryptoWalletDto(
+            item: VaultItemPatchDto(
+              itemId: c.editingCryptoWalletId!,
+              name: FieldUpdate.set(c.name.trim()),
+              description: FieldUpdate.set(clean(c.description)),
+              categoryId: FieldUpdate.set(c.categoryId),
+            ),
+            cryptoWallet: PatchCryptoWalletDataDto(
+              walletType: FieldUpdate.set(
+                c.walletType.isEmpty ? null : CryptoWalletType.values.byName(c.walletType),
+              ),
+              mnemonic: FieldUpdate.set(clean(c.mnemonic)),
+              privateKey: FieldUpdate.set(clean(c.privateKey)),
+              derivationPath: FieldUpdate.set(clean(c.derivationPath)),
+              network: FieldUpdate.set(
+                c.network.isEmpty ? null : CryptoNetwork.values.byName(c.network),
+              ),
+              addresses: FieldUpdate.set(clean(c.addresses)),
+              xpub: FieldUpdate.set(clean(c.xpub)),
+              xprv: FieldUpdate.set(clean(c.xprv)),
+              hardwareDevice: FieldUpdate.set(clean(c.hardwareDevice)),
+              derivationScheme: FieldUpdate.set(
+                c.derivationScheme.isEmpty
+                    ? null
+                    : CryptoDerivationScheme.values.byName(c.derivationScheme),
+              ),
+              watchOnly: FieldUpdate.set(c.watchOnly),
+            ),
+            tags: FieldUpdate.set(c.tagIds),
           ),
         );
-
-        if (!updated) {
-          _update((s) => s.copyWith(isSaving: false));
-          return false;
-        }
 
         await saveCustomFields(ref, c.editingCryptoWalletId!, c.customFields);
 
@@ -177,24 +179,32 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
               entityId: c.editingCryptoWalletId,
             );
       } else {
-        final id = await dao.createCryptoWallet(
+        final id = await repository.create(
           CreateCryptoWalletDto(
-            name: c.name.trim(),
-            walletType: c.walletType.trim(),
-            mnemonic: clean(c.mnemonic),
-            privateKey: clean(c.privateKey),
-            derivationPath: clean(c.derivationPath),
-            network: clean(c.network),
-            addresses: clean(c.addresses),
-            xpub: clean(c.xpub),
-            xprv: clean(c.xprv),
-            hardwareDevice: clean(c.hardwareDevice),
-            derivationScheme: clean(c.derivationScheme),
-            description: clean(c.description),
-            watchOnly: c.watchOnly,
-            noteId: c.noteId,
-            categoryId: c.categoryId,
-            tagsIds: c.tagIds,
+            item: VaultItemCreateDto(
+              name: c.name.trim(),
+              description: clean(c.description),
+              categoryId: c.categoryId,
+            ),
+            cryptoWallet: CryptoWalletDataDto(
+              walletType: c.walletType.isEmpty
+                  ? null
+                  : CryptoWalletType.values.byName(c.walletType),
+              mnemonic: clean(c.mnemonic),
+              privateKey: clean(c.privateKey),
+              derivationPath: clean(c.derivationPath),
+              network: c.network.isEmpty
+                  ? null
+                  : CryptoNetwork.values.byName(c.network),
+              addresses: clean(c.addresses),
+              xpub: clean(c.xpub),
+              xprv: clean(c.xprv),
+              hardwareDevice: clean(c.hardwareDevice),
+              derivationScheme: c.derivationScheme.isEmpty
+                  ? null
+                  : CryptoDerivationScheme.values.byName(c.derivationScheme),
+              watchOnly: c.watchOnly,
+            ),
           ),
         );
 

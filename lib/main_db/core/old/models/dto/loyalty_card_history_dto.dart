@@ -1,4 +1,4 @@
-﻿import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'loyalty_card_history_dto.freezed.dart';
 part 'loyalty_card_history_dto.g.dart';
@@ -90,3 +90,4 @@ sealed class LoyaltyCardHistoryCardDto with _$LoyaltyCardHistoryCardDto {
   factory LoyaltyCardHistoryCardDto.fromJson(Map<String, dynamic> json) =>
       _$LoyaltyCardHistoryCardDtoFromJson(json);
 }
+

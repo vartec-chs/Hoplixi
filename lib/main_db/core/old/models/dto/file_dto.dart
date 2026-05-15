@@ -92,19 +92,5 @@ sealed class FileCardDto with _$FileCardDto implements BaseCardDto {
 }
 
 /// DTO для обновления файла
-@freezed
-sealed class UpdateFileDto with _$UpdateFileDto {
-  const factory UpdateFileDto({
-    String? name,
-    String? description,
-    String? noteId,
-    String? categoryId,
-    bool? isFavorite,
-    bool? isArchived,
-    bool? isPinned,
-    List<String>? tagsIds,
-  }) = _UpdateFileDto;
 
-  factory UpdateFileDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateFileDtoFromJson(json);
-}
+

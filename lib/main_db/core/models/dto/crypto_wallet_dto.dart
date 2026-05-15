@@ -60,17 +60,6 @@ sealed class CreateCryptoWalletDto with _$CreateCryptoWalletDto {
 }
 
 @freezed
-sealed class UpdateCryptoWalletDto with _$UpdateCryptoWalletDto {
-  const factory UpdateCryptoWalletDto({
-    required VaultItemUpdateDto item,
-    required CryptoWalletDataDto cryptoWallet,
-  }) = _UpdateCryptoWalletDto;
-
-  factory UpdateCryptoWalletDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateCryptoWalletDtoFromJson(json);
-}
-
-@freezed
 sealed class CryptoWalletViewDto with _$CryptoWalletViewDto {
   const factory CryptoWalletViewDto({
     required VaultItemViewDto item,
@@ -117,5 +106,6 @@ sealed class PatchCryptoWalletDto with _$PatchCryptoWalletDto {
   const factory PatchCryptoWalletDto({
     required VaultItemPatchDto item,
     required PatchCryptoWalletDataDto cryptoWallet,
+    @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchCryptoWalletDto;
 }

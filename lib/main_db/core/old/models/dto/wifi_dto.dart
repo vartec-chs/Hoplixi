@@ -31,33 +31,7 @@ sealed class CreateWifiDto with _$CreateWifiDto {
       _$CreateWifiDtoFromJson(json);
 }
 
-@freezed
-sealed class UpdateWifiDto with _$UpdateWifiDto {
-  const factory UpdateWifiDto({
-    String? name,
-    String? ssid,
-    String? password,
-    String? security,
-    bool? hidden,
-    String? eapMethod,
-    String? username,
-    String? identity,
-    String? domain,
-    String? lastConnectedBssid,
-    int? priority,
-    String? qrCodePayload,
-    String? description,
-    String? noteId,
-    String? categoryId,
-    bool? isFavorite,
-    bool? isArchived,
-    bool? isPinned,
-    List<String>? tagsIds,
-  }) = _UpdateWifiDto;
 
-  factory UpdateWifiDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateWifiDtoFromJson(json);
-}
 
 @freezed
 sealed class WifiCardDto with _$WifiCardDto implements BaseCardDto {
@@ -88,3 +62,4 @@ sealed class WifiCardDto with _$WifiCardDto implements BaseCardDto {
   factory WifiCardDto.fromJson(Map<String, dynamic> json) =>
       _$WifiCardDtoFromJson(json);
 }
+

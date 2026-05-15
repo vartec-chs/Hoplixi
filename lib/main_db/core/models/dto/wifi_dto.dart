@@ -49,17 +49,6 @@ sealed class CreateWifiDto with _$CreateWifiDto {
 }
 
 @freezed
-sealed class UpdateWifiDto with _$UpdateWifiDto {
-  const factory UpdateWifiDto({
-    required VaultItemUpdateDto item,
-    required WifiDataDto wifi,
-  }) = _UpdateWifiDto;
-
-  factory UpdateWifiDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateWifiDtoFromJson(json);
-}
-
-@freezed
 sealed class WifiViewDto with _$WifiViewDto {
   const factory WifiViewDto({
     required VaultItemViewDto item,
@@ -99,5 +88,6 @@ sealed class PatchWifiDto with _$PatchWifiDto {
   const factory PatchWifiDto({
     required VaultItemPatchDto item,
     required PatchWifiDataDto wifi,
+    @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchWifiDto;
 }

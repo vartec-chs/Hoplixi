@@ -1,3 +1,4 @@
+import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:uuid/uuid.dart';
 import 'package:drift/drift.dart' as drift;
 
@@ -8,7 +9,7 @@ import '../../../models/mappers/system/item_link_mapper.dart';
 import '../../../models/dto/system/tag_dto.dart';
 import '../../../models/mappers/system/tag_mapper.dart';
 
-class VaultItemRelationsRepository   {
+class VaultItemRelationsRepository {
   final MainStore db;
 
   VaultItemRelationsRepository(this.db);
@@ -98,8 +99,10 @@ class VaultItemRelationsRepository   {
     }
 
     if (dto.relationType == ItemLinkType.other) {
-      if (dto.relationTypeOther == null || dto.relationTypeOther!.trim().isEmpty) {
-        throw ArgumentError('relationTypeOther is required when relationType is other');
+      if (dto.relationTypeOther == null ||
+          dto.relationTypeOther!.trim().isEmpty) {
+        throw ArgumentError(
+            'relationTypeOther is required when relationType is other');
       }
     }
 
@@ -123,12 +126,12 @@ class VaultItemRelationsRepository   {
     return id;
   }
 
-  Future<void> updateLink(UpdateItemLinkDto dto) async {
+  Future<void> updateLink(PatchItemLinkDto dto) async {
     final companion = ItemLinksCompanion(
-      relationType: dto.relationType != null ? drift.Value(dto.relationType!) : const drift.Value.absent(),
-      relationTypeOther: dto.relationTypeOther != null ? drift.Value(dto.relationTypeOther) : const drift.Value.absent(),
-      label: dto.label != null ? drift.Value(dto.label) : const drift.Value.absent(),
-      sortOrder: dto.sortOrder != null ? drift.Value(dto.sortOrder!) : const drift.Value.absent(),
+      relationType: dto.relationType.toRequiredValue(),
+      relationTypeOther: dto.relationTypeOther.toNullableValue(),
+      label: dto.label.toNullableValue(),
+      sortOrder: dto.sortOrder.toRequiredValue(),
       modifiedAt: drift.Value(DateTime.now()),
     );
 

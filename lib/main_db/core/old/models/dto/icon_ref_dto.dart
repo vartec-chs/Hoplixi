@@ -63,3 +63,4 @@ class IconRefDto {
   @override
   String toString() => 'IconRefDto(source: ${source.value}, value: $value)';
 }
+

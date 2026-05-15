@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../main_store.dart';
@@ -32,24 +33,21 @@ class FileMetadataRepository {
     return id;
   }
 
-  Future<void> updateMetadata({
-    required String metadataId,
-    required FileMetadataDataDto dto,
-  }) async {
+  Future<void> updateMetadata(PatchFileMetadataDto dto) async {
     await db.fileMetadataDao.updateFileMetadataById(
-      metadataId,
+      dto.id,
       FileMetadataCompanion(
-        fileName: Value(dto.fileName),
-        fileExtension: Value(dto.fileExtension),
-        filePath: Value(dto.filePath),
-        mimeType: Value(dto.mimeType),
-        fileSize: Value(dto.fileSize),
-        sha256: Value(dto.sha256),
-        availabilityStatus: Value(dto.availabilityStatus),
-        integrityStatus: Value(dto.integrityStatus),
-        missingDetectedAt: Value(dto.missingDetectedAt),
-        deletedAt: Value(dto.deletedAt),
-        lastIntegrityCheckAt: Value(dto.lastIntegrityCheckAt),
+        fileName: dto.fileName.toRequiredValue(),
+        fileExtension: dto.fileExtension.toNullableValue(),
+        filePath: dto.filePath.toNullableValue(),
+        mimeType: dto.mimeType.toRequiredValue(),
+        fileSize: dto.fileSize.toRequiredValue(),
+        sha256: dto.sha256.toNullableValue(),
+        availabilityStatus: dto.availabilityStatus.toRequiredValue(),
+        integrityStatus: dto.integrityStatus.toRequiredValue(),
+        missingDetectedAt: dto.missingDetectedAt.toNullableValue(),
+        deletedAt: dto.deletedAt.toNullableValue(),
+        lastIntegrityCheckAt: dto.lastIntegrityCheckAt.toNullableValue(),
       ),
     );
   }

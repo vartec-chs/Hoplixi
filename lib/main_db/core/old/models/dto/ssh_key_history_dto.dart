@@ -20,3 +20,4 @@ sealed class SshKeyHistoryCardDto with _$SshKeyHistoryCardDto {
   factory SshKeyHistoryCardDto.fromJson(Map<String, dynamic> json) =>
       _$SshKeyHistoryCardDtoFromJson(json);
 }
+

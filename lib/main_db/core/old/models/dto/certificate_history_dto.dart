@@ -22,3 +22,4 @@ sealed class CertificateHistoryCardDto with _$CertificateHistoryCardDto {
   factory CertificateHistoryCardDto.fromJson(Map<String, dynamic> json) =>
       _$CertificateHistoryCardDtoFromJson(json);
 }
+

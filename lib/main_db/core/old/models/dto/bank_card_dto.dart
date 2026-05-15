@@ -95,29 +95,5 @@ sealed class BankCardCardDto with _$BankCardCardDto implements BaseCardDto {
 }
 
 /// DTO для обновления банковской карты
-@freezed
-sealed class UpdateBankCardDto with _$UpdateBankCardDto {
-  const factory UpdateBankCardDto({
-    String? name,
-    String? cardholderName,
-    String? cardNumber,
-    String? expiryMonth,
-    String? expiryYear,
-    String? cardType,
-    String? cardNetwork,
-    String? cvv,
-    String? bankName,
-    String? accountNumber,
-    String? routingNumber,
-    String? description,
-    String? noteId,
-    String? categoryId,
-    bool? isFavorite,
-    bool? isArchived,
-    bool? isPinned,
-    List<String>? tagsIds,
-  }) = _UpdateBankCardDto;
 
-  factory UpdateBankCardDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateBankCardDtoFromJson(json);
-}
+

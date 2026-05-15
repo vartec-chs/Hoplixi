@@ -90,3 +90,4 @@ sealed class BankCardHistoryCardDto with _$BankCardHistoryCardDto {
   factory BankCardHistoryCardDto.fromJson(Map<String, dynamic> json) =>
       _$BankCardHistoryCardDtoFromJson(json);
 }
+

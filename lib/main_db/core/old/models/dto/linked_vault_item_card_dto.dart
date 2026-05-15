@@ -40,3 +40,4 @@ class LinkedVaultItemCardDto implements BaseCardDto {
   final CategoryInCardDto? category;
   final List<TagInCardDto>? tags;
 }
+

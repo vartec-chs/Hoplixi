@@ -57,17 +57,6 @@ sealed class CreateDocumentDto with _$CreateDocumentDto {
 }
 
 @freezed
-sealed class UpdateDocumentDto with _$UpdateDocumentDto {
-  const factory UpdateDocumentDto({
-    required VaultItemUpdateDto item,
-    required DocumentDataDto document,
-  }) = _UpdateDocumentDto;
-
-  factory UpdateDocumentDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateDocumentDtoFromJson(json);
-}
-
-@freezed
 sealed class DocumentViewDto with _$DocumentViewDto {
   const factory DocumentViewDto({
     required VaultItemViewDto item,
@@ -120,16 +109,20 @@ sealed class CreateDocumentVersionDto with _$CreateDocumentVersionDto {
 }
 
 @freezed
-sealed class UpdateDocumentVersionDto with _$UpdateDocumentVersionDto {
-  const factory UpdateDocumentVersionDto({
-    required String id,
-    DocumentType? documentType,
-    String? documentTypeOther,
-    String? aggregateSha256Hash,
-  }) = _UpdateDocumentVersionDto;
+sealed class PatchDocumentVersionDataDto with _$PatchDocumentVersionDataDto {
+  const factory PatchDocumentVersionDataDto({
+    @Default(FieldUpdate.keep()) FieldUpdate<DocumentType> documentType,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> documentTypeOther,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> aggregateSha256Hash,
+  }) = _PatchDocumentVersionDataDto;
+}
 
-  factory UpdateDocumentVersionDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateDocumentVersionDtoFromJson(json);
+@freezed
+sealed class PatchDocumentVersionDto with _$PatchDocumentVersionDto {
+  const factory PatchDocumentVersionDto({
+    required String id,
+    required PatchDocumentVersionDataDto version,
+  }) = _PatchDocumentVersionDto;
 }
 
 @freezed
@@ -285,5 +278,6 @@ sealed class PatchDocumentDto with _$PatchDocumentDto {
   const factory PatchDocumentDto({
     required VaultItemPatchDto item,
     required PatchDocumentDataDto document,
+    @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchDocumentDto;
 }

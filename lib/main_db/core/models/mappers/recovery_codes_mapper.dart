@@ -1,6 +1,6 @@
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/recovery_codes_dto.dart';
-import 'package:hoplixi/main_db/core/models/dto/recovery_codes_history_dto.dart';
+import 'package:hoplixi/main_db/core/models/dto_history/recovery_codes_history_dto.dart';
 
 extension RecoveryCodesItemsDataMapper on RecoveryCodesItemsData {
   RecoveryCodesDataDto toRecoveryCodesDataDto() {

@@ -57,18 +57,7 @@ sealed class OpenStoreDto with _$OpenStoreDto {
 }
 
 /// DTO для изменения хранилища
-@freezed
-sealed class UpdateStoreDto with _$UpdateStoreDto {
-  const factory UpdateStoreDto({
-    String? name,
-    String? description,
-    String? password,
-    bool? saveMasterPassword,
-  }) = _UpdateStoreDto;
 
-  factory UpdateStoreDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateStoreDtoFromJson(json);
-}
 
 /// DTO для просмотра базовой информации о хранилище
 @freezed
@@ -86,3 +75,4 @@ sealed class StoreInfoDto with _$StoreInfoDto {
   factory StoreInfoDto.fromJson(Map<String, dynamic> json) =>
       _$StoreInfoDtoFromJson(json);
 }
+

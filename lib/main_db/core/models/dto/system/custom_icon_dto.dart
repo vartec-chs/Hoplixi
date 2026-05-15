@@ -1,10 +1,23 @@
 import 'dart:typed_data';
+
 import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../../../tables/system/icons/custom_icons.dart';
+import '../../field_update.dart';
 import '../converters.dart';
 
 part 'custom_icon_dto.freezed.dart';
 part 'custom_icon_dto.g.dart';
+
+@freezed
+sealed class PatchCustomIconDto with _$PatchCustomIconDto {
+  const factory PatchCustomIconDto({
+    required String id,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> name,
+    @Default(FieldUpdate.keep()) FieldUpdate<CustomIconFormat> format,
+    @Default(FieldUpdate.keep()) FieldUpdate<Uint8List> data,
+  }) = _PatchCustomIconDto;
+}
 
 @freezed
 sealed class CreateCustomIconDto with _$CreateCustomIconDto {
@@ -16,19 +29,6 @@ sealed class CreateCustomIconDto with _$CreateCustomIconDto {
 
   factory CreateCustomIconDto.fromJson(Map<String, dynamic> json) =>
       _$CreateCustomIconDtoFromJson(json);
-}
-
-@freezed
-sealed class UpdateCustomIconDto with _$UpdateCustomIconDto {
-  const factory UpdateCustomIconDto({
-    required String id,
-    String? name,
-    CustomIconFormat? format,
-    @Uint8ListBase64Converter() Uint8List? data,
-  }) = _UpdateCustomIconDto;
-
-  factory UpdateCustomIconDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateCustomIconDtoFromJson(json);
 }
 
 @freezed

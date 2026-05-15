@@ -70,17 +70,6 @@ sealed class CreateApiKeyDto with _$CreateApiKeyDto {
 }
 
 @freezed
-sealed class UpdateApiKeyDto with _$UpdateApiKeyDto {
-  const factory UpdateApiKeyDto({
-    required VaultItemUpdateDto item,
-    required ApiKeyDataDto apiKey,
-  }) = _UpdateApiKeyDto;
-
-  factory UpdateApiKeyDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateApiKeyDtoFromJson(json);
-}
-
-@freezed
 sealed class ApiKeyViewDto with _$ApiKeyViewDto {
   const factory ApiKeyViewDto({
     required VaultItemViewDto item,
@@ -131,6 +120,7 @@ sealed class PatchApiKeyDto with _$PatchApiKeyDto {
   const factory PatchApiKeyDto({
     required VaultItemPatchDto item,
     required PatchApiKeyDataDto apiKey,
+    @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchApiKeyDto;
 }
 

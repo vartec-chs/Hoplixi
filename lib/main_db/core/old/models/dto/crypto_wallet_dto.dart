@@ -32,34 +32,7 @@ sealed class CreateCryptoWalletDto with _$CreateCryptoWalletDto {
       _$CreateCryptoWalletDtoFromJson(json);
 }
 
-@freezed
-sealed class UpdateCryptoWalletDto with _$UpdateCryptoWalletDto {
-  const factory UpdateCryptoWalletDto({
-    String? name,
-    String? walletType,
-    String? mnemonic,
-    String? privateKey,
-    String? derivationPath,
-    String? network,
-    String? addresses,
-    String? xpub,
-    String? xprv,
-    String? hardwareDevice,
-    DateTime? lastBalanceCheckedAt,
-    bool? watchOnly,
-    String? derivationScheme,
-    String? description,
-    String? noteId,
-    String? categoryId,
-    bool? isFavorite,
-    bool? isArchived,
-    bool? isPinned,
-    List<String>? tagsIds,
-  }) = _UpdateCryptoWalletDto;
 
-  factory UpdateCryptoWalletDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateCryptoWalletDtoFromJson(json);
-}
 
 @freezed
 sealed class CryptoWalletCardDto
@@ -93,3 +66,4 @@ sealed class CryptoWalletCardDto
   factory CryptoWalletCardDto.fromJson(Map<String, dynamic> json) =>
       _$CryptoWalletCardDtoFromJson(json);
 }
+

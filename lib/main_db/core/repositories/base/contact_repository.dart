@@ -17,9 +17,7 @@ class ContactRepository {
       final now = DateTime.now();
       final itemId = const Uuid().v4();
 
-      await db
-          .into(db.vaultItems)
-          .insert(
+      await db.into(db.vaultItems).insert(
             VaultItemsCompanion.insert(
               id: Value(itemId),
               type: VaultItemType.contact,
@@ -34,9 +32,7 @@ class ContactRepository {
             ),
           );
 
-      await db
-          .into(db.contactItems)
-          .insert(
+      await db.into(db.contactItems).insert(
             ContactItemsCompanion.insert(
               itemId: itemId,
               firstName: dto.contact.firstName,
@@ -49,6 +45,7 @@ class ContactRepository {
               address: Value(dto.contact.address),
               website: Value(dto.contact.website),
               birthday: Value(dto.contact.birthday),
+              isEmergencyContact: Value(dto.contact.isEmergencyContact),
             ),
           );
 
@@ -56,7 +53,7 @@ class ContactRepository {
     });
   }
 
-  Future<void> update(UpdateContactDto dto) {
+  Future<void> update(PatchContactDto dto) {
     return db.transaction(() async {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
@@ -65,12 +62,12 @@ class ContactRepository {
         db.vaultItems,
       )..where((tbl) => tbl.id.equals(itemId))).write(
         VaultItemsCompanion(
-          name: Value(dto.item.name),
-          description: Value(dto.item.description),
-          categoryId: Value(dto.item.categoryId),
-          iconRefId: Value(dto.item.iconRefId),
-          isFavorite: Value(dto.item.isFavorite),
-          isPinned: Value(dto.item.isPinned),
+          name: dto.item.name.toRequiredValue(),
+          description: dto.item.description.toNullableValue(),
+          categoryId: dto.item.categoryId.toNullableValue(),
+          iconRefId: dto.item.iconRefId.toNullableValue(),
+          isFavorite: dto.item.isFavorite.toRequiredValue(),
+          isPinned: dto.item.isPinned.toRequiredValue(),
           modifiedAt: Value(now),
         ),
       );
@@ -79,31 +76,39 @@ class ContactRepository {
         db.contactItems,
       )..where((tbl) => tbl.itemId.equals(itemId))).write(
         ContactItemsCompanion(
-          firstName: Value(dto.contact.firstName),
-          middleName: Value(dto.contact.middleName),
-          lastName: Value(dto.contact.lastName),
-          company: Value(dto.contact.company),
-          jobTitle: Value(dto.contact.jobTitle),
-          email: Value(dto.contact.email),
-          phone: Value(dto.contact.phone),
-          address: Value(dto.contact.address),
-          website: Value(dto.contact.website),
-          birthday: Value(dto.contact.birthday),
+          firstName: dto.contact.firstName.toRequiredValue(),
+          middleName: dto.contact.middleName.toNullableValue(),
+          lastName: dto.contact.lastName.toNullableValue(),
+          company: dto.contact.company.toNullableValue(),
+          jobTitle: dto.contact.jobTitle.toNullableValue(),
+          email: dto.contact.email.toNullableValue(),
+          phone: dto.contact.phone.toNullableValue(),
+          address: dto.contact.address.toNullableValue(),
+          website: dto.contact.website.toNullableValue(),
+          birthday: dto.contact.birthday.toNullableValue(),
+          isEmergencyContact: dto.contact.isEmergencyContact.toRequiredValue(),
         ),
       );
+
+      final tagsUpdate = dto.tags;
+      if (tagsUpdate is FieldUpdateSet<List<String>>) {
+        await db.itemTagsDao.removeAllTagsFromItem(itemId);
+        for (final tagId in tagsUpdate.value ?? []) {
+          await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
+        }
+      }
     });
   }
 
   Future<ContactViewDto?> getViewById(String itemId) async {
-    final query =
-        db.select(db.vaultItems).join([
-            innerJoin(
-              db.contactItems,
-              db.contactItems.itemId.equalsExp(db.vaultItems.id),
-            ),
-          ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.contact));
+    final query = db.select(db.vaultItems).join([
+      innerJoin(
+        db.contactItems,
+        db.contactItems.itemId.equalsExp(db.vaultItems.id),
+      ),
+    ])
+      ..where(db.vaultItems.id.equals(itemId))
+      ..where(db.vaultItems.type.equalsValue(VaultItemType.contact));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
@@ -142,9 +147,8 @@ class ContactRepository {
   }
 
   Future<void> deletePermanently(String itemId) {
-    return (db.delete(
-      db.vaultItems,
-    )..where((tbl) => tbl.id.equals(itemId))).go();
+    return (db.delete(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
+        .go();
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery() {
@@ -153,39 +157,39 @@ class ContactRepository {
         db.contactItems,
         db.contactItems.itemId.equalsExp(db.vaultItems.id),
       ),
-    ])..addColumns([
-      db.vaultItems.id,
-      db.vaultItems.type,
-      db.vaultItems.name,
-      db.vaultItems.description,
-      db.vaultItems.categoryId,
-      db.vaultItems.iconRefId,
-      db.vaultItems.isFavorite,
-      db.vaultItems.isArchived,
-      db.vaultItems.isPinned,
-      db.vaultItems.isDeleted,
-      db.vaultItems.createdAt,
-      db.vaultItems.modifiedAt,
-      db.vaultItems.lastUsedAt,
-      db.vaultItems.archivedAt,
-      db.vaultItems.deletedAt,
-      db.vaultItems.recentScore,
-
-      db.contactItems.firstName,
-      db.contactItems.middleName,
-      db.contactItems.lastName,
-      db.contactItems.company,
-      db.contactItems.email,
-      db.contactItems.phone,
-      db.contactItems.isEmergencyContact,
-    ]);
+    ])
+      ..addColumns([
+        db.vaultItems.id,
+        db.vaultItems.type,
+        db.vaultItems.name,
+        db.vaultItems.description,
+        db.vaultItems.categoryId,
+        db.vaultItems.iconRefId,
+        db.vaultItems.isFavorite,
+        db.vaultItems.isArchived,
+        db.vaultItems.isPinned,
+        db.vaultItems.isDeleted,
+        db.vaultItems.createdAt,
+        db.vaultItems.modifiedAt,
+        db.vaultItems.lastUsedAt,
+        db.vaultItems.archivedAt,
+        db.vaultItems.deletedAt,
+        db.vaultItems.recentScore,
+        db.contactItems.firstName,
+        db.contactItems.middleName,
+        db.contactItems.lastName,
+        db.contactItems.company,
+        db.contactItems.email,
+        db.contactItems.phone,
+        db.contactItems.isEmergencyContact,
+      ]);
   }
 
   ContactCardDto _mapRowToCardDto(TypedResult row) {
     return ContactCardDto(
       item: VaultItemCardDto(
         itemId: row.read(db.vaultItems.id)!,
-        type: row.readWithConverter(db.vaultItems.type)!,
+        type: row.readWithConverter<VaultItemType, String>(db.vaultItems.type)!,
         name: row.read(db.vaultItems.name)!,
         description: row.read(db.vaultItems.description),
         categoryId: row.read(db.vaultItems.categoryId),

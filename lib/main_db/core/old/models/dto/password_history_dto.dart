@@ -76,3 +76,4 @@ sealed class PasswordHistoryCardDto with _$PasswordHistoryCardDto {
   factory PasswordHistoryCardDto.fromJson(Map<String, dynamic> json) =>
       _$PasswordHistoryCardDtoFromJson(json);
 }
+

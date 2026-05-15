@@ -46,17 +46,6 @@ sealed class CreateSshKeyDto with _$CreateSshKeyDto {
 }
 
 @freezed
-sealed class UpdateSshKeyDto with _$UpdateSshKeyDto {
-  const factory UpdateSshKeyDto({
-    required VaultItemUpdateDto item,
-    required SshKeyDataDto sshKey,
-  }) = _UpdateSshKeyDto;
-
-  factory UpdateSshKeyDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateSshKeyDtoFromJson(json);
-}
-
-@freezed
 sealed class SshKeyViewDto with _$SshKeyViewDto {
   const factory SshKeyViewDto({
     required VaultItemViewDto item,
@@ -94,5 +83,6 @@ sealed class PatchSshKeyDto with _$PatchSshKeyDto {
   const factory PatchSshKeyDto({
     required VaultItemPatchDto item,
     required PatchSshKeyDataDto sshKey,
+    @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchSshKeyDto;
 }

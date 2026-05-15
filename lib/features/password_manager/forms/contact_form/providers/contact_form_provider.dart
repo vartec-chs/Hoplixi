@@ -3,9 +3,8 @@ import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
-import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/main_db/core/models/dto/dto.dart';
+import 'package:hoplixi/main_db/providers/repository_providers.dart';
 
 import '../models/contact_form_state.dart';
 
@@ -26,25 +25,25 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
     }
     final id = contactId!;
 
-    final dao = await ref.read(contactDaoProvider.future);
-    final row = await dao.getById(id);
-    if (row == null) {
+    final repository = await ref.read(contactRepositoryProvider.future);
+    final view = await repository.getViewById(id);
+    if (view == null) {
       return const ContactFormState(isEditMode: false);
     }
 
-    final item = row.$1;
-    final details = row.$2;
+    final item = view.item;
+    final details = view.contact;
 
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    final tagIds = await vaultItemDao.getTagIds(id);
-    final tagDao = await ref.read(tagDaoProvider.future);
-    final tags = await tagDao.getTagsByIds(tagIds);
+    // TODO: handle tags properly
     final customFields = await loadCustomFields(ref, id);
 
     return ContactFormState(
       isEditMode: true,
       editingContactId: id,
       name: item.name,
+      firstName: details.firstName,
+      middleName: details.middleName ?? '',
+      lastName: details.lastName ?? '',
       phone: details.phone ?? '',
       email: details.email ?? '',
       company: details.company ?? '',
@@ -52,12 +51,10 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
       address: details.address ?? '',
       website: details.website ?? '',
       birthday: details.birthday,
-      description: item.description ?? '',
       isEmergencyContact: details.isEmergencyContact,
-      noteId: item.noteId,
+      description: item.description ?? '',
       categoryId: item.categoryId,
-      tagIds: tagIds,
-      tagNames: tags.map((tag) => tag.name).toList(),
+      tagIds: [],
       customFields: customFields,
     );
   }
@@ -72,12 +69,26 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
     _update((s) => s.copyWith(name: value, nameError: _validateName(value)));
   }
 
+  void setFirstName(String value) {
+    _update(
+      (s) => s.copyWith(firstName: value, firstNameError: _validateName(value)),
+    );
+  }
+
+  void setMiddleName(String value) {
+    _update((s) => s.copyWith(middleName: value));
+  }
+
+  void setLastName(String value) {
+    _update((s) => s.copyWith(lastName: value));
+  }
+
   void setPhone(String value) {
     _update((s) => s.copyWith(phone: value));
   }
 
   void setEmail(String value) {
-    _update((s) => s.copyWith(email: value, emailError: _validateEmail(value)));
+    _update((s) => s.copyWith(email: value));
   }
 
   void setCompany(String value) {
@@ -100,16 +111,16 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
     _update((s) => s.copyWith(birthday: value));
   }
 
+  void setIsEmergencyContact(bool value) {
+    _update((s) => s.copyWith(isEmergencyContact: value));
+  }
+
   void setDescription(String value) {
     _update((s) => s.copyWith(description: value));
   }
 
-  void setEmergencyContact(bool value) {
-    _update((s) => s.copyWith(isEmergencyContact: value));
-  }
-
-  void setNote(String? noteId, String? noteName) {
-    _update((s) => s.copyWith(noteId: noteId, noteName: noteName));
+  void setNoteId(String? value) {
+    _update((s) => s.copyWith(noteId: value));
   }
 
   void setCategory(String? categoryId, String? categoryName) {
@@ -118,62 +129,39 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
     );
   }
 
-  void setTags(List<String> tagIds, List<String> tagNames) {
-    _update((s) => s.copyWith(tagIds: tagIds, tagNames: tagNames));
-  }
-
-  void setCustomFields(List<CustomFieldEntry> fields) {
-    _update((s) => s.copyWith(customFields: fields));
-  }
-
-  void applyImportedContact({
-    required String name,
-    String? phone,
-    String? email,
-    String? company,
-    String? jobTitle,
-    String? address,
-    String? website,
-    DateTime? birthday,
-  }) {
+  void setIconRef(IconRefDto? iconRef) {
     _update(
       (s) => s.copyWith(
-        name: name,
-        phone: phone ?? '',
-        email: email ?? '',
-        company: company ?? '',
-        jobTitle: jobTitle ?? '',
-        address: address ?? '',
-        website: website ?? '',
-        birthday: birthday,
-        nameError: _validateName(name),
-        emailError: _validateEmail(email ?? ''),
+        iconSource: iconRef?.sourceValue,
+        iconValue: iconRef?.value,
       ),
     );
   }
 
-  String? _validateName(String value) {
-    if (value.trim().isEmpty) {
-      return t.dashboard_forms.validation_required_contact_name;
-    }
-    return null;
+  void setTags(List<String> tagIds, List<String> tagNames) {
+    _update((s) => s.copyWith(tagIds: tagIds, tagNames: tagNames));
   }
 
-  String? _validateEmail(String value) {
-    final v = value.trim();
-    if (v.isEmpty) return null;
-    final isValid = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v);
-    if (!isValid) return t.dashboard_forms.validation_invalid_email;
+  void setCustomFields(List<CustomFieldEntry> fields) =>
+      _update((s) => s.copyWith(customFields: fields));
+
+  String? _validateName(String value) {
+    if (value.trim().isEmpty) return 'Обязательное поле';
     return null;
   }
 
   bool validate() {
     final current = _current;
     final nameError = _validateName(current.name);
-    final emailError = _validateEmail(current.email);
-    _update((s) => s.copyWith(nameError: nameError, emailError: emailError));
+    final firstNameError = _validateName(current.firstName);
+    _update(
+      (s) => s.copyWith(
+        nameError: nameError,
+        firstNameError: firstNameError,
+      ),
+    );
 
-    return nameError == null && emailError == null;
+    return nameError == null && firstNameError == null;
   }
 
   Future<bool> save() async {
@@ -182,38 +170,54 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
     final current = _current;
     _update((s) => s.copyWith(isSaving: true));
 
-    String? norm(String value) {
-      final v = value.trim();
-      return v.isEmpty ? null : v;
-    }
-
     try {
-      final dao = await ref.read(contactDaoProvider.future);
+      final repository = await ref.read(contactRepositoryProvider.future);
 
       if (current.isEditMode && current.editingContactId != null) {
-        final updated = await dao.updateContact(
-          current.editingContactId!,
-          UpdateContactDto(
-            name: current.name.trim(),
-            phone: norm(current.phone),
-            email: norm(current.email),
-            company: norm(current.company),
-            jobTitle: norm(current.jobTitle),
-            address: norm(current.address),
-            website: norm(current.website),
-            birthday: current.birthday,
-            description: norm(current.description),
-            noteId: current.noteId,
-            categoryId: current.categoryId,
-            isEmergencyContact: current.isEmergencyContact,
-            tagsIds: current.tagIds,
+        await repository.update(
+          PatchContactDto(
+            item: VaultItemPatchDto(
+              itemId: current.editingContactId!,
+              name: FieldUpdate.set(current.name.trim()),
+              description: FieldUpdate.set(
+                current.description.trim().isEmpty
+                    ? null
+                    : current.description.trim(),
+              ),
+              categoryId: FieldUpdate.set(current.categoryId),
+            ),
+            contact: PatchContactDataDto(
+              firstName: FieldUpdate.set(current.firstName.trim()),
+              middleName: FieldUpdate.set(
+                current.middleName.trim().isEmpty ? null : current.middleName.trim(),
+              ),
+              lastName: FieldUpdate.set(
+                current.lastName.trim().isEmpty ? null : current.lastName.trim(),
+              ),
+              phone: FieldUpdate.set(
+                current.phone.trim().isEmpty ? null : current.phone.trim(),
+              ),
+              email: FieldUpdate.set(
+                current.email.trim().isEmpty ? null : current.email.trim(),
+              ),
+              company: FieldUpdate.set(
+                current.company.trim().isEmpty ? null : current.company.trim(),
+              ),
+              jobTitle: FieldUpdate.set(
+                current.jobTitle.trim().isEmpty ? null : current.jobTitle.trim(),
+              ),
+              address: FieldUpdate.set(
+                current.address.trim().isEmpty ? null : current.address.trim(),
+              ),
+              website: FieldUpdate.set(
+                current.website.trim().isEmpty ? null : current.website.trim(),
+              ),
+              birthday: FieldUpdate.set(current.birthday),
+              isEmergencyContact: FieldUpdate.set(current.isEmergencyContact),
+            ),
+            tags: FieldUpdate.set(current.tagIds),
           ),
         );
-
-        if (!updated) {
-          _update((s) => s.copyWith(isSaving: false));
-          return false;
-        }
 
         await saveCustomFields(
           ref,
@@ -228,25 +232,45 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
               entityId: current.editingContactId,
             );
       } else {
-        final id = await dao.createContact(
+        final id = await repository.create(
           CreateContactDto(
-            name: current.name.trim(),
-            phone: norm(current.phone),
-            email: norm(current.email),
-            company: norm(current.company),
-            jobTitle: norm(current.jobTitle),
-            address: norm(current.address),
-            website: norm(current.website),
-            birthday: current.birthday,
-            description: norm(current.description),
-            noteId: current.noteId,
-            categoryId: current.categoryId,
-            isEmergencyContact: current.isEmergencyContact,
-            tagsIds: current.tagIds,
+            item: VaultItemCreateDto(
+              name: current.name.trim(),
+              description: current.description.trim().isEmpty
+                  ? null
+                  : current.description.trim(),
+              categoryId: current.categoryId,
+            ),
+            contact: ContactDataDto(
+              firstName: current.firstName.trim(),
+              middleName: current.middleName.trim().isEmpty
+                  ? null
+                  : current.middleName.trim(),
+              lastName: current.lastName.trim().isEmpty
+                  ? null
+                  : current.lastName.trim(),
+              phone: current.phone.trim().isEmpty ? null : current.phone.trim(),
+              email: current.email.trim().isEmpty ? null : current.email.trim(),
+              company: current.company.trim().isEmpty
+                  ? null
+                  : current.company.trim(),
+              jobTitle: current.jobTitle.trim().isEmpty
+                  ? null
+                  : current.jobTitle.trim(),
+              address: current.address.trim().isEmpty
+                  ? null
+                  : current.address.trim(),
+              website: current.website.trim().isEmpty
+                  ? null
+                  : current.website.trim(),
+              birthday: current.birthday,
+              isEmergencyContact: current.isEmergencyContact,
+            ),
           ),
         );
 
         await saveCustomFields(ref, id, current.customFields);
+
         ref
             .read(dashboardListRefreshTriggerProvider.notifier)
             .triggerEntityAdd(EntityType.contact, entityId: id);

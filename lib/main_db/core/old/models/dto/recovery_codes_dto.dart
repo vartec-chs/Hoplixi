@@ -26,28 +26,7 @@ sealed class CreateRecoveryCodesDto with _$CreateRecoveryCodesDto {
       _$CreateRecoveryCodesDtoFromJson(json);
 }
 
-@freezed
-sealed class UpdateRecoveryCodesDto with _$UpdateRecoveryCodesDto {
-  const factory UpdateRecoveryCodesDto({
-    String? name,
 
-    /// Новые коды для добавления к существующим (append-only через форму).
-    List<String>? newCodes,
-    DateTime? generatedAt,
-    bool? oneTime,
-    String? displayHint,
-    String? description,
-    String? noteId,
-    String? categoryId,
-    bool? isFavorite,
-    bool? isArchived,
-    bool? isPinned,
-    List<String>? tagsIds,
-  }) = _UpdateRecoveryCodesDto;
-
-  factory UpdateRecoveryCodesDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateRecoveryCodesDtoFromJson(json);
-}
 
 @freezed
 sealed class RecoveryCodesCardDto
@@ -81,3 +60,4 @@ sealed class RecoveryCodesCardDto
   factory RecoveryCodesCardDto.fromJson(Map<String, dynamic> json) =>
       _$RecoveryCodesCardDtoFromJson(json);
 }
+

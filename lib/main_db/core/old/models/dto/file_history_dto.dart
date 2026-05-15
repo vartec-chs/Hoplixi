@@ -66,3 +66,4 @@ sealed class FileHistoryCardDto with _$FileHistoryCardDto {
   factory FileHistoryCardDto.fromJson(Map<String, dynamic> json) =>
       _$FileHistoryCardDtoFromJson(json);
 }
+

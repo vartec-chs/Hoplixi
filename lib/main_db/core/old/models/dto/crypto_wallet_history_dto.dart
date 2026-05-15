@@ -20,3 +20,4 @@ sealed class CryptoWalletHistoryCardDto with _$CryptoWalletHistoryCardDto {
   factory CryptoWalletHistoryCardDto.fromJson(Map<String, dynamic> json) =>
       _$CryptoWalletHistoryCardDtoFromJson(json);
 }
+

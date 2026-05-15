@@ -18,9 +18,7 @@ class CertificateRepository {
       final now = DateTime.now();
       final itemId = const Uuid().v4();
 
-      await db
-          .into(db.vaultItems)
-          .insert(
+      await db.into(db.vaultItems).insert(
             VaultItemsCompanion.insert(
               id: Value(itemId),
               type: VaultItemType.certificate,
@@ -35,15 +33,12 @@ class CertificateRepository {
             ),
           );
 
-      await db
-          .into(db.certificateItems)
-          .insert(
+      await db.into(db.certificateItems).insert(
             CertificateItemsCompanion.insert(
               itemId: itemId,
               certificateFormat: Value(dto.certificate.certificateFormat),
-              certificateFormatOther: Value(
-                dto.certificate.certificateFormatOther,
-              ),
+              certificateFormatOther:
+                  Value(dto.certificate.certificateFormatOther),
               certificatePem: Value(dto.certificate.certificatePem),
               certificateBlob: Value(dto.certificate.certificateBlob),
               privateKey: Value(dto.certificate.privateKey),
@@ -64,7 +59,7 @@ class CertificateRepository {
     });
   }
 
-  Future<void> update(UpdateCertificateDto dto) {
+  Future<void> update(PatchCertificateDto dto) {
     return db.transaction(() async {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
@@ -73,12 +68,12 @@ class CertificateRepository {
         db.vaultItems,
       )..where((tbl) => tbl.id.equals(itemId))).write(
         VaultItemsCompanion(
-          name: Value(dto.item.name),
-          description: Value(dto.item.description),
-          categoryId: Value(dto.item.categoryId),
-          iconRefId: Value(dto.item.iconRefId),
-          isFavorite: Value(dto.item.isFavorite),
-          isPinned: Value(dto.item.isPinned),
+          name: dto.item.name.toRequiredValue(),
+          description: dto.item.description.toNullableValue(),
+          categoryId: dto.item.categoryId.toNullableValue(),
+          iconRefId: dto.item.iconRefId.toNullableValue(),
+          isFavorite: dto.item.isFavorite.toRequiredValue(),
+          isPinned: dto.item.isPinned.toRequiredValue(),
           modifiedAt: Value(now),
         ),
       );
@@ -87,36 +82,46 @@ class CertificateRepository {
         db.certificateItems,
       )..where((tbl) => tbl.itemId.equals(itemId))).write(
         CertificateItemsCompanion(
-          certificateFormat: Value(dto.certificate.certificateFormat),
-          certificateFormatOther: Value(dto.certificate.certificateFormatOther),
-          certificatePem: Value(dto.certificate.certificatePem),
-          certificateBlob: Value(dto.certificate.certificateBlob),
-          privateKey: Value(dto.certificate.privateKey),
-          privateKeyPassword: Value(dto.certificate.privateKeyPassword),
-          passwordForPfx: Value(dto.certificate.passwordForPfx),
-          keyAlgorithm: Value(dto.certificate.keyAlgorithm),
-          keyAlgorithmOther: Value(dto.certificate.keyAlgorithmOther),
-          keySize: Value(dto.certificate.keySize),
-          serialNumber: Value(dto.certificate.serialNumber),
-          issuer: Value(dto.certificate.issuer),
-          subject: Value(dto.certificate.subject),
-          validFrom: Value(dto.certificate.validFrom),
-          validTo: Value(dto.certificate.validTo),
+          certificateFormat: dto.certificate.certificateFormat.toNullableValue(),
+          certificateFormatOther:
+              dto.certificate.certificateFormatOther.toNullableValue(),
+          certificatePem: dto.certificate.certificatePem.toNullableValue(),
+          certificateBlob: dto.certificate.certificateBlob.toNullableValue(),
+          privateKey: dto.certificate.privateKey.toNullableValue(),
+          privateKeyPassword:
+              dto.certificate.privateKeyPassword.toNullableValue(),
+          passwordForPfx: dto.certificate.passwordForPfx.toNullableValue(),
+          keyAlgorithm: dto.certificate.keyAlgorithm.toNullableValue(),
+          keyAlgorithmOther:
+              dto.certificate.keyAlgorithmOther.toNullableValue(),
+          keySize: dto.certificate.keySize.toNullableValue(),
+          serialNumber: dto.certificate.serialNumber.toNullableValue(),
+          issuer: dto.certificate.issuer.toNullableValue(),
+          subject: dto.certificate.subject.toNullableValue(),
+          validFrom: dto.certificate.validFrom.toNullableValue(),
+          validTo: dto.certificate.validTo.toNullableValue(),
         ),
       );
+
+      final tagsUpdate = dto.tags;
+      if (tagsUpdate is FieldUpdateSet<List<String>>) {
+        await db.itemTagsDao.removeAllTagsFromItem(itemId);
+        for (final tagId in tagsUpdate.value ?? []) {
+          await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
+        }
+      }
     });
   }
 
   Future<CertificateViewDto?> getViewById(String itemId) async {
-    final query =
-        db.select(db.vaultItems).join([
-            innerJoin(
-              db.certificateItems,
-              db.certificateItems.itemId.equalsExp(db.vaultItems.id),
-            ),
-          ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.certificate));
+    final query = db.select(db.vaultItems).join([
+      innerJoin(
+        db.certificateItems,
+        db.certificateItems.itemId.equalsExp(db.vaultItems.id),
+      ),
+    ])
+      ..where(db.vaultItems.id.equals(itemId))
+      ..where(db.vaultItems.type.equalsValue(VaultItemType.certificate));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
@@ -157,9 +162,8 @@ class CertificateRepository {
   }
 
   Future<void> deletePermanently(String itemId) {
-    return (db.delete(
-      db.vaultItems,
-    )..where((tbl) => tbl.id.equals(itemId))).go();
+    return (db.delete(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
+        .go();
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery(
@@ -188,7 +192,6 @@ class CertificateRepository {
         db.vaultItems.archivedAt,
         db.vaultItems.deletedAt,
         db.vaultItems.recentScore,
-
         db.certificateItems.certificateFormat,
         db.certificateItems.keyAlgorithm,
         db.certificateItems.keySize,

@@ -20,19 +20,6 @@ sealed class StoreSettingDto with _$StoreSettingDto {
 }
 
 @freezed
-sealed class UpdateStoreSettingDto with _$UpdateStoreSettingDto {
-  const factory UpdateStoreSettingDto({
-    required String key,
-    required String value,
-    StoreSettingValueType? valueType,
-    String? description,
-  }) = _UpdateStoreSettingDto;
-
-  factory UpdateStoreSettingDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateStoreSettingDtoFromJson(json);
-}
-
-@freezed
 sealed class StoreSettingsViewDto with _$StoreSettingsViewDto {
   const factory StoreSettingsViewDto({
     required List<StoreSettingDto> settings,

@@ -4,7 +4,6 @@ import 'package:hoplixi/main_db/core/tables/license_key/license_key_items.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../main_store.dart';
-import '../../models/dto/license_key_dto.dart';
 import '../../models/mappers/license_key_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
 import '../../tables/vault_items/vault_items.dart';
@@ -62,7 +61,7 @@ class LicenseKeyRepository {
     });
   }
 
-  Future<void> update(UpdateLicenseKeyDto dto) {
+  Future<void> update(PatchLicenseKeyDto dto) {
     return db.transaction(() async {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
@@ -70,12 +69,12 @@ class LicenseKeyRepository {
       await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
           .write(
         VaultItemsCompanion(
-          name: Value(dto.item.name),
-          description: Value(dto.item.description),
-          categoryId: Value(dto.item.categoryId),
-          iconRefId: Value(dto.item.iconRefId),
-          isFavorite: Value(dto.item.isFavorite),
-          isPinned: Value(dto.item.isPinned),
+          name: dto.item.name.toRequiredValue(),
+          description: dto.item.description.toNullableValue(),
+          categoryId: dto.item.categoryId.toNullableValue(),
+          iconRefId: dto.item.iconRefId.toNullableValue(),
+          isFavorite: dto.item.isFavorite.toRequiredValue(),
+          isPinned: dto.item.isPinned.toRequiredValue(),
           modifiedAt: Value(now),
         ),
       );
@@ -84,26 +83,34 @@ class LicenseKeyRepository {
             ..where((tbl) => tbl.itemId.equals(itemId)))
           .write(
         LicenseKeyItemsCompanion(
-          productName: Value(dto.licenseKey.productName),
-          vendor: Value(dto.licenseKey.vendor),
-          licenseKey: Value(dto.licenseKey.licenseKey),
-          licenseType: Value(dto.licenseKey.licenseType),
-          licenseTypeOther: Value(dto.licenseKey.licenseTypeOther),
-          accountEmail: Value(dto.licenseKey.accountEmail),
-          accountUsername: Value(dto.licenseKey.accountUsername),
-          purchaseEmail: Value(dto.licenseKey.purchaseEmail),
-          orderNumber: Value(dto.licenseKey.orderNumber),
-          purchaseDate: Value(dto.licenseKey.purchaseDate),
-          purchasePrice: Value(dto.licenseKey.purchasePrice),
-          currency: Value(dto.licenseKey.currency),
-          validFrom: Value(dto.licenseKey.validFrom),
-          validTo: Value(dto.licenseKey.validTo),
-          renewalDate: Value(dto.licenseKey.renewalDate),
-          seats: Value(dto.licenseKey.seats),
-          activationLimit: Value(dto.licenseKey.activationLimit),
-          activationsUsed: Value(dto.licenseKey.activationsUsed),
+          productName: dto.licenseKey.productName.toRequiredValue(),
+          vendor: dto.licenseKey.vendor.toNullableValue(),
+          licenseKey: dto.licenseKey.licenseKey.toRequiredValue(),
+          licenseType: dto.licenseKey.licenseType.toNullableValue(),
+          licenseTypeOther: dto.licenseKey.licenseTypeOther.toNullableValue(),
+          accountEmail: dto.licenseKey.accountEmail.toNullableValue(),
+          accountUsername: dto.licenseKey.accountUsername.toNullableValue(),
+          purchaseEmail: dto.licenseKey.purchaseEmail.toNullableValue(),
+          orderNumber: dto.licenseKey.orderNumber.toNullableValue(),
+          purchaseDate: dto.licenseKey.purchaseDate.toNullableValue(),
+          purchasePrice: dto.licenseKey.purchasePrice.toNullableValue(),
+          currency: dto.licenseKey.currency.toNullableValue(),
+          validFrom: dto.licenseKey.validFrom.toNullableValue(),
+          validTo: dto.licenseKey.validTo.toNullableValue(),
+          renewalDate: dto.licenseKey.renewalDate.toNullableValue(),
+          seats: dto.licenseKey.seats.toNullableValue(),
+          activationLimit: dto.licenseKey.activationLimit.toNullableValue(),
+          activationsUsed: dto.licenseKey.activationsUsed.toNullableValue(),
         ),
       );
+
+      final tagsUpdate = dto.tags;
+      if (tagsUpdate is FieldUpdateSet<List<String>>) {
+        await db.itemTagsDao.removeAllTagsFromItem(itemId);
+        for (final tagId in tagsUpdate.value ?? []) {
+          await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
+        }
+      }
     });
   }
 
@@ -186,7 +193,6 @@ class LicenseKeyRepository {
         db.vaultItems.archivedAt,
         db.vaultItems.deletedAt,
         db.vaultItems.recentScore,
-
         db.licenseKeyItems.productName,
         db.licenseKeyItems.vendor,
         db.licenseKeyItems.licenseType,

@@ -62,10 +62,5 @@ sealed class TagInCardDto with _$TagInCardDto {
 }
 
 /// DTO для обновления тега
-@freezed
-sealed class UpdateTagDto with _$UpdateTagDto {
-  const factory UpdateTagDto({String? name, String? color}) = _UpdateTagDto;
 
-  factory UpdateTagDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateTagDtoFromJson(json);
-}
+

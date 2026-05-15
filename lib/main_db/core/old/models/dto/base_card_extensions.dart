@@ -75,3 +75,4 @@ extension BaseCardDtoExtension on BaseCardDto {
     return self;
   }
 }
+

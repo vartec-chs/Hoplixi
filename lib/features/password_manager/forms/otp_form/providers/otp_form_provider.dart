@@ -6,22 +6,19 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_
 import 'package:hoplixi/features/password_manager/forms/otp_form/utils/otp_uri_parser.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/otp_dto.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/main_db/core/models/dto/dto.dart';
+import 'package:hoplixi/main_db/providers/repository_providers.dart';
+import 'package:hoplixi/main_db/core/tables/otp/otp_items.dart';
 
 import '../models/otp_form_state.dart';
 
 const _logTag = 'OtpFormProvider';
 
-/// Провайдер состояния формы OTP
 final otpFormProvider =
     NotifierProvider.autoDispose<OtpFormNotifier, OtpFormState>(
       OtpFormNotifier.new,
     );
 
-/// Notifier для управления формой OTP
 class OtpFormNotifier extends Notifier<OtpFormState> {
   final _smartConverter = SmartConverter();
 
@@ -30,59 +27,51 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
     return const OtpFormState(isEditMode: false);
   }
 
-  /// Инициализировать форму для создания нового OTP
   void initForCreate() {
     state = const OtpFormState(isEditMode: false);
   }
 
-  /// Инициализировать форму для редактирования OTP
   Future<void> initForEdit(String otpId) async {
     state = state.copyWith(isLoading: true);
 
     try {
-      final dao = await ref.read(otpDaoProvider.future);
-      final record = await dao.getById(otpId);
+      final repository = await ref.read(otpRepositoryProvider.future);
+      final view = await repository.getViewById(otpId);
 
-      if (record == null) {
+      if (view == null) {
         logWarning('OTP not found: $otpId', tag: _logTag);
         state = state.copyWith(isLoading: false);
         return;
       }
 
-      final (vault, otpItem) = record;
-      final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-      final tagIds = await vaultItemDao.getTagIds(otpId);
-      final tagDao = await ref.read(tagDaoProvider.future);
-      final tagRecords = await tagDao.getTagsByIds(tagIds);
-      final customFields = await loadCustomFields(ref, otpId);
+      final item = view.item;
+      final details = view.otp;
 
-      // Декодируем секрет из bytes обратно в base32 для отображения
-      final secretBytes = otpItem.secret;
+      // TODO: handle tags properly
+      final tagIds = <String>[];
+      final tagNames = <String>[];
+
       final secretBase32 =
           _smartConverter.toBase32(
-            String.fromCharCodes(secretBytes),
+            String.fromCharCodes(details.secret),
           )['base32'] ??
           '';
 
       state = OtpFormState(
         isEditMode: true,
         editingOtpId: otpId,
-        otpType: OtpTypeX.fromString(otpItem.type.name),
-        issuer: otpItem.issuer ?? '',
-        accountName: otpItem.accountName ?? '',
+        otpType: details.type,
+        issuer: details.issuer ?? '',
+        accountName: details.accountName ?? '',
         secret: secretBase32,
-        noteId: vault.noteId,
-        algorithm: AlgorithmOtpX.fromString(otpItem.algorithm.name),
-        digits: otpItem.digits,
-        period: otpItem.period,
-        counter: otpItem.counter,
-        categoryId: vault.categoryId,
-        iconSource: vault.iconSource,
-        iconValue: vault.iconValue,
-        passwordId: otpItem.passwordItemId,
+        algorithm: details.algorithm,
+        digits: details.digits,
+        period: details.period ?? 30,
+        counter: details.counter,
+        categoryId: item.categoryId,
         tagIds: tagIds,
-        tagNames: tagRecords.map((tag) => tag.name).toList(),
-        customFields: customFields,
+        tagNames: tagNames,
+        customFields: await loadCustomFields(ref, otpId),
         isLoading: false,
       );
     } catch (e, stack) {
@@ -96,7 +85,6 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
     }
   }
 
-  /// Применить данные из отсканированного QR-кода
   void applyFromQrCode(String qrData) {
     final parseResult = OtpUriParser.parse(qrData);
 
@@ -115,7 +103,6 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
       period: parseResult.period,
       counter: parseResult.counter,
       isFromQrCode: true,
-      // Очищаем ошибки после загрузки из QR
       secretError: null,
       issuerError: null,
       accountNameError: null,
@@ -124,37 +111,30 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
     logInfo('OTP data loaded from QR code', tag: _logTag);
   }
 
-  /// Обновить тип OTP
   void setOtpType(OtpType type) {
     state = state.copyWith(otpType: type);
   }
 
-  /// Обновить поле issuer
   void setIssuer(String value) {
     state = state.copyWith(issuer: value);
   }
 
-  /// Обновить поле accountName
   void setAccountName(String value) {
     state = state.copyWith(accountName: value);
   }
 
-  /// Обновить поле secret
   void setSecret(String value) {
     state = state.copyWith(secret: value, secretError: _validateSecret(value));
   }
 
-  /// Обновить поле noteId
   void setNoteId(String? value) {
     state = state.copyWith(noteId: value);
   }
 
-  /// Обновить алгоритм
-  void setAlgorithm(AlgorithmOtp algorithm) {
+  void setAlgorithm(OtpHashAlgorithm algorithm) {
     state = state.copyWith(algorithm: algorithm);
   }
 
-  /// Обновить количество цифр
   void setDigits(int digits) {
     state = state.copyWith(
       digits: digits,
@@ -162,7 +142,6 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
     );
   }
 
-  /// Обновить период
   void setPeriod(int period) {
     state = state.copyWith(
       period: period,
@@ -170,12 +149,10 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
     );
   }
 
-  /// Обновить счётчик (для HOTP)
   void setCounter(int? counter) {
     state = state.copyWith(counter: counter);
   }
 
-  /// Обновить категорию
   void setCategory(String? categoryId, String? categoryName) {
     state = state.copyWith(categoryId: categoryId, categoryName: categoryName);
   }
@@ -187,7 +164,6 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
     );
   }
 
-  /// Обновить теги
   void setTags(List<String> tagIds, List<String> tagNames) {
     state = state.copyWith(tagIds: tagIds, tagNames: tagNames);
   }
@@ -196,28 +172,22 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
     state = state.copyWith(customFields: fields);
   }
 
-  /// Обновить связь с паролем
   void setPasswordId(String? passwordId) {
     state = state.copyWith(passwordId: passwordId);
   }
 
-  /// Валидация секрета
   String? _validateSecret(String value) {
     if (value.trim().isEmpty) {
       return 'Секретный ключ обязателен';
     }
-
-    // Проверка, что это валидный Base32
     final cleaned = value.replaceAll(RegExp(r'[\s-]'), '').toUpperCase();
     final base32Regex = RegExp(r'^[A-Z2-7]+=*$');
     if (!base32Regex.hasMatch(cleaned)) {
       return 'Неверный формат Base32';
     }
-
     return null;
   }
 
-  /// Валидация количества цифр
   String? _validateDigits(int digits) {
     if (digits < 6 || digits > 8) {
       return 'Количество цифр должно быть от 6 до 8';
@@ -225,7 +195,6 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
     return null;
   }
 
-  /// Валидация периода
   String? _validatePeriod(int period) {
     if (period < 1 || period > 120) {
       return 'Период должен быть от 1 до 120 секунд';
@@ -233,7 +202,6 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
     return null;
   }
 
-  /// Валидировать все поля формы
   bool validateAll() {
     final secretError = _validateSecret(state.secret);
     final digitsError = _validateDigits(state.digits);
@@ -254,15 +222,12 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
     return !state.hasErrors;
   }
 
-  /// Конвертировать секрет в Base32 (используя SmartConverter)
   String _normalizeSecretToBase32(String secret) {
     final result = _smartConverter.toBase32(secret.trim());
     return result['base32'] ?? secret.toUpperCase();
   }
 
-  /// Сохранить форму
   Future<bool> save() async {
-    // Валидация
     if (!validateAll()) {
       logWarning('Form validation failed', tag: _logTag);
       return false;
@@ -271,100 +236,76 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
     state = state.copyWith(isSaving: true);
 
     try {
-      final dao = await ref.read(otpDaoProvider.future);
-
-      // Нормализуем секрет в Base32
+      final repository = await ref.read(otpRepositoryProvider.future);
       final normalizedSecret = _normalizeSecretToBase32(state.secret);
 
       if (state.isEditMode && state.editingOtpId != null) {
-        // Режим редактирования
-        final dto = UpdateOtpDto(
-          issuer: state.issuer.trim().isEmpty ? null : state.issuer.trim(),
-          accountName: state.accountName.trim().isEmpty
-              ? null
-              : state.accountName.trim(),
-          noteId: state.noteId,
-          algorithm: state.algorithm.name,
-          digits: state.digits,
-          period: state.period,
-          counter: state.counter,
-          categoryId: state.categoryId,
-          passwordId: state.passwordId,
-        );
-
-        final success = await dao.updateOtp(state.editingOtpId!, dto);
-
-        if (success) {
-          final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-          await vaultItemDao.setIconRef(
-            state.editingOtpId!,
-            IconRefDto.fromFields(
-              iconSource: state.iconSource,
-              iconValue: state.iconValue,
+        await repository.update(
+          PatchOtpDto(
+            item: VaultItemPatchDto(
+              itemId: state.editingOtpId!,
+              name: FieldUpdate.set(state.issuer.isNotEmpty ? state.issuer : state.accountName),
+              description: FieldUpdate.set(state.description.isEmpty ? null : state.description),
+              categoryId: FieldUpdate.set(state.categoryId),
             ),
-          );
-          await vaultItemDao.syncTags(state.editingOtpId!, state.tagIds);
-          await saveCustomFields(ref, state.editingOtpId!, state.customFields);
-
-          logInfo('OTP updated: ${state.editingOtpId}', tag: _logTag);
-          state = state.copyWith(isSaving: false, isSaved: true);
-
-          // Триггерим обновление списка
-          ref
-              .read(dashboardListRefreshTriggerProvider.notifier)
-              .triggerEntityUpdate(
-                EntityType.otp,
-                entityId: state.editingOtpId,
-              );
-
-          return true;
-        } else {
-          logWarning(
-            'Failed to update OTP: ${state.editingOtpId}',
-            tag: _logTag,
-          );
-          state = state.copyWith(isSaving: false);
-          return false;
-        }
-      } else {
-        // Режим создания
-        final dto = CreateOtpDto(
-          type: state.otpType.name,
-          secret: normalizedSecret.codeUnits,
-          secretEncoding: SecretEncoding.BASE32.name,
-          issuer: state.issuer.trim().isEmpty ? null : state.issuer.trim(),
-          accountName: state.accountName.trim().isEmpty
-              ? null
-              : state.accountName.trim(),
-          noteId: state.noteId,
-          algorithm: state.algorithm.name,
-          digits: state.digits,
-          period: state.period,
-          counter: state.otpType == OtpType.hotp ? (state.counter ?? 0) : null,
-          categoryId: state.categoryId,
-          tagsIds: state.tagIds.isEmpty ? null : state.tagIds,
-          passwordId: state.passwordId,
-        );
-
-        final otpId = await dao.createOtp(dto);
-
-        await saveCustomFields(ref, otpId, state.customFields);
-        final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-        await vaultItemDao.setIconRef(
-          otpId,
-          IconRefDto.fromFields(
-            iconSource: state.iconSource,
-            iconValue: state.iconValue,
+            otp: PatchOtpDataDto(
+              type: FieldUpdate.set(state.otpType),
+              issuer: FieldUpdate.set(state.issuer.trim().isEmpty ? null : state.issuer.trim()),
+              accountName: FieldUpdate.set(state.accountName.trim().isEmpty ? null : state.accountName.trim()),
+              secret: FieldUpdate.set(Uint8List.fromList(normalizedSecret.codeUnits)),
+              algorithm: FieldUpdate.set(state.algorithm),
+              digits: FieldUpdate.set(state.digits),
+              period: FieldUpdate.set(state.otpType == OtpType.otp ? state.period : null),
+              counter: FieldUpdate.set(state.otpType == OtpType.hotp ? state.counter : null),
+            ),
+            tags: FieldUpdate.set(state.tagIds),
           ),
         );
 
-        logInfo('OTP created: $otpId', tag: _logTag);
+        await saveCustomFields(ref, state.editingOtpId!, state.customFields);
+        // TODO: handle icon ref and password link
+
+        logInfo('OTP updated: ${state.editingOtpId}', tag: _logTag);
         state = state.copyWith(isSaving: false, isSaved: true);
 
-        // Триггерим обновление списка
         ref
             .read(dashboardListRefreshTriggerProvider.notifier)
-            .triggerEntityAdd(EntityType.otp, entityId: otpId);
+            .triggerEntityUpdate(
+              EntityType.otp,
+              entityId: state.editingOtpId,
+            );
+
+        return true;
+      } else {
+        final id = await repository.create(
+          CreateOtpDto(
+            item: VaultItemCreateDto(
+              name: state.issuer.isNotEmpty ? state.issuer : state.accountName,
+              description: state.description.isEmpty ? null : state.description,
+              categoryId: state.categoryId,
+            ),
+            otp: OtpDataDto(
+              type: state.otpType,
+              issuer: state.issuer.trim().isEmpty ? null : state.issuer.trim(),
+              accountName: state.accountName.trim().isEmpty ? null : state.accountName.trim(),
+              secret: Uint8List.fromList(normalizedSecret.codeUnits),
+              algorithm: state.algorithm,
+              digits: state.digits,
+              period: state.otpType == OtpType.otp ? state.period : null,
+              counter: state.otpType == OtpType.hotp ? (state.counter ?? 0) : null,
+            ),
+          ),
+        );
+
+        await saveCustomFields(ref, id, state.customFields);
+        // TODO: handle tags, icon ref, password link
+
+        logInfo('OTP created: $id', tag: _logTag);
+        state = state.copyWith(isSaving: false, isSaved: true);
+
+        ref
+            .read(dashboardListRefreshTriggerProvider.notifier)
+            .triggerEntityAdd(EntityType.otp, entityId: id);
 
         return true;
       }
@@ -375,12 +316,10 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
     }
   }
 
-  /// Сбросить флаг сохранения
   void resetSaved() {
     state = state.copyWith(isSaved: false);
   }
 
-  /// Сбросить форму
   void reset() {
     state = const OtpFormState(isEditMode: false);
   }

@@ -19,3 +19,4 @@ sealed class RecoveryCodesHistoryCardDto with _$RecoveryCodesHistoryCardDto {
   factory RecoveryCodesHistoryCardDto.fromJson(Map<String, dynamic> json) =>
       _$RecoveryCodesHistoryCardDtoFromJson(json);
 }
+

@@ -68,3 +68,4 @@ sealed class NoteHistoryCardDto with _$NoteHistoryCardDto {
   factory NoteHistoryCardDto.fromJson(Map<String, dynamic> json) =>
       _$NoteHistoryCardDtoFromJson(json);
 }
+

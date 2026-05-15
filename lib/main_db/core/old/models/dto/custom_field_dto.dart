@@ -35,16 +35,5 @@ sealed class CreateCustomFieldDto with _$CreateCustomFieldDto {
 }
 
 /// DTO для обновления кастомного поля
-@freezed
-sealed class UpdateCustomFieldDto with _$UpdateCustomFieldDto {
-  const factory UpdateCustomFieldDto({
-    String? label,
-    String? value,
-    bool? clearValue,
-    CustomFieldType? fieldType,
-    int? sortOrder,
-  }) = _UpdateCustomFieldDto;
 
-  factory UpdateCustomFieldDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateCustomFieldDtoFromJson(json);
-}
+

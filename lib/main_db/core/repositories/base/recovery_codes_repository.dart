@@ -60,7 +60,7 @@ class RecoveryCodesRepository {
     });
   }
 
-  Future<void> update(UpdateRecoveryCodesDto dto) {
+  Future<void> update(PatchRecoveryCodesDto dto) {
     return db.transaction(() async {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
@@ -68,12 +68,12 @@ class RecoveryCodesRepository {
       await db.vaultItemsDao.updateVaultItemById(
         itemId,
         VaultItemsCompanion(
-          name: Value(dto.item.name),
-          description: Value(dto.item.description),
-          categoryId: Value(dto.item.categoryId),
-          iconRefId: Value(dto.item.iconRefId),
-          isFavorite: Value(dto.item.isFavorite),
-          isPinned: Value(dto.item.isPinned),
+          name: dto.item.name.toRequiredValue(),
+          description: dto.item.description.toNullableValue(),
+          categoryId: dto.item.categoryId.toNullableValue(),
+          iconRefId: dto.item.iconRefId.toNullableValue(),
+          isFavorite: dto.item.isFavorite.toRequiredValue(),
+          isPinned: dto.item.isPinned.toRequiredValue(),
           modifiedAt: Value(now),
         ),
       );
@@ -81,10 +81,18 @@ class RecoveryCodesRepository {
       await db.recoveryCodesItemsDao.updateRecoveryCodesItemByItemId(
         itemId,
         RecoveryCodesItemsCompanion(
-          generatedAt: Value(dto.recoveryCodes.generatedAt),
-          oneTime: Value(dto.recoveryCodes.oneTime),
+          generatedAt: dto.recoveryCodes.generatedAt.toNullableValue(),
+          oneTime: dto.recoveryCodes.oneTime.toRequiredValue(),
         ),
       );
+
+      final tagsUpdate = dto.tags;
+      if (tagsUpdate is FieldUpdateSet<List<String>>) {
+        await db.itemTagsDao.removeAllTagsFromItem(itemId);
+        for (final tagId in tagsUpdate.value ?? []) {
+          await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
+        }
+      }
     });
   }
 
@@ -169,13 +177,15 @@ class RecoveryCodesRepository {
   }) async {
     await db.transaction(() async {
       await db.recoveryCodesDao.insertRecoveryCodesBatch(
-        codes.map((c) => RecoveryCodesCompanion.insert(
-          itemId: itemId,
-          code: c.code,
-          used: Value(c.used),
-          usedAt: Value(c.usedAt),
-          position: Value(c.position),
-        )).toList(),
+        codes
+            .map((c) => RecoveryCodesCompanion.insert(
+                  itemId: itemId,
+                  code: c.code,
+                  used: Value(c.used),
+                  usedAt: Value(c.usedAt),
+                  position: Value(c.position),
+                ))
+            .toList(),
       );
       await _updateModifiedAt(itemId);
     });
@@ -230,13 +240,15 @@ class RecoveryCodesRepository {
       await db.recoveryCodesDao.deleteRecoveryCodesByItemId(itemId);
       if (codes.isNotEmpty) {
         await db.recoveryCodesDao.insertRecoveryCodesBatch(
-          codes.map((c) => RecoveryCodesCompanion.insert(
-            itemId: itemId,
-            code: c.code,
-            used: Value(c.used),
-            usedAt: Value(c.usedAt),
-            position: Value(c.position),
-          )).toList(),
+          codes
+              .map((c) => RecoveryCodesCompanion.insert(
+                    itemId: itemId,
+                    code: c.code,
+                    used: Value(c.used),
+                    usedAt: Value(c.usedAt),
+                    position: Value(c.position),
+                  ))
+              .toList(),
         );
       }
       await _updateModifiedAt(itemId);
@@ -271,7 +283,6 @@ class RecoveryCodesRepository {
         db.vaultItems.archivedAt,
         db.vaultItems.deletedAt,
         db.vaultItems.recentScore,
-
         db.recoveryCodesItems.codesCount,
         db.recoveryCodesItems.usedCount,
         db.recoveryCodesItems.generatedAt,

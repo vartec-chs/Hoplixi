@@ -127,3 +127,4 @@ extension CategoryInCardDtoIconRefX on CategoryInCardDto {
   IconRefDto? get effectiveIconRef =>
       IconRefDto.fromFields(legacyIconId: iconId);
 }
+

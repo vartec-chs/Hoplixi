@@ -33,35 +33,7 @@ sealed class CreateSshKeyDto with _$CreateSshKeyDto {
       _$CreateSshKeyDtoFromJson(json);
 }
 
-@freezed
-sealed class UpdateSshKeyDto with _$UpdateSshKeyDto {
-  const factory UpdateSshKeyDto({
-    String? name,
-    String? publicKey,
-    String? privateKey,
-    String? keyType,
-    int? keySize,
-    String? passphraseHint,
-    String? comment,
-    String? fingerprint,
-    String? createdBy,
-    bool? addedToAgent,
-    String? usage,
-    String? publicKeyFileId,
-    String? privateKeyFileId,
-    String? metadata,
-    String? description,
-    String? noteId,
-    String? categoryId,
-    bool? isFavorite,
-    bool? isArchived,
-    bool? isPinned,
-    List<String>? tagsIds,
-  }) = _UpdateSshKeyDto;
 
-  factory UpdateSshKeyDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateSshKeyDtoFromJson(json);
-}
 
 @freezed
 sealed class SshKeyCardDto with _$SshKeyCardDto implements BaseCardDto {
@@ -92,3 +64,4 @@ sealed class SshKeyCardDto with _$SshKeyCardDto implements BaseCardDto {
   factory SshKeyCardDto.fromJson(Map<String, dynamic> json) =>
       _$SshKeyCardDtoFromJson(json);
 }
+

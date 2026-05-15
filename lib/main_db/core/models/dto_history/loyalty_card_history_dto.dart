@@ -66,3 +66,4 @@ sealed class LoyaltyCardHistoryCardDto with _$LoyaltyCardHistoryCardDto {
   factory LoyaltyCardHistoryCardDto.fromJson(Map<String, dynamic> json) =>
       _$LoyaltyCardHistoryCardDtoFromJson(json);
 }
+

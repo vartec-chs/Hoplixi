@@ -4,7 +4,6 @@ import 'package:hoplixi/main_db/core/tables/bank_card/bank_card_items.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../main_store.dart';
-import '../../models/dto/bank_card_dto.dart';
 import '../../models/mappers/bank_card_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
 import '../../tables/vault_items/vault_items.dart';
@@ -56,7 +55,7 @@ class BankCardRepository {
     });
   }
 
-  Future<void> update(UpdateBankCardDto dto) {
+  Future<void> update(PatchBankCardDto dto) {
     return db.transaction(() async {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
@@ -64,12 +63,12 @@ class BankCardRepository {
       await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
           .write(
         VaultItemsCompanion(
-          name: Value(dto.item.name),
-          description: Value(dto.item.description),
-          categoryId: Value(dto.item.categoryId),
-          iconRefId: Value(dto.item.iconRefId),
-          isFavorite: Value(dto.item.isFavorite),
-          isPinned: Value(dto.item.isPinned),
+          name: dto.item.name.toRequiredValue(),
+          description: dto.item.description.toNullableValue(),
+          categoryId: dto.item.categoryId.toNullableValue(),
+          iconRefId: dto.item.iconRefId.toNullableValue(),
+          isFavorite: dto.item.isFavorite.toRequiredValue(),
+          isPinned: dto.item.isPinned.toRequiredValue(),
           modifiedAt: Value(now),
         ),
       );
@@ -78,20 +77,28 @@ class BankCardRepository {
             ..where((tbl) => tbl.itemId.equals(itemId)))
           .write(
         BankCardItemsCompanion(
-          cardholderName: Value(dto.bankCard.cardholderName),
-          cardNumber: Value(dto.bankCard.cardNumber),
-          cardType: Value(dto.bankCard.cardType),
-          cardTypeOther: Value(dto.bankCard.cardTypeOther),
-          cardNetwork: Value(dto.bankCard.cardNetwork),
-          cardNetworkOther: Value(dto.bankCard.cardNetworkOther),
-          expiryMonth: Value(dto.bankCard.expiryMonth),
-          expiryYear: Value(dto.bankCard.expiryYear),
-          cvv: Value(dto.bankCard.cvv),
-          bankName: Value(dto.bankCard.bankName),
-          accountNumber: Value(dto.bankCard.accountNumber),
-          routingNumber: Value(dto.bankCard.routingNumber),
+          cardholderName: dto.bankCard.cardholderName.toNullableValue(),
+          cardNumber: dto.bankCard.cardNumber.toRequiredValue(),
+          cardType: dto.bankCard.cardType.toNullableValue(),
+          cardTypeOther: dto.bankCard.cardTypeOther.toNullableValue(),
+          cardNetwork: dto.bankCard.cardNetwork.toNullableValue(),
+          cardNetworkOther: dto.bankCard.cardNetworkOther.toNullableValue(),
+          expiryMonth: dto.bankCard.expiryMonth.toNullableValue(),
+          expiryYear: dto.bankCard.expiryYear.toNullableValue(),
+          cvv: dto.bankCard.cvv.toNullableValue(),
+          bankName: dto.bankCard.bankName.toNullableValue(),
+          accountNumber: dto.bankCard.accountNumber.toNullableValue(),
+          routingNumber: dto.bankCard.routingNumber.toNullableValue(),
         ),
       );
+
+      final tagsUpdate = dto.tags;
+      if (tagsUpdate is FieldUpdateSet<List<String>>) {
+        await db.itemTagsDao.removeAllTagsFromItem(itemId);
+        for (final tagId in tagsUpdate.value ?? []) {
+          await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
+        }
+      }
     });
   }
 
@@ -174,7 +181,6 @@ class BankCardRepository {
         db.vaultItems.archivedAt,
         db.vaultItems.deletedAt,
         db.vaultItems.recentScore,
-
         db.bankCardItems.cardholderName,
         db.bankCardItems.cardType,
         db.bankCardItems.cardNetwork,
@@ -220,8 +226,8 @@ class BankCardRepository {
         expiryMonth: row.read(db.bankCardItems.expiryMonth),
         expiryYear: row.read(db.bankCardItems.expiryYear),
         bankName: row.read(db.bankCardItems.bankName),
-        hasCvv: row.read(expr.hasCvv) ?? false,
         hasCardNumber: row.read(expr.hasCardNumber) ?? false,
+        hasCvv: row.read(expr.hasCvv) ?? false,
       ),
     );
   }

@@ -4,7 +4,6 @@ import 'package:hoplixi/main_db/core/tables/otp/otp_items.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../main_store.dart';
-import '../../models/dto/otp_dto.dart';
 import '../../models/mappers/otp_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
 import '../../tables/vault_items/vault_items.dart';
@@ -52,7 +51,7 @@ class OtpRepository {
     });
   }
 
-  Future<void> update(UpdateOtpDto dto) {
+  Future<void> update(PatchOtpDto dto) {
     return db.transaction(() async {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
@@ -60,12 +59,12 @@ class OtpRepository {
       await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
           .write(
         VaultItemsCompanion(
-          name: Value(dto.item.name),
-          description: Value(dto.item.description),
-          categoryId: Value(dto.item.categoryId),
-          iconRefId: Value(dto.item.iconRefId),
-          isFavorite: Value(dto.item.isFavorite),
-          isPinned: Value(dto.item.isPinned),
+          name: dto.item.name.toRequiredValue(),
+          description: dto.item.description.toNullableValue(),
+          categoryId: dto.item.categoryId.toNullableValue(),
+          iconRefId: dto.item.iconRefId.toNullableValue(),
+          isFavorite: dto.item.isFavorite.toRequiredValue(),
+          isPinned: dto.item.isPinned.toRequiredValue(),
           modifiedAt: Value(now),
         ),
       );
@@ -73,14 +72,14 @@ class OtpRepository {
       await (db.update(db.otpItems)..where((tbl) => tbl.itemId.equals(itemId)))
           .write(
         OtpItemsCompanion(
-          type: Value(dto.otp.type),
-          issuer: Value(dto.otp.issuer),
-          accountName: Value(dto.otp.accountName),
-          secret: Value(dto.otp.secret),
-          algorithm: Value(dto.otp.algorithm),
-          digits: Value(dto.otp.digits),
-          period: Value(dto.otp.period),
-          counter: Value(dto.otp.counter),
+          type: dto.otp.type.toRequiredValue(),
+          issuer: dto.otp.issuer.toNullableValue(),
+          accountName: dto.otp.accountName.toNullableValue(),
+          secret: dto.otp.secret.toRequiredValue(),
+          algorithm: dto.otp.algorithm.toRequiredValue(),
+          digits: dto.otp.digits.toRequiredValue(),
+          period: dto.otp.period.toNullableValue(),
+          counter: dto.otp.counter.toNullableValue(),
         ),
       );
     });
@@ -165,7 +164,6 @@ class OtpRepository {
         db.vaultItems.archivedAt,
         db.vaultItems.deletedAt,
         db.vaultItems.recentScore,
-
         db.otpItems.type,
         db.otpItems.issuer,
         db.otpItems.accountName,
@@ -201,8 +199,8 @@ class OtpRepository {
         type: row.readWithConverter<OtpType, String>(db.otpItems.type)!,
         issuer: row.read(db.otpItems.issuer),
         accountName: row.read(db.otpItems.accountName),
-        algorithm:
-            row.readWithConverter<OtpHashAlgorithm, String>(db.otpItems.algorithm)!,
+        algorithm: row.readWithConverter<OtpHashAlgorithm, String>(
+            db.otpItems.algorithm)!,
         digits: row.read(db.otpItems.digits)!,
         period: row.read(db.otpItems.period),
         counter: row.read(db.otpItems.counter),

@@ -20,20 +20,6 @@ sealed class CreateItemLinkDto with _$CreateItemLinkDto {
 }
 
 @freezed
-sealed class UpdateItemLinkDto with _$UpdateItemLinkDto {
-  const factory UpdateItemLinkDto({
-    required String id,
-    ItemLinkType? relationType,
-    String? relationTypeOther,
-    String? label,
-    int? sortOrder,
-  }) = _UpdateItemLinkDto;
-
-  factory UpdateItemLinkDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateItemLinkDtoFromJson(json);
-}
-
-@freezed
 sealed class ItemLinkViewDto with _$ItemLinkViewDto {
   const factory ItemLinkViewDto({
     required String id,

@@ -93,18 +93,6 @@ sealed class CreateFileDto with _$CreateFileDto {
 }
 
 @freezed
-sealed class UpdateFileDto with _$UpdateFileDto {
-  const factory UpdateFileDto({
-    required VaultItemUpdateDto item,
-    required FileDataDto file,
-    FileMetadataDataDto? metadata,
-  }) = _UpdateFileDto;
-
-  factory UpdateFileDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateFileDtoFromJson(json);
-}
-
-@freezed
 sealed class FileViewDto with _$FileViewDto {
   const factory FileViewDto({
     required VaultItemViewDto item,
@@ -156,5 +144,6 @@ sealed class PatchFileDto with _$PatchFileDto {
     required VaultItemPatchDto item,
     required PatchFileDataDto file,
     PatchFileMetadataDataDto? metadata,
+    @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchFileDto;
 }

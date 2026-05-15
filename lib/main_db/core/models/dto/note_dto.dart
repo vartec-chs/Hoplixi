@@ -39,17 +39,6 @@ sealed class CreateNoteDto with _$CreateNoteDto {
 }
 
 @freezed
-sealed class UpdateNoteDto with _$UpdateNoteDto {
-  const factory UpdateNoteDto({
-    required VaultItemUpdateDto item,
-    required NoteDataDto note,
-  }) = _UpdateNoteDto;
-
-  factory UpdateNoteDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateNoteDtoFromJson(json);
-}
-
-@freezed
 sealed class NoteViewDto with _$NoteViewDto {
   const factory NoteViewDto({
     required VaultItemViewDto item,
@@ -84,5 +73,6 @@ sealed class PatchNoteDto with _$PatchNoteDto {
   const factory PatchNoteDto({
     required VaultItemPatchDto item,
     required PatchNoteDataDto note,
+    @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchNoteDto;
 }

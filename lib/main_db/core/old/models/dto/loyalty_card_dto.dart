@@ -1,4 +1,4 @@
-﻿import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hoplixi/main_db/core/old/models/dto/base_card_dto.dart';
 import 'package:hoplixi/main_db/core/old/models/dto/category_dto.dart';
 import 'package:hoplixi/main_db/core/old/models/dto/tag_dto.dart';
@@ -31,33 +31,7 @@ sealed class CreateLoyaltyCardDto with _$CreateLoyaltyCardDto {
       _$CreateLoyaltyCardDtoFromJson(json);
 }
 
-@freezed
-sealed class UpdateLoyaltyCardDto with _$UpdateLoyaltyCardDto {
-  const factory UpdateLoyaltyCardDto({
-    String? name,
-    String? programName,
-    String? cardNumber,
-    String? holderName,
-    String? barcodeValue,
-    String? barcodeType,
-    String? password,
-    String? pointsBalance,
-    String? tier,
-    DateTime? expiryDate,
-    String? website,
-    String? phoneNumber,
-    String? description,
-    String? noteId,
-    String? categoryId,
-    bool? isFavorite,
-    bool? isArchived,
-    bool? isPinned,
-    List<String>? tagsIds,
-  }) = _UpdateLoyaltyCardDto;
 
-  factory UpdateLoyaltyCardDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateLoyaltyCardDtoFromJson(json);
-}
 
 @freezed
 sealed class GetLoyaltyCardDto with _$GetLoyaltyCardDto {
@@ -126,3 +100,4 @@ sealed class LoyaltyCardCardDto
   factory LoyaltyCardCardDto.fromJson(Map<String, dynamic> json) =>
       _$LoyaltyCardCardDtoFromJson(json);
 }
+

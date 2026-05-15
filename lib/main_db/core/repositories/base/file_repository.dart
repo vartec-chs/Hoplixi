@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:hoplixi/main_db/core/models/field_update.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../main_store.dart';
@@ -68,7 +69,7 @@ class FileRepository {
     });
   }
 
-  Future<void> update(UpdateFileDto dto) {
+  Future<void> update(PatchFileDto dto) {
     return db.transaction(() async {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
@@ -76,12 +77,12 @@ class FileRepository {
       await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
           .write(
         VaultItemsCompanion(
-          name: Value(dto.item.name),
-          description: Value(dto.item.description),
-          categoryId: Value(dto.item.categoryId),
-          iconRefId: Value(dto.item.iconRefId),
-          isFavorite: Value(dto.item.isFavorite),
-          isPinned: Value(dto.item.isPinned),
+          name: dto.item.name.toRequiredValue(),
+          description: dto.item.description.toNullableValue(),
+          categoryId: dto.item.categoryId.toNullableValue(),
+          iconRefId: dto.item.iconRefId.toNullableValue(),
+          isFavorite: dto.item.isFavorite.toRequiredValue(),
+          isPinned: dto.item.isPinned.toRequiredValue(),
           modifiedAt: Value(now),
         ),
       );
@@ -89,28 +90,45 @@ class FileRepository {
       await db.fileItemsDao.updateFileItemByItemId(
         itemId,
         FileItemsCompanion(
-          metadataId: Value(dto.file.metadataId),
+          metadataId: dto.file.metadataId.toNullableValue(),
         ),
       );
 
-      if (dto.metadata != null) {
-        if (dto.file.metadataId == null) {
+      final tagsUpdate = dto.tags;
+      if (tagsUpdate is FieldUpdateSet<List<String>>) {
+        await db.itemTagsDao.removeAllTagsFromItem(itemId);
+        for (final tagId in tagsUpdate.value ?? []) {
+          await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
+        }
+      }
+
+      final metadataDto = dto.metadata;
+      if (metadataDto != null) {
+        final metadataIdUpdate = dto.file.metadataId;
+        String? targetMetadataId;
+        if (metadataIdUpdate is FieldUpdateSet<String>) {
+          targetMetadataId = metadataIdUpdate.value;
+        }
+
+        if (targetMetadataId == null) {
           throw StateError('Cannot update metadata because metadataId is null');
         }
+
         await db.fileMetadataDao.updateFileMetadataById(
-          dto.file.metadataId!,
+          targetMetadataId,
           FileMetadataCompanion(
-            fileName: Value(dto.metadata!.fileName),
-            fileExtension: Value(dto.metadata!.fileExtension),
-            filePath: Value(dto.metadata!.filePath),
-            mimeType: Value(dto.metadata!.mimeType),
-            fileSize: Value(dto.metadata!.fileSize),
-            sha256: Value(dto.metadata!.sha256),
-            availabilityStatus: Value(dto.metadata!.availabilityStatus),
-            integrityStatus: Value(dto.metadata!.integrityStatus),
-            missingDetectedAt: Value(dto.metadata!.missingDetectedAt),
-            deletedAt: Value(dto.metadata!.deletedAt),
-            lastIntegrityCheckAt: Value(dto.metadata!.lastIntegrityCheckAt),
+            fileName: metadataDto.fileName.toRequiredValue(),
+            fileExtension: metadataDto.fileExtension.toNullableValue(),
+            filePath: metadataDto.filePath.toNullableValue(),
+            mimeType: metadataDto.mimeType.toRequiredValue(),
+            fileSize: metadataDto.fileSize.toRequiredValue(),
+            sha256: metadataDto.sha256.toNullableValue(),
+            availabilityStatus: metadataDto.availabilityStatus.toRequiredValue(),
+            integrityStatus: metadataDto.integrityStatus.toRequiredValue(),
+            missingDetectedAt: metadataDto.missingDetectedAt.toNullableValue(),
+            deletedAt: metadataDto.deletedAt.toNullableValue(),
+            lastIntegrityCheckAt:
+                metadataDto.lastIntegrityCheckAt.toNullableValue(),
           ),
         );
       }

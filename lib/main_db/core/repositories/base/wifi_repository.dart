@@ -4,7 +4,6 @@ import 'package:hoplixi/main_db/core/tables/tables.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../main_store.dart';
-import '../../models/dto/wifi_dto.dart';
 import '../../models/mappers/vault_item_mapper.dart';
 import '../../models/mappers/wifi_mapper.dart';
 import '../../tables/vault_items/vault_items.dart';
@@ -51,7 +50,7 @@ class WifiRepository {
     });
   }
 
-  Future<void> update(UpdateWifiDto dto) {
+  Future<void> update(PatchWifiDto dto) {
     return db.transaction(() async {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
@@ -59,12 +58,12 @@ class WifiRepository {
       await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
           .write(
         VaultItemsCompanion(
-          name: Value(dto.item.name),
-          description: Value(dto.item.description),
-          categoryId: Value(dto.item.categoryId),
-          iconRefId: Value(dto.item.iconRefId),
-          isFavorite: Value(dto.item.isFavorite),
-          isPinned: Value(dto.item.isPinned),
+          name: dto.item.name.toRequiredValue(),
+          description: dto.item.description.toNullableValue(),
+          categoryId: dto.item.categoryId.toNullableValue(),
+          iconRefId: dto.item.iconRefId.toNullableValue(),
+          isFavorite: dto.item.isFavorite.toRequiredValue(),
+          isPinned: dto.item.isPinned.toRequiredValue(),
           modifiedAt: Value(now),
         ),
       );
@@ -72,13 +71,13 @@ class WifiRepository {
       await (db.update(db.wifiItems)..where((tbl) => tbl.itemId.equals(itemId)))
           .write(
         WifiItemsCompanion(
-          ssid: Value(dto.wifi.ssid),
-          password: Value(dto.wifi.password),
-          securityType: Value(dto.wifi.securityType),
-          securityTypeOther: Value(dto.wifi.securityTypeOther),
-          encryption: Value(dto.wifi.encryption),
-          encryptionOther: Value(dto.wifi.encryptionOther),
-          hiddenSsid: Value(dto.wifi.hiddenSsid),
+          ssid: dto.wifi.ssid.toRequiredValue(),
+          password: dto.wifi.password.toNullableValue(),
+          securityType: dto.wifi.securityType.toNullableValue(),
+          securityTypeOther: dto.wifi.securityTypeOther.toNullableValue(),
+          encryption: dto.wifi.encryption.toNullableValue(),
+          encryptionOther: dto.wifi.encryptionOther.toNullableValue(),
+          hiddenSsid: dto.wifi.hiddenSsid.toRequiredValue(),
         ),
       );
     });
@@ -163,7 +162,6 @@ class WifiRepository {
         db.vaultItems.archivedAt,
         db.vaultItems.deletedAt,
         db.vaultItems.recentScore,
-
         db.wifiItems.ssid,
         db.wifiItems.securityType,
         db.wifiItems.encryption,

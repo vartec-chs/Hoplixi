@@ -3,7 +3,6 @@ import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../main_store.dart';
-import '../../models/dto/password_dto.dart';
 import '../../models/mappers/password_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
 import '../../tables/vault_items/vault_items.dart';
@@ -48,7 +47,7 @@ class PasswordRepository {
     });
   }
 
-  Future<void> update(UpdatePasswordDto dto) {
+  Future<void> update(PatchPasswordDto dto) {
     return db.transaction(() async {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
@@ -56,12 +55,12 @@ class PasswordRepository {
       await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
           .write(
         VaultItemsCompanion(
-          name: Value(dto.item.name),
-          description: Value(dto.item.description),
-          categoryId: Value(dto.item.categoryId),
-          iconRefId: Value(dto.item.iconRefId),
-          isFavorite: Value(dto.item.isFavorite),
-          isPinned: Value(dto.item.isPinned),
+          name: dto.item.name.toRequiredValue(),
+          description: dto.item.description.toNullableValue(),
+          categoryId: dto.item.categoryId.toNullableValue(),
+          iconRefId: dto.item.iconRefId.toNullableValue(),
+          isFavorite: dto.item.isFavorite.toRequiredValue(),
+          isPinned: dto.item.isPinned.toRequiredValue(),
           modifiedAt: Value(now),
         ),
       );
@@ -70,11 +69,11 @@ class PasswordRepository {
             ..where((tbl) => tbl.itemId.equals(itemId)))
           .write(
         PasswordItemsCompanion(
-          login: Value(dto.password.login),
-          email: Value(dto.password.email),
-          password: Value(dto.password.password),
-          url: Value(dto.password.url),
-          expiresAt: Value(dto.password.expiresAt),
+          login: dto.password.login.toNullableValue(),
+          email: dto.password.email.toNullableValue(),
+          password: dto.password.password.toRequiredValue(),
+          url: dto.password.url.toNullableValue(),
+          expiresAt: dto.password.expiresAt.toNullableValue(),
         ),
       );
     });
@@ -159,7 +158,6 @@ class PasswordRepository {
         db.vaultItems.archivedAt,
         db.vaultItems.deletedAt,
         db.vaultItems.recentScore,
-
         db.passwordItems.login,
         db.passwordItems.email,
         db.passwordItems.url,

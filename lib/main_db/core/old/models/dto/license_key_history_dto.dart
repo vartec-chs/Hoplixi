@@ -20,3 +20,4 @@ sealed class LicenseKeyHistoryCardDto with _$LicenseKeyHistoryCardDto {
   factory LicenseKeyHistoryCardDto.fromJson(Map<String, dynamic> json) =>
       _$LicenseKeyHistoryCardDtoFromJson(json);
 }
+

@@ -33,35 +33,7 @@ sealed class CreateIdentityDto with _$CreateIdentityDto {
       _$CreateIdentityDtoFromJson(json);
 }
 
-@freezed
-sealed class UpdateIdentityDto with _$UpdateIdentityDto {
-  const factory UpdateIdentityDto({
-    String? name,
-    String? idType,
-    String? idNumber,
-    String? fullName,
-    DateTime? dateOfBirth,
-    String? placeOfBirth,
-    String? nationality,
-    String? issuingAuthority,
-    DateTime? issueDate,
-    DateTime? expiryDate,
-    String? mrz,
-    String? scanAttachmentId,
-    String? photoAttachmentId,
-    bool? verified,
-    String? description,
-    String? noteId,
-    String? categoryId,
-    bool? isFavorite,
-    bool? isArchived,
-    bool? isPinned,
-    List<String>? tagsIds,
-  }) = _UpdateIdentityDto;
 
-  factory UpdateIdentityDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateIdentityDtoFromJson(json);
-}
 
 @freezed
 sealed class IdentityCardDto with _$IdentityCardDto implements BaseCardDto {
@@ -89,3 +61,4 @@ sealed class IdentityCardDto with _$IdentityCardDto implements BaseCardDto {
   factory IdentityCardDto.fromJson(Map<String, dynamic> json) =>
       _$IdentityCardDtoFromJson(json);
 }
+

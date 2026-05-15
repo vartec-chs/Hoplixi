@@ -17,19 +17,6 @@ sealed class CreateTagDto with _$CreateTagDto {
 }
 
 @freezed
-sealed class UpdateTagDto with _$UpdateTagDto {
-  const factory UpdateTagDto({
-    required String id,
-    String? name,
-    String? color,
-    TagType? type,
-  }) = _UpdateTagDto;
-
-  factory UpdateTagDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateTagDtoFromJson(json);
-}
-
-@freezed
 sealed class TagViewDto with _$TagViewDto {
   const factory TagViewDto({
     required String id,

@@ -21,3 +21,4 @@ sealed class IdentityHistoryCardDto with _$IdentityHistoryCardDto {
   factory IdentityHistoryCardDto.fromJson(Map<String, dynamic> json) =>
       _$IdentityHistoryCardDtoFromJson(json);
 }
+

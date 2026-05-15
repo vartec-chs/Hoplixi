@@ -32,34 +32,7 @@ sealed class CreateLicenseKeyDto with _$CreateLicenseKeyDto {
       _$CreateLicenseKeyDtoFromJson(json);
 }
 
-@freezed
-sealed class UpdateLicenseKeyDto with _$UpdateLicenseKeyDto {
-  const factory UpdateLicenseKeyDto({
-    String? name,
-    String? product,
-    String? licenseKey,
-    String? licenseType,
-    int? seats,
-    int? maxActivations,
-    DateTime? activatedOn,
-    DateTime? purchaseDate,
-    String? purchaseFrom,
-    String? orderId,
-    String? licenseFileId,
-    DateTime? expiresAt,
-    String? supportContact,
-    String? description,
-    String? noteId,
-    String? categoryId,
-    bool? isFavorite,
-    bool? isArchived,
-    bool? isPinned,
-    List<String>? tagsIds,
-  }) = _UpdateLicenseKeyDto;
 
-  factory UpdateLicenseKeyDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateLicenseKeyDtoFromJson(json);
-}
 
 @freezed
 sealed class LicenseKeyCardDto with _$LicenseKeyCardDto implements BaseCardDto {
@@ -86,3 +59,4 @@ sealed class LicenseKeyCardDto with _$LicenseKeyCardDto implements BaseCardDto {
   factory LicenseKeyCardDto.fromJson(Map<String, dynamic> json) =>
       _$LicenseKeyCardDtoFromJson(json);
 }
+

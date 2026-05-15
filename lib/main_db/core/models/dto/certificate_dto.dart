@@ -68,17 +68,6 @@ sealed class CreateCertificateDto with _$CreateCertificateDto {
 }
 
 @freezed
-sealed class UpdateCertificateDto with _$UpdateCertificateDto {
-  const factory UpdateCertificateDto({
-    required VaultItemUpdateDto item,
-    required CertificateDataDto certificate,
-  }) = _UpdateCertificateDto;
-
-  factory UpdateCertificateDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateCertificateDtoFromJson(json);
-}
-
-@freezed
 sealed class CertificateViewDto with _$CertificateViewDto {
   const factory CertificateViewDto({
     required VaultItemViewDto item,
@@ -126,5 +115,6 @@ sealed class PatchCertificateDto with _$PatchCertificateDto {
   const factory PatchCertificateDto({
     required VaultItemPatchDto item,
     required PatchCertificateDataDto certificate,
+    @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchCertificateDto;
 }

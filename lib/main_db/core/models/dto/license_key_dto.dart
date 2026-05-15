@@ -62,17 +62,6 @@ sealed class CreateLicenseKeyDto with _$CreateLicenseKeyDto {
 }
 
 @freezed
-sealed class UpdateLicenseKeyDto with _$UpdateLicenseKeyDto {
-  const factory UpdateLicenseKeyDto({
-    required VaultItemUpdateDto item,
-    required LicenseKeyDataDto licenseKey,
-  }) = _UpdateLicenseKeyDto;
-
-  factory UpdateLicenseKeyDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateLicenseKeyDtoFromJson(json);
-}
-
-@freezed
 sealed class LicenseKeyViewDto with _$LicenseKeyViewDto {
   const factory LicenseKeyViewDto({
     required VaultItemViewDto item,
@@ -122,5 +111,6 @@ sealed class PatchLicenseKeyDto with _$PatchLicenseKeyDto {
   const factory PatchLicenseKeyDto({
     required VaultItemPatchDto item,
     required PatchLicenseKeyDataDto licenseKey,
+    @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchLicenseKeyDto;
 }

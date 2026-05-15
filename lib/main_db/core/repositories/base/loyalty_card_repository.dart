@@ -1,11 +1,11 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/main_db/core/models/dto/dto.dart';
+import 'package:hoplixi/main_db/core/tables/tables.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../main_store.dart';
 import '../../models/mappers/loyalty_card_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
-import '../../tables/loyalty_card/loyalty_card_items.dart';
 import '../../tables/vault_items/vault_items.dart';
 
 class LoyaltyCardRepository {
@@ -55,7 +55,7 @@ class LoyaltyCardRepository {
     });
   }
 
-  Future<void> update(UpdateLoyaltyCardDto dto) {
+  Future<void> update(PatchLoyaltyCardDto dto) {
     return db.transaction(() async {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
@@ -63,12 +63,12 @@ class LoyaltyCardRepository {
       await db.vaultItemsDao.updateVaultItemById(
         itemId,
         VaultItemsCompanion(
-          name: Value(dto.item.name),
-          description: Value(dto.item.description),
-          categoryId: Value(dto.item.categoryId),
-          iconRefId: Value(dto.item.iconRefId),
-          isFavorite: Value(dto.item.isFavorite),
-          isPinned: Value(dto.item.isPinned),
+          name: dto.item.name.toRequiredValue(),
+          description: dto.item.description.toNullableValue(),
+          categoryId: dto.item.categoryId.toNullableValue(),
+          iconRefId: dto.item.iconRefId.toNullableValue(),
+          isFavorite: dto.item.isFavorite.toRequiredValue(),
+          isPinned: dto.item.isPinned.toRequiredValue(),
           modifiedAt: Value(now),
         ),
       );
@@ -76,20 +76,28 @@ class LoyaltyCardRepository {
       await db.loyaltyCardItemsDao.updateLoyaltyCardByItemId(
         itemId,
         LoyaltyCardItemsCompanion(
-          programName: Value(dto.loyaltyCard.programName),
-          cardNumber: Value(dto.loyaltyCard.cardNumber),
-          barcodeValue: Value(dto.loyaltyCard.barcodeValue),
-          password: Value(dto.loyaltyCard.password),
-          barcodeType: Value(dto.loyaltyCard.barcodeType),
-          barcodeTypeOther: Value(dto.loyaltyCard.barcodeTypeOther),
-          issuer: Value(dto.loyaltyCard.issuer),
-          website: Value(dto.loyaltyCard.website),
-          phone: Value(dto.loyaltyCard.phone),
-          email: Value(dto.loyaltyCard.email),
-          validFrom: Value(dto.loyaltyCard.validFrom),
-          validTo: Value(dto.loyaltyCard.validTo),
+          programName: dto.loyaltyCard.programName.toRequiredValue(),
+          cardNumber: dto.loyaltyCard.cardNumber.toNullableValue(),
+          barcodeValue: dto.loyaltyCard.barcodeValue.toNullableValue(),
+          password: dto.loyaltyCard.password.toNullableValue(),
+          barcodeType: dto.loyaltyCard.barcodeType.toNullableValue(),
+          barcodeTypeOther: dto.loyaltyCard.barcodeTypeOther.toNullableValue(),
+          issuer: dto.loyaltyCard.issuer.toNullableValue(),
+          website: dto.loyaltyCard.website.toNullableValue(),
+          phone: dto.loyaltyCard.phone.toNullableValue(),
+          email: dto.loyaltyCard.email.toNullableValue(),
+          validFrom: dto.loyaltyCard.validFrom.toNullableValue(),
+          validTo: dto.loyaltyCard.validTo.toNullableValue(),
         ),
       );
+
+      final tagsUpdate = dto.tags;
+      if (tagsUpdate is FieldUpdateSet<List<String>>) {
+        await db.itemTagsDao.removeAllTagsFromItem(itemId);
+        for (final tagId in tagsUpdate.value ?? []) {
+          await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
+        }
+      }
     });
   }
 
@@ -172,7 +180,6 @@ class LoyaltyCardRepository {
         db.vaultItems.archivedAt,
         db.vaultItems.deletedAt,
         db.vaultItems.recentScore,
-
         db.loyaltyCardItems.programName,
         db.loyaltyCardItems.barcodeType,
         db.loyaltyCardItems.barcodeTypeOther,
@@ -182,7 +189,6 @@ class LoyaltyCardRepository {
         db.loyaltyCardItems.email,
         db.loyaltyCardItems.validFrom,
         db.loyaltyCardItems.validTo,
-
         hasCardNumberExpr,
         hasBarcodeValueExpr,
         hasPasswordExpr,

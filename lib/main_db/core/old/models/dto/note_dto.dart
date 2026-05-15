@@ -71,22 +71,5 @@ sealed class NoteCardDto with _$NoteCardDto implements BaseCardDto {
 }
 
 /// DTO для обновления заметки
-@freezed
-sealed class UpdateNoteDto with _$UpdateNoteDto {
-  const factory UpdateNoteDto({
-    String? title,
-    String? content,
-    String? deltaJson,
-    String? description,
-    String? categoryId,
-    String? iconSource,
-    String? iconValue,
-    bool? isFavorite,
-    bool? isArchived,
-    bool? isPinned,
-    List<String>? tagsIds,
-  }) = _UpdateNoteDto;
 
-  factory UpdateNoteDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateNoteDtoFromJson(json);
-}
+

@@ -1,3 +1,4 @@
+import 'package:hoplixi/main_db/core/models/field_update.dart';
 import 'package:uuid/uuid.dart';
 import 'package:drift/drift.dart' as drift;
 
@@ -43,40 +44,47 @@ class CategoryRepository {
     return id;
   }
 
-  Future<void> updateCategory(UpdateCategoryDto dto) async {
-    if (dto.name != null && dto.name!.trim().isEmpty) {
-      throw ArgumentError('Category name cannot be empty');
+  Future<void> updateCategory(PatchCategoryDto dto) async {
+    if (dto.name is FieldUpdateSet<String>) {
+      final name = (dto.name as FieldUpdateSet<String>).value;
+      if (name != null && name.trim().isEmpty) {
+        throw ArgumentError('Category name cannot be empty');
+      }
     }
 
-    if (dto.parentId != null) {
-      if (dto.parentId == dto.id) {
-        throw ArgumentError('Category cannot be its own parent');
-      }
-
-      final parentExists = await db.categoriesDao.existsCategory(dto.parentId!);
-      if (!parentExists) {
-        throw ArgumentError('Parent category not found');
-      }
-
-      var currentParentId = dto.parentId;
-      while (currentParentId != null) {
-        if (currentParentId == dto.id) {
-          throw ArgumentError('Category tree cycle detected');
+    final parentIdUpdate = dto.parentId;
+    if (parentIdUpdate is FieldUpdateSet<String>) {
+      final parentId = parentIdUpdate.value;
+      if (parentId != null) {
+        if (parentId == dto.id) {
+          throw ArgumentError('Category cannot be its own parent');
         }
-        final parent = await db.categoriesDao.getCategoryById(currentParentId);
-        currentParentId = parent?.parentId;
+
+        final parentExists = await db.categoriesDao.existsCategory(parentId);
+        if (!parentExists) {
+          throw ArgumentError('Parent category not found');
+        }
+
+        String? currentParentId = parentId;
+        while (currentParentId != null) {
+          if (currentParentId == dto.id) {
+            throw ArgumentError('Category tree cycle detected');
+          }
+          final parent = await db.categoriesDao.getCategoryById(currentParentId);
+          currentParentId = parent?.parentId;
+        }
       }
     }
 
     await db.categoriesDao.updateCategoryById(
       dto.id,
       CategoriesCompanion(
-        name: dto.name != null ? drift.Value(dto.name!.trim()) : const drift.Value.absent(),
-        description: dto.description != null ? drift.Value(dto.description) : const drift.Value.absent(),
-        iconRefId: dto.iconRefId != null ? drift.Value(dto.iconRefId) : const drift.Value.absent(),
-        color: dto.color != null ? drift.Value(dto.color!) : const drift.Value.absent(),
-        type: dto.type != null ? drift.Value(dto.type!) : const drift.Value.absent(),
-        parentId: dto.parentId != null ? drift.Value(dto.parentId) : const drift.Value.absent(),
+        name: dto.name.toRequiredValue(),
+        description: dto.description.toNullableValue(),
+        iconRefId: dto.iconRefId.toNullableValue(),
+        color: dto.color.toRequiredValue(),
+        type: dto.type.toRequiredValue(),
+        parentId: dto.parentId.toNullableValue(),
         modifiedAt: drift.Value(DateTime.now()),
       ),
     );

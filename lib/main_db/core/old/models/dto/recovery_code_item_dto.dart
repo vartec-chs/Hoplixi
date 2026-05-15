@@ -18,3 +18,4 @@ sealed class RecoveryCodeItemDto with _$RecoveryCodeItemDto {
   factory RecoveryCodeItemDto.fromJson(Map<String, dynamic> json) =>
       _$RecoveryCodeItemDtoFromJson(json);
 }
+

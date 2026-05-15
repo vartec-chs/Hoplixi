@@ -54,17 +54,6 @@ sealed class CreateContactDto with _$CreateContactDto {
 }
 
 @freezed
-sealed class UpdateContactDto with _$UpdateContactDto {
-  const factory UpdateContactDto({
-    required VaultItemUpdateDto item,
-    required ContactDataDto contact,
-  }) = _UpdateContactDto;
-
-  factory UpdateContactDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateContactDtoFromJson(json);
-}
-
-@freezed
 sealed class ContactViewDto with _$ContactViewDto {
   const factory ContactViewDto({
     required VaultItemViewDto item,
@@ -108,5 +97,6 @@ sealed class PatchContactDto with _$PatchContactDto {
   const factory PatchContactDto({
     required VaultItemPatchDto item,
     required PatchContactDataDto contact,
+    @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchContactDto;
 }

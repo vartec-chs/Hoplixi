@@ -36,38 +36,7 @@ sealed class CreateCertificateDto with _$CreateCertificateDto {
       _$CreateCertificateDtoFromJson(json);
 }
 
-@freezed
-sealed class UpdateCertificateDto with _$UpdateCertificateDto {
-  const factory UpdateCertificateDto({
-    String? name,
-    String? certificatePem,
-    String? privateKey,
-    String? serialNumber,
-    String? issuer,
-    String? subject,
-    DateTime? validFrom,
-    DateTime? validTo,
-    String? fingerprint,
-    String? keyUsage,
-    String? extensions,
-    List<int>? pfxBlob,
-    String? passwordForPfx,
-    String? ocspUrl,
-    String? crlUrl,
-    bool? autoRenew,
-    DateTime? lastCheckedAt,
-    String? description,
-    String? noteId,
-    String? categoryId,
-    bool? isFavorite,
-    bool? isArchived,
-    bool? isPinned,
-    List<String>? tagsIds,
-  }) = _UpdateCertificateDto;
 
-  factory UpdateCertificateDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateCertificateDtoFromJson(json);
-}
 
 @freezed
 sealed class CertificateCardDto
@@ -101,3 +70,4 @@ sealed class CertificateCardDto
   factory CertificateCardDto.fromJson(Map<String, dynamic> json) =>
       _$CertificateCardDtoFromJson(json);
 }
+

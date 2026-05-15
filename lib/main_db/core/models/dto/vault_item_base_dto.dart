@@ -23,20 +23,17 @@ sealed class VaultItemPatchDto with _$VaultItemPatchDto {
 
 @freezed
 sealed class VaultItemCreateDto with _$VaultItemCreateDto {
-  const factory VaultItemUpdateDto({
-    required String itemId,
-
+  const factory VaultItemCreateDto({
     required String name,
     String? description,
     String? categoryId,
     String? iconRefId,
-
     @Default(false) bool isFavorite,
     @Default(false) bool isPinned,
-  }) = _VaultItemUpdateDto;
+  }) = _VaultItemCreateDto;
 
-  factory VaultItemUpdateDto.fromJson(Map<String, dynamic> json) =>
-      _$VaultItemUpdateDtoFromJson(json);
+  factory VaultItemCreateDto.fromJson(Map<String, dynamic> json) =>
+      _$VaultItemCreateDtoFromJson(json);
 }
 
 @freezed

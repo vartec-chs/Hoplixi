@@ -57,17 +57,6 @@ sealed class CreateIdentityDto with _$CreateIdentityDto {
 }
 
 @freezed
-sealed class UpdateIdentityDto with _$UpdateIdentityDto {
-  const factory UpdateIdentityDto({
-    required VaultItemUpdateDto item,
-    required IdentityDataDto identity,
-  }) = _UpdateIdentityDto;
-
-  factory UpdateIdentityDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateIdentityDtoFromJson(json);
-}
-
-@freezed
 sealed class IdentityViewDto with _$IdentityViewDto {
   const factory IdentityViewDto({
     required VaultItemViewDto item,
@@ -116,5 +105,6 @@ sealed class PatchIdentityDto with _$PatchIdentityDto {
   const factory PatchIdentityDto({
     required VaultItemPatchDto item,
     required PatchIdentityDataDto identity,
+    @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchIdentityDto;
 }

@@ -96,26 +96,5 @@ class DuplicatePasswordGroupDto {
 }
 
 /// DTO для обновления пароля
-@freezed
-sealed class UpdatePasswordDto with _$UpdatePasswordDto {
-  const factory UpdatePasswordDto({
-    String? name,
-    String? password,
-    String? login,
-    String? email,
-    String? url,
-    String? description,
-    String? noteId,
-    String? categoryId,
-    String? iconSource,
-    String? iconValue,
-    bool? isFavorite,
-    bool? isArchived,
-    bool? isPinned,
-    List<String>? tagsIds,
-    DateTime? expireAt,
-  }) = _UpdatePasswordDto;
 
-  factory UpdatePasswordDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdatePasswordDtoFromJson(json);
-}
+

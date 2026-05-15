@@ -3,7 +3,6 @@ import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../main_store.dart';
-import '../../models/dto/note_dto.dart';
 import '../../models/mappers/note_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
 import '../../tables/vault_items/vault_items.dart';
@@ -45,7 +44,7 @@ class NoteRepository {
     });
   }
 
-  Future<void> update(UpdateNoteDto dto) {
+  Future<void> update(PatchNoteDto dto) {
     return db.transaction(() async {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
@@ -53,12 +52,12 @@ class NoteRepository {
       await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
           .write(
         VaultItemsCompanion(
-          name: Value(dto.item.name),
-          description: Value(dto.item.description),
-          categoryId: Value(dto.item.categoryId),
-          iconRefId: Value(dto.item.iconRefId),
-          isFavorite: Value(dto.item.isFavorite),
-          isPinned: Value(dto.item.isPinned),
+          name: dto.item.name.toRequiredValue(),
+          description: dto.item.description.toNullableValue(),
+          categoryId: dto.item.categoryId.toNullableValue(),
+          iconRefId: dto.item.iconRefId.toNullableValue(),
+          isFavorite: dto.item.isFavorite.toRequiredValue(),
+          isPinned: dto.item.isPinned.toRequiredValue(),
           modifiedAt: Value(now),
         ),
       );
@@ -66,8 +65,8 @@ class NoteRepository {
       await (db.update(db.noteItems)..where((tbl) => tbl.itemId.equals(itemId)))
           .write(
         NoteItemsCompanion(
-          deltaJson: Value(dto.note.deltaJson),
-          content: Value(dto.note.content),
+          deltaJson: dto.note.deltaJson.toRequiredValue(),
+          content: dto.note.content.toRequiredValue(),
         ),
       );
     });
@@ -148,7 +147,6 @@ class NoteRepository {
         db.vaultItems.archivedAt,
         db.vaultItems.deletedAt,
         db.vaultItems.recentScore,
-
         db.noteItems.content,
       ]);
   }

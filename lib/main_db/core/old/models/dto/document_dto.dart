@@ -83,23 +83,5 @@ sealed class DocumentCardDto with _$DocumentCardDto implements BaseCardDto {
 }
 
 /// DTO для обновления документа
-@freezed
-sealed class UpdateDocumentDto with _$UpdateDocumentDto {
-  const factory UpdateDocumentDto({
-    String? title,
-    String? documentType,
-    String? description,
-    String? aggregatedText,
-    String? aggregateHash,
-    int? pageCount,
-    String? categoryId,
-    String? noteId,
-    bool? isFavorite,
-    bool? isArchived,
-    bool? isPinned,
-    List<String>? tagsIds,
-  }) = _UpdateDocumentDto;
 
-  factory UpdateDocumentDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateDocumentDtoFromJson(json);
-}
+

@@ -57,17 +57,6 @@ sealed class CreateBankCardDto with _$CreateBankCardDto {
 }
 
 @freezed
-sealed class UpdateBankCardDto with _$UpdateBankCardDto {
-  const factory UpdateBankCardDto({
-    required VaultItemUpdateDto item,
-    required BankCardDataDto bankCard,
-  }) = _UpdateBankCardDto;
-
-  factory UpdateBankCardDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateBankCardDtoFromJson(json);
-}
-
-@freezed
 sealed class BankCardViewDto with _$BankCardViewDto {
   const factory BankCardViewDto({
     required VaultItemViewDto item,
@@ -112,5 +101,6 @@ sealed class PatchBankCardDto with _$PatchBankCardDto {
   const factory PatchBankCardDto({
     required VaultItemPatchDto item,
     required PatchBankCardDataDto bankCard,
+    @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchBankCardDto;
 }

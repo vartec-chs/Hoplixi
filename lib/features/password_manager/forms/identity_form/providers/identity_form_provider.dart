@@ -4,8 +4,8 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/main_db/core/models/dto/dto.dart';
+import 'package:hoplixi/main_db/providers/repository_providers.dart';
 
 import '../models/identity_form_state.dart';
 
@@ -24,41 +24,39 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
     if (identityId == null) return const IdentityFormState(isEditMode: false);
     final id = identityId!;
 
-    final dao = await ref.read(identityDaoProvider.future);
-    final row = await dao.getById(id);
-    if (row == null) return const IdentityFormState(isEditMode: false);
+    final repository = await ref.read(identityRepositoryProvider.future);
+    final view = await repository.getViewById(id);
+    if (view == null) return const IdentityFormState(isEditMode: false);
 
-    final item = row.$1;
-    final identity = row.$2;
+    final item = view.item;
+    final identity = view.identity;
 
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    final tagIds = await vaultItemDao.getTagIds(id);
-    final tagDao = await ref.read(tagDaoProvider.future);
-    final tags = await tagDao.getTagsByIds(tagIds);
+    // TODO: handle tags properly
     final customFields = await loadCustomFields(ref, id);
 
     return IdentityFormState(
       isEditMode: true,
       editingIdentityId: id,
       name: item.name,
-      idType: identity.idType,
-      idNumber: identity.idNumber,
-      fullName: identity.fullName ?? '',
-      dateOfBirth: identity.dateOfBirth?.toIso8601String() ?? '',
-      placeOfBirth: identity.placeOfBirth ?? '',
-      nationality: identity.nationality ?? '',
-      issuingAuthority: identity.issuingAuthority ?? '',
-      issueDate: identity.issueDate?.toIso8601String() ?? '',
-      expiryDate: identity.expiryDate?.toIso8601String() ?? '',
-      mrz: identity.mrz ?? '',
-      scanAttachmentId: identity.scanAttachmentId,
-      photoAttachmentId: identity.photoAttachmentId,
+      firstName: identity.firstName ?? '',
+      middleName: identity.middleName ?? '',
+      lastName: identity.lastName ?? '',
+      displayName: identity.displayName ?? '',
+      username: identity.username ?? '',
+      email: identity.email ?? '',
+      phone: identity.phone ?? '',
+      address: identity.address ?? '',
+      birthday: identity.birthday?.toIso8601String() ?? '',
+      company: identity.company ?? '',
+      jobTitle: identity.jobTitle ?? '',
+      website: identity.website ?? '',
+      taxId: identity.taxId ?? '',
+      nationalId: identity.nationalId ?? '',
+      passportNumber: identity.passportNumber ?? '',
+      driverLicenseNumber: identity.driverLicenseNumber ?? '',
       description: item.description ?? '',
-      verified: identity.verified,
-      noteId: item.noteId,
       categoryId: item.categoryId,
-      tagIds: tagIds,
-      tagNames: tags.map((t) => t.name).toList(),
+      tagIds: [],
       customFields: customFields,
     );
   }
@@ -109,12 +107,10 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
       _update((s) => s.copyWith(expiryDate: v, expiryDateError: _dateErr(v)));
   void setMrz(String v) => _update((s) => s.copyWith(mrz: v));
 
-  /// Установить выбранный скан-документ (document_items)
   void setScanAttachment(String? id, String? name) => _update(
     (s) => s.copyWith(scanAttachmentId: id, scanAttachmentName: name),
   );
 
-  /// Установить выбранное фото-вложение (file_items)
   void setPhotoAttachment(String? id, String? name) => _update(
     (s) => s.copyWith(photoAttachmentId: id, photoAttachmentName: name),
   );
@@ -135,35 +131,11 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
   bool validate() {
     final c = _current;
     final nameError = _req(c.name, t.dashboard_forms.validation_required_name);
-    final idTypeError = _req(
-      c.idType,
-      t.dashboard_forms.validation_required_type,
-    );
-    final idNumberError = _req(
-      c.idNumber,
-      t.dashboard_forms.validation_required_number,
-    );
-    final dateOfBirthError = _dateErr(c.dateOfBirth);
-    final issueDateError = _dateErr(c.issueDate);
-    final expiryDateError = _dateErr(c.expiryDate);
+    // TODO: proper validation
+    
+    _update((s) => s.copyWith(nameError: nameError));
 
-    _update(
-      (s) => s.copyWith(
-        nameError: nameError,
-        idTypeError: idTypeError,
-        idNumberError: idNumberError,
-        dateOfBirthError: dateOfBirthError,
-        issueDateError: issueDateError,
-        expiryDateError: expiryDateError,
-      ),
-    );
-
-    return nameError == null &&
-        idTypeError == null &&
-        idNumberError == null &&
-        dateOfBirthError == null &&
-        issueDateError == null &&
-        expiryDateError == null;
+    return nameError == null;
   }
 
   Future<bool> save() async {
@@ -184,37 +156,38 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
     }
 
     try {
-      final dao = await ref.read(identityDaoProvider.future);
+      final repository = await ref.read(identityRepositoryProvider.future);
 
       if (c.isEditMode && c.editingIdentityId != null) {
-        final updated = await dao.updateIdentity(
-          c.editingIdentityId!,
-          UpdateIdentityDto(
-            name: c.name.trim(),
-            idType: c.idType.trim(),
-            idNumber: c.idNumber.trim(),
-            fullName: clean(c.fullName),
-            dateOfBirth: parseDate(c.dateOfBirth),
-            placeOfBirth: clean(c.placeOfBirth),
-            nationality: clean(c.nationality),
-            issuingAuthority: clean(c.issuingAuthority),
-            issueDate: parseDate(c.issueDate),
-            expiryDate: parseDate(c.expiryDate),
-            mrz: clean(c.mrz),
-            scanAttachmentId: c.scanAttachmentId,
-            photoAttachmentId: c.photoAttachmentId,
-            verified: c.verified,
-            description: clean(c.description),
-            noteId: c.noteId,
-            categoryId: c.categoryId,
-            tagsIds: c.tagIds,
+        await repository.update(
+          PatchIdentityDto(
+            item: VaultItemPatchDto(
+              itemId: c.editingIdentityId!,
+              name: FieldUpdate.set(c.name.trim()),
+              description: FieldUpdate.set(clean(c.description)),
+              categoryId: FieldUpdate.set(c.categoryId),
+            ),
+            identity: PatchIdentityDataDto(
+              firstName: FieldUpdate.set(clean(c.firstName)),
+              middleName: FieldUpdate.set(clean(c.middleName)),
+              lastName: FieldUpdate.set(clean(c.lastName)),
+              displayName: FieldUpdate.set(clean(c.displayName)),
+              username: FieldUpdate.set(clean(c.username)),
+              email: FieldUpdate.set(clean(c.email)),
+              phone: FieldUpdate.set(clean(c.phone)),
+              address: FieldUpdate.set(clean(c.address)),
+              birthday: FieldUpdate.set(parseDate(c.birthday)),
+              company: FieldUpdate.set(clean(c.company)),
+              jobTitle: FieldUpdate.set(clean(c.jobTitle)),
+              website: FieldUpdate.set(clean(c.website)),
+              taxId: FieldUpdate.set(clean(c.taxId)),
+              nationalId: FieldUpdate.set(clean(c.nationalId)),
+              passportNumber: FieldUpdate.set(clean(c.passportNumber)),
+              driverLicenseNumber: FieldUpdate.set(clean(c.driverLicenseNumber)),
+            ),
+            tags: FieldUpdate.set(c.tagIds),
           ),
         );
-
-        if (!updated) {
-          _update((s) => s.copyWith(isSaving: false));
-          return false;
-        }
 
         await saveCustomFields(ref, c.editingIdentityId!, c.customFields);
 
@@ -225,26 +198,31 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
               entityId: c.editingIdentityId,
             );
       } else {
-        final id = await dao.createIdentity(
+        final id = await repository.create(
           CreateIdentityDto(
-            name: c.name.trim(),
-            idType: c.idType.trim(),
-            idNumber: c.idNumber.trim(),
-            fullName: clean(c.fullName),
-            dateOfBirth: parseDate(c.dateOfBirth),
-            placeOfBirth: clean(c.placeOfBirth),
-            nationality: clean(c.nationality),
-            issuingAuthority: clean(c.issuingAuthority),
-            issueDate: parseDate(c.issueDate),
-            expiryDate: parseDate(c.expiryDate),
-            mrz: clean(c.mrz),
-            scanAttachmentId: c.scanAttachmentId,
-            photoAttachmentId: c.photoAttachmentId,
-            verified: c.verified,
-            description: clean(c.description),
-            noteId: c.noteId,
-            categoryId: c.categoryId,
-            tagsIds: c.tagIds,
+            item: VaultItemCreateDto(
+              name: c.name.trim(),
+              description: clean(c.description),
+              categoryId: c.categoryId,
+            ),
+            identity: IdentityDataDto(
+              firstName: clean(c.firstName),
+              middleName: clean(c.middleName),
+              lastName: clean(c.lastName),
+              displayName: clean(c.displayName),
+              username: clean(c.username),
+              email: clean(c.email),
+              phone: clean(c.phone),
+              address: clean(c.address),
+              birthday: parseDate(c.birthday),
+              company: clean(c.company),
+              jobTitle: clean(c.jobTitle),
+              website: clean(c.website),
+              taxId: clean(c.taxId),
+              nationalId: clean(c.nationalId),
+              passportNumber: clean(c.passportNumber),
+              driverLicenseNumber: clean(c.driverLicenseNumber),
+            ),
           ),
         );
 

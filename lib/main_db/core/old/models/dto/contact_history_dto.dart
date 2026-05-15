@@ -20,3 +20,4 @@ sealed class ContactHistoryCardDto with _$ContactHistoryCardDto {
   factory ContactHistoryCardDto.fromJson(Map<String, dynamic> json) =>
       _$ContactHistoryCardDtoFromJson(json);
 }
+

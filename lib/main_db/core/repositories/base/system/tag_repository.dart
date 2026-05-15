@@ -1,3 +1,4 @@
+import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:uuid/uuid.dart';
 import 'package:drift/drift.dart' as drift;
 
@@ -33,17 +34,20 @@ class TagRepository {
     return id;
   }
 
-  Future<void> updateTag(UpdateTagDto dto) async {
-    if (dto.name != null && dto.name!.trim().isEmpty) {
-      throw ArgumentError('Tag name cannot be empty');
+  Future<void> updateTag(PatchTagDto dto) async {
+    if (dto.name is FieldUpdateSet<String>) {
+      final name = (dto.name as FieldUpdateSet<String>).value;
+      if (name != null && name.trim().isEmpty) {
+        throw ArgumentError('Tag name cannot be empty');
+      }
     }
 
     await db.tagsDao.updateTagById(
       dto.id,
       TagsCompanion(
-        name: dto.name != null ? drift.Value(dto.name!.trim()) : const drift.Value.absent(),
-        color: dto.color != null ? drift.Value(dto.color!) : const drift.Value.absent(),
-        type: dto.type != null ? drift.Value(dto.type!) : const drift.Value.absent(),
+        name: dto.name.toRequiredValue(),
+        color: dto.color.toRequiredValue(),
+        type: dto.type.toRequiredValue(),
         modifiedAt: drift.Value(DateTime.now()),
       ),
     );

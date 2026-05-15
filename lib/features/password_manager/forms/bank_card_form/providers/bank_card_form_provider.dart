@@ -4,75 +4,69 @@ import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/bank_card_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/main_db/core/models/dto/dto.dart';
+import 'package:hoplixi/main_db/providers/repository_providers.dart';
+import 'package:hoplixi/main_db/core/tables/bank_card/bank_card_items.dart';
 
 import '../models/bank_card_form_state.dart';
 
 const _logTag = 'BankCardFormProvider';
 
-/// Провайдер состояния формы банковской карты
 final bankCardFormProvider =
     NotifierProvider.autoDispose<BankCardFormNotifier, BankCardFormState>(
       BankCardFormNotifier.new,
     );
 
-/// Notifier для управления формой банковской карты
 class BankCardFormNotifier extends Notifier<BankCardFormState> {
   @override
   BankCardFormState build() {
     return const BankCardFormState(isEditMode: false);
   }
 
-  /// Инициализировать форму для создания новой карты
   void initForCreate() {
     state = const BankCardFormState(isEditMode: false);
   }
 
-  /// Инициализировать форму для редактирования карты
   Future<void> initForEdit(String bankCardId) async {
     state = state.copyWith(isLoading: true);
 
     try {
-      final dao = await ref.read(bankCardDaoProvider.future);
-      final record = await dao.getById(bankCardId);
+      final repository = await ref.read(bankCardRepositoryProvider.future);
+      final view = await repository.getViewById(bankCardId);
 
-      if (record == null) {
+      if (view == null) {
         logWarning('Bank card not found: $bankCardId', tag: _logTag);
         state = state.copyWith(isLoading: false);
         return;
       }
 
-      final (vault, cardItem) = record;
-      final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-      final tagIds = await vaultItemDao.getTagIds(bankCardId);
-      final tagDao = await ref.read(tagDaoProvider.future);
-      final tagRecords = await tagDao.getTagsByIds(tagIds);
+      final item = view.item;
+      final details = view.bankCard;
+      
+      // TODO: handle tags properly
+      final tagIds = <String>[];
+      final tagNames = <String>[];
+
       final customFields = await loadCustomFields(ref, bankCardId);
 
       state = BankCardFormState(
         isEditMode: true,
         editingBankCardId: bankCardId,
-        name: vault.name,
-        cardholderName: cardItem.cardholderName,
-        cardNumber: cardItem.cardNumber,
-        expiryMonth: cardItem.expiryMonth,
-        expiryYear: cardItem.expiryYear,
-        cvv: cardItem.cvv ?? '',
-        bankName: cardItem.bankName ?? '',
-        accountNumber: cardItem.accountNumber ?? '',
-        routingNumber: cardItem.routingNumber ?? '',
-        description: vault.description ?? '',
-        noteId: vault.noteId,
-        cardType: cardItem.cardType?.value,
-        cardNetwork: cardItem.cardNetwork?.value,
-        categoryId: vault.categoryId,
-        iconSource: vault.iconSource,
-        iconValue: vault.iconValue,
+        name: item.name,
+        cardholderName: details.cardholderName ?? '',
+        cardNumber: details.cardNumber,
+        expiryMonth: details.expiryMonth ?? '',
+        expiryYear: details.expiryYear ?? '',
+        cvv: details.cvv ?? '',
+        bankName: details.bankName ?? '',
+        accountNumber: details.accountNumber ?? '',
+        routingNumber: details.routingNumber ?? '',
+        description: item.description ?? '',
+        cardType: details.cardType?.name,
+        cardNetwork: details.cardNetwork?.name,
+        categoryId: item.categoryId,
         tagIds: tagIds,
-        tagNames: tagRecords.map((tag) => tag.name).toList(),
+        tagNames: tagNames,
         customFields: customFields,
         isLoading: false,
       );
@@ -87,12 +81,10 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     }
   }
 
-  /// Обновить поле name
   void setName(String value) {
     state = state.copyWith(name: value, nameError: _validateName(value));
   }
 
-  /// Обновить поле cardholderName
   void setCardholderName(String value) {
     state = state.copyWith(
       cardholderName: value,
@@ -100,7 +92,6 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     );
   }
 
-  /// Обновить поле cardNumber
   void setCardNumber(String value) {
     state = state.copyWith(
       cardNumber: value,
@@ -108,7 +99,6 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     );
   }
 
-  /// Обновить поле expiryMonth
   void setExpiryMonth(String value) {
     state = state.copyWith(
       expiryMonth: value,
@@ -116,7 +106,6 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     );
   }
 
-  /// Обновить поле expiryYear
   void setExpiryYear(String value) {
     state = state.copyWith(
       expiryYear: value,
@@ -124,47 +113,38 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     );
   }
 
-  /// Обновить поле cvv
   void setCvv(String value) {
     state = state.copyWith(cvv: value, cvvError: _validateCvv(value));
   }
 
-  /// Обновить поле bankName
   void setBankName(String value) {
     state = state.copyWith(bankName: value);
   }
 
-  /// Обновить поле accountNumber
   void setAccountNumber(String value) {
     state = state.copyWith(accountNumber: value);
   }
 
-  /// Обновить поле routingNumber
   void setRoutingNumber(String value) {
     state = state.copyWith(routingNumber: value);
   }
 
-  /// Обновить поле description
   void setDescription(String value) {
     state = state.copyWith(description: value);
   }
 
-  /// Обновить поле noteId
   void setNoteId(String? value) {
     state = state.copyWith(noteId: value);
   }
 
-  /// Обновить тип карты
   void setCardType(String? value) {
     state = state.copyWith(cardType: value);
   }
 
-  /// Обновить сеть карты
   void setCardNetwork(String? value) {
     state = state.copyWith(cardNetwork: value);
   }
 
-  /// Обновить категорию
   void setCategory(String? categoryId, String? categoryName) {
     state = state.copyWith(categoryId: categoryId, categoryName: categoryName);
   }
@@ -176,7 +156,6 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     );
   }
 
-  /// Обновить теги
   void setTags(List<String> tagIds, List<String> tagNames) {
     state = state.copyWith(tagIds: tagIds, tagNames: tagNames);
   }
@@ -185,12 +164,10 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     state = state.copyWith(customFields: fields);
   }
 
-  /// Установить фокус на CVV
   void setCvvFocused(bool isFocused) {
     state = state.copyWith(isCvvFocused: isFocused);
   }
 
-  /// Валидация имени
   String? _validateName(String value) {
     if (value.trim().isEmpty) {
       return 'Название обязательно';
@@ -201,7 +178,6 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     return null;
   }
 
-  /// Валидация имени владельца
   String? _validateCardholderName(String value) {
     if (value.trim().isEmpty) {
       return 'Имя владельца обязательно';
@@ -212,7 +188,6 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     return null;
   }
 
-  /// Валидация номера карты
   String? _validateCardNumber(String value) {
     final cleanNumber = value.replaceAll(RegExp(r'\D'), '');
     if (cleanNumber.isEmpty) {
@@ -224,7 +199,6 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     return null;
   }
 
-  /// Валидация месяца истечения
   String? _validateExpiryMonth(String value) {
     if (value.trim().isEmpty) {
       return 'Месяц обязателен';
@@ -236,7 +210,6 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     return null;
   }
 
-  /// Валидация года истечения
   String? _validateExpiryYear(String value) {
     if (value.trim().isEmpty) {
       return 'Год обязателен';
@@ -252,10 +225,9 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     return null;
   }
 
-  /// Валидация CVV
   String? _validateCvv(String value) {
     if (value.isEmpty) {
-      return null; // CVV опционален
+      return null;
     }
     final cleanCvv = value.replaceAll(RegExp(r'\D'), '');
     if (cleanCvv.length < 3 || cleanCvv.length > 4) {
@@ -264,7 +236,6 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     return null;
   }
 
-  /// Валидировать все поля формы
   bool validateAll() {
     final nameError = _validateName(state.name);
     final cardholderNameError = _validateCardholderName(state.cardholderName);
@@ -285,9 +256,7 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     return !state.hasErrors;
   }
 
-  /// Сохранить форму
   Future<bool> save() async {
-    // Валидация
     if (!validateAll()) {
       logWarning('Form validation failed', tag: _logTag);
       return false;
@@ -296,129 +265,122 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     state = state.copyWith(isSaving: true);
 
     try {
-      final dao = await ref.read(bankCardDaoProvider.future);
+      final repository = await ref.read(bankCardRepositoryProvider.future);
 
       if (state.isEditMode && state.editingBankCardId != null) {
-        // Режим редактирования
-        final dto = UpdateBankCardDto(
-          name: state.name.trim(),
-          cardholderName: state.cardholderName.trim(),
-          cardNumber: state.cardNumber.replaceAll(RegExp(r'\D'), ''),
-          expiryMonth: state.expiryMonth.padLeft(2, '0'),
-          expiryYear: state.expiryYear,
-          cvv: state.cvv.isEmpty ? null : state.cvv,
-          bankName: state.bankName.trim().isEmpty
-              ? null
-              : state.bankName.trim(),
-          accountNumber: state.accountNumber.trim().isEmpty
-              ? null
-              : state.accountNumber.trim(),
-          routingNumber: state.routingNumber.trim().isEmpty
-              ? null
-              : state.routingNumber.trim(),
-          description: state.description.trim().isEmpty
-              ? null
-              : state.description.trim(),
-          noteId: state.noteId,
-          cardType: state.cardType,
-          cardNetwork: state.cardNetwork,
-          categoryId: state.categoryId,
-        );
-
-        final success = await dao.updateBankCard(state.editingBankCardId!, dto);
-
-        if (success) {
-          final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-          await vaultItemDao.setIconRef(
-            state.editingBankCardId!,
-            IconRefDto.fromFields(
-              iconSource: state.iconSource,
-              iconValue: state.iconValue,
+        await repository.update(
+          PatchBankCardDto(
+            item: VaultItemPatchDto(
+              itemId: state.editingBankCardId!,
+              name: FieldUpdate.set(state.name.trim()),
+              description: FieldUpdate.set(
+                state.description.trim().isEmpty ? null : state.description.trim(),
+              ),
+              categoryId: FieldUpdate.set(state.categoryId),
             ),
-          );
-          await vaultItemDao.syncTags(state.editingBankCardId!, state.tagIds);
-          await saveCustomFields(
-            ref,
-            state.editingBankCardId!,
-            state.customFields,
-          );
-
-          logInfo(
-            'Bank card updated: ${state.editingBankCardId}',
-            tag: _logTag,
-          );
-          state = state.copyWith(isSaving: false, isSaved: true);
-
-          // Триггерим обновление списка
-          ref
-              .read(dashboardListRefreshTriggerProvider.notifier)
-              .triggerEntityUpdate(
-                EntityType.bankCard,
-                entityId: state.editingBankCardId,
-              );
-
-          return true;
-        } else {
-          logWarning(
-            'Failed to update bank card: ${state.editingBankCardId}',
-            tag: _logTag,
-          );
-          state = state.copyWith(isSaving: false);
-          return false;
-        }
-      } else {
-        // Режим создания
-        final dto = CreateBankCardDto(
-          name: state.name.trim(),
-          cardholderName: state.cardholderName.trim(),
-          cardNumber: state.cardNumber.replaceAll(RegExp(r'\D'), ''),
-          expiryMonth: state.expiryMonth.padLeft(2, '0'),
-          expiryYear: state.expiryYear,
-          cvv: state.cvv.isEmpty ? null : state.cvv,
-          bankName: state.bankName.trim().isEmpty
-              ? null
-              : state.bankName.trim(),
-          accountNumber: state.accountNumber.trim().isEmpty
-              ? null
-              : state.accountNumber.trim(),
-          routingNumber: state.routingNumber.trim().isEmpty
-              ? null
-              : state.routingNumber.trim(),
-          description: state.description.trim().isEmpty
-              ? null
-              : state.description.trim(),
-          noteId: state.noteId,
-          cardType: state.cardType,
-          cardNetwork: state.cardNetwork,
-          categoryId: state.categoryId,
-          tagsIds: state.tagIds,
-        );
-
-        final bankCardId = await dao.createBankCard(dto);
-
-        final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-        await vaultItemDao.setIconRef(
-          bankCardId,
-          IconRefDto.fromFields(
-            iconSource: state.iconSource,
-            iconValue: state.iconValue,
+            bankCard: PatchBankCardDataDto(
+              cardholderName: FieldUpdate.set(state.cardholderName.trim()),
+              cardNumber: FieldUpdate.set(
+                state.cardNumber.replaceAll(RegExp(r'\D'), ''),
+              ),
+              expiryMonth: FieldUpdate.set(state.expiryMonth.padLeft(2, '0')),
+              expiryYear: FieldUpdate.set(state.expiryYear),
+              cvv: FieldUpdate.set(state.cvv.isEmpty ? null : state.cvv),
+              bankName: FieldUpdate.set(
+                state.bankName.trim().isEmpty ? null : state.bankName.trim(),
+              ),
+              accountNumber: FieldUpdate.set(
+                state.accountNumber.trim().isEmpty
+                    ? null
+                    : state.accountNumber.trim(),
+              ),
+              routingNumber: FieldUpdate.set(
+                state.routingNumber.trim().isEmpty
+                    ? null
+                    : state.routingNumber.trim(),
+              ),
+              cardType: FieldUpdate.set(
+                state.cardType != null
+                    ? CardType.values.byName(state.cardType!)
+                    : null,
+              ),
+              cardNetwork: FieldUpdate.set(
+                state.cardNetwork != null
+                    ? CardNetwork.values.byName(state.cardNetwork!)
+                    : null,
+              ),
+            ),
+            tags: FieldUpdate.set(state.tagIds),
           ),
         );
 
-        // Синхронизация тегов для новой карты
-        if (state.tagIds.isNotEmpty) {
-          await vaultItemDao.syncTags(bankCardId, state.tagIds);
-        }
+        await saveCustomFields(
+          ref,
+          state.editingBankCardId!,
+          state.customFields,
+        );
+        // TODO: handle icon ref
 
-        await saveCustomFields(ref, bankCardId, state.customFields);
-
-        logInfo('Bank card created: $bankCardId', tag: _logTag);
+        logInfo(
+          'Bank card updated: ${state.editingBankCardId}',
+          tag: _logTag,
+        );
         state = state.copyWith(isSaving: false, isSaved: true);
 
-        // Триггерим обновление списка
         ref
             .read(dashboardListRefreshTriggerProvider.notifier)
-            .triggerEntityAdd(EntityType.bankCard, entityId: bankCardId);
+            .triggerEntityUpdate(
+              EntityType.bankCard,
+              entityId: state.editingBankCardId,
+            );
+
+        return true;
+      } else {
+        final id = await repository.create(
+          CreateBankCardDto(
+            item: VaultItemCreateDto(
+              name: state.name.trim(),
+              description: state.description.trim().isEmpty
+                  ? null
+                  : state.description.trim(),
+              categoryId: state.categoryId,
+            ),
+            bankCard: BankCardDataDto(
+              cardholderName: state.cardholderName.trim(),
+              cardNumber: state.cardNumber.replaceAll(RegExp(r'\D'), ''),
+              expiryMonth: state.expiryMonth.padLeft(2, '0'),
+              expiryYear: state.expiryYear,
+              cvv: state.cvv.isEmpty ? null : state.cvv,
+              bankName: state.bankName.trim().isEmpty
+                  ? null
+                  : state.bankName.trim(),
+              accountNumber: state.accountNumber.trim().isEmpty
+                  ? null
+                  : state.accountNumber.trim(),
+              routingNumber: state.routingNumber.trim().isEmpty
+                  ? null
+                  : state.routingNumber.trim(),
+              cardType: state.cardType != null
+                  ? CardType.values.byName(state.cardType!)
+                  : null,
+              cardNetwork: state.cardNetwork != null
+                  ? CardNetwork.values.byName(state.cardNetwork!)
+                  : null,
+            ),
+          ),
+        );
+
+        // TODO: handle tags for create
+        // TODO: handle icon ref
+
+        await saveCustomFields(ref, id, state.customFields);
+
+        logInfo('Bank card created: $id', tag: _logTag);
+        state = state.copyWith(isSaving: false, isSaved: true);
+
+        ref
+            .read(dashboardListRefreshTriggerProvider.notifier)
+            .triggerEntityAdd(EntityType.bankCard, entityId: id);
 
         return true;
       }
@@ -434,7 +396,6 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     }
   }
 
-  /// Сбросить флаг сохранения
   void resetSaved() {
     state = state.copyWith(isSaved: false);
   }

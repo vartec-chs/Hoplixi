@@ -20,3 +20,4 @@ sealed class WifiHistoryCardDto with _$WifiHistoryCardDto {
   factory WifiHistoryCardDto.fromJson(Map<String, dynamic> json) =>
       _$WifiHistoryCardDtoFromJson(json);
 }
+

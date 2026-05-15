@@ -4,7 +4,6 @@ import 'package:hoplixi/main_db/core/tables/ssh_key/ssh_key_items.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../main_store.dart';
-import '../../models/dto/ssh_key_dto.dart';
 import '../../models/mappers/ssh_key_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
 import '../../tables/vault_items/vault_items.dart';
@@ -49,7 +48,7 @@ class SshKeyRepository {
     });
   }
 
-  Future<void> update(UpdateSshKeyDto dto) {
+  Future<void> update(PatchSshKeyDto dto) {
     return db.transaction(() async {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
@@ -57,12 +56,12 @@ class SshKeyRepository {
       await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
           .write(
         VaultItemsCompanion(
-          name: Value(dto.item.name),
-          description: Value(dto.item.description),
-          categoryId: Value(dto.item.categoryId),
-          iconRefId: Value(dto.item.iconRefId),
-          isFavorite: Value(dto.item.isFavorite),
-          isPinned: Value(dto.item.isPinned),
+          name: dto.item.name.toRequiredValue(),
+          description: dto.item.description.toNullableValue(),
+          categoryId: dto.item.categoryId.toNullableValue(),
+          iconRefId: dto.item.iconRefId.toNullableValue(),
+          isFavorite: dto.item.isFavorite.toRequiredValue(),
+          isPinned: dto.item.isPinned.toRequiredValue(),
           modifiedAt: Value(now),
         ),
       );
@@ -71,11 +70,11 @@ class SshKeyRepository {
             ..where((tbl) => tbl.itemId.equals(itemId)))
           .write(
         SshKeyItemsCompanion(
-          publicKey: Value(dto.sshKey.publicKey),
-          privateKey: Value(dto.sshKey.privateKey),
-          keyType: Value(dto.sshKey.keyType),
-          keyTypeOther: Value(dto.sshKey.keyTypeOther),
-          keySize: Value(dto.sshKey.keySize),
+          publicKey: dto.sshKey.publicKey.toNullableValue(),
+          privateKey: dto.sshKey.privateKey.toNullableValue(),
+          keyType: dto.sshKey.keyType.toNullableValue(),
+          keyTypeOther: dto.sshKey.keyTypeOther.toNullableValue(),
+          keySize: dto.sshKey.keySize.toNullableValue(),
         ),
       );
     });
@@ -160,7 +159,6 @@ class SshKeyRepository {
         db.vaultItems.archivedAt,
         db.vaultItems.deletedAt,
         db.vaultItems.recentScore,
-
         db.sshKeyItems.publicKey,
         db.sshKeyItems.keyType,
         db.sshKeyItems.keySize,

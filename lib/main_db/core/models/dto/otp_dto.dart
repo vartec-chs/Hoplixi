@@ -56,17 +56,6 @@ sealed class CreateOtpDto with _$CreateOtpDto {
 }
 
 @freezed
-sealed class UpdateOtpDto with _$UpdateOtpDto {
-  const factory UpdateOtpDto({
-    required VaultItemUpdateDto item,
-    required OtpDataDto otp,
-  }) = _UpdateOtpDto;
-
-  factory UpdateOtpDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateOtpDtoFromJson(json);
-}
-
-@freezed
 sealed class OtpViewDto with _$OtpViewDto {
   const factory OtpViewDto({
     required VaultItemViewDto item,
@@ -107,5 +96,6 @@ sealed class PatchOtpDto with _$PatchOtpDto {
   const factory PatchOtpDto({
     required VaultItemPatchDto item,
     required PatchOtpDataDto otp,
+    @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchOtpDto;
 }

@@ -22,22 +22,6 @@ sealed class CreateCategoryDto with _$CreateCategoryDto {
 }
 
 @freezed
-sealed class UpdateCategoryDto with _$UpdateCategoryDto {
-  const factory UpdateCategoryDto({
-    required String id,
-    String? name,
-    String? description,
-    String? iconRefId,
-    String? color,
-    CategoryType? type,
-    String? parentId,
-  }) = _UpdateCategoryDto;
-
-  factory UpdateCategoryDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateCategoryDtoFromJson(json);
-}
-
-@freezed
 sealed class CategoryViewDto with _$CategoryViewDto {
   const factory CategoryViewDto({
     required String id,

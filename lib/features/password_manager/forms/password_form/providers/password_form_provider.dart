@@ -4,75 +4,69 @@ import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/password_dto.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/main_db/core/models/dto/dto.dart';
+import 'package:hoplixi/main_db/providers/repository_providers.dart';
 
 import '../models/password_form_state.dart';
 
 const _logTag = 'PasswordFormProvider';
 
-/// Провайдер состояния формы пароля
 final passwordFormProvider =
     NotifierProvider.autoDispose<PasswordFormNotifier, PasswordFormState>(
       PasswordFormNotifier.new,
     );
 
-/// Notifier для управления формой пароля
 class PasswordFormNotifier extends Notifier<PasswordFormState> {
   @override
   PasswordFormState build() {
     return const PasswordFormState(isEditMode: false);
   }
 
-  /// Инициализировать форму для создания нового пароля
   void initForCreate() {
     state = const PasswordFormState(isEditMode: false);
   }
 
-  /// Инициализировать форму для редактирования пароля
   Future<void> initForEdit(String passwordId) async {
     state = state.copyWith(isLoading: true);
 
     try {
-      final dao = await ref.read(passwordDaoProvider.future);
-      final record = await dao.getById(passwordId);
+      final repository = await ref.read(passwordRepositoryProvider.future);
+      final view = await repository.getViewById(passwordId);
 
-      if (record == null) {
+      if (view == null) {
         logWarning('Password not found: $passwordId', tag: _logTag);
         state = state.copyWith(isLoading: false);
         return;
       }
 
-      final (vault, pwItem) = record;
-      final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-      final tagIds = await vaultItemDao.getTagIds(passwordId);
-      final tagDao = await ref.read(tagDaoProvider.future);
-      final tagRecords = await tagDao.getTagsByIds(tagIds);
+      final item = view.item;
+      final details = view.password;
+      
+      // TODO: handle tags properly
+      final tagIds = <String>[];
+      final tagNames = <String>[];
 
-      final otpDao = await ref.read(otpDaoProvider.future);
-      final linkedOtp = await otpDao.getByPasswordItemId(passwordId);
+      // TODO: handle OTP link properly via ItemLinkRepository or RelationsService
+      String? otpId;
+      String? otpName;
 
       final customFields = await loadCustomFields(ref, passwordId);
 
       state = PasswordFormState(
         isEditMode: true,
         editingPasswordId: passwordId,
-        name: vault.name,
-        password: pwItem.password,
-        login: pwItem.login ?? '',
-        email: pwItem.email ?? '',
-        url: pwItem.url ?? '',
-        description: vault.description ?? '',
-        noteId: vault.noteId,
-        categoryId: vault.categoryId,
-        iconSource: vault.iconSource,
-        iconValue: vault.iconValue,
-        expireAt: pwItem.expireAt,
+        name: item.name,
+        password: details.password,
+        login: details.login ?? '',
+        email: details.email ?? '',
+        url: details.url ?? '',
+        description: item.description ?? '',
+        categoryId: item.categoryId,
+        expireAt: details.expiresAt,
         tagIds: tagIds,
-        tagNames: tagRecords.map((tag) => tag.name).toList(),
-        otpId: linkedOtp?.$1.id,
-        otpName: linkedOtp?.$1.name ?? linkedOtp?.$2.accountName,
+        tagNames: tagNames,
+        otpId: otpId,
+        otpName: otpName,
         customFields: customFields,
         isLoading: false,
       );
@@ -87,12 +81,10 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     }
   }
 
-  /// Обновить поле name
   void setName(String value) {
     state = state.copyWith(name: value, nameError: _validateName(value));
   }
 
-  /// Обновить поле password
   void setPassword(String value) {
     state = state.copyWith(
       password: value,
@@ -100,7 +92,6 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     );
   }
 
-  /// Обновить поле login
   void setLogin(String value) {
     state = state.copyWith(
       login: value,
@@ -108,7 +99,6 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     );
   }
 
-  /// Обновить поле email
   void setEmail(String value) {
     state = state.copyWith(
       email: value,
@@ -116,32 +106,26 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     );
   }
 
-  /// Обновить поле url
   void setUrl(String value) {
     state = state.copyWith(url: value, urlError: _validateUrl(value));
   }
 
-  /// Обновить поле description
   void setDescription(String value) {
     state = state.copyWith(description: value);
   }
 
-  /// Обновить кастомные поля
   void setCustomFields(List<CustomFieldEntry> fields) {
     state = state.copyWith(customFields: fields);
   }
 
-  /// Обновить поле noteId
   void setNoteId(String? value) {
     state = state.copyWith(noteId: value);
   }
 
-  /// Обновить поле otpId
   void setOtp(String? otpId, String? otpName) {
     state = state.copyWith(otpId: otpId, otpName: otpName);
   }
 
-  /// Обновить категорию
   void setCategory(String? categoryId, String? categoryName) {
     state = state.copyWith(categoryId: categoryId, categoryName: categoryName);
   }
@@ -153,17 +137,14 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     );
   }
 
-  /// Обновить теги
   void setTags(List<String> tagIds, List<String> tagNames) {
     state = state.copyWith(tagIds: tagIds, tagNames: tagNames);
   }
 
-  /// Обновить expireAt
   void setExpireAt(DateTime? value) {
     state = state.copyWith(expireAt: value);
   }
 
-  /// Валидация имени
   String? _validateName(String value) {
     if (value.trim().isEmpty) {
       return 'Название обязательно';
@@ -174,18 +155,13 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     return null;
   }
 
-  /// Валидация пароля
   String? _validatePassword(String value) {
     if (value.isEmpty) {
       return 'Пароль обязателен';
     }
-    if (value.isEmpty) {
-      return 'Пароль не может быть пустым';
-    }
     return null;
   }
 
-  /// Валидация логина (должен быть заполнен логин или email)
   String? _validateLogin(String login, String email) {
     if (login.trim().isEmpty && email.trim().isEmpty) {
       return 'Заполните логин или email';
@@ -193,7 +169,6 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     return null;
   }
 
-  /// Валидация email (должен быть заполнен логин или email)
   String? _validateEmail(String email, String login) {
     if (email.trim().isEmpty && login.trim().isEmpty) {
       return 'Заполните email или логин';
@@ -206,10 +181,9 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     return null;
   }
 
-  /// Валидация URL
   String? _validateUrl(String value) {
     if (value.trim().isEmpty) {
-      return null; // URL опционален
+      return null;
     }
 
     if (!_isValidUrl(value)) {
@@ -219,7 +193,6 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     return null;
   }
 
-  /// Проверка формата email
   bool _isValidEmail(String email) {
     final emailRegex = RegExp(
       r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
@@ -227,7 +200,6 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     return emailRegex.hasMatch(email.trim());
   }
 
-  /// Проверка формата URL
   bool _isValidUrl(String url) {
     try {
       final uri = Uri.parse(url.trim());
@@ -237,7 +209,6 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     }
   }
 
-  /// Валидировать все поля формы
   bool validateAll() {
     final nameError = _validateName(state.name);
     final passwordError = _validatePassword(state.password);
@@ -256,9 +227,7 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     return !state.hasErrors;
   }
 
-  /// Сохранить форму
   Future<bool> save() async {
-    // Валидация
     if (!validateAll()) {
       logWarning('Form validation failed', tag: _logTag);
       return false;
@@ -267,99 +236,87 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     state = state.copyWith(isSaving: true);
 
     try {
-      final dao = await ref.read(passwordDaoProvider.future);
+      final repository = await ref.read(passwordRepositoryProvider.future);
 
       if (state.isEditMode && state.editingPasswordId != null) {
-        // Режим редактирования
-        final dto = UpdatePasswordDto(
-          name: state.name.trim(),
-          password: state.password,
-          login: state.login.trim().isEmpty ? null : state.login.trim(),
-          email: state.email.trim().isEmpty ? null : state.email.trim(),
-          url: state.url.trim().isEmpty ? null : state.url.trim(),
-          description: state.description.trim().isEmpty
-              ? null
-              : state.description.trim(),
-          noteId: state.noteId,
-          categoryId: state.categoryId,
-          expireAt: state.expireAt,
-        );
-
-        final success = await dao.updatePassword(state.editingPasswordId!, dto);
-
-        if (success) {
-          final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-          await vaultItemDao.setIconRef(
-            state.editingPasswordId!,
-            IconRefDto.fromFields(
-              iconSource: state.iconSource,
-              iconValue: state.iconValue,
+        await repository.update(
+          PatchPasswordDto(
+            item: VaultItemPatchDto(
+              itemId: state.editingPasswordId!,
+              name: FieldUpdate.set(state.name.trim()),
+              description: FieldUpdate.set(
+                state.description.trim().isEmpty ? null : state.description.trim(),
+              ),
+              categoryId: FieldUpdate.set(state.categoryId),
             ),
-          );
-          await vaultItemDao.syncTags(state.editingPasswordId!, state.tagIds);
-          await _updateOtpLink(state.editingPasswordId!);
-          await saveCustomFields(
-            ref,
-            state.editingPasswordId!,
-            state.customFields,
-          );
-
-          logInfo('Password updated: ${state.editingPasswordId}', tag: _logTag);
-          state = state.copyWith(isSaving: false, isSaved: true);
-
-          // Триггерим обновление списка паролей
-          ref
-              .read(dashboardListRefreshTriggerProvider.notifier)
-              .triggerEntityUpdate(
-                EntityType.password,
-                entityId: state.editingPasswordId,
-              );
-
-          return true;
-        } else {
-          logWarning(
-            'Failed to update password: ${state.editingPasswordId}',
-            tag: _logTag,
-          );
-          state = state.copyWith(isSaving: false);
-          return false;
-        }
-      } else {
-        // Режим создания
-        final dto = CreatePasswordDto(
-          name: state.name.trim(),
-          password: state.password,
-          login: state.login.trim().isEmpty ? null : state.login.trim(),
-          email: state.email.trim().isEmpty ? null : state.email.trim(),
-          url: state.url.trim().isEmpty ? null : state.url.trim(),
-          description: state.description.trim().isEmpty
-              ? null
-              : state.description.trim(),
-          noteId: state.noteId,
-          categoryId: state.categoryId,
-          tagsIds: state.tagIds.isEmpty ? null : state.tagIds,
-          expireAt: state.expireAt,
-        );
-
-        final passwordId = await dao.createPassword(dto);
-        final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-        await vaultItemDao.setIconRef(
-          passwordId,
-          IconRefDto.fromFields(
-            iconSource: state.iconSource,
-            iconValue: state.iconValue,
+            password: PatchPasswordDataDto(
+              login: FieldUpdate.set(
+                state.login.trim().isEmpty ? null : state.login.trim(),
+              ),
+              email: FieldUpdate.set(
+                state.email.trim().isEmpty ? null : state.email.trim(),
+              ),
+              password: FieldUpdate.set(state.password),
+              url: FieldUpdate.set(
+                state.url.trim().isEmpty ? null : state.url.trim(),
+              ),
+              expiresAt: FieldUpdate.set(state.expireAt),
+            ),
+            tags: FieldUpdate.set(state.tagIds),
           ),
         );
-        await _updateOtpLink(passwordId);
-        await saveCustomFields(ref, passwordId, state.customFields);
 
-        logInfo('Password created: $passwordId', tag: _logTag);
+        await saveCustomFields(
+          ref,
+          state.editingPasswordId!,
+          state.customFields,
+        );
+        // TODO: handle icon ref
+        // TODO: handle OTP link
+
+        logInfo('Password updated: ${state.editingPasswordId}', tag: _logTag);
         state = state.copyWith(isSaving: false, isSaved: true);
 
-        // Триггерим обновление списка паролей
         ref
             .read(dashboardListRefreshTriggerProvider.notifier)
-            .triggerEntityAdd(EntityType.password, entityId: passwordId);
+            .triggerEntityUpdate(
+              EntityType.password,
+              entityId: state.editingPasswordId,
+            );
+
+        return true;
+      } else {
+        final id = await repository.create(
+          CreatePasswordDto(
+            item: VaultItemCreateDto(
+              name: state.name.trim(),
+              description: state.description.trim().isEmpty
+                  ? null
+                  : state.description.trim(),
+              categoryId: state.categoryId,
+            ),
+            password: PasswordDataDto(
+              login: state.login.trim().isEmpty ? null : state.login.trim(),
+              email: state.email.trim().isEmpty ? null : state.email.trim(),
+              password: state.password,
+              url: state.url.trim().isEmpty ? null : state.url.trim(),
+              expiresAt: state.expireAt,
+            ),
+          ),
+        );
+
+        // TODO: handle tags for create
+        // TODO: handle icon ref
+        // TODO: handle OTP link
+
+        await saveCustomFields(ref, id, state.customFields);
+
+        logInfo('Password created: $id', tag: _logTag);
+        state = state.copyWith(isSaving: false, isSaved: true);
+
+        ref
+            .read(dashboardListRefreshTriggerProvider.notifier)
+            .triggerEntityAdd(EntityType.password, entityId: id);
 
         return true;
       }
@@ -375,31 +332,7 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     }
   }
 
-  /// Сбросить флаг сохранения
   void resetSaved() {
     state = state.copyWith(isSaved: false);
-  }
-
-  /// Обновить привязку OTP
-  Future<void> _updateOtpLink(String passwordId) async {
-    try {
-      final otpDao = await ref.read(otpDaoProvider.future);
-      // 1. Найти текущие привязки
-      final currentLinkedOtp = await otpDao.getByPasswordItemId(passwordId);
-
-      // 2. Отвязать лишние
-      if (currentLinkedOtp != null) {
-        if (currentLinkedOtp.$1.id != state.otpId) {
-          await otpDao.updateOtpLink(currentLinkedOtp.$1.id, null);
-        }
-      }
-
-      // 3. Привязать новый
-      if (state.otpId != null) {
-        await otpDao.updateOtpLink(state.otpId!, passwordId);
-      }
-    } catch (e) {
-      logError('Failed to update OTP link', error: e, tag: _logTag);
-    }
   }
 }

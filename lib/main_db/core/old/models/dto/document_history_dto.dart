@@ -71,3 +71,4 @@ sealed class DocumentHistoryCardDto with _$DocumentHistoryCardDto {
   factory DocumentHistoryCardDto.fromJson(Map<String, dynamic> json) =>
       _$DocumentHistoryCardDtoFromJson(json);
 }
+

@@ -79,17 +79,6 @@ sealed class CreateRecoveryCodesDto with _$CreateRecoveryCodesDto {
 }
 
 @freezed
-sealed class UpdateRecoveryCodesDto with _$UpdateRecoveryCodesDto {
-  const factory UpdateRecoveryCodesDto({
-    required VaultItemUpdateDto item,
-    required RecoveryCodesDataDto recoveryCodes,
-  }) = _UpdateRecoveryCodesDto;
-
-  factory UpdateRecoveryCodesDto.fromJson(Map<String, dynamic> json) =>
-      _$UpdateRecoveryCodesDtoFromJson(json);
-}
-
-@freezed
 sealed class RecoveryCodesViewDto with _$RecoveryCodesViewDto {
   const factory RecoveryCodesViewDto({
     required VaultItemViewDto item,
@@ -126,5 +115,6 @@ sealed class PatchRecoveryCodesDto with _$PatchRecoveryCodesDto {
   const factory PatchRecoveryCodesDto({
     required VaultItemPatchDto item,
     required PatchRecoveryCodesDataDto recoveryCodes,
+    @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchRecoveryCodesDto;
 }

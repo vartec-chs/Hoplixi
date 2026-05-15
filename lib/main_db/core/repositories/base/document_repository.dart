@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/main_db/core/models/dto/vault_item_base_dto.dart';
+import 'package:hoplixi/main_db/core/models/field_update.dart';
 import 'package:hoplixi/main_db/core/tables/tables.dart';
 import 'package:uuid/uuid.dart';
 
@@ -48,7 +49,7 @@ class DocumentRepository {
     });
   }
 
-  Future<void> update(UpdateDocumentDto dto) {
+  Future<void> update(PatchDocumentDto dto) {
     return db.transaction(() async {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
@@ -57,12 +58,12 @@ class DocumentRepository {
         db.vaultItems,
       )..where((tbl) => tbl.id.equals(itemId))).write(
         VaultItemsCompanion(
-          name: Value(dto.item.name),
-          description: Value(dto.item.description),
-          categoryId: Value(dto.item.categoryId),
-          iconRefId: Value(dto.item.iconRefId),
-          isFavorite: Value(dto.item.isFavorite),
-          isPinned: Value(dto.item.isPinned),
+          name: dto.item.name.toRequiredValue(),
+          description: dto.item.description.toNullableValue(),
+          categoryId: dto.item.categoryId.toNullableValue(),
+          iconRefId: dto.item.iconRefId.toNullableValue(),
+          isFavorite: dto.item.isFavorite.toRequiredValue(),
+          isPinned: dto.item.isPinned.toRequiredValue(),
           modifiedAt: Value(now),
         ),
       );
@@ -71,9 +72,17 @@ class DocumentRepository {
         db.documentItems,
       )..where((tbl) => tbl.itemId.equals(itemId))).write(
         DocumentItemsCompanion(
-          currentVersionId: Value(dto.document.currentVersionId),
+          currentVersionId: dto.document.currentVersionId.toNullableValue(),
         ),
       );
+
+      final tagsUpdate = dto.tags;
+      if (tagsUpdate is FieldUpdateSet<List<String>>) {
+        await db.itemTagsDao.removeAllTagsFromItem(itemId);
+        for (final tagId in tagsUpdate.value ?? []) {
+          await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
+        }
+      }
     });
   }
 
