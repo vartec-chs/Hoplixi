@@ -19,13 +19,41 @@ sealed class RecoveryCodesDataDto with _$RecoveryCodesDataDto {
 }
 
 @freezed
+sealed class RecoveryCodeValueDto with _$RecoveryCodeValueDto {
+  const factory RecoveryCodeValueDto({
+    int? id,
+    required String code,
+    @Default(false) bool used,
+    DateTime? usedAt,
+    int? position,
+  }) = _RecoveryCodeValueDto;
+
+  factory RecoveryCodeValueDto.fromJson(Map<String, dynamic> json) =>
+      _$RecoveryCodeValueDtoFromJson(json);
+}
+
+@freezed
+sealed class RecoveryCodeValueCardDto with _$RecoveryCodeValueCardDto {
+  const factory RecoveryCodeValueCardDto({
+    int? id,
+    @Default(false) bool used,
+    DateTime? usedAt,
+    int? position,
+    required bool hasCode,
+  }) = _RecoveryCodeValueCardDto;
+
+  factory RecoveryCodeValueCardDto.fromJson(Map<String, dynamic> json) =>
+      _$RecoveryCodeValueCardDtoFromJson(json);
+}
+
+@freezed
 sealed class RecoveryCodesCardDataDto with _$RecoveryCodesCardDataDto {
   const factory RecoveryCodesCardDataDto({
     @Default(0) int codesCount,
     @Default(0) int usedCount,
     DateTime? generatedAt,
     @Default(false) bool oneTime,
-    @Default(true) bool hasRecoveryCodes,
+    required bool hasCodes,
   }) = _RecoveryCodesCardDataDto;
 
   factory RecoveryCodesCardDataDto.fromJson(Map<String, dynamic> json) =>
@@ -36,7 +64,13 @@ sealed class RecoveryCodesCardDataDto with _$RecoveryCodesCardDataDto {
 sealed class CreateRecoveryCodesDto with _$CreateRecoveryCodesDto {
   const factory CreateRecoveryCodesDto({
     required VaultItemCreateDto item,
+
+    /// Aggregate fields. codesCount/usedCount могут быть пересчитаны триггерами,
+    /// но DTO хранит generatedAt/oneTime.
     required RecoveryCodesDataDto recoveryCodes,
+
+    /// Optional list of codes to insert with the item.
+    @Default([]) List<RecoveryCodeValueDto> codes,
   }) = _CreateRecoveryCodesDto;
 
   factory CreateRecoveryCodesDto.fromJson(Map<String, dynamic> json) =>
@@ -59,6 +93,9 @@ sealed class RecoveryCodesViewDto with _$RecoveryCodesViewDto {
   const factory RecoveryCodesViewDto({
     required VaultItemViewDto item,
     required RecoveryCodesDataDto recoveryCodes,
+
+    /// Full view may contain secrets.
+    @Default([]) List<RecoveryCodeValueDto> codes,
   }) = _RecoveryCodesViewDto;
 
   factory RecoveryCodesViewDto.fromJson(Map<String, dynamic> json) =>

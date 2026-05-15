@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
-import '../main_store.dart';
-import '../tables/recovery_codes/recovery_codes_items.dart';
+import '../../main_store.dart';
+import '../../tables/recovery_codes/recovery_codes_items.dart';
 
 part 'recovery_codes_items_dao.g.dart';
 
@@ -10,11 +10,13 @@ class RecoveryCodesItemsDao extends DatabaseAccessor<MainStore>
     with _$RecoveryCodesItemsDaoMixin {
   RecoveryCodesItemsDao(super.db);
 
-  Future<void> insertRecoveryCodes(RecoveryCodesItemsCompanion companion) {
+  Future<void> insertRecoveryCodesItem(
+    RecoveryCodesItemsCompanion companion,
+  ) {
     return into(recoveryCodesItems).insert(companion);
   }
 
-  Future<int> updateRecoveryCodesByItemId(
+  Future<int> updateRecoveryCodesItemByItemId(
     String itemId,
     RecoveryCodesItemsCompanion companion,
   ) {
@@ -22,12 +24,14 @@ class RecoveryCodesItemsDao extends DatabaseAccessor<MainStore>
         .write(companion);
   }
 
-  Future<RecoveryCodesItemsData?> getRecoveryCodesByItemId(String itemId) {
+  Future<RecoveryCodesItemsData?> getRecoveryCodesItemByItemId(
+    String itemId,
+  ) {
     return (select(recoveryCodesItems)..where((tbl) => tbl.itemId.equals(itemId)))
         .getSingleOrNull();
   }
 
-  Future<bool> existsRecoveryCodesByItemId(String itemId) async {
+  Future<bool> existsRecoveryCodesItemByItemId(String itemId) async {
     final row = await (selectOnly(recoveryCodesItems)
           ..addColumns([recoveryCodesItems.itemId])
           ..where(recoveryCodesItems.itemId.equals(itemId)))
@@ -36,7 +40,7 @@ class RecoveryCodesItemsDao extends DatabaseAccessor<MainStore>
     return row != null;
   }
 
-  Future<int> deleteRecoveryCodesByItemId(String itemId) {
+  Future<int> deleteRecoveryCodesItemByItemId(String itemId) {
     return (delete(recoveryCodesItems)..where((tbl) => tbl.itemId.equals(itemId)))
         .go();
   }

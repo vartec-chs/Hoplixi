@@ -11,7 +11,7 @@ export 'loyalty_card_items_dao.dart';
 export 'note_items_dao.dart';
 export 'otp_items_dao.dart';
 export 'password_items_dao.dart';
-export 'recovery_codes_items_dao.dart';
+export 'recovery_codes/daos.dart';
 export 'ssh_key_items_dao.dart';
 export 'vault_items_dao.dart';
 export 'wifi_items_dao.dart';

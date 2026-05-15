@@ -108,6 +108,9 @@ part 'main_store.g.dart';
     IdentityItemsDao,
     LicenseKeyItemsDao,
     RecoveryCodesItemsDao,
+    RecoveryCodesDao,
+    RecoveryCodesHistoryDao,
+    RecoveryCodeValuesHistoryDao,
     LoyaltyCardItemsDao,
   ],
 )

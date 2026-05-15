@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import 'vault_snapshot_base_dto.dart';
+import '../dto_history/vault_snapshot_base_dto.dart';
 
 part 'recovery_codes_history_dto.freezed.dart';
 part 'recovery_codes_history_dto.g.dart';
@@ -19,17 +19,21 @@ sealed class RecoveryCodesHistoryDataDto with _$RecoveryCodesHistoryDataDto {
 }
 
 @freezed
-sealed class RecoveryCodeValueHistoryDto with _$RecoveryCodeValueHistoryDto {
-  const factory RecoveryCodeValueHistoryDto({
+sealed class RecoveryCodeValueHistoryDataDto
+    with _$RecoveryCodeValueHistoryDataDto {
+  const factory RecoveryCodeValueHistoryDataDto({
+    int? id,
     int? originalCodeId,
+
+    /// Nullable из-за secret history policy.
     String? code,
     @Default(false) bool used,
     DateTime? usedAt,
     int? position,
-  }) = _RecoveryCodeValueHistoryDto;
+  }) = _RecoveryCodeValueHistoryDataDto;
 
-  factory RecoveryCodeValueHistoryDto.fromJson(Map<String, dynamic> json) =>
-      _$RecoveryCodeValueHistoryDtoFromJson(json);
+  factory RecoveryCodeValueHistoryDataDto.fromJson(Map<String, dynamic> json) =>
+      _$RecoveryCodeValueHistoryDataDtoFromJson(json);
 }
 
 @freezed
@@ -37,7 +41,9 @@ sealed class RecoveryCodesHistoryViewDto with _$RecoveryCodesHistoryViewDto {
   const factory RecoveryCodesHistoryViewDto({
     required VaultSnapshotViewDto snapshot,
     required RecoveryCodesHistoryDataDto recoveryCodes,
-    @Default([]) List<RecoveryCodeValueHistoryDto> values,
+
+    /// Может содержать секреты, nullable из-за secret history policy.
+    @Default([]) List<RecoveryCodeValueHistoryDataDto> codes,
   }) = _RecoveryCodesHistoryViewDto;
 
   factory RecoveryCodesHistoryViewDto.fromJson(Map<String, dynamic> json) =>
@@ -45,13 +51,14 @@ sealed class RecoveryCodesHistoryViewDto with _$RecoveryCodesHistoryViewDto {
 }
 
 @freezed
-sealed class RecoveryCodesHistoryCardDataDto with _$RecoveryCodesHistoryCardDataDto {
+sealed class RecoveryCodesHistoryCardDataDto
+    with _$RecoveryCodesHistoryCardDataDto {
   const factory RecoveryCodesHistoryCardDataDto({
     @Default(0) int codesCount,
     @Default(0) int usedCount,
     DateTime? generatedAt,
     @Default(false) bool oneTime,
-    required bool hasCodes,
+    required bool hasCodeValues,
   }) = _RecoveryCodesHistoryCardDataDto;
 
   factory RecoveryCodesHistoryCardDataDto.fromJson(Map<String, dynamic> json) =>

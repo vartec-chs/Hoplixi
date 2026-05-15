@@ -3,7 +3,6 @@ import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:uuid/uuid.dart';
 
 import '../main_store.dart';
-import '../models/dto/recovery_codes_dto.dart';
 import '../models/mappers/recovery_codes_mapper.dart';
 import '../models/mappers/vault_item_mapper.dart';
 import '../tables/vault_items/vault_items.dart';
@@ -18,41 +17,43 @@ class RecoveryCodesRepository {
       final now = DateTime.now();
       final itemId = const Uuid().v4();
 
-      await db.into(db.vaultItems).insert(
-            VaultItemsCompanion.insert(
-              id: Value(itemId),
-              type: VaultItemType.recoveryCodes,
-              name: dto.item.name,
-              description: Value(dto.item.description),
-              categoryId: Value(dto.item.categoryId),
-              iconRefId: Value(dto.item.iconRefId),
-              isFavorite: Value(dto.item.isFavorite),
-              isPinned: Value(dto.item.isPinned),
-              createdAt: Value(now),
-              modifiedAt: Value(now),
-            ),
-          );
+      await db.vaultItemsDao.insertVaultItem(
+        VaultItemsCompanion.insert(
+          id: Value(itemId),
+          type: VaultItemType.recoveryCodes,
+          name: dto.item.name,
+          description: Value(dto.item.description),
+          categoryId: Value(dto.item.categoryId),
+          iconRefId: Value(dto.item.iconRefId),
+          isFavorite: Value(dto.item.isFavorite),
+          isPinned: Value(dto.item.isPinned),
+          createdAt: Value(now),
+          modifiedAt: Value(now),
+        ),
+      );
 
-      await db.into(db.recoveryCodesItems).insert(
-            RecoveryCodesItemsCompanion.insert(
+      await db.recoveryCodesItemsDao.insertRecoveryCodesItem(
+        RecoveryCodesItemsCompanion.insert(
+          itemId: itemId,
+          generatedAt: Value(dto.recoveryCodes.generatedAt),
+          oneTime: Value(dto.recoveryCodes.oneTime),
+          codesCount: const Value(0),
+          usedCount: const Value(0),
+        ),
+      );
+
+      if (dto.codes.isNotEmpty) {
+        await db.recoveryCodesDao.insertRecoveryCodesBatch(
+          dto.codes.map((codeDto) {
+            return RecoveryCodesCompanion.insert(
               itemId: itemId,
-              generatedAt: Value(dto.recoveryCodes.generatedAt),
-              oneTime: Value(dto.recoveryCodes.oneTime),
-            ),
-          );
-
-      if (dto.recoveryCodes.codes.isNotEmpty) {
-        for (final code in dto.recoveryCodes.codes) {
-          await db.into(db.recoveryCodes).insert(
-                RecoveryCodesCompanion.insert(
-                  itemId: itemId,
-                  code: code.code,
-                  used: Value(code.used),
-                  usedAt: Value(code.usedAt),
-                  position: Value(code.position),
-                ),
-              );
-        }
+              code: codeDto.code,
+              used: Value(codeDto.used),
+              usedAt: Value(codeDto.usedAt),
+              position: Value(codeDto.position),
+            );
+          }).toList(),
+        );
       }
 
       return itemId;
@@ -64,8 +65,8 @@ class RecoveryCodesRepository {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
 
-      await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-          .write(
+      await db.vaultItemsDao.updateVaultItemById(
+        itemId,
         VaultItemsCompanion(
           name: Value(dto.item.name),
           description: Value(dto.item.description),
@@ -77,34 +78,13 @@ class RecoveryCodesRepository {
         ),
       );
 
-      await (db.update(db.recoveryCodesItems)
-            ..where((tbl) => tbl.itemId.equals(itemId)))
-          .write(
+      await db.recoveryCodesItemsDao.updateRecoveryCodesItemByItemId(
+        itemId,
         RecoveryCodesItemsCompanion(
           generatedAt: Value(dto.recoveryCodes.generatedAt),
           oneTime: Value(dto.recoveryCodes.oneTime),
         ),
       );
-
-      // Updating codes is complex (delete all and re-insert or diff).
-      // Given the requirement, we assume codes can be replaced.
-      await (db.delete(db.recoveryCodes)
-            ..where((tbl) => tbl.itemId.equals(itemId)))
-          .go();
-
-      if (dto.recoveryCodes.codes.isNotEmpty) {
-        for (final code in dto.recoveryCodes.codes) {
-          await db.into(db.recoveryCodes).insert(
-                RecoveryCodesCompanion.insert(
-                  itemId: itemId,
-                  code: code.code,
-                  used: Value(code.used),
-                  usedAt: Value(code.usedAt),
-                  position: Value(code.position),
-                ),
-              );
-        }
-      }
     });
   }
 
@@ -124,25 +104,12 @@ class RecoveryCodesRepository {
     final item = row.readTable(db.vaultItems);
     final recoveryCodesItem = row.readTable(db.recoveryCodesItems);
 
-    final codesRows = await (db.select(db.recoveryCodes)
-          ..where((tbl) => tbl.itemId.equals(itemId))
-          ..orderBy([(tbl) => OrderingTerm.asc(tbl.position)]))
-        .get();
-
-    final codes = codesRows
-        .map((r) => RecoveryCodeDto(
-              code: r.code,
-              used: r.used,
-              usedAt: r.usedAt,
-              position: r.position,
-            ))
-        .toList();
+    final codesData = await db.recoveryCodesDao.getRecoveryCodesByItemId(itemId);
 
     return RecoveryCodesViewDto(
       item: item.toVaultItemViewDto(),
-      recoveryCodes: recoveryCodesItem.toRecoveryCodesDataDto().copyWith(
-            codes: codes,
-          ),
+      recoveryCodes: recoveryCodesItem.toRecoveryCodesDataDto(),
+      codes: codesData.map((c) => c.toRecoveryCodeValueDto()).toList(),
     );
   }
 
@@ -173,6 +140,111 @@ class RecoveryCodesRepository {
   Future<void> deletePermanently(String itemId) {
     return (db.delete(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
         .go();
+  }
+
+  // --- Методы управления кодами ---
+
+  Future<int> addCode({
+    required String itemId,
+    required RecoveryCodeValueDto code,
+  }) async {
+    return db.transaction(() async {
+      final id = await db.recoveryCodesDao.insertRecoveryCode(
+        RecoveryCodesCompanion.insert(
+          itemId: itemId,
+          code: code.code,
+          used: Value(code.used),
+          usedAt: Value(code.usedAt),
+          position: Value(code.position),
+        ),
+      );
+      await _updateModifiedAt(itemId);
+      return id;
+    });
+  }
+
+  Future<void> addCodes({
+    required String itemId,
+    required List<RecoveryCodeValueDto> codes,
+  }) async {
+    await db.transaction(() async {
+      await db.recoveryCodesDao.insertRecoveryCodesBatch(
+        codes.map((c) => RecoveryCodesCompanion.insert(
+          itemId: itemId,
+          code: c.code,
+          used: Value(c.used),
+          usedAt: Value(c.usedAt),
+          position: Value(c.position),
+        )).toList(),
+      );
+      await _updateModifiedAt(itemId);
+    });
+  }
+
+  Future<int> markCodeUsed({
+    required int codeId,
+    required DateTime usedAt,
+  }) async {
+    return db.transaction(() async {
+      final code = await db.recoveryCodesDao.getRecoveryCodeById(codeId);
+      if (code == null) return 0;
+
+      final count = await db.recoveryCodesDao.markCodeUsed(
+        id: codeId,
+        usedAt: usedAt,
+      );
+      await _updateModifiedAt(code.itemId);
+      return count;
+    });
+  }
+
+  Future<int> markCodeUnused({
+    required int codeId,
+  }) async {
+    return db.transaction(() async {
+      final code = await db.recoveryCodesDao.getRecoveryCodeById(codeId);
+      if (code == null) return 0;
+
+      final count = await db.recoveryCodesDao.markCodeUnused(id: codeId);
+      await _updateModifiedAt(code.itemId);
+      return count;
+    });
+  }
+
+  Future<int> deleteCode(int codeId) async {
+    return db.transaction(() async {
+      final code = await db.recoveryCodesDao.getRecoveryCodeById(codeId);
+      if (code == null) return 0;
+
+      final count = await db.recoveryCodesDao.deleteRecoveryCodeById(codeId);
+      await _updateModifiedAt(code.itemId);
+      return count;
+    });
+  }
+
+  Future<void> replaceCodes({
+    required String itemId,
+    required List<RecoveryCodeValueDto> codes,
+  }) async {
+    await db.transaction(() async {
+      await db.recoveryCodesDao.deleteRecoveryCodesByItemId(itemId);
+      if (codes.isNotEmpty) {
+        await db.recoveryCodesDao.insertRecoveryCodesBatch(
+          codes.map((c) => RecoveryCodesCompanion.insert(
+            itemId: itemId,
+            code: c.code,
+            used: Value(c.used),
+            usedAt: Value(c.usedAt),
+            position: Value(c.position),
+          )).toList(),
+        );
+      }
+      await _updateModifiedAt(itemId);
+    });
+  }
+
+  Future<void> _updateModifiedAt(String itemId) async {
+    await db.vaultItemsDao.touchModifiedAt(itemId, DateTime.now());
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery() {
@@ -232,6 +304,7 @@ class RecoveryCodesRepository {
         usedCount: row.read(db.recoveryCodesItems.usedCount)!,
         generatedAt: row.read(db.recoveryCodesItems.generatedAt),
         oneTime: row.read(db.recoveryCodesItems.oneTime)!,
+        hasCodes: (row.read(db.recoveryCodesItems.codesCount) ?? 0) > 0,
       ),
     );
   }
