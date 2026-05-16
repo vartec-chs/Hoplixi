@@ -22,7 +22,6 @@ import 'package:hoplixi/main_db/core/services/relations/snapshot_relations_servi
 import 'package:hoplixi/main_db/core/tables/file/file_metadata_history.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_events_history.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
-import 'package:hoplixi/main_db/core/tables/vault_items/vault_snapshots_history.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../main_store.dart';
@@ -168,8 +167,7 @@ class VaultSnapshotWriter {
           includeSecrets: includeSecrets,
           includeRelations: includeRelations,
         ),
-      VaultItemType.document => _writeBaseSnapshot((view as DocumentViewDto).item, action),
-      _ => throw UnsupportedError('Snapshot is not implemented for $type'),
+      VaultItemType.document => _writeBaseSnapshot((view as DocumentViewDto).item, action)
     };
   }
 
