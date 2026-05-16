@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/otp/otp_items.dart';
+import '../../../tables/otp/otp_items.dart';
 import 'base_filter.dart';
 
 part 'otp_filter.freezed.dart';

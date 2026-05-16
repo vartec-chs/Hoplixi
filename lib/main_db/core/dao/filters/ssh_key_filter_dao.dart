@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../main_store.dart';
 import '../../models/dto/dto.dart';
 import '../../models/filters/filters.dart';
+
 import '../../tables/ssh_key/ssh_key_items.dart';
 import '../../tables/system/categories.dart';
 import '../../tables/system/item_tags.dart';
@@ -13,13 +14,7 @@ import 'filter_dao.dart';
 
 part 'ssh_key_filter_dao.g.dart';
 
-@DriftAccessor(tables: [
-  VaultItems,
-  SshKeyItems,
-  Categories,
-  Tags,
-  ItemTags,
-])
+@DriftAccessor(tables: [VaultItems, SshKeyItems, Categories, Tags, ItemTags])
 class SshKeyFilterDao extends DatabaseAccessor<MainStore>
     with _$SshKeyFilterDaoMixin, BaseFilterQueryMixin
     implements FilterDao<SshKeyFilter, FilteredCardDto<SshKeyCardDto>> {
@@ -32,32 +27,33 @@ class SshKeyFilterDao extends DatabaseAccessor<MainStore>
     final whereExpr = _buildWhere(filter);
     final hasPrivateKeyExpr = sshKeyItems.privateKey.isNotNull();
 
-    final query = selectOnly(vaultItems).join([
-      innerJoin(sshKeyItems, sshKeyItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..addColumns([
-        vaultItems.id,
-        vaultItems.type,
-        vaultItems.name,
-        vaultItems.description,
-        vaultItems.categoryId,
-        vaultItems.iconRefId,
-        vaultItems.isFavorite,
-        vaultItems.isArchived,
-        vaultItems.isPinned,
-        vaultItems.isDeleted,
-        vaultItems.createdAt,
-        vaultItems.modifiedAt,
-        vaultItems.lastUsedAt,
-        vaultItems.archivedAt,
-        vaultItems.deletedAt,
-        vaultItems.recentScore,
-        sshKeyItems.publicKey,
-        sshKeyItems.keyType,
-        sshKeyItems.keySize,
-        hasPrivateKeyExpr,
-      ])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(sshKeyItems, sshKeyItems.itemId.equalsExp(vaultItems.id)),
+          ])
+          ..addColumns([
+            vaultItems.id,
+            vaultItems.type,
+            vaultItems.name,
+            vaultItems.description,
+            vaultItems.categoryId,
+            vaultItems.iconRefId,
+            vaultItems.isFavorite,
+            vaultItems.isArchived,
+            vaultItems.isPinned,
+            vaultItems.isDeleted,
+            vaultItems.createdAt,
+            vaultItems.modifiedAt,
+            vaultItems.lastUsedAt,
+            vaultItems.archivedAt,
+            vaultItems.deletedAt,
+            vaultItems.recentScore,
+            sshKeyItems.publicKey,
+            sshKeyItems.keyType,
+            sshKeyItems.keySize,
+            hasPrivateKeyExpr,
+          ])
+          ..where(whereExpr);
 
     applyLimitOffset(query, filter.base);
 
@@ -68,27 +64,33 @@ class SshKeyFilterDao extends DatabaseAccessor<MainStore>
       switch (filter.sortField!) {
         case SshKeySortField.name:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.name, mode: mode));
+            OrderingTerm(expression: vaultItems.name, mode: mode),
+          );
           break;
         case SshKeySortField.createdAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.createdAt, mode: mode));
+            OrderingTerm(expression: vaultItems.createdAt, mode: mode),
+          );
           break;
         case SshKeySortField.modifiedAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
+          );
           break;
         case SshKeySortField.lastUsedAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
+          );
           break;
         case SshKeySortField.usedCount:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.usedCount, mode: mode));
+            OrderingTerm(expression: vaultItems.usedCount, mode: mode),
+          );
           break;
         case SshKeySortField.recentScore:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.recentScore, mode: mode));
+            OrderingTerm(expression: vaultItems.recentScore, mode: mode),
+          );
           break;
       }
     }
@@ -135,7 +137,9 @@ class SshKeyFilterDao extends DatabaseAccessor<MainStore>
         ),
         sshKey: SshKeyCardDataDto(
           publicKey: row.read(sshKeyItems.publicKey),
-          keyType: row.readWithConverter<SshKeyType?, String>(sshKeyItems.keyType),
+          keyType: row.readWithConverter<SshKeyType?, String>(
+            sshKeyItems.keyType,
+          ),
           keySize: row.read(sshKeyItems.keySize),
           hasPrivateKey: row.read(hasPrivateKeyExpr) ?? false,
         ),
@@ -149,19 +153,21 @@ class SshKeyFilterDao extends DatabaseAccessor<MainStore>
   Future<int> countFiltered(SshKeyFilter filter) async {
     final whereExpr = _buildWhere(filter);
     final countExp = countAll();
-    final query = selectOnly(vaultItems).join([
-      innerJoin(sshKeyItems, sshKeyItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..addColumns([countExp])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(sshKeyItems, sshKeyItems.itemId.equalsExp(vaultItems.id)),
+          ])
+          ..addColumns([countExp])
+          ..where(whereExpr);
 
     final row = await query.getSingle();
     return row.read(countExp) ?? 0;
   }
 
   Expression<bool> _buildWhere(SshKeyFilter filter) {
-    Expression<bool> whereExpr =
-        vaultItems.type.equalsValue(VaultItemType.sshKey);
+    Expression<bool> whereExpr = vaultItems.type.equalsValue(
+      VaultItemType.sshKey,
+    );
 
     whereExpr &= applyBaseVaultItemFilters(filter.base);
 
@@ -189,8 +195,7 @@ class SshKeyFilterDao extends DatabaseAccessor<MainStore>
 
     if (filter.base.query.isNotEmpty) {
       final q = '%${filter.base.query}%';
-      final textExpr =
-          vaultItems.name.like(q) | vaultItems.description.like(q);
+      final textExpr = vaultItems.name.like(q) | vaultItems.description.like(q);
       whereExpr &= textExpr;
     }
 

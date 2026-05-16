@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../main_store.dart';
 import '../../models/dto/dto.dart';
 import '../../models/filters/filters.dart';
+
 import '../../tables/otp/otp_items.dart';
 import '../../tables/system/categories.dart';
 import '../../tables/system/item_tags.dart';
@@ -13,13 +14,7 @@ import 'filter_dao.dart';
 
 part 'otp_filter_dao.g.dart';
 
-@DriftAccessor(tables: [
-  VaultItems,
-  OtpItems,
-  Categories,
-  Tags,
-  ItemTags,
-])
+@DriftAccessor(tables: [VaultItems, OtpItems, Categories, Tags, ItemTags])
 class OtpFilterDao extends DatabaseAccessor<MainStore>
     with _$OtpFilterDaoMixin, BaseFilterQueryMixin
     implements FilterDao<OtpFilter, FilteredCardDto<OtpCardDto>> {
@@ -32,36 +27,37 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
     final whereExpr = _buildWhere(filter);
     final hasSecretExpr = otpItems.secret.isNotNull();
 
-    final query = selectOnly(vaultItems).join([
-      innerJoin(otpItems, otpItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..addColumns([
-        vaultItems.id,
-        vaultItems.type,
-        vaultItems.name,
-        vaultItems.description,
-        vaultItems.categoryId,
-        vaultItems.iconRefId,
-        vaultItems.isFavorite,
-        vaultItems.isArchived,
-        vaultItems.isPinned,
-        vaultItems.isDeleted,
-        vaultItems.createdAt,
-        vaultItems.modifiedAt,
-        vaultItems.lastUsedAt,
-        vaultItems.archivedAt,
-        vaultItems.deletedAt,
-        vaultItems.recentScore,
-        otpItems.type,
-        otpItems.issuer,
-        otpItems.accountName,
-        otpItems.algorithm,
-        otpItems.digits,
-        otpItems.period,
-        otpItems.counter,
-        hasSecretExpr,
-      ])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(otpItems, otpItems.itemId.equalsExp(vaultItems.id)),
+          ])
+          ..addColumns([
+            vaultItems.id,
+            vaultItems.type,
+            vaultItems.name,
+            vaultItems.description,
+            vaultItems.categoryId,
+            vaultItems.iconRefId,
+            vaultItems.isFavorite,
+            vaultItems.isArchived,
+            vaultItems.isPinned,
+            vaultItems.isDeleted,
+            vaultItems.createdAt,
+            vaultItems.modifiedAt,
+            vaultItems.lastUsedAt,
+            vaultItems.archivedAt,
+            vaultItems.deletedAt,
+            vaultItems.recentScore,
+            otpItems.type,
+            otpItems.issuer,
+            otpItems.accountName,
+            otpItems.algorithm,
+            otpItems.digits,
+            otpItems.period,
+            otpItems.counter,
+            hasSecretExpr,
+          ])
+          ..where(whereExpr);
 
     applyLimitOffset(query, filter.base);
 
@@ -72,35 +68,43 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
       switch (filter.sortField!) {
         case OtpSortField.name:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.name, mode: mode));
+            OrderingTerm(expression: vaultItems.name, mode: mode),
+          );
           break;
         case OtpSortField.issuer:
           orderingTerms.add(
-              OrderingTerm(expression: otpItems.issuer, mode: mode));
+            OrderingTerm(expression: otpItems.issuer, mode: mode),
+          );
           break;
         case OtpSortField.accountName:
           orderingTerms.add(
-              OrderingTerm(expression: otpItems.accountName, mode: mode));
+            OrderingTerm(expression: otpItems.accountName, mode: mode),
+          );
           break;
         case OtpSortField.createdAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.createdAt, mode: mode));
+            OrderingTerm(expression: vaultItems.createdAt, mode: mode),
+          );
           break;
         case OtpSortField.modifiedAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
+          );
           break;
         case OtpSortField.lastUsedAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
+          );
           break;
         case OtpSortField.usedCount:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.usedCount, mode: mode));
+            OrderingTerm(expression: vaultItems.usedCount, mode: mode),
+          );
           break;
         case OtpSortField.recentScore:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.recentScore, mode: mode));
+            OrderingTerm(expression: vaultItems.recentScore, mode: mode),
+          );
           break;
       }
     }
@@ -150,7 +154,8 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
           issuer: row.read(otpItems.issuer),
           accountName: row.read(otpItems.accountName),
           algorithm: row.readWithConverter<OtpHashAlgorithm, String>(
-              otpItems.algorithm)!,
+            otpItems.algorithm,
+          )!,
           digits: row.read(otpItems.digits)!,
           period: row.read(otpItems.period)!,
           counter: row.read(otpItems.counter),
@@ -166,11 +171,12 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
   Future<int> countFiltered(OtpFilter filter) async {
     final whereExpr = _buildWhere(filter);
     final countExp = countAll();
-    final query = selectOnly(vaultItems).join([
-      innerJoin(otpItems, otpItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..addColumns([countExp])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(otpItems, otpItems.itemId.equalsExp(vaultItems.id)),
+          ])
+          ..addColumns([countExp])
+          ..where(whereExpr);
 
     final row = await query.getSingle();
     return row.read(countExp) ?? 0;
@@ -214,7 +220,8 @@ class OtpFilterDao extends DatabaseAccessor<MainStore>
 
     if (filter.base.query.isNotEmpty) {
       final q = '%${filter.base.query}%';
-      final textExpr = vaultItems.name.like(q) |
+      final textExpr =
+          vaultItems.name.like(q) |
           vaultItems.description.like(q) |
           otpItems.issuer.like(q) |
           otpItems.accountName.like(q);

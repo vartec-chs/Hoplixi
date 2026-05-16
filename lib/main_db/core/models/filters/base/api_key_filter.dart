@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/api_key/api_key_items.dart';
+import '../../../tables/api_key/api_key_items.dart';
 import 'base_filter.dart';
 
 part 'api_key_filter.freezed.dart';

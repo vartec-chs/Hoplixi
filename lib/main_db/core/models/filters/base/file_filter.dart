@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/file/file_metadata.dart';
+import '../../../tables/file/file_metadata.dart';
 import 'base_filter.dart';
 
 part 'file_filter.freezed.dart';

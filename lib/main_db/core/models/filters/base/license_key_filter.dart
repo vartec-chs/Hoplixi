@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/license_key/license_key_items.dart';
+import '../../../tables/license_key/license_key_items.dart';
 import 'base_filter.dart';
 
 part 'license_key_filter.freezed.dart';

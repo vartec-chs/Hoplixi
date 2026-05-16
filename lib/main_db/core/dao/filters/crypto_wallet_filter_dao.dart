@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../main_store.dart';
 import '../../models/dto/dto.dart';
 import '../../models/filters/filters.dart';
+
 import '../../tables/crypto_wallet/crypto_wallet_items.dart';
 import '../../tables/system/categories.dart';
 import '../../tables/system/item_tags.dart';
@@ -13,16 +14,13 @@ import 'filter_dao.dart';
 
 part 'crypto_wallet_filter_dao.g.dart';
 
-@DriftAccessor(tables: [
-  VaultItems,
-  CryptoWalletItems,
-  Categories,
-  Tags,
-  ItemTags,
-])
+@DriftAccessor(
+  tables: [VaultItems, CryptoWalletItems, Categories, Tags, ItemTags],
+)
 class CryptoWalletFilterDao extends DatabaseAccessor<MainStore>
     with _$CryptoWalletFilterDaoMixin, BaseFilterQueryMixin
-    implements FilterDao<CryptoWalletFilter, FilteredCardDto<CryptoWalletCardDto>> {
+    implements
+        FilterDao<CryptoWalletFilter, FilteredCardDto<CryptoWalletCardDto>> {
   CryptoWalletFilterDao(super.db);
 
   @override
@@ -34,38 +32,41 @@ class CryptoWalletFilterDao extends DatabaseAccessor<MainStore>
     final hasPrivateKeyExpr = cryptoWalletItems.privateKey.isNotNull();
     final hasXprvExpr = cryptoWalletItems.xprv.isNotNull();
 
-    final query = selectOnly(vaultItems).join([
-      innerJoin(cryptoWalletItems,
-          cryptoWalletItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..addColumns([
-        vaultItems.id,
-        vaultItems.type,
-        vaultItems.name,
-        vaultItems.description,
-        vaultItems.categoryId,
-        vaultItems.iconRefId,
-        vaultItems.isFavorite,
-        vaultItems.isArchived,
-        vaultItems.isPinned,
-        vaultItems.isDeleted,
-        vaultItems.createdAt,
-        vaultItems.modifiedAt,
-        vaultItems.lastUsedAt,
-        vaultItems.archivedAt,
-        vaultItems.deletedAt,
-        vaultItems.recentScore,
-        cryptoWalletItems.walletType,
-        cryptoWalletItems.network,
-        cryptoWalletItems.addresses,
-        cryptoWalletItems.xpub,
-        cryptoWalletItems.hardwareDevice,
-        cryptoWalletItems.watchOnly,
-        hasMnemonicExpr,
-        hasPrivateKeyExpr,
-        hasXprvExpr,
-      ])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(
+              cryptoWalletItems,
+              cryptoWalletItems.itemId.equalsExp(vaultItems.id),
+            ),
+          ])
+          ..addColumns([
+            vaultItems.id,
+            vaultItems.type,
+            vaultItems.name,
+            vaultItems.description,
+            vaultItems.categoryId,
+            vaultItems.iconRefId,
+            vaultItems.isFavorite,
+            vaultItems.isArchived,
+            vaultItems.isPinned,
+            vaultItems.isDeleted,
+            vaultItems.createdAt,
+            vaultItems.modifiedAt,
+            vaultItems.lastUsedAt,
+            vaultItems.archivedAt,
+            vaultItems.deletedAt,
+            vaultItems.recentScore,
+            cryptoWalletItems.walletType,
+            cryptoWalletItems.network,
+            cryptoWalletItems.addresses,
+            cryptoWalletItems.xpub,
+            cryptoWalletItems.hardwareDevice,
+            cryptoWalletItems.watchOnly,
+            hasMnemonicExpr,
+            hasPrivateKeyExpr,
+            hasXprvExpr,
+          ])
+          ..where(whereExpr);
 
     applyLimitOffset(query, filter.base);
 
@@ -76,35 +77,43 @@ class CryptoWalletFilterDao extends DatabaseAccessor<MainStore>
       switch (filter.sortField!) {
         case CryptoWalletSortField.name:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.name, mode: mode));
+            OrderingTerm(expression: vaultItems.name, mode: mode),
+          );
           break;
         case CryptoWalletSortField.walletType:
-          orderingTerms.add(OrderingTerm(
-              expression: cryptoWalletItems.walletType, mode: mode));
+          orderingTerms.add(
+            OrderingTerm(expression: cryptoWalletItems.walletType, mode: mode),
+          );
           break;
         case CryptoWalletSortField.network:
-          orderingTerms.add(OrderingTerm(
-              expression: cryptoWalletItems.network, mode: mode));
+          orderingTerms.add(
+            OrderingTerm(expression: cryptoWalletItems.network, mode: mode),
+          );
           break;
         case CryptoWalletSortField.createdAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.createdAt, mode: mode));
+            OrderingTerm(expression: vaultItems.createdAt, mode: mode),
+          );
           break;
         case CryptoWalletSortField.modifiedAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
+          );
           break;
         case CryptoWalletSortField.lastUsedAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
+          );
           break;
         case CryptoWalletSortField.usedCount:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.usedCount, mode: mode));
+            OrderingTerm(expression: vaultItems.usedCount, mode: mode),
+          );
           break;
         case CryptoWalletSortField.recentScore:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.recentScore, mode: mode));
+            OrderingTerm(expression: vaultItems.recentScore, mode: mode),
+          );
           break;
       }
     }
@@ -151,9 +160,11 @@ class CryptoWalletFilterDao extends DatabaseAccessor<MainStore>
         ),
         cryptoWallet: CryptoWalletCardDataDto(
           walletType: row.readWithConverter<CryptoWalletType?, String>(
-              cryptoWalletItems.walletType),
+            cryptoWalletItems.walletType,
+          ),
           network: row.readWithConverter<CryptoNetwork?, String>(
-              cryptoWalletItems.network),
+            cryptoWalletItems.network,
+          ),
           addresses: row.read(cryptoWalletItems.addresses),
           xpub: row.read(cryptoWalletItems.xpub),
           hardwareDevice: row.read(cryptoWalletItems.hardwareDevice),
@@ -172,33 +183,37 @@ class CryptoWalletFilterDao extends DatabaseAccessor<MainStore>
   Future<int> countFiltered(CryptoWalletFilter filter) async {
     final whereExpr = _buildWhere(filter);
     final countExp = countAll();
-    final query = selectOnly(vaultItems).join([
-      innerJoin(cryptoWalletItems,
-          cryptoWalletItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..addColumns([countExp])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(
+              cryptoWalletItems,
+              cryptoWalletItems.itemId.equalsExp(vaultItems.id),
+            ),
+          ])
+          ..addColumns([countExp])
+          ..where(whereExpr);
 
     final row = await query.getSingle();
     return row.read(countExp) ?? 0;
   }
 
   Expression<bool> _buildWhere(CryptoWalletFilter filter) {
-    Expression<bool> whereExpr =
-        vaultItems.type.equalsValue(VaultItemType.cryptoWallet);
+    Expression<bool> whereExpr = vaultItems.type.equalsValue(
+      VaultItemType.cryptoWallet,
+    );
 
     whereExpr &= applyBaseVaultItemFilters(filter.base);
 
     if (filter.walletType != null) {
-      whereExpr &=
-          cryptoWalletItems.walletType.equalsValue(filter.walletType!);
+      whereExpr &= cryptoWalletItems.walletType.equalsValue(filter.walletType!);
     }
     if (filter.network != null) {
       whereExpr &= cryptoWalletItems.network.equalsValue(filter.network!);
     }
     if (filter.derivationScheme != null) {
-      whereExpr &= cryptoWalletItems.derivationScheme
-          .equalsValue(filter.derivationScheme!);
+      whereExpr &= cryptoWalletItems.derivationScheme.equalsValue(
+        filter.derivationScheme!,
+      );
     }
     if (filter.watchOnly != null) {
       whereExpr &= cryptoWalletItems.watchOnly.equals(filter.watchOnly!);
@@ -233,13 +248,15 @@ class CryptoWalletFilterDao extends DatabaseAccessor<MainStore>
       }
     }
     if (filter.hardwareDevice != null) {
-      whereExpr &=
-          cryptoWalletItems.hardwareDevice.contains(filter.hardwareDevice!);
+      whereExpr &= cryptoWalletItems.hardwareDevice.contains(
+        filter.hardwareDevice!,
+      );
     }
 
     if (filter.base.query.isNotEmpty) {
       final q = '%${filter.base.query}%';
-      final textExpr = vaultItems.name.like(q) |
+      final textExpr =
+          vaultItems.name.like(q) |
           vaultItems.description.like(q) |
           cryptoWalletItems.addresses.like(q) |
           cryptoWalletItems.hardwareDevice.like(q);

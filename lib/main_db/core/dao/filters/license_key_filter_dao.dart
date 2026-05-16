@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../main_store.dart';
 import '../../models/dto/dto.dart';
 import '../../models/filters/filters.dart';
+
 import '../../tables/license_key/license_key_items.dart';
 import '../../tables/system/categories.dart';
 import '../../tables/system/item_tags.dart';
@@ -13,13 +14,9 @@ import 'filter_dao.dart';
 
 part 'license_key_filter_dao.g.dart';
 
-@DriftAccessor(tables: [
-  VaultItems,
-  LicenseKeyItems,
-  Categories,
-  Tags,
-  ItemTags,
-])
+@DriftAccessor(
+  tables: [VaultItems, LicenseKeyItems, Categories, Tags, ItemTags],
+)
 class LicenseKeyFilterDao extends DatabaseAccessor<MainStore>
     with _$LicenseKeyFilterDaoMixin, BaseFilterQueryMixin
     implements FilterDao<LicenseKeyFilter, FilteredCardDto<LicenseKeyCardDto>> {
@@ -32,36 +29,39 @@ class LicenseKeyFilterDao extends DatabaseAccessor<MainStore>
     final whereExpr = _buildWhere(filter);
     final hasKeyExpr = licenseKeyItems.licenseKey.isNotNull();
 
-    final query = selectOnly(vaultItems).join([
-      innerJoin(
-          licenseKeyItems, licenseKeyItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..addColumns([
-        vaultItems.id,
-        vaultItems.type,
-        vaultItems.name,
-        vaultItems.description,
-        vaultItems.categoryId,
-        vaultItems.iconRefId,
-        vaultItems.isFavorite,
-        vaultItems.isArchived,
-        vaultItems.isPinned,
-        vaultItems.isDeleted,
-        vaultItems.createdAt,
-        vaultItems.modifiedAt,
-        vaultItems.lastUsedAt,
-        vaultItems.archivedAt,
-        vaultItems.deletedAt,
-        vaultItems.recentScore,
-        licenseKeyItems.productName,
-        licenseKeyItems.vendor,
-        licenseKeyItems.licenseType,
-        licenseKeyItems.accountEmail,
-        licenseKeyItems.accountUsername,
-        licenseKeyItems.validTo,
-        hasKeyExpr,
-      ])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(
+              licenseKeyItems,
+              licenseKeyItems.itemId.equalsExp(vaultItems.id),
+            ),
+          ])
+          ..addColumns([
+            vaultItems.id,
+            vaultItems.type,
+            vaultItems.name,
+            vaultItems.description,
+            vaultItems.categoryId,
+            vaultItems.iconRefId,
+            vaultItems.isFavorite,
+            vaultItems.isArchived,
+            vaultItems.isPinned,
+            vaultItems.isDeleted,
+            vaultItems.createdAt,
+            vaultItems.modifiedAt,
+            vaultItems.lastUsedAt,
+            vaultItems.archivedAt,
+            vaultItems.deletedAt,
+            vaultItems.recentScore,
+            licenseKeyItems.productName,
+            licenseKeyItems.vendor,
+            licenseKeyItems.licenseType,
+            licenseKeyItems.accountEmail,
+            licenseKeyItems.accountUsername,
+            licenseKeyItems.validTo,
+            hasKeyExpr,
+          ])
+          ..where(whereExpr);
 
     applyLimitOffset(query, filter.base);
 
@@ -72,51 +72,63 @@ class LicenseKeyFilterDao extends DatabaseAccessor<MainStore>
       switch (filter.sortField!) {
         case LicenseKeySortField.name:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.name, mode: mode));
+            OrderingTerm(expression: vaultItems.name, mode: mode),
+          );
           break;
         case LicenseKeySortField.productName:
-          orderingTerms.add(OrderingTerm(
-              expression: licenseKeyItems.productName, mode: mode));
+          orderingTerms.add(
+            OrderingTerm(expression: licenseKeyItems.productName, mode: mode),
+          );
           break;
         case LicenseKeySortField.vendor:
           orderingTerms.add(
-              OrderingTerm(expression: licenseKeyItems.vendor, mode: mode));
+            OrderingTerm(expression: licenseKeyItems.vendor, mode: mode),
+          );
           break;
         case LicenseKeySortField.licenseType:
-          orderingTerms.add(OrderingTerm(
-              expression: licenseKeyItems.licenseType, mode: mode));
+          orderingTerms.add(
+            OrderingTerm(expression: licenseKeyItems.licenseType, mode: mode),
+          );
           break;
         case LicenseKeySortField.purchaseDate:
-          orderingTerms.add(OrderingTerm(
-              expression: licenseKeyItems.purchaseDate, mode: mode));
+          orderingTerms.add(
+            OrderingTerm(expression: licenseKeyItems.purchaseDate, mode: mode),
+          );
           break;
         case LicenseKeySortField.validTo:
           orderingTerms.add(
-              OrderingTerm(expression: licenseKeyItems.validTo, mode: mode));
+            OrderingTerm(expression: licenseKeyItems.validTo, mode: mode),
+          );
           break;
         case LicenseKeySortField.renewalDate:
-          orderingTerms.add(OrderingTerm(
-              expression: licenseKeyItems.renewalDate, mode: mode));
+          orderingTerms.add(
+            OrderingTerm(expression: licenseKeyItems.renewalDate, mode: mode),
+          );
           break;
         case LicenseKeySortField.createdAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.createdAt, mode: mode));
+            OrderingTerm(expression: vaultItems.createdAt, mode: mode),
+          );
           break;
         case LicenseKeySortField.modifiedAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
+          );
           break;
         case LicenseKeySortField.lastUsedAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
+          );
           break;
         case LicenseKeySortField.usedCount:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.usedCount, mode: mode));
+            OrderingTerm(expression: vaultItems.usedCount, mode: mode),
+          );
           break;
         case LicenseKeySortField.recentScore:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.recentScore, mode: mode));
+            OrderingTerm(expression: vaultItems.recentScore, mode: mode),
+          );
           break;
       }
     }
@@ -165,7 +177,8 @@ class LicenseKeyFilterDao extends DatabaseAccessor<MainStore>
           productName: row.read(licenseKeyItems.productName)!,
           vendor: row.read(licenseKeyItems.vendor),
           licenseType: row.readWithConverter<LicenseType?, String>(
-              licenseKeyItems.licenseType),
+            licenseKeyItems.licenseType,
+          ),
           accountEmail: row.read(licenseKeyItems.accountEmail),
           accountUsername: row.read(licenseKeyItems.accountUsername),
           validTo: row.read(licenseKeyItems.validTo),
@@ -181,20 +194,24 @@ class LicenseKeyFilterDao extends DatabaseAccessor<MainStore>
   Future<int> countFiltered(LicenseKeyFilter filter) async {
     final whereExpr = _buildWhere(filter);
     final countExp = countAll();
-    final query = selectOnly(vaultItems).join([
-      innerJoin(
-          licenseKeyItems, licenseKeyItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..addColumns([countExp])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(
+              licenseKeyItems,
+              licenseKeyItems.itemId.equalsExp(vaultItems.id),
+            ),
+          ])
+          ..addColumns([countExp])
+          ..where(whereExpr);
 
     final row = await query.getSingle();
     return row.read(countExp) ?? 0;
   }
 
   Expression<bool> _buildWhere(LicenseKeyFilter filter) {
-    Expression<bool> whereExpr =
-        vaultItems.type.equalsValue(VaultItemType.licenseKey);
+    Expression<bool> whereExpr = vaultItems.type.equalsValue(
+      VaultItemType.licenseKey,
+    );
 
     whereExpr &= applyBaseVaultItemFilters(filter.base);
 
@@ -211,36 +228,43 @@ class LicenseKeyFilterDao extends DatabaseAccessor<MainStore>
       whereExpr &= licenseKeyItems.accountEmail.contains(filter.accountEmail!);
     }
     if (filter.accountUsername != null) {
-      whereExpr &=
-          licenseKeyItems.accountUsername.contains(filter.accountUsername!);
+      whereExpr &= licenseKeyItems.accountUsername.contains(
+        filter.accountUsername!,
+      );
     }
     if (filter.purchaseEmail != null) {
-      whereExpr &=
-          licenseKeyItems.purchaseEmail.contains(filter.purchaseEmail!);
+      whereExpr &= licenseKeyItems.purchaseEmail.contains(
+        filter.purchaseEmail!,
+      );
     }
     if (filter.orderNumber != null) {
       whereExpr &= licenseKeyItems.orderNumber.contains(filter.orderNumber!);
     }
 
     if (filter.purchaseDateAfter != null) {
-      whereExpr &= licenseKeyItems.purchaseDate
-          .isBiggerOrEqualValue(filter.purchaseDateAfter!);
+      whereExpr &= licenseKeyItems.purchaseDate.isBiggerOrEqualValue(
+        filter.purchaseDateAfter!,
+      );
     }
     if (filter.purchaseDateBefore != null) {
-      whereExpr &= licenseKeyItems.purchaseDate
-          .isSmallerOrEqualValue(filter.purchaseDateBefore!);
+      whereExpr &= licenseKeyItems.purchaseDate.isSmallerOrEqualValue(
+        filter.purchaseDateBefore!,
+      );
     }
     if (filter.validFromAfter != null) {
-      whereExpr &= licenseKeyItems.validFrom
-          .isBiggerOrEqualValue(filter.validFromAfter!);
+      whereExpr &= licenseKeyItems.validFrom.isBiggerOrEqualValue(
+        filter.validFromAfter!,
+      );
     }
     if (filter.validToBefore != null) {
-      whereExpr &= licenseKeyItems.validTo
-          .isSmallerOrEqualValue(filter.validToBefore!);
+      whereExpr &= licenseKeyItems.validTo.isSmallerOrEqualValue(
+        filter.validToBefore!,
+      );
     }
     if (filter.renewalDateBefore != null) {
-      whereExpr &= licenseKeyItems.renewalDate
-          .isSmallerOrEqualValue(filter.renewalDateBefore!);
+      whereExpr &= licenseKeyItems.renewalDate.isSmallerOrEqualValue(
+        filter.renewalDateBefore!,
+      );
     }
 
     if (filter.hasExpiration != null) {
@@ -260,7 +284,8 @@ class LicenseKeyFilterDao extends DatabaseAccessor<MainStore>
 
     if (filter.base.query.isNotEmpty) {
       final q = '%${filter.base.query}%';
-      final textExpr = vaultItems.name.like(q) |
+      final textExpr =
+          vaultItems.name.like(q) |
           vaultItems.description.like(q) |
           licenseKeyItems.productName.like(q) |
           licenseKeyItems.vendor.like(q) |

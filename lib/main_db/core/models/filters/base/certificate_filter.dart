@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/certificate/certificate_items.dart';
+import '../../../tables/certificate/certificate_items.dart';
 import 'base_filter.dart';
 
 part 'certificate_filter.freezed.dart';

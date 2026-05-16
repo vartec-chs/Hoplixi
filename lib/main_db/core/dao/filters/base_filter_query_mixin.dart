@@ -1,8 +1,8 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/main_db/core/models/dto/filter_meta_dto.dart';
-import 'package:hoplixi/main_db/core/models/filters/base_filter.dart';
 
 import '../../main_store.dart';
+import '../../models/filters/filters.dart';
 
 mixin BaseFilterQueryMixin on DatabaseAccessor<MainStore> {
   /// Builds a map of category IDs to category DTOs for the given items.
@@ -12,9 +12,9 @@ mixin BaseFilterQueryMixin on DatabaseAccessor<MainStore> {
     if (categoryIds.isEmpty) return {};
 
     final uniqueIds = categoryIds.toSet().toList();
-    final categories = await (select(db.categories)
-          ..where((t) => t.id.isIn(uniqueIds)))
-        .get();
+    final categories = await (select(
+      db.categories,
+    )..where((t) => t.id.isIn(uniqueIds))).get();
 
     return {
       for (final c in categories)
@@ -48,11 +48,7 @@ mixin BaseFilterQueryMixin on DatabaseAccessor<MainStore> {
       final itemId = row.readTable(db.itemTags).itemId;
       final tag = row.readTable(db.tags);
 
-      final tagDto = TagInCardDto(
-        id: tag.id,
-        name: tag.name,
-        color: tag.color,
-      );
+      final tagDto = TagInCardDto(id: tag.id, name: tag.name, color: tag.color);
 
       map.putIfAbsent(itemId, () => []).add(tagDto);
     }
@@ -104,21 +100,31 @@ mixin BaseFilterQueryMixin on DatabaseAccessor<MainStore> {
       expr &= db.vaultItems.createdAt.isBiggerOrEqualValue(base.createdAfter!);
     }
     if (base.createdBefore != null) {
-      expr &= db.vaultItems.createdAt.isSmallerOrEqualValue(base.createdBefore!);
+      expr &= db.vaultItems.createdAt.isSmallerOrEqualValue(
+        base.createdBefore!,
+      );
     }
 
     if (base.modifiedAfter != null) {
-      expr &= db.vaultItems.modifiedAt.isBiggerOrEqualValue(base.modifiedAfter!);
+      expr &= db.vaultItems.modifiedAt.isBiggerOrEqualValue(
+        base.modifiedAfter!,
+      );
     }
     if (base.modifiedBefore != null) {
-      expr &= db.vaultItems.modifiedAt.isSmallerOrEqualValue(base.modifiedBefore!);
+      expr &= db.vaultItems.modifiedAt.isSmallerOrEqualValue(
+        base.modifiedBefore!,
+      );
     }
 
     if (base.lastUsedAfter != null) {
-      expr &= db.vaultItems.lastUsedAt.isBiggerOrEqualValue(base.lastUsedAfter!);
+      expr &= db.vaultItems.lastUsedAt.isBiggerOrEqualValue(
+        base.lastUsedAfter!,
+      );
     }
     if (base.lastUsedBefore != null) {
-      expr &= db.vaultItems.lastUsedAt.isSmallerOrEqualValue(base.lastUsedBefore!);
+      expr &= db.vaultItems.lastUsedAt.isSmallerOrEqualValue(
+        base.lastUsedBefore!,
+      );
     }
 
     if (base.minUsedCount != null) {
@@ -130,7 +136,9 @@ mixin BaseFilterQueryMixin on DatabaseAccessor<MainStore> {
 
     if (base.isFrequentlyUsed != null && base.isFrequentlyUsed!) {
       if (base.frequencyWindowDays != null) {
-        final cutoff = DateTime.now().subtract(Duration(days: base.frequencyWindowDays!));
+        final cutoff = DateTime.now().subtract(
+          Duration(days: base.frequencyWindowDays!),
+        );
         expr &= db.vaultItems.lastUsedAt.isBiggerOrEqualValue(cutoff);
       }
       expr &= db.vaultItems.recentScore.isBiggerThanValue(0.0);
@@ -157,7 +165,9 @@ mixin BaseFilterQueryMixin on DatabaseAccessor<MainStore> {
     final terms = <OrderingTerm>[];
 
     // Pinned always first
-    terms.add(OrderingTerm(expression: db.vaultItems.isPinned, mode: OrderingMode.desc));
+    terms.add(
+      OrderingTerm(expression: db.vaultItems.isPinned, mode: OrderingMode.desc),
+    );
 
     final isAsc = base.sortDirection == SortDirection.asc;
     final mode = isAsc ? OrderingMode.asc : OrderingMode.desc;
@@ -167,19 +177,29 @@ mixin BaseFilterQueryMixin on DatabaseAccessor<MainStore> {
         terms.add(OrderingTerm(expression: db.vaultItems.name, mode: mode));
         break;
       case BaseSortBy.createdAt:
-        terms.add(OrderingTerm(expression: db.vaultItems.createdAt, mode: mode));
+        terms.add(
+          OrderingTerm(expression: db.vaultItems.createdAt, mode: mode),
+        );
         break;
       case BaseSortBy.modifiedAt:
-        terms.add(OrderingTerm(expression: db.vaultItems.modifiedAt, mode: mode));
+        terms.add(
+          OrderingTerm(expression: db.vaultItems.modifiedAt, mode: mode),
+        );
         break;
       case BaseSortBy.lastUsedAt:
-        terms.add(OrderingTerm(expression: db.vaultItems.lastUsedAt, mode: mode));
+        terms.add(
+          OrderingTerm(expression: db.vaultItems.lastUsedAt, mode: mode),
+        );
         break;
       case BaseSortBy.recentScore:
-        terms.add(OrderingTerm(expression: db.vaultItems.recentScore, mode: mode));
+        terms.add(
+          OrderingTerm(expression: db.vaultItems.recentScore, mode: mode),
+        );
         break;
       case BaseSortBy.usedCount:
-        terms.add(OrderingTerm(expression: db.vaultItems.usedCount, mode: mode));
+        terms.add(
+          OrderingTerm(expression: db.vaultItems.usedCount, mode: mode),
+        );
         break;
     }
 

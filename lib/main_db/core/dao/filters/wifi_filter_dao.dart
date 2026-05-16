@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../main_store.dart';
 import '../../models/dto/dto.dart';
 import '../../models/filters/filters.dart';
+
 import '../../tables/system/categories.dart';
 import '../../tables/system/item_tags.dart';
 import '../../tables/system/tags.dart';
@@ -13,13 +14,7 @@ import 'filter_dao.dart';
 
 part 'wifi_filter_dao.g.dart';
 
-@DriftAccessor(tables: [
-  VaultItems,
-  WifiItems,
-  Categories,
-  Tags,
-  ItemTags,
-])
+@DriftAccessor(tables: [VaultItems, WifiItems, Categories, Tags, ItemTags])
 class WifiFilterDao extends DatabaseAccessor<MainStore>
     with _$WifiFilterDaoMixin, BaseFilterQueryMixin
     implements FilterDao<WifiFilter, FilteredCardDto<WifiCardDto>> {
@@ -32,33 +27,34 @@ class WifiFilterDao extends DatabaseAccessor<MainStore>
     final whereExpr = _buildWhere(filter);
     final hasPasswordExpr = wifiItems.password.isNotNull();
 
-    final query = selectOnly(vaultItems).join([
-      innerJoin(wifiItems, wifiItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..addColumns([
-        vaultItems.id,
-        vaultItems.type,
-        vaultItems.name,
-        vaultItems.description,
-        vaultItems.categoryId,
-        vaultItems.iconRefId,
-        vaultItems.isFavorite,
-        vaultItems.isArchived,
-        vaultItems.isPinned,
-        vaultItems.isDeleted,
-        vaultItems.createdAt,
-        vaultItems.modifiedAt,
-        vaultItems.lastUsedAt,
-        vaultItems.archivedAt,
-        vaultItems.deletedAt,
-        vaultItems.recentScore,
-        wifiItems.ssid,
-        wifiItems.securityType,
-        wifiItems.encryption,
-        wifiItems.hiddenSsid,
-        hasPasswordExpr,
-      ])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(wifiItems, wifiItems.itemId.equalsExp(vaultItems.id)),
+          ])
+          ..addColumns([
+            vaultItems.id,
+            vaultItems.type,
+            vaultItems.name,
+            vaultItems.description,
+            vaultItems.categoryId,
+            vaultItems.iconRefId,
+            vaultItems.isFavorite,
+            vaultItems.isArchived,
+            vaultItems.isPinned,
+            vaultItems.isDeleted,
+            vaultItems.createdAt,
+            vaultItems.modifiedAt,
+            vaultItems.lastUsedAt,
+            vaultItems.archivedAt,
+            vaultItems.deletedAt,
+            vaultItems.recentScore,
+            wifiItems.ssid,
+            wifiItems.securityType,
+            wifiItems.encryption,
+            wifiItems.hiddenSsid,
+            hasPasswordExpr,
+          ])
+          ..where(whereExpr);
 
     applyLimitOffset(query, filter.base);
 
@@ -69,31 +65,38 @@ class WifiFilterDao extends DatabaseAccessor<MainStore>
       switch (filter.sortField!) {
         case WifiSortField.name:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.name, mode: mode));
+            OrderingTerm(expression: vaultItems.name, mode: mode),
+          );
           break;
         case WifiSortField.ssid:
           orderingTerms.add(
-              OrderingTerm(expression: wifiItems.ssid, mode: mode));
+            OrderingTerm(expression: wifiItems.ssid, mode: mode),
+          );
           break;
         case WifiSortField.createdAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.createdAt, mode: mode));
+            OrderingTerm(expression: vaultItems.createdAt, mode: mode),
+          );
           break;
         case WifiSortField.modifiedAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
+          );
           break;
         case WifiSortField.lastUsedAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
+          );
           break;
         case WifiSortField.usedCount:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.usedCount, mode: mode));
+            OrderingTerm(expression: vaultItems.usedCount, mode: mode),
+          );
           break;
         case WifiSortField.recentScore:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.recentScore, mode: mode));
+            OrderingTerm(expression: vaultItems.recentScore, mode: mode),
+          );
           break;
       }
     }
@@ -141,9 +144,11 @@ class WifiFilterDao extends DatabaseAccessor<MainStore>
         wifi: WifiCardDataDto(
           ssid: row.read(wifiItems.ssid)!,
           securityType: row.readWithConverter<WifiSecurityType?, String>(
-              wifiItems.securityType),
+            wifiItems.securityType,
+          ),
           encryption: row.readWithConverter<WifiEncryptionType?, String>(
-              wifiItems.encryption),
+            wifiItems.encryption,
+          ),
           hiddenSsid: row.read(wifiItems.hiddenSsid) ?? false,
           hasWifiPassword: row.read(hasPasswordExpr) ?? false,
         ),
@@ -157,18 +162,21 @@ class WifiFilterDao extends DatabaseAccessor<MainStore>
   Future<int> countFiltered(WifiFilter filter) async {
     final whereExpr = _buildWhere(filter);
     final countExp = countAll();
-    final query = selectOnly(vaultItems).join([
-      innerJoin(wifiItems, wifiItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..addColumns([countExp])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(wifiItems, wifiItems.itemId.equalsExp(vaultItems.id)),
+          ])
+          ..addColumns([countExp])
+          ..where(whereExpr);
 
     final row = await query.getSingle();
     return row.read(countExp) ?? 0;
   }
 
   Expression<bool> _buildWhere(WifiFilter filter) {
-    Expression<bool> whereExpr = vaultItems.type.equalsValue(VaultItemType.wifi);
+    Expression<bool> whereExpr = vaultItems.type.equalsValue(
+      VaultItemType.wifi,
+    );
 
     whereExpr &= applyBaseVaultItemFilters(filter.base);
 
@@ -194,7 +202,8 @@ class WifiFilterDao extends DatabaseAccessor<MainStore>
 
     if (filter.base.query.isNotEmpty) {
       final q = '%${filter.base.query}%';
-      final textExpr = vaultItems.name.like(q) |
+      final textExpr =
+          vaultItems.name.like(q) |
           vaultItems.description.like(q) |
           wifiItems.ssid.like(q);
       whereExpr &= textExpr;

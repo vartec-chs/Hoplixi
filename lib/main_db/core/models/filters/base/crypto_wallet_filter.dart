@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/crypto_wallet/crypto_wallet_items.dart';
+import '../../../tables/crypto_wallet/crypto_wallet_items.dart';
 import 'base_filter.dart';
 
 part 'crypto_wallet_filter.freezed.dart';

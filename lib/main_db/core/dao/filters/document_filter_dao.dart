@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../main_store.dart';
 import '../../models/dto/dto.dart';
 import '../../models/filters/filters.dart';
+
 import '../../tables/document/document_items.dart';
 import '../../tables/document/document_versions.dart';
 import '../../tables/system/categories.dart';
@@ -14,14 +15,16 @@ import 'filter_dao.dart';
 
 part 'document_filter_dao.g.dart';
 
-@DriftAccessor(tables: [
-  VaultItems,
-  DocumentItems,
-  DocumentVersions,
-  Categories,
-  Tags,
-  ItemTags,
-])
+@DriftAccessor(
+  tables: [
+    VaultItems,
+    DocumentItems,
+    DocumentVersions,
+    Categories,
+    Tags,
+    ItemTags,
+  ],
+)
 class DocumentFilterDao extends DatabaseAccessor<MainStore>
     with _$DocumentFilterDaoMixin, BaseFilterQueryMixin
     implements FilterDao<DocumentFilter, FilteredCardDto<DocumentCardDto>> {
@@ -34,38 +37,44 @@ class DocumentFilterDao extends DatabaseAccessor<MainStore>
     final whereExpr = _buildWhere(filter);
     final hasCurrentVersionExpr = db.documentItems.currentVersionId.isNotNull();
 
-    final query = selectOnly(vaultItems).join([
-      innerJoin(documentItems, documentItems.itemId.equalsExp(vaultItems.id)),
-      leftOuterJoin(documentVersions,
-          documentVersions.id.equalsExp(documentItems.currentVersionId)),
-    ])
-      ..addColumns([
-        vaultItems.id,
-        vaultItems.type,
-        vaultItems.name,
-        vaultItems.description,
-        vaultItems.categoryId,
-        vaultItems.iconRefId,
-        vaultItems.isFavorite,
-        vaultItems.isArchived,
-        vaultItems.isPinned,
-        vaultItems.isDeleted,
-        vaultItems.createdAt,
-        vaultItems.modifiedAt,
-        vaultItems.lastUsedAt,
-        vaultItems.archivedAt,
-        vaultItems.deletedAt,
-        vaultItems.recentScore,
-        documentItems.currentVersionId,
-        documentVersions.versionNumber,
-        documentVersions.documentType,
-        documentVersions.documentTypeOther,
-        documentVersions.pageCount,
-        documentVersions.createdAt,
-        documentVersions.modifiedAt,
-        hasCurrentVersionExpr,
-      ])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(
+              documentItems,
+              documentItems.itemId.equalsExp(vaultItems.id),
+            ),
+            leftOuterJoin(
+              documentVersions,
+              documentVersions.id.equalsExp(documentItems.currentVersionId),
+            ),
+          ])
+          ..addColumns([
+            vaultItems.id,
+            vaultItems.type,
+            vaultItems.name,
+            vaultItems.description,
+            vaultItems.categoryId,
+            vaultItems.iconRefId,
+            vaultItems.isFavorite,
+            vaultItems.isArchived,
+            vaultItems.isPinned,
+            vaultItems.isDeleted,
+            vaultItems.createdAt,
+            vaultItems.modifiedAt,
+            vaultItems.lastUsedAt,
+            vaultItems.archivedAt,
+            vaultItems.deletedAt,
+            vaultItems.recentScore,
+            documentItems.currentVersionId,
+            documentVersions.versionNumber,
+            documentVersions.documentType,
+            documentVersions.documentTypeOther,
+            documentVersions.pageCount,
+            documentVersions.createdAt,
+            documentVersions.modifiedAt,
+            hasCurrentVersionExpr,
+          ])
+          ..where(whereExpr);
 
     applyLimitOffset(query, filter.base);
 
@@ -75,28 +84,34 @@ class DocumentFilterDao extends DatabaseAccessor<MainStore>
       final mode = isAsc ? OrderingMode.asc : OrderingMode.desc;
       switch (filter.sortField!) {
         case DocumentSortField.name:
-          orderingTerms
-              .add(OrderingTerm(expression: vaultItems.name, mode: mode));
+          orderingTerms.add(
+            OrderingTerm(expression: vaultItems.name, mode: mode),
+          );
           break;
         case DocumentSortField.createdAt:
-          orderingTerms
-              .add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
+          orderingTerms.add(
+            OrderingTerm(expression: vaultItems.createdAt, mode: mode),
+          );
           break;
         case DocumentSortField.modifiedAt:
-          orderingTerms
-              .add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
+          orderingTerms.add(
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
+          );
           break;
         case DocumentSortField.lastUsedAt:
-          orderingTerms
-              .add(OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
+          orderingTerms.add(
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
+          );
           break;
         case DocumentSortField.usedCount:
-          orderingTerms
-              .add(OrderingTerm(expression: vaultItems.usedCount, mode: mode));
+          orderingTerms.add(
+            OrderingTerm(expression: vaultItems.usedCount, mode: mode),
+          );
           break;
         case DocumentSortField.recentScore:
-          orderingTerms
-              .add(OrderingTerm(expression: vaultItems.recentScore, mode: mode));
+          orderingTerms.add(
+            OrderingTerm(expression: vaultItems.recentScore, mode: mode),
+          );
           break;
       }
     }
@@ -145,7 +160,8 @@ class DocumentFilterDao extends DatabaseAccessor<MainStore>
           currentVersionId: row.read(documentItems.currentVersionId),
           currentVersionNumber: row.read(documentVersions.versionNumber),
           documentType: row.readWithConverter<DocumentType?, String>(
-              documentVersions.documentType),
+            documentVersions.documentType,
+          ),
           documentTypeOther: row.read(documentVersions.documentTypeOther),
           pageCount: row.read(documentVersions.pageCount),
           versionCreatedAt: row.read(documentVersions.createdAt),
@@ -162,21 +178,28 @@ class DocumentFilterDao extends DatabaseAccessor<MainStore>
   Future<int> countFiltered(DocumentFilter filter) async {
     final whereExpr = _buildWhere(filter);
     final countExp = countAll();
-    final query = selectOnly(vaultItems).join([
-      innerJoin(documentItems, documentItems.itemId.equalsExp(vaultItems.id)),
-      leftOuterJoin(documentVersions,
-          documentVersions.id.equalsExp(documentItems.currentVersionId)),
-    ])
-      ..addColumns([countExp])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(
+              documentItems,
+              documentItems.itemId.equalsExp(vaultItems.id),
+            ),
+            leftOuterJoin(
+              documentVersions,
+              documentVersions.id.equalsExp(documentItems.currentVersionId),
+            ),
+          ])
+          ..addColumns([countExp])
+          ..where(whereExpr);
 
     final row = await query.getSingle();
     return row.read(countExp) ?? 0;
   }
 
   Expression<bool> _buildWhere(DocumentFilter filter) {
-    Expression<bool> whereExpr =
-        vaultItems.type.equalsValue(VaultItemType.document);
+    Expression<bool> whereExpr = vaultItems.type.equalsValue(
+      VaultItemType.document,
+    );
 
     whereExpr &= applyBaseVaultItemFilters(filter.base);
 
@@ -189,8 +212,9 @@ class DocumentFilterDao extends DatabaseAccessor<MainStore>
     }
 
     if (filter.documentType != null) {
-      whereExpr &=
-          documentVersions.documentType.equalsValue(filter.documentType!);
+      whereExpr &= documentVersions.documentType.equalsValue(
+        filter.documentType!,
+      );
     }
 
     if (filter.versionNumber != null) {
@@ -198,12 +222,14 @@ class DocumentFilterDao extends DatabaseAccessor<MainStore>
     }
 
     if (filter.minPageCount != null) {
-      whereExpr &=
-          documentVersions.pageCount.isBiggerOrEqualValue(filter.minPageCount!);
+      whereExpr &= documentVersions.pageCount.isBiggerOrEqualValue(
+        filter.minPageCount!,
+      );
     }
     if (filter.maxPageCount != null) {
-      whereExpr &=
-          documentVersions.pageCount.isSmallerOrEqualValue(filter.maxPageCount!);
+      whereExpr &= documentVersions.pageCount.isSmallerOrEqualValue(
+        filter.maxPageCount!,
+      );
     }
 
     if (filter.hasAggregateHash != null) {

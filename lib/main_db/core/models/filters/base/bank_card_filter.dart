@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/bank_card/bank_card_items.dart';
+import '../../../tables/bank_card/bank_card_items.dart';
 import 'base_filter.dart';
 
 part 'bank_card_filter.freezed.dart';

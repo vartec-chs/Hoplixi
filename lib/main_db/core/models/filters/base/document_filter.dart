@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/document/document_types.dart';
+import '../../../tables/document/document_types.dart';
 import 'base_filter.dart';
 
 part 'document_filter.freezed.dart';

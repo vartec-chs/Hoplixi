@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../main_store.dart';
 import '../../models/dto/dto.dart';
 import '../../models/filters/filters.dart';
+
 import '../../tables/recovery_codes/recovery_codes_items.dart';
 import '../../tables/system/categories.dart';
 import '../../tables/system/item_tags.dart';
@@ -13,13 +14,9 @@ import 'filter_dao.dart';
 
 part 'recovery_codes_filter_dao.g.dart';
 
-@DriftAccessor(tables: [
-  VaultItems,
-  RecoveryCodesItems,
-  Categories,
-  Tags,
-  ItemTags,
-])
+@DriftAccessor(
+  tables: [VaultItems, RecoveryCodesItems, Categories, Tags, ItemTags],
+)
 class RecoveryCodesFilterDao extends DatabaseAccessor<MainStore>
     with _$RecoveryCodesFilterDaoMixin, BaseFilterQueryMixin
     implements
@@ -33,34 +30,37 @@ class RecoveryCodesFilterDao extends DatabaseAccessor<MainStore>
     final whereExpr = _buildWhere(filter);
     final hasCodesExpr = db.recoveryCodesItems.codesCount.isBiggerThanValue(0);
 
-    final query = selectOnly(vaultItems).join([
-      innerJoin(recoveryCodesItems,
-          recoveryCodesItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..addColumns([
-        vaultItems.id,
-        vaultItems.type,
-        vaultItems.name,
-        vaultItems.description,
-        vaultItems.categoryId,
-        vaultItems.iconRefId,
-        vaultItems.isFavorite,
-        vaultItems.isArchived,
-        vaultItems.isPinned,
-        vaultItems.isDeleted,
-        vaultItems.createdAt,
-        vaultItems.modifiedAt,
-        vaultItems.lastUsedAt,
-        vaultItems.archivedAt,
-        vaultItems.deletedAt,
-        vaultItems.recentScore,
-        recoveryCodesItems.codesCount,
-        recoveryCodesItems.usedCount,
-        recoveryCodesItems.generatedAt,
-        recoveryCodesItems.oneTime,
-        hasCodesExpr,
-      ])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(
+              recoveryCodesItems,
+              recoveryCodesItems.itemId.equalsExp(vaultItems.id),
+            ),
+          ])
+          ..addColumns([
+            vaultItems.id,
+            vaultItems.type,
+            vaultItems.name,
+            vaultItems.description,
+            vaultItems.categoryId,
+            vaultItems.iconRefId,
+            vaultItems.isFavorite,
+            vaultItems.isArchived,
+            vaultItems.isPinned,
+            vaultItems.isDeleted,
+            vaultItems.createdAt,
+            vaultItems.modifiedAt,
+            vaultItems.lastUsedAt,
+            vaultItems.archivedAt,
+            vaultItems.deletedAt,
+            vaultItems.recentScore,
+            recoveryCodesItems.codesCount,
+            recoveryCodesItems.usedCount,
+            recoveryCodesItems.generatedAt,
+            recoveryCodesItems.oneTime,
+            hasCodesExpr,
+          ])
+          ..where(whereExpr);
 
     applyLimitOffset(query, filter.base);
 
@@ -71,31 +71,41 @@ class RecoveryCodesFilterDao extends DatabaseAccessor<MainStore>
       switch (filter.sortField!) {
         case RecoveryCodesSortField.name:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.name, mode: mode));
+            OrderingTerm(expression: vaultItems.name, mode: mode),
+          );
           break;
         case RecoveryCodesSortField.generatedAt:
-          orderingTerms.add(OrderingTerm(
-              expression: recoveryCodesItems.generatedAt, mode: mode));
+          orderingTerms.add(
+            OrderingTerm(
+              expression: recoveryCodesItems.generatedAt,
+              mode: mode,
+            ),
+          );
           break;
         case RecoveryCodesSortField.createdAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.createdAt, mode: mode));
+            OrderingTerm(expression: vaultItems.createdAt, mode: mode),
+          );
           break;
         case RecoveryCodesSortField.modifiedAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
+          );
           break;
         case RecoveryCodesSortField.lastUsedAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
+          );
           break;
         case RecoveryCodesSortField.usedCount:
-          orderingTerms.add(OrderingTerm(
-              expression: recoveryCodesItems.usedCount, mode: mode));
+          orderingTerms.add(
+            OrderingTerm(expression: recoveryCodesItems.usedCount, mode: mode),
+          );
           break;
         case RecoveryCodesSortField.recentScore:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.recentScore, mode: mode));
+            OrderingTerm(expression: vaultItems.recentScore, mode: mode),
+          );
           break;
       }
     }
@@ -157,50 +167,60 @@ class RecoveryCodesFilterDao extends DatabaseAccessor<MainStore>
   Future<int> countFiltered(RecoveryCodesFilter filter) async {
     final whereExpr = _buildWhere(filter);
     final countExp = countAll();
-    final query = selectOnly(vaultItems).join([
-      innerJoin(recoveryCodesItems,
-          recoveryCodesItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..addColumns([countExp])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(
+              recoveryCodesItems,
+              recoveryCodesItems.itemId.equalsExp(vaultItems.id),
+            ),
+          ])
+          ..addColumns([countExp])
+          ..where(whereExpr);
 
     final row = await query.getSingle();
     return row.read(countExp) ?? 0;
   }
 
   Expression<bool> _buildWhere(RecoveryCodesFilter filter) {
-    Expression<bool> whereExpr =
-        vaultItems.type.equalsValue(VaultItemType.recoveryCodes);
+    Expression<bool> whereExpr = vaultItems.type.equalsValue(
+      VaultItemType.recoveryCodes,
+    );
 
     whereExpr &= applyBaseVaultItemFilters(filter.base);
 
     if (filter.generatedAfter != null) {
-      whereExpr &= recoveryCodesItems.generatedAt
-          .isBiggerOrEqualValue(filter.generatedAfter!);
+      whereExpr &= recoveryCodesItems.generatedAt.isBiggerOrEqualValue(
+        filter.generatedAfter!,
+      );
     }
     if (filter.generatedBefore != null) {
-      whereExpr &= recoveryCodesItems.generatedAt
-          .isSmallerOrEqualValue(filter.generatedBefore!);
+      whereExpr &= recoveryCodesItems.generatedAt.isSmallerOrEqualValue(
+        filter.generatedBefore!,
+      );
     }
     if (filter.oneTime != null) {
       whereExpr &= recoveryCodesItems.oneTime.equals(filter.oneTime!);
     }
 
     if (filter.minCodesCount != null) {
-      whereExpr &= recoveryCodesItems.codesCount
-          .isBiggerOrEqualValue(filter.minCodesCount!);
+      whereExpr &= recoveryCodesItems.codesCount.isBiggerOrEqualValue(
+        filter.minCodesCount!,
+      );
     }
     if (filter.maxCodesCount != null) {
-      whereExpr &= recoveryCodesItems.codesCount
-          .isSmallerOrEqualValue(filter.maxCodesCount!);
+      whereExpr &= recoveryCodesItems.codesCount.isSmallerOrEqualValue(
+        filter.maxCodesCount!,
+      );
     }
     if (filter.minUsedCount != null) {
-      whereExpr &=
-          recoveryCodesItems.usedCount.isBiggerOrEqualValue(filter.minUsedCount!);
+      whereExpr &= recoveryCodesItems.usedCount.isBiggerOrEqualValue(
+        filter.minUsedCount!,
+      );
     }
     if (filter.maxUsedCount != null) {
-      whereExpr &=
-          recoveryCodesItems.usedCount.isSmallerOrEqualValue(filter.maxUsedCount!);
+      whereExpr &= recoveryCodesItems.usedCount.isSmallerOrEqualValue(
+        filter.maxUsedCount!,
+      );
     }
 
     if (filter.hasCodes != null) {
@@ -213,8 +233,7 @@ class RecoveryCodesFilterDao extends DatabaseAccessor<MainStore>
 
     if (filter.base.query.isNotEmpty) {
       final q = '%${filter.base.query}%';
-      final textExpr =
-          vaultItems.name.like(q) | vaultItems.description.like(q);
+      final textExpr = vaultItems.name.like(q) | vaultItems.description.like(q);
       whereExpr &= textExpr;
     }
 

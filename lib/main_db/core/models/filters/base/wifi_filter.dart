@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/wifi/wifi_items.dart';
+import '../../../tables/wifi/wifi_items.dart';
 import 'base_filter.dart';
 
 part 'wifi_filter.freezed.dart';

@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/ssh_key/ssh_key_items.dart';
+import '../../../tables/ssh_key/ssh_key_items.dart';
 import 'base_filter.dart';
 
 part 'ssh_key_filter.freezed.dart';

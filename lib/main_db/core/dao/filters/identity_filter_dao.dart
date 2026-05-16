@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../main_store.dart';
 import '../../models/dto/dto.dart';
 import '../../models/filters/filters.dart';
+
 import '../../tables/identity/identity_items.dart';
 import '../../tables/system/categories.dart';
 import '../../tables/system/item_tags.dart';
@@ -13,13 +14,7 @@ import 'filter_dao.dart';
 
 part 'identity_filter_dao.g.dart';
 
-@DriftAccessor(tables: [
-  VaultItems,
-  IdentityItems,
-  Categories,
-  Tags,
-  ItemTags,
-])
+@DriftAccessor(tables: [VaultItems, IdentityItems, Categories, Tags, ItemTags])
 class IdentityFilterDao extends DatabaseAccessor<MainStore>
     with _$IdentityFilterDaoMixin, BaseFilterQueryMixin
     implements FilterDao<IdentityFilter, FilteredCardDto<IdentityCardDto>> {
@@ -33,40 +28,44 @@ class IdentityFilterDao extends DatabaseAccessor<MainStore>
     final hasTaxIdExpr = identityItems.taxId.isNotNull();
     final hasNationalIdExpr = identityItems.nationalId.isNotNull();
     final hasPassportNumberExpr = identityItems.passportNumber.isNotNull();
-    final hasDriverLicenseNumberExpr =
-        identityItems.driverLicenseNumber.isNotNull();
+    final hasDriverLicenseNumberExpr = identityItems.driverLicenseNumber
+        .isNotNull();
 
-    final query = selectOnly(vaultItems).join([
-      innerJoin(identityItems, identityItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..addColumns([
-        vaultItems.id,
-        vaultItems.type,
-        vaultItems.name,
-        vaultItems.description,
-        vaultItems.categoryId,
-        vaultItems.iconRefId,
-        vaultItems.isFavorite,
-        vaultItems.isArchived,
-        vaultItems.isPinned,
-        vaultItems.isDeleted,
-        vaultItems.createdAt,
-        vaultItems.modifiedAt,
-        vaultItems.lastUsedAt,
-        vaultItems.archivedAt,
-        vaultItems.deletedAt,
-        vaultItems.recentScore,
-        identityItems.displayName,
-        identityItems.username,
-        identityItems.email,
-        identityItems.phone,
-        identityItems.company,
-        hasTaxIdExpr,
-        hasNationalIdExpr,
-        hasPassportNumberExpr,
-        hasDriverLicenseNumberExpr,
-      ])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(
+              identityItems,
+              identityItems.itemId.equalsExp(vaultItems.id),
+            ),
+          ])
+          ..addColumns([
+            vaultItems.id,
+            vaultItems.type,
+            vaultItems.name,
+            vaultItems.description,
+            vaultItems.categoryId,
+            vaultItems.iconRefId,
+            vaultItems.isFavorite,
+            vaultItems.isArchived,
+            vaultItems.isPinned,
+            vaultItems.isDeleted,
+            vaultItems.createdAt,
+            vaultItems.modifiedAt,
+            vaultItems.lastUsedAt,
+            vaultItems.archivedAt,
+            vaultItems.deletedAt,
+            vaultItems.recentScore,
+            identityItems.displayName,
+            identityItems.username,
+            identityItems.email,
+            identityItems.phone,
+            identityItems.company,
+            hasTaxIdExpr,
+            hasNationalIdExpr,
+            hasPassportNumberExpr,
+            hasDriverLicenseNumberExpr,
+          ])
+          ..where(whereExpr);
 
     applyLimitOffset(query, filter.base);
 
@@ -77,43 +76,53 @@ class IdentityFilterDao extends DatabaseAccessor<MainStore>
       switch (filter.sortField!) {
         case IdentitySortField.name:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.name, mode: mode));
+            OrderingTerm(expression: vaultItems.name, mode: mode),
+          );
           break;
         case IdentitySortField.displayName:
           orderingTerms.add(
-              OrderingTerm(expression: identityItems.displayName, mode: mode));
+            OrderingTerm(expression: identityItems.displayName, mode: mode),
+          );
           break;
         case IdentitySortField.username:
           orderingTerms.add(
-              OrderingTerm(expression: identityItems.username, mode: mode));
+            OrderingTerm(expression: identityItems.username, mode: mode),
+          );
           break;
         case IdentitySortField.email:
           orderingTerms.add(
-              OrderingTerm(expression: identityItems.email, mode: mode));
+            OrderingTerm(expression: identityItems.email, mode: mode),
+          );
           break;
         case IdentitySortField.company:
           orderingTerms.add(
-              OrderingTerm(expression: identityItems.company, mode: mode));
+            OrderingTerm(expression: identityItems.company, mode: mode),
+          );
           break;
         case IdentitySortField.createdAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.createdAt, mode: mode));
+            OrderingTerm(expression: vaultItems.createdAt, mode: mode),
+          );
           break;
         case IdentitySortField.modifiedAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
+          );
           break;
         case IdentitySortField.lastUsedAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
+          );
           break;
         case IdentitySortField.usedCount:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.usedCount, mode: mode));
+            OrderingTerm(expression: vaultItems.usedCount, mode: mode),
+          );
           break;
         case IdentitySortField.recentScore:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.recentScore, mode: mode));
+            OrderingTerm(expression: vaultItems.recentScore, mode: mode),
+          );
           break;
       }
     }
@@ -179,19 +188,24 @@ class IdentityFilterDao extends DatabaseAccessor<MainStore>
   Future<int> countFiltered(IdentityFilter filter) async {
     final whereExpr = _buildWhere(filter);
     final countExp = countAll();
-    final query = selectOnly(vaultItems).join([
-      innerJoin(identityItems, identityItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..addColumns([countExp])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(
+              identityItems,
+              identityItems.itemId.equalsExp(vaultItems.id),
+            ),
+          ])
+          ..addColumns([countExp])
+          ..where(whereExpr);
 
     final row = await query.getSingle();
     return row.read(countExp) ?? 0;
   }
 
   Expression<bool> _buildWhere(IdentityFilter filter) {
-    Expression<bool> whereExpr =
-        vaultItems.type.equalsValue(VaultItemType.identity);
+    Expression<bool> whereExpr = vaultItems.type.equalsValue(
+      VaultItemType.identity,
+    );
 
     whereExpr &= applyBaseVaultItemFilters(filter.base);
 
@@ -254,7 +268,8 @@ class IdentityFilterDao extends DatabaseAccessor<MainStore>
 
     if (filter.base.query.isNotEmpty) {
       final q = '%${filter.base.query}%';
-      final textExpr = vaultItems.name.like(q) |
+      final textExpr =
+          vaultItems.name.like(q) |
           vaultItems.description.like(q) |
           identityItems.firstName.like(q) |
           identityItems.lastName.like(q) |

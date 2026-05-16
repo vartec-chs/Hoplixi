@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/loyalty_card/loyalty_card_items.dart';
+import '../../../tables/loyalty_card/loyalty_card_items.dart';
 import 'base_filter.dart';
 
 part 'loyalty_card_filter.freezed.dart';

@@ -1,21 +1,9 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../sort.dart';
+
 part 'base_filter.freezed.dart';
 part 'base_filter.g.dart';
-
-enum SortDirection {
-  asc,
-  desc,
-}
-
-enum BaseSortBy {
-  name,
-  createdAt,
-  modifiedAt,
-  lastUsedAt,
-  recentScore,
-  usedCount,
-}
 
 @freezed
 sealed class BaseFilter with _$BaseFilter {

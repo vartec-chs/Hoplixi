@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../main_store.dart';
 import '../../models/dto/dto.dart';
 import '../../models/filters/filters.dart';
+
 import '../../tables/loyalty_card/loyalty_card_items.dart';
 import '../../tables/system/categories.dart';
 import '../../tables/system/item_tags.dart';
@@ -13,16 +14,13 @@ import 'filter_dao.dart';
 
 part 'loyalty_card_filter_dao.g.dart';
 
-@DriftAccessor(tables: [
-  VaultItems,
-  LoyaltyCardItems,
-  Categories,
-  Tags,
-  ItemTags,
-])
+@DriftAccessor(
+  tables: [VaultItems, LoyaltyCardItems, Categories, Tags, ItemTags],
+)
 class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
     with _$LoyaltyCardFilterDaoMixin, BaseFilterQueryMixin
-    implements FilterDao<LoyaltyCardFilter, FilteredCardDto<LoyaltyCardCardDto>> {
+    implements
+        FilterDao<LoyaltyCardFilter, FilteredCardDto<LoyaltyCardCardDto>> {
   LoyaltyCardFilterDao(super.db);
 
   @override
@@ -34,40 +32,43 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
     final hasBarcodeValueExpr = loyaltyCardItems.barcodeValue.isNotNull();
     final hasPasswordExpr = loyaltyCardItems.password.isNotNull();
 
-    final query = selectOnly(vaultItems).join([
-      innerJoin(
-          loyaltyCardItems, loyaltyCardItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..addColumns([
-        vaultItems.id,
-        vaultItems.type,
-        vaultItems.name,
-        vaultItems.description,
-        vaultItems.categoryId,
-        vaultItems.iconRefId,
-        vaultItems.isFavorite,
-        vaultItems.isArchived,
-        vaultItems.isPinned,
-        vaultItems.isDeleted,
-        vaultItems.createdAt,
-        vaultItems.modifiedAt,
-        vaultItems.lastUsedAt,
-        vaultItems.archivedAt,
-        vaultItems.deletedAt,
-        vaultItems.recentScore,
-        loyaltyCardItems.programName,
-        loyaltyCardItems.barcodeType,
-        loyaltyCardItems.issuer,
-        loyaltyCardItems.website,
-        loyaltyCardItems.phone,
-        loyaltyCardItems.email,
-        loyaltyCardItems.validFrom,
-        loyaltyCardItems.validTo,
-        hasCardNumberExpr,
-        hasBarcodeValueExpr,
-        hasPasswordExpr,
-      ])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(
+              loyaltyCardItems,
+              loyaltyCardItems.itemId.equalsExp(vaultItems.id),
+            ),
+          ])
+          ..addColumns([
+            vaultItems.id,
+            vaultItems.type,
+            vaultItems.name,
+            vaultItems.description,
+            vaultItems.categoryId,
+            vaultItems.iconRefId,
+            vaultItems.isFavorite,
+            vaultItems.isArchived,
+            vaultItems.isPinned,
+            vaultItems.isDeleted,
+            vaultItems.createdAt,
+            vaultItems.modifiedAt,
+            vaultItems.lastUsedAt,
+            vaultItems.archivedAt,
+            vaultItems.deletedAt,
+            vaultItems.recentScore,
+            loyaltyCardItems.programName,
+            loyaltyCardItems.barcodeType,
+            loyaltyCardItems.issuer,
+            loyaltyCardItems.website,
+            loyaltyCardItems.phone,
+            loyaltyCardItems.email,
+            loyaltyCardItems.validFrom,
+            loyaltyCardItems.validTo,
+            hasCardNumberExpr,
+            hasBarcodeValueExpr,
+            hasPasswordExpr,
+          ])
+          ..where(whereExpr);
 
     applyLimitOffset(query, filter.base);
 
@@ -78,39 +79,48 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
       switch (filter.sortField!) {
         case LoyaltyCardSortField.name:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.name, mode: mode));
+            OrderingTerm(expression: vaultItems.name, mode: mode),
+          );
           break;
         case LoyaltyCardSortField.programName:
-          orderingTerms.add(OrderingTerm(
-              expression: loyaltyCardItems.programName, mode: mode));
+          orderingTerms.add(
+            OrderingTerm(expression: loyaltyCardItems.programName, mode: mode),
+          );
           break;
         case LoyaltyCardSortField.issuer:
           orderingTerms.add(
-              OrderingTerm(expression: loyaltyCardItems.issuer, mode: mode));
+            OrderingTerm(expression: loyaltyCardItems.issuer, mode: mode),
+          );
           break;
         case LoyaltyCardSortField.validTo:
           orderingTerms.add(
-              OrderingTerm(expression: loyaltyCardItems.validTo, mode: mode));
+            OrderingTerm(expression: loyaltyCardItems.validTo, mode: mode),
+          );
           break;
         case LoyaltyCardSortField.createdAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.createdAt, mode: mode));
+            OrderingTerm(expression: vaultItems.createdAt, mode: mode),
+          );
           break;
         case LoyaltyCardSortField.modifiedAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
+          );
           break;
         case LoyaltyCardSortField.lastUsedAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
+          );
           break;
         case LoyaltyCardSortField.usedCount:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.usedCount, mode: mode));
+            OrderingTerm(expression: vaultItems.usedCount, mode: mode),
+          );
           break;
         case LoyaltyCardSortField.recentScore:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.recentScore, mode: mode));
+            OrderingTerm(expression: vaultItems.recentScore, mode: mode),
+          );
           break;
       }
     }
@@ -158,7 +168,8 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
         loyaltyCard: LoyaltyCardCardDataDto(
           programName: row.read(loyaltyCardItems.programName)!,
           barcodeType: row.readWithConverter<LoyaltyBarcodeType?, String>(
-              loyaltyCardItems.barcodeType),
+            loyaltyCardItems.barcodeType,
+          ),
           issuer: row.read(loyaltyCardItems.issuer),
           website: row.read(loyaltyCardItems.website),
           phone: row.read(loyaltyCardItems.phone),
@@ -179,20 +190,24 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
   Future<int> countFiltered(LoyaltyCardFilter filter) async {
     final whereExpr = _buildWhere(filter);
     final countExp = countAll();
-    final query = selectOnly(vaultItems).join([
-      innerJoin(
-          loyaltyCardItems, loyaltyCardItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..addColumns([countExp])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(
+              loyaltyCardItems,
+              loyaltyCardItems.itemId.equalsExp(vaultItems.id),
+            ),
+          ])
+          ..addColumns([countExp])
+          ..where(whereExpr);
 
     final row = await query.getSingle();
     return row.read(countExp) ?? 0;
   }
 
   Expression<bool> _buildWhere(LoyaltyCardFilter filter) {
-    Expression<bool> whereExpr =
-        vaultItems.type.equalsValue(VaultItemType.loyaltyCard);
+    Expression<bool> whereExpr = vaultItems.type.equalsValue(
+      VaultItemType.loyaltyCard,
+    );
 
     whereExpr &= applyBaseVaultItemFilters(filter.base);
 
@@ -200,8 +215,9 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
       whereExpr &= loyaltyCardItems.programName.contains(filter.programName!);
     }
     if (filter.barcodeType != null) {
-      whereExpr &=
-          loyaltyCardItems.barcodeType.equalsValue(filter.barcodeType!);
+      whereExpr &= loyaltyCardItems.barcodeType.equalsValue(
+        filter.barcodeType!,
+      );
     }
     if (filter.issuer != null) {
       whereExpr &= loyaltyCardItems.issuer.contains(filter.issuer!);
@@ -217,12 +233,14 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
     }
 
     if (filter.validFromAfter != null) {
-      whereExpr &= loyaltyCardItems.validFrom
-          .isBiggerOrEqualValue(filter.validFromAfter!);
+      whereExpr &= loyaltyCardItems.validFrom.isBiggerOrEqualValue(
+        filter.validFromAfter!,
+      );
     }
     if (filter.validToBefore != null) {
-      whereExpr &=
-          loyaltyCardItems.validTo.isSmallerOrEqualValue(filter.validToBefore!);
+      whereExpr &= loyaltyCardItems.validTo.isSmallerOrEqualValue(
+        filter.validToBefore!,
+      );
     }
 
     if (filter.hasCardNumber != null) {
@@ -249,7 +267,8 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
 
     if (filter.base.query.isNotEmpty) {
       final q = '%${filter.base.query}%';
-      final textExpr = vaultItems.name.like(q) |
+      final textExpr =
+          vaultItems.name.like(q) |
           vaultItems.description.like(q) |
           loyaltyCardItems.programName.like(q) |
           loyaltyCardItems.issuer.like(q) |

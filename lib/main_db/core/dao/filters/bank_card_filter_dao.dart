@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../main_store.dart';
 import '../../models/dto/dto.dart';
 import '../../models/filters/filters.dart';
+
 import '../../tables/bank_card/bank_card_items.dart';
 import '../../tables/system/categories.dart';
 import '../../tables/system/item_tags.dart';
@@ -13,13 +14,7 @@ import 'filter_dao.dart';
 
 part 'bank_card_filter_dao.g.dart';
 
-@DriftAccessor(tables: [
-  VaultItems,
-  BankCardItems,
-  Categories,
-  Tags,
-  ItemTags,
-])
+@DriftAccessor(tables: [VaultItems, BankCardItems, Categories, Tags, ItemTags])
 class BankCardFilterDao extends DatabaseAccessor<MainStore>
     with _$BankCardFilterDaoMixin, BaseFilterQueryMixin
     implements FilterDao<BankCardFilter, FilteredCardDto<BankCardCardDto>> {
@@ -35,38 +30,42 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
     final hasAccountNumberExpr = bankCardItems.accountNumber.isNotNull();
     final hasRoutingNumberExpr = bankCardItems.routingNumber.isNotNull();
 
-    final query = selectOnly(vaultItems).join([
-      innerJoin(bankCardItems, bankCardItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..addColumns([
-        vaultItems.id,
-        vaultItems.type,
-        vaultItems.name,
-        vaultItems.description,
-        vaultItems.categoryId,
-        vaultItems.iconRefId,
-        vaultItems.isFavorite,
-        vaultItems.isArchived,
-        vaultItems.isPinned,
-        vaultItems.isDeleted,
-        vaultItems.createdAt,
-        vaultItems.modifiedAt,
-        vaultItems.lastUsedAt,
-        vaultItems.archivedAt,
-        vaultItems.deletedAt,
-        vaultItems.recentScore,
-        bankCardItems.cardholderName,
-        bankCardItems.cardType,
-        bankCardItems.cardNetwork,
-        bankCardItems.expiryMonth,
-        bankCardItems.expiryYear,
-        bankCardItems.bankName,
-        hasCardNumberExpr,
-        hasCvvExpr,
-        hasAccountNumberExpr,
-        hasRoutingNumberExpr,
-      ])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(
+              bankCardItems,
+              bankCardItems.itemId.equalsExp(vaultItems.id),
+            ),
+          ])
+          ..addColumns([
+            vaultItems.id,
+            vaultItems.type,
+            vaultItems.name,
+            vaultItems.description,
+            vaultItems.categoryId,
+            vaultItems.iconRefId,
+            vaultItems.isFavorite,
+            vaultItems.isArchived,
+            vaultItems.isPinned,
+            vaultItems.isDeleted,
+            vaultItems.createdAt,
+            vaultItems.modifiedAt,
+            vaultItems.lastUsedAt,
+            vaultItems.archivedAt,
+            vaultItems.deletedAt,
+            vaultItems.recentScore,
+            bankCardItems.cardholderName,
+            bankCardItems.cardType,
+            bankCardItems.cardNetwork,
+            bankCardItems.expiryMonth,
+            bankCardItems.expiryYear,
+            bankCardItems.bankName,
+            hasCardNumberExpr,
+            hasCvvExpr,
+            hasAccountNumberExpr,
+            hasRoutingNumberExpr,
+          ])
+          ..where(whereExpr);
 
     applyLimitOffset(query, filter.base);
 
@@ -77,35 +76,43 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
       switch (filter.sortField!) {
         case BankCardSortField.name:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.name, mode: mode));
+            OrderingTerm(expression: vaultItems.name, mode: mode),
+          );
           break;
         case BankCardSortField.cardholderName:
           orderingTerms.add(
-              OrderingTerm(expression: bankCardItems.cardholderName, mode: mode));
+            OrderingTerm(expression: bankCardItems.cardholderName, mode: mode),
+          );
           break;
         case BankCardSortField.bankName:
           orderingTerms.add(
-              OrderingTerm(expression: bankCardItems.bankName, mode: mode));
+            OrderingTerm(expression: bankCardItems.bankName, mode: mode),
+          );
           break;
         case BankCardSortField.createdAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.createdAt, mode: mode));
+            OrderingTerm(expression: vaultItems.createdAt, mode: mode),
+          );
           break;
         case BankCardSortField.modifiedAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
+          );
           break;
         case BankCardSortField.lastUsedAt:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
+          );
           break;
         case BankCardSortField.usedCount:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.usedCount, mode: mode));
+            OrderingTerm(expression: vaultItems.usedCount, mode: mode),
+          );
           break;
         case BankCardSortField.recentScore:
           orderingTerms.add(
-              OrderingTerm(expression: vaultItems.recentScore, mode: mode));
+            OrderingTerm(expression: vaultItems.recentScore, mode: mode),
+          );
           break;
       }
     }
@@ -152,10 +159,12 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
         ),
         bankCard: BankCardCardDataDto(
           cardholderName: row.read(bankCardItems.cardholderName),
-          cardType:
-              row.readWithConverter<CardType?, String>(bankCardItems.cardType),
+          cardType: row.readWithConverter<CardType?, String>(
+            bankCardItems.cardType,
+          ),
           cardNetwork: row.readWithConverter<CardNetwork?, String>(
-              bankCardItems.cardNetwork),
+            bankCardItems.cardNetwork,
+          ),
           expiryMonth: row.read(bankCardItems.expiryMonth),
           expiryYear: row.read(bankCardItems.expiryYear),
           bankName: row.read(bankCardItems.bankName),
@@ -174,24 +183,31 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
   Future<int> countFiltered(BankCardFilter filter) async {
     final whereExpr = _buildWhere(filter);
     final countExp = countAll();
-    final query = selectOnly(vaultItems).join([
-      innerJoin(bankCardItems, bankCardItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..addColumns([countExp])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(
+              bankCardItems,
+              bankCardItems.itemId.equalsExp(vaultItems.id),
+            ),
+          ])
+          ..addColumns([countExp])
+          ..where(whereExpr);
 
     final row = await query.getSingle();
     return row.read(countExp) ?? 0;
   }
 
   Expression<bool> _buildWhere(BankCardFilter filter) {
-    Expression<bool> whereExpr =
-        vaultItems.type.equalsValue(VaultItemType.bankCard);
+    Expression<bool> whereExpr = vaultItems.type.equalsValue(
+      VaultItemType.bankCard,
+    );
 
     whereExpr &= applyBaseVaultItemFilters(filter.base);
 
     if (filter.cardholderName != null) {
-      whereExpr &= bankCardItems.cardholderName.contains(filter.cardholderName!);
+      whereExpr &= bankCardItems.cardholderName.contains(
+        filter.cardholderName!,
+      );
     }
     if (filter.cardType != null) {
       whereExpr &= bankCardItems.cardType.equalsValue(filter.cardType!);
@@ -204,11 +220,13 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
     }
     if (filter.hasExpiry != null) {
       if (filter.hasExpiry!) {
-        whereExpr &= bankCardItems.expiryMonth.isNotNull() &
+        whereExpr &=
+            bankCardItems.expiryMonth.isNotNull() &
             bankCardItems.expiryYear.isNotNull();
       } else {
         whereExpr &=
-            bankCardItems.expiryMonth.isNull() | bankCardItems.expiryYear.isNull();
+            bankCardItems.expiryMonth.isNull() |
+            bankCardItems.expiryYear.isNull();
       }
     }
     if (filter.hasCvv != null) {
@@ -228,7 +246,8 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
 
     if (filter.base.query.isNotEmpty) {
       final q = '%${filter.base.query}%';
-      final textExpr = vaultItems.name.like(q) |
+      final textExpr =
+          vaultItems.name.like(q) |
           vaultItems.description.like(q) |
           bankCardItems.cardholderName.like(q) |
           bankCardItems.bankName.like(q);
