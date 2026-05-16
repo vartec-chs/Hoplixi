@@ -1,11 +1,11 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/dao/system/categories_dao.dart';
-import 'package:hoplixi/main_db/core/dao/system/item_category_history_dao.dart';
-import 'package:hoplixi/main_db/core/dao/system/item_link_history_dao.dart';
-import 'package:hoplixi/main_db/core/dao/system/item_links_dao.dart';
-import 'package:hoplixi/main_db/core/dao/system/item_tags_dao.dart';
-import 'package:hoplixi/main_db/core/dao/system/tags_dao.dart';
-import 'package:hoplixi/main_db/core/dao/system/vault_item_tag_history_dao.dart';
+import 'package:hoplixi/main_db/core/daos/base/system/categories_dao.dart';
+import 'package:hoplixi/main_db/core/daos/base/system/item_category_history_dao.dart';
+import 'package:hoplixi/main_db/core/daos/base/system/item_link_history_dao.dart';
+import 'package:hoplixi/main_db/core/daos/base/system/item_links_dao.dart';
+import 'package:hoplixi/main_db/core/daos/base/system/item_tags_dao.dart';
+import 'package:hoplixi/main_db/core/daos/base/system/tags_dao.dart';
+import 'package:hoplixi/main_db/core/daos/base/system/vault_item_tag_history_dao.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../main_store.dart';

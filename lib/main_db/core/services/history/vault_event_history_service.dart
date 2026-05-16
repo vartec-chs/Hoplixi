@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/dao/vault_items/vault_events_history_dao.dart';
+import 'package:hoplixi/main_db/core/daos/base/vault_items/vault_events_history_dao.dart';
 import 'package:hoplixi/main_db/core/errors/db_exception_mapper.dart';
 import 'package:hoplixi/main_db/core/errors/db_result.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_events_history.dart';

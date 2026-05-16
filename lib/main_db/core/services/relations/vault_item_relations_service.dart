@@ -1,9 +1,9 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/dao/system/categories_dao.dart';
-import 'package:hoplixi/main_db/core/dao/system/item_links_dao.dart';
-import 'package:hoplixi/main_db/core/dao/system/item_tags_dao.dart';
-import 'package:hoplixi/main_db/core/dao/system/tags_dao.dart';
-import 'package:hoplixi/main_db/core/dao/vault_items/vault_items_dao.dart';
+import 'package:hoplixi/main_db/core/daos/base/system/categories_dao.dart';
+import 'package:hoplixi/main_db/core/daos/base/system/item_links_dao.dart';
+import 'package:hoplixi/main_db/core/daos/base/system/item_tags_dao.dart';
+import 'package:hoplixi/main_db/core/daos/base/system/tags_dao.dart';
+import 'package:hoplixi/main_db/core/daos/base/vault_items/vault_items_dao.dart';
 import 'package:hoplixi/main_db/core/errors/db_error.dart';
 import 'package:hoplixi/main_db/core/errors/db_exception_mapper.dart';
 import 'package:hoplixi/main_db/core/errors/db_result.dart';

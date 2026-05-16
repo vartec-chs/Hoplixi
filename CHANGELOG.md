@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 2026-05-17
+
+### docs
+
+- Обновлён [lib/main_db/core/README.md](lib/main_db/core/README.md) с актуальным
+  описанием `lib/main_db/core/models`: добавлены `dto_history`, `filters`,
+  `mappers` и вспомогательные модельные типы.
+- Обновлён [lib/main_db/core/README.md](lib/main_db/core/README.md) с актуальным
+  описанием `lib/main_db/core/daos`: добавлены `base/`, `filters/` и агрегатор
+  `daos.dart`, а терминология приведена к `DAOs`.
+
 ## 2026-05-16
 
 ### main_db

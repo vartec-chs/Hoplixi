@@ -1,5 +1,5 @@
 import 'package:hoplixi/main_db/config/store_settings_keys.dart';
-import 'package:hoplixi/main_db/core/dao/system/store_settings_dao.dart';
+import 'package:hoplixi/main_db/core/daos/base/system/store_settings_dao.dart';
 
 class StoreHistoryPolicyService {
   StoreHistoryPolicyService(this.settingsDao);

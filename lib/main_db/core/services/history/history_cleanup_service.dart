@@ -1,4 +1,4 @@
-import 'package:hoplixi/main_db/core/dao/system/store_settings_dao.dart';
+import 'package:hoplixi/main_db/core/daos/base/system/store_settings_dao.dart';
 
 class HistoryCleanupService {
   HistoryCleanupService(this.settingsDao);
