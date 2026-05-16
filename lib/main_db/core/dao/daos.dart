@@ -16,3 +16,4 @@ export 'ssh_key/daos.dart';
 export 'system/daos.dart';
 export 'vault_items/daos.dart';
 export 'wifi/daos.dart';
+export 'filters/daos.dart';

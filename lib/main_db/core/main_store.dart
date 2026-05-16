@@ -128,6 +128,23 @@ part 'main_store.g.dart';
     LoyaltyCardHistoryDao,
     VaultEventsHistoryDao,
     VaultSnapshotsHistoryDao,
+    // Filter DAOs
+    ApiKeyFilterDao,
+    BankCardFilterDao,
+    CertificateFilterDao,
+    ContactFilterDao,
+    CryptoWalletFilterDao,
+    DocumentFilterDao,
+    FileFilterDao,
+    IdentityFilterDao,
+    LicenseKeyFilterDao,
+    LoyaltyCardFilterDao,
+    NoteFilterDao,
+    OtpFilterDao,
+    PasswordFilterDao,
+    RecoveryCodesFilterDao,
+    SshKeyFilterDao,
+    WifiFilterDao,
   ],
 )
 class MainStore extends _$MainStore {

@@ -11,6 +11,7 @@ export 'dto.dart';
 export '../field_update.dart';
 export 'file_dto.dart';
 export 'file_metadata_dto.dart';
+export 'filter_meta_dto.dart';
 export 'icon_dto.dart';
 export 'identity_dto.dart';
 export 'item_link_dto.dart';
