@@ -2,7 +2,6 @@ import 'package:hoplixi/main_db/core/errors/db_error.dart';
 import 'package:hoplixi/main_db/core/errors/db_exception_mapper.dart';
 import 'package:hoplixi/main_db/core/errors/db_result.dart';
 import 'package:hoplixi/main_db/core/models/dto/dto.dart';
-import 'package:hoplixi/main_db/core/models/field_update.dart';
 import 'package:hoplixi/main_db/core/repositories/base/api_key_repository.dart';
 import 'package:hoplixi/main_db/core/services/history/vault_history_service.dart';
 import 'package:hoplixi/main_db/core/services/relations/vault_item_relations_service.dart';
@@ -72,7 +71,7 @@ class ApiKeyService {
           name: createdView.item.name,
           categoryId: createdView.item.categoryId,
           iconRefId: createdView.item.iconRefId,
-          snapshotHistoryId: snapshotRes!.getOrNull(),
+          snapshotHistoryId: snapshotRes?.getOrNull(),
         );
         if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
 
@@ -132,7 +131,7 @@ class ApiKeyService {
           name: dto.item.name.valueOrNull ?? oldView.item.name,
           categoryId: dto.item.categoryId.valueOrNull ?? oldView.item.categoryId,
           iconRefId: dto.item.iconRefId.valueOrNull ?? oldView.item.iconRefId,
-          snapshotHistoryId: snapshotRes!.getOrNull(),
+          snapshotHistoryId: snapshotRes?.getOrNull(),
         );
         if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
 
@@ -167,7 +166,7 @@ class ApiKeyService {
           type: VaultItemType.apiKey,
           action: VaultEventHistoryAction.deleted,
           name: oldView.item.name,
-          snapshotHistoryId: snapshotRes!.getOrNull(),
+          snapshotHistoryId: snapshotRes?.getOrNull(),
         );
         if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
         
@@ -200,7 +199,7 @@ class ApiKeyService {
           type: VaultItemType.apiKey,
           action: VaultEventHistoryAction.recovered,
           name: oldView.item.name,
-          snapshotHistoryId: snapshotRes!.getOrNull(),
+          snapshotHistoryId: snapshotRes?.getOrNull(),
         );
         if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
         
@@ -233,7 +232,7 @@ class ApiKeyService {
           type: VaultItemType.apiKey,
           action: VaultEventHistoryAction.archived,
           name: oldView.item.name,
-          snapshotHistoryId: snapshotRes!.getOrNull(),
+          snapshotHistoryId: snapshotRes?.getOrNull(),
         );
         if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
         
@@ -266,7 +265,7 @@ class ApiKeyService {
           type: VaultItemType.apiKey,
           action: VaultEventHistoryAction.restored,
           name: oldView.item.name,
-          snapshotHistoryId: snapshotRes!.getOrNull(),
+          snapshotHistoryId: snapshotRes?.getOrNull(),
         );
         if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
         
@@ -279,3 +278,4 @@ class ApiKeyService {
     }
   }
 }
+

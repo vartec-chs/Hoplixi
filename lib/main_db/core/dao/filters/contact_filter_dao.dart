@@ -29,56 +29,133 @@ class ContactFilterDao extends DatabaseAccessor<MainStore>
   Future<List<FilteredCardDto<ContactCardDto>>> getFiltered(
     ContactFilter filter,
   ) async {
-    final query = _buildQuery(filter);
+    final whereExpr = _buildWhere(filter);
+
+    final query = selectOnly(vaultItems).join([
+      innerJoin(contactItems, contactItems.itemId.equalsExp(vaultItems.id)),
+    ])
+      ..addColumns([
+        vaultItems.id,
+        vaultItems.type,
+        vaultItems.name,
+        vaultItems.description,
+        vaultItems.categoryId,
+        vaultItems.iconRefId,
+        vaultItems.isFavorite,
+        vaultItems.isArchived,
+        vaultItems.isPinned,
+        vaultItems.isDeleted,
+        vaultItems.createdAt,
+        vaultItems.modifiedAt,
+        vaultItems.lastUsedAt,
+        vaultItems.archivedAt,
+        vaultItems.deletedAt,
+        vaultItems.recentScore,
+        contactItems.firstName,
+        contactItems.middleName,
+        contactItems.lastName,
+        contactItems.company,
+        contactItems.phone,
+        contactItems.email,
+        contactItems.isEmergencyContact,
+      ])
+      ..where(whereExpr);
+
     applyLimitOffset(query, filter.base);
+
+    final orderingTerms = buildBaseOrdering(filter.base);
+    if (filter.sortField != null) {
+      final isAsc = filter.base.sortDirection == SortDirection.asc;
+      final mode = isAsc ? OrderingMode.asc : OrderingMode.desc;
+      switch (filter.sortField!) {
+        case ContactSortField.name:
+          orderingTerms
+              .add(OrderingTerm(expression: vaultItems.name, mode: mode));
+          break;
+        case ContactSortField.firstName:
+          orderingTerms.add(
+              OrderingTerm(expression: contactItems.firstName, mode: mode));
+          break;
+        case ContactSortField.lastName:
+          orderingTerms
+              .add(OrderingTerm(expression: contactItems.lastName, mode: mode));
+          break;
+        case ContactSortField.company:
+          orderingTerms
+              .add(OrderingTerm(expression: contactItems.company, mode: mode));
+          break;
+        case ContactSortField.createdAt:
+          orderingTerms
+              .add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
+          break;
+        case ContactSortField.modifiedAt:
+          orderingTerms
+              .add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
+          break;
+        case ContactSortField.lastUsedAt:
+          orderingTerms
+              .add(OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
+          break;
+        case ContactSortField.usedCount:
+          orderingTerms
+              .add(OrderingTerm(expression: vaultItems.usedCount, mode: mode));
+          break;
+        case ContactSortField.recentScore:
+          orderingTerms
+              .add(OrderingTerm(expression: vaultItems.recentScore, mode: mode));
+          break;
+      }
+    }
+    query.orderBy(orderingTerms);
 
     final rows = await query.get();
     if (rows.isEmpty) return [];
 
-    final itemIds = rows.map((r) => r.readTable(vaultItems).id).toList();
-    final categoryIds =
-        rows.map((r) => r.readTable(vaultItems).categoryId).whereType<String>().toList();
+    final itemIds = rows.map((r) => r.read(vaultItems.id)!).toList();
+    final categoryIds = rows
+        .map((r) => r.read(vaultItems.categoryId))
+        .whereType<String>()
+        .toList();
 
     final categoriesMap = await loadCategoriesForItems(categoryIds);
     final tagsMap = await loadTagsForItems(itemIds);
 
     return rows.map((row) {
-      final item = row.readTable(vaultItems);
-      final contact = row.readTable(contactItems);
-
-      final categoryId = item.categoryId;
+      final itemId = row.read(vaultItems.id)!;
+      final categoryId = row.read(vaultItems.categoryId);
       final meta = VaultItemCardMetaDto(
         category: categoryId != null ? categoriesMap[categoryId] : null,
-        tags: tagsMap[item.id] ?? const [],
+        tags: tagsMap[itemId] ?? const [],
       );
 
       final cardDto = ContactCardDto(
         item: VaultItemCardDto(
-          itemId: item.id,
-          type: item.type,
-          name: item.name,
-          description: item.description,
-          categoryId: item.categoryId,
-          iconRefId: item.iconRefId,
-          isFavorite: item.isFavorite,
-          isArchived: item.isArchived,
-          isPinned: item.isPinned,
-          isDeleted: item.isDeleted,
-          createdAt: item.createdAt,
-          modifiedAt: item.modifiedAt,
-          lastUsedAt: item.lastUsedAt,
-          archivedAt: item.archivedAt,
-          deletedAt: item.deletedAt,
-          recentScore: item.recentScore,
+          itemId: itemId,
+          type: row.readWithConverter<VaultItemType, String>(vaultItems.type)!,
+          name: row.read(vaultItems.name)!,
+          description: row.read(vaultItems.description),
+          categoryId: categoryId,
+          iconRefId: row.read(vaultItems.iconRefId),
+          isFavorite: row.read(vaultItems.isFavorite)!,
+          isArchived: row.read(vaultItems.isArchived)!,
+          isPinned: row.read(vaultItems.isPinned)!,
+          isDeleted: row.read(vaultItems.isDeleted)!,
+          createdAt: row.read(vaultItems.createdAt)!,
+          modifiedAt: row.read(vaultItems.modifiedAt)!,
+          lastUsedAt: row.read(vaultItems.lastUsedAt),
+          archivedAt: row.read(vaultItems.archivedAt),
+          deletedAt: row.read(vaultItems.deletedAt),
+          recentScore: row.read(vaultItems.recentScore),
         ),
         contact: ContactCardDataDto(
-          firstName: contact.firstName,
-          middleName: contact.middleName,
-          lastName: contact.lastName,
-          company: contact.company,
-          phone: contact.phone,
-          email: contact.email,
-          isEmergencyContact: contact.isEmergencyContact,
+          firstName: row.read(contactItems.firstName)!,
+          middleName: row.read(contactItems.middleName),
+          lastName: row.read(contactItems.lastName),
+          company: row.read(contactItems.company),
+          phone: row.read(contactItems.phone),
+          email: row.read(contactItems.email),
+          isEmergencyContact:
+              row.read(contactItems.isEmergencyContact) ?? false,
         ),
       );
 
@@ -88,41 +165,45 @@ class ContactFilterDao extends DatabaseAccessor<MainStore>
 
   @override
   Future<int> countFiltered(ContactFilter filter) async {
-    final query = _buildQuery(filter);
+    final whereExpr = _buildWhere(filter);
     final countExp = countAll();
-    query.addColumns([countExp]);
+    final query = selectOnly(vaultItems).join([
+      innerJoin(contactItems, contactItems.itemId.equalsExp(vaultItems.id)),
+    ])
+      ..addColumns([countExp])
+      ..where(whereExpr);
+
     final row = await query.getSingle();
     return row.read(countExp) ?? 0;
   }
 
-  JoinedSelectStatement<HasResultSet, dynamic> _buildQuery(ContactFilter filter) {
-    Expression<bool> whereExpr = vaultItems.type.equalsValue(VaultItemType.contact);
+  Expression<bool> _buildWhere(ContactFilter filter) {
+    Expression<bool> whereExpr =
+        vaultItems.type.equalsValue(VaultItemType.contact);
 
     whereExpr &= applyBaseVaultItemFilters(filter.base);
 
+    if (filter.firstName != null) {
+      whereExpr &= contactItems.firstName.contains(filter.firstName!);
+    }
+    if (filter.middleName != null) {
+      whereExpr &= contactItems.middleName.contains(filter.middleName!);
+    }
+    if (filter.lastName != null) {
+      whereExpr &= contactItems.lastName.contains(filter.lastName!);
+    }
+    if (filter.company != null) {
+      whereExpr &= contactItems.company.contains(filter.company!);
+    }
     if (filter.phone != null) {
       whereExpr &= contactItems.phone.contains(filter.phone!);
     }
     if (filter.email != null) {
       whereExpr &= contactItems.email.contains(filter.email!);
     }
-    if (filter.company != null) {
-      whereExpr &= contactItems.company.contains(filter.company!);
-    }
-    if (filter.jobTitle != null) {
-      whereExpr &= contactItems.jobTitle.contains(filter.jobTitle!);
-    }
-    if (filter.website != null) {
-      whereExpr &= contactItems.website.contains(filter.website!);
-    }
-    if (filter.birthdayAfter != null) {
-      whereExpr &= contactItems.birthday.isBiggerOrEqualValue(filter.birthdayAfter!);
-    }
-    if (filter.birthdayBefore != null) {
-      whereExpr &= contactItems.birthday.isSmallerOrEqualValue(filter.birthdayBefore!);
-    }
     if (filter.isEmergencyContact != null) {
-      whereExpr &= contactItems.isEmergencyContact.equals(filter.isEmergencyContact!);
+      whereExpr &=
+          contactItems.isEmergencyContact.equals(filter.isEmergencyContact!);
     }
 
     if (filter.base.query.isNotEmpty) {
@@ -130,55 +211,14 @@ class ContactFilterDao extends DatabaseAccessor<MainStore>
       final textExpr = vaultItems.name.like(q) |
           vaultItems.description.like(q) |
           contactItems.firstName.like(q) |
+          contactItems.middleName.like(q) |
           contactItems.lastName.like(q) |
           contactItems.company.like(q) |
-          contactItems.email.like(q) |
-          contactItems.phone.like(q);
+          contactItems.phone.like(q) |
+          contactItems.email.like(q);
       whereExpr &= textExpr;
     }
 
-    final query = select(vaultItems).join([
-      innerJoin(contactItems, contactItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..where(whereExpr);
-
-    final orderingTerms = buildBaseOrdering(filter.base);
-    if (filter.sortField != null) {
-      final isAsc = filter.base.sortDirection == SortDirection.asc;
-      final mode = isAsc ? OrderingMode.asc : OrderingMode.desc;
-      switch (filter.sortField!) {
-        case ContactSortField.name:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
-          break;
-        case ContactSortField.firstName:
-          orderingTerms.add(OrderingTerm(expression: contactItems.firstName, mode: mode));
-          break;
-        case ContactSortField.lastName:
-          orderingTerms.add(OrderingTerm(expression: contactItems.lastName, mode: mode));
-          break;
-        case ContactSortField.company:
-          orderingTerms.add(OrderingTerm(expression: contactItems.company, mode: mode));
-          break;
-        case ContactSortField.createdAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
-          break;
-        case ContactSortField.modifiedAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
-          break;
-        case ContactSortField.lastUsedAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
-          break;
-        case ContactSortField.usedCount:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.usedCount, mode: mode));
-          break;
-        case ContactSortField.recentScore:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.recentScore, mode: mode));
-          break;
-      }
-    }
-
-    query.orderBy(orderingTerms);
-
-    return query;
+    return whereExpr;
   }
 }

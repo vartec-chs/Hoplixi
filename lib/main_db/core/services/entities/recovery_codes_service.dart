@@ -1,12 +1,21 @@
-// TODO(db-error): migrate service to DbResult<..., DbError>.
+import 'package:hoplixi/main_db/core/errors/db_error.dart';
+import 'package:hoplixi/main_db/core/errors/db_exception_mapper.dart';
+import 'package:hoplixi/main_db/core/errors/db_result.dart';
 import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:hoplixi/main_db/core/repositories/base/recovery_codes_repository.dart';
 import 'package:hoplixi/main_db/core/services/history/vault_history_service.dart';
 import 'package:hoplixi/main_db/core/services/relations/vault_item_relations_service.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_events_history.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
+import 'package:hoplixi/main_db/core/validators/recovery_codes_validator.dart';
+import 'package:result_dart/result_dart.dart';
 
 import '../../main_store.dart';
+
+class _InternalDbFailure implements Exception {
+  const _InternalDbFailure(this.error);
+  final DbError error;
+}
 
 class RecoveryCodesService {
   RecoveryCodesService({
@@ -21,121 +30,240 @@ class RecoveryCodesService {
   final VaultItemRelationsService relationsService;
   final VaultHistoryService historyService;
 
-  Future<String> create(CreateRecoveryCodesDto dto) async {
-    return await db.transaction(() async {
-      final itemId = await repository.create(dto);
+  Future<DbResult<String>> create(CreateRecoveryCodesDto dto) async {
+    final validationError = validateCreateRecoveryCodes(dto);
+    if (validationError != null) return Failure(validationError);
 
-      if (dto.tagIds.isNotEmpty) {
-        await relationsService.replaceTags(itemId: itemId, tagIds: dto.tagIds);
-      }
+    try {
+      return await db.transaction(() async {
+        final itemId = await repository.create(dto);
 
-      final createdView = await repository.getViewById(itemId);
-      if (createdView == null) {
-        throw Exception('Failed to retrieve created RecoveryCodes: $itemId');
-      }
+        if (dto.tagIds.isNotEmpty) {
+          final res = await relationsService.replaceTags(itemId: itemId, tagIds: dto.tagIds);
+          if (res.isError()) throw _InternalDbFailure(res.exceptionOrNull()!);
+        }
 
-      final snapshotId = await historyService.snapshotAfterCreate(
-        type: VaultItemType.recoveryCodes,
-        createdView: createdView,
-        action: VaultEventHistoryAction.created,
-      );
+        final createdView = await repository.getViewById(itemId);
+        if (createdView == null) {
+          throw _InternalDbFailure(DbError.notFound(
+            entity: 'recoveryCodes',
+            id: itemId,
+            message: 'Failed to retrieve created RecoveryCodes: $itemId',
+          ));
+        }
 
-      await historyService.writeEvent(
-        itemId: itemId,
-        type: VaultItemType.recoveryCodes,
-        action: VaultEventHistoryAction.created,
-        name: createdView.item.name,
-        categoryId: createdView.item.categoryId,
-        iconRefId: createdView.item.iconRefId,
-        snapshotHistoryId: snapshotId?.getOrNull(),
-      );
-
-      return itemId;
-    });
-  }
-
-  Future<void> update(PatchRecoveryCodesDto dto) async {
-    await db.transaction(() async {
-      final itemId = dto.item.itemId;
-
-      final oldView = await repository.getViewById(itemId);
-      if (oldView == null) {
-        throw Exception('RecoveryCodes not found for update: $itemId');
-      }
-
-      final snapshotId = await historyService.snapshotBeforeUpdate(
-        type: VaultItemType.recoveryCodes,
-        oldView: oldView,
-        action: VaultEventHistoryAction.updated,
-      );
-
-      await repository.update(dto);
-
-      final tagsUpdate = dto.tags;
-      if (tagsUpdate is FieldUpdateSet<List<String>>) {
-        await relationsService.replaceTags(
-          itemId: itemId,
-          tagIds: tagsUpdate.value ?? const [],
+        final snapshotRes = await historyService.snapshotAfterCreate(
+          type: VaultItemType.recoveryCodes,
+          createdView: createdView,
+          action: VaultEventHistoryAction.created,
         );
-      }
+        if (snapshotRes != null && snapshotRes.isError()) throw _InternalDbFailure(snapshotRes.exceptionOrNull()!);
 
-      await historyService.writeEvent(
-        itemId: itemId,
-        type: VaultItemType.recoveryCodes,
-        action: VaultEventHistoryAction.updated,
-        name: dto.item.name.valueOrNull ?? oldView.item.name,
-        categoryId: dto.item.categoryId.valueOrNull ?? oldView.item.categoryId,
-        iconRefId: dto.item.iconRefId.valueOrNull ?? oldView.item.iconRefId,
-        snapshotHistoryId: snapshotId?.getOrNull(),
-      );
-    });
+        final eventRes = await historyService.writeEvent(
+          itemId: itemId,
+          type: VaultItemType.recoveryCodes,
+          action: VaultEventHistoryAction.created,
+          name: createdView.item.name,
+          categoryId: createdView.item.categoryId,
+          iconRefId: createdView.item.iconRefId,
+          snapshotHistoryId: snapshotRes?.getOrNull(),
+        );
+        if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
+
+        return Success(itemId);
+      });
+    } on _InternalDbFailure catch (e) {
+      return Failure(e.error);
+    } catch (e, st) {
+      return Failure(mapDbException(e, st));
+    }
   }
 
-  Future<void> softDelete(String itemId) async {
-    await db.transaction(() async {
-      final oldView = await repository.getViewById(itemId);
-      if (oldView == null) return;
+  Future<DbResult<Unit>> update(PatchRecoveryCodesDto dto) async {
+    final validationError = validatePatchRecoveryCodes(dto);
+    if (validationError != null) return Failure(validationError);
 
-      final snapshotId = await historyService.snapshotBeforeUpdate(
-        type: VaultItemType.recoveryCodes,
-        oldView: oldView,
-        action: VaultEventHistoryAction.deleted,
-      );
+    try {
+      return await db.transaction(() async {
+        final itemId = dto.item.itemId;
 
-      await db.vaultItemsDao.softDeleteItem(itemId, DateTime.now());
+        final oldView = await repository.getViewById(itemId);
+        if (oldView == null) {
+          throw _InternalDbFailure(DbError.notFound(
+            entity: 'recoveryCodes',
+            id: itemId,
+            message: 'RecoveryCodes not found for update: $itemId',
+          ));
+        }
 
-      await historyService.writeEvent(
-        itemId: itemId,
-        type: VaultItemType.recoveryCodes,
-        action: VaultEventHistoryAction.deleted,
-        name: oldView.item.name,
-        snapshotHistoryId: snapshotId?.getOrNull(),
-      );
-    });
+        final snapshotRes = await historyService.snapshotBeforeUpdate(
+          type: VaultItemType.recoveryCodes,
+          oldView: oldView,
+          action: VaultEventHistoryAction.updated,
+        );
+        if (snapshotRes != null && snapshotRes.isError()) throw _InternalDbFailure(snapshotRes.exceptionOrNull()!);
+
+        await repository.update(dto);
+
+        final tagsUpdate = dto.tags;
+        if (tagsUpdate is FieldUpdateSet<List<String>>) {
+          final res = await relationsService.replaceTags(
+            itemId: itemId,
+            tagIds: tagsUpdate.value ?? const [],
+          );
+          if (res.isError()) throw _InternalDbFailure(res.exceptionOrNull()!);
+        }
+
+        final eventRes = await historyService.writeEvent(
+          itemId: itemId,
+          type: VaultItemType.recoveryCodes,
+          action: VaultEventHistoryAction.updated,
+          name: dto.item.name.valueOrNull ?? oldView.item.name,
+          categoryId: dto.item.categoryId.valueOrNull ?? oldView.item.categoryId,
+          iconRefId: dto.item.iconRefId.valueOrNull ?? oldView.item.iconRefId,
+          snapshotHistoryId: snapshotRes?.getOrNull(),
+        );
+        if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
+
+        return const Success(unit);
+      });
+    } on _InternalDbFailure catch (e) {
+      return Failure(e.error);
+    } catch (e, st) {
+      return Failure(mapDbException(e, st));
+    }
   }
 
-  Future<void> recover(String itemId) async {
-    await db.transaction(() async {
-      final oldView = await repository.getViewById(itemId);
-      if (oldView == null) return;
+  Future<DbResult<Unit>> softDelete(String itemId) async {
+    try {
+      return await db.transaction(() async {
+        final oldView = await repository.getViewById(itemId);
+        if (oldView == null) return const Success(unit);
 
-      final snapshotId = await historyService.snapshotBeforeUpdate(
-        type: VaultItemType.recoveryCodes,
-        oldView: oldView,
-        action: VaultEventHistoryAction.recovered,
-      );
+        final snapshotRes = await historyService.snapshotBeforeUpdate(
+          type: VaultItemType.recoveryCodes,
+          oldView: oldView,
+          action: VaultEventHistoryAction.deleted,
+        );
+        if (snapshotRes != null && snapshotRes.isError()) throw _InternalDbFailure(snapshotRes.exceptionOrNull()!);
 
-      await db.vaultItemsDao.recoverDeletedItem(itemId, DateTime.now());
+        await db.vaultItemsDao.softDeleteItem(itemId, DateTime.now());
 
-      await historyService.writeEvent(
-        itemId: itemId,
-        type: VaultItemType.recoveryCodes,
-        action: VaultEventHistoryAction.recovered,
-        name: oldView.item.name,
-        snapshotHistoryId: snapshotId?.getOrNull(),
-      );
-    });
+        final eventRes = await historyService.writeEvent(
+          itemId: itemId,
+          type: VaultItemType.recoveryCodes,
+          action: VaultEventHistoryAction.deleted,
+          name: oldView.item.name,
+          snapshotHistoryId: snapshotRes?.getOrNull(),
+        );
+        if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
+
+        return const Success(unit);
+      });
+    } on _InternalDbFailure catch (e) {
+      return Failure(e.error);
+    } catch (e, st) {
+      return Failure(mapDbException(e, st));
+    }
+  }
+
+  Future<DbResult<Unit>> recover(String itemId) async {
+    try {
+      return await db.transaction(() async {
+        final oldView = await repository.getViewById(itemId);
+        if (oldView == null) return const Success(unit);
+
+        final snapshotRes = await historyService.snapshotBeforeUpdate(
+          type: VaultItemType.recoveryCodes,
+          oldView: oldView,
+          action: VaultEventHistoryAction.recovered,
+        );
+        if (snapshotRes != null && snapshotRes.isError()) throw _InternalDbFailure(snapshotRes.exceptionOrNull()!);
+
+        await db.vaultItemsDao.recoverDeletedItem(itemId, DateTime.now());
+
+        final eventRes = await historyService.writeEvent(
+          itemId: itemId,
+          type: VaultItemType.recoveryCodes,
+          action: VaultEventHistoryAction.recovered,
+          name: oldView.item.name,
+          snapshotHistoryId: snapshotRes?.getOrNull(),
+        );
+        if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
+
+        return const Success(unit);
+      });
+    } on _InternalDbFailure catch (e) {
+      return Failure(e.error);
+    } catch (e, st) {
+      return Failure(mapDbException(e, st));
+    }
+  }
+
+  Future<DbResult<Unit>> archive(String itemId) async {
+    try {
+      return await db.transaction(() async {
+        final oldView = await repository.getViewById(itemId);
+        if (oldView == null) return const Success(unit);
+
+        final snapshotRes = await historyService.snapshotBeforeUpdate(
+          type: VaultItemType.recoveryCodes,
+          oldView: oldView,
+          action: VaultEventHistoryAction.archived,
+        );
+        if (snapshotRes != null && snapshotRes.isError()) throw _InternalDbFailure(snapshotRes.exceptionOrNull()!);
+
+        await db.vaultItemsDao.archiveItem(itemId, DateTime.now());
+
+        final eventRes = await historyService.writeEvent(
+          itemId: itemId,
+          type: VaultItemType.recoveryCodes,
+          action: VaultEventHistoryAction.archived,
+          name: oldView.item.name,
+          snapshotHistoryId: snapshotRes?.getOrNull(),
+        );
+        if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
+
+        return const Success(unit);
+      });
+    } on _InternalDbFailure catch (e) {
+      return Failure(e.error);
+    } catch (e, st) {
+      return Failure(mapDbException(e, st));
+    }
+  }
+
+  Future<DbResult<Unit>> restoreArchived(String itemId) async {
+    try {
+      return await db.transaction(() async {
+        final oldView = await repository.getViewById(itemId);
+        if (oldView == null) return const Success(unit);
+
+        final snapshotRes = await historyService.snapshotBeforeUpdate(
+          type: VaultItemType.recoveryCodes,
+          oldView: oldView,
+          action: VaultEventHistoryAction.restored,
+        );
+        if (snapshotRes != null && snapshotRes.isError()) throw _InternalDbFailure(snapshotRes.exceptionOrNull()!);
+
+        await db.vaultItemsDao.restoreArchivedItem(itemId, DateTime.now());
+
+        final eventRes = await historyService.writeEvent(
+          itemId: itemId,
+          type: VaultItemType.recoveryCodes,
+          action: VaultEventHistoryAction.restored,
+          name: oldView.item.name,
+          snapshotHistoryId: snapshotRes?.getOrNull(),
+        );
+        if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
+
+        return const Success(unit);
+      });
+    } on _InternalDbFailure catch (e) {
+      return Failure(e.error);
+    } catch (e, st) {
+      return Failure(mapDbException(e, st));
+    }
   }
 }
-
 
