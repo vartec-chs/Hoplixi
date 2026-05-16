@@ -1,3 +1,4 @@
+// TODO(db-error): migrate service to DbResult<..., DbError>.
 import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:hoplixi/main_db/core/repositories/base/file_repository.dart';
 import 'package:hoplixi/main_db/core/services/history/vault_history_service.dart';
@@ -47,7 +48,7 @@ class FileService {
         name: createdView.item.name,
         categoryId: createdView.item.categoryId,
         iconRefId: createdView.item.iconRefId,
-        snapshotHistoryId: snapshotId,
+        snapshotHistoryId: snapshotId?.getOrNull(),
       );
 
       return itemId;
@@ -86,7 +87,7 @@ class FileService {
         name: dto.item.name.valueOrNull ?? oldView.item.name,
         categoryId: dto.item.categoryId.valueOrNull ?? oldView.item.categoryId,
         iconRefId: dto.item.iconRefId.valueOrNull ?? oldView.item.iconRefId,
-        snapshotHistoryId: snapshotId,
+        snapshotHistoryId: snapshotId?.getOrNull(),
       );
     });
   }
@@ -109,7 +110,7 @@ class FileService {
         type: VaultItemType.file,
         action: VaultEventHistoryAction.deleted,
         name: oldView.item.name,
-        snapshotHistoryId: snapshotId,
+        snapshotHistoryId: snapshotId?.getOrNull(),
       );
     });
   }
@@ -132,8 +133,10 @@ class FileService {
         type: VaultItemType.file,
         action: VaultEventHistoryAction.recovered,
         name: oldView.item.name,
-        snapshotHistoryId: snapshotId,
+        snapshotHistoryId: snapshotId?.getOrNull(),
       );
     });
   }
 }
+
+

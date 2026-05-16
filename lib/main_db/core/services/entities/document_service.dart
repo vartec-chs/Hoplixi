@@ -1,3 +1,4 @@
+// TODO(db-error): migrate service to DbResult<..., DbError>.
 import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:hoplixi/main_db/core/repositories/base/document_repository.dart';
 import 'package:hoplixi/main_db/core/services/history/vault_history_service.dart';
@@ -112,3 +113,4 @@ class DocumentService {
     });
   }
 }
+

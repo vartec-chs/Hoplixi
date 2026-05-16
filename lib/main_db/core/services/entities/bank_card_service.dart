@@ -1,3 +1,4 @@
+// TODO(db-error): migrate service to DbResult<..., DbError>.
 import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:hoplixi/main_db/core/repositories/base/bank_card_repository.dart';
 import 'package:hoplixi/main_db/core/services/history/vault_history_service.dart';
@@ -46,7 +47,7 @@ class BankCardService {
         name: createdView.item.name,
         categoryId: createdView.item.categoryId,
         iconRefId: createdView.item.iconRefId,
-        snapshotHistoryId: snapshotId,
+        snapshotHistoryId: snapshotId?.getOrNull(),
       );
 
       return itemId;
@@ -85,7 +86,7 @@ class BankCardService {
         name: dto.item.name.valueOrNull ?? oldView.item.name,
         categoryId: dto.item.categoryId.valueOrNull ?? oldView.item.categoryId,
         iconRefId: dto.item.iconRefId.valueOrNull ?? oldView.item.iconRefId,
-        snapshotHistoryId: snapshotId,
+        snapshotHistoryId: snapshotId?.getOrNull(),
       );
     });
   }
@@ -108,7 +109,7 @@ class BankCardService {
         type: VaultItemType.bankCard,
         action: VaultEventHistoryAction.deleted,
         name: oldView.item.name,
-        snapshotHistoryId: snapshotId,
+        snapshotHistoryId: snapshotId?.getOrNull(),
       );
     });
   }
@@ -131,8 +132,10 @@ class BankCardService {
         type: VaultItemType.bankCard,
         action: VaultEventHistoryAction.recovered,
         name: oldView.item.name,
-        snapshotHistoryId: snapshotId,
+        snapshotHistoryId: snapshotId?.getOrNull(),
       );
     });
   }
 }
+
+

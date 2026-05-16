@@ -45,7 +45,7 @@ class VaultItemMutationService {
         itemId: itemId,
         type: type,
         action: VaultEventHistoryAction.updated,
-        snapshotHistoryId: snapshotId,
+        snapshotHistoryId: snapshotId?.getOrNull(),
       );
     });
   }
@@ -81,8 +81,9 @@ class VaultItemMutationService {
         type: type,
         action: VaultEventHistoryAction.updated,
         categoryId: categoryId,
-        snapshotHistoryId: snapshotId,
+        snapshotHistoryId: snapshotId?.getOrNull(),
       );
     });
   }
 }
+
