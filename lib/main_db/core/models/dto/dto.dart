@@ -26,3 +26,5 @@ export 'store_dto.dart';
 export 'tag_dto.dart';
 export 'vault_item_base_dto.dart';
 export 'wifi_dto.dart';
+export '../dto_history/cards/cards_exports.dart';
+

@@ -29,28 +29,3 @@ sealed class PasswordHistoryViewDto with _$PasswordHistoryViewDto {
   factory PasswordHistoryViewDto.fromJson(Map<String, dynamic> json) =>
       _$PasswordHistoryViewDtoFromJson(json);
 }
-
-@freezed
-sealed class PasswordHistoryCardDataDto with _$PasswordHistoryCardDataDto {
-  const factory PasswordHistoryCardDataDto({
-    String? login,
-    String? email,
-    String? url,
-    DateTime? expiresAt,
-    required bool hasPassword,
-  }) = _PasswordHistoryCardDataDto;
-
-  factory PasswordHistoryCardDataDto.fromJson(Map<String, dynamic> json) =>
-      _$PasswordHistoryCardDataDtoFromJson(json);
-}
-
-@freezed
-sealed class PasswordHistoryCardDto with _$PasswordHistoryCardDto {
-  const factory PasswordHistoryCardDto({
-    required VaultSnapshotCardDto snapshot,
-    required PasswordHistoryCardDataDto password,
-  }) = _PasswordHistoryCardDto;
-
-  factory PasswordHistoryCardDto.fromJson(Map<String, dynamic> json) =>
-      _$PasswordHistoryCardDtoFromJson(json);
-}
