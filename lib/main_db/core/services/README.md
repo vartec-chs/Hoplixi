@@ -44,8 +44,10 @@
 - `certificate_service.dart` — Сертификаты.
 - `contact_service.dart` — Контакты.
 - `crypto_wallet_service.dart` — Криптокошельки.
-- `document_service.dart` — Документы.
-- `file_service.dart` — Файлы.
+- `document_service.dart` — Документы. (Нельзя использовать напрямую нужен
+  сервис посредник который будет выполнять работу с файлами)
+- `file_service.dart` — Файлы. (Нельзя использовать напрямую нужен сервис
+  посредник который будет выполнять работу с файлами)
 - `identity_service.dart` — Личные данные (Identity).
 - `license_key_service.dart` — Лицензионные ключи.
 - `loyalty_card_service.dart` — Карты лояльности.

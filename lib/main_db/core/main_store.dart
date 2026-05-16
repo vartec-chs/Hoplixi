@@ -1,9 +1,12 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
-import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/core/logger/logger.dart';
 import 'package:hoplixi/main_db/core/dao/daos.dart';
 import 'package:hoplixi/main_db/core/tables/tables.dart';
 import 'package:uuid/uuid.dart';
+
+import 'tables/all_table_indexes.dart';
+import 'tables/all_table_triggers.dart';
 
 part 'main_store.g.dart';
 
@@ -159,10 +162,10 @@ class MainStore extends _$MainStore {
         await m.createAll();
 
         // Установка индексов для оптимизации запросов
-        // await _installIndexes();
+        await _installIndexes();
 
-        // Установка триггеров для записи истории изменений
-        // await _installHistoryTriggers();
+        // Установка триггеров для бизнес-логики и истории
+        await _installTriggers();
       },
       beforeOpen: (details) async {
         await customStatement('PRAGMA foreign_keys = ON');
@@ -174,21 +177,6 @@ class MainStore extends _$MainStore {
         );
 
         var currentVersion = from;
-
-        // final migrationRuntime = MainStoreMigrationRuntime(
-        //   customStatement: (sql) => customStatement(sql),
-        //   reinstallHistoryTriggers: _installHistoryTriggers,
-        //   categoriesTable: categories,
-        //   vaultItemsTable: vaultItems,
-        // );
-
-        // currentVersion = await runMainStoreKnownMigrations(
-        //   migrator: m,
-        //   from: currentVersion,
-        //   to: to,
-        //   runtime: migrationRuntime,
-        //   logTag: '${_logTag}Migration',
-        // );
 
         if (currentVersion < to) {
           logWarning(
@@ -212,8 +200,8 @@ class MainStore extends _$MainStore {
           await customStatement('PRAGMA foreign_keys = ON');
 
           await m.createAll();
-          // await _installIndexes();
-          // await _installHistoryTriggers();
+          await _installIndexes();
+          await _installTriggers();
         }
 
         logInfo('Migration completed', tag: '${_logTag}Migration');
@@ -288,22 +276,39 @@ class MainStore extends _$MainStore {
     ).watch().map((_) {});
   }
 
-  /// Установка триггеров для автоматической записи истории
-  /// изменений и управления временными метками.
-  // Future<void> _installHistoryTriggers() {
-  //   return installMainStoreHistoryTriggers(
-  //     executeStatement: customStatement,
-  //     logTag: _logTag,
-  //   );
-  // }
+  /// Установка всех SQL триггеров.
+  Future<void> _installTriggers() async {
+    for (final trigger in allTableTriggers) {
+      await customStatement(trigger);
+    }
+  }
 
-  /// Создание индексов для оптимизации запросов.
-  ///
-  /// Вызывается один раз при [onCreate] после [createAll].
-  // Future<void> _installIndexes() {
-  //   return installMainStoreIndexes(
-  //     executeStatement: customStatement,
-  //     logTag: _logTag,
-  //   );
-  // }
+  /// Удаление всех пользовательских триггеров.
+  Future<void> _dropTriggers() async {
+    final rows = await customSelect(
+      "SELECT name FROM sqlite_master WHERE type='trigger' AND name NOT LIKE 'sqlite_%'",
+    ).get();
+    for (final row in rows) {
+      final name = row.read<String>('name');
+      await customStatement('DROP TRIGGER IF EXISTS "$name"');
+    }
+  }
+
+  /// Установка всех SQL индексов.
+  Future<void> _installIndexes() async {
+    for (final index in allTableIndexes) {
+      await customStatement(index);
+    }
+  }
+
+  /// Удаление всех пользовательских индексов.
+  Future<void> _dropIndexes() async {
+    final rows = await customSelect(
+      "SELECT name FROM sqlite_master WHERE type='index' AND name NOT LIKE 'sqlite_%' AND origin = 'u'",
+    ).get();
+    for (final row in rows) {
+      final name = row.read<String>('name');
+      await customStatement('DROP INDEX IF EXISTS "$name"');
+    }
+  }
 }
