@@ -1,9 +1,9 @@
 import '../errors/db_error.dart';
 import '../models/dto/crypto_wallet_dto.dart';
 
-DbError? validateCreateCryptoWallet(CreateCryptoWalletDto dto) {
+DBCoreError? validateCreateCryptoWallet(CreateCryptoWalletDto dto) {
   if (dto.item.name.trim().isEmpty) {
-    return const DbError.validation(
+    return const DBCoreError.validation(
       entity: 'cryptoWallet',
       field: 'name',
       code: 'vault_item.name.not_blank',
@@ -13,6 +13,6 @@ DbError? validateCreateCryptoWallet(CreateCryptoWalletDto dto) {
   return null;
 }
 
-DbError? validatePatchCryptoWallet(PatchCryptoWalletDto dto) {
+DBCoreError? validatePatchCryptoWallet(PatchCryptoWalletDto dto) {
   return null;
 }

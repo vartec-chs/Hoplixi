@@ -1,9 +1,9 @@
 import '../errors/db_error.dart';
 import '../models/dto/certificate_dto.dart';
 
-DbError? validateCreateCertificate(CreateCertificateDto dto) {
+DBCoreError? validateCreateCertificate(CreateCertificateDto dto) {
   if (dto.item.name.trim().isEmpty) {
-    return const DbError.validation(
+    return const DBCoreError.validation(
       entity: 'certificate',
       field: 'name',
       code: 'vault_item.name.not_blank',
@@ -13,6 +13,6 @@ DbError? validateCreateCertificate(CreateCertificateDto dto) {
   return null;
 }
 
-DbError? validatePatchCertificate(PatchCertificateDto dto) {
+DBCoreError? validatePatchCertificate(PatchCertificateDto dto) {
   return null;
 }

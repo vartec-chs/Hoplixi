@@ -78,96 +78,99 @@ class VaultSnapshotWriter {
   }) async {
     return switch (type) {
       VaultItemType.apiKey => _writeApiKeySnapshot(
-          view as ApiKeyViewDto,
-          action: action,
-          includeSecrets: includeSecrets,
-          includeRelations: includeRelations,
-        ),
+        view as ApiKeyViewDto,
+        action: action,
+        includeSecrets: includeSecrets,
+        includeRelations: includeRelations,
+      ),
       VaultItemType.password => _writePasswordSnapshot(
-          view as PasswordViewDto,
-          action: action,
-          includeSecrets: includeSecrets,
-          includeRelations: includeRelations,
-        ),
+        view as PasswordViewDto,
+        action: action,
+        includeSecrets: includeSecrets,
+        includeRelations: includeRelations,
+      ),
       VaultItemType.note => _writeNoteSnapshot(
-          view as NoteViewDto,
-          action: action,
-          includeSecrets: includeSecrets,
-          includeRelations: includeRelations,
-        ),
+        view as NoteViewDto,
+        action: action,
+        includeSecrets: includeSecrets,
+        includeRelations: includeRelations,
+      ),
       VaultItemType.bankCard => _writeBankCardSnapshot(
-          view as BankCardViewDto,
-          action: action,
-          includeSecrets: includeSecrets,
-          includeRelations: includeRelations,
-        ),
+        view as BankCardViewDto,
+        action: action,
+        includeSecrets: includeSecrets,
+        includeRelations: includeRelations,
+      ),
       VaultItemType.certificate => _writeCertificateSnapshot(
-          view as CertificateViewDto,
-          action: action,
-          includeSecrets: includeSecrets,
-          includeRelations: includeRelations,
-        ),
+        view as CertificateViewDto,
+        action: action,
+        includeSecrets: includeSecrets,
+        includeRelations: includeRelations,
+      ),
       VaultItemType.contact => _writeContactSnapshot(
-          view as ContactViewDto,
-          action: action,
-          includeSecrets: includeSecrets,
-          includeRelations: includeRelations,
-        ),
+        view as ContactViewDto,
+        action: action,
+        includeSecrets: includeSecrets,
+        includeRelations: includeRelations,
+      ),
       VaultItemType.cryptoWallet => _writeCryptoWalletSnapshot(
-          view as CryptoWalletViewDto,
-          action: action,
-          includeSecrets: includeSecrets,
-          includeRelations: includeRelations,
-        ),
+        view as CryptoWalletViewDto,
+        action: action,
+        includeSecrets: includeSecrets,
+        includeRelations: includeRelations,
+      ),
       VaultItemType.file => _writeFileSnapshot(
-          view as FileViewDto,
-          action: action,
-          includeSecrets: includeSecrets,
-          includeRelations: includeRelations,
-        ),
+        view as FileViewDto,
+        action: action,
+        includeSecrets: includeSecrets,
+        includeRelations: includeRelations,
+      ),
       VaultItemType.identity => _writeIdentitySnapshot(
-          view as IdentityViewDto,
-          action: action,
-          includeSecrets: includeSecrets,
-          includeRelations: includeRelations,
-        ),
+        view as IdentityViewDto,
+        action: action,
+        includeSecrets: includeSecrets,
+        includeRelations: includeRelations,
+      ),
       VaultItemType.licenseKey => _writeLicenseKeySnapshot(
-          view as LicenseKeyViewDto,
-          action: action,
-          includeSecrets: includeSecrets,
-          includeRelations: includeRelations,
-        ),
+        view as LicenseKeyViewDto,
+        action: action,
+        includeSecrets: includeSecrets,
+        includeRelations: includeRelations,
+      ),
       VaultItemType.loyaltyCard => _writeLoyaltyCardSnapshot(
-          view as LoyaltyCardViewDto,
-          action: action,
-          includeSecrets: includeSecrets,
-          includeRelations: includeRelations,
-        ),
+        view as LoyaltyCardViewDto,
+        action: action,
+        includeSecrets: includeSecrets,
+        includeRelations: includeRelations,
+      ),
       VaultItemType.otp => _writeOtpSnapshot(
-          view as OtpViewDto,
-          action: action,
-          includeSecrets: includeSecrets,
-          includeRelations: includeRelations,
-        ),
+        view as OtpViewDto,
+        action: action,
+        includeSecrets: includeSecrets,
+        includeRelations: includeRelations,
+      ),
       VaultItemType.recoveryCodes => _writeRecoveryCodesSnapshot(
-          view as RecoveryCodesViewDto,
-          action: action,
-          includeSecrets: includeSecrets,
-          includeRelations: includeRelations,
-        ),
+        view as RecoveryCodesViewDto,
+        action: action,
+        includeSecrets: includeSecrets,
+        includeRelations: includeRelations,
+      ),
       VaultItemType.sshKey => _writeSshKeySnapshot(
-          view as SshKeyViewDto,
-          action: action,
-          includeSecrets: includeSecrets,
-          includeRelations: includeRelations,
-        ),
+        view as SshKeyViewDto,
+        action: action,
+        includeSecrets: includeSecrets,
+        includeRelations: includeRelations,
+      ),
       VaultItemType.wifi => _writeWifiSnapshot(
-          view as WifiViewDto,
-          action: action,
-          includeSecrets: includeSecrets,
-          includeRelations: includeRelations,
-        ),
-      VaultItemType.document => _writeBaseSnapshot((view as DocumentViewDto).item, action)
+        view as WifiViewDto,
+        action: action,
+        includeSecrets: includeSecrets,
+        includeRelations: includeRelations,
+      ),
+      VaultItemType.document => _writeBaseSnapshot(
+        (view as DocumentViewDto).item,
+        action,
+      ),
     };
   }
 
@@ -314,7 +317,9 @@ class VaultSnapshotWriter {
         certificatePem: Value(cert.certificatePem),
         certificateBlob: Value(cert.certificateBlob),
         privateKey: Value(includeSecrets ? cert.privateKey : null),
-        privateKeyPassword: Value(includeSecrets ? cert.privateKeyPassword : null),
+        privateKeyPassword: Value(
+          includeSecrets ? cert.privateKeyPassword : null,
+        ),
         passwordForPfx: Value(includeSecrets ? cert.passwordForPfx : null),
         keyAlgorithm: Value(cert.keyAlgorithm),
         keyAlgorithmOther: Value(cert.keyAlgorithmOther),
@@ -621,15 +626,21 @@ class VaultSnapshotWriter {
     );
 
     if (view.codes.isNotEmpty) {
-      final codeCompanions = view.codes.map((c) => RecoveryCodeValuesHistoryCompanion.insert(
-        historyId: historyId,
-        originalCodeId: Value(c.id),
-        code: Value(includeSecrets ? c.code : null),
-        used: Value(c.used),
-        usedAt: Value(c.usedAt),
-        position: Value(c.position),
-      )).toList();
-      await recoveryCodeValuesHistoryDao.insertRecoveryCodeValuesHistoryBatch(codeCompanions);
+      final codeCompanions = view.codes
+          .map(
+            (c) => RecoveryCodeValuesHistoryCompanion.insert(
+              historyId: historyId,
+              originalCodeId: Value(c.id),
+              code: Value(includeSecrets ? c.code : null),
+              used: Value(c.used),
+              usedAt: Value(c.usedAt),
+              position: Value(c.position),
+            ),
+          )
+          .toList();
+      await recoveryCodeValuesHistoryDao.insertRecoveryCodeValuesHistoryBatch(
+        codeCompanions,
+      );
     }
 
     if (includeRelations) {
@@ -704,11 +715,12 @@ class VaultSnapshotWriter {
     final historyId = const Uuid().v4();
     final now = DateTime.now();
 
-    final categoryHistoryId = await snapshotRelationsService.snapshotCategoryForItem(
-      categoryId: item.categoryId,
-      itemId: item.itemId,
-      snapshotId: historyId,
-    );
+    final categoryHistoryId = await snapshotRelationsService
+        .snapshotCategoryForItem(
+          categoryId: item.categoryId,
+          itemId: item.itemId,
+          snapshotId: historyId,
+        );
 
     await vaultSnapshotsHistoryDao.insertVaultSnapshot(
       VaultSnapshotsHistoryCompanion.insert(

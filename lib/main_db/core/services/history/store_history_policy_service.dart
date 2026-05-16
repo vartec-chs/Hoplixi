@@ -19,6 +19,7 @@ class StoreHistoryPolicyService {
   }
 
   Future<bool> incrementUsageOnCopy() async {
-    return await settingsDao.getBool(StoreSettingsKey.incrementUsageOnCopy) ?? true;
+    return await settingsDao.getBool(StoreSettingsKey.incrementUsageOnCopy) ??
+        true;
   }
 }

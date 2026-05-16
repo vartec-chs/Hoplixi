@@ -3,14 +3,14 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'db_error.freezed.dart';
 
 @freezed
-sealed class DbError with _$DbError {
-  const factory DbError.notFound({
+sealed class DBCoreError with _$DBCoreError implements Exception {
+  const factory DBCoreError.notFound({
     required String entity,
     required String id,
     String? message,
   }) = DbNotFoundError;
 
-  const factory DbError.validation({
+  const factory DBCoreError.validation({
     required String code,
     required String message,
     String? field,
@@ -18,7 +18,7 @@ sealed class DbError with _$DbError {
     @Default(<String, Object?>{}) Map<String, Object?> data,
   }) = DbValidationError;
 
-  const factory DbError.constraint({
+  const factory DBCoreError.constraint({
     required String constraint,
     required String message,
     String? table,
@@ -28,21 +28,21 @@ sealed class DbError with _$DbError {
     @Default(<String, Object?>{}) Map<String, Object?> data,
   }) = DbConstraintError;
 
-  const factory DbError.conflict({
+  const factory DBCoreError.conflict({
     required String code,
     required String message,
     String? entity,
     @Default(<String, Object?>{}) Map<String, Object?> data,
   }) = DbConflictError;
 
-  const factory DbError.sqlite({
+  const factory DBCoreError.sqlite({
     required String message,
     String? statement,
     Object? cause,
     StackTrace? stackTrace,
   }) = DbSqliteError;
 
-  const factory DbError.unknown({
+  const factory DBCoreError.unknown({
     required String message,
     Object? cause,
     StackTrace? stackTrace,

@@ -1,9 +1,9 @@
 import '../errors/db_error.dart';
 import '../models/dto/loyalty_card_dto.dart';
 
-DbError? validateCreateLoyaltyCard(CreateLoyaltyCardDto dto) {
+DBCoreError? validateCreateLoyaltyCard(CreateLoyaltyCardDto dto) {
   if (dto.item.name.trim().isEmpty) {
-    return const DbError.validation(
+    return const DBCoreError.validation(
       entity: 'loyaltyCard',
       field: 'name',
       code: 'vault_item.name.not_blank',
@@ -13,6 +13,6 @@ DbError? validateCreateLoyaltyCard(CreateLoyaltyCardDto dto) {
   return null;
 }
 
-DbError? validatePatchLoyaltyCard(PatchLoyaltyCardDto dto) {
+DBCoreError? validatePatchLoyaltyCard(PatchLoyaltyCardDto dto) {
   return null;
 }

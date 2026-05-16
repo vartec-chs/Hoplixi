@@ -1,9 +1,9 @@
 import '../errors/db_error.dart';
 import '../models/dto/otp_dto.dart';
 
-DbError? validateCreateOtp(CreateOtpDto dto) {
+DBCoreError? validateCreateOtp(CreateOtpDto dto) {
   if (dto.item.name.trim().isEmpty) {
-    return const DbError.validation(
+    return const DBCoreError.validation(
       entity: 'otp',
       field: 'name',
       code: 'vault_item.name.not_blank',
@@ -13,6 +13,6 @@ DbError? validateCreateOtp(CreateOtpDto dto) {
   return null;
 }
 
-DbError? validatePatchOtp(PatchOtpDto dto) {
+DBCoreError? validatePatchOtp(PatchOtpDto dto) {
   return null;
 }

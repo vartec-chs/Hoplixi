@@ -1,9 +1,9 @@
 import '../errors/db_error.dart';
 import '../models/dto/password_dto.dart';
 
-DbError? validateCreatePassword(CreatePasswordDto dto) {
+DBCoreError? validateCreatePassword(CreatePasswordDto dto) {
   if (dto.item.name.trim().isEmpty) {
-    return const DbError.validation(
+    return const DBCoreError.validation(
       entity: 'password',
       field: 'name',
       code: 'vault_item.name.not_blank',
@@ -11,7 +11,7 @@ DbError? validateCreatePassword(CreatePasswordDto dto) {
     );
   }
   if (dto.password.password.isEmpty) {
-      return const DbError.validation(
+    return const DBCoreError.validation(
       entity: 'password',
       field: 'password',
       code: 'password.password.not_blank',
@@ -21,6 +21,6 @@ DbError? validateCreatePassword(CreatePasswordDto dto) {
   return null;
 }
 
-DbError? validatePatchPassword(PatchPasswordDto dto) {
+DBCoreError? validatePatchPassword(PatchPasswordDto dto) {
   return null;
 }

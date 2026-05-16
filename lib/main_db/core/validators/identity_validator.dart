@@ -1,9 +1,9 @@
 import '../errors/db_error.dart';
 import '../models/dto/identity_dto.dart';
 
-DbError? validateCreateIdentity(CreateIdentityDto dto) {
+DBCoreError? validateCreateIdentity(CreateIdentityDto dto) {
   if (dto.item.name.trim().isEmpty) {
-    return const DbError.validation(
+    return const DBCoreError.validation(
       entity: 'identity',
       field: 'name',
       code: 'vault_item.name.not_blank',
@@ -13,6 +13,6 @@ DbError? validateCreateIdentity(CreateIdentityDto dto) {
   return null;
 }
 
-DbError? validatePatchIdentity(PatchIdentityDto dto) {
+DBCoreError? validatePatchIdentity(PatchIdentityDto dto) {
   return null;
 }

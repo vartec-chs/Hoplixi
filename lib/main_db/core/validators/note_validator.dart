@@ -1,9 +1,9 @@
 import '../errors/db_error.dart';
 import '../models/dto/note_dto.dart';
 
-DbError? validateCreateNote(CreateNoteDto dto) {
+DBCoreError? validateCreateNote(CreateNoteDto dto) {
   if (dto.item.name.trim().isEmpty) {
-    return const DbError.validation(
+    return const DBCoreError.validation(
       entity: 'note',
       field: 'name',
       code: 'vault_item.name.not_blank',
@@ -13,6 +13,6 @@ DbError? validateCreateNote(CreateNoteDto dto) {
   return null;
 }
 
-DbError? validatePatchNote(PatchNoteDto dto) {
+DBCoreError? validatePatchNote(PatchNoteDto dto) {
   return null;
 }

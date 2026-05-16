@@ -10,11 +10,6 @@ import 'package:hoplixi/main_db/core/tables/vault_items/vault_events_history.dar
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
 import 'package:result_dart/result_dart.dart';
 
-class _InternalDbFailure implements Exception {
-  const _InternalDbFailure(this.error);
-  final DbError error;
-}
-
 class VaultItemMutationService {
   VaultItemMutationService({
     required this.db,
@@ -41,11 +36,11 @@ class VaultItemMutationService {
           type: type,
         );
         if (untypedOldView == null) {
-          throw _InternalDbFailure(DbError.notFound(
+          throw DBCoreError.notFound(
             entity: 'vaultItem',
             id: itemId,
             message: 'Vault item not found: $itemId',
-          ));
+          );
         }
 
         final VaultEntityViewDto oldView = untypedOldView as VaultEntityViewDto;
@@ -57,7 +52,7 @@ class VaultItemMutationService {
           action: VaultEventHistoryAction.updated,
         );
         if (snapshotRes != null && snapshotRes.isError()) {
-          throw _InternalDbFailure(snapshotRes.exceptionOrNull()!);
+          throw snapshotRes.exceptionOrNull()!;
         }
 
         // 3. Заменяем теги
@@ -65,7 +60,7 @@ class VaultItemMutationService {
           itemId: itemId,
           tagIds: tagIds,
         );
-        if (res.isError()) throw _InternalDbFailure(res.exceptionOrNull()!);
+        if (res.isError()) throw res.exceptionOrNull()!;
 
         // 4. Пишем event updated
         final eventRes = await historyService.writeEvent(
@@ -74,11 +69,11 @@ class VaultItemMutationService {
           action: VaultEventHistoryAction.updated,
           snapshotHistoryId: snapshotRes?.getOrNull(),
         );
-        if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
+        if (eventRes.isError()) throw eventRes.exceptionOrNull()!;
       });
       return const Success(unit);
-    } on _InternalDbFailure catch (e) {
-      return Failure(e.error);
+    } on DBCoreError catch (e) {
+      return Failure(e);
     } catch (e, st) {
       return Failure(mapDbException(e, st));
     }
@@ -97,11 +92,11 @@ class VaultItemMutationService {
           type: type,
         );
         if (untypedOldView == null) {
-          throw _InternalDbFailure(DbError.notFound(
+          throw DBCoreError.notFound(
             entity: 'vaultItem',
             id: itemId,
             message: 'Vault item not found: $itemId',
-          ));
+          );
         }
 
         final VaultEntityViewDto oldView = untypedOldView as VaultEntityViewDto;
@@ -113,7 +108,7 @@ class VaultItemMutationService {
           action: VaultEventHistoryAction.updated,
         );
         if (snapshotRes != null && snapshotRes.isError()) {
-          throw _InternalDbFailure(snapshotRes.exceptionOrNull()!);
+          throw snapshotRes.exceptionOrNull()!;
         }
 
         // 3. Меняем категорию
@@ -121,7 +116,7 @@ class VaultItemMutationService {
           itemId: itemId,
           categoryId: categoryId,
         );
-        if (res.isError()) throw _InternalDbFailure(res.exceptionOrNull()!);
+        if (res.isError()) throw res.exceptionOrNull()!;
 
         // 4. Пишем event updated
         final eventRes = await historyService.writeEvent(
@@ -131,11 +126,11 @@ class VaultItemMutationService {
           categoryId: categoryId,
           snapshotHistoryId: snapshotRes?.getOrNull(),
         );
-        if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
+        if (eventRes.isError()) throw eventRes.exceptionOrNull()!;
       });
       return const Success(unit);
-    } on _InternalDbFailure catch (e) {
-      return Failure(e.error);
+    } on DBCoreError catch (e) {
+      return Failure(e);
     } catch (e, st) {
       return Failure(mapDbException(e, st));
     }

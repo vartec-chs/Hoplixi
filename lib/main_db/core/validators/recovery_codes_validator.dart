@@ -1,9 +1,9 @@
 import '../errors/db_error.dart';
 import '../models/dto/recovery_codes_dto.dart';
 
-DbError? validateCreateRecoveryCodes(CreateRecoveryCodesDto dto) {
+DBCoreError? validateCreateRecoveryCodes(CreateRecoveryCodesDto dto) {
   if (dto.item.name.trim().isEmpty) {
-    return const DbError.validation(
+    return const DBCoreError.validation(
       entity: 'recoveryCodes',
       field: 'name',
       code: 'vault_item.name.not_blank',
@@ -13,6 +13,6 @@ DbError? validateCreateRecoveryCodes(CreateRecoveryCodesDto dto) {
   return null;
 }
 
-DbError? validatePatchRecoveryCodes(PatchRecoveryCodesDto dto) {
+DBCoreError? validatePatchRecoveryCodes(PatchRecoveryCodesDto dto) {
   return null;
 }

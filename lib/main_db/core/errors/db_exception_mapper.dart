@@ -1,26 +1,22 @@
 import 'db_constraint_registry.dart';
 import 'db_error.dart';
 
-DbError mapDbException(Object error, StackTrace stackTrace) {
+DBCoreError mapDbException(Object error, StackTrace stackTrace) {
   final message = error.toString();
 
   if (_isUniqueError(message)) {
-    return DbError.constraint(
+    return DBCoreError.constraint(
       constraint: 'unique',
       message: 'Такая запись уже существует',
-      data: {
-        'rawMessage': message,
-      },
+      data: {'rawMessage': message},
     );
   }
 
   if (_isForeignKeyError(message)) {
-    return DbError.constraint(
+    return DBCoreError.constraint(
       constraint: 'foreign_key',
       message: 'Нарушена ссылочная целостность данных',
-      data: {
-        'rawMessage': message,
-      },
+      data: {'rawMessage': message},
     );
   }
 
@@ -30,29 +26,25 @@ DbError mapDbException(Object error, StackTrace stackTrace) {
     final descriptor = dbConstraintRegistry[constraintName];
 
     if (descriptor != null) {
-      return DbError.constraint(
+      return DBCoreError.constraint(
         constraint: descriptor.constraint,
         table: descriptor.table,
         entity: descriptor.entity,
         field: descriptor.field,
         code: descriptor.code,
         message: descriptor.message,
-        data: {
-          'rawMessage': message,
-        },
+        data: {'rawMessage': message},
       );
     }
 
-    return DbError.constraint(
+    return DBCoreError.constraint(
       constraint: constraintName,
       message: 'Нарушено ограничение базы данных',
-      data: {
-        'rawMessage': message,
-      },
+      data: {'rawMessage': message},
     );
   }
 
-  return DbError.sqlite(
+  return DBCoreError.sqlite(
     message: 'Ошибка базы данных',
     cause: error,
     stackTrace: stackTrace,

@@ -4,19 +4,14 @@ import 'package:hoplixi/main_db/core/errors/db_result.dart';
 import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:hoplixi/main_db/core/repositories/base/api_key_repository.dart';
 import 'package:hoplixi/main_db/core/services/history/vault_history_service.dart';
-import 'package:hoplixi/main_db/core/services/vault_items_state_service.dart';
 import 'package:hoplixi/main_db/core/services/relations/vault_item_relations_service.dart';
+import 'package:hoplixi/main_db/core/services/vault_items_state_service.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_events_history.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
 import 'package:hoplixi/main_db/core/validators/api_key_validator.dart';
 import 'package:result_dart/result_dart.dart';
 
 import '../../main_store.dart';
-
-class _InternalDbFailure implements Exception {
-  const _InternalDbFailure(this.error);
-  final DbError error;
-}
 
 class ApiKeyService {
   ApiKeyService({
@@ -44,18 +39,21 @@ class ApiKeyService {
 
         // 2. Привязываем теги
         if (dto.tagIds.isNotEmpty) {
-          final res = await relationsService.replaceTags(itemId: itemId, tagIds: dto.tagIds);
-          if (res.isError()) throw _InternalDbFailure(res.exceptionOrNull()!);
+          final res = await relationsService.replaceTags(
+            itemId: itemId,
+            tagIds: dto.tagIds,
+          );
+          if (res.isError()) throw res.exceptionOrNull()!;
         }
 
         // 3. Получаем созданное состояние для snapshot
         final createdView = await repository.getViewById(itemId);
         if (createdView == null) {
-          throw _InternalDbFailure(DbError.notFound(
+          throw DBCoreError.notFound(
             entity: 'apiKey',
             id: itemId,
             message: 'Failed to retrieve created ApiKey: $itemId',
-          ));
+          );
         }
 
         // 4. Пишем snapshot created (After create)
@@ -64,7 +62,8 @@ class ApiKeyService {
           createdView: createdView,
           action: VaultEventHistoryAction.created,
         );
-        if (snapshotRes != null && snapshotRes.isError()) throw _InternalDbFailure(snapshotRes.exceptionOrNull()!);
+        if (snapshotRes != null && snapshotRes.isError())
+          throw snapshotRes.exceptionOrNull()!;
 
         // 5. Пишем event created
         final eventRes = await historyService.writeEvent(
@@ -76,12 +75,12 @@ class ApiKeyService {
           iconRefId: createdView.item.iconRefId,
           snapshotHistoryId: snapshotRes?.getOrNull(),
         );
-        if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
+        if (eventRes.isError()) throw eventRes.exceptionOrNull()!;
 
         return Success(itemId);
       });
-    } on _InternalDbFailure catch (e) {
-      return Failure(e.error);
+    } on DBCoreError catch (e) {
+      return Failure(e);
     } catch (e, st) {
       return Failure(mapDbException(e, st));
     }
@@ -98,11 +97,11 @@ class ApiKeyService {
         // 1. Получаем старое состояние для snapshot
         final oldView = await repository.getViewById(itemId);
         if (oldView == null) {
-          throw _InternalDbFailure(DbError.notFound(
+          throw DBCoreError.notFound(
             entity: 'apiKey',
             id: itemId,
             message: 'ApiKey not found for update: $itemId',
-          ));
+          );
         }
 
         // 2. Пишем snapshot before update
@@ -111,7 +110,8 @@ class ApiKeyService {
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
         );
-        if (snapshotRes != null && snapshotRes.isError()) throw _InternalDbFailure(snapshotRes.exceptionOrNull()!);
+        if (snapshotRes != null && snapshotRes.isError())
+          throw snapshotRes.exceptionOrNull()!;
 
         // 3. Обновляем данные в репозитории
         await repository.update(dto);
@@ -123,7 +123,7 @@ class ApiKeyService {
             itemId: itemId,
             tagIds: tagsUpdate.value ?? const [],
           );
-          if (res.isError()) throw _InternalDbFailure(res.exceptionOrNull()!);
+          if (res.isError()) throw res.exceptionOrNull()!;
         }
 
         // 5. Пишем event updated
@@ -132,16 +132,17 @@ class ApiKeyService {
           type: VaultItemType.apiKey,
           action: VaultEventHistoryAction.updated,
           name: dto.item.name.valueOrNull ?? oldView.item.name,
-          categoryId: dto.item.categoryId.valueOrNull ?? oldView.item.categoryId,
+          categoryId:
+              dto.item.categoryId.valueOrNull ?? oldView.item.categoryId,
           iconRefId: dto.item.iconRefId.valueOrNull ?? oldView.item.iconRefId,
           snapshotHistoryId: snapshotRes?.getOrNull(),
         );
-        if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
+        if (eventRes.isError()) throw eventRes.exceptionOrNull()!;
 
         return const Success(unit);
       });
-    } on _InternalDbFailure catch (e) {
-      return Failure(e.error);
+    } on DBCoreError catch (e) {
+      return Failure(e);
     } catch (e, st) {
       return Failure(mapDbException(e, st));
     }

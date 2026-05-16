@@ -11,11 +11,6 @@ import 'package:result_dart/result_dart.dart';
 
 import '../main_store.dart';
 
-class _InternalDbFailure implements Exception {
-  const _InternalDbFailure(this.error);
-  final DbError error;
-}
-
 /// Сервис для изменения общих состояний записей хранилища (vault_items).
 class VaultItemsStateService {
   VaultItemsStateService({
@@ -89,10 +84,7 @@ class VaultItemsStateService {
           : VaultEventHistoryAction.unfavorited,
       mutate: (now) => db.vaultItemsDao.updateVaultItemById(
         itemId,
-        VaultItemsCompanion(
-          isFavorite: Value(value),
-          modifiedAt: Value(now),
-        ),
+        VaultItemsCompanion(isFavorite: Value(value), modifiedAt: Value(now)),
       ),
     );
   }
@@ -110,10 +102,7 @@ class VaultItemsStateService {
           : VaultEventHistoryAction.unpinned,
       mutate: (now) => db.vaultItemsDao.updateVaultItemById(
         itemId,
-        VaultItemsCompanion(
-          isPinned: Value(value),
-          modifiedAt: Value(now),
-        ),
+        VaultItemsCompanion(isPinned: Value(value), modifiedAt: Value(now)),
       ),
     );
   }
@@ -132,12 +121,10 @@ class VaultItemsStateService {
         );
 
         if (untypedOldView == null) {
-          throw _InternalDbFailure(
-            DbError.notFound(
-              entity: 'vaultItem',
-              id: itemId,
-              message: 'Запись не найдена',
-            ),
+          throw DBCoreError.notFound(
+            entity: 'vaultItem',
+            id: itemId,
+            message: 'Запись не найдена',
           );
         }
 
@@ -149,7 +136,7 @@ class VaultItemsStateService {
           action: action,
         );
         if (snapshotRes != null && snapshotRes.isError()) {
-          throw _InternalDbFailure(snapshotRes.exceptionOrNull()!);
+          throw snapshotRes.exceptionOrNull()!;
         }
 
         final now = DateTime.now();
@@ -165,13 +152,13 @@ class VaultItemsStateService {
           snapshotHistoryId: snapshotRes?.getOrNull(),
         );
         if (eventRes.isError()) {
-          throw _InternalDbFailure(eventRes.exceptionOrNull()!);
+          throw eventRes.exceptionOrNull()!;
         }
 
         return const Success(unit);
       });
-    } on _InternalDbFailure catch (e) {
-      return Failure(e.error);
+    } on DBCoreError catch (e) {
+      return Failure(e);
     } catch (e, st) {
       return Failure(mapDbException(e, st));
     }

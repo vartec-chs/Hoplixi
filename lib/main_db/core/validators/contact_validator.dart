@@ -1,9 +1,9 @@
 import '../errors/db_error.dart';
 import '../models/dto/contact_dto.dart';
 
-DbError? validateCreateContact(CreateContactDto dto) {
+DBCoreError? validateCreateContact(CreateContactDto dto) {
   if (dto.item.name.trim().isEmpty) {
-    return const DbError.validation(
+    return const DBCoreError.validation(
       entity: 'contact',
       field: 'name',
       code: 'vault_item.name.not_blank',
@@ -13,6 +13,6 @@ DbError? validateCreateContact(CreateContactDto dto) {
   return null;
 }
 
-DbError? validatePatchContact(PatchContactDto dto) {
+DBCoreError? validatePatchContact(PatchContactDto dto) {
   return null;
 }

@@ -2,9 +2,9 @@ import '../errors/db_error.dart';
 import '../models/dto/api_key_dto.dart';
 import '../models/field_update.dart';
 
-DbError? validateCreateApiKey(CreateApiKeyDto dto) {
+DBCoreError? validateCreateApiKey(CreateApiKeyDto dto) {
   if (dto.item.name.trim().isEmpty) {
-    return const DbError.validation(
+    return const DBCoreError.validation(
       entity: 'apiKey',
       field: 'name',
       code: 'vault_item.name.not_blank',
@@ -13,7 +13,7 @@ DbError? validateCreateApiKey(CreateApiKeyDto dto) {
   }
 
   if (dto.apiKey.service.trim().isEmpty) {
-    return const DbError.validation(
+    return const DBCoreError.validation(
       entity: 'apiKey',
       field: 'service',
       code: 'api_key.service.not_blank',
@@ -22,7 +22,7 @@ DbError? validateCreateApiKey(CreateApiKeyDto dto) {
   }
 
   if (dto.apiKey.key.trim().isEmpty) {
-    return const DbError.validation(
+    return const DBCoreError.validation(
       entity: 'apiKey',
       field: 'key',
       code: 'api_key.key.not_blank',
@@ -33,10 +33,10 @@ DbError? validateCreateApiKey(CreateApiKeyDto dto) {
   return null;
 }
 
-DbError? validatePatchApiKey(PatchApiKeyDto dto) {
+DBCoreError? validatePatchApiKey(PatchApiKeyDto dto) {
   if (dto.item.name case FieldUpdateSet<String>(value: final value)) {
     if (value == null || value.trim().isEmpty) {
-      return const DbError.validation(
+      return const DBCoreError.validation(
         entity: 'apiKey',
         field: 'name',
         code: 'vault_item.name.not_blank',
@@ -47,7 +47,7 @@ DbError? validatePatchApiKey(PatchApiKeyDto dto) {
 
   if (dto.apiKey.service case FieldUpdateSet<String>(value: final value)) {
     if (value == null || value.trim().isEmpty) {
-      return const DbError.validation(
+      return const DBCoreError.validation(
         entity: 'apiKey',
         field: 'service',
         code: 'api_key.service.not_blank',
@@ -58,7 +58,7 @@ DbError? validatePatchApiKey(PatchApiKeyDto dto) {
 
   if (dto.apiKey.key case FieldUpdateSet<String>(value: final value)) {
     if (value == null || value.trim().isEmpty) {
-      return const DbError.validation(
+      return const DBCoreError.validation(
         entity: 'apiKey',
         field: 'key',
         code: 'api_key.key.not_blank',

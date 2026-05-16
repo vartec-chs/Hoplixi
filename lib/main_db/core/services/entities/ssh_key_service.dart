@@ -13,11 +13,6 @@ import 'package:result_dart/result_dart.dart';
 
 import '../../main_store.dart';
 
-class _InternalDbFailure implements Exception {
-  const _InternalDbFailure(this.error);
-  final DbError error;
-}
-
 class SshKeyService {
   SshKeyService({
     required this.db,
@@ -42,17 +37,20 @@ class SshKeyService {
         final itemId = await repository.create(dto);
 
         if (dto.tagIds.isNotEmpty) {
-          final res = await relationsService.replaceTags(itemId: itemId, tagIds: dto.tagIds);
-          if (res.isError()) throw _InternalDbFailure(res.exceptionOrNull()!);
+          final res = await relationsService.replaceTags(
+            itemId: itemId,
+            tagIds: dto.tagIds,
+          );
+          if (res.isError()) throw res.exceptionOrNull()!;
         }
 
         final createdView = await repository.getViewById(itemId);
         if (createdView == null) {
-          throw _InternalDbFailure(DbError.notFound(
+          throw DBCoreError.notFound(
             entity: 'sshKey',
             id: itemId,
             message: 'Failed to retrieve created SshKey: $itemId',
-          ));
+          );
         }
 
         final snapshotRes = await historyService.snapshotAfterCreate(
@@ -60,7 +58,8 @@ class SshKeyService {
           createdView: createdView,
           action: VaultEventHistoryAction.created,
         );
-        if (snapshotRes != null && snapshotRes.isError()) throw _InternalDbFailure(snapshotRes.exceptionOrNull()!);
+        if (snapshotRes != null && snapshotRes.isError())
+          throw snapshotRes.exceptionOrNull()!;
 
         final eventRes = await historyService.writeEvent(
           itemId: itemId,
@@ -71,12 +70,12 @@ class SshKeyService {
           iconRefId: createdView.item.iconRefId,
           snapshotHistoryId: snapshotRes?.getOrNull(),
         );
-        if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
+        if (eventRes.isError()) throw eventRes.exceptionOrNull()!;
 
         return Success(itemId);
       });
-    } on _InternalDbFailure catch (e) {
-      return Failure(e.error);
+    } on DBCoreError catch (e) {
+      return Failure(e);
     } catch (e, st) {
       return Failure(mapDbException(e, st));
     }
@@ -92,11 +91,11 @@ class SshKeyService {
 
         final oldView = await repository.getViewById(itemId);
         if (oldView == null) {
-          throw _InternalDbFailure(DbError.notFound(
+          throw DBCoreError.notFound(
             entity: 'sshKey',
             id: itemId,
             message: 'SshKey not found for update: $itemId',
-          ));
+          );
         }
 
         final snapshotRes = await historyService.snapshotBeforeUpdate(
@@ -104,7 +103,8 @@ class SshKeyService {
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
         );
-        if (snapshotRes != null && snapshotRes.isError()) throw _InternalDbFailure(snapshotRes.exceptionOrNull()!);
+        if (snapshotRes != null && snapshotRes.isError())
+          throw snapshotRes.exceptionOrNull()!;
 
         await repository.update(dto);
 
@@ -114,7 +114,7 @@ class SshKeyService {
             itemId: itemId,
             tagIds: tagsUpdate.value ?? const [],
           );
-          if (res.isError()) throw _InternalDbFailure(res.exceptionOrNull()!);
+          if (res.isError()) throw res.exceptionOrNull()!;
         }
 
         final eventRes = await historyService.writeEvent(
@@ -122,16 +122,17 @@ class SshKeyService {
           type: VaultItemType.sshKey,
           action: VaultEventHistoryAction.updated,
           name: dto.item.name.valueOrNull ?? oldView.item.name,
-          categoryId: dto.item.categoryId.valueOrNull ?? oldView.item.categoryId,
+          categoryId:
+              dto.item.categoryId.valueOrNull ?? oldView.item.categoryId,
           iconRefId: dto.item.iconRefId.valueOrNull ?? oldView.item.iconRefId,
           snapshotHistoryId: snapshotRes?.getOrNull(),
         );
-        if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
+        if (eventRes.isError()) throw eventRes.exceptionOrNull()!;
 
         return const Success(unit);
       });
-    } on _InternalDbFailure catch (e) {
-      return Failure(e.error);
+    } on DBCoreError catch (e) {
+      return Failure(e);
     } catch (e, st) {
       return Failure(mapDbException(e, st));
     }

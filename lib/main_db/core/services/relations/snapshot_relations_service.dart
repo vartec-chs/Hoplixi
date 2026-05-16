@@ -40,7 +40,7 @@ class SnapshotRelationsService {
 
     final category = await categoriesDao.getCategoryById(categoryId);
     if (category == null) {
-      // Можно бросить ошибку или вернуть null. 
+      // Можно бросить ошибку или вернуть null.
       // По инструкции: "лучше вернуть null и оставить categoryId в vault_snapshots_history"
       return null;
     }

@@ -1,9 +1,9 @@
 import '../errors/db_error.dart';
 import '../models/dto/license_key_dto.dart';
 
-DbError? validateCreateLicenseKey(CreateLicenseKeyDto dto) {
+DBCoreError? validateCreateLicenseKey(CreateLicenseKeyDto dto) {
   if (dto.item.name.trim().isEmpty) {
-    return const DbError.validation(
+    return const DBCoreError.validation(
       entity: 'licenseKey',
       field: 'name',
       code: 'vault_item.name.not_blank',
@@ -13,6 +13,6 @@ DbError? validateCreateLicenseKey(CreateLicenseKeyDto dto) {
   return null;
 }
 
-DbError? validatePatchLicenseKey(PatchLicenseKeyDto dto) {
+DBCoreError? validatePatchLicenseKey(PatchLicenseKeyDto dto) {
   return null;
 }

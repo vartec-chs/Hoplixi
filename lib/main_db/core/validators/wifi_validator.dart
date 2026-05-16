@@ -1,9 +1,9 @@
 import '../errors/db_error.dart';
 import '../models/dto/wifi_dto.dart';
 
-DbError? validateCreateWifi(CreateWifiDto dto) {
+DBCoreError? validateCreateWifi(CreateWifiDto dto) {
   if (dto.item.name.trim().isEmpty) {
-    return const DbError.validation(
+    return const DBCoreError.validation(
       entity: 'wifi',
       field: 'name',
       code: 'vault_item.name.not_blank',
@@ -13,6 +13,6 @@ DbError? validateCreateWifi(CreateWifiDto dto) {
   return null;
 }
 
-DbError? validatePatchWifi(PatchWifiDto dto) {
+DBCoreError? validatePatchWifi(PatchWifiDto dto) {
   return null;
 }

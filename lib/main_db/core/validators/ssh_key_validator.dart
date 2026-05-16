@@ -1,9 +1,9 @@
 import '../errors/db_error.dart';
 import '../models/dto/ssh_key_dto.dart';
 
-DbError? validateCreateSshKey(CreateSshKeyDto dto) {
+DBCoreError? validateCreateSshKey(CreateSshKeyDto dto) {
   if (dto.item.name.trim().isEmpty) {
-    return const DbError.validation(
+    return const DBCoreError.validation(
       entity: 'sshKey',
       field: 'name',
       code: 'vault_item.name.not_blank',
@@ -13,6 +13,6 @@ DbError? validateCreateSshKey(CreateSshKeyDto dto) {
   return null;
 }
 
-DbError? validatePatchSshKey(PatchSshKeyDto dto) {
+DBCoreError? validatePatchSshKey(PatchSshKeyDto dto) {
   return null;
 }

@@ -1,9 +1,9 @@
 import '../errors/db_error.dart';
 import '../models/dto/bank_card_dto.dart';
 
-DbError? validateCreateBankCard(CreateBankCardDto dto) {
+DBCoreError? validateCreateBankCard(CreateBankCardDto dto) {
   if (dto.item.name.trim().isEmpty) {
-    return const DbError.validation(
+    return const DBCoreError.validation(
       entity: 'bankCard',
       field: 'name',
       code: 'vault_item.name.not_blank',
@@ -13,6 +13,6 @@ DbError? validateCreateBankCard(CreateBankCardDto dto) {
   return null;
 }
 
-DbError? validatePatchBankCard(PatchBankCardDto dto) {
+DBCoreError? validatePatchBankCard(PatchBankCardDto dto) {
   return null;
 }

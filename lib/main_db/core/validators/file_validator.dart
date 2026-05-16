@@ -1,9 +1,9 @@
 import '../errors/db_error.dart';
 import '../models/dto/file_dto.dart';
 
-DbError? validateCreateFile(CreateFileDto dto) {
+DBCoreError? validateCreateFile(CreateFileDto dto) {
   if (dto.item.name.trim().isEmpty) {
-    return const DbError.validation(
+    return const DBCoreError.validation(
       entity: 'file',
       field: 'name',
       code: 'vault_item.name.not_blank',
@@ -13,6 +13,6 @@ DbError? validateCreateFile(CreateFileDto dto) {
   return null;
 }
 
-DbError? validatePatchFile(PatchFileDto dto) {
+DBCoreError? validatePatchFile(PatchFileDto dto) {
   return null;
 }

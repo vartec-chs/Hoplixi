@@ -14,11 +14,6 @@ import 'package:uuid/uuid.dart';
 
 import '../../main_store.dart';
 
-class _InternalDbFailure implements Exception {
-  const _InternalDbFailure(this.error);
-  final DbError error;
-}
-
 class VaultItemRelationsService {
   VaultItemRelationsService({
     required this.db,
@@ -46,22 +41,22 @@ class VaultItemRelationsService {
       await db.transaction(() async {
         final exists = await vaultItemsDao.existsVaultItem(itemId);
         if (!exists) {
-          throw _InternalDbFailure(DbError.notFound(
+          throw DBCoreError.notFound(
             entity: 'vaultItem',
             id: itemId,
             message: 'Vault item not found: $itemId',
-          ));
+          );
         }
 
         final uniqueTagIds = tagIds.toSet().toList();
         for (final tagId in uniqueTagIds) {
           final tagExists = await tagsDao.existsTag(tagId);
           if (!tagExists) {
-            throw _InternalDbFailure(DbError.notFound(
+            throw DBCoreError.notFound(
               entity: 'tag',
               id: tagId,
               message: 'Tag not found: $tagId',
-            ));
+            );
           }
         }
 
@@ -80,8 +75,8 @@ class VaultItemRelationsService {
         }
       });
       return const Success(unit);
-    } on _InternalDbFailure catch (e) {
-      return Failure(e.error);
+    } on DBCoreError catch (e) {
+      return Failure(e);
     } catch (e, st) {
       return Failure(mapDbException(e, st));
     }
@@ -96,18 +91,18 @@ class VaultItemRelationsService {
         for (final tagId in tagIds) {
           final tagExists = await tagsDao.existsTag(tagId);
           if (!tagExists) {
-            throw _InternalDbFailure(DbError.notFound(
+            throw DBCoreError.notFound(
               entity: 'tag',
               id: tagId,
               message: 'Tag not found: $tagId',
-            ));
+            );
           }
           await itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
         }
       });
       return const Success(unit);
-    } on _InternalDbFailure catch (e) {
-      return Failure(e.error);
+    } on DBCoreError catch (e) {
+      return Failure(e);
     } catch (e, st) {
       return Failure(mapDbException(e, st));
     }
@@ -154,11 +149,11 @@ class VaultItemRelationsService {
         if (categoryId != null) {
           final categoryExists = await categoriesDao.existsCategory(categoryId);
           if (!categoryExists) {
-            throw _InternalDbFailure(DbError.notFound(
+            throw DBCoreError.notFound(
               entity: 'category',
               id: categoryId,
               message: 'Category not found: $categoryId',
-            ));
+            );
           }
         }
 
@@ -171,8 +166,8 @@ class VaultItemRelationsService {
         );
       });
       return const Success(unit);
-    } on _InternalDbFailure catch (e) {
-      return Failure(e.error);
+    } on DBCoreError catch (e) {
+      return Failure(e);
     } catch (e, st) {
       return Failure(mapDbException(e, st));
     }
@@ -189,32 +184,32 @@ class VaultItemRelationsService {
     try {
       return await db.transaction(() async {
         if (dto.sourceItemId == dto.targetItemId) {
-          throw const _InternalDbFailure(DbError.validation(
+          throw DBCoreError.validation(
             code: 'item_link.source_target_same',
             message: 'Source and target item IDs must be different',
-          ));
+          );
         }
 
         final sourceExists = await vaultItemsDao.existsVaultItem(
           dto.sourceItemId,
         );
         if (!sourceExists) {
-          throw _InternalDbFailure(DbError.notFound(
+          throw DBCoreError.notFound(
             entity: 'vaultItem',
             id: dto.sourceItemId,
             message: 'Source item not found: ${dto.sourceItemId}',
-          ));
+          );
         }
 
         final targetExists = await vaultItemsDao.existsVaultItem(
           dto.targetItemId,
         );
         if (!targetExists) {
-          throw _InternalDbFailure(DbError.notFound(
+          throw DBCoreError.notFound(
             entity: 'vaultItem',
             id: dto.targetItemId,
             message: 'Target item not found: ${dto.targetItemId}',
-          ));
+          );
         }
 
         final id = const Uuid().v4();
@@ -233,8 +228,8 @@ class VaultItemRelationsService {
         );
         return Success(id);
       });
-    } on _InternalDbFailure catch (e) {
-      return Failure(e.error);
+    } on DBCoreError catch (e) {
+      return Failure(e);
     } catch (e, st) {
       return Failure(mapDbException(e, st));
     }

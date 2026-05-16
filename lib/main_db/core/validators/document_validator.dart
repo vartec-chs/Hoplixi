@@ -1,9 +1,9 @@
 import '../errors/db_error.dart';
 import '../models/dto/document_dto.dart';
 
-DbError? validateCreateDocument(CreateDocumentDto dto) {
+DBCoreError? validateCreateDocument(CreateDocumentDto dto) {
   if (dto.item.name.trim().isEmpty) {
-    return const DbError.validation(
+    return const DBCoreError.validation(
       entity: 'document',
       field: 'name',
       code: 'vault_item.name.not_blank',
@@ -13,6 +13,6 @@ DbError? validateCreateDocument(CreateDocumentDto dto) {
   return null;
 }
 
-DbError? validatePatchDocument(PatchDocumentDto dto) {
+DBCoreError? validatePatchDocument(PatchDocumentDto dto) {
   return null;
 }
