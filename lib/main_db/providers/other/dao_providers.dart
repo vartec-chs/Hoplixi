@@ -204,6 +204,16 @@ final fileFilterDaoProvider = FutureProvider<FileFilterDao>(
   (ref) => _ensureDao(ref, (store) => store.fileFilterDao),
 );
 
+final vaultEventHistoryFilterDaoProvider =
+    FutureProvider<VaultEventHistoryFilterDao>(
+      (ref) => _ensureDao(ref, (store) => store.vaultEventHistoryFilterDao),
+    );
+
+final vaultSnapshotHistoryFilterDaoProvider =
+    FutureProvider<VaultSnapshotHistoryFilterDao>(
+      (ref) => _ensureDao(ref, (store) => store.vaultSnapshotHistoryFilterDao),
+    );
+
 final noteLinkDaoProvider = FutureProvider<NoteLinkDao>(
   (ref) => _ensureDao(ref, (store) => store.noteLinkDao),
 );

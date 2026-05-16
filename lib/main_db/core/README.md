@@ -59,6 +59,66 @@ DAOs или сервисов, пожалуйста,обновляйте этот
 - **Public surface**: `dto/dto.dart` агрегирует экспортируемые DTO для удобного
   импорта из других слоёв.
 
+#### History-фильтры для `VaultSnapshotsHistory` и `VaultEventsHistory`
+
+Для таблиц истории используются отдельные модели фильтрации:
+
+- `VaultSnapshotHistoryFilter` — фильтр для `vault_snapshots_history`
+  (`VaultSnapshotsHistory`). Используется, когда нужен список restorable
+  snapshot-ов: по item, типу, action, категории, состояниям item на момент
+  snapshot-а, временным диапазонам, `usedCount` и `recentScore`.
+- `VaultEventHistoryFilter` — фильтр для `vault_events_history`
+  (`VaultEventsHistory`). Используется для audit/event-ленты: по item, action,
+  типу item, actor type, категории, связанному snapshot и времени события.
+
+Используйте фабрики `.create(...)`: они нормализуют строковые параметры
+(`trim`), убирают пустые значения из списков и дедуплицируют коллекции. `query`
+предназначен для поиска по `name` / `description`. History-фильтры не должны
+возвращать секретные поля; они работают только с metadata/history-таблицами.
+
+Пример фильтра snapshot-истории:
+
+```dart
+final filter = VaultSnapshotHistoryFilter.create(
+  itemId: itemId,
+  actions: const [
+    VaultEventHistoryAction.created,
+    VaultEventHistoryAction.updated,
+    VaultEventHistoryAction.restored,
+  ],
+  types: const [VaultItemType.password],
+  isDeleted: false,
+  historyCreatedAfter: from,
+  historyCreatedBefore: to,
+  sortBy: SnapshotHistorySortBy.historyCreatedAt,
+  sortDirection: SortDirection.desc,
+  limit: 50,
+);
+```
+
+Пример фильтра event-истории:
+
+```dart
+final filter = VaultEventHistoryFilter.create(
+  itemIds: itemIds,
+  actions: const [
+    VaultEventHistoryAction.updated,
+    VaultEventHistoryAction.deleted,
+    VaultEventHistoryAction.recovered,
+  ],
+  actorTypes: const [
+    VaultHistoryActorType.user,
+    VaultHistoryActorType.sync,
+  ],
+  hasSnapshot: true,
+  eventCreatedAfter: from,
+  eventCreatedBefore: to,
+  sortBy: EventHistorySortBy.eventCreatedAt,
+  sortDirection: SortDirection.desc,
+  limit: 100,
+);
+```
+
 ### 4. [Repositories](./repositories/) — Репозитории
 
 Прослойка между DAOs и Сервисами.

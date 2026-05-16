@@ -147,6 +147,8 @@ part 'main_store.g.dart';
     PasswordFilterDao,
     RecoveryCodesFilterDao,
     SshKeyFilterDao,
+    VaultEventHistoryFilterDao,
+    VaultSnapshotHistoryFilterDao,
     WifiFilterDao,
   ],
 )

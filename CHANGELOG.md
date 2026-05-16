@@ -4,6 +4,12 @@
 
 ### docs
 
+- Добавлены `VaultSnapshotHistoryFilterDao` и `VaultEventHistoryFilterDao` для
+  фильтрации `VaultSnapshotsHistory` и `VaultEventsHistory`; DAO подключены к
+  `MainStore`, экспортам и provider-слою.
+- В [lib/main_db/core/README.md](lib/main_db/core/README.md) добавлено описание
+  `VaultSnapshotHistoryFilter` и `VaultEventHistoryFilter` с примерами
+  фильтрации таблиц `VaultSnapshotsHistory` и `VaultEventsHistory`.
 - Обновлён [lib/main_db/core/README.md](lib/main_db/core/README.md) с актуальным
   описанием `lib/main_db/core/models`: добавлены `dto_history`, `filters`,
   `mappers` и вспомогательные модельные типы.

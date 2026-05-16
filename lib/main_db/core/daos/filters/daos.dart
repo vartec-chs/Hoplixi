@@ -15,4 +15,6 @@ export 'otp_filter_dao.dart';
 export 'password_filter_dao.dart';
 export 'recovery_codes_filter_dao.dart';
 export 'ssh_key_filter_dao.dart';
+export 'vault_event_history_filter_dao.dart';
+export 'vault_snapshot_history_filter_dao.dart';
 export 'wifi_filter_dao.dart';
