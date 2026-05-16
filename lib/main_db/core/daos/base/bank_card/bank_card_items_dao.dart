@@ -72,4 +72,8 @@ class BankCardItemsDao extends DatabaseAccessor<MainStore>
         .getSingleOrNull();
     return row?.read(bankCardItems.routingNumber);
   }
+
+  Future<void> upsertBankCardItem(BankCardItemsCompanion companion) {
+    return into(bankCardItems).insertOnConflictUpdate(companion);
+  }
 }

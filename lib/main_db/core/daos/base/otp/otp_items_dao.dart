@@ -46,4 +46,8 @@ class OtpItemsDao extends DatabaseAccessor<MainStore> with _$OtpItemsDaoMixin {
         .getSingleOrNull();
     return row?.read(otpItems.secret);
   }
+
+  Future<void> upsertOtpItem(OtpItemsCompanion companion) {
+    return into(otpItems).insertOnConflictUpdate(companion);
+  }
 }

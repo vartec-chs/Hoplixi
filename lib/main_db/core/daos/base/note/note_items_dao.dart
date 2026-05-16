@@ -38,4 +38,8 @@ class NoteItemsDao extends DatabaseAccessor<MainStore> with _$NoteItemsDaoMixin 
   Future<int> deleteNoteByItemId(String itemId) {
     return (delete(noteItems)..where((tbl) => tbl.itemId.equals(itemId))).go();
   }
+
+  Future<void> upsertNoteItem(NoteItemsCompanion companion) {
+    return into(noteItems).insertOnConflictUpdate(companion);
+  }
 }

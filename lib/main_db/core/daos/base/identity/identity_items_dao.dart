@@ -71,4 +71,8 @@ class IdentityItemsDao extends DatabaseAccessor<MainStore>
         .getSingleOrNull();
     return row?.read(identityItems.driverLicenseNumber);
   }
+
+  Future<void> upsertIdentityItem(IdentityItemsCompanion companion) {
+    return into(identityItems).insertOnConflictUpdate(companion);
+  }
 }

@@ -47,7 +47,7 @@ class VaultHistoryDetailService {
         fieldDiffs: fieldDiffs,
         customFieldDiffs: const [],
         isRestorable: restorePolicy.isRestorable(selected),
-        restoreWarnings: selected.restoreWarnings,
+        restoreWarnings: restorePolicy.restoreWarnings(selected),
       ));
     } catch (e, s) {
       return Failure(DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s));

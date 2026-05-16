@@ -47,4 +47,8 @@ class SshKeyItemsDao extends DatabaseAccessor<MainStore>
         .getSingleOrNull();
     return row?.read(sshKeyItems.privateKey);
   }
+
+  Future<void> upsertSshKeyItem(SshKeyItemsCompanion companion) {
+    return into(sshKeyItems).insertOnConflictUpdate(companion);
+  }
 }

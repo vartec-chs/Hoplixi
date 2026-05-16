@@ -19,6 +19,9 @@
 - Обновлён [lib/main_db/core/README.md](lib/main_db/core/README.md) с разделом
   `Config` для [lib/main_db/core/config](lib/main_db/core/config) и
   `store_settings_keys.dart`.
+- В `VaultHistoryRestoreService` добавлены проверки на пустые строки для
+  `deltaJson`, `content`, `firstName`, `productName` и `licenseKey` при
+  восстановлении history snapshot-ов.
 
 ## 2026-05-16
 

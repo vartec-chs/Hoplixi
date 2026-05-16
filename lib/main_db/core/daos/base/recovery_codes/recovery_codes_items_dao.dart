@@ -44,4 +44,8 @@ class RecoveryCodesItemsDao extends DatabaseAccessor<MainStore>
     return (delete(recoveryCodesItems)..where((tbl) => tbl.itemId.equals(itemId)))
         .go();
   }
+
+  Future<void> upsertRecoveryCodesItem(RecoveryCodesItemsCompanion companion) {
+    return into(recoveryCodesItems).insertOnConflictUpdate(companion);
+  }
 }

@@ -46,4 +46,8 @@ class WifiItemsDao extends DatabaseAccessor<MainStore> with _$WifiItemsDaoMixin 
         .getSingleOrNull();
     return row?.read(wifiItems.password);
   }
+
+  Future<void> upsertWifiItem(WifiItemsCompanion companion) {
+    return into(wifiItems).insertOnConflictUpdate(companion);
+  }
 }

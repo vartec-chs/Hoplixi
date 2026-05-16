@@ -66,4 +66,8 @@ class LoyaltyCardItemsDao extends DatabaseAccessor<MainStore>
         .getSingleOrNull();
     return row?.read(loyaltyCardItems.password);
   }
+
+  Future<void> upsertLoyaltyCardItem(LoyaltyCardItemsCompanion companion) {
+    return into(loyaltyCardItems).insertOnConflictUpdate(companion);
+  }
 }

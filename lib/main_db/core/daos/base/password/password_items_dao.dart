@@ -47,4 +47,8 @@ class PasswordItemsDao extends DatabaseAccessor<MainStore>
         .getSingleOrNull();
     return row?.read(passwordItems.password);
   }
+
+  Future<void> upsertPasswordItem(PasswordItemsCompanion companion) {
+    return into(passwordItems).insertOnConflictUpdate(companion);
+  }
 }

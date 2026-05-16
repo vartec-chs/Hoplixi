@@ -80,4 +80,8 @@ class CertificateItemsDao extends DatabaseAccessor<MainStore>
         .getSingleOrNull();
     return row?.read(certificateItems.certificateBlob);
   }
+
+  Future<void> upsertCertificateItem(CertificateItemsCompanion companion) {
+    return into(certificateItems).insertOnConflictUpdate(companion);
+  }
 }

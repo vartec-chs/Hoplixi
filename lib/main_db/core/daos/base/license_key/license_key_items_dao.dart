@@ -48,4 +48,8 @@ class LicenseKeyItemsDao extends DatabaseAccessor<MainStore>
         .getSingleOrNull();
     return row?.read(licenseKeyItems.licenseKey);
   }
+
+  Future<void> upsertLicenseKeyItem(LicenseKeyItemsCompanion companion) {
+    return into(licenseKeyItems).insertOnConflictUpdate(companion);
+  }
 }

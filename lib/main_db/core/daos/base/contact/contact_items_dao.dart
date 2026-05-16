@@ -39,4 +39,8 @@ class ContactItemsDao extends DatabaseAccessor<MainStore>
   Future<int> deleteContactByItemId(String itemId) {
     return (delete(contactItems)..where((tbl) => tbl.itemId.equals(itemId))).go();
   }
+
+  Future<void> upsertContactItem(ContactItemsCompanion companion) {
+    return into(contactItems).insertOnConflictUpdate(companion);
+  }
 }

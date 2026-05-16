@@ -64,4 +64,8 @@ class CryptoWalletItemsDao extends DatabaseAccessor<MainStore>
         .getSingleOrNull();
     return row?.read(cryptoWalletItems.xprv);
   }
+
+  Future<void> upsertCryptoWalletItem(CryptoWalletItemsCompanion companion) {
+    return into(cryptoWalletItems).insertOnConflictUpdate(companion);
+  }
 }
