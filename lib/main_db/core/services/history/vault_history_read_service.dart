@@ -1,3 +1,6 @@
+import 'package:result_dart/result_dart.dart';
+import '../../errors/db_result.dart';
+import '../../errors/db_error.dart';
 import '../../../core/daos/daos.dart';
 import '../../../core/main_store.dart';
 import '../../../core/models/dto/dto.dart';
@@ -44,21 +47,34 @@ class VaultHistoryReadService {
   final IdentityHistoryDao identityHistoryDao;
   final NoteHistoryDao noteHistoryDao;
 
-  Future<List<VaultHistoryCardDto>> getFilteredCards(
+  Future<DbResult<List<VaultHistoryCardDto>>> getFilteredCards(
     VaultSnapshotHistoryFilter filter,
   ) async {
-    final snapshots = await snapshotFilterDao.getFiltered(filter);
-    if (snapshots.isEmpty) return const [];
-    return _assembleCards(snapshots);
+    try {
+      final snapshots = await snapshotFilterDao.getFiltered(filter);
+      if (snapshots.isEmpty) return Success(const []);
+      final cards = await _assembleCards(snapshots);
+      return Success(cards);
+    } catch (e, s) {
+      return Failure(DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s));
+    }
   }
 
-  Future<VaultHistoryCardDto?> getCardByHistoryId(String historyId) async {
-    final snapshot = await snapshotsHistoryDao.getSnapshotById(historyId);
-    if (snapshot == null) return null;
-    final cards = await _assembleCards([snapshot]);
-    return cards.isEmpty ? null : cards.first;
+  Future<DbResult<VaultHistoryCardDto>> getCardByHistoryId(String historyId) async {
+    try {
+      final snapshot = await snapshotsHistoryDao.getSnapshotById(historyId);
+      if (snapshot == null) {
+        return Failure(DBCoreError.notFound(entity: 'HistorySnapshot', id: historyId));
+      }
+      final cards = await _assembleCards([snapshot]);
+      if (cards.isEmpty) {
+        return Failure(DBCoreError.notFound(entity: 'HistorySnapshotData', id: historyId));
+      }
+      return Success(cards.first);
+    } catch (e, s) {
+      return Failure(DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s));
+    }
   }
-
   Future<List<VaultHistoryCardDto>> _assembleCards(
     List<VaultSnapshotHistoryData> snapshots,
   ) async {
@@ -71,33 +87,27 @@ class VaultHistoryReadService {
 
     if (historyIdsByType.containsKey(VaultItemType.apiKey)) {
       final ids = historyIdsByType[VaultItemType.apiKey]!;
-      final map = await apiKeyHistoryDao.getApiKeyHistoryCardDataByHistoryIds(
-        ids,
-      );
+      final map = await apiKeyHistoryDao.getApiKeyHistoryCardDataByHistoryIds(ids);
       dataMap.addAll(map);
     }
     if (historyIdsByType.containsKey(VaultItemType.password)) {
       final ids = historyIdsByType[VaultItemType.password]!;
-      final map = await passwordHistoryDao
-          .getPasswordHistoryCardDataByHistoryIds(ids);
+      final map = await passwordHistoryDao.getPasswordHistoryCardDataByHistoryIds(ids);
       dataMap.addAll(map);
     }
     if (historyIdsByType.containsKey(VaultItemType.bankCard)) {
       final ids = historyIdsByType[VaultItemType.bankCard]!;
-      final map = await bankCardHistoryDao
-          .getBankCardHistoryCardDataByHistoryIds(ids);
+      final map = await bankCardHistoryDao.getBankCardHistoryCardDataByHistoryIds(ids);
       dataMap.addAll(map);
     }
     if (historyIdsByType.containsKey(VaultItemType.certificate)) {
       final ids = historyIdsByType[VaultItemType.certificate]!;
-      final map = await certificateHistoryDao
-          .getCertificateHistoryCardDataByHistoryIds(ids);
+      final map = await certificateHistoryDao.getCertificateHistoryCardDataByHistoryIds(ids);
       dataMap.addAll(map);
     }
     if (historyIdsByType.containsKey(VaultItemType.cryptoWallet)) {
       final ids = historyIdsByType[VaultItemType.cryptoWallet]!;
-      final map = await cryptoWalletHistoryDao
-          .getCryptoWalletHistoryCardDataByHistoryIds(ids);
+      final map = await cryptoWalletHistoryDao.getCryptoWalletHistoryCardDataByHistoryIds(ids);
       dataMap.addAll(map);
     }
     if (historyIdsByType.containsKey(VaultItemType.wifi)) {
@@ -107,15 +117,12 @@ class VaultHistoryReadService {
     }
     if (historyIdsByType.containsKey(VaultItemType.sshKey)) {
       final ids = historyIdsByType[VaultItemType.sshKey]!;
-      final map = await sshKeyHistoryDao.getSshKeyHistoryCardDataByHistoryIds(
-        ids,
-      );
+      final map = await sshKeyHistoryDao.getSshKeyHistoryCardDataByHistoryIds(ids);
       dataMap.addAll(map);
     }
     if (historyIdsByType.containsKey(VaultItemType.licenseKey)) {
       final ids = historyIdsByType[VaultItemType.licenseKey]!;
-      final map = await licenseKeyHistoryDao
-          .getLicenseKeyHistoryCardDataByHistoryIds(ids);
+      final map = await licenseKeyHistoryDao.getLicenseKeyHistoryCardDataByHistoryIds(ids);
       dataMap.addAll(map);
     }
     if (historyIdsByType.containsKey(VaultItemType.otp)) {
@@ -125,14 +132,12 @@ class VaultHistoryReadService {
     }
     if (historyIdsByType.containsKey(VaultItemType.recoveryCodes)) {
       final ids = historyIdsByType[VaultItemType.recoveryCodes]!;
-      final map = await recoveryCodesHistoryDao
-          .getRecoveryCodesHistoryCardDataByHistoryIds(ids);
+      final map = await recoveryCodesHistoryDao.getRecoveryCodesHistoryCardDataByHistoryIds(ids);
       dataMap.addAll(map);
     }
     if (historyIdsByType.containsKey(VaultItemType.loyaltyCard)) {
       final ids = historyIdsByType[VaultItemType.loyaltyCard]!;
-      final map = await loyaltyCardHistoryDao
-          .getLoyaltyCardHistoryCardDataByHistoryIds(ids);
+      final map = await loyaltyCardHistoryDao.getLoyaltyCardHistoryCardDataByHistoryIds(ids);
       dataMap.addAll(map);
     }
     if (historyIdsByType.containsKey(VaultItemType.file)) {
@@ -142,15 +147,12 @@ class VaultHistoryReadService {
     }
     if (historyIdsByType.containsKey(VaultItemType.contact)) {
       final ids = historyIdsByType[VaultItemType.contact]!;
-      final map = await contactHistoryDao.getContactHistoryCardDataByHistoryIds(
-        ids,
-      );
+      final map = await contactHistoryDao.getContactHistoryCardDataByHistoryIds(ids);
       dataMap.addAll(map);
     }
     if (historyIdsByType.containsKey(VaultItemType.identity)) {
       final ids = historyIdsByType[VaultItemType.identity]!;
-      final map = await identityHistoryDao
-          .getIdentityHistoryCardDataByHistoryIds(ids);
+      final map = await identityHistoryDao.getIdentityHistoryCardDataByHistoryIds(ids);
       dataMap.addAll(map);
     }
     if (historyIdsByType.containsKey(VaultItemType.note)) {
@@ -169,9 +171,7 @@ class VaultHistoryReadService {
         case VaultItemType.apiKey:
           final data = dataMap[historyId] as ApiKeyHistoryCardDataDto?;
           if (data != null) {
-            result.add(
-              ApiKeyHistoryCardDto(snapshot: snapshotDto, apikey: data),
-            );
+            result.add(ApiKeyHistoryCardDto(snapshot: snapshotDto, apikey: data));
           } else {
             result.add(GenericHistoryCardDto(snapshot: snapshotDto));
           }
@@ -179,9 +179,7 @@ class VaultHistoryReadService {
         case VaultItemType.password:
           final data = dataMap[historyId] as PasswordHistoryCardDataDto?;
           if (data != null) {
-            result.add(
-              PasswordHistoryCardDto(snapshot: snapshotDto, password: data),
-            );
+            result.add(PasswordHistoryCardDto(snapshot: snapshotDto, password: data));
           } else {
             result.add(GenericHistoryCardDto(snapshot: snapshotDto));
           }
@@ -189,9 +187,7 @@ class VaultHistoryReadService {
         case VaultItemType.bankCard:
           final data = dataMap[historyId] as BankCardHistoryCardDataDto?;
           if (data != null) {
-            result.add(
-              BankCardHistoryCardDto(snapshot: snapshotDto, bankcard: data),
-            );
+            result.add(BankCardHistoryCardDto(snapshot: snapshotDto, bankcard: data));
           } else {
             result.add(GenericHistoryCardDto(snapshot: snapshotDto));
           }
@@ -199,12 +195,7 @@ class VaultHistoryReadService {
         case VaultItemType.certificate:
           final data = dataMap[historyId] as CertificateHistoryCardDataDto?;
           if (data != null) {
-            result.add(
-              CertificateHistoryCardDto(
-                snapshot: snapshotDto,
-                certificate: data,
-              ),
-            );
+            result.add(CertificateHistoryCardDto(snapshot: snapshotDto, certificate: data));
           } else {
             result.add(GenericHistoryCardDto(snapshot: snapshotDto));
           }
@@ -212,12 +203,7 @@ class VaultHistoryReadService {
         case VaultItemType.cryptoWallet:
           final data = dataMap[historyId] as CryptoWalletHistoryCardDataDto?;
           if (data != null) {
-            result.add(
-              CryptoWalletHistoryCardDto(
-                snapshot: snapshotDto,
-                cryptowallet: data,
-              ),
-            );
+            result.add(CryptoWalletHistoryCardDto(snapshot: snapshotDto, cryptowallet: data));
           } else {
             result.add(GenericHistoryCardDto(snapshot: snapshotDto));
           }
@@ -233,9 +219,7 @@ class VaultHistoryReadService {
         case VaultItemType.sshKey:
           final data = dataMap[historyId] as SshKeyHistoryCardDataDto?;
           if (data != null) {
-            result.add(
-              SshKeyHistoryCardDto(snapshot: snapshotDto, sshkey: data),
-            );
+            result.add(SshKeyHistoryCardDto(snapshot: snapshotDto, sshkey: data));
           } else {
             result.add(GenericHistoryCardDto(snapshot: snapshotDto));
           }
@@ -243,9 +227,7 @@ class VaultHistoryReadService {
         case VaultItemType.licenseKey:
           final data = dataMap[historyId] as LicenseKeyHistoryCardDataDto?;
           if (data != null) {
-            result.add(
-              LicenseKeyHistoryCardDto(snapshot: snapshotDto, licensekey: data),
-            );
+            result.add(LicenseKeyHistoryCardDto(snapshot: snapshotDto, licensekey: data));
           } else {
             result.add(GenericHistoryCardDto(snapshot: snapshotDto));
           }
@@ -261,12 +243,7 @@ class VaultHistoryReadService {
         case VaultItemType.recoveryCodes:
           final data = dataMap[historyId] as RecoveryCodesHistoryCardDataDto?;
           if (data != null) {
-            result.add(
-              RecoveryCodesHistoryCardDto(
-                snapshot: snapshotDto,
-                recoverycodes: data,
-              ),
-            );
+            result.add(RecoveryCodesHistoryCardDto(snapshot: snapshotDto, recoverycodes: data));
           } else {
             result.add(GenericHistoryCardDto(snapshot: snapshotDto));
           }
@@ -274,12 +251,7 @@ class VaultHistoryReadService {
         case VaultItemType.loyaltyCard:
           final data = dataMap[historyId] as LoyaltyCardHistoryCardDataDto?;
           if (data != null) {
-            result.add(
-              LoyaltyCardHistoryCardDto(
-                snapshot: snapshotDto,
-                loyaltycard: data,
-              ),
-            );
+            result.add(LoyaltyCardHistoryCardDto(snapshot: snapshotDto, loyaltycard: data));
           } else {
             result.add(GenericHistoryCardDto(snapshot: snapshotDto));
           }
@@ -295,9 +267,7 @@ class VaultHistoryReadService {
         case VaultItemType.contact:
           final data = dataMap[historyId] as ContactHistoryCardDataDto?;
           if (data != null) {
-            result.add(
-              ContactHistoryCardDto(snapshot: snapshotDto, contact: data),
-            );
+            result.add(ContactHistoryCardDto(snapshot: snapshotDto, contact: data));
           } else {
             result.add(GenericHistoryCardDto(snapshot: snapshotDto));
           }
@@ -305,9 +275,7 @@ class VaultHistoryReadService {
         case VaultItemType.identity:
           final data = dataMap[historyId] as IdentityHistoryCardDataDto?;
           if (data != null) {
-            result.add(
-              IdentityHistoryCardDto(snapshot: snapshotDto, identity: data),
-            );
+            result.add(IdentityHistoryCardDto(snapshot: snapshotDto, identity: data));
           } else {
             result.add(GenericHistoryCardDto(snapshot: snapshotDto));
           }

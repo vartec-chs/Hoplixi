@@ -19,4 +19,10 @@ class VaultSnapshotsHistoryDao extends DatabaseAccessor<MainStore>
     return (select(vaultSnapshotsHistory)..where((t) => t.id.equals(historyId)))
         .getSingleOrNull();
   }
+
+  Future<int> deleteSnapshotById(String historyId) {
+    return (delete(vaultSnapshotsHistory)..where((t) => t.id.equals(historyId)))
+        .go();
+  }
 }
+

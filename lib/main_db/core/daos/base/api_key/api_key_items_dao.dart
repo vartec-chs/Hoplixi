@@ -14,6 +14,11 @@ class ApiKeyItemsDao extends DatabaseAccessor<MainStore>
     return into(apiKeyItems).insert(companion);
   }
 
+  Future<void> upsertApiKeyItem(ApiKeyItemsCompanion companion) {
+    return into(apiKeyItems).insertOnConflictUpdate(companion);
+  }
+
+
   Future<int> updateApiKeyByItemId(
     String itemId,
     ApiKeyItemsCompanion companion,
