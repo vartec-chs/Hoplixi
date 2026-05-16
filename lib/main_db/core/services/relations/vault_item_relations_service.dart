@@ -58,9 +58,6 @@ class VaultItemRelationsService {
       }
 
       for (final tagId in tagsToAdd) {
-        if (tagId == null) {
-          continue; // Skip null tag IDs
-        }
         await itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
       }
     });
