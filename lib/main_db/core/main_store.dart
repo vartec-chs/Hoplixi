@@ -126,6 +126,8 @@ part 'main_store.g.dart';
     RecoveryCodeValuesHistoryDao,
     LoyaltyCardItemsDao,
     LoyaltyCardHistoryDao,
+    VaultEventsHistoryDao,
+    VaultSnapshotsHistoryDao,
   ],
 )
 class MainStore extends _$MainStore {
