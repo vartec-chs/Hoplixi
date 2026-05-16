@@ -16,6 +16,9 @@
 - Обновлён [lib/main_db/core/README.md](lib/main_db/core/README.md) с актуальным
   описанием `lib/main_db/core/daos`: добавлены `base/`, `filters/` и агрегатор
   `daos.dart`, а терминология приведена к `DAOs`.
+- Обновлён [lib/main_db/core/README.md](lib/main_db/core/README.md) с разделом
+  `Config` для [lib/main_db/core/config](lib/main_db/core/config) и
+  `store_settings_keys.dart`.
 
 ## 2026-05-16
 
@@ -518,7 +521,11 @@
 - Окно выбора полей для шеринга переведено на `WoltModalSheet`; список и
   действия теперь живут в корректной sheet-структуре без сломанной вставки.
 - В генератор паролей добавлено редактирование набора символов для каждой
-  категории через кнопку редактирования или двойной клик по опции.
+- Обновлён [lib/main_db/core/README.md](lib/main_db/core/README.md) с правилами
+  ответственности слоёв: `daos/base` как простой data access, `daos/filters` как
+  более умные фильтры, `repositories` как агрегаторы нескольких DAOs и
+  `services` как оркестраторы repositories + DAOs. категории через кнопку
+  редактирования или двойной клик по опции.
 - Пользовательские наборы символов генератора сохраняются в профилях и
   восстанавливаются при выборе профиля.
 

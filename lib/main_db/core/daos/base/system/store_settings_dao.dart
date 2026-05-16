@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/config/store_settings_keys.dart';
+import 'package:hoplixi/main_db/core/config/store_settings_keys.dart';
 import '../../../main_store.dart';
 import '../../../tables/system/store/store_settings.dart';
 

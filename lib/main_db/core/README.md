@@ -31,10 +31,10 @@ DAOs или сервисов, пожалуйста,обновляйте этот
 
 Объекты доступа к данным, инкапсулирующие конкретные SQL/Drift запросы.
 
-- **Base**: Папка `base/` содержит базовые DAOs и общие mixin-ы для построения
-  запросов.
-- **Filters**: Папка `filters/` содержит filter DAOs для сложной фильтрации и
-  поиска по спискам.
+- **Base**: Папка `base/` содержит простые, "тупые" DAOs, которые делают базовые
+  операции чтения и записи без orchestration-логики.
+- **Filters**: Папка `filters/` содержит более "умные" filter DAOs: они собирают
+  параметры запроса, применяют фильтрацию, сортировку и поиск по спискам.
 - **Security Policy**: Filter/Card DAOs **запрещено** читать секретные поля. Они
   возвращают только метаданные и флаги наличия секретов (`hasPassword`, `hasKey`
   и т.д.).
@@ -121,7 +121,7 @@ final filter = VaultEventHistoryFilter.create(
 
 ### 4. [Repositories](./repositories/) — Репозитории
 
-Прослойка между DAOs и Сервисами.
+Репозитории объединяют несколько DAOs для выполнения задач уровня домена.
 
 - Содержат логику сборки сложных DTO (например, ViewDto вместе с тегами и
   категориями).
@@ -131,6 +131,7 @@ final filter = VaultEventHistoryFilter.create(
 
 Верхний уровень ядра БД.
 
+- Сервисы объединяют repositories и DAOs для выполнения сложных операций.
 - Координируют транзакции, историю изменений и связи.
 - **Result Pattern**: Все публичные методы возвращают `DbResult<T, DBCoreError>`
   из пакета `result_dart`.
@@ -146,11 +147,19 @@ final filter = VaultEventHistoryFilter.create(
 - [db_constraint_registry.dart](./errors/db_constraint_registry.dart) — маппинг
   имен SQL-ограничений в человекочитаемые сообщения.
 
-### 7. [Validators](./validators/) — Валидация
+### 7. [Config](./config/) — Конфигурация ядра
+
+Параметры и ключи, которые используются внутри `core` для работы со store-level
+настройками.
+
+- [store_settings_keys.dart](./config/store_settings_keys.dart) — перечисление
+  canonical-ключей настроек хранилища и маппинг между enum и storage key.
+
+### 8. [Validators](./validators/) — Валидация
 
 Логика проверки данных перед записью в БД, дополняющая SQL-ограничения.
 
-### 8. [Migrations](./migrations/) — Миграции
+### 9. [Migrations](./migrations/) — Миграции
 
 Управление версиями схемы базы данных.
 

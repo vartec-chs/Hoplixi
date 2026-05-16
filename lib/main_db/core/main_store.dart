@@ -10,6 +10,15 @@ import 'tables/all_table_triggers.dart';
 
 part 'main_store.g.dart';
 
+/// Главный класс базы данных, объединяющий все таблицы и DAOs.
+///
+/// Warning!
+///
+/// Этот класс должен быть максимально "тонким" и не содержать бизнес-логики
+///
+/// PRAGMA memory_security = ON; использовать до ввода ключа при открытии базы данных
+///
+/// PRAGMA wal_checkpoint(TRUNCATE); при закрытии базы данных обязательно
 @DriftDatabase(
   tables: [
     // --- Мета-таблицы ---
@@ -170,7 +179,7 @@ class MainStore extends _$MainStore {
         await _installTriggers();
       },
       beforeOpen: (details) async {
-        await customStatement('PRAGMA foreign_keys = ON');
+        await _setupRuntimePragmas();
       },
       onUpgrade: (Migrator m, int from, int to) async {
         logInfo(
@@ -178,26 +187,13 @@ class MainStore extends _$MainStore {
           tag: '${_logTag}Migration',
         );
 
-        var currentVersion = from;
-
-        if (currentVersion < to) {
+        if (from < to) {
           logWarning(
             'Falling back to development migration strategy for remaining versions',
             tag: '${_logTag}Migration',
           );
 
-          await customStatement('PRAGMA foreign_keys = OFF');
-
-          final tableRows = await customSelect(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
-          ).get();
-
-          for (final row in tableRows) {
-            final name = row.read<String>('name');
-            if (name.isEmpty) continue;
-            final escapedName = name.replaceAll('"', '""');
-            await customStatement('DROP TABLE IF EXISTS "$escapedName"');
-          }
+          await _dropAllUserObjects();
 
           await customStatement('PRAGMA foreign_keys = ON');
 
@@ -213,6 +209,20 @@ class MainStore extends _$MainStore {
 
   @override
   int get schemaVersion => MainConstants.databaseSchemaVersion;
+
+  Future<void> _setupRuntimePragmas() async {
+    await customStatement('PRAGMA foreign_keys = ON');
+    await customStatement('PRAGMA recursive_triggers = ON');
+    await customStatement('PRAGMA secure_delete = ON');
+    await customStatement('PRAGMA temp_store = MEMORY');
+    await customStatement('PRAGMA mmap_size = 0');
+
+    await customStatement('PRAGMA journal_mode = WAL');
+
+    await customStatement('PRAGMA synchronous = FULL');
+
+    await customStatement('PRAGMA journal_size_limit = 0');
+  }
 
   /// Поток для отслеживания изменений в данных.
   ///
@@ -278,6 +288,55 @@ class MainStore extends _$MainStore {
     ).watch().map((_) {});
   }
 
+  Future<void> _dropAllUserObjects() async {
+    if (MainConstants.isProduction) {
+      throw StateError('Destructive migration is disabled in release builds');
+    }
+
+    await customStatement('PRAGMA foreign_keys = OFF');
+
+    await _dropTriggers();
+
+    // Индексы можно не дропать отдельно, потому что DROP TABLE удалит индексы таблицы.
+    // Но если у тебя есть отдельно создаваемые индексы из allTableIndexes,
+    // можно удалить их явно для чистоты.
+    await _dropIndexes();
+
+    final viewRows = await customSelect('''
+    SELECT name
+    FROM sqlite_master
+    WHERE type = 'view'
+      AND name NOT LIKE 'sqlite_%'
+  ''').get();
+
+    for (final row in viewRows) {
+      final name = row.read<String>('name');
+      if (name.isEmpty) continue;
+
+      await customStatement('DROP VIEW IF EXISTS ${_quoteIdent(name)}');
+    }
+
+    final tableRows = await customSelect('''
+    SELECT name
+    FROM sqlite_master
+    WHERE type = 'table'
+      AND name NOT LIKE 'sqlite_%'
+  ''').get();
+
+    for (final row in tableRows) {
+      final name = row.read<String>('name');
+      if (name.isEmpty) continue;
+
+      await customStatement('DROP TABLE IF EXISTS ${_quoteIdent(name)}');
+    }
+
+    await customStatement('PRAGMA foreign_keys = ON');
+  }
+
+  String _quoteIdent(String name) {
+    return '"${name.replaceAll('"', '""')}"';
+  }
+
   /// Установка всех SQL триггеров.
   Future<void> _installTriggers() async {
     for (final trigger in allTableTriggers) {
@@ -287,12 +346,18 @@ class MainStore extends _$MainStore {
 
   /// Удаление всех пользовательских триггеров.
   Future<void> _dropTriggers() async {
-    final rows = await customSelect(
-      "SELECT name FROM sqlite_master WHERE type='trigger' AND name NOT LIKE 'sqlite_%'",
-    ).get();
+    final rows = await customSelect('''
+    SELECT name
+    FROM sqlite_master
+    WHERE type = 'trigger'
+      AND name NOT LIKE 'sqlite_%'
+  ''').get();
+
     for (final row in rows) {
       final name = row.read<String>('name');
-      await customStatement('DROP TRIGGER IF EXISTS "$name"');
+      if (name.isEmpty) continue;
+
+      await customStatement('DROP TRIGGER IF EXISTS ${_quoteIdent(name)}');
     }
   }
 
@@ -305,12 +370,18 @@ class MainStore extends _$MainStore {
 
   /// Удаление всех пользовательских индексов.
   Future<void> _dropIndexes() async {
-    final rows = await customSelect(
-      "SELECT name FROM sqlite_master WHERE type='index' AND name NOT LIKE 'sqlite_%' AND origin = 'u'",
-    ).get();
+    final rows = await customSelect('''
+    SELECT name
+    FROM sqlite_master
+    WHERE type = 'index'
+      AND name NOT LIKE 'sqlite_%'
+  ''').get();
+
     for (final row in rows) {
       final name = row.read<String>('name');
-      await customStatement('DROP INDEX IF EXISTS "$name"');
+      if (name.isEmpty) continue;
+
+      await customStatement('DROP INDEX IF EXISTS ${_quoteIdent(name)}');
     }
   }
 }
