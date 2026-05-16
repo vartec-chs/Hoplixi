@@ -1,16 +1,9 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_db/core/migrations/main_store_migration_types.dart';
-import 'package:hoplixi/main_db/core/migrations/versions/migration_v2.dart';
-import 'package:hoplixi/main_db/core/migrations/versions/migration_v3.dart';
-import 'package:hoplixi/main_db/core/migrations/versions/migration_v5.dart';
-import 'package:hoplixi/main_db/core/migrations/versions/migration_v6.dart';
+
 
 final Map<int, MainStoreMigration> _mainStoreMigrationsByVersion = {
-  2: migrateTo,
-  3: migrateToV3,
-  5: migrateToV5,
-  6: migrateToV6,
 };
 
 /// Runs known, versioned migrations in ascending order.

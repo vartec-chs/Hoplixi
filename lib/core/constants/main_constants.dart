@@ -13,11 +13,11 @@ class MainConstants {
   static const Size defaultDashboardSize = Size(1080, 750);
   static const bool isCenter = true;
 
-  static const int databaseSchemaVersion = 6;
-  static const int storeManifestVersion = 2;
-  static const String dbExtension = '.hplxdb';
-  static const String encryptedFileExtension = '.hplxenc';
-  static const String keyFileExtension = '.hdbkey';
+  static const int databaseSchemaVersion = 1;
+  static const int storeManifestVersion = 1;
+  static const String dbExtension = '.hpxdb';
+  static const String encryptedFileExtension = '.hpxenc';
+  static const String keyFileExtension = '.hpxkey';
 
   // Минимальное количество использований для считания записи часто используемой
   static const int frequentlyUsedThreshold = 5;
