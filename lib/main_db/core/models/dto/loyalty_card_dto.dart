@@ -86,7 +86,7 @@ sealed class LoyaltyCardViewDto with _$LoyaltyCardViewDto {
 }
 
 @freezed
-sealed class LoyaltyCardCardDto with _$LoyaltyCardCardDto {
+sealed class LoyaltyCardCardDto with _$LoyaltyCardCardDto implements VaultEntityCardDto {
   const factory LoyaltyCardCardDto({
     required VaultItemCardDto item,
     required LoyaltyCardCardDataDto loyaltyCard,

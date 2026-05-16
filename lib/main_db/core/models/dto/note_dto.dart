@@ -51,7 +51,7 @@ sealed class NoteViewDto with _$NoteViewDto {
 }
 
 @freezed
-sealed class NoteCardDto with _$NoteCardDto {
+sealed class NoteCardDto with _$NoteCardDto implements VaultEntityCardDto {
   const factory NoteCardDto({
     required VaultItemCardDto item,
     required NoteCardDataDto note,

@@ -94,7 +94,7 @@ sealed class RecoveryCodesViewDto with _$RecoveryCodesViewDto {
 }
 
 @freezed
-sealed class RecoveryCodesCardDto with _$RecoveryCodesCardDto {
+sealed class RecoveryCodesCardDto with _$RecoveryCodesCardDto implements VaultEntityCardDto {
   const factory RecoveryCodesCardDto({
     required VaultItemCardDto item,
     required RecoveryCodesCardDataDto recoveryCodes,

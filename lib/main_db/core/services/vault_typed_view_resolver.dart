@@ -72,9 +72,10 @@ class VaultTypedViewResolver {
       VaultItemType.wifi => wifiRepository.getViewById(itemId),
       VaultItemType.identity => identityRepository.getViewById(itemId),
       VaultItemType.licenseKey => licenseKeyRepository.getViewById(itemId),
-      VaultItemType.recoveryCodes => recoveryCodesRepository.getViewById(itemId),
+      VaultItemType.recoveryCodes => recoveryCodesRepository.getViewById(
+        itemId,
+      ),
       VaultItemType.loyaltyCard => loyaltyCardRepository.getViewById(itemId),
-      _ => throw UnsupportedError('View resolver is not implemented for $type'),
     };
   }
 }

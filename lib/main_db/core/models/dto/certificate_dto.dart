@@ -80,7 +80,7 @@ sealed class CertificateViewDto with _$CertificateViewDto {
 }
 
 @freezed
-sealed class CertificateCardDto with _$CertificateCardDto {
+sealed class CertificateCardDto with _$CertificateCardDto implements VaultEntityCardDto {
   const factory CertificateCardDto({
     required VaultItemCardDto item,
     required CertificateCardDataDto certificate,

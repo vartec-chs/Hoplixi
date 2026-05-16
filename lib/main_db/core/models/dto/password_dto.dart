@@ -58,7 +58,7 @@ sealed class PasswordViewDto with _$PasswordViewDto {
 }
 
 @freezed
-sealed class PasswordCardDto with _$PasswordCardDto {
+sealed class PasswordCardDto with _$PasswordCardDto implements VaultEntityCardDto {
   const factory PasswordCardDto({
     required VaultItemCardDto item,
     required PasswordCardDataDto password,

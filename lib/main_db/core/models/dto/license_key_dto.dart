@@ -74,7 +74,7 @@ sealed class LicenseKeyViewDto with _$LicenseKeyViewDto {
 }
 
 @freezed
-sealed class LicenseKeyCardDto with _$LicenseKeyCardDto {
+sealed class LicenseKeyCardDto with _$LicenseKeyCardDto implements VaultEntityCardDto {
   const factory LicenseKeyCardDto({
     required VaultItemCardDto item,
     required LicenseKeyCardDataDto licenseKey,

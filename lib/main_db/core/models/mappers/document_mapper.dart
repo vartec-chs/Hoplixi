@@ -1,6 +1,5 @@
 import '../../main_store.dart';
 import '../dto/document_dto.dart';
-import '../../tables/document/document_types.dart';
 
 extension DocumentItemsDataMapper on DocumentItemsData {
   DocumentDataDto toDocumentDataDto() {

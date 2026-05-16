@@ -69,7 +69,7 @@ sealed class DocumentViewDto with _$DocumentViewDto {
 }
 
 @freezed
-sealed class DocumentCardDto with _$DocumentCardDto {
+sealed class DocumentCardDto with _$DocumentCardDto implements VaultEntityCardDto {
   const factory DocumentCardDto({
     required VaultItemCardDto item,
     required DocumentCurrentVersionCardDataDto document,

@@ -71,7 +71,7 @@ sealed class BankCardViewDto with _$BankCardViewDto {
 }
 
 @freezed
-sealed class BankCardCardDto with _$BankCardCardDto {
+sealed class BankCardCardDto with _$BankCardCardDto implements VaultEntityCardDto {
   const factory BankCardCardDto({
     required VaultItemCardDto item,
     required BankCardCardDataDto bankCard,

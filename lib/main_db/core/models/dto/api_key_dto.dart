@@ -82,7 +82,7 @@ sealed class ApiKeyViewDto with _$ApiKeyViewDto {
 }
 
 @freezed
-sealed class ApiKeyCardDto with _$ApiKeyCardDto {
+sealed class ApiKeyCardDto with _$ApiKeyCardDto implements VaultEntityCardDto {
   const factory ApiKeyCardDto({
     required VaultItemCardDto item,
     required ApiKeyCardDataDto apiKey,

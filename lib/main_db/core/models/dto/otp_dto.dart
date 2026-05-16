@@ -68,7 +68,7 @@ sealed class OtpViewDto with _$OtpViewDto {
 }
 
 @freezed
-sealed class OtpCardDto with _$OtpCardDto {
+sealed class OtpCardDto with _$OtpCardDto implements VaultEntityCardDto {
   const factory OtpCardDto({
     required VaultItemCardDto item,
     required OtpCardDataDto otp,

@@ -72,7 +72,7 @@ sealed class CryptoWalletViewDto with _$CryptoWalletViewDto {
 }
 
 @freezed
-sealed class CryptoWalletCardDto with _$CryptoWalletCardDto {
+sealed class CryptoWalletCardDto with _$CryptoWalletCardDto implements VaultEntityCardDto {
   const factory CryptoWalletCardDto({
     required VaultItemCardDto item,
     required CryptoWalletCardDataDto cryptoWallet,

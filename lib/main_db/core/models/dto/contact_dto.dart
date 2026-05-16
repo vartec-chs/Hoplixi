@@ -66,7 +66,7 @@ sealed class ContactViewDto with _$ContactViewDto {
 }
 
 @freezed
-sealed class ContactCardDto with _$ContactCardDto {
+sealed class ContactCardDto with _$ContactCardDto implements VaultEntityCardDto {
   const factory ContactCardDto({
     required VaultItemCardDto item,
     required ContactCardDataDto contact,

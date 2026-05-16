@@ -106,7 +106,7 @@ sealed class FileViewDto with _$FileViewDto {
 }
 
 @freezed
-sealed class FileCardDto with _$FileCardDto {
+sealed class FileCardDto with _$FileCardDto implements VaultEntityCardDto {
   const factory FileCardDto({
     required VaultItemCardDto item,
     required FileCardDataDto file,

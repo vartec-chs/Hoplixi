@@ -6,7 +6,6 @@ import 'package:uuid/uuid.dart';
 import '../../main_store.dart';
 import '../../models/mappers/loyalty_card_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
-import '../../tables/vault_items/vault_items.dart';
 
 class LoyaltyCardRepository {
   final MainStore db;

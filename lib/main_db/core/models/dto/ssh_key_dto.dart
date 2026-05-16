@@ -58,7 +58,7 @@ sealed class SshKeyViewDto with _$SshKeyViewDto {
 }
 
 @freezed
-sealed class SshKeyCardDto with _$SshKeyCardDto {
+sealed class SshKeyCardDto with _$SshKeyCardDto implements VaultEntityCardDto {
   const factory SshKeyCardDto({
     required VaultItemCardDto item,
     required SshKeyCardDataDto sshKey,

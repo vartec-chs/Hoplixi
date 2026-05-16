@@ -73,7 +73,7 @@ sealed class IdentityViewDto with _$IdentityViewDto {
 }
 
 @freezed
-sealed class IdentityCardDto with _$IdentityCardDto {
+sealed class IdentityCardDto with _$IdentityCardDto implements VaultEntityCardDto {
   const factory IdentityCardDto({
     required VaultItemCardDto item,
     required IdentityCardDataDto identity,

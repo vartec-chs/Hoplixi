@@ -61,7 +61,7 @@ sealed class WifiViewDto with _$WifiViewDto {
 }
 
 @freezed
-sealed class WifiCardDto with _$WifiCardDto {
+sealed class WifiCardDto with _$WifiCardDto implements VaultEntityCardDto {
   const factory WifiCardDto({
     required VaultItemCardDto item,
     required WifiCardDataDto wifi,
