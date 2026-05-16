@@ -3,7 +3,6 @@ import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:hoplixi/main_db/core/tables/tables.dart';
 
 import '../../../main_store.dart';
-import '../../../tables/certificate/certificate_history.dart';
 
 part 'certificate_history_dao.g.dart';
 

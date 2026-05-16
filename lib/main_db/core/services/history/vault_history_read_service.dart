@@ -291,9 +291,6 @@ class VaultHistoryReadService {
         case VaultItemType.document:
           result.add(DocumentHistoryCardDto(snapshot: snapshotDto));
           break;
-        default:
-          result.add(GenericHistoryCardDto(snapshot: snapshotDto));
-          break;
       }
     }
 

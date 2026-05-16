@@ -3,7 +3,6 @@ import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:hoplixi/main_db/core/tables/tables.dart';
 
 import '../../../main_store.dart';
-import '../../../tables/bank_card/bank_card_history.dart';
 
 part 'bank_card_history_dao.g.dart';
 

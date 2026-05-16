@@ -3,7 +3,6 @@ import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:hoplixi/main_db/core/tables/tables.dart';
 
 import '../../../main_store.dart';
-import '../../../tables/file/file_metadata_history.dart';
 
 part 'file_metadata_history_dao.g.dart';
 

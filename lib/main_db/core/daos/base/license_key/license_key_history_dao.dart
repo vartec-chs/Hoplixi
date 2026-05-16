@@ -3,7 +3,6 @@ import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:hoplixi/main_db/core/tables/tables.dart';
 
 import '../../../main_store.dart';
-import '../../../tables/license_key/license_key_history.dart';
 
 part 'license_key_history_dao.g.dart';
 

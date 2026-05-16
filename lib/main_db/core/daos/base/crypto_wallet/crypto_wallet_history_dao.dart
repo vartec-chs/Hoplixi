@@ -3,7 +3,6 @@ import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:hoplixi/main_db/core/tables/tables.dart';
 
 import '../../../main_store.dart';
-import '../../../tables/crypto_wallet/crypto_wallet_history.dart';
 
 part 'crypto_wallet_history_dao.g.dart';
 
