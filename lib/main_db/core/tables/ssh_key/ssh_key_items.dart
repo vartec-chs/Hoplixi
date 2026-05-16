@@ -16,7 +16,7 @@ class SshKeyItems extends Table {
 
   /// Приватный ключ.
   ///
-  /// Секретное значение. Может быть NULL для public-only записи.
+  /// Secret!!!. Может быть NULL для public-only записи.
   TextColumn get privateKey => text().nullable()();
 
   /// Тип ключа: rsa, ed25519, ecdsa, dsa, other.

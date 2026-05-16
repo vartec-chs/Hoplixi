@@ -21,7 +21,7 @@ class PasswordItems extends Table {
 
   /// Пароль.
   ///
-  /// Секретное значение. Не ограничиваем длину:
+  /// Secret!!!. Не ограничиваем длину:
   /// пользователь может хранить passphrase, token, recovery string и т.д.
   TextColumn get password => text()();
 

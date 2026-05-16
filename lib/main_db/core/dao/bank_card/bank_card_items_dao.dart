@@ -37,6 +37,39 @@ class BankCardItemsDao extends DatabaseAccessor<MainStore>
   }
 
   Future<int> deleteBankCardByItemId(String itemId) {
-    return (delete(bankCardItems)..where((tbl) => tbl.itemId.equals(itemId))).go();
+    return (delete(bankCardItems)..where((tbl) => tbl.itemId.equals(itemId)))
+        .go();
+  }
+
+  Future<String?> getCardNumberByItemId(String itemId) async {
+    final row = await (selectOnly(bankCardItems)
+          ..addColumns([bankCardItems.cardNumber])
+          ..where(bankCardItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(bankCardItems.cardNumber);
+  }
+
+  Future<String?> getCvvByItemId(String itemId) async {
+    final row = await (selectOnly(bankCardItems)
+          ..addColumns([bankCardItems.cvv])
+          ..where(bankCardItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(bankCardItems.cvv);
+  }
+
+  Future<String?> getAccountNumberByItemId(String itemId) async {
+    final row = await (selectOnly(bankCardItems)
+          ..addColumns([bankCardItems.accountNumber])
+          ..where(bankCardItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(bankCardItems.accountNumber);
+  }
+
+  Future<String?> getRoutingNumberByItemId(String itemId) async {
+    final row = await (selectOnly(bankCardItems)
+          ..addColumns([bankCardItems.routingNumber])
+          ..where(bankCardItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(bankCardItems.routingNumber);
   }
 }

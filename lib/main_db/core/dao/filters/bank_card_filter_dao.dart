@@ -29,60 +29,140 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
   Future<List<FilteredCardDto<BankCardCardDto>>> getFiltered(
     BankCardFilter filter,
   ) async {
-    final query = _buildQuery(filter);
+    final whereExpr = _buildWhere(filter);
+    final hasCardNumberExpr = bankCardItems.cardNumber.isNotNull();
+    final hasCvvExpr = bankCardItems.cvv.isNotNull();
+    final hasAccountNumberExpr = bankCardItems.accountNumber.isNotNull();
+    final hasRoutingNumberExpr = bankCardItems.routingNumber.isNotNull();
+
+    final query = selectOnly(vaultItems).join([
+      innerJoin(bankCardItems, bankCardItems.itemId.equalsExp(vaultItems.id)),
+    ])
+      ..addColumns([
+        vaultItems.id,
+        vaultItems.type,
+        vaultItems.name,
+        vaultItems.description,
+        vaultItems.categoryId,
+        vaultItems.iconRefId,
+        vaultItems.isFavorite,
+        vaultItems.isArchived,
+        vaultItems.isPinned,
+        vaultItems.isDeleted,
+        vaultItems.createdAt,
+        vaultItems.modifiedAt,
+        vaultItems.lastUsedAt,
+        vaultItems.archivedAt,
+        vaultItems.deletedAt,
+        vaultItems.recentScore,
+        bankCardItems.cardholderName,
+        bankCardItems.cardType,
+        bankCardItems.cardNetwork,
+        bankCardItems.expiryMonth,
+        bankCardItems.expiryYear,
+        bankCardItems.bankName,
+        hasCardNumberExpr,
+        hasCvvExpr,
+        hasAccountNumberExpr,
+        hasRoutingNumberExpr,
+      ])
+      ..where(whereExpr);
+
     applyLimitOffset(query, filter.base);
+
+    final orderingTerms = buildBaseOrdering(filter.base);
+    if (filter.sortField != null) {
+      final isAsc = filter.base.sortDirection == SortDirection.asc;
+      final mode = isAsc ? OrderingMode.asc : OrderingMode.desc;
+      switch (filter.sortField!) {
+        case BankCardSortField.name:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.name, mode: mode));
+          break;
+        case BankCardSortField.cardholderName:
+          orderingTerms.add(
+              OrderingTerm(expression: bankCardItems.cardholderName, mode: mode));
+          break;
+        case BankCardSortField.bankName:
+          orderingTerms.add(
+              OrderingTerm(expression: bankCardItems.bankName, mode: mode));
+          break;
+        case BankCardSortField.createdAt:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.createdAt, mode: mode));
+          break;
+        case BankCardSortField.modifiedAt:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
+          break;
+        case BankCardSortField.lastUsedAt:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
+          break;
+        case BankCardSortField.usedCount:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.usedCount, mode: mode));
+          break;
+        case BankCardSortField.recentScore:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.recentScore, mode: mode));
+          break;
+      }
+    }
+    query.orderBy(orderingTerms);
 
     final rows = await query.get();
     if (rows.isEmpty) return [];
 
-    final itemIds = rows.map((r) => r.readTable(vaultItems).id).toList();
-    final categoryIds =
-        rows.map((r) => r.readTable(vaultItems).categoryId).whereType<String>().toList();
+    final itemIds = rows.map((r) => r.read(vaultItems.id)!).toList();
+    final categoryIds = rows
+        .map((r) => r.read(vaultItems.categoryId))
+        .whereType<String>()
+        .toList();
 
     final categoriesMap = await loadCategoriesForItems(categoryIds);
     final tagsMap = await loadTagsForItems(itemIds);
 
-    final hasCardNumberExpr = db.bankCardItems.cardNumber.isNotNull();
-    final hasCvvExpr = db.bankCardItems.cvv.isNotNull();
-
     return rows.map((row) {
-      final item = row.readTable(vaultItems);
-      final card = row.readTable(bankCardItems);
-
-      final categoryId = item.categoryId;
+      final itemId = row.read(vaultItems.id)!;
+      final categoryId = row.read(vaultItems.categoryId);
       final meta = VaultItemCardMetaDto(
         category: categoryId != null ? categoriesMap[categoryId] : null,
-        tags: tagsMap[item.id] ?? const [],
+        tags: tagsMap[itemId] ?? const [],
       );
 
       final cardDto = BankCardCardDto(
         item: VaultItemCardDto(
-          itemId: item.id,
-          type: item.type,
-          name: item.name,
-          description: item.description,
-          categoryId: item.categoryId,
-          iconRefId: item.iconRefId,
-          isFavorite: item.isFavorite,
-          isArchived: item.isArchived,
-          isPinned: item.isPinned,
-          isDeleted: item.isDeleted,
-          createdAt: item.createdAt,
-          modifiedAt: item.modifiedAt,
-          lastUsedAt: item.lastUsedAt,
-          archivedAt: item.archivedAt,
-          deletedAt: item.deletedAt,
-          recentScore: item.recentScore,
+          itemId: itemId,
+          type: row.readWithConverter<VaultItemType, String>(vaultItems.type)!,
+          name: row.read(vaultItems.name)!,
+          description: row.read(vaultItems.description),
+          categoryId: categoryId,
+          iconRefId: row.read(vaultItems.iconRefId),
+          isFavorite: row.read(vaultItems.isFavorite)!,
+          isArchived: row.read(vaultItems.isArchived)!,
+          isPinned: row.read(vaultItems.isPinned)!,
+          isDeleted: row.read(vaultItems.isDeleted)!,
+          createdAt: row.read(vaultItems.createdAt)!,
+          modifiedAt: row.read(vaultItems.modifiedAt)!,
+          lastUsedAt: row.read(vaultItems.lastUsedAt),
+          archivedAt: row.read(vaultItems.archivedAt),
+          deletedAt: row.read(vaultItems.deletedAt),
+          recentScore: row.read(vaultItems.recentScore),
         ),
         bankCard: BankCardCardDataDto(
-          cardholderName: card.cardholderName,
-          cardType: row.readWithConverter<CardType?, String>(bankCardItems.cardType),
-          cardNetwork: row.readWithConverter<CardNetwork?, String>(bankCardItems.cardNetwork),
-          expiryMonth: card.expiryMonth,
-          expiryYear: card.expiryYear,
-          bankName: card.bankName,
+          cardholderName: row.read(bankCardItems.cardholderName),
+          cardType:
+              row.readWithConverter<CardType?, String>(bankCardItems.cardType),
+          cardNetwork: row.readWithConverter<CardNetwork?, String>(
+              bankCardItems.cardNetwork),
+          expiryMonth: row.read(bankCardItems.expiryMonth),
+          expiryYear: row.read(bankCardItems.expiryYear),
+          bankName: row.read(bankCardItems.bankName),
           hasCardNumber: row.read(hasCardNumberExpr) ?? false,
           hasCvv: row.read(hasCvvExpr) ?? false,
+          hasAccountNumber: row.read(hasAccountNumberExpr) ?? false,
+          hasRoutingNumber: row.read(hasRoutingNumberExpr) ?? false,
         ),
       );
 
@@ -92,15 +172,21 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
 
   @override
   Future<int> countFiltered(BankCardFilter filter) async {
-    final query = _buildQuery(filter);
+    final whereExpr = _buildWhere(filter);
     final countExp = countAll();
-    query.addColumns([countExp]);
+    final query = selectOnly(vaultItems).join([
+      innerJoin(bankCardItems, bankCardItems.itemId.equalsExp(vaultItems.id)),
+    ])
+      ..addColumns([countExp])
+      ..where(whereExpr);
+
     final row = await query.getSingle();
     return row.read(countExp) ?? 0;
   }
 
-  JoinedSelectStatement<HasResultSet, dynamic> _buildQuery(BankCardFilter filter) {
-    Expression<bool> whereExpr = vaultItems.type.equalsValue(VaultItemType.bankCard);
+  Expression<bool> _buildWhere(BankCardFilter filter) {
+    Expression<bool> whereExpr =
+        vaultItems.type.equalsValue(VaultItemType.bankCard);
 
     whereExpr &= applyBaseVaultItemFilters(filter.base);
 
@@ -118,9 +204,11 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
     }
     if (filter.hasExpiry != null) {
       if (filter.hasExpiry!) {
-        whereExpr &= bankCardItems.expiryMonth.isNotNull() & bankCardItems.expiryYear.isNotNull();
+        whereExpr &= bankCardItems.expiryMonth.isNotNull() &
+            bankCardItems.expiryYear.isNotNull();
       } else {
-        whereExpr &= bankCardItems.expiryMonth.isNull() | bankCardItems.expiryYear.isNull();
+        whereExpr &=
+            bankCardItems.expiryMonth.isNull() | bankCardItems.expiryYear.isNull();
       }
     }
     if (filter.hasCvv != null) {
@@ -147,49 +235,6 @@ class BankCardFilterDao extends DatabaseAccessor<MainStore>
       whereExpr &= textExpr;
     }
 
-    final hasCardNumberExpr = db.bankCardItems.cardNumber.isNotNull();
-    final hasCvvExpr = db.bankCardItems.cvv.isNotNull();
-
-    final query = select(vaultItems).join([
-      innerJoin(bankCardItems, bankCardItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..where(whereExpr)
-      ..addColumns([hasCardNumberExpr, hasCvvExpr]);
-
-    final orderingTerms = buildBaseOrdering(filter.base);
-    if (filter.sortField != null) {
-      final isAsc = filter.base.sortDirection == SortDirection.asc;
-      final mode = isAsc ? OrderingMode.asc : OrderingMode.desc;
-      switch (filter.sortField!) {
-        case BankCardSortField.name:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
-          break;
-        case BankCardSortField.cardholderName:
-          orderingTerms.add(OrderingTerm(expression: bankCardItems.cardholderName, mode: mode));
-          break;
-        case BankCardSortField.bankName:
-          orderingTerms.add(OrderingTerm(expression: bankCardItems.bankName, mode: mode));
-          break;
-        case BankCardSortField.createdAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
-          break;
-        case BankCardSortField.modifiedAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
-          break;
-        case BankCardSortField.lastUsedAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
-          break;
-        case BankCardSortField.usedCount:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.usedCount, mode: mode));
-          break;
-        case BankCardSortField.recentScore:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.recentScore, mode: mode));
-          break;
-      }
-    }
-
-    query.orderBy(orderingTerms);
-
-    return query;
+    return whereExpr;
   }
 }

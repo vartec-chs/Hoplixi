@@ -29,55 +29,122 @@ class WifiFilterDao extends DatabaseAccessor<MainStore>
   Future<List<FilteredCardDto<WifiCardDto>>> getFiltered(
     WifiFilter filter,
   ) async {
-    final query = _buildQuery(filter);
+    final whereExpr = _buildWhere(filter);
+    final hasPasswordExpr = wifiItems.password.isNotNull();
+
+    final query = selectOnly(vaultItems).join([
+      innerJoin(wifiItems, wifiItems.itemId.equalsExp(vaultItems.id)),
+    ])
+      ..addColumns([
+        vaultItems.id,
+        vaultItems.type,
+        vaultItems.name,
+        vaultItems.description,
+        vaultItems.categoryId,
+        vaultItems.iconRefId,
+        vaultItems.isFavorite,
+        vaultItems.isArchived,
+        vaultItems.isPinned,
+        vaultItems.isDeleted,
+        vaultItems.createdAt,
+        vaultItems.modifiedAt,
+        vaultItems.lastUsedAt,
+        vaultItems.archivedAt,
+        vaultItems.deletedAt,
+        vaultItems.recentScore,
+        wifiItems.ssid,
+        wifiItems.securityType,
+        wifiItems.encryption,
+        wifiItems.hiddenSsid,
+        hasPasswordExpr,
+      ])
+      ..where(whereExpr);
+
     applyLimitOffset(query, filter.base);
+
+    final orderingTerms = buildBaseOrdering(filter.base);
+    if (filter.sortField != null) {
+      final isAsc = filter.base.sortDirection == SortDirection.asc;
+      final mode = isAsc ? OrderingMode.asc : OrderingMode.desc;
+      switch (filter.sortField!) {
+        case WifiSortField.name:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.name, mode: mode));
+          break;
+        case WifiSortField.ssid:
+          orderingTerms.add(
+              OrderingTerm(expression: wifiItems.ssid, mode: mode));
+          break;
+        case WifiSortField.createdAt:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.createdAt, mode: mode));
+          break;
+        case WifiSortField.modifiedAt:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
+          break;
+        case WifiSortField.lastUsedAt:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
+          break;
+        case WifiSortField.usedCount:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.usedCount, mode: mode));
+          break;
+        case WifiSortField.recentScore:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.recentScore, mode: mode));
+          break;
+      }
+    }
+    query.orderBy(orderingTerms);
 
     final rows = await query.get();
     if (rows.isEmpty) return [];
 
-    final itemIds = rows.map((r) => r.readTable(vaultItems).id).toList();
-    final categoryIds =
-        rows.map((r) => r.readTable(vaultItems).categoryId).whereType<String>().toList();
+    final itemIds = rows.map((r) => r.read(vaultItems.id)!).toList();
+    final categoryIds = rows
+        .map((r) => r.read(vaultItems.categoryId))
+        .whereType<String>()
+        .toList();
 
     final categoriesMap = await loadCategoriesForItems(categoryIds);
     final tagsMap = await loadTagsForItems(itemIds);
 
-    final hasPasswordExpr = db.wifiItems.password.isNotNull();
-
     return rows.map((row) {
-      final item = row.readTable(vaultItems);
-      final wifi = row.readTable(wifiItems);
-
-      final categoryId = item.categoryId;
+      final itemId = row.read(vaultItems.id)!;
+      final categoryId = row.read(vaultItems.categoryId);
       final meta = VaultItemCardMetaDto(
         category: categoryId != null ? categoriesMap[categoryId] : null,
-        tags: tagsMap[item.id] ?? const [],
+        tags: tagsMap[itemId] ?? const [],
       );
 
       final cardDto = WifiCardDto(
         item: VaultItemCardDto(
-          itemId: item.id,
-          type: item.type,
-          name: item.name,
-          description: item.description,
-          categoryId: item.categoryId,
-          iconRefId: item.iconRefId,
-          isFavorite: item.isFavorite,
-          isArchived: item.isArchived,
-          isPinned: item.isPinned,
-          isDeleted: item.isDeleted,
-          createdAt: item.createdAt,
-          modifiedAt: item.modifiedAt,
-          lastUsedAt: item.lastUsedAt,
-          archivedAt: item.archivedAt,
-          deletedAt: item.deletedAt,
-          recentScore: item.recentScore,
+          itemId: itemId,
+          type: row.readWithConverter<VaultItemType, String>(vaultItems.type)!,
+          name: row.read(vaultItems.name)!,
+          description: row.read(vaultItems.description),
+          categoryId: categoryId,
+          iconRefId: row.read(vaultItems.iconRefId),
+          isFavorite: row.read(vaultItems.isFavorite)!,
+          isArchived: row.read(vaultItems.isArchived)!,
+          isPinned: row.read(vaultItems.isPinned)!,
+          isDeleted: row.read(vaultItems.isDeleted)!,
+          createdAt: row.read(vaultItems.createdAt)!,
+          modifiedAt: row.read(vaultItems.modifiedAt)!,
+          lastUsedAt: row.read(vaultItems.lastUsedAt),
+          archivedAt: row.read(vaultItems.archivedAt),
+          deletedAt: row.read(vaultItems.deletedAt),
+          recentScore: row.read(vaultItems.recentScore),
         ),
         wifi: WifiCardDataDto(
-          ssid: wifi.ssid,
-          securityType: row.readWithConverter<WifiSecurityType?, String>(wifiItems.securityType),
-          encryption: row.readWithConverter<WifiEncryptionType?, String>(wifiItems.encryption),
-          hiddenSsid: wifi.hiddenSsid,
+          ssid: row.read(wifiItems.ssid)!,
+          securityType: row.readWithConverter<WifiSecurityType?, String>(
+              wifiItems.securityType),
+          encryption: row.readWithConverter<WifiEncryptionType?, String>(
+              wifiItems.encryption),
+          hiddenSsid: row.read(wifiItems.hiddenSsid) ?? false,
           hasWifiPassword: row.read(hasPasswordExpr) ?? false,
         ),
       );
@@ -88,14 +155,19 @@ class WifiFilterDao extends DatabaseAccessor<MainStore>
 
   @override
   Future<int> countFiltered(WifiFilter filter) async {
-    final query = _buildQuery(filter);
+    final whereExpr = _buildWhere(filter);
     final countExp = countAll();
-    query.addColumns([countExp]);
+    final query = selectOnly(vaultItems).join([
+      innerJoin(wifiItems, wifiItems.itemId.equalsExp(vaultItems.id)),
+    ])
+      ..addColumns([countExp])
+      ..where(whereExpr);
+
     final row = await query.getSingle();
     return row.read(countExp) ?? 0;
   }
 
-  JoinedSelectStatement<HasResultSet, dynamic> _buildQuery(WifiFilter filter) {
+  Expression<bool> _buildWhere(WifiFilter filter) {
     Expression<bool> whereExpr = vaultItems.type.equalsValue(VaultItemType.wifi);
 
     whereExpr &= applyBaseVaultItemFilters(filter.base);
@@ -128,45 +200,6 @@ class WifiFilterDao extends DatabaseAccessor<MainStore>
       whereExpr &= textExpr;
     }
 
-    final hasPasswordExpr = db.wifiItems.password.isNotNull();
-
-    final query = select(vaultItems).join([
-      innerJoin(wifiItems, wifiItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..where(whereExpr)
-      ..addColumns([hasPasswordExpr]);
-
-    final orderingTerms = buildBaseOrdering(filter.base);
-    if (filter.sortField != null) {
-      final isAsc = filter.base.sortDirection == SortDirection.asc;
-      final mode = isAsc ? OrderingMode.asc : OrderingMode.desc;
-      switch (filter.sortField!) {
-        case WifiSortField.name:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
-          break;
-        case WifiSortField.ssid:
-          orderingTerms.add(OrderingTerm(expression: wifiItems.ssid, mode: mode));
-          break;
-        case WifiSortField.createdAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
-          break;
-        case WifiSortField.modifiedAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
-          break;
-        case WifiSortField.lastUsedAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
-          break;
-        case WifiSortField.usedCount:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.usedCount, mode: mode));
-          break;
-        case WifiSortField.recentScore:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.recentScore, mode: mode));
-          break;
-      }
-    }
-
-    query.orderBy(orderingTerms);
-
-    return query;
+    return whereExpr;
   }
 }

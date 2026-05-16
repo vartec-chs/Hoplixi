@@ -26,7 +26,7 @@ class LicenseKeyItems extends Table {
 
   /// Лицензионный ключ.
   ///
-  /// Секретное значение. Не ограничиваем длину и outer whitespace, чтобы не
+  /// Secret!!!. Не ограничиваем длину и outer whitespace, чтобы не
   /// ломать нестандартные ключи, offline activation blobs и т.п.
   TextColumn get licenseKey => text()();
 

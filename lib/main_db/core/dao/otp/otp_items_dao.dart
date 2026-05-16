@@ -38,4 +38,12 @@ class OtpItemsDao extends DatabaseAccessor<MainStore> with _$OtpItemsDaoMixin {
   Future<int> deleteOtpByItemId(String itemId) {
     return (delete(otpItems)..where((tbl) => tbl.itemId.equals(itemId))).go();
   }
+
+  Future<Uint8List?> getOtpSecretByItemId(String itemId) async {
+    final row = await (selectOnly(otpItems)
+          ..addColumns([otpItems.secret])
+          ..where(otpItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(otpItems.secret);
+  }
 }

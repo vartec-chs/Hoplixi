@@ -23,66 +23,161 @@ class ApiKeyFilterDao extends DatabaseAccessor<MainStore>
   Future<List<FilteredCardDto<ApiKeyCardDto>>> getFiltered(
     ApiKeyFilter filter,
   ) async {
-    final query = _buildQuery(filter);
+    final whereExpr = _buildWhere(filter);
+    final hasKeyExpr = apiKeyItems.key.isNotNull();
+
+    final query = selectOnly(vaultItems).join([
+      innerJoin(apiKeyItems, apiKeyItems.itemId.equalsExp(vaultItems.id)),
+    ])
+      ..addColumns([
+        vaultItems.id,
+        vaultItems.type,
+        vaultItems.name,
+        vaultItems.description,
+        vaultItems.categoryId,
+        vaultItems.iconRefId,
+        vaultItems.isFavorite,
+        vaultItems.isArchived,
+        vaultItems.isPinned,
+        vaultItems.isDeleted,
+        vaultItems.createdAt,
+        vaultItems.modifiedAt,
+        vaultItems.lastUsedAt,
+        vaultItems.archivedAt,
+        vaultItems.deletedAt,
+        vaultItems.recentScore,
+        apiKeyItems.service,
+        apiKeyItems.tokenType,
+        apiKeyItems.environment,
+        apiKeyItems.expiresAt,
+        apiKeyItems.revokedAt,
+        apiKeyItems.rotationPeriodDays,
+        apiKeyItems.lastRotatedAt,
+        apiKeyItems.owner,
+        apiKeyItems.baseUrl,
+        hasKeyExpr,
+      ])
+      ..where(whereExpr);
+
     applyLimitOffset(query, filter.base);
+
+    final orderingTerms = buildBaseOrdering(filter.base);
+    if (filter.sortField != null) {
+      final isAsc = filter.base.sortDirection == SortDirection.asc;
+      final mode = isAsc ? OrderingMode.asc : OrderingMode.desc;
+      switch (filter.sortField!) {
+        case ApiKeySortField.name:
+          orderingTerms.add(
+            OrderingTerm(expression: vaultItems.name, mode: mode),
+          );
+          break;
+        case ApiKeySortField.service:
+          orderingTerms.add(
+            OrderingTerm(expression: apiKeyItems.service, mode: mode),
+          );
+          break;
+        case ApiKeySortField.tokenType:
+          orderingTerms.add(
+            OrderingTerm(expression: apiKeyItems.tokenType, mode: mode),
+          );
+          break;
+        case ApiKeySortField.environment:
+          orderingTerms.add(
+            OrderingTerm(expression: apiKeyItems.environment, mode: mode),
+          );
+          break;
+        case ApiKeySortField.expiresAt:
+          orderingTerms.add(
+            OrderingTerm(expression: apiKeyItems.expiresAt, mode: mode),
+          );
+          break;
+        case ApiKeySortField.revokedAt:
+          orderingTerms.add(
+            OrderingTerm(expression: apiKeyItems.revokedAt, mode: mode),
+          );
+          break;
+        case ApiKeySortField.createdAt:
+          orderingTerms.add(
+            OrderingTerm(expression: vaultItems.createdAt, mode: mode),
+          );
+          break;
+        case ApiKeySortField.modifiedAt:
+          orderingTerms.add(
+            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
+          );
+          break;
+        case ApiKeySortField.lastUsedAt:
+          orderingTerms.add(
+            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
+          );
+          break;
+        case ApiKeySortField.usedCount:
+          orderingTerms.add(
+            OrderingTerm(expression: vaultItems.usedCount, mode: mode),
+          );
+          break;
+        case ApiKeySortField.recentScore:
+          orderingTerms.add(
+            OrderingTerm(expression: vaultItems.recentScore, mode: mode),
+          );
+          break;
+      }
+    }
+    query.orderBy(orderingTerms);
 
     final rows = await query.get();
     if (rows.isEmpty) return [];
 
-    final itemIds = rows.map((r) => r.readTable(vaultItems).id).toList();
+    final itemIds = rows.map((r) => r.read(vaultItems.id)!).toList();
     final categoryIds = rows
-        .map((r) => r.readTable(vaultItems).categoryId)
+        .map((r) => r.read(vaultItems.categoryId))
         .whereType<String>()
         .toList();
 
     final categoriesMap = await loadCategoriesForItems(categoryIds);
     final tagsMap = await loadTagsForItems(itemIds);
 
-    final hasKeyExpr = db.apiKeyItems.key.isNotNull();
-
     return rows.map((row) {
-      final item = row.readTable(vaultItems);
-      final apiKey = row.readTable(apiKeyItems);
-
-      final categoryId = item.categoryId;
+      final itemId = row.read(vaultItems.id)!;
+      final categoryId = row.read(vaultItems.categoryId);
       final meta = VaultItemCardMetaDto(
         category: categoryId != null ? categoriesMap[categoryId] : null,
-        tags: tagsMap[item.id] ?? const [],
+        tags: tagsMap[itemId] ?? const [],
       );
 
       final cardDto = ApiKeyCardDto(
         item: VaultItemCardDto(
-          itemId: item.id,
-          type: item.type,
-          name: item.name,
-          description: item.description,
-          categoryId: item.categoryId,
-          iconRefId: item.iconRefId,
-          isFavorite: item.isFavorite,
-          isArchived: item.isArchived,
-          isPinned: item.isPinned,
-          isDeleted: item.isDeleted,
-          createdAt: item.createdAt,
-          modifiedAt: item.modifiedAt,
-          lastUsedAt: item.lastUsedAt,
-          archivedAt: item.archivedAt,
-          deletedAt: item.deletedAt,
-          recentScore: item.recentScore,
+          itemId: itemId,
+          type: row.readWithConverter<VaultItemType, String>(vaultItems.type)!,
+          name: row.read(vaultItems.name)!,
+          description: row.read(vaultItems.description),
+          categoryId: categoryId,
+          iconRefId: row.read(vaultItems.iconRefId),
+          isFavorite: row.read(vaultItems.isFavorite)!,
+          isArchived: row.read(vaultItems.isArchived)!,
+          isPinned: row.read(vaultItems.isPinned)!,
+          isDeleted: row.read(vaultItems.isDeleted)!,
+          createdAt: row.read(vaultItems.createdAt)!,
+          modifiedAt: row.read(vaultItems.modifiedAt)!,
+          lastUsedAt: row.read(vaultItems.lastUsedAt),
+          archivedAt: row.read(vaultItems.archivedAt),
+          deletedAt: row.read(vaultItems.deletedAt),
+          recentScore: row.read(vaultItems.recentScore),
         ),
         apiKey: ApiKeyCardDataDto(
-          service: apiKey.service,
+          service: row.read(apiKeyItems.service)!,
           tokenType: row.readWithConverter<ApiKeyTokenType?, String>(
             apiKeyItems.tokenType,
           ),
           environment: row.readWithConverter<ApiKeyEnvironment?, String>(
             apiKeyItems.environment,
           ),
-          expiresAt: apiKey.expiresAt,
-          revokedAt: apiKey.revokedAt,
-          rotationPeriodDays: apiKey.rotationPeriodDays,
-          lastRotatedAt: apiKey.lastRotatedAt,
-          owner: apiKey.owner,
-          baseUrl: apiKey.baseUrl,
+          expiresAt: row.read(apiKeyItems.expiresAt),
+          revokedAt: row.read(apiKeyItems.revokedAt),
+          rotationPeriodDays: row.read(apiKeyItems.rotationPeriodDays),
+          lastRotatedAt: row.read(apiKeyItems.lastRotatedAt),
+          owner: row.read(apiKeyItems.owner),
+          baseUrl: row.read(apiKeyItems.baseUrl),
           hasKey: row.read(hasKeyExpr) ?? false,
         ),
       );
@@ -93,16 +188,19 @@ class ApiKeyFilterDao extends DatabaseAccessor<MainStore>
 
   @override
   Future<int> countFiltered(ApiKeyFilter filter) async {
-    final query = _buildQuery(filter);
+    final whereExpr = _buildWhere(filter);
     final countExp = countAll();
-    query.addColumns([countExp]);
+    final query = selectOnly(vaultItems).join([
+      innerJoin(apiKeyItems, apiKeyItems.itemId.equalsExp(vaultItems.id)),
+    ])
+      ..addColumns([countExp])
+      ..where(whereExpr);
+
     final row = await query.getSingle();
     return row.read(countExp) ?? 0;
   }
 
-  JoinedSelectStatement<HasResultSet, dynamic> _buildQuery(
-    ApiKeyFilter filter,
-  ) {
+  Expression<bool> _buildWhere(ApiKeyFilter filter) {
     Expression<bool> whereExpr = vaultItems.type.equalsValue(
       VaultItemType.apiKey,
     );
@@ -169,80 +267,6 @@ class ApiKeyFilterDao extends DatabaseAccessor<MainStore>
       whereExpr &= textExpr;
     }
 
-    final hasKeyExpr = db.apiKeyItems.key.isNotNull();
-
-    final query =
-        select(vaultItems).join([
-            innerJoin(apiKeyItems, apiKeyItems.itemId.equalsExp(vaultItems.id)),
-          ])
-          ..where(whereExpr)
-          ..addColumns([hasKeyExpr]);
-
-    final orderingTerms = buildBaseOrdering(filter.base);
-    if (filter.sortField != null) {
-      final isAsc = filter.base.sortDirection == SortDirection.asc;
-      final mode = isAsc ? OrderingMode.asc : OrderingMode.desc;
-      switch (filter.sortField!) {
-        case ApiKeySortField.name:
-          orderingTerms.add(
-            OrderingTerm(expression: vaultItems.name, mode: mode),
-          );
-          break;
-        case ApiKeySortField.service:
-          orderingTerms.add(
-            OrderingTerm(expression: apiKeyItems.service, mode: mode),
-          );
-          break;
-        case ApiKeySortField.tokenType:
-          orderingTerms.add(
-            OrderingTerm(expression: apiKeyItems.tokenType, mode: mode),
-          );
-          break;
-        case ApiKeySortField.environment:
-          orderingTerms.add(
-            OrderingTerm(expression: apiKeyItems.environment, mode: mode),
-          );
-          break;
-        case ApiKeySortField.expiresAt:
-          orderingTerms.add(
-            OrderingTerm(expression: apiKeyItems.expiresAt, mode: mode),
-          );
-          break;
-        case ApiKeySortField.revokedAt:
-          orderingTerms.add(
-            OrderingTerm(expression: apiKeyItems.revokedAt, mode: mode),
-          );
-          break;
-        case ApiKeySortField.createdAt:
-          orderingTerms.add(
-            OrderingTerm(expression: vaultItems.createdAt, mode: mode),
-          );
-          break;
-        case ApiKeySortField.modifiedAt:
-          orderingTerms.add(
-            OrderingTerm(expression: vaultItems.modifiedAt, mode: mode),
-          );
-          break;
-        case ApiKeySortField.lastUsedAt:
-          orderingTerms.add(
-            OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
-          );
-          break;
-        case ApiKeySortField.usedCount:
-          orderingTerms.add(
-            OrderingTerm(expression: vaultItems.usedCount, mode: mode),
-          );
-          break;
-        case ApiKeySortField.recentScore:
-          orderingTerms.add(
-            OrderingTerm(expression: vaultItems.recentScore, mode: mode),
-          );
-          break;
-      }
-    }
-
-    query.orderBy(orderingTerms);
-
-    return query;
+    return whereExpr;
   }
 }

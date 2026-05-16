@@ -24,7 +24,7 @@ class ApiKeyItems extends Table {
 
   /// Сам API key / token.
   ///
-  /// Секретное значение внутри зашифрованной БД.
+  /// Secret!!!.
   TextColumn get key => text()();
 
   /// Тип токена.

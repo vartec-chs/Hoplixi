@@ -42,4 +42,28 @@ class LoyaltyCardItemsDao extends DatabaseAccessor<MainStore>
     return (delete(loyaltyCardItems)..where((tbl) => tbl.itemId.equals(itemId)))
         .go();
   }
+
+  Future<String?> getCardNumberByItemId(String itemId) async {
+    final row = await (selectOnly(loyaltyCardItems)
+          ..addColumns([loyaltyCardItems.cardNumber])
+          ..where(loyaltyCardItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(loyaltyCardItems.cardNumber);
+  }
+
+  Future<String?> getBarcodeValueByItemId(String itemId) async {
+    final row = await (selectOnly(loyaltyCardItems)
+          ..addColumns([loyaltyCardItems.barcodeValue])
+          ..where(loyaltyCardItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(loyaltyCardItems.barcodeValue);
+  }
+
+  Future<String?> getLoyaltyPasswordByItemId(String itemId) async {
+    final row = await (selectOnly(loyaltyCardItems)
+          ..addColumns([loyaltyCardItems.password])
+          ..where(loyaltyCardItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(loyaltyCardItems.password);
+  }
 }

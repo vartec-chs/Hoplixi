@@ -38,4 +38,12 @@ class WifiItemsDao extends DatabaseAccessor<MainStore> with _$WifiItemsDaoMixin 
   Future<int> deleteWifiByItemId(String itemId) {
     return (delete(wifiItems)..where((tbl) => tbl.itemId.equals(itemId))).go();
   }
+
+  Future<String?> getWifiPasswordByItemId(String itemId) async {
+    final row = await (selectOnly(wifiItems)
+          ..addColumns([wifiItems.password])
+          ..where(wifiItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(wifiItems.password);
+  }
 }

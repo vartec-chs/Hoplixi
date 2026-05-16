@@ -39,4 +39,36 @@ class IdentityItemsDao extends DatabaseAccessor<MainStore>
   Future<int> deleteIdentityByItemId(String itemId) {
     return (delete(identityItems)..where((tbl) => tbl.itemId.equals(itemId))).go();
   }
+
+  Future<String?> getTaxIdByItemId(String itemId) async {
+    final row = await (selectOnly(identityItems)
+          ..addColumns([identityItems.taxId])
+          ..where(identityItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(identityItems.taxId);
+  }
+
+  Future<String?> getNationalIdByItemId(String itemId) async {
+    final row = await (selectOnly(identityItems)
+          ..addColumns([identityItems.nationalId])
+          ..where(identityItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(identityItems.nationalId);
+  }
+
+  Future<String?> getPassportNumberByItemId(String itemId) async {
+    final row = await (selectOnly(identityItems)
+          ..addColumns([identityItems.passportNumber])
+          ..where(identityItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(identityItems.passportNumber);
+  }
+
+  Future<String?> getDriverLicenseNumberByItemId(String itemId) async {
+    final row = await (selectOnly(identityItems)
+          ..addColumns([identityItems.driverLicenseNumber])
+          ..where(identityItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(identityItems.driverLicenseNumber);
+  }
 }

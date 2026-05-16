@@ -39,4 +39,12 @@ class ApiKeyItemsDao extends DatabaseAccessor<MainStore>
   Future<int> deleteApiKeyByItemId(String itemId) {
     return (delete(apiKeyItems)..where((tbl) => tbl.itemId.equals(itemId))).go();
   }
+
+  Future<String?> getApiKeySecretByItemId(String itemId) async {
+    final row = await (selectOnly(apiKeyItems)
+          ..addColumns([apiKeyItems.key])
+          ..where(apiKeyItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(apiKeyItems.key);
+  }
 }

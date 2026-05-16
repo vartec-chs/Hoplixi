@@ -40,4 +40,28 @@ class CryptoWalletItemsDao extends DatabaseAccessor<MainStore>
     return (delete(cryptoWalletItems)..where((tbl) => tbl.itemId.equals(itemId)))
         .go();
   }
+
+  Future<String?> getMnemonicByItemId(String itemId) async {
+    final row = await (selectOnly(cryptoWalletItems)
+          ..addColumns([cryptoWalletItems.mnemonic])
+          ..where(cryptoWalletItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(cryptoWalletItems.mnemonic);
+  }
+
+  Future<String?> getPrivateKeyByItemId(String itemId) async {
+    final row = await (selectOnly(cryptoWalletItems)
+          ..addColumns([cryptoWalletItems.privateKey])
+          ..where(cryptoWalletItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(cryptoWalletItems.privateKey);
+  }
+
+  Future<String?> getXprvByItemId(String itemId) async {
+    final row = await (selectOnly(cryptoWalletItems)
+          ..addColumns([cryptoWalletItems.xprv])
+          ..where(cryptoWalletItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(cryptoWalletItems.xprv);
+  }
 }

@@ -39,6 +39,8 @@ sealed class BankCardCardDataDto with _$BankCardCardDataDto {
     String? bankName,
     @Default(false) bool hasCvv,
     @Default(true) bool hasCardNumber,
+    @Default(false) bool hasAccountNumber,
+    @Default(false) bool hasRoutingNumber,
   }) = _BankCardCardDataDto;
 
   factory BankCardCardDataDto.fromJson(Map<String, dynamic> json) =>

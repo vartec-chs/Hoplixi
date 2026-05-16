@@ -50,15 +50,17 @@ class CryptoWalletItems extends Table {
 
   /// Mnemonic/seed phrase.
   ///
-  /// Секретное значение. Не ограничиваем длину.
+  /// Secret!!!.
   TextColumn get mnemonic => text().nullable()();
 
   /// Приватный ключ.
   ///
-  /// Секретное значение. Не ограничиваем длину.
+  /// Secret!!!.
   TextColumn get privateKey => text().nullable()();
 
   /// Путь деривации, например m/44'/0'/0'/0/0.
+  /// 
+  /// Secret!!!, может содержать чувствительную информацию, если используется нестандартная схема деривации.
   TextColumn get derivationPath =>
       text().withLength(min: 1, max: 255).nullable()();
 
@@ -76,11 +78,13 @@ class CryptoWalletItems extends Table {
   TextColumn get addresses => text().nullable()();
 
   /// Extended public key.
+  ///
+  /// Secret!!!.
   TextColumn get xpub => text().nullable()();
 
   /// Extended private key.
   ///
-  /// Секретное значение.
+  /// Secret!!!.
   TextColumn get xprv => text().nullable()();
 
   /// Аппаратное устройство: Ledger, Trezor и т.д.

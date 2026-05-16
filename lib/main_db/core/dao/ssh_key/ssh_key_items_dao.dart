@@ -39,4 +39,12 @@ class SshKeyItemsDao extends DatabaseAccessor<MainStore>
   Future<int> deleteSshKeyByItemId(String itemId) {
     return (delete(sshKeyItems)..where((tbl) => tbl.itemId.equals(itemId))).go();
   }
+
+  Future<String?> getPrivateKeyByItemId(String itemId) async {
+    final row = await (selectOnly(sshKeyItems)
+          ..addColumns([sshKeyItems.privateKey])
+          ..where(sshKeyItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(sshKeyItems.privateKey);
+  }
 }

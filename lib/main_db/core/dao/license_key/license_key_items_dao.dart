@@ -40,4 +40,12 @@ class LicenseKeyItemsDao extends DatabaseAccessor<MainStore>
     return (delete(licenseKeyItems)..where((tbl) => tbl.itemId.equals(itemId)))
         .go();
   }
+
+  Future<String?> getLicenseKeySecretByItemId(String itemId) async {
+    final row = await (selectOnly(licenseKeyItems)
+          ..addColumns([licenseKeyItems.licenseKey])
+          ..where(licenseKeyItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(licenseKeyItems.licenseKey);
+  }
 }

@@ -29,63 +29,159 @@ class CertificateFilterDao extends DatabaseAccessor<MainStore>
   Future<List<FilteredCardDto<CertificateCardDto>>> getFiltered(
     CertificateFilter filter,
   ) async {
-    final query = _buildQuery(filter);
+    final whereExpr = _buildWhere(filter);
+    final hasPrivateKeyExpr = certificateItems.privateKey.isNotNull();
+    final hasCertificateBlobExpr =
+        certificateItems.certificateBlob.isNotNull();
+    final hasPrivateKeyPasswordExpr =
+        certificateItems.privateKeyPassword.isNotNull();
+    final hasPasswordForPfxExpr =
+        certificateItems.passwordForPfx.isNotNull();
+    final hasCertificatePemExpr =
+        certificateItems.certificatePem.isNotNull();
+
+    final query = selectOnly(vaultItems).join([
+      innerJoin(
+          certificateItems, certificateItems.itemId.equalsExp(vaultItems.id)),
+    ])
+      ..addColumns([
+        vaultItems.id,
+        vaultItems.type,
+        vaultItems.name,
+        vaultItems.description,
+        vaultItems.categoryId,
+        vaultItems.iconRefId,
+        vaultItems.isFavorite,
+        vaultItems.isArchived,
+        vaultItems.isPinned,
+        vaultItems.isDeleted,
+        vaultItems.createdAt,
+        vaultItems.modifiedAt,
+        vaultItems.lastUsedAt,
+        vaultItems.archivedAt,
+        vaultItems.deletedAt,
+        vaultItems.recentScore,
+        certificateItems.certificateFormat,
+        certificateItems.keyAlgorithm,
+        certificateItems.keySize,
+        certificateItems.serialNumber,
+        certificateItems.issuer,
+        certificateItems.subject,
+        certificateItems.validFrom,
+        certificateItems.validTo,
+        hasPrivateKeyExpr,
+        hasCertificateBlobExpr,
+        hasPrivateKeyPasswordExpr,
+        hasPasswordForPfxExpr,
+        hasCertificatePemExpr,
+      ])
+      ..where(whereExpr);
+
     applyLimitOffset(query, filter.base);
+
+    final orderingTerms = buildBaseOrdering(filter.base);
+    if (filter.sortField != null) {
+      final isAsc = filter.base.sortDirection == SortDirection.asc;
+      final mode = isAsc ? OrderingMode.asc : OrderingMode.desc;
+      switch (filter.sortField!) {
+        case CertificateSortField.name:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.name, mode: mode));
+          break;
+        case CertificateSortField.serialNumber:
+          orderingTerms.add(OrderingTerm(
+              expression: certificateItems.serialNumber, mode: mode));
+          break;
+        case CertificateSortField.issuer:
+          orderingTerms.add(
+              OrderingTerm(expression: certificateItems.issuer, mode: mode));
+          break;
+        case CertificateSortField.subject:
+          orderingTerms.add(
+              OrderingTerm(expression: certificateItems.subject, mode: mode));
+          break;
+        case CertificateSortField.validFrom:
+          orderingTerms.add(OrderingTerm(
+              expression: certificateItems.validFrom, mode: mode));
+          break;
+        case CertificateSortField.validTo:
+          orderingTerms.add(OrderingTerm(
+              expression: certificateItems.validTo, mode: mode));
+          break;
+        case CertificateSortField.createdAt:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.createdAt, mode: mode));
+          break;
+        case CertificateSortField.modifiedAt:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
+          break;
+        case CertificateSortField.lastUsedAt:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
+          break;
+        case CertificateSortField.usedCount:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.usedCount, mode: mode));
+          break;
+        case CertificateSortField.recentScore:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.recentScore, mode: mode));
+          break;
+      }
+    }
+    query.orderBy(orderingTerms);
 
     final rows = await query.get();
     if (rows.isEmpty) return [];
 
-    final itemIds = rows.map((r) => r.readTable(vaultItems).id).toList();
-    final categoryIds =
-        rows.map((r) => r.readTable(vaultItems).categoryId).whereType<String>().toList();
+    final itemIds = rows.map((r) => r.read(vaultItems.id)!).toList();
+    final categoryIds = rows
+        .map((r) => r.read(vaultItems.categoryId))
+        .whereType<String>()
+        .toList();
 
     final categoriesMap = await loadCategoriesForItems(categoryIds);
     final tagsMap = await loadTagsForItems(itemIds);
 
-    final hasPrivateKeyExpr = db.certificateItems.privateKey.isNotNull();
-    final hasCertificateBlobExpr = db.certificateItems.certificateBlob.isNotNull();
-    final hasPrivateKeyPasswordExpr = db.certificateItems.privateKeyPassword.isNotNull();
-    final hasPasswordForPfxExpr = db.certificateItems.passwordForPfx.isNotNull();
-    final hasCertificatePemExpr = db.certificateItems.certificatePem.isNotNull();
-
     return rows.map((row) {
-      final item = row.readTable(vaultItems);
-      final cert = row.readTable(certificateItems);
-
-      final categoryId = item.categoryId;
+      final itemId = row.read(vaultItems.id)!;
+      final categoryId = row.read(vaultItems.categoryId);
       final meta = VaultItemCardMetaDto(
         category: categoryId != null ? categoriesMap[categoryId] : null,
-        tags: tagsMap[item.id] ?? const [],
+        tags: tagsMap[itemId] ?? const [],
       );
 
       final cardDto = CertificateCardDto(
         item: VaultItemCardDto(
-          itemId: item.id,
-          type: item.type,
-          name: item.name,
-          description: item.description,
-          categoryId: item.categoryId,
-          iconRefId: item.iconRefId,
-          isFavorite: item.isFavorite,
-          isArchived: item.isArchived,
-          isPinned: item.isPinned,
-          isDeleted: item.isDeleted,
-          createdAt: item.createdAt,
-          modifiedAt: item.modifiedAt,
-          lastUsedAt: item.lastUsedAt,
-          archivedAt: item.archivedAt,
-          deletedAt: item.deletedAt,
-          recentScore: item.recentScore,
+          itemId: itemId,
+          type: row.readWithConverter<VaultItemType, String>(vaultItems.type)!,
+          name: row.read(vaultItems.name)!,
+          description: row.read(vaultItems.description),
+          categoryId: categoryId,
+          iconRefId: row.read(vaultItems.iconRefId),
+          isFavorite: row.read(vaultItems.isFavorite)!,
+          isArchived: row.read(vaultItems.isArchived)!,
+          isPinned: row.read(vaultItems.isPinned)!,
+          isDeleted: row.read(vaultItems.isDeleted)!,
+          createdAt: row.read(vaultItems.createdAt)!,
+          modifiedAt: row.read(vaultItems.modifiedAt)!,
+          lastUsedAt: row.read(vaultItems.lastUsedAt),
+          archivedAt: row.read(vaultItems.archivedAt),
+          deletedAt: row.read(vaultItems.deletedAt),
+          recentScore: row.read(vaultItems.recentScore),
         ),
         certificate: CertificateCardDataDto(
-          certificateFormat: row.readWithConverter<CertificateFormat?, String>(certificateItems.certificateFormat),
-          keyAlgorithm: row.readWithConverter<CertificateKeyAlgorithm?, String>(certificateItems.keyAlgorithm),
-          keySize: cert.keySize,
-          serialNumber: cert.serialNumber,
-          issuer: cert.issuer,
-          subject: cert.subject,
-          validFrom: cert.validFrom,
-          validTo: cert.validTo,
+          certificateFormat: row.readWithConverter<CertificateFormat?, String>(
+              certificateItems.certificateFormat),
+          keyAlgorithm: row.readWithConverter<CertificateKeyAlgorithm?, String>(
+              certificateItems.keyAlgorithm),
+          keySize: row.read(certificateItems.keySize),
+          serialNumber: row.read(certificateItems.serialNumber),
+          issuer: row.read(certificateItems.issuer),
+          subject: row.read(certificateItems.subject),
+          validFrom: row.read(certificateItems.validFrom),
+          validTo: row.read(certificateItems.validTo),
           hasPrivateKey: row.read(hasPrivateKeyExpr) ?? false,
           hasCertificateBlob: row.read(hasCertificateBlobExpr) ?? false,
           hasPrivateKeyPassword: row.read(hasPrivateKeyPasswordExpr) ?? false,
@@ -100,29 +196,39 @@ class CertificateFilterDao extends DatabaseAccessor<MainStore>
 
   @override
   Future<int> countFiltered(CertificateFilter filter) async {
-    final query = _buildQuery(filter);
+    final whereExpr = _buildWhere(filter);
     final countExp = countAll();
-    query.addColumns([countExp]);
+    final query = selectOnly(vaultItems).join([
+      innerJoin(
+          certificateItems, certificateItems.itemId.equalsExp(vaultItems.id)),
+    ])
+      ..addColumns([countExp])
+      ..where(whereExpr);
+
     final row = await query.getSingle();
     return row.read(countExp) ?? 0;
   }
 
-  JoinedSelectStatement<HasResultSet, dynamic> _buildQuery(CertificateFilter filter) {
-    Expression<bool> whereExpr = vaultItems.type.equalsValue(VaultItemType.certificate);
+  Expression<bool> _buildWhere(CertificateFilter filter) {
+    Expression<bool> whereExpr =
+        vaultItems.type.equalsValue(VaultItemType.certificate);
 
     whereExpr &= applyBaseVaultItemFilters(filter.base);
 
     if (filter.certificateFormat != null) {
-      whereExpr &= certificateItems.certificateFormat.equalsValue(filter.certificateFormat!);
+      whereExpr &= certificateItems.certificateFormat
+          .equalsValue(filter.certificateFormat!);
     }
     if (filter.keyAlgorithm != null) {
-      whereExpr &= certificateItems.keyAlgorithm.equalsValue(filter.keyAlgorithm!);
+      whereExpr &=
+          certificateItems.keyAlgorithm.equalsValue(filter.keyAlgorithm!);
     }
     if (filter.keySize != null) {
       whereExpr &= certificateItems.keySize.equals(filter.keySize!);
     }
     if (filter.serialNumber != null) {
-      whereExpr &= certificateItems.serialNumber.contains(filter.serialNumber!);
+      whereExpr &=
+          certificateItems.serialNumber.contains(filter.serialNumber!);
     }
     if (filter.issuer != null) {
       whereExpr &= certificateItems.issuer.contains(filter.issuer!);
@@ -132,10 +238,12 @@ class CertificateFilterDao extends DatabaseAccessor<MainStore>
     }
 
     if (filter.validFromAfter != null) {
-      whereExpr &= certificateItems.validFrom.isBiggerOrEqualValue(filter.validFromAfter!);
+      whereExpr &= certificateItems.validFrom
+          .isBiggerOrEqualValue(filter.validFromAfter!);
     }
     if (filter.validToBefore != null) {
-      whereExpr &= certificateItems.validTo.isSmallerOrEqualValue(filter.validToBefore!);
+      whereExpr &=
+          certificateItems.validTo.isSmallerOrEqualValue(filter.validToBefore!);
     }
 
     if (filter.hasPrivateKey != null) {
@@ -170,67 +278,6 @@ class CertificateFilterDao extends DatabaseAccessor<MainStore>
       whereExpr &= textExpr;
     }
 
-    final hasPrivateKeyExpr = db.certificateItems.privateKey.isNotNull();
-    final hasCertificateBlobExpr = db.certificateItems.certificateBlob.isNotNull();
-    final hasPrivateKeyPasswordExpr = db.certificateItems.privateKeyPassword.isNotNull();
-    final hasPasswordForPfxExpr = db.certificateItems.passwordForPfx.isNotNull();
-    final hasCertificatePemExpr = db.certificateItems.certificatePem.isNotNull();
-
-    final query = select(vaultItems).join([
-      innerJoin(certificateItems, certificateItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..where(whereExpr)
-      ..addColumns([
-        hasPrivateKeyExpr,
-        hasCertificateBlobExpr,
-        hasPrivateKeyPasswordExpr,
-        hasPasswordForPfxExpr,
-        hasCertificatePemExpr,
-      ]);
-
-    final orderingTerms = buildBaseOrdering(filter.base);
-    if (filter.sortField != null) {
-      final isAsc = filter.base.sortDirection == SortDirection.asc;
-      final mode = isAsc ? OrderingMode.asc : OrderingMode.desc;
-      switch (filter.sortField!) {
-        case CertificateSortField.name:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
-          break;
-        case CertificateSortField.serialNumber:
-          orderingTerms.add(OrderingTerm(expression: certificateItems.serialNumber, mode: mode));
-          break;
-        case CertificateSortField.issuer:
-          orderingTerms.add(OrderingTerm(expression: certificateItems.issuer, mode: mode));
-          break;
-        case CertificateSortField.subject:
-          orderingTerms.add(OrderingTerm(expression: certificateItems.subject, mode: mode));
-          break;
-        case CertificateSortField.validFrom:
-          orderingTerms.add(OrderingTerm(expression: certificateItems.validFrom, mode: mode));
-          break;
-        case CertificateSortField.validTo:
-          orderingTerms.add(OrderingTerm(expression: certificateItems.validTo, mode: mode));
-          break;
-        case CertificateSortField.createdAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
-          break;
-        case CertificateSortField.modifiedAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
-          break;
-        case CertificateSortField.lastUsedAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
-          break;
-        case CertificateSortField.usedCount:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.usedCount, mode: mode));
-          break;
-        case CertificateSortField.recentScore:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.recentScore, mode: mode));
-          break;
-      }
-    }
-
-    query.orderBy(orderingTerms);
-
-    return query;
+    return whereExpr;
   }
 }

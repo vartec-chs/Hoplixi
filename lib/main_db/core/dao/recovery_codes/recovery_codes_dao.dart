@@ -89,4 +89,20 @@ class RecoveryCodesDao extends DatabaseAccessor<MainStore>
     return (delete(recoveryCodes)..where((tbl) => tbl.itemId.equals(itemId)))
         .go();
   }
+
+  Future<String?> getRecoveryCodeSecretById(int id) async {
+    final row = await (selectOnly(recoveryCodes)
+          ..addColumns([recoveryCodes.code])
+          ..where(recoveryCodes.id.equals(id)))
+        .getSingleOrNull();
+    return row?.read(recoveryCodes.code);
+  }
+
+  Future<List<int>> getRecoveryCodeIdsByItemId(String itemId) async {
+    final query = selectOnly(recoveryCodes)
+      ..addColumns([recoveryCodes.id])
+      ..where(recoveryCodes.itemId.equals(itemId));
+    final rows = await query.get();
+    return rows.map((r) => r.read(recoveryCodes.id)!).toList();
+  }
 }

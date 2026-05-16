@@ -30,13 +30,17 @@ class CertificateItems extends Table {
 
   /// Приватный ключ.
   ///
-  /// Секретное значение. Может быть NULL, если хранится только сертификат.
+  /// Secret!!!.
   TextColumn get privateKey => text().nullable()();
 
   /// Пароль от privateKey, если он есть.
+  /// 
+  /// Secret!!!.
   TextColumn get privateKeyPassword => text().nullable()();
 
   /// Пароль от PFX/PKCS#12.
+  /// 
+  /// Secret!!!.
   TextColumn get passwordForPfx => text().nullable()();
 
   /// Алгоритм ключа: RSA, ECDSA, Ed25519 и т.д.

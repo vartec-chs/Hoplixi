@@ -29,54 +29,145 @@ class IdentityFilterDao extends DatabaseAccessor<MainStore>
   Future<List<FilteredCardDto<IdentityCardDto>>> getFiltered(
     IdentityFilter filter,
   ) async {
-    final query = _buildQuery(filter);
+    final whereExpr = _buildWhere(filter);
+    final hasTaxIdExpr = identityItems.taxId.isNotNull();
+    final hasNationalIdExpr = identityItems.nationalId.isNotNull();
+    final hasPassportNumberExpr = identityItems.passportNumber.isNotNull();
+    final hasDriverLicenseNumberExpr =
+        identityItems.driverLicenseNumber.isNotNull();
+
+    final query = selectOnly(vaultItems).join([
+      innerJoin(identityItems, identityItems.itemId.equalsExp(vaultItems.id)),
+    ])
+      ..addColumns([
+        vaultItems.id,
+        vaultItems.type,
+        vaultItems.name,
+        vaultItems.description,
+        vaultItems.categoryId,
+        vaultItems.iconRefId,
+        vaultItems.isFavorite,
+        vaultItems.isArchived,
+        vaultItems.isPinned,
+        vaultItems.isDeleted,
+        vaultItems.createdAt,
+        vaultItems.modifiedAt,
+        vaultItems.lastUsedAt,
+        vaultItems.archivedAt,
+        vaultItems.deletedAt,
+        vaultItems.recentScore,
+        identityItems.displayName,
+        identityItems.username,
+        identityItems.email,
+        identityItems.phone,
+        identityItems.company,
+        hasTaxIdExpr,
+        hasNationalIdExpr,
+        hasPassportNumberExpr,
+        hasDriverLicenseNumberExpr,
+      ])
+      ..where(whereExpr);
+
     applyLimitOffset(query, filter.base);
+
+    final orderingTerms = buildBaseOrdering(filter.base);
+    if (filter.sortField != null) {
+      final isAsc = filter.base.sortDirection == SortDirection.asc;
+      final mode = isAsc ? OrderingMode.asc : OrderingMode.desc;
+      switch (filter.sortField!) {
+        case IdentitySortField.name:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.name, mode: mode));
+          break;
+        case IdentitySortField.displayName:
+          orderingTerms.add(
+              OrderingTerm(expression: identityItems.displayName, mode: mode));
+          break;
+        case IdentitySortField.username:
+          orderingTerms.add(
+              OrderingTerm(expression: identityItems.username, mode: mode));
+          break;
+        case IdentitySortField.email:
+          orderingTerms.add(
+              OrderingTerm(expression: identityItems.email, mode: mode));
+          break;
+        case IdentitySortField.company:
+          orderingTerms.add(
+              OrderingTerm(expression: identityItems.company, mode: mode));
+          break;
+        case IdentitySortField.createdAt:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.createdAt, mode: mode));
+          break;
+        case IdentitySortField.modifiedAt:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
+          break;
+        case IdentitySortField.lastUsedAt:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
+          break;
+        case IdentitySortField.usedCount:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.usedCount, mode: mode));
+          break;
+        case IdentitySortField.recentScore:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.recentScore, mode: mode));
+          break;
+      }
+    }
+    query.orderBy(orderingTerms);
 
     final rows = await query.get();
     if (rows.isEmpty) return [];
 
-    final itemIds = rows.map((r) => r.readTable(vaultItems).id).toList();
-    final categoryIds =
-        rows.map((r) => r.readTable(vaultItems).categoryId).whereType<String>().toList();
+    final itemIds = rows.map((r) => r.read(vaultItems.id)!).toList();
+    final categoryIds = rows
+        .map((r) => r.read(vaultItems.categoryId))
+        .whereType<String>()
+        .toList();
 
     final categoriesMap = await loadCategoriesForItems(categoryIds);
     final tagsMap = await loadTagsForItems(itemIds);
 
     return rows.map((row) {
-      final item = row.readTable(vaultItems);
-      final identity = row.readTable(identityItems);
-
-      final categoryId = item.categoryId;
+      final itemId = row.read(vaultItems.id)!;
+      final categoryId = row.read(vaultItems.categoryId);
       final meta = VaultItemCardMetaDto(
         category: categoryId != null ? categoriesMap[categoryId] : null,
-        tags: tagsMap[item.id] ?? const [],
+        tags: tagsMap[itemId] ?? const [],
       );
 
       final cardDto = IdentityCardDto(
         item: VaultItemCardDto(
-          itemId: item.id,
-          type: item.type,
-          name: item.name,
-          description: item.description,
-          categoryId: item.categoryId,
-          iconRefId: item.iconRefId,
-          isFavorite: item.isFavorite,
-          isArchived: item.isArchived,
-          isPinned: item.isPinned,
-          isDeleted: item.isDeleted,
-          createdAt: item.createdAt,
-          modifiedAt: item.modifiedAt,
-          lastUsedAt: item.lastUsedAt,
-          archivedAt: item.archivedAt,
-          deletedAt: item.deletedAt,
-          recentScore: item.recentScore,
+          itemId: itemId,
+          type: row.readWithConverter<VaultItemType, String>(vaultItems.type)!,
+          name: row.read(vaultItems.name)!,
+          description: row.read(vaultItems.description),
+          categoryId: categoryId,
+          iconRefId: row.read(vaultItems.iconRefId),
+          isFavorite: row.read(vaultItems.isFavorite)!,
+          isArchived: row.read(vaultItems.isArchived)!,
+          isPinned: row.read(vaultItems.isPinned)!,
+          isDeleted: row.read(vaultItems.isDeleted)!,
+          createdAt: row.read(vaultItems.createdAt)!,
+          modifiedAt: row.read(vaultItems.modifiedAt)!,
+          lastUsedAt: row.read(vaultItems.lastUsedAt),
+          archivedAt: row.read(vaultItems.archivedAt),
+          deletedAt: row.read(vaultItems.deletedAt),
+          recentScore: row.read(vaultItems.recentScore),
         ),
         identity: IdentityCardDataDto(
-          displayName: identity.displayName,
-          username: identity.username,
-          email: identity.email,
-          phone: identity.phone,
-          company: identity.company,
+          displayName: row.read(identityItems.displayName),
+          username: row.read(identityItems.username),
+          email: row.read(identityItems.email),
+          phone: row.read(identityItems.phone),
+          company: row.read(identityItems.company),
+          hasTaxId: row.read(hasTaxIdExpr) ?? false,
+          hasNationalId: row.read(hasNationalIdExpr) ?? false,
+          hasPassportNumber: row.read(hasPassportNumberExpr) ?? false,
+          hasDriverLicenseNumber: row.read(hasDriverLicenseNumberExpr) ?? false,
         ),
       );
 
@@ -86,15 +177,21 @@ class IdentityFilterDao extends DatabaseAccessor<MainStore>
 
   @override
   Future<int> countFiltered(IdentityFilter filter) async {
-    final query = _buildQuery(filter);
+    final whereExpr = _buildWhere(filter);
     final countExp = countAll();
-    query.addColumns([countExp]);
+    final query = selectOnly(vaultItems).join([
+      innerJoin(identityItems, identityItems.itemId.equalsExp(vaultItems.id)),
+    ])
+      ..addColumns([countExp])
+      ..where(whereExpr);
+
     final row = await query.getSingle();
     return row.read(countExp) ?? 0;
   }
 
-  JoinedSelectStatement<HasResultSet, dynamic> _buildQuery(IdentityFilter filter) {
-    Expression<bool> whereExpr = vaultItems.type.equalsValue(VaultItemType.identity);
+  Expression<bool> _buildWhere(IdentityFilter filter) {
+    Expression<bool> whereExpr =
+        vaultItems.type.equalsValue(VaultItemType.identity);
 
     whereExpr &= applyBaseVaultItemFilters(filter.base);
 
@@ -168,51 +265,6 @@ class IdentityFilterDao extends DatabaseAccessor<MainStore>
       whereExpr &= textExpr;
     }
 
-    final query = select(vaultItems).join([
-      innerJoin(identityItems, identityItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..where(whereExpr);
-
-    final orderingTerms = buildBaseOrdering(filter.base);
-    if (filter.sortField != null) {
-      final isAsc = filter.base.sortDirection == SortDirection.asc;
-      final mode = isAsc ? OrderingMode.asc : OrderingMode.desc;
-      switch (filter.sortField!) {
-        case IdentitySortField.name:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
-          break;
-        case IdentitySortField.displayName:
-          orderingTerms.add(OrderingTerm(expression: identityItems.displayName, mode: mode));
-          break;
-        case IdentitySortField.username:
-          orderingTerms.add(OrderingTerm(expression: identityItems.username, mode: mode));
-          break;
-        case IdentitySortField.email:
-          orderingTerms.add(OrderingTerm(expression: identityItems.email, mode: mode));
-          break;
-        case IdentitySortField.company:
-          orderingTerms.add(OrderingTerm(expression: identityItems.company, mode: mode));
-          break;
-        case IdentitySortField.createdAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
-          break;
-        case IdentitySortField.modifiedAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
-          break;
-        case IdentitySortField.lastUsedAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
-          break;
-        case IdentitySortField.usedCount:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.usedCount, mode: mode));
-          break;
-        case IdentitySortField.recentScore:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.recentScore, mode: mode));
-          break;
-      }
-    }
-
-    query.orderBy(orderingTerms);
-
-    return query;
+    return whereExpr;
   }
 }

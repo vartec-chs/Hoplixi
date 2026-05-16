@@ -92,4 +92,12 @@ class FileMetadataDao extends DatabaseAccessor<MainStore>
       ),
     );
   }
+
+  Future<String?> getFilePathByMetadataId(String metadataId) async {
+    final row = await (selectOnly(fileMetadata)
+          ..addColumns([fileMetadata.filePath])
+          ..where(fileMetadata.id.equals(metadataId)))
+        .getSingleOrNull();
+    return row?.read(fileMetadata.filePath);
+  }
 }

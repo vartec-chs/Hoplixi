@@ -37,6 +37,8 @@ class LoyaltyCardItems extends Table {
   TextColumn get barcodeValue => text().nullable()();
 
   /// Пароль/секрет карты лояльности.
+  /// 
+  /// Secret!!!, может содержать чувствительную информацию
   TextColumn get password => text().nullable()();
 
   /// Тип штрихкода/QR-кода.

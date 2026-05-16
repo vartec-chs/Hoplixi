@@ -60,7 +60,7 @@ class BankCardItems extends Table {
 
   /// CVV/CVC.
   ///
-  /// Секретное значение. Может быть NULL.
+  /// Secret!!!.
   TextColumn get cvv => text().nullable()();
 
   /// Название банка.

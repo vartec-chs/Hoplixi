@@ -40,4 +40,44 @@ class CertificateItemsDao extends DatabaseAccessor<MainStore>
     return (delete(certificateItems)..where((tbl) => tbl.itemId.equals(itemId)))
         .go();
   }
+
+  Future<String?> getPrivateKeyByItemId(String itemId) async {
+    final row = await (selectOnly(certificateItems)
+          ..addColumns([certificateItems.privateKey])
+          ..where(certificateItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(certificateItems.privateKey);
+  }
+
+  Future<String?> getPrivateKeyPasswordByItemId(String itemId) async {
+    final row = await (selectOnly(certificateItems)
+          ..addColumns([certificateItems.privateKeyPassword])
+          ..where(certificateItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(certificateItems.privateKeyPassword);
+  }
+
+  Future<String?> getPasswordForPfxByItemId(String itemId) async {
+    final row = await (selectOnly(certificateItems)
+          ..addColumns([certificateItems.passwordForPfx])
+          ..where(certificateItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(certificateItems.passwordForPfx);
+  }
+
+  Future<String?> getCertificatePemByItemId(String itemId) async {
+    final row = await (selectOnly(certificateItems)
+          ..addColumns([certificateItems.certificatePem])
+          ..where(certificateItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(certificateItems.certificatePem);
+  }
+
+  Future<Uint8List?> getCertificateBlobByItemId(String itemId) async {
+    final row = await (selectOnly(certificateItems)
+          ..addColumns([certificateItems.certificateBlob])
+          ..where(certificateItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(certificateItems.certificateBlob);
+  }
 }

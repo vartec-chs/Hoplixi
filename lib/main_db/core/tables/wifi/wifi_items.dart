@@ -26,7 +26,7 @@ class WifiItems extends Table {
 
   /// Пароль Wi-Fi.
   ///
-  /// Nullable для open/enterprise-сетей или если пароль неизвестен.
+  /// Secret!!!. Nullable для open/enterprise-сетей или если пароль неизвестен.
   TextColumn get password => text().nullable()();
 
   /// Тип защиты сети.

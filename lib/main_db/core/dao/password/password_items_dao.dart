@@ -39,4 +39,12 @@ class PasswordItemsDao extends DatabaseAccessor<MainStore>
   Future<int> deletePasswordByItemId(String itemId) {
     return (delete(passwordItems)..where((tbl) => tbl.itemId.equals(itemId))).go();
   }
+
+  Future<String?> getPasswordSecretByItemId(String itemId) async {
+    final row = await (selectOnly(passwordItems)
+          ..addColumns([passwordItems.password])
+          ..where(passwordItems.itemId.equals(itemId)))
+        .getSingleOrNull();
+    return row?.read(passwordItems.password);
+  }
 }

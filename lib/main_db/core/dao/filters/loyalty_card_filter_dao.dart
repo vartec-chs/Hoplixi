@@ -29,61 +29,142 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
   Future<List<FilteredCardDto<LoyaltyCardCardDto>>> getFiltered(
     LoyaltyCardFilter filter,
   ) async {
-    final query = _buildQuery(filter);
+    final whereExpr = _buildWhere(filter);
+    final hasCardNumberExpr = loyaltyCardItems.cardNumber.isNotNull();
+    final hasBarcodeValueExpr = loyaltyCardItems.barcodeValue.isNotNull();
+    final hasPasswordExpr = loyaltyCardItems.password.isNotNull();
+
+    final query = selectOnly(vaultItems).join([
+      innerJoin(
+          loyaltyCardItems, loyaltyCardItems.itemId.equalsExp(vaultItems.id)),
+    ])
+      ..addColumns([
+        vaultItems.id,
+        vaultItems.type,
+        vaultItems.name,
+        vaultItems.description,
+        vaultItems.categoryId,
+        vaultItems.iconRefId,
+        vaultItems.isFavorite,
+        vaultItems.isArchived,
+        vaultItems.isPinned,
+        vaultItems.isDeleted,
+        vaultItems.createdAt,
+        vaultItems.modifiedAt,
+        vaultItems.lastUsedAt,
+        vaultItems.archivedAt,
+        vaultItems.deletedAt,
+        vaultItems.recentScore,
+        loyaltyCardItems.programName,
+        loyaltyCardItems.barcodeType,
+        loyaltyCardItems.issuer,
+        loyaltyCardItems.website,
+        loyaltyCardItems.phone,
+        loyaltyCardItems.email,
+        loyaltyCardItems.validFrom,
+        loyaltyCardItems.validTo,
+        hasCardNumberExpr,
+        hasBarcodeValueExpr,
+        hasPasswordExpr,
+      ])
+      ..where(whereExpr);
+
     applyLimitOffset(query, filter.base);
+
+    final orderingTerms = buildBaseOrdering(filter.base);
+    if (filter.sortField != null) {
+      final isAsc = filter.base.sortDirection == SortDirection.asc;
+      final mode = isAsc ? OrderingMode.asc : OrderingMode.desc;
+      switch (filter.sortField!) {
+        case LoyaltyCardSortField.name:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.name, mode: mode));
+          break;
+        case LoyaltyCardSortField.programName:
+          orderingTerms.add(OrderingTerm(
+              expression: loyaltyCardItems.programName, mode: mode));
+          break;
+        case LoyaltyCardSortField.issuer:
+          orderingTerms.add(
+              OrderingTerm(expression: loyaltyCardItems.issuer, mode: mode));
+          break;
+        case LoyaltyCardSortField.validTo:
+          orderingTerms.add(
+              OrderingTerm(expression: loyaltyCardItems.validTo, mode: mode));
+          break;
+        case LoyaltyCardSortField.createdAt:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.createdAt, mode: mode));
+          break;
+        case LoyaltyCardSortField.modifiedAt:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
+          break;
+        case LoyaltyCardSortField.lastUsedAt:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
+          break;
+        case LoyaltyCardSortField.usedCount:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.usedCount, mode: mode));
+          break;
+        case LoyaltyCardSortField.recentScore:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.recentScore, mode: mode));
+          break;
+      }
+    }
+    query.orderBy(orderingTerms);
 
     final rows = await query.get();
     if (rows.isEmpty) return [];
 
-    final itemIds = rows.map((r) => r.readTable(vaultItems).id).toList();
-    final categoryIds =
-        rows.map((r) => r.readTable(vaultItems).categoryId).whereType<String>().toList();
+    final itemIds = rows.map((r) => r.read(vaultItems.id)!).toList();
+    final categoryIds = rows
+        .map((r) => r.read(vaultItems.categoryId))
+        .whereType<String>()
+        .toList();
 
     final categoriesMap = await loadCategoriesForItems(categoryIds);
     final tagsMap = await loadTagsForItems(itemIds);
 
-    final hasCardNumberExpr = db.loyaltyCardItems.cardNumber.isNotNull();
-    final hasBarcodeValueExpr = db.loyaltyCardItems.barcodeValue.isNotNull();
-    final hasPasswordExpr = db.loyaltyCardItems.password.isNotNull();
-
     return rows.map((row) {
-      final item = row.readTable(vaultItems);
-      final lk = row.readTable(loyaltyCardItems);
-
-      final categoryId = item.categoryId;
+      final itemId = row.read(vaultItems.id)!;
+      final categoryId = row.read(vaultItems.categoryId);
       final meta = VaultItemCardMetaDto(
         category: categoryId != null ? categoriesMap[categoryId] : null,
-        tags: tagsMap[item.id] ?? const [],
+        tags: tagsMap[itemId] ?? const [],
       );
 
       final cardDto = LoyaltyCardCardDto(
         item: VaultItemCardDto(
-          itemId: item.id,
-          type: item.type,
-          name: item.name,
-          description: item.description,
-          categoryId: item.categoryId,
-          iconRefId: item.iconRefId,
-          isFavorite: item.isFavorite,
-          isArchived: item.isArchived,
-          isPinned: item.isPinned,
-          isDeleted: item.isDeleted,
-          createdAt: item.createdAt,
-          modifiedAt: item.modifiedAt,
-          lastUsedAt: item.lastUsedAt,
-          archivedAt: item.archivedAt,
-          deletedAt: item.deletedAt,
-          recentScore: item.recentScore,
+          itemId: itemId,
+          type: row.readWithConverter<VaultItemType, String>(vaultItems.type)!,
+          name: row.read(vaultItems.name)!,
+          description: row.read(vaultItems.description),
+          categoryId: categoryId,
+          iconRefId: row.read(vaultItems.iconRefId),
+          isFavorite: row.read(vaultItems.isFavorite)!,
+          isArchived: row.read(vaultItems.isArchived)!,
+          isPinned: row.read(vaultItems.isPinned)!,
+          isDeleted: row.read(vaultItems.isDeleted)!,
+          createdAt: row.read(vaultItems.createdAt)!,
+          modifiedAt: row.read(vaultItems.modifiedAt)!,
+          lastUsedAt: row.read(vaultItems.lastUsedAt),
+          archivedAt: row.read(vaultItems.archivedAt),
+          deletedAt: row.read(vaultItems.deletedAt),
+          recentScore: row.read(vaultItems.recentScore),
         ),
         loyaltyCard: LoyaltyCardCardDataDto(
-          programName: lk.programName,
-          barcodeType: row.readWithConverter<LoyaltyBarcodeType?, String>(loyaltyCardItems.barcodeType),
-          issuer: lk.issuer,
-          website: lk.website,
-          phone: lk.phone,
-          email: lk.email,
-          validFrom: lk.validFrom,
-          validTo: lk.validTo,
+          programName: row.read(loyaltyCardItems.programName)!,
+          barcodeType: row.readWithConverter<LoyaltyBarcodeType?, String>(
+              loyaltyCardItems.barcodeType),
+          issuer: row.read(loyaltyCardItems.issuer),
+          website: row.read(loyaltyCardItems.website),
+          phone: row.read(loyaltyCardItems.phone),
+          email: row.read(loyaltyCardItems.email),
+          validFrom: row.read(loyaltyCardItems.validFrom),
+          validTo: row.read(loyaltyCardItems.validTo),
           hasCardNumber: row.read(hasCardNumberExpr) ?? false,
           hasBarcodeValue: row.read(hasBarcodeValueExpr) ?? false,
           hasPassword: row.read(hasPasswordExpr) ?? false,
@@ -96,15 +177,22 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
 
   @override
   Future<int> countFiltered(LoyaltyCardFilter filter) async {
-    final query = _buildQuery(filter);
+    final whereExpr = _buildWhere(filter);
     final countExp = countAll();
-    query.addColumns([countExp]);
+    final query = selectOnly(vaultItems).join([
+      innerJoin(
+          loyaltyCardItems, loyaltyCardItems.itemId.equalsExp(vaultItems.id)),
+    ])
+      ..addColumns([countExp])
+      ..where(whereExpr);
+
     final row = await query.getSingle();
     return row.read(countExp) ?? 0;
   }
 
-  JoinedSelectStatement<HasResultSet, dynamic> _buildQuery(LoyaltyCardFilter filter) {
-    Expression<bool> whereExpr = vaultItems.type.equalsValue(VaultItemType.loyaltyCard);
+  Expression<bool> _buildWhere(LoyaltyCardFilter filter) {
+    Expression<bool> whereExpr =
+        vaultItems.type.equalsValue(VaultItemType.loyaltyCard);
 
     whereExpr &= applyBaseVaultItemFilters(filter.base);
 
@@ -112,7 +200,8 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
       whereExpr &= loyaltyCardItems.programName.contains(filter.programName!);
     }
     if (filter.barcodeType != null) {
-      whereExpr &= loyaltyCardItems.barcodeType.equalsValue(filter.barcodeType!);
+      whereExpr &=
+          loyaltyCardItems.barcodeType.equalsValue(filter.barcodeType!);
     }
     if (filter.issuer != null) {
       whereExpr &= loyaltyCardItems.issuer.contains(filter.issuer!);
@@ -128,10 +217,12 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
     }
 
     if (filter.validFromAfter != null) {
-      whereExpr &= loyaltyCardItems.validFrom.isBiggerOrEqualValue(filter.validFromAfter!);
+      whereExpr &= loyaltyCardItems.validFrom
+          .isBiggerOrEqualValue(filter.validFromAfter!);
     }
     if (filter.validToBefore != null) {
-      whereExpr &= loyaltyCardItems.validTo.isSmallerOrEqualValue(filter.validToBefore!);
+      whereExpr &=
+          loyaltyCardItems.validTo.isSmallerOrEqualValue(filter.validToBefore!);
     }
 
     if (filter.hasCardNumber != null) {
@@ -166,53 +257,6 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<MainStore>
       whereExpr &= textExpr;
     }
 
-    final hasCardNumberExpr = db.loyaltyCardItems.cardNumber.isNotNull();
-    final hasBarcodeValueExpr = db.loyaltyCardItems.barcodeValue.isNotNull();
-    final hasPasswordExpr = db.loyaltyCardItems.password.isNotNull();
-
-    final query = select(vaultItems).join([
-      innerJoin(loyaltyCardItems, loyaltyCardItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..where(whereExpr)
-      ..addColumns([hasCardNumberExpr, hasBarcodeValueExpr, hasPasswordExpr]);
-
-    final orderingTerms = buildBaseOrdering(filter.base);
-    if (filter.sortField != null) {
-      final isAsc = filter.base.sortDirection == SortDirection.asc;
-      final mode = isAsc ? OrderingMode.asc : OrderingMode.desc;
-      switch (filter.sortField!) {
-        case LoyaltyCardSortField.name:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
-          break;
-        case LoyaltyCardSortField.programName:
-          orderingTerms.add(OrderingTerm(expression: loyaltyCardItems.programName, mode: mode));
-          break;
-        case LoyaltyCardSortField.issuer:
-          orderingTerms.add(OrderingTerm(expression: loyaltyCardItems.issuer, mode: mode));
-          break;
-        case LoyaltyCardSortField.validTo:
-          orderingTerms.add(OrderingTerm(expression: loyaltyCardItems.validTo, mode: mode));
-          break;
-        case LoyaltyCardSortField.createdAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
-          break;
-        case LoyaltyCardSortField.modifiedAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
-          break;
-        case LoyaltyCardSortField.lastUsedAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
-          break;
-        case LoyaltyCardSortField.usedCount:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.usedCount, mode: mode));
-          break;
-        case LoyaltyCardSortField.recentScore:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.recentScore, mode: mode));
-          break;
-      }
-    }
-
-    query.orderBy(orderingTerms);
-
-    return query;
+    return whereExpr;
   }
 }

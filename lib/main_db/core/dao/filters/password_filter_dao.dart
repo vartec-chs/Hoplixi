@@ -29,55 +29,132 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
   Future<List<FilteredCardDto<PasswordCardDto>>> getFiltered(
     PasswordFilter filter,
   ) async {
-    final query = _buildQuery(filter);
+    final whereExpr = _buildWhere(filter);
+    final hasPasswordExpr = passwordItems.password.isNotNull();
+
+    final query = selectOnly(vaultItems).join([
+      innerJoin(passwordItems, passwordItems.itemId.equalsExp(vaultItems.id)),
+    ])
+      ..addColumns([
+        vaultItems.id,
+        vaultItems.type,
+        vaultItems.name,
+        vaultItems.description,
+        vaultItems.categoryId,
+        vaultItems.iconRefId,
+        vaultItems.isFavorite,
+        vaultItems.isArchived,
+        vaultItems.isPinned,
+        vaultItems.isDeleted,
+        vaultItems.createdAt,
+        vaultItems.modifiedAt,
+        vaultItems.lastUsedAt,
+        vaultItems.archivedAt,
+        vaultItems.deletedAt,
+        vaultItems.recentScore,
+        passwordItems.login,
+        passwordItems.email,
+        passwordItems.url,
+        passwordItems.expiresAt,
+        hasPasswordExpr,
+      ])
+      ..where(whereExpr);
+
     applyLimitOffset(query, filter.base);
+
+    final orderingTerms = buildBaseOrdering(filter.base);
+    if (filter.sortField != null) {
+      final isAsc = filter.base.sortDirection == SortDirection.asc;
+      final mode = isAsc ? OrderingMode.asc : OrderingMode.desc;
+      switch (filter.sortField!) {
+        case PasswordSortField.name:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.name, mode: mode));
+          break;
+        case PasswordSortField.login:
+          orderingTerms.add(
+              OrderingTerm(expression: passwordItems.login, mode: mode));
+          break;
+        case PasswordSortField.email:
+          orderingTerms.add(
+              OrderingTerm(expression: passwordItems.email, mode: mode));
+          break;
+        case PasswordSortField.url:
+          orderingTerms.add(
+              OrderingTerm(expression: passwordItems.url, mode: mode));
+          break;
+        case PasswordSortField.expiresAt:
+          orderingTerms.add(
+              OrderingTerm(expression: passwordItems.expiresAt, mode: mode));
+          break;
+        case PasswordSortField.createdAt:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.createdAt, mode: mode));
+          break;
+        case PasswordSortField.modifiedAt:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
+          break;
+        case PasswordSortField.lastUsedAt:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
+          break;
+        case PasswordSortField.usedCount:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.usedCount, mode: mode));
+          break;
+        case PasswordSortField.recentScore:
+          orderingTerms.add(
+              OrderingTerm(expression: vaultItems.recentScore, mode: mode));
+          break;
+      }
+    }
+    query.orderBy(orderingTerms);
 
     final rows = await query.get();
     if (rows.isEmpty) return [];
 
-    final itemIds = rows.map((r) => r.readTable(vaultItems).id).toList();
-    final categoryIds =
-        rows.map((r) => r.readTable(vaultItems).categoryId).whereType<String>().toList();
+    final itemIds = rows.map((r) => r.read(vaultItems.id)!).toList();
+    final categoryIds = rows
+        .map((r) => r.read(vaultItems.categoryId))
+        .whereType<String>()
+        .toList();
 
     final categoriesMap = await loadCategoriesForItems(categoryIds);
     final tagsMap = await loadTagsForItems(itemIds);
 
-    final hasPasswordExpr = db.passwordItems.password.isNotNull();
-
     return rows.map((row) {
-      final item = row.readTable(vaultItems);
-      final password = row.readTable(passwordItems);
-
-      final categoryId = item.categoryId;
+      final itemId = row.read(vaultItems.id)!;
+      final categoryId = row.read(vaultItems.categoryId);
       final meta = VaultItemCardMetaDto(
         category: categoryId != null ? categoriesMap[categoryId] : null,
-        tags: tagsMap[item.id] ?? const [],
+        tags: tagsMap[itemId] ?? const [],
       );
 
       final cardDto = PasswordCardDto(
         item: VaultItemCardDto(
-          itemId: item.id,
-          type: item.type,
-          name: item.name,
-          description: item.description,
-          categoryId: item.categoryId,
-          iconRefId: item.iconRefId,
-          isFavorite: item.isFavorite,
-          isArchived: item.isArchived,
-          isPinned: item.isPinned,
-          isDeleted: item.isDeleted,
-          createdAt: item.createdAt,
-          modifiedAt: item.modifiedAt,
-          lastUsedAt: item.lastUsedAt,
-          archivedAt: item.archivedAt,
-          deletedAt: item.deletedAt,
-          recentScore: item.recentScore,
+          itemId: itemId,
+          type: row.readWithConverter<VaultItemType, String>(vaultItems.type)!,
+          name: row.read(vaultItems.name)!,
+          description: row.read(vaultItems.description),
+          categoryId: categoryId,
+          iconRefId: row.read(vaultItems.iconRefId),
+          isFavorite: row.read(vaultItems.isFavorite)!,
+          isArchived: row.read(vaultItems.isArchived)!,
+          isPinned: row.read(vaultItems.isPinned)!,
+          isDeleted: row.read(vaultItems.isDeleted)!,
+          createdAt: row.read(vaultItems.createdAt)!,
+          modifiedAt: row.read(vaultItems.modifiedAt)!,
+          lastUsedAt: row.read(vaultItems.lastUsedAt),
+          archivedAt: row.read(vaultItems.archivedAt),
+          deletedAt: row.read(vaultItems.deletedAt),
+          recentScore: row.read(vaultItems.recentScore),
         ),
         password: PasswordCardDataDto(
-          login: password.login,
-          email: password.email,
-          url: password.url,
-          expiresAt: password.expiresAt,
+          login: row.read(passwordItems.login),
+          email: row.read(passwordItems.email),
+          url: row.read(passwordItems.url),
+          expiresAt: row.read(passwordItems.expiresAt),
           hasPassword: row.read(hasPasswordExpr) ?? false,
         ),
       );
@@ -88,15 +165,21 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
 
   @override
   Future<int> countFiltered(PasswordFilter filter) async {
-    final query = _buildQuery(filter);
+    final whereExpr = _buildWhere(filter);
     final countExp = countAll();
-    query.addColumns([countExp]);
+    final query = selectOnly(vaultItems).join([
+      innerJoin(passwordItems, passwordItems.itemId.equalsExp(vaultItems.id)),
+    ])
+      ..addColumns([countExp])
+      ..where(whereExpr);
+
     final row = await query.getSingle();
     return row.read(countExp) ?? 0;
   }
 
-  JoinedSelectStatement<HasResultSet, dynamic> _buildQuery(PasswordFilter filter) {
-    Expression<bool> whereExpr = vaultItems.type.equalsValue(VaultItemType.password);
+  Expression<bool> _buildWhere(PasswordFilter filter) {
+    Expression<bool> whereExpr =
+        vaultItems.type.equalsValue(VaultItemType.password);
 
     whereExpr &= applyBaseVaultItemFilters(filter.base);
 
@@ -152,54 +235,6 @@ class PasswordFilterDao extends DatabaseAccessor<MainStore>
       whereExpr &= textExpr;
     }
 
-    final hasPasswordExpr = db.passwordItems.password.isNotNull();
-
-    final query = select(vaultItems).join([
-      innerJoin(passwordItems, passwordItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..where(whereExpr)
-      ..addColumns([hasPasswordExpr]);
-
-    final orderingTerms = buildBaseOrdering(filter.base);
-    if (filter.sortField != null) {
-      final isAsc = filter.base.sortDirection == SortDirection.asc;
-      final mode = isAsc ? OrderingMode.asc : OrderingMode.desc;
-      switch (filter.sortField!) {
-        case PasswordSortField.name:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.name, mode: mode));
-          break;
-        case PasswordSortField.login:
-          orderingTerms.add(OrderingTerm(expression: passwordItems.login, mode: mode));
-          break;
-        case PasswordSortField.email:
-          orderingTerms.add(OrderingTerm(expression: passwordItems.email, mode: mode));
-          break;
-        case PasswordSortField.url:
-          orderingTerms.add(OrderingTerm(expression: passwordItems.url, mode: mode));
-          break;
-        case PasswordSortField.expiresAt:
-          orderingTerms.add(OrderingTerm(expression: passwordItems.expiresAt, mode: mode));
-          break;
-        case PasswordSortField.createdAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.createdAt, mode: mode));
-          break;
-        case PasswordSortField.modifiedAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.modifiedAt, mode: mode));
-          break;
-        case PasswordSortField.lastUsedAt:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode));
-          break;
-        case PasswordSortField.usedCount:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.usedCount, mode: mode));
-          break;
-        case PasswordSortField.recentScore:
-          orderingTerms.add(OrderingTerm(expression: vaultItems.recentScore, mode: mode));
-          break;
-      }
-    }
-
-    query.orderBy(orderingTerms);
-
-    return query;
+    return whereExpr;
   }
 }

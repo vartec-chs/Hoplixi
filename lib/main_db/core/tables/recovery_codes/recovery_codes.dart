@@ -14,7 +14,7 @@ class RecoveryCodes extends Table {
 
   /// Recovery code.
   ///
-  /// Секретное значение. Не ограничиваем длину:
+  /// Secret!!!. Не ограничиваем длину:
   /// у разных сервисов форматы recovery codes отличаются.
   TextColumn get code => text()();
 

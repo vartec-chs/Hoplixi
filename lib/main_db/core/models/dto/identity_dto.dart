@@ -39,6 +39,10 @@ sealed class IdentityCardDataDto with _$IdentityCardDataDto {
     String? email,
     String? phone,
     String? company,
+    @Default(false) bool hasTaxId,
+    @Default(false) bool hasNationalId,
+    @Default(false) bool hasPassportNumber,
+    @Default(false) bool hasDriverLicenseNumber,
   }) = _IdentityCardDataDto;
 
   factory IdentityCardDataDto.fromJson(Map<String, dynamic> json) =>

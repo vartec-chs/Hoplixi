@@ -21,6 +21,8 @@ class OtpItems extends Table {
       text().withLength(min: 1, max: 255).nullable()();
 
   /// OTP secret in canonical decoded raw bytes form.
+  /// 
+  /// Secret!!!
   BlobColumn get secret => blob()();
 
   TextColumn get algorithm =>
