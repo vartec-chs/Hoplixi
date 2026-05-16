@@ -55,6 +55,7 @@ sealed class CreateLicenseKeyDto with _$CreateLicenseKeyDto {
   const factory CreateLicenseKeyDto({
     required VaultItemCreateDto item,
     required LicenseKeyDataDto licenseKey,
+    @Default([]) List<String> tagIds,
   }) = _CreateLicenseKeyDto;
 
   factory CreateLicenseKeyDto.fromJson(Map<String, dynamic> json) =>

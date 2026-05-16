@@ -39,6 +39,7 @@ sealed class CreateSshKeyDto with _$CreateSshKeyDto {
   const factory CreateSshKeyDto({
     required VaultItemCreateDto item,
     required SshKeyDataDto sshKey,
+    @Default([]) List<String> tagIds,
   }) = _CreateSshKeyDto;
 
   factory CreateSshKeyDto.fromJson(Map<String, dynamic> json) =>

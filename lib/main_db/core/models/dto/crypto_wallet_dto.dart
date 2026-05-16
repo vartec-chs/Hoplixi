@@ -53,6 +53,7 @@ sealed class CreateCryptoWalletDto with _$CreateCryptoWalletDto {
   const factory CreateCryptoWalletDto({
     required VaultItemCreateDto item,
     required CryptoWalletDataDto cryptoWallet,
+    @Default([]) List<String> tagIds,
   }) = _CreateCryptoWalletDto;
 
   factory CreateCryptoWalletDto.fromJson(Map<String, dynamic> json) =>

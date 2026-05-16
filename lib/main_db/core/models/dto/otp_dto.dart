@@ -49,6 +49,7 @@ sealed class CreateOtpDto with _$CreateOtpDto {
   const factory CreateOtpDto({
     required VaultItemCreateDto item,
     required OtpDataDto otp,
+    @Default([]) List<String> tagIds,
   }) = _CreateOtpDto;
 
   factory CreateOtpDto.fromJson(Map<String, dynamic> json) =>

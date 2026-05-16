@@ -86,6 +86,7 @@ sealed class CreateFileDto with _$CreateFileDto {
     required VaultItemCreateDto item,
     @Default(FileDataDto()) FileDataDto file,
     FileMetadataDataDto? metadata,
+    @Default([]) List<String> tagIds,
   }) = _CreateFileDto;
 
   factory CreateFileDto.fromJson(Map<String, dynamic> json) =>

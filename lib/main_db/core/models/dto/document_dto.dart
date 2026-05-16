@@ -50,6 +50,7 @@ sealed class CreateDocumentDto with _$CreateDocumentDto {
   const factory CreateDocumentDto({
     required VaultItemCreateDto item,
     @Default(DocumentDataDto()) DocumentDataDto document,
+    @Default([]) List<String> tagIds,
   }) = _CreateDocumentDto;
 
   factory CreateDocumentDto.fromJson(Map<String, dynamic> json) =>

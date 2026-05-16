@@ -32,6 +32,7 @@ sealed class CreateNoteDto with _$CreateNoteDto {
   const factory CreateNoteDto({
     required VaultItemCreateDto item,
     required NoteDataDto note,
+    @Default([]) List<String> tagIds,
   }) = _CreateNoteDto;
 
   factory CreateNoteDto.fromJson(Map<String, dynamic> json) =>

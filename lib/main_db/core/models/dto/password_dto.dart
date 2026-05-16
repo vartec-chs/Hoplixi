@@ -39,6 +39,7 @@ sealed class CreatePasswordDto with _$CreatePasswordDto {
   const factory CreatePasswordDto({
     required VaultItemCreateDto item,
     required PasswordDataDto password,
+    @Default([]) List<String> tagIds,
   }) = _CreatePasswordDto;
 
   factory CreatePasswordDto.fromJson(Map<String, dynamic> json) =>

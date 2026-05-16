@@ -47,6 +47,7 @@ sealed class CreateContactDto with _$CreateContactDto {
   const factory CreateContactDto({
     required VaultItemCreateDto item,
     required ContactDataDto contact,
+    @Default([]) List<String> tagIds,
   }) = _CreateContactDto;
 
   factory CreateContactDto.fromJson(Map<String, dynamic> json) =>

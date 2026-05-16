@@ -67,6 +67,7 @@ sealed class CreateLoyaltyCardDto with _$CreateLoyaltyCardDto {
   const factory CreateLoyaltyCardDto({
     required VaultItemCreateDto item,
     required LoyaltyCardDataDto loyaltyCard,
+    @Default([]) List<String> tagIds,
   }) = _CreateLoyaltyCardDto;
 
   factory CreateLoyaltyCardDto.fromJson(Map<String, dynamic> json) =>

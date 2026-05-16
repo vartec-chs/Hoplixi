@@ -20,15 +20,12 @@ class BankCardService {
   final VaultItemRelationsService relationsService;
   final VaultHistoryService historyService;
 
-  Future<String> create({
-    required CreateBankCardDto dto,
-    List<String> tagIds = const [],
-  }) async {
+  Future<String> create(CreateBankCardDto dto) async {
     return await db.transaction(() async {
       final itemId = await repository.create(dto);
 
-      if (tagIds.isNotEmpty) {
-        await relationsService.replaceTags(itemId: itemId, tagIds: tagIds);
+      if (dto.tagIds.isNotEmpty) {
+        await relationsService.replaceTags(itemId: itemId, tagIds: dto.tagIds);
       }
 
       final createdView = await repository.getViewById(itemId);
@@ -56,10 +53,7 @@ class BankCardService {
     });
   }
 
-  Future<void> update({
-    required PatchBankCardDto dto,
-    List<String>? tagIds,
-  }) async {
+  Future<void> update(PatchBankCardDto dto) async {
     await db.transaction(() async {
       final itemId = dto.item.itemId;
 
@@ -76,8 +70,12 @@ class BankCardService {
 
       await repository.update(dto);
 
-      if (tagIds != null) {
-        await relationsService.replaceTags(itemId: itemId, tagIds: tagIds);
+      final tagsUpdate = dto.tags;
+      if (tagsUpdate is FieldUpdateSet<List<String>>) {
+        await relationsService.replaceTags(
+          itemId: itemId,
+          tagIds: tagsUpdate.value ?? const [],
+        );
       }
 
       await historyService.writeEvent(

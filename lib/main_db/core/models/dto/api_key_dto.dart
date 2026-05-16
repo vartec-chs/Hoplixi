@@ -63,6 +63,7 @@ sealed class CreateApiKeyDto with _$CreateApiKeyDto {
   const factory CreateApiKeyDto({
     required VaultItemCreateDto item,
     required ApiKeyDataDto apiKey,
+    @Default([]) List<String> tagIds,
   }) = _CreateApiKeyDto;
 
   factory CreateApiKeyDto.fromJson(Map<String, dynamic> json) =>

@@ -61,6 +61,7 @@ sealed class CreateCertificateDto with _$CreateCertificateDto {
   const factory CreateCertificateDto({
     required VaultItemCreateDto item,
     required CertificateDataDto certificate,
+    @Default([]) List<String> tagIds,
   }) = _CreateCertificateDto;
 
   factory CreateCertificateDto.fromJson(Map<String, dynamic> json) =>

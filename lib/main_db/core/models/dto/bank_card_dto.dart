@@ -50,6 +50,7 @@ sealed class CreateBankCardDto with _$CreateBankCardDto {
   const factory CreateBankCardDto({
     required VaultItemCreateDto item,
     required BankCardDataDto bankCard,
+    @Default([]) List<String> tagIds,
   }) = _CreateBankCardDto;
 
   factory CreateBankCardDto.fromJson(Map<String, dynamic> json) =>

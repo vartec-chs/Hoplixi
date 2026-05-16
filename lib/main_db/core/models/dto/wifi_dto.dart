@@ -42,6 +42,7 @@ sealed class CreateWifiDto with _$CreateWifiDto {
   const factory CreateWifiDto({
     required VaultItemCreateDto item,
     required WifiDataDto wifi,
+    @Default([]) List<String> tagIds,
   }) = _CreateWifiDto;
 
   factory CreateWifiDto.fromJson(Map<String, dynamic> json) =>

@@ -50,6 +50,7 @@ sealed class CreateIdentityDto with _$CreateIdentityDto {
   const factory CreateIdentityDto({
     required VaultItemCreateDto item,
     required IdentityDataDto identity,
+    @Default([]) List<String> tagIds,
   }) = _CreateIdentityDto;
 
   factory CreateIdentityDto.fromJson(Map<String, dynamic> json) =>

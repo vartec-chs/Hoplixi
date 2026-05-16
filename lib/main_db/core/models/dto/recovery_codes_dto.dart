@@ -72,6 +72,7 @@ sealed class CreateRecoveryCodesDto with _$CreateRecoveryCodesDto {
 
     /// Optional list of codes to insert with the item.
     @Default([]) List<RecoveryCodeValueDto> codes,
+    @Default([]) List<String> tagIds,
   }) = _CreateRecoveryCodesDto;
 
   factory CreateRecoveryCodesDto.fromJson(Map<String, dynamic> json) =>
