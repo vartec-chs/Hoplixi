@@ -57,7 +57,7 @@ sealed class CreateOtpDto with _$CreateOtpDto {
 }
 
 @freezed
-sealed class OtpViewDto with _$OtpViewDto {
+sealed class OtpViewDto with _$OtpViewDto implements VaultEntityViewDto {
   const factory OtpViewDto({
     required VaultItemViewDto item,
     required OtpDataDto otp,
@@ -100,3 +100,5 @@ sealed class PatchOtpDto with _$PatchOtpDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchOtpDto;
 }
+
+

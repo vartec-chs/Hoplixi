@@ -71,7 +71,7 @@ sealed class CreateApiKeyDto with _$CreateApiKeyDto {
 }
 
 @freezed
-sealed class ApiKeyViewDto with _$ApiKeyViewDto {
+sealed class ApiKeyViewDto with _$ApiKeyViewDto implements VaultEntityViewDto {
   const factory ApiKeyViewDto({
     required VaultItemViewDto item,
     required ApiKeyDataDto apiKey,
@@ -132,3 +132,5 @@ extension ApiKeyDataDtoX on ApiKeyDataDto {
 extension ApiKeyCardDataDtoX on ApiKeyCardDataDto {
   bool get isRevoked => revokedAt != null;
 }
+
+

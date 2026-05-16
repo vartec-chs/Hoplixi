@@ -40,7 +40,7 @@ sealed class CreateNoteDto with _$CreateNoteDto {
 }
 
 @freezed
-sealed class NoteViewDto with _$NoteViewDto {
+sealed class NoteViewDto with _$NoteViewDto implements VaultEntityViewDto {
   const factory NoteViewDto({
     required VaultItemViewDto item,
     required NoteDataDto note,
@@ -77,3 +77,5 @@ sealed class PatchNoteDto with _$PatchNoteDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchNoteDto;
 }
+
+

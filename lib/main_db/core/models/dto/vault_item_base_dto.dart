@@ -36,8 +36,12 @@ sealed class VaultItemCreateDto with _$VaultItemCreateDto {
       _$VaultItemCreateDtoFromJson(json);
 }
 
+abstract interface class VaultEntityViewDto {
+  VaultItemViewDto get item;
+}
+
 @freezed
-sealed class VaultItemViewDto with _$VaultItemViewDto {
+sealed class VaultItemViewDto with _$VaultItemViewDto implements VaultEntityViewDto {
   const factory VaultItemViewDto({
     required String itemId,
     required VaultItemType type,
@@ -63,6 +67,11 @@ sealed class VaultItemViewDto with _$VaultItemViewDto {
 
     double? recentScore,
   }) = _VaultItemViewDto;
+
+  const VaultItemViewDto._();
+
+  @override
+  VaultItemViewDto get item => this;
 
   factory VaultItemViewDto.fromJson(Map<String, dynamic> json) =>
       _$VaultItemViewDtoFromJson(json);

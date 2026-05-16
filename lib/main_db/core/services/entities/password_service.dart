@@ -4,6 +4,7 @@ import 'package:hoplixi/main_db/core/errors/db_result.dart';
 import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:hoplixi/main_db/core/repositories/base/password_repository.dart';
 import 'package:hoplixi/main_db/core/services/history/vault_history_service.dart';
+import 'package:hoplixi/main_db/core/services/vault_items_state_service.dart';
 import 'package:hoplixi/main_db/core/services/relations/vault_item_relations_service.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_events_history.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
@@ -23,12 +24,14 @@ class PasswordService {
     required this.repository,
     required this.relationsService,
     required this.historyService,
+    required this.vaultItemsStateService,
   });
 
   final MainStore db;
   final PasswordRepository repository;
   final VaultItemRelationsService relationsService;
   final VaultHistoryService historyService;
+  final VaultItemsStateService vaultItemsStateService;
 
   Future<DbResult<String>> create(CreatePasswordDto dto) async {
     final validationError = validateCreatePassword(dto);
@@ -134,136 +137,47 @@ class PasswordService {
     }
   }
 
-  Future<DbResult<Unit>> softDelete(String itemId) async {
-    try {
-      return await db.transaction(() async {
-        final oldView = await repository.getViewById(itemId);
-        if (oldView == null) return const Success(unit);
-
-        final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: VaultItemType.password,
-          oldView: oldView,
-          action: VaultEventHistoryAction.deleted,
-        );
-        if (snapshotRes != null && snapshotRes.isError()) throw _InternalDbFailure(snapshotRes.exceptionOrNull()!);
-
-        await db.vaultItemsDao.softDeleteItem(itemId, DateTime.now());
-
-        final eventRes = await historyService.writeEvent(
-          itemId: itemId,
-          type: VaultItemType.password,
-          action: VaultEventHistoryAction.deleted,
-          name: oldView.item.name,
-          snapshotHistoryId: snapshotRes?.getOrNull(),
-        );
-        if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
-
-        return const Success(unit);
-      });
-    } on _InternalDbFailure catch (e) {
-      return Failure(e.error);
-    } catch (e, st) {
-      return Failure(mapDbException(e, st));
-    }
+  Future<DbResult<Unit>> softDelete(String itemId) {
+    return vaultItemsStateService.softDelete(
+      itemId: itemId,
+      type: VaultItemType.password,
+    );
   }
 
-  Future<DbResult<Unit>> recover(String itemId) async {
-    try {
-      return await db.transaction(() async {
-        final oldView = await repository.getViewById(itemId);
-        if (oldView == null) return const Success(unit);
-
-        final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: VaultItemType.password,
-          oldView: oldView,
-          action: VaultEventHistoryAction.recovered,
-        );
-        if (snapshotRes != null && snapshotRes.isError()) throw _InternalDbFailure(snapshotRes.exceptionOrNull()!);
-
-        await db.vaultItemsDao.recoverDeletedItem(itemId, DateTime.now());
-
-        final eventRes = await historyService.writeEvent(
-          itemId: itemId,
-          type: VaultItemType.password,
-          action: VaultEventHistoryAction.recovered,
-          name: oldView.item.name,
-          snapshotHistoryId: snapshotRes?.getOrNull(),
-        );
-        if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
-
-        return const Success(unit);
-      });
-    } on _InternalDbFailure catch (e) {
-      return Failure(e.error);
-    } catch (e, st) {
-      return Failure(mapDbException(e, st));
-    }
+  Future<DbResult<Unit>> recover(String itemId) {
+    return vaultItemsStateService.recover(
+      itemId: itemId,
+      type: VaultItemType.password,
+    );
   }
 
-  Future<DbResult<Unit>> archive(String itemId) async {
-    try {
-      return await db.transaction(() async {
-        final oldView = await repository.getViewById(itemId);
-        if (oldView == null) return const Success(unit);
-
-        final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: VaultItemType.password,
-          oldView: oldView,
-          action: VaultEventHistoryAction.archived,
-        );
-        if (snapshotRes != null && snapshotRes.isError()) throw _InternalDbFailure(snapshotRes.exceptionOrNull()!);
-
-        await db.vaultItemsDao.archiveItem(itemId, DateTime.now());
-
-        final eventRes = await historyService.writeEvent(
-          itemId: itemId,
-          type: VaultItemType.password,
-          action: VaultEventHistoryAction.archived,
-          name: oldView.item.name,
-          snapshotHistoryId: snapshotRes?.getOrNull(),
-        );
-        if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
-
-        return const Success(unit);
-      });
-    } on _InternalDbFailure catch (e) {
-      return Failure(e.error);
-    } catch (e, st) {
-      return Failure(mapDbException(e, st));
-    }
+  Future<DbResult<Unit>> archive(String itemId) {
+    return vaultItemsStateService.archive(
+      itemId: itemId,
+      type: VaultItemType.password,
+    );
   }
 
-  Future<DbResult<Unit>> restoreArchived(String itemId) async {
-    try {
-      return await db.transaction(() async {
-        final oldView = await repository.getViewById(itemId);
-        if (oldView == null) return const Success(unit);
+  Future<DbResult<Unit>> restoreArchived(String itemId) {
+    return vaultItemsStateService.restoreArchived(
+      itemId: itemId,
+      type: VaultItemType.password,
+    );
+  }
 
-        final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: VaultItemType.password,
-          oldView: oldView,
-          action: VaultEventHistoryAction.restored,
-        );
-        if (snapshotRes != null && snapshotRes.isError()) throw _InternalDbFailure(snapshotRes.exceptionOrNull()!);
+  Future<DbResult<Unit>> setFavorite(String itemId, bool value) {
+    return vaultItemsStateService.setFavorite(
+      itemId: itemId,
+      type: VaultItemType.password,
+      value: value,
+    );
+  }
 
-        await db.vaultItemsDao.restoreArchivedItem(itemId, DateTime.now());
-
-        final eventRes = await historyService.writeEvent(
-          itemId: itemId,
-          type: VaultItemType.password,
-          action: VaultEventHistoryAction.restored,
-          name: oldView.item.name,
-          snapshotHistoryId: snapshotRes?.getOrNull(),
-        );
-        if (eventRes.isError()) throw _InternalDbFailure(eventRes.exceptionOrNull()!);
-
-        return const Success(unit);
-      });
-    } on _InternalDbFailure catch (e) {
-      return Failure(e.error);
-    } catch (e, st) {
-      return Failure(mapDbException(e, st));
-    }
+  Future<DbResult<Unit>> setPinned(String itemId, bool value) {
+    return vaultItemsStateService.setPinned(
+      itemId: itemId,
+      type: VaultItemType.password,
+      value: value,
+    );
   }
 }
-

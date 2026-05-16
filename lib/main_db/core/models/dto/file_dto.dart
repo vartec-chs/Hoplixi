@@ -94,7 +94,7 @@ sealed class CreateFileDto with _$CreateFileDto {
 }
 
 @freezed
-sealed class FileViewDto with _$FileViewDto {
+sealed class FileViewDto with _$FileViewDto implements VaultEntityViewDto {
   const factory FileViewDto({
     required VaultItemViewDto item,
     required FileDataDto file,
@@ -148,3 +148,5 @@ sealed class PatchFileDto with _$PatchFileDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchFileDto;
 }
+
+

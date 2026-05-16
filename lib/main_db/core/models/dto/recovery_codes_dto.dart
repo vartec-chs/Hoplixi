@@ -80,7 +80,7 @@ sealed class CreateRecoveryCodesDto with _$CreateRecoveryCodesDto {
 }
 
 @freezed
-sealed class RecoveryCodesViewDto with _$RecoveryCodesViewDto {
+sealed class RecoveryCodesViewDto with _$RecoveryCodesViewDto implements VaultEntityViewDto {
   const factory RecoveryCodesViewDto({
     required VaultItemViewDto item,
     required RecoveryCodesDataDto recoveryCodes,
@@ -119,3 +119,5 @@ sealed class PatchRecoveryCodesDto with _$PatchRecoveryCodesDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchRecoveryCodesDto;
 }
+
+

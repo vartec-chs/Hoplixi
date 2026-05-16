@@ -50,7 +50,7 @@ sealed class CreateWifiDto with _$CreateWifiDto {
 }
 
 @freezed
-sealed class WifiViewDto with _$WifiViewDto {
+sealed class WifiViewDto with _$WifiViewDto implements VaultEntityViewDto {
   const factory WifiViewDto({
     required VaultItemViewDto item,
     required WifiDataDto wifi,
@@ -92,3 +92,5 @@ sealed class PatchWifiDto with _$PatchWifiDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchWifiDto;
 }
+
+

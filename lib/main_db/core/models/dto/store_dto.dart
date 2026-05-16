@@ -62,3 +62,5 @@ sealed class PatchStoreSettingDto with _$PatchStoreSettingDto {
     @Default(FieldUpdate.keep()) FieldUpdate<String> description,
   }) = _PatchStoreSettingDto;
 }
+
+

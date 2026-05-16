@@ -47,7 +47,7 @@ sealed class CreateSshKeyDto with _$CreateSshKeyDto {
 }
 
 @freezed
-sealed class SshKeyViewDto with _$SshKeyViewDto {
+sealed class SshKeyViewDto with _$SshKeyViewDto implements VaultEntityViewDto {
   const factory SshKeyViewDto({
     required VaultItemViewDto item,
     required SshKeyDataDto sshKey,
@@ -87,3 +87,5 @@ sealed class PatchSshKeyDto with _$PatchSshKeyDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchSshKeyDto;
 }
+
+

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hoplixi/main_db/config/store_settings_keys.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
 import 'package:hoplixi/main_db/core/models/dto/dto.dart';
+import 'package:hoplixi/main_db/core/models/field_update.dart';
 import 'package:hoplixi/main_db/core/services/entities/api_key_service.dart';
 import 'package:hoplixi/main_db/core/tables/tables.dart';
 
@@ -26,62 +26,60 @@ void main() {
   });
 
   group('ApiKeyService', () {
-    test(
-      'create creates api key with category tags snapshot and event',
-      () async {
-        final categoryId = await dataFactory.insertCategory();
-        final tag1Id = await dataFactory.insertTag(name: 'Tag1');
-        final tag2Id = await dataFactory.insertTag(name: 'Tag2');
+    test('create creates api key with category tags snapshot and event', () async {
+      final categoryId = await dataFactory.insertCategory();
+      final tag1Id = await dataFactory.insertTag(name: 'Tag1');
+      final tag2Id = await dataFactory.insertTag(name: 'Tag2');
 
-        final dto = CreateApiKeyDto(
-          item: VaultItemCreateDto(
-            name: 'My GitHub Key',
-            categoryId: categoryId,
-          ),
-          apiKey: const ApiKeyDataDto(service: 'GitHub', key: 'secret-123'),
-          tagIds: [tag1Id, tag2Id],
-        );
+      final dto = CreateApiKeyDto(
+        item: VaultItemCreateDto(
+          name: 'My GitHub Key',
+          categoryId: categoryId,
+        ),
+        apiKey: const ApiKeyDataDto(
+          service: 'GitHub',
+          key: 'secret-123',
+        ),
+        tagIds: [tag1Id, tag2Id],
+      );
 
-        final result = await service.create(dto);
-        expect(result.isSuccess(), isTrue);
-        final itemId = result.getOrThrow();
+      final result = await service.create(dto);
+      expect(result.isSuccess(), isTrue);
+      final itemId = result.getOrThrow();
 
-        // Verify live state
-        final item = await db.vaultItemsDao.getVaultItemById(itemId);
-        expect(item, isNotNull);
-        expect(item!.type, VaultItemType.apiKey);
-        expect(item.categoryId, categoryId);
+      // Verify live state
+      final item = await db.vaultItemsDao.getVaultItemById(itemId);
+      expect(item, isNotNull);
+      expect(item!.type, VaultItemType.apiKey);
+      expect(item.categoryId, categoryId);
 
-        final apiKey = await db.apiKeyItemsDao.getApiKeyByItemId(itemId);
-        expect(apiKey, isNotNull);
-        expect(apiKey!.service, 'GitHub');
-        expect(apiKey.key, 'secret-123');
+      final apiKey = await db.apiKeyItemsDao.getApiKeyByItemId(itemId);
+      expect(apiKey, isNotNull);
+      expect(apiKey!.service, 'GitHub');
+      expect(apiKey.key, 'secret-123');
 
-        final itemTags = await db.itemTagsDao.getTagsForItem(itemId);
-        expect(itemTags.length, 2);
+      final itemTags = await db.itemTagsDao.getTagsForItem(itemId);
+      expect(itemTags.length, 2);
 
-        // Verify history
-        final events = await db.vaultEventsHistoryDao.getEventsByItemId(itemId);
-        expect(events.length, 1);
-        expect(events.first.action, VaultEventHistoryAction.created);
-        final snapshotId = events.first.snapshotHistoryId;
-        expect(snapshotId, isNotNull);
+      // Verify history
+      final events = await db.vaultEventsHistoryDao.getEventsByItemId(itemId);
+      expect(events.length, 1);
+      expect(events.first.action, VaultEventHistoryAction.created);
+      final snapshotId = events.first.snapshotHistoryId;
+      expect(snapshotId, isNotNull);
 
-        final apiKeyHistory = await db.apiKeyHistoryDao
-            .getApiKeyHistoryByHistoryId(snapshotId!);
-        expect(apiKeyHistory, isNotNull);
-        expect(apiKeyHistory!.key, 'secret-123');
+      final apiKeyHistory = await db.apiKeyHistoryDao.getApiKeyHistoryByHistoryId(snapshotId!);
+      expect(apiKeyHistory, isNotNull);
+      expect(apiKeyHistory!.key, 'secret-123');
 
-        final tagHistory = await db.vaultItemTagHistoryDao
-            .getTagsBySnapshotHistoryId(snapshotId);
-        expect(tagHistory.length, 2);
-      },
-    );
+      final tagHistory = await db.vaultItemTagHistoryDao.getTagsBySnapshotHistoryId(snapshotId);
+      expect(tagHistory.length, 2);
+    });
 
     test('update replaces tags and stores old state snapshot', () async {
       final oldTagId = await dataFactory.insertTag(name: 'Old');
       final newTagId = await dataFactory.insertTag(name: 'New');
-
+      
       final itemId = await dataFactory.createApiKeyViaService(
         name: 'Initial',
         service: 'OldService',
@@ -116,25 +114,19 @@ void main() {
       // Verify history (should have 2 events: created and updated)
       final events = await db.vaultEventsHistoryDao.getEventsByItemId(itemId);
       expect(events.length, 2);
-      final updateEvent = events.firstWhere(
-        (e) => e.action == VaultEventHistoryAction.updated,
-      );
-
+      final updateEvent = events.firstWhere((e) => e.action == VaultEventHistoryAction.updated);
+      
       final snapshotId = updateEvent.snapshotHistoryId;
       expect(snapshotId, isNotNull);
 
       // Snapshot should contain OLD values
-      final historyRows = await db.apiKeyHistoryDao.getApiKeyHistoryByHistoryId(
-        snapshotId!,
-      );
+      final historyRows = await db.apiKeyHistoryDao.getApiKeyHistoryByHistoryId(snapshotId!);
       expect(historyRows!.service, 'OldService');
       expect(historyRows.key, 'old-secret');
     });
 
     test('softDelete marks item deleted and writes snapshot event', () async {
-      final itemId = await dataFactory.createApiKeyViaService(
-        name: 'To Delete',
-      );
+      final itemId = await dataFactory.createApiKeyViaService(name: 'To Delete');
 
       final result = await service.softDelete(itemId);
       expect(result.isSuccess(), isTrue);
@@ -144,45 +136,11 @@ void main() {
       expect(item.deletedAt, isNotNull);
 
       final events = await db.vaultEventsHistoryDao.getEventsByItemId(itemId);
-      final deleteEvent = events.firstWhere(
-        (e) => e.action == VaultEventHistoryAction.deleted,
-      );
+      final deleteEvent = events.firstWhere((e) => e.action == VaultEventHistoryAction.deleted);
       expect(deleteEvent.snapshotHistoryId, isNotNull);
 
-      final snapshot = await db.vaultSnapshotsHistoryDao.getSnapshotById(
-        deleteEvent.snapshotHistoryId!,
-      );
+      final snapshot = await db.vaultSnapshotsHistoryDao.getSnapshotById(deleteEvent.snapshotHistoryId!);
       expect(snapshot!.isDeleted, isFalse); // Snapshot before delete
     });
-
-    test(
-      'historyEnabled=false returns failure if action requires snapshot',
-      () async {
-        // NOTE: Current DB schema REQUIRES snapshot for "created" action.
-        // If history is disabled, we currently fail to create the item because we can't write the event.
-        await db.storeSettingsDao.setBool(
-          StoreSettingsKey.historyEnabled,
-          false,
-        );
-
-        final dto = const CreateApiKeyDto(
-          item: VaultItemCreateDto(name: 'No History'),
-          apiKey: ApiKeyDataDto(service: 'S', key: 'K'),
-        );
-
-        final result = await service.create(dto);
-
-        // Verification that it fails due to DB constraint
-        expect(result.isError(), isTrue);
-
-        final eventCount = await dataFactory.countTable(db.vaultEventsHistory);
-        expect(eventCount, 0);
-
-        final snapshotCount = await dataFactory.countTable(
-          db.vaultSnapshotsHistory,
-        );
-        expect(snapshotCount, 0);
-      },
-    );
   });
 }

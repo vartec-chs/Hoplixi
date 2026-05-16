@@ -61,7 +61,7 @@ sealed class CreateCryptoWalletDto with _$CreateCryptoWalletDto {
 }
 
 @freezed
-sealed class CryptoWalletViewDto with _$CryptoWalletViewDto {
+sealed class CryptoWalletViewDto with _$CryptoWalletViewDto implements VaultEntityViewDto {
   const factory CryptoWalletViewDto({
     required VaultItemViewDto item,
     required CryptoWalletDataDto cryptoWallet,
@@ -110,3 +110,5 @@ sealed class PatchCryptoWalletDto with _$PatchCryptoWalletDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchCryptoWalletDto;
 }
+
+

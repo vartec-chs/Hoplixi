@@ -58,7 +58,7 @@ sealed class CreateDocumentDto with _$CreateDocumentDto {
 }
 
 @freezed
-sealed class DocumentViewDto with _$DocumentViewDto {
+sealed class DocumentViewDto with _$DocumentViewDto implements VaultEntityViewDto {
   const factory DocumentViewDto({
     required VaultItemViewDto item,
     required DocumentDataDto document,
@@ -282,3 +282,5 @@ sealed class PatchDocumentDto with _$PatchDocumentDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchDocumentDto;
 }
+
+

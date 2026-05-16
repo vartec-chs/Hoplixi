@@ -46,3 +46,5 @@ sealed class FilteredCardDto<T> with _$FilteredCardDto<T> {
     required VaultItemCardMetaDto meta,
   }) = _FilteredCardDto<T>;
 }
+
+

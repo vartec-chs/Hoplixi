@@ -16,12 +16,28 @@ import 'package:hoplixi/main_db/core/repositories/base/recovery_codes_repository
 import 'package:hoplixi/main_db/core/repositories/base/ssh_key_repository.dart';
 import 'package:hoplixi/main_db/core/repositories/base/wifi_repository.dart';
 import 'package:hoplixi/main_db/core/services/entities/api_key_service.dart';
+import 'package:hoplixi/main_db/core/services/entities/bank_card_service.dart';
+import 'package:hoplixi/main_db/core/services/entities/certificate_service.dart';
+import 'package:hoplixi/main_db/core/services/entities/contact_service.dart';
+import 'package:hoplixi/main_db/core/services/entities/crypto_wallet_service.dart';
+import 'package:hoplixi/main_db/core/services/entities/document_service.dart';
+import 'package:hoplixi/main_db/core/services/entities/file_service.dart';
+import 'package:hoplixi/main_db/core/services/entities/identity_service.dart';
+import 'package:hoplixi/main_db/core/services/entities/license_key_service.dart';
+import 'package:hoplixi/main_db/core/services/entities/loyalty_card_service.dart';
+import 'package:hoplixi/main_db/core/services/entities/note_service.dart';
+import 'package:hoplixi/main_db/core/services/entities/otp_service.dart';
+import 'package:hoplixi/main_db/core/services/entities/password_service.dart';
+import 'package:hoplixi/main_db/core/services/entities/recovery_codes_service.dart';
+import 'package:hoplixi/main_db/core/services/entities/ssh_key_service.dart';
+import 'package:hoplixi/main_db/core/services/entities/wifi_service.dart';
 import 'package:hoplixi/main_db/core/services/history/store_history_policy_service.dart';
 import 'package:hoplixi/main_db/core/services/history/vault_event_history_service.dart';
 import 'package:hoplixi/main_db/core/services/history/vault_history_service.dart';
 import 'package:hoplixi/main_db/core/services/history/vault_snapshot_writer.dart';
 import 'package:hoplixi/main_db/core/services/relations/snapshot_relations_service.dart';
 import 'package:hoplixi/main_db/core/services/relations/vault_item_relations_service.dart';
+import 'package:hoplixi/main_db/core/services/vault_items_state_service.dart';
 import 'package:hoplixi/main_db/core/services/vault_typed_view_resolver.dart';
 
 class TestServiceFactory {
@@ -92,39 +108,51 @@ class TestServiceFactory {
     );
   }
 
+  VaultItemsStateService createVaultItemsStateService() {
+    return VaultItemsStateService(
+      db: db,
+      viewResolver: createVaultTypedViewResolver(),
+      historyService: createVaultHistoryService(),
+    );
+  }
+
   VaultTypedViewResolver createVaultTypedViewResolver() {
     return VaultTypedViewResolver(
       apiKeyRepository: createApiKeyRepository(),
       passwordRepository: createPasswordRepository(),
       bankCardRepository: createBankCardRepository(),
-      certificateRepository: createCertificateRepository(),
-      contactRepository: createContactRepository(),
-      cryptoWalletRepository: createCryptoWalletRepository(),
-      identityRepository: createIdentityRepository(),
-      licenseKeyRepository: createLicenseKeyRepository(),
-      loyaltyCardRepository: createLoyaltyCardRepository(),
       noteRepository: createNoteRepository(),
       otpRepository: createOtpRepository(),
-      recoveryCodesRepository: createRecoveryCodesRepository(),
-      sshKeyRepository: createSshKeyRepository(),
-      wifiRepository: createWifiRepository(),
-      fileRepository: createFileRepository(),
       documentRepository: createDocumentRepository(),
+      fileRepository: createFileRepository(),
+      contactRepository: createContactRepository(),
+      sshKeyRepository: createSshKeyRepository(),
+      certificateRepository: createCertificateRepository(),
+      cryptoWalletRepository: createCryptoWalletRepository(),
+      wifiRepository: createWifiRepository(),
+      identityRepository: createIdentityRepository(),
+      licenseKeyRepository: createLicenseKeyRepository(),
+      recoveryCodesRepository: createRecoveryCodesRepository(),
+      loyaltyCardRepository: createLoyaltyCardRepository(),
     );
   }
 
   ApiKeyRepository createApiKeyRepository() => ApiKeyRepository(db);
   PasswordRepository createPasswordRepository() => PasswordRepository(db);
   BankCardRepository createBankCardRepository() => BankCardRepository(db);
-  CertificateRepository createCertificateRepository() => CertificateRepository(db);
+  CertificateRepository createCertificateRepository() =>
+      CertificateRepository(db);
   ContactRepository createContactRepository() => ContactRepository(db);
-  CryptoWalletRepository createCryptoWalletRepository() => CryptoWalletRepository(db);
+  CryptoWalletRepository createCryptoWalletRepository() =>
+      CryptoWalletRepository(db);
   IdentityRepository createIdentityRepository() => IdentityRepository(db);
   LicenseKeyRepository createLicenseKeyRepository() => LicenseKeyRepository(db);
-  LoyaltyCardRepository createLoyaltyCardRepository() => LoyaltyCardRepository(db);
+  LoyaltyCardRepository createLoyaltyCardRepository() =>
+      LoyaltyCardRepository(db);
   NoteRepository createNoteRepository() => NoteRepository(db);
   OtpRepository createOtpRepository() => OtpRepository(db);
-  RecoveryCodesRepository createRecoveryCodesRepository() => RecoveryCodesRepository(db);
+  RecoveryCodesRepository createRecoveryCodesRepository() =>
+      RecoveryCodesRepository(db);
   SshKeyRepository createSshKeyRepository() => SshKeyRepository(db);
   WifiRepository createWifiRepository() => WifiRepository(db);
   FileRepository createFileRepository() => FileRepository(db);
@@ -136,6 +164,17 @@ class TestServiceFactory {
       repository: createApiKeyRepository(),
       relationsService: createVaultItemRelationsService(),
       historyService: createVaultHistoryService(),
+      vaultItemsStateService: createVaultItemsStateService(),
+    );
+  }
+
+  PasswordService createPasswordService() {
+    return PasswordService(
+      db: db,
+      repository: createPasswordRepository(),
+      relationsService: createVaultItemRelationsService(),
+      historyService: createVaultHistoryService(),
+      vaultItemsStateService: createVaultItemsStateService(),
     );
   }
 }

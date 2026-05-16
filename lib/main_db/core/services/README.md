@@ -6,6 +6,15 @@
 
 ## Основные сервисы
 
+### [vault_items_state_service.dart](./vault_items_state_service.dart)
+Общий сервис для изменения состояния vault_items:
+- softDelete / recover
+- archive / restoreArchived
+- favorite / unfavorite
+- pin / unpin
+
+Сервис использует `VaultTypedViewResolver` для получения `oldView`, создаёт snapshot before update и пишет event history. Entity services делегируют эти операции данному сервису.
+
 ### [vault_item_mutation_service.dart](./vault_item_mutation_service.dart)
 
 Сервис для выполнения атомарных изменений (мутаций), общих для всех типов

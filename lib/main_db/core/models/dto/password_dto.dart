@@ -47,7 +47,7 @@ sealed class CreatePasswordDto with _$CreatePasswordDto {
 }
 
 @freezed
-sealed class PasswordViewDto with _$PasswordViewDto {
+sealed class PasswordViewDto with _$PasswordViewDto implements VaultEntityViewDto {
   const factory PasswordViewDto({
     required VaultItemViewDto item,
     required PasswordDataDto password,
@@ -87,3 +87,5 @@ sealed class PatchPasswordDto with _$PatchPasswordDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchPasswordDto;
 }
+
+

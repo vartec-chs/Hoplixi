@@ -45,3 +45,5 @@ sealed class PatchFileMetadataDto with _$PatchFileMetadataDto {
     @Default(FieldUpdate.keep()) FieldUpdate<DateTime> lastIntegrityCheckAt,
   }) = _PatchFileMetadataDto;
 }
+
+

@@ -69,7 +69,7 @@ sealed class CreateCertificateDto with _$CreateCertificateDto {
 }
 
 @freezed
-sealed class CertificateViewDto with _$CertificateViewDto {
+sealed class CertificateViewDto with _$CertificateViewDto implements VaultEntityViewDto {
   const factory CertificateViewDto({
     required VaultItemViewDto item,
     required CertificateDataDto certificate,
@@ -119,3 +119,5 @@ sealed class PatchCertificateDto with _$PatchCertificateDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchCertificateDto;
 }
+
+

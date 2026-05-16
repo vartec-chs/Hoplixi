@@ -63,7 +63,7 @@ sealed class CreateLicenseKeyDto with _$CreateLicenseKeyDto {
 }
 
 @freezed
-sealed class LicenseKeyViewDto with _$LicenseKeyViewDto {
+sealed class LicenseKeyViewDto with _$LicenseKeyViewDto implements VaultEntityViewDto {
   const factory LicenseKeyViewDto({
     required VaultItemViewDto item,
     required LicenseKeyDataDto licenseKey,
@@ -115,3 +115,5 @@ sealed class PatchLicenseKeyDto with _$PatchLicenseKeyDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchLicenseKeyDto;
 }
+
+
