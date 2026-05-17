@@ -1,3 +1,4 @@
+import 'package:hoplixi/main_db/core/services/history/history_services.dart';
 import 'package:result_dart/result_dart.dart';
 import '../../errors/db_result.dart';
 import '../../errors/db_error.dart';
@@ -28,28 +29,41 @@ class VaultHistoryDetailService {
         );
       }
 
-      // TODO: Load compare target (newer revision or current live)
-      // For now, compare with empty snapshot or placeholder
-      final emptySnapshot = NormalizedHistorySnapshot(
-        snapshot: selected.snapshot,
-        fields: const {},
-        sensitiveKeys: const {},
-        customFields: const [],
-        restoreWarnings: const [],
+      // Load compare target (newer revision or current live)
+      // For now, we only have comparison with current live as a concept
+      final current = await loader.loadCurrentSnapshot(
+        itemId: selected.base.itemId,
+        type: selected.base.type,
       );
 
+      final AnyNormalizedHistorySnapshot compareTarget =
+          current ??
+          NormalizedHistorySnapshot(
+            base: selected.base,
+            payload: EmptyHistoryPayload(selected.base.type),
+            customFields: const [],
+            restoreWarnings: const [],
+          );
+
       final fieldDiffs = diffService.buildFieldDiffs(
-        current: emptySnapshot,
+        current: compareTarget,
+        replacement: selected,
+      );
+
+      final customFieldDiffs = diffService.buildCustomFieldDiffs(
+        current: compareTarget,
         replacement: selected,
       );
 
       return Success(
         VaultHistoryRevisionDetailDto(
-          selected: selected.snapshot,
+          selected: selected.base.historyId, // Changed to string historyId
           compareTargetKind:
-              HistoryCompareTargetKind.currentLive, // Placeholder
+              current != null
+                  ? HistoryCompareTargetKind.currentLive
+                  : HistoryCompareTargetKind.none,
           fieldDiffs: fieldDiffs,
-          customFieldDiffs: const [],
+          customFieldDiffs: customFieldDiffs,
           isRestorable: restorePolicy.isRestorable(selected),
           restoreWarnings: restorePolicy.restoreWarnings(selected),
         ),

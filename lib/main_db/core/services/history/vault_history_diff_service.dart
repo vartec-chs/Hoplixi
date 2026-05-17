@@ -1,41 +1,45 @@
 import 'package:collection/collection.dart';
-import 'package:hoplixi/main_db/core/main_store.dart';
+import 'package:hoplixi/main_db/core/services/history/history_services.dart';
 
 import '../../models/dto_history/cards/vault_history_revision_detail_dto.dart';
-import '../../tables/tables.dart';
 import '../../tables/vault_items/vault_item_custom_fields.dart';
-import 'history_field_label_resolver.dart';
 import 'vault_history_normalized_loader.dart';
 
 class VaultHistoryDiffService {
-  VaultHistoryDiffService({required this.labelResolver});
-
-  final HistoryFieldLabelResolver labelResolver;
+  VaultHistoryDiffService();
 
   List<VaultHistoryFieldDiffDto> buildFieldDiffs({
-    required NormalizedHistorySnapshot current,
-    required NormalizedHistorySnapshot replacement,
+    required AnyNormalizedHistorySnapshot current,
+    required AnyNormalizedHistorySnapshot replacement,
   }) {
     final diffs = <VaultHistoryFieldDiffDto>[];
-    final allKeys = {...current.fields.keys, ...replacement.fields.keys};
+
+    final currentFields = {
+      for (final field in current.diffFields()) field.key: field,
+    };
+
+    final replacementFields = {
+      for (final field in replacement.diffFields()) field.key: field,
+    };
+
+    final allKeys = {...currentFields.keys, ...replacementFields.keys};
 
     for (final key in allKeys) {
-      final oldVal = current.fields[key];
-      final newVal = replacement.fields[key];
+      final oldF = currentFields[key];
+      final newF = replacementFields[key];
+
+      final oldVal = oldF?.value;
+      final newVal = newF?.value;
 
       if (oldVal == newVal) continue;
 
-      final isSensitive =
-          current.sensitiveKeys.contains(key) ||
-          replacement.sensitiveKeys.contains(key);
+      final isSensitive = (oldF?.isSensitive ?? false) || (newF?.isSensitive ?? false);
+      final label = newF?.label ?? oldF?.label ?? key;
 
       diffs.add(
         VaultHistoryFieldDiffDto(
           fieldKey: key,
-          label: labelResolver.labelFor(
-            type: replacement.snapshot.type,
-            fieldKey: key,
-          ),
+          label: label,
           oldValue: isSensitive ? '••••••' : oldVal,
           newValue: isSensitive ? '••••••' : newVal,
           changeType: _determineChangeType(oldVal, newVal),
@@ -48,49 +52,39 @@ class VaultHistoryDiffService {
   }
 
   List<VaultHistoryFieldDiffDto> buildCustomFieldDiffs({
-    required NormalizedHistorySnapshot current,
-    required NormalizedHistorySnapshot replacement,
+    required AnyNormalizedHistorySnapshot current,
+    required AnyNormalizedHistorySnapshot replacement,
   }) {
     final diffs = <VaultHistoryFieldDiffDto>[];
 
-    final currentFields = current.customFields
-        .cast<VaultItemCustomFieldsHistoryData>();
-    final replacementFields = replacement.customFields
-        .cast<VaultItemCustomFieldsHistoryData>();
-
-    final allIds = <String>{
-      ...currentFields.map((e) => e.originalFieldId ?? e.id),
-      ...replacementFields.map((e) => e.originalFieldId ?? e.id),
+    final allIdentityKeys = <String>{
+      ...current.customFields.map((e) => e.identityKey),
+      ...replacement.customFields.map((e) => e.identityKey),
     };
 
-    for (final id in allIds) {
-      final oldF = currentFields.firstWhereOrNull(
-        (e) => (e.originalFieldId ?? e.id) == id,
+    for (final identityKey in allIdentityKeys) {
+      final oldF = current.customFields.firstWhereOrNull(
+        (e) => e.identityKey == identityKey,
       );
-      final newF = replacementFields.firstWhereOrNull(
-        (e) => (e.originalFieldId ?? e.id) == id,
+      final newF = replacement.customFields.firstWhereOrNull(
+        (e) => e.identityKey == identityKey,
       );
 
       if (oldF == null && newF == null) continue;
-
-      final label = newF?.label ?? oldF!.label;
-      final isSensitive =
-          (oldF?.isSecret == true ||
-              oldF?.fieldType == CustomFieldType.concealed) ||
-          (newF?.isSecret == true ||
-              newF?.fieldType == CustomFieldType.concealed);
 
       final oldVal = oldF?.value;
       final newVal = newF?.value;
 
       if (oldF != null && newF != null && oldVal == newVal) {
-        // Also check if label or field type changed if needed, but standard diff focuses on value
         continue;
       }
 
+      final label = newF?.label ?? oldF?.label ?? identityKey;
+      final isSensitive = (oldF?.isSensitive ?? false) || (newF?.isSensitive ?? false);
+
       diffs.add(
         VaultHistoryFieldDiffDto(
-          fieldKey: id,
+          fieldKey: identityKey,
           label: label,
           oldValue: isSensitive ? '••••••' : oldVal,
           newValue: isSensitive ? '••••••' : newVal,

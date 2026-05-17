@@ -1,16 +1,21 @@
-import 'vault_history_normalized_loader.dart';
+import 'package:hoplixi/main_db/core/services/history/history_services.dart';
+import 'package:hoplixi/main_db/core/tables/file/file_metadata.dart';
+
 import '../../tables/vault_items/vault_items.dart';
+import 'vault_history_normalized_loader.dart';
 
 class VaultHistoryRestorePolicyService {
-  bool isRestorable(NormalizedHistorySnapshot snapshot) {
-    switch (snapshot.snapshot.type) {
+  bool isRestorable(AnyNormalizedHistorySnapshot snapshot) {
+    switch (snapshot.base.type) {
       case VaultItemType.document:
         return false;
       case VaultItemType.recoveryCodes:
-        // Recovery codes are restorable only if values are present and not null
-        final missingCount = snapshot.fields['missingValuesCount'] as int? ?? 0;
-        final valuesCount = snapshot.fields['valuesCount'] as int? ?? 0;
-        final codesCount = snapshot.fields['codesCount'] as int? ?? 0;
+        if (snapshot.payload is! RecoveryCodesHistoryPayload) return true;
+        final p = snapshot.payload as RecoveryCodesHistoryPayload;
+
+        final codesCount = p.codesCount ?? 0;
+        final valuesCount = p.valuesCount ?? 0;
+        final missingCount = p.missingValuesCount ?? 0;
 
         if (codesCount > 0 && valuesCount == 0) return false;
         if (missingCount > 0) return false;
@@ -21,52 +26,56 @@ class VaultHistoryRestorePolicyService {
     }
   }
 
-  List<String> restoreWarnings(NormalizedHistorySnapshot snapshot) {
+  List<String> restoreWarnings(AnyNormalizedHistorySnapshot snapshot) {
     final warnings = <String>[];
 
-    final type = snapshot.snapshot.type;
+    final type = snapshot.base.type;
 
     if (type == VaultItemType.file) {
-      final availabilityStatus =
-          snapshot.fields['availabilityStatus'] as String?;
-      if (availabilityStatus == 'missing') {
-        warnings.add(
-          'Файл помечен как отсутствующий. Будет восстановлена только метаинформация.',
-        );
-      } else if (availabilityStatus == 'deleted') {
-        warnings.add(
-          'Файл помечен как удалённый. Будет восстановлена только метаинформация.',
-        );
-      } else {
-        warnings.add(
-          'Восстановление файла восстановит только запись в БД. Убедитесь, что физический файл всё ещё на месте.',
-        );
-      }
+      if (snapshot.payload is FileHistoryPayload) {
+        final p = snapshot.payload as FileHistoryPayload;
+        if (p.availabilityStatus == FileAvailabilityStatus.missing) {
+          warnings.add(
+            'Файл помечен как отсутствующий. Будет восстановлена только метаинформация.',
+          );
+        } else if (p.availabilityStatus == FileAvailabilityStatus.deleted) {
+          warnings.add(
+            'Файл помечен как удалённый. Будет восстановлена только метаинформация.',
+          );
+        } else {
+          warnings.add(
+            'Восстановление файла восстановит только запись в БД. Убедитесь, что физический файл всё ещё на месте.',
+          );
+        }
 
-      if (snapshot.fields['filePath'] == null) {
-        warnings.add('Путь к файлу в снимке отсутствует.');
+        if (p.filePath == null) {
+          warnings.add('Путь к файлу в снимке отсутствует.');
+        }
       }
     } else if (type == VaultItemType.document) {
       warnings.add('Восстановление документов пока не поддерживается.');
     } else if (type == VaultItemType.recoveryCodes) {
-      final usedValuesCount = snapshot.fields['usedValuesCount'] as int? ?? 0;
-      if (usedValuesCount > 0) {
+      if (snapshot.payload is RecoveryCodesHistoryPayload) {
+        final p = snapshot.payload as RecoveryCodesHistoryPayload;
+        final usedValuesCount = p.usedValuesCount ?? 0;
+        if (usedValuesCount > 0) {
+          warnings.add(
+            'Будет восстановлен статус использованных кодов ($usedValuesCount шт.).',
+          );
+        }
+      }
+    }
+
+    // Check for missing secrets in type-specific payload
+    for (final field in snapshot.payload.diffFields()) {
+      if (field.isSensitive && field.value == null) {
         warnings.add(
-          'Будет восстановлен статус использованных кодов ($usedValuesCount шт.).',
+          'В снимке отсутствует секретное поле "${field.label}". Оно не будет восстановлено.',
         );
       }
     }
 
-    // Check for missing secrets
-    for (final key in snapshot.sensitiveKeys) {
-      if (snapshot.fields[key] == null) {
-        warnings.add(
-          'В снимке отсутствует секретное поле "$key". Оно не будет восстановлено.',
-        );
-      }
-    }
-
-    if (snapshot.snapshot.isDeleted) {
+    if (snapshot.base.isDeleted) {
       warnings.add(
         'Запись сейчас находится в корзине. Восстановление переместит её в активные.',
       );

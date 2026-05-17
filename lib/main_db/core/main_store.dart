@@ -140,6 +140,8 @@ part 'main_store.g.dart';
     LoyaltyCardHistoryDao,
     VaultEventsHistoryDao,
     VaultSnapshotsHistoryDao,
+    VaultItemCustomFieldsDao,
+    VaultItemCustomFieldsHistoryDao,
     // Filter DAOs
     ApiKeyFilterDao,
     BankCardFilterDao,
