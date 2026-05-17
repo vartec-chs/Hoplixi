@@ -15,14 +15,12 @@ import 'package:uuid/uuid.dart';
 import '../../main_store.dart';
 
 class VaultItemRelationsService {
-  VaultItemRelationsService({
-    required this.db,
-    required this.vaultItemsDao,
-    required this.categoriesDao,
-    required this.tagsDao,
-    required this.itemTagsDao,
-    required this.itemLinksDao,
-  });
+  VaultItemRelationsService({required this.db})
+    : vaultItemsDao = db.vaultItemsDao,
+      categoriesDao = db.categoriesDao,
+      tagsDao = db.tagsDao,
+      itemTagsDao = db.itemTagsDao,
+      itemLinksDao = db.itemLinksDao;
 
   final MainStore db;
   final VaultItemsDao vaultItemsDao;

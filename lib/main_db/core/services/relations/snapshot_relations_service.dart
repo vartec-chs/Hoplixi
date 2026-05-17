@@ -11,15 +11,16 @@ import 'package:uuid/uuid.dart';
 import '../../main_store.dart';
 
 class SnapshotRelationsService {
-  SnapshotRelationsService({
-    required this.categoriesDao,
-    required this.tagsDao,
-    required this.itemTagsDao,
-    required this.itemLinksDao,
-    required this.itemCategoryHistoryDao,
-    required this.vaultItemTagHistoryDao,
-    required this.itemLinkHistoryDao,
-  });
+  SnapshotRelationsService({required this.db})
+    : categoriesDao = db.categoriesDao,
+      tagsDao = db.tagsDao,
+      itemTagsDao = db.itemTagsDao,
+      itemLinksDao = db.itemLinksDao,
+      itemCategoryHistoryDao = db.itemCategoryHistoryDao,
+      vaultItemTagHistoryDao = db.vaultItemTagHistoryDao,
+      itemLinkHistoryDao = db.itemLinkHistoryDao;
+
+  final MainStore db;
 
   final CategoriesDao categoriesDao;
   final TagsDao tagsDao;

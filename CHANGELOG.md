@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 2026-05-18
+
+### docs
+
+- Обновлён
+  [lib/main_db/core/services/README.md](lib/main_db/core/services/README.md):
+  добавлено описание `VaultCardFilterService` и пояснение роли типизированных
+  сервисов сущностей в папке `entities`.
+
+### main_db
+
+- Доработан `VaultCardFilterService` в
+  [lib/main_db/core/services/entities/vault_card_filter_service.dart](lib/main_db/core/services/entities/vault_card_filter_service.dart):
+  сервис теперь покрывает все карточные `getFiltered`/`countFiltered` вызовы и
+  получает filter DAO напрямую из `MainStore` в момент вызова.
+
 ## 2026-05-17
 
 ### docs

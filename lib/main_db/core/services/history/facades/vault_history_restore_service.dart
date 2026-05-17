@@ -9,10 +9,14 @@ import '../../../daos/daos.dart';
 import '../../../errors/db_error.dart';
 import '../../../errors/db_exception_mapper.dart';
 import '../../../errors/db_result.dart';
-
+import '../../../models/dto/dto.dart';
+import '../../../tables/vault_items/vault_events_history.dart';
+import '../../vault_typed_view_resolver.dart';
 import '../restore_handlers/restore_handlers.dart';
+import '../vault_event_history_service.dart';
 import '../vault_history_normalized_loader.dart';
 import '../policy/vault_history_restore_policy_service.dart';
+import '../vault_snapshot_writer.dart';
 
 class VaultHistoryRestoreService {
   VaultHistoryRestoreService({
@@ -24,6 +28,9 @@ class VaultHistoryRestoreService {
     required this.customFieldsRestoreService,
     required this.tagsRestoreService,
     required this.itemLinksRestoreService,
+    required this.viewResolver,
+    required this.snapshotWriter,
+    required this.eventHistoryService,
   });
 
   final VaultHistoryNormalizedLoader loader;
@@ -34,6 +41,9 @@ class VaultHistoryRestoreService {
   final CustomFieldsRestoreService customFieldsRestoreService;
   final TagsRestoreService tagsRestoreService;
   final ItemLinksRestoreService itemLinksRestoreService;
+  final VaultTypedViewResolver viewResolver;
+  final VaultSnapshotWriter snapshotWriter;
+  final VaultEventHistoryService eventHistoryService;
 
   Future<DbResult<Unit>> restoreRevision({
     required String historyId,
@@ -68,6 +78,49 @@ class VaultHistoryRestoreService {
       }
 
       return await db.transaction(() async {
+        String? beforeRestoreSnapshotId;
+
+        final currentView = await viewResolver.getView(
+          itemId: selected.base.itemId,
+          type: selected.base.type,
+        );
+
+        if (currentView == null && !recreate) {
+          return Failure(
+            DBCoreError.notFound(
+              entity: selected.base.type.name,
+              id: selected.base.itemId,
+              message:
+                  'Live item not found. Use recreate=true to restore deleted physical item.',
+            ),
+          );
+        }
+
+        if (currentView != null) {
+          if (currentView is! VaultEntityViewDto) {
+            throw _InternalRestoreFailure(
+              DBCoreError.conflict(
+                code: 'history.restore.invalid_current_view',
+                message: 'Current view does not implement VaultEntityViewDto',
+                entity: selected.base.type.name,
+              ),
+            );
+          }
+
+          final snapshotRes = await snapshotWriter.writeSnapshot(
+            view: currentView,
+            action: VaultEventHistoryAction.restored,
+            includeSecrets: true,
+            includeRelations: true,
+          );
+
+          if (snapshotRes.isError()) {
+            throw _InternalRestoreFailure(snapshotRes.exceptionOrNull()!);
+          }
+
+          beforeRestoreSnapshotId = snapshotRes.getOrThrow();
+        }
+
         await vaultItemsDao.upsertVaultItem(
           VaultItemsCompanion(
             id: Value(selected.base.itemId),
@@ -76,12 +129,17 @@ class VaultHistoryRestoreService {
             description: Value(selected.base.description),
             categoryId: Value(selected.base.categoryId),
             iconRefId: Value(selected.base.iconRefId),
+            usedCount: Value(selected.base.usedCount),
             isFavorite: Value(selected.base.isFavorite),
             isArchived: Value(selected.base.isArchived),
             isPinned: Value(selected.base.isPinned),
             isDeleted: const Value(false), // Always restore as active
             createdAt: Value(selected.base.createdAt),
             modifiedAt: Value(DateTime.now()), // Updated modification time
+            lastUsedAt: Value(selected.base.lastUsedAt),
+            archivedAt: Value(selected.base.archivedAt),
+            deletedAt: const Value(null),
+            recentScore: Value(selected.base.recentScore),
           ),
         );
 
@@ -117,6 +175,20 @@ class VaultHistoryRestoreService {
         );
         if (linksRes.isError()) {
           throw _InternalRestoreFailure(linksRes.exceptionOrNull()!);
+        }
+
+        final eventRes = await eventHistoryService.writeEvent(
+          itemId: selected.base.itemId,
+          type: selected.base.type,
+          action: VaultEventHistoryAction.restored,
+          name: selected.base.name,
+          categoryId: selected.base.categoryId,
+          iconRefId: selected.base.iconRefId,
+          snapshotHistoryId: beforeRestoreSnapshotId,
+        );
+
+        if (eventRes.isError()) {
+          throw _InternalRestoreFailure(eventRes.exceptionOrNull()!);
         }
 
         return const Success(unit);

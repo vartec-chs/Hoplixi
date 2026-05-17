@@ -6,8 +6,14 @@ import '../field_update.dart';
 part 'vault_item_base_dto.freezed.dart';
 part 'vault_item_base_dto.g.dart';
 
+abstract interface class VaultEntityPatchDto {
+  VaultItemPatchDto get item;
+}
+
 @freezed
-sealed class VaultItemPatchDto with _$VaultItemPatchDto {
+sealed class VaultItemPatchDto
+    with _$VaultItemPatchDto
+    implements VaultEntityPatchDto {
   const factory VaultItemPatchDto({
     required String itemId,
 
@@ -19,6 +25,11 @@ sealed class VaultItemPatchDto with _$VaultItemPatchDto {
     @Default(FieldUpdate.keep()) FieldUpdate<bool> isFavorite,
     @Default(FieldUpdate.keep()) FieldUpdate<bool> isPinned,
   }) = _VaultItemPatchDto;
+
+  const VaultItemPatchDto._();
+
+  @override
+  VaultItemPatchDto get item => this;
 }
 
 @freezed

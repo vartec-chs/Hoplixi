@@ -3,6 +3,7 @@ import 'package:hoplixi/main_db/core/repositories/base/bank_card_repository.dart
 import 'package:hoplixi/main_db/core/repositories/base/certificate_repository.dart';
 import 'package:hoplixi/main_db/core/repositories/base/contact_repository.dart';
 import 'package:hoplixi/main_db/core/repositories/base/crypto_wallet_repository.dart';
+import 'package:hoplixi/main_db/core/repositories/base/document_repository.dart';
 import 'package:hoplixi/main_db/core/repositories/base/file_repository.dart';
 import 'package:hoplixi/main_db/core/repositories/base/identity_repository.dart';
 import 'package:hoplixi/main_db/core/repositories/base/license_key_repository.dart';
@@ -14,6 +15,7 @@ import 'package:hoplixi/main_db/core/repositories/base/recovery_codes_repository
 import 'package:hoplixi/main_db/core/repositories/base/ssh_key_repository.dart';
 import 'package:hoplixi/main_db/core/repositories/base/wifi_repository.dart';
 import 'package:hoplixi/main_db/core/services/history/history.dart';
+import 'package:hoplixi/main_db/core/services/vault_typed_view_resolver.dart';
 
 import '../../main_store.dart';
 import '../relations/snapshot_relations_service.dart';
@@ -22,6 +24,25 @@ class VaultHistoryServiceAssembly {
   VaultHistoryServiceAssembly(this.db);
 
   final MainStore db;
+
+  late final VaultTypedViewResolver viewResolver = VaultTypedViewResolver(
+    apiKeyRepository: ApiKeyRepository(db),
+    passwordRepository: PasswordRepository(db),
+    bankCardRepository: BankCardRepository(db),
+    noteRepository: NoteRepository(db),
+    otpRepository: OtpRepository(db),
+    documentRepository: DocumentRepository(db),
+    fileRepository: FileRepository(db),
+    contactRepository: ContactRepository(db),
+    sshKeyRepository: SshKeyRepository(db),
+    certificateRepository: CertificateRepository(db),
+    cryptoWalletRepository: CryptoWalletRepository(db),
+    wifiRepository: WifiRepository(db),
+    identityRepository: IdentityRepository(db),
+    licenseKeyRepository: LicenseKeyRepository(db),
+    recoveryCodesRepository: RecoveryCodesRepository(db),
+    loyaltyCardRepository: LoyaltyCardRepository(db),
+  );
 
   late final VaultHistoryNormalizerRegistry normalizerRegistry =
       VaultHistoryNormalizerRegistry([
@@ -216,15 +237,7 @@ class VaultHistoryServiceAssembly {
 
   late final VaultSnapshotWriter snapshotWriter = VaultSnapshotWriter(
     vaultSnapshotsHistoryDao: db.vaultSnapshotsHistoryDao,
-    snapshotRelationsService: SnapshotRelationsService(
-      categoriesDao: db.categoriesDao,
-      tagsDao: db.tagsDao,
-      itemTagsDao: db.itemTagsDao,
-      itemLinksDao: db.itemLinksDao,
-      itemLinkHistoryDao: db.itemLinkHistoryDao,
-      itemCategoryHistoryDao: db.itemCategoryHistoryDao,
-      vaultItemTagHistoryDao: db.vaultItemTagHistoryDao,
-    ),
+    snapshotRelationsService: SnapshotRelationsService(db: db),
     customFieldsSnapshotService: CustomFieldsSnapshotService(
       customFieldsDao: db.vaultItemCustomFieldsDao,
       customFieldsHistoryDao: db.vaultItemCustomFieldsHistoryDao,
@@ -265,6 +278,9 @@ class VaultHistoryServiceAssembly {
           itemLinksDao: db.itemLinksDao,
           vaultItemsDao: db.vaultItemsDao,
         ),
+        viewResolver: viewResolver,
+        snapshotWriter: snapshotWriter,
+        eventHistoryService: eventHistoryService,
       );
 
   late final VaultHistoryDeleteService deleteService =
