@@ -29,9 +29,6 @@ sealed class VaultEventHistoryFilter with _$VaultEventHistoryFilter {
     /// Источники событий: user, system, sync, import и т.д.
     @Default(<VaultHistoryActorType>[]) List<VaultHistoryActorType> actorTypes,
 
-    /// Категория на момент события.
-    @Default(<String>[]) List<String> categoryIds,
-
     /// Привязанные snapshot history.
     @Default(<String>[]) List<String> snapshotHistoryIds,
 
@@ -64,7 +61,6 @@ sealed class VaultEventHistoryFilter with _$VaultEventHistoryFilter {
     List<VaultEventHistoryAction>? actions,
     List<VaultItemType>? types,
     List<VaultHistoryActorType>? actorTypes,
-    List<String>? categoryIds,
     List<String>? snapshotHistoryIds,
     bool? hasSnapshot,
     bool? hasName,
@@ -79,12 +75,6 @@ sealed class VaultEventHistoryFilter with _$VaultEventHistoryFilter {
     final normalizedItemId = itemId?.trim();
 
     final normalizedItemIds = (itemIds ?? <String>[])
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toSet()
-        .toList();
-
-    final normalizedCategoryIds = (categoryIds ?? <String>[])
         .map((e) => e.trim())
         .where((e) => e.isNotEmpty)
         .toSet()
@@ -105,7 +95,6 @@ sealed class VaultEventHistoryFilter with _$VaultEventHistoryFilter {
       actions: (actions ?? <VaultEventHistoryAction>[]).toSet().toList(),
       types: (types ?? <VaultItemType>[]).toSet().toList(),
       actorTypes: (actorTypes ?? <VaultHistoryActorType>[]).toSet().toList(),
-      categoryIds: normalizedCategoryIds,
       snapshotHistoryIds: normalizedSnapshotHistoryIds,
       hasSnapshot: hasSnapshot,
       hasName: hasName,
@@ -130,7 +119,6 @@ extension VaultEventHistoryFilterHelpers on VaultEventHistoryFilter {
     if (actions.isNotEmpty) return true;
     if (types.isNotEmpty) return true;
     if (actorTypes.isNotEmpty) return true;
-    if (categoryIds.isNotEmpty) return true;
     if (snapshotHistoryIds.isNotEmpty) return true;
     if (hasSnapshot != null) return true;
     if (hasName != null) return true;

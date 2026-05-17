@@ -182,8 +182,6 @@ class VaultHistoryRestoreService {
           type: selected.base.type,
           action: VaultEventHistoryAction.restored,
           name: selected.base.name,
-          categoryId: selected.base.categoryId,
-          iconRefId: selected.base.iconRefId,
           snapshotHistoryId: beforeRestoreSnapshotId,
         );
 

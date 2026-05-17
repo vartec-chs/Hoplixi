@@ -66,8 +66,6 @@ class PasswordService {
           type: VaultItemType.password,
           action: VaultEventHistoryAction.created,
           name: createdView.item.name,
-          categoryId: createdView.item.categoryId,
-          iconRefId: createdView.item.iconRefId,
           snapshotHistoryId: snapshotRes?.getOrNull(),
         );
         if (eventRes.isError()) throw eventRes.exceptionOrNull()!;
@@ -122,9 +120,6 @@ class PasswordService {
           type: VaultItemType.password,
           action: VaultEventHistoryAction.updated,
           name: dto.item.name.valueOrNull ?? oldView.item.name,
-          categoryId:
-              dto.item.categoryId.valueOrNull ?? oldView.item.categoryId,
-          iconRefId: dto.item.iconRefId.valueOrNull ?? oldView.item.iconRefId,
           snapshotHistoryId: snapshotRes?.getOrNull(),
         );
         if (eventRes.isError()) throw eventRes.exceptionOrNull()!;

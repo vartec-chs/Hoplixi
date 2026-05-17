@@ -70,8 +70,6 @@ class VaultHistoryService {
     required VaultEventHistoryAction action,
     String? name,
     String? description,
-    String? categoryId,
-    String? iconRefId,
     String? snapshotHistoryId,
     VaultHistoryActorType actorType = VaultHistoryActorType.user,
   }) async {
@@ -83,8 +81,6 @@ class VaultHistoryService {
         action: action,
         name: name,
         description: description,
-        categoryId: categoryId,
-        iconRefId: iconRefId,
         snapshotHistoryId: snapshotHistoryId,
         actorType: actorType,
       );

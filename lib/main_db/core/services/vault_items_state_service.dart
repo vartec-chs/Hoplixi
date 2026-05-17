@@ -146,8 +146,6 @@ class VaultItemsStateService {
           type: type,
           action: action,
           name: oldView.item.name,
-          categoryId: oldView.item.categoryId,
-          iconRefId: oldView.item.iconRefId,
           snapshotHistoryId: snapshotRes?.getOrNull(),
         );
         if (eventRes.isError()) {

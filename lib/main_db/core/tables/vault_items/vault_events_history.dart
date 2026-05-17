@@ -72,16 +72,6 @@ class VaultEventsHistory extends Table {
   /// Описание события или дополнительный человекочитаемый контекст.
   TextColumn get description => text().nullable()();
 
-  /// ID категории на момент события.
-  ///
-  /// Не FK: категория могла быть удалена.
-  TextColumn get categoryId => text().nullable()();
-
-  /// ID icon_ref на момент события.
-  ///
-  /// Не FK: icon_ref мог быть удалён.
-  TextColumn get iconRefId => text().nullable()();
-
   /// Snapshot history, если событие связано с restorable snapshot.
   ///
   /// ON DELETE SET NULL:
@@ -147,22 +137,6 @@ class VaultEventsHistory extends Table {
         ''',
 
     '''
-        CONSTRAINT ${VaultEventHistoryConstraint.categoryIdNotBlank.constraintName}
-        CHECK (
-          category_id IS NULL
-          OR length(trim(category_id)) > 0
-        )
-        ''',
-
-    '''
-        CONSTRAINT ${VaultEventHistoryConstraint.iconRefIdNotBlank.constraintName}
-        CHECK (
-          icon_ref_id IS NULL
-          OR length(trim(icon_ref_id)) > 0
-        )
-        ''',
-
-    '''
         CONSTRAINT ${VaultEventHistoryConstraint.snapshotHistoryIdNotBlank.constraintName}
         CHECK (
           snapshot_history_id IS NULL
@@ -206,10 +180,6 @@ enum VaultEventHistoryConstraint {
 
   descriptionNotBlank('chk_vault_events_history_description_not_blank'),
 
-  categoryIdNotBlank('chk_vault_events_history_category_id_not_blank'),
-
-  iconRefIdNotBlank('chk_vault_events_history_icon_ref_id_not_blank'),
-
   snapshotHistoryIdNotBlank(
     'chk_vault_events_history_snapshot_history_id_not_blank',
   ),
@@ -233,10 +203,6 @@ enum VaultEventHistoryIndex {
   actionEventCreatedAt('idx_vault_events_history_action_event_created_at'),
 
   typeEventCreatedAt('idx_vault_events_history_type_event_created_at'),
-
-  categoryEventCreatedAt(
-    'idx_vault_events_history_category_id_event_created_at',
-  ),
 
   snapshotHistoryId('idx_vault_events_history_snapshot_history_id'),
 
@@ -270,12 +236,6 @@ final List<String> vaultEventsHistoryTableIndexes = [
   '''
   CREATE INDEX IF NOT EXISTS ${VaultEventHistoryIndex.typeEventCreatedAt.indexName}
   ON vault_events_history(type, event_created_at DESC);
-  ''',
-
-  '''
-  CREATE INDEX IF NOT EXISTS ${VaultEventHistoryIndex.categoryEventCreatedAt.indexName}
-  ON vault_events_history(category_id, event_created_at DESC)
-  WHERE category_id IS NOT NULL;
   ''',
 
   '''

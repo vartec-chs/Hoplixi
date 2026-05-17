@@ -93,9 +93,6 @@ class VaultEventHistoryFilterDao extends DatabaseAccessor<MainStore>
     if (filter.actorTypes.isNotEmpty) {
       whereExpr &= _matchesAnyActorType(filter.actorTypes);
     }
-    if (filter.categoryIds.isNotEmpty) {
-      whereExpr &= vaultEventsHistory.categoryId.isIn(filter.categoryIds);
-    }
     if (filter.snapshotHistoryIds.isNotEmpty) {
       whereExpr &= vaultEventsHistory.snapshotHistoryId.isIn(
         filter.snapshotHistoryIds,

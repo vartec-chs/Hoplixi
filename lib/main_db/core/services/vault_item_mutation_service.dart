@@ -121,7 +121,6 @@ class VaultItemMutationService {
           itemId: itemId,
           type: type,
           action: VaultEventHistoryAction.updated,
-          categoryId: categoryId,
           snapshotHistoryId: snapshotRes?.getOrNull(),
         );
         if (eventRes.isError()) throw eventRes.exceptionOrNull()!;

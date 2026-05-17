@@ -19,8 +19,6 @@ class VaultEventHistoryService {
     required VaultEventHistoryAction action,
     String? name,
     String? description,
-    String? categoryId,
-    String? iconRefId,
     String? snapshotHistoryId,
     VaultHistoryActorType actorType = VaultHistoryActorType.user,
   }) async {
@@ -32,8 +30,6 @@ class VaultEventHistoryService {
           action: action,
           name: Value(name),
           description: Value(description),
-          categoryId: Value(categoryId),
-          iconRefId: Value(iconRefId),
           snapshotHistoryId: Value(snapshotHistoryId),
           actorType: Value(actorType),
           eventCreatedAt: Value(DateTime.now()),
