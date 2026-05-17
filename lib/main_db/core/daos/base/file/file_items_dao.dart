@@ -5,7 +5,8 @@ import '../../../tables/file/file_items.dart';
 part 'file_items_dao.g.dart';
 
 @DriftAccessor(tables: [FileItems])
-class FileItemsDao extends DatabaseAccessor<MainStore> with _$FileItemsDaoMixin {
+class FileItemsDao extends DatabaseAccessor<MainStore>
+    with _$FileItemsDaoMixin {
   FileItemsDao(super.db);
 
   Future<void> insertFileItem(FileItemsCompanion companion) {
@@ -16,18 +17,19 @@ class FileItemsDao extends DatabaseAccessor<MainStore> with _$FileItemsDaoMixin 
     String itemId,
     FileItemsCompanion companion,
   ) {
-    return (update(fileItems)..where((t) => t.itemId.equals(itemId)))
-        .write(companion);
+    return (update(
+      fileItems,
+    )..where((t) => t.itemId.equals(itemId))).write(companion);
   }
 
   Future<FileItemsData?> getFileItemByItemId(String itemId) {
-    return (select(fileItems)..where((t) => t.itemId.equals(itemId)))
-        .getSingleOrNull();
+    return (select(
+      fileItems,
+    )..where((t) => t.itemId.equals(itemId))).getSingleOrNull();
   }
 
   Future<bool> existsFileItemByItemId(String itemId) async {
-    final query = selectOnly(fileItems)
-      ..where(fileItems.itemId.equals(itemId));
+    final query = selectOnly(fileItems)..where(fileItems.itemId.equals(itemId));
     final result = await query.get();
     return result.isNotEmpty;
   }
@@ -37,9 +39,7 @@ class FileItemsDao extends DatabaseAccessor<MainStore> with _$FileItemsDaoMixin 
     required String? metadataId,
   }) {
     return (update(fileItems)..where((t) => t.itemId.equals(itemId))).write(
-      FileItemsCompanion(
-        metadataId: Value(metadataId),
-      ),
+      FileItemsCompanion(metadataId: Value(metadataId)),
     );
   }
 

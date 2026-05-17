@@ -18,7 +18,9 @@ class WifiRepository {
       final now = DateTime.now();
       final itemId = const Uuid().v4();
 
-      await db.into(db.vaultItems).insert(
+      await db
+          .into(db.vaultItems)
+          .insert(
             VaultItemsCompanion.insert(
               id: Value(itemId),
               type: VaultItemType.wifi,
@@ -33,7 +35,9 @@ class WifiRepository {
             ),
           );
 
-      await db.into(db.wifiItems).insert(
+      await db
+          .into(db.wifiItems)
+          .insert(
             WifiItemsCompanion.insert(
               itemId: itemId,
               ssid: dto.wifi.ssid,
@@ -55,8 +59,9 @@ class WifiRepository {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
 
-      await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-          .write(
+      await (db.update(
+        db.vaultItems,
+      )..where((tbl) => tbl.id.equals(itemId))).write(
         VaultItemsCompanion(
           name: dto.item.name.toRequiredValue(),
           description: dto.item.description.toNullableValue(),
@@ -68,8 +73,9 @@ class WifiRepository {
         ),
       );
 
-      await (db.update(db.wifiItems)..where((tbl) => tbl.itemId.equals(itemId)))
-          .write(
+      await (db.update(
+        db.wifiItems,
+      )..where((tbl) => tbl.itemId.equals(itemId))).write(
         WifiItemsCompanion(
           ssid: dto.wifi.ssid.toRequiredValue(),
           password: dto.wifi.password.toNullableValue(),
@@ -84,14 +90,15 @@ class WifiRepository {
   }
 
   Future<WifiViewDto?> getViewById(String itemId) async {
-    final query = db.select(db.vaultItems).join([
-      innerJoin(
-        db.wifiItems,
-        db.wifiItems.itemId.equalsExp(db.vaultItems.id),
-      ),
-    ])
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.wifi));
+    final query =
+        db.select(db.vaultItems).join([
+            innerJoin(
+              db.wifiItems,
+              db.wifiItems.itemId.equalsExp(db.vaultItems.id),
+            ),
+          ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.wifi));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
@@ -117,10 +124,7 @@ class WifiRepository {
     return _mapRowToCardDto(row, expr);
   }
 
-  Future<List<WifiCardDto>> getCards({
-    int limit = 50,
-    int offset = 0,
-  }) async {
+  Future<List<WifiCardDto>> getCards({int limit = 50, int offset = 0}) async {
     final expr = _WifiCardExpressions(db);
     final query = _buildCardQuery(expr)
       ..where(db.vaultItems.type.equalsValue(VaultItemType.wifi))
@@ -132,42 +136,39 @@ class WifiRepository {
   }
 
   Future<void> deletePermanently(String itemId) {
-    return (db.delete(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-        .go();
+    return (db.delete(
+      db.vaultItems,
+    )..where((tbl) => tbl.id.equals(itemId))).go();
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery(
     _WifiCardExpressions expr,
   ) {
     return db.selectOnly(db.vaultItems).join([
-      innerJoin(
-        db.wifiItems,
-        db.wifiItems.itemId.equalsExp(db.vaultItems.id),
-      ),
-    ])
-      ..addColumns([
-        db.vaultItems.id,
-        db.vaultItems.type,
-        db.vaultItems.name,
-        db.vaultItems.description,
-        db.vaultItems.categoryId,
-        db.vaultItems.iconRefId,
-        db.vaultItems.isFavorite,
-        db.vaultItems.isArchived,
-        db.vaultItems.isPinned,
-        db.vaultItems.isDeleted,
-        db.vaultItems.createdAt,
-        db.vaultItems.modifiedAt,
-        db.vaultItems.lastUsedAt,
-        db.vaultItems.archivedAt,
-        db.vaultItems.deletedAt,
-        db.vaultItems.recentScore,
-        db.wifiItems.ssid,
-        db.wifiItems.securityType,
-        db.wifiItems.encryption,
-        db.wifiItems.hiddenSsid,
-        expr.hasWifiPassword,
-      ]);
+      innerJoin(db.wifiItems, db.wifiItems.itemId.equalsExp(db.vaultItems.id)),
+    ])..addColumns([
+      db.vaultItems.id,
+      db.vaultItems.type,
+      db.vaultItems.name,
+      db.vaultItems.description,
+      db.vaultItems.categoryId,
+      db.vaultItems.iconRefId,
+      db.vaultItems.isFavorite,
+      db.vaultItems.isArchived,
+      db.vaultItems.isPinned,
+      db.vaultItems.isDeleted,
+      db.vaultItems.createdAt,
+      db.vaultItems.modifiedAt,
+      db.vaultItems.lastUsedAt,
+      db.vaultItems.archivedAt,
+      db.vaultItems.deletedAt,
+      db.vaultItems.recentScore,
+      db.wifiItems.ssid,
+      db.wifiItems.securityType,
+      db.wifiItems.encryption,
+      db.wifiItems.hiddenSsid,
+      expr.hasWifiPassword,
+    ]);
   }
 
   WifiCardDto _mapRowToCardDto(TypedResult row, _WifiCardExpressions expr) {
@@ -207,7 +208,7 @@ class WifiRepository {
 
 class _WifiCardExpressions {
   _WifiCardExpressions(this.db)
-      : hasWifiPassword = db.wifiItems.password.isNotNull();
+    : hasWifiPassword = db.wifiItems.password.isNotNull();
 
   final MainStore db;
   final Expression<bool> hasWifiPassword;

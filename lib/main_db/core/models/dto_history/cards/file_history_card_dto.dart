@@ -26,15 +26,19 @@ sealed class FileHistoryCardDataDto with _$FileHistoryCardDataDto {
     @Default(false) bool hasFilePath,
   }) = _FileHistoryCardDataDto;
 
-  factory FileHistoryCardDataDto.fromJson(Map<String, dynamic> json) => _$FileHistoryCardDataDtoFromJson(json);
+  factory FileHistoryCardDataDto.fromJson(Map<String, dynamic> json) =>
+      _$FileHistoryCardDataDtoFromJson(json);
 }
 
 @freezed
-sealed class FileHistoryCardDto with _$FileHistoryCardDto implements VaultHistoryCardDto {
+sealed class FileHistoryCardDto
+    with _$FileHistoryCardDto
+    implements VaultHistoryCardDto {
   const factory FileHistoryCardDto({
     required VaultSnapshotCardDto snapshot,
     required FileHistoryCardDataDto file,
   }) = _FileHistoryCardDto;
 
-  factory FileHistoryCardDto.fromJson(Map<String, dynamic> json) => _$FileHistoryCardDtoFromJson(json);
+  factory FileHistoryCardDto.fromJson(Map<String, dynamic> json) =>
+      _$FileHistoryCardDtoFromJson(json);
 }

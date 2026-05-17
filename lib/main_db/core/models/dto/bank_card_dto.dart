@@ -60,7 +60,9 @@ sealed class CreateBankCardDto with _$CreateBankCardDto {
 }
 
 @freezed
-sealed class BankCardViewDto with _$BankCardViewDto implements VaultEntityViewDto {
+sealed class BankCardViewDto
+    with _$BankCardViewDto
+    implements VaultEntityViewDto {
   const factory BankCardViewDto({
     required VaultItemViewDto item,
     required BankCardDataDto bankCard,
@@ -71,7 +73,9 @@ sealed class BankCardViewDto with _$BankCardViewDto implements VaultEntityViewDt
 }
 
 @freezed
-sealed class BankCardCardDto with _$BankCardCardDto implements VaultEntityCardDto {
+sealed class BankCardCardDto
+    with _$BankCardCardDto
+    implements VaultEntityCardDto {
   const factory BankCardCardDto({
     required VaultItemCardDto item,
     required BankCardCardDataDto bankCard,
@@ -107,5 +111,3 @@ sealed class PatchBankCardDto with _$PatchBankCardDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchBankCardDto;
 }
-
-

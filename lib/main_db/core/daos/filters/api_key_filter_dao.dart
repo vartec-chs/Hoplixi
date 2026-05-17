@@ -26,38 +26,39 @@ class ApiKeyFilterDao extends DatabaseAccessor<MainStore>
     final whereExpr = _buildWhere(filter);
     final hasKeyExpr = apiKeyItems.key.isNotNull();
 
-    final query = selectOnly(vaultItems).join([
-      innerJoin(apiKeyItems, apiKeyItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..addColumns([
-        vaultItems.id,
-        vaultItems.type,
-        vaultItems.name,
-        vaultItems.description,
-        vaultItems.categoryId,
-        vaultItems.iconRefId,
-        vaultItems.isFavorite,
-        vaultItems.isArchived,
-        vaultItems.isPinned,
-        vaultItems.isDeleted,
-        vaultItems.createdAt,
-        vaultItems.modifiedAt,
-        vaultItems.lastUsedAt,
-        vaultItems.archivedAt,
-        vaultItems.deletedAt,
-        vaultItems.recentScore,
-        apiKeyItems.service,
-        apiKeyItems.tokenType,
-        apiKeyItems.environment,
-        apiKeyItems.expiresAt,
-        apiKeyItems.revokedAt,
-        apiKeyItems.rotationPeriodDays,
-        apiKeyItems.lastRotatedAt,
-        apiKeyItems.owner,
-        apiKeyItems.baseUrl,
-        hasKeyExpr,
-      ])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(apiKeyItems, apiKeyItems.itemId.equalsExp(vaultItems.id)),
+          ])
+          ..addColumns([
+            vaultItems.id,
+            vaultItems.type,
+            vaultItems.name,
+            vaultItems.description,
+            vaultItems.categoryId,
+            vaultItems.iconRefId,
+            vaultItems.isFavorite,
+            vaultItems.isArchived,
+            vaultItems.isPinned,
+            vaultItems.isDeleted,
+            vaultItems.createdAt,
+            vaultItems.modifiedAt,
+            vaultItems.lastUsedAt,
+            vaultItems.archivedAt,
+            vaultItems.deletedAt,
+            vaultItems.recentScore,
+            apiKeyItems.service,
+            apiKeyItems.tokenType,
+            apiKeyItems.environment,
+            apiKeyItems.expiresAt,
+            apiKeyItems.revokedAt,
+            apiKeyItems.rotationPeriodDays,
+            apiKeyItems.lastRotatedAt,
+            apiKeyItems.owner,
+            apiKeyItems.baseUrl,
+            hasKeyExpr,
+          ])
+          ..where(whereExpr);
 
     applyLimitOffset(query, filter.base);
 
@@ -190,11 +191,12 @@ class ApiKeyFilterDao extends DatabaseAccessor<MainStore>
   Future<int> countFiltered(ApiKeyFilter filter) async {
     final whereExpr = _buildWhere(filter);
     final countExp = countAll();
-    final query = selectOnly(vaultItems).join([
-      innerJoin(apiKeyItems, apiKeyItems.itemId.equalsExp(vaultItems.id)),
-    ])
-      ..addColumns([countExp])
-      ..where(whereExpr);
+    final query =
+        selectOnly(vaultItems).join([
+            innerJoin(apiKeyItems, apiKeyItems.itemId.equalsExp(vaultItems.id)),
+          ])
+          ..addColumns([countExp])
+          ..where(whereExpr);
 
     final row = await query.getSingle();
     return row.read(countExp) ?? 0;

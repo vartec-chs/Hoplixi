@@ -17,13 +17,15 @@ class VaultItemCustomFieldsDao extends DatabaseAccessor<MainStore>
     String id,
     VaultItemCustomFieldsCompanion companion,
   ) {
-    return (update(vaultItemCustomFields)..where((tbl) => tbl.id.equals(id)))
-        .write(companion);
+    return (update(
+      vaultItemCustomFields,
+    )..where((tbl) => tbl.id.equals(id))).write(companion);
   }
 
   Future<VaultItemCustomFieldsData?> getCustomFieldById(String id) {
-    return (select(vaultItemCustomFields)..where((tbl) => tbl.id.equals(id)))
-        .getSingleOrNull();
+    return (select(
+      vaultItemCustomFields,
+    )..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
   }
 
   Future<List<VaultItemCustomFieldsData>> getCustomFieldsByItemId(
@@ -46,14 +48,15 @@ class VaultItemCustomFieldsDao extends DatabaseAccessor<MainStore>
   }
 
   Future<int> deleteCustomFieldById(String id) {
-    return (delete(vaultItemCustomFields)..where((tbl) => tbl.id.equals(id)))
-        .go();
+    return (delete(
+      vaultItemCustomFields,
+    )..where((tbl) => tbl.id.equals(id))).go();
   }
 
   Future<int> deleteCustomFieldsByItemId(String itemId) {
-    return (delete(vaultItemCustomFields)
-          ..where((tbl) => tbl.itemId.equals(itemId)))
-        .go();
+    return (delete(
+      vaultItemCustomFields,
+    )..where((tbl) => tbl.itemId.equals(itemId))).go();
   }
 
   Future<void> replaceCustomFieldsForItem({

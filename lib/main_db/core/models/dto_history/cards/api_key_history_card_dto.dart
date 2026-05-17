@@ -21,15 +21,19 @@ sealed class ApiKeyHistoryCardDataDto with _$ApiKeyHistoryCardDataDto {
     @Default(false) bool hasKey,
   }) = _ApiKeyHistoryCardDataDto;
 
-  factory ApiKeyHistoryCardDataDto.fromJson(Map<String, dynamic> json) => _$ApiKeyHistoryCardDataDtoFromJson(json);
+  factory ApiKeyHistoryCardDataDto.fromJson(Map<String, dynamic> json) =>
+      _$ApiKeyHistoryCardDataDtoFromJson(json);
 }
 
 @freezed
-sealed class ApiKeyHistoryCardDto with _$ApiKeyHistoryCardDto implements VaultHistoryCardDto {
+sealed class ApiKeyHistoryCardDto
+    with _$ApiKeyHistoryCardDto
+    implements VaultHistoryCardDto {
   const factory ApiKeyHistoryCardDto({
     required VaultSnapshotCardDto snapshot,
     required ApiKeyHistoryCardDataDto apikey,
   }) = _ApiKeyHistoryCardDto;
 
-  factory ApiKeyHistoryCardDto.fromJson(Map<String, dynamic> json) => _$ApiKeyHistoryCardDtoFromJson(json);
+  factory ApiKeyHistoryCardDto.fromJson(Map<String, dynamic> json) =>
+      _$ApiKeyHistoryCardDtoFromJson(json);
 }

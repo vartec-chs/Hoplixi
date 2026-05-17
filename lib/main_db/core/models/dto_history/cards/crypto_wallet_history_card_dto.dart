@@ -7,7 +7,8 @@ part 'crypto_wallet_history_card_dto.freezed.dart';
 part 'crypto_wallet_history_card_dto.g.dart';
 
 @freezed
-sealed class CryptoWalletHistoryCardDataDto with _$CryptoWalletHistoryCardDataDto {
+sealed class CryptoWalletHistoryCardDataDto
+    with _$CryptoWalletHistoryCardDataDto {
   const factory CryptoWalletHistoryCardDataDto({
     CryptoWalletType? walletType,
     CryptoNetwork? network,
@@ -22,15 +23,19 @@ sealed class CryptoWalletHistoryCardDataDto with _$CryptoWalletHistoryCardDataDt
     @Default(false) bool hasXprv,
   }) = _CryptoWalletHistoryCardDataDto;
 
-  factory CryptoWalletHistoryCardDataDto.fromJson(Map<String, dynamic> json) => _$CryptoWalletHistoryCardDataDtoFromJson(json);
+  factory CryptoWalletHistoryCardDataDto.fromJson(Map<String, dynamic> json) =>
+      _$CryptoWalletHistoryCardDataDtoFromJson(json);
 }
 
 @freezed
-sealed class CryptoWalletHistoryCardDto with _$CryptoWalletHistoryCardDto implements VaultHistoryCardDto {
+sealed class CryptoWalletHistoryCardDto
+    with _$CryptoWalletHistoryCardDto
+    implements VaultHistoryCardDto {
   const factory CryptoWalletHistoryCardDto({
     required VaultSnapshotCardDto snapshot,
     required CryptoWalletHistoryCardDataDto cryptowallet,
   }) = _CryptoWalletHistoryCardDto;
 
-  factory CryptoWalletHistoryCardDto.fromJson(Map<String, dynamic> json) => _$CryptoWalletHistoryCardDtoFromJson(json);
+  factory CryptoWalletHistoryCardDto.fromJson(Map<String, dynamic> json) =>
+      _$CryptoWalletHistoryCardDtoFromJson(json);
 }

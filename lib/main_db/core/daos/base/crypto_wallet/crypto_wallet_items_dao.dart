@@ -18,50 +18,57 @@ class CryptoWalletItemsDao extends DatabaseAccessor<MainStore>
     String itemId,
     CryptoWalletItemsCompanion companion,
   ) {
-    return (update(cryptoWalletItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .write(companion);
+    return (update(
+      cryptoWalletItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).write(companion);
   }
 
   Future<CryptoWalletItemsData?> getCryptoWalletByItemId(String itemId) {
-    return (select(cryptoWalletItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .getSingleOrNull();
+    return (select(
+      cryptoWalletItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).getSingleOrNull();
   }
 
   Future<bool> existsCryptoWalletByItemId(String itemId) async {
-    final row = await (selectOnly(cryptoWalletItems)
-          ..addColumns([cryptoWalletItems.itemId])
-          ..where(cryptoWalletItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(cryptoWalletItems)
+              ..addColumns([cryptoWalletItems.itemId])
+              ..where(cryptoWalletItems.itemId.equals(itemId)))
+            .getSingleOrNull();
 
     return row != null;
   }
 
   Future<int> deleteCryptoWalletByItemId(String itemId) {
-    return (delete(cryptoWalletItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .go();
+    return (delete(
+      cryptoWalletItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).go();
   }
 
   Future<String?> getMnemonicByItemId(String itemId) async {
-    final row = await (selectOnly(cryptoWalletItems)
-          ..addColumns([cryptoWalletItems.mnemonic])
-          ..where(cryptoWalletItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(cryptoWalletItems)
+              ..addColumns([cryptoWalletItems.mnemonic])
+              ..where(cryptoWalletItems.itemId.equals(itemId)))
+            .getSingleOrNull();
     return row?.read(cryptoWalletItems.mnemonic);
   }
 
   Future<String?> getPrivateKeyByItemId(String itemId) async {
-    final row = await (selectOnly(cryptoWalletItems)
-          ..addColumns([cryptoWalletItems.privateKey])
-          ..where(cryptoWalletItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(cryptoWalletItems)
+              ..addColumns([cryptoWalletItems.privateKey])
+              ..where(cryptoWalletItems.itemId.equals(itemId)))
+            .getSingleOrNull();
     return row?.read(cryptoWalletItems.privateKey);
   }
 
   Future<String?> getXprvByItemId(String itemId) async {
-    final row = await (selectOnly(cryptoWalletItems)
-          ..addColumns([cryptoWalletItems.xprv])
-          ..where(cryptoWalletItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(cryptoWalletItems)
+              ..addColumns([cryptoWalletItems.xprv])
+              ..where(cryptoWalletItems.itemId.equals(itemId)))
+            .getSingleOrNull();
     return row?.read(cryptoWalletItems.xprv);
   }
 

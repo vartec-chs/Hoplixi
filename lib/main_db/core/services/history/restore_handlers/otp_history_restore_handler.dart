@@ -12,9 +12,7 @@ import '../payloads/otp_history_payload.dart';
 import 'vault_history_restore_handler.dart';
 
 class OtpHistoryRestoreHandler implements VaultHistoryRestoreHandler {
-  OtpHistoryRestoreHandler({
-    required this.otpItemsDao,
-  });
+  OtpHistoryRestoreHandler({required this.otpItemsDao});
 
   final OtpItemsDao otpItemsDao;
 
@@ -43,7 +41,8 @@ class OtpHistoryRestoreHandler implements VaultHistoryRestoreHandler {
       return const Failure(
         DBCoreError.conflict(
           code: 'history.restore.missing_field',
-          message: 'Нельзя восстановить запись: в снимке отсутствуют обязательные поля OTP',
+          message:
+              'Нельзя восстановить запись: в снимке отсутствуют обязательные поля OTP',
           entity: 'otp',
         ),
       );

@@ -16,34 +16,39 @@ class IdentityHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<IdentityHistoryData?> getIdentityHistoryByHistoryId(String historyId) {
-    return (select(identityHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .getSingleOrNull();
+    return (select(
+      identityHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).getSingleOrNull();
   }
 
   Future<bool> existsIdentityHistoryByHistoryId(String historyId) async {
-    final row = await (selectOnly(identityHistory)
-          ..addColumns([identityHistory.historyId])
-          ..where(identityHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(identityHistory)
+              ..addColumns([identityHistory.historyId])
+              ..where(identityHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
 
     return row != null;
   }
 
   Future<int> deleteIdentityHistoryByHistoryId(String historyId) {
-    return (delete(identityHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .go();
+    return (delete(
+      identityHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).go();
   }
-
 
   // --- HISTORY CARD BATCH METHODS ---
-  Future<List<IdentityHistoryData>> getIdentityHistoryByHistoryIds(List<String> historyIds) {
+  Future<List<IdentityHistoryData>> getIdentityHistoryByHistoryIds(
+    List<String> historyIds,
+  ) {
     if (historyIds.isEmpty) return Future.value(const []);
-    return (select(identityHistory)..where((tbl) => tbl.historyId.isIn(historyIds))).get();
+    return (select(
+      identityHistory,
+    )..where((tbl) => tbl.historyId.isIn(historyIds))).get();
   }
 
-  Future<Map<String, IdentityHistoryCardDataDto>> getIdentityHistoryCardDataByHistoryIds(List<String> historyIds) async {
+  Future<Map<String, IdentityHistoryCardDataDto>>
+  getIdentityHistoryCardDataByHistoryIds(List<String> historyIds) async {
     if (historyIds.isEmpty) return const {};
 
     final query = selectOnly(identityHistory)
@@ -92,5 +97,4 @@ class IdentityHistoryDao extends DatabaseAccessor<MainStore>
         ),
     };
   }
-
 }

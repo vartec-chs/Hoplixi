@@ -41,5 +41,3 @@ sealed class CustomIconDto with _$CustomIconDto {
   factory CustomIconDto.fromJson(Map<String, dynamic> json) =>
       _$CustomIconDtoFromJson(json);
 }
-
-

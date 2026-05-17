@@ -12,9 +12,7 @@ import '../payloads/identity_history_payload.dart';
 import 'vault_history_restore_handler.dart';
 
 class IdentityHistoryRestoreHandler implements VaultHistoryRestoreHandler {
-  IdentityHistoryRestoreHandler({
-    required this.identityItemsDao,
-  });
+  IdentityHistoryRestoreHandler({required this.identityItemsDao});
 
   final IdentityItemsDao identityItemsDao;
 

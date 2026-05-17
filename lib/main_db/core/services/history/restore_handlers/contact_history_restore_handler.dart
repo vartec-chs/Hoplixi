@@ -12,9 +12,7 @@ import '../payloads/contact_history_payload.dart';
 import 'vault_history_restore_handler.dart';
 
 class ContactHistoryRestoreHandler implements VaultHistoryRestoreHandler {
-  ContactHistoryRestoreHandler({
-    required this.contactItemsDao,
-  });
+  ContactHistoryRestoreHandler({required this.contactItemsDao});
 
   final ContactItemsDao contactItemsDao;
 

@@ -46,22 +46,22 @@ class IdentityItems extends Table {
   TextColumn get website => text().nullable()();
 
   /// ИНН / Налоговый номер.
-  /// 
+  ///
   /// Secret!!!.
   TextColumn get taxId => text().nullable()();
 
   /// Национальный ID / СНИЛС.
-  /// 
+  ///
   /// Secret!!!.
   TextColumn get nationalId => text().nullable()();
 
   /// Номер паспорта.
-  /// 
+  ///
   /// Secret!!!.
   TextColumn get passportNumber => text().nullable()();
 
   /// Номер водительского удостоверения.
-  /// 
+  ///
   /// Secret!!!.
   TextColumn get driverLicenseNumber => text().nullable()();
 

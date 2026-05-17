@@ -5,15 +5,15 @@ import '../../../tables/system/store/store_settings.dart';
 
 part 'store_settings_dao.g.dart';
 
-
-
 @DriftAccessor(tables: [StoreSettings])
-class StoreSettingsDao extends DatabaseAccessor<MainStore> with _$StoreSettingsDaoMixin {
+class StoreSettingsDao extends DatabaseAccessor<MainStore>
+    with _$StoreSettingsDaoMixin {
   StoreSettingsDao(super.db);
 
   Future<String?> getRawValue(String key) async {
-    final row = await (select(storeSettings)..where((t) => t.key.equals(key)))
-        .getSingleOrNull();
+    final row = await (select(
+      storeSettings,
+    )..where((t) => t.key.equals(key))).getSingleOrNull();
     return row?.value;
   }
 

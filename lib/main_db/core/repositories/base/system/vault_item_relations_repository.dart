@@ -102,7 +102,8 @@ class VaultItemRelationsRepository {
       if (dto.relationTypeOther == null ||
           dto.relationTypeOther!.trim().isEmpty) {
         throw ArgumentError(
-            'relationTypeOther is required when relationType is other');
+          'relationTypeOther is required when relationType is other',
+        );
       }
     }
 

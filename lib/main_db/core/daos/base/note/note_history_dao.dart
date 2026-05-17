@@ -16,34 +16,39 @@ class NoteHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<NoteHistoryData?> getNoteHistoryByHistoryId(String historyId) {
-    return (select(noteHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .getSingleOrNull();
+    return (select(
+      noteHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).getSingleOrNull();
   }
 
   Future<bool> existsNoteHistoryByHistoryId(String historyId) async {
-    final row = await (selectOnly(noteHistory)
-          ..addColumns([noteHistory.historyId])
-          ..where(noteHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(noteHistory)
+              ..addColumns([noteHistory.historyId])
+              ..where(noteHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
 
     return row != null;
   }
 
   Future<int> deleteNoteHistoryByHistoryId(String historyId) {
-    return (delete(noteHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .go();
+    return (delete(
+      noteHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).go();
   }
-
 
   // --- HISTORY CARD BATCH METHODS ---
-  Future<List<NoteHistoryData>> getNoteHistoryByHistoryIds(List<String> historyIds) {
+  Future<List<NoteHistoryData>> getNoteHistoryByHistoryIds(
+    List<String> historyIds,
+  ) {
     if (historyIds.isEmpty) return Future.value(const []);
-    return (select(noteHistory)..where((tbl) => tbl.historyId.isIn(historyIds))).get();
+    return (select(
+      noteHistory,
+    )..where((tbl) => tbl.historyId.isIn(historyIds))).get();
   }
 
-  Future<Map<String, NoteHistoryCardDataDto>> getNoteHistoryCardDataByHistoryIds(List<String> historyIds) async {
+  Future<Map<String, NoteHistoryCardDataDto>>
+  getNoteHistoryCardDataByHistoryIds(List<String> historyIds) async {
     if (historyIds.isEmpty) return const {};
 
     final query = selectOnly(noteHistory)
@@ -64,5 +69,4 @@ class NoteHistoryDao extends DatabaseAccessor<MainStore>
         ),
     };
   }
-
 }

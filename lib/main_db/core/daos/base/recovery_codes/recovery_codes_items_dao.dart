@@ -10,9 +10,7 @@ class RecoveryCodesItemsDao extends DatabaseAccessor<MainStore>
     with _$RecoveryCodesItemsDaoMixin {
   RecoveryCodesItemsDao(super.db);
 
-  Future<void> insertRecoveryCodesItem(
-    RecoveryCodesItemsCompanion companion,
-  ) {
+  Future<void> insertRecoveryCodesItem(RecoveryCodesItemsCompanion companion) {
     return into(recoveryCodesItems).insert(companion);
   }
 
@@ -20,29 +18,31 @@ class RecoveryCodesItemsDao extends DatabaseAccessor<MainStore>
     String itemId,
     RecoveryCodesItemsCompanion companion,
   ) {
-    return (update(recoveryCodesItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .write(companion);
+    return (update(
+      recoveryCodesItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).write(companion);
   }
 
-  Future<RecoveryCodesItemsData?> getRecoveryCodesItemByItemId(
-    String itemId,
-  ) {
-    return (select(recoveryCodesItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .getSingleOrNull();
+  Future<RecoveryCodesItemsData?> getRecoveryCodesItemByItemId(String itemId) {
+    return (select(
+      recoveryCodesItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).getSingleOrNull();
   }
 
   Future<bool> existsRecoveryCodesItemByItemId(String itemId) async {
-    final row = await (selectOnly(recoveryCodesItems)
-          ..addColumns([recoveryCodesItems.itemId])
-          ..where(recoveryCodesItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(recoveryCodesItems)
+              ..addColumns([recoveryCodesItems.itemId])
+              ..where(recoveryCodesItems.itemId.equals(itemId)))
+            .getSingleOrNull();
 
     return row != null;
   }
 
   Future<int> deleteRecoveryCodesItemByItemId(String itemId) {
-    return (delete(recoveryCodesItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .go();
+    return (delete(
+      recoveryCodesItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).go();
   }
 
   Future<void> upsertRecoveryCodesItem(RecoveryCodesItemsCompanion companion) {

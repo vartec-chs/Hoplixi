@@ -132,5 +132,3 @@ extension ApiKeyDataDtoX on ApiKeyDataDto {
 extension ApiKeyCardDataDtoX on ApiKeyCardDataDto {
   bool get isRevoked => revokedAt != null;
 }
-
-

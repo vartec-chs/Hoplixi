@@ -3,9 +3,7 @@ import 'vault_history_restore_handler.dart';
 
 class VaultHistoryRestoreHandlerRegistry {
   VaultHistoryRestoreHandlerRegistry(List<VaultHistoryRestoreHandler> handlers)
-      : _handlers = {
-          for (final h in handlers) h.type: h,
-        };
+    : _handlers = {for (final h in handlers) h.type: h};
 
   final Map<VaultItemType, VaultHistoryRestoreHandler> _handlers;
 

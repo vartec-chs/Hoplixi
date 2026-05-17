@@ -54,4 +54,3 @@ final List<String> allTableIndexes = [
   ...wifiHistoryTableIndexes,
   ...wifiItemsTableIndexes,
 ];
-

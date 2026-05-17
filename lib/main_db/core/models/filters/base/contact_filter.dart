@@ -65,8 +65,12 @@ sealed class ContactFilter with _$ContactFilter {
 
     return ContactFilter(
       base: base ?? const BaseFilter(),
-      firstName: normalizedFirstName?.isEmpty == true ? null : normalizedFirstName,
-      middleName: normalizedMiddleName?.isEmpty == true ? null : normalizedMiddleName,
+      firstName: normalizedFirstName?.isEmpty == true
+          ? null
+          : normalizedFirstName,
+      middleName: normalizedMiddleName?.isEmpty == true
+          ? null
+          : normalizedMiddleName,
       lastName: normalizedLastName?.isEmpty == true ? null : normalizedLastName,
       phone: normalizedPhone?.isEmpty == true ? null : normalizedPhone,
       email: normalizedEmail?.isEmpty == true ? null : normalizedEmail,

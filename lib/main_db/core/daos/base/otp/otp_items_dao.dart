@@ -13,24 +13,24 @@ class OtpItemsDao extends DatabaseAccessor<MainStore> with _$OtpItemsDaoMixin {
     return into(otpItems).insert(companion);
   }
 
-  Future<int> updateOtpByItemId(
-    String itemId,
-    OtpItemsCompanion companion,
-  ) {
-    return (update(otpItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .write(companion);
+  Future<int> updateOtpByItemId(String itemId, OtpItemsCompanion companion) {
+    return (update(
+      otpItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).write(companion);
   }
 
   Future<OtpItemsData?> getOtpByItemId(String itemId) {
-    return (select(otpItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .getSingleOrNull();
+    return (select(
+      otpItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).getSingleOrNull();
   }
 
   Future<bool> existsOtpByItemId(String itemId) async {
-    final row = await (selectOnly(otpItems)
-          ..addColumns([otpItems.itemId])
-          ..where(otpItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(otpItems)
+              ..addColumns([otpItems.itemId])
+              ..where(otpItems.itemId.equals(itemId)))
+            .getSingleOrNull();
 
     return row != null;
   }
@@ -40,10 +40,11 @@ class OtpItemsDao extends DatabaseAccessor<MainStore> with _$OtpItemsDaoMixin {
   }
 
   Future<Uint8List?> getOtpSecretByItemId(String itemId) async {
-    final row = await (selectOnly(otpItems)
-          ..addColumns([otpItems.secret])
-          ..where(otpItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(otpItems)
+              ..addColumns([otpItems.secret])
+              ..where(otpItems.itemId.equals(itemId)))
+            .getSingleOrNull();
     return row?.read(otpItems.secret);
   }
 

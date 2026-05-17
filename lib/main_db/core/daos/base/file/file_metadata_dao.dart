@@ -17,13 +17,15 @@ class FileMetadataDao extends DatabaseAccessor<MainStore>
     String id,
     FileMetadataCompanion companion,
   ) {
-    return (update(fileMetadata)..where((t) => t.id.equals(id)))
-        .write(companion);
+    return (update(
+      fileMetadata,
+    )..where((t) => t.id.equals(id))).write(companion);
   }
 
   Future<FileMetadataData?> getFileMetadataById(String id) {
-    return (select(fileMetadata)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (select(
+      fileMetadata,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Future<bool> existsFileMetadata(String id) async {
@@ -43,17 +45,17 @@ class FileMetadataDao extends DatabaseAccessor<MainStore>
   Future<List<FileMetadataData>> getByAvailabilityStatus(
     FileAvailabilityStatus status,
   ) {
-    return (select(fileMetadata)
-          ..where((t) => t.availabilityStatus.equals(status.name)))
-        .get();
+    return (select(
+      fileMetadata,
+    )..where((t) => t.availabilityStatus.equals(status.name))).get();
   }
 
   Future<List<FileMetadataData>> getByIntegrityStatus(
     FileIntegrityStatus status,
   ) {
-    return (select(fileMetadata)
-          ..where((t) => t.integrityStatus.equals(status.name)))
-        .get();
+    return (select(
+      fileMetadata,
+    )..where((t) => t.integrityStatus.equals(status.name))).get();
   }
 
   Future<int> updateAvailabilityStatus({
@@ -98,10 +100,11 @@ class FileMetadataDao extends DatabaseAccessor<MainStore>
   }
 
   Future<String?> getFilePathByMetadataId(String metadataId) async {
-    final row = await (selectOnly(fileMetadata)
-          ..addColumns([fileMetadata.filePath])
-          ..where(fileMetadata.id.equals(metadataId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(fileMetadata)
+              ..addColumns([fileMetadata.filePath])
+              ..where(fileMetadata.id.equals(metadataId)))
+            .getSingleOrNull();
     return row?.read(fileMetadata.filePath);
   }
 }

@@ -11,43 +11,46 @@ class LoyaltyCardHistoryDao extends DatabaseAccessor<MainStore>
     with _$LoyaltyCardHistoryDaoMixin {
   LoyaltyCardHistoryDao(super.db);
 
-  Future<void> insertLoyaltyCardHistory(
-    LoyaltyCardHistoryCompanion companion,
-  ) {
+  Future<void> insertLoyaltyCardHistory(LoyaltyCardHistoryCompanion companion) {
     return into(loyaltyCardHistory).insert(companion);
   }
 
   Future<LoyaltyCardHistoryData?> getLoyaltyCardHistoryByHistoryId(
     String historyId,
   ) {
-    return (select(loyaltyCardHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .getSingleOrNull();
+    return (select(
+      loyaltyCardHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).getSingleOrNull();
   }
 
   Future<bool> existsLoyaltyCardHistoryByHistoryId(String historyId) async {
-    final row = await (selectOnly(loyaltyCardHistory)
-          ..addColumns([loyaltyCardHistory.historyId])
-          ..where(loyaltyCardHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(loyaltyCardHistory)
+              ..addColumns([loyaltyCardHistory.historyId])
+              ..where(loyaltyCardHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
 
     return row != null;
   }
 
   Future<int> deleteLoyaltyCardHistoryByHistoryId(String historyId) {
-    return (delete(loyaltyCardHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .go();
+    return (delete(
+      loyaltyCardHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).go();
   }
-
 
   // --- HISTORY CARD BATCH METHODS ---
-  Future<List<LoyaltyCardHistoryData>> getLoyaltyCardHistoryByHistoryIds(List<String> historyIds) {
+  Future<List<LoyaltyCardHistoryData>> getLoyaltyCardHistoryByHistoryIds(
+    List<String> historyIds,
+  ) {
     if (historyIds.isEmpty) return Future.value(const []);
-    return (select(loyaltyCardHistory)..where((tbl) => tbl.historyId.isIn(historyIds))).get();
+    return (select(
+      loyaltyCardHistory,
+    )..where((tbl) => tbl.historyId.isIn(historyIds))).get();
   }
 
-  Future<Map<String, LoyaltyCardHistoryCardDataDto>> getLoyaltyCardHistoryCardDataByHistoryIds(List<String> historyIds) async {
+  Future<Map<String, LoyaltyCardHistoryCardDataDto>>
+  getLoyaltyCardHistoryCardDataByHistoryIds(List<String> historyIds) async {
     if (historyIds.isEmpty) return const {};
 
     final hasCardNumberExpr = loyaltyCardHistory.cardNumber.isNotNull();
@@ -76,7 +79,9 @@ class LoyaltyCardHistoryDao extends DatabaseAccessor<MainStore>
       for (final row in rows)
         row.read(loyaltyCardHistory.historyId)!: LoyaltyCardHistoryCardDataDto(
           programName: row.read(loyaltyCardHistory.programName),
-          barcodeType: row.readWithConverter<LoyaltyBarcodeType?, String>(loyaltyCardHistory.barcodeType),
+          barcodeType: row.readWithConverter<LoyaltyBarcodeType?, String>(
+            loyaltyCardHistory.barcodeType,
+          ),
           issuer: row.read(loyaltyCardHistory.issuer),
           website: row.read(loyaltyCardHistory.website),
           phone: row.read(loyaltyCardHistory.phone),
@@ -91,27 +96,29 @@ class LoyaltyCardHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<String?> getCardNumberByHistoryId(String historyId) async {
-    final row = await (selectOnly(loyaltyCardHistory)
-          ..addColumns([loyaltyCardHistory.cardNumber])
-          ..where(loyaltyCardHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(loyaltyCardHistory)
+              ..addColumns([loyaltyCardHistory.cardNumber])
+              ..where(loyaltyCardHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
     return row?.read(loyaltyCardHistory.cardNumber);
   }
 
   Future<String?> getBarcodeValueByHistoryId(String historyId) async {
-    final row = await (selectOnly(loyaltyCardHistory)
-          ..addColumns([loyaltyCardHistory.barcodeValue])
-          ..where(loyaltyCardHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(loyaltyCardHistory)
+              ..addColumns([loyaltyCardHistory.barcodeValue])
+              ..where(loyaltyCardHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
     return row?.read(loyaltyCardHistory.barcodeValue);
   }
 
   Future<String?> getPasswordByHistoryId(String historyId) async {
-    final row = await (selectOnly(loyaltyCardHistory)
-          ..addColumns([loyaltyCardHistory.password])
-          ..where(loyaltyCardHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(loyaltyCardHistory)
+              ..addColumns([loyaltyCardHistory.password])
+              ..where(loyaltyCardHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
     return row?.read(loyaltyCardHistory.password);
   }
-
 }

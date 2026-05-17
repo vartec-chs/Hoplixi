@@ -298,7 +298,6 @@ class FileMetadataHistory extends Table {
   ];
 }
 
-
 enum FileMetadataHistoryConstraint {
   idNotBlank('chk_file_metadata_history_id_not_blank'),
   historyIdNotBlank('chk_file_metadata_history_history_id_not_blank'),
@@ -361,7 +360,6 @@ enum FileMetadataHistoryConstraint {
   final String constraintName;
 }
 
-
 enum FileMetadataHistoryIndex {
   historyId('idx_file_metadata_history_history_id'),
   ownerKind('idx_file_metadata_history_owner_kind'),
@@ -391,7 +389,6 @@ final List<String> fileMetadataHistoryTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${FileMetadataHistoryIndex.integrityStatus.indexName} ON file_metadata_history(integrity_status);',
   'CREATE INDEX IF NOT EXISTS ${FileMetadataHistoryIndex.snapshotCreatedAt.indexName} ON file_metadata_history(snapshot_created_at) WHERE snapshot_created_at IS NOT NULL;',
 ];
-
 
 enum FileMetadataHistoryTrigger {
   preventUpdate('trg_file_metadata_history_prevent_update');

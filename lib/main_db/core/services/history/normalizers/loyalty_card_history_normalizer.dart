@@ -19,10 +19,10 @@ class LoyaltyCardHistoryNormalizer implements VaultHistoryTypeNormalizer {
   VaultItemType get type => VaultItemType.loyaltyCard;
 
   @override
-  Future<HistoryPayload?> normalizeHistory({
-    required String historyId,
-  }) async {
-    final rows = await loyaltyCardHistoryDao.getLoyaltyCardHistoryByHistoryIds([historyId]);
+  Future<HistoryPayload?> normalizeHistory({required String historyId}) async {
+    final rows = await loyaltyCardHistoryDao.getLoyaltyCardHistoryByHistoryIds([
+      historyId,
+    ]);
     if (rows.isEmpty) return null;
 
     final item = rows.first;
@@ -44,9 +44,7 @@ class LoyaltyCardHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }
 
   @override
-  Future<HistoryPayload?> normalizeCurrent({
-    required String itemId,
-  }) async {
+  Future<HistoryPayload?> normalizeCurrent({required String itemId}) async {
     final view = await loyaltyCardRepository.getViewById(itemId);
     if (view == null) return null;
 

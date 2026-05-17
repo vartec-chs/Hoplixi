@@ -22,17 +22,16 @@ class RecoveryCodesDao extends DatabaseAccessor<MainStore>
     });
   }
 
-  Future<int> updateRecoveryCodeById(
-    int id,
-    RecoveryCodesCompanion companion,
-  ) {
-    return (update(recoveryCodes)..where((tbl) => tbl.id.equals(id)))
-        .write(companion);
+  Future<int> updateRecoveryCodeById(int id, RecoveryCodesCompanion companion) {
+    return (update(
+      recoveryCodes,
+    )..where((tbl) => tbl.id.equals(id))).write(companion);
   }
 
   Future<RecoveryCodeData?> getRecoveryCodeById(int id) {
-    return (select(recoveryCodes)..where((tbl) => tbl.id.equals(id)))
-        .getSingleOrNull();
+    return (select(
+      recoveryCodes,
+    )..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
   }
 
   Future<List<RecoveryCodeData>> getRecoveryCodesByItemId(String itemId) {
@@ -58,26 +57,15 @@ class RecoveryCodesDao extends DatabaseAccessor<MainStore>
         .get();
   }
 
-  Future<int> markCodeUsed({
-    required int id,
-    required DateTime usedAt,
-  }) {
+  Future<int> markCodeUsed({required int id, required DateTime usedAt}) {
     return (update(recoveryCodes)..where((tbl) => tbl.id.equals(id))).write(
-      RecoveryCodesCompanion(
-        used: const Value(true),
-        usedAt: Value(usedAt),
-      ),
+      RecoveryCodesCompanion(used: const Value(true), usedAt: Value(usedAt)),
     );
   }
 
-  Future<int> markCodeUnused({
-    required int id,
-  }) {
+  Future<int> markCodeUnused({required int id}) {
     return (update(recoveryCodes)..where((tbl) => tbl.id.equals(id))).write(
-      const RecoveryCodesCompanion(
-        used: Value(false),
-        usedAt: Value(null),
-      ),
+      const RecoveryCodesCompanion(used: Value(false), usedAt: Value(null)),
     );
   }
 
@@ -86,15 +74,17 @@ class RecoveryCodesDao extends DatabaseAccessor<MainStore>
   }
 
   Future<int> deleteRecoveryCodesByItemId(String itemId) {
-    return (delete(recoveryCodes)..where((tbl) => tbl.itemId.equals(itemId)))
-        .go();
+    return (delete(
+      recoveryCodes,
+    )..where((tbl) => tbl.itemId.equals(itemId))).go();
   }
 
   Future<String?> getRecoveryCodeSecretById(int id) async {
-    final row = await (selectOnly(recoveryCodes)
-          ..addColumns([recoveryCodes.code])
-          ..where(recoveryCodes.id.equals(id)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(recoveryCodes)
+              ..addColumns([recoveryCodes.code])
+              ..where(recoveryCodes.id.equals(id)))
+            .getSingleOrNull();
     return row?.read(recoveryCodes.code);
   }
 

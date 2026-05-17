@@ -59,7 +59,7 @@ class CryptoWalletItems extends Table {
   TextColumn get privateKey => text().nullable()();
 
   /// Путь деривации, например m/44'/0'/0'/0/0.
-  /// 
+  ///
   /// Secret!!!, может содержать чувствительную информацию, если используется нестандартная схема деривации.
   TextColumn get derivationPath =>
       text().withLength(min: 1, max: 255).nullable()();

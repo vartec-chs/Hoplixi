@@ -21,15 +21,15 @@ class RecoveryCodesHistoryNormalizer implements VaultHistoryTypeNormalizer {
   VaultItemType get type => VaultItemType.recoveryCodes;
 
   @override
-  Future<HistoryPayload?> normalizeHistory({
-    required String historyId,
-  }) async {
-    final rows = await recoveryCodesHistoryDao.getRecoveryCodesHistoryByHistoryIds([historyId]);
+  Future<HistoryPayload?> normalizeHistory({required String historyId}) async {
+    final rows = await recoveryCodesHistoryDao
+        .getRecoveryCodesHistoryByHistoryIds([historyId]);
     if (rows.isEmpty) return null;
 
     final item = rows.first;
 
-    final values = await recoveryCodeValuesHistoryDao.getRecoveryCodeValuesByHistoryId(historyId);
+    final values = await recoveryCodeValuesHistoryDao
+        .getRecoveryCodeValuesByHistoryId(historyId);
 
     return RecoveryCodesHistoryPayload(
       codesCount: item.codesCount,
@@ -43,9 +43,7 @@ class RecoveryCodesHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }
 
   @override
-  Future<HistoryPayload?> normalizeCurrent({
-    required String itemId,
-  }) async {
+  Future<HistoryPayload?> normalizeCurrent({required String itemId}) async {
     final view = await recoveryCodesRepository.getViewById(itemId);
     if (view == null) return null;
 

@@ -2,9 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/main_db/core/migrations/main_store_migration_types.dart';
 
-
-final Map<int, MainStoreMigration> _mainStoreMigrationsByVersion = {
-};
+final Map<int, MainStoreMigration> _mainStoreMigrationsByVersion = {};
 
 /// Runs known, versioned migrations in ascending order.
 ///

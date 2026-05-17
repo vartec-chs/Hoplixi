@@ -19,10 +19,10 @@ class CertificateHistoryNormalizer implements VaultHistoryTypeNormalizer {
   VaultItemType get type => VaultItemType.certificate;
 
   @override
-  Future<HistoryPayload?> normalizeHistory({
-    required String historyId,
-  }) async {
-    final rows = await certificateHistoryDao.getCertificateHistoryByHistoryIds([historyId]);
+  Future<HistoryPayload?> normalizeHistory({required String historyId}) async {
+    final rows = await certificateHistoryDao.getCertificateHistoryByHistoryIds([
+      historyId,
+    ]);
     if (rows.isEmpty) return null;
 
     final item = rows.first;
@@ -47,9 +47,7 @@ class CertificateHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }
 
   @override
-  Future<HistoryPayload?> normalizeCurrent({
-    required String itemId,
-  }) async {
+  Future<HistoryPayload?> normalizeCurrent({required String itemId}) async {
     final view = await certificateRepository.getViewById(itemId);
     if (view == null) return null;
 

@@ -12,9 +12,7 @@ import '../payloads/wifi_history_payload.dart';
 import 'vault_history_restore_handler.dart';
 
 class WifiHistoryRestoreHandler implements VaultHistoryRestoreHandler {
-  WifiHistoryRestoreHandler({
-    required this.wifiItemsDao,
-  });
+  WifiHistoryRestoreHandler({required this.wifiItemsDao});
 
   final WifiItemsDao wifiItemsDao;
 
@@ -40,7 +38,8 @@ class WifiHistoryRestoreHandler implements VaultHistoryRestoreHandler {
       return const Failure(
         DBCoreError.conflict(
           code: 'history.restore.missing_field',
-          message: 'Нельзя восстановить запись: в снимке отсутствуют обязательные поля WiFi',
+          message:
+              'Нельзя восстановить запись: в снимке отсутствуют обязательные поля WiFi',
           entity: 'wifi',
         ),
       );

@@ -26,7 +26,7 @@ class VaultItemCustomFieldsHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<List<VaultItemCustomFieldsHistoryData>>
-      getCustomFieldsHistoryBySnapshotHistoryId(String snapshotHistoryId) {
+  getCustomFieldsHistoryBySnapshotHistoryId(String snapshotHistoryId) {
     return (select(vaultItemCustomFieldsHistory)
           ..where((tbl) => tbl.snapshotHistoryId.equals(snapshotHistoryId))
           ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]))
@@ -34,8 +34,7 @@ class VaultItemCustomFieldsHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<List<VaultItemCustomFieldsHistoryData>>
-      getCustomFieldsHistoryBySnapshotHistoryIds(
-          List<String> snapshotHistoryIds) {
+  getCustomFieldsHistoryBySnapshotHistoryIds(List<String> snapshotHistoryIds) {
     if (snapshotHistoryIds.isEmpty) return Future.value(const []);
     return (select(vaultItemCustomFieldsHistory)
           ..where((tbl) => tbl.snapshotHistoryId.isIn(snapshotHistoryIds))
@@ -46,13 +45,13 @@ class VaultItemCustomFieldsHistoryDao extends DatabaseAccessor<MainStore>
   Future<int> deleteCustomFieldsHistoryBySnapshotHistoryId(
     String snapshotHistoryId,
   ) {
-    return (delete(vaultItemCustomFieldsHistory)
-          ..where((tbl) => tbl.snapshotHistoryId.equals(snapshotHistoryId)))
-        .go();
+    return (delete(
+      vaultItemCustomFieldsHistory,
+    )..where((tbl) => tbl.snapshotHistoryId.equals(snapshotHistoryId))).go();
   }
 
   Future<Map<String, List<VaultItemCustomFieldHistoryCardDataDto>>>
-      getCustomFieldHistoryCardsBySnapshotHistoryIds(
+  getCustomFieldHistoryCardsBySnapshotHistoryIds(
     List<String> snapshotHistoryIds,
   ) async {
     if (snapshotHistoryIds.isEmpty) return const {};
@@ -73,7 +72,9 @@ class VaultItemCustomFieldsHistoryDao extends DatabaseAccessor<MainStore>
         vaultItemCustomFieldsHistory.modifiedAt,
         vaultItemCustomFieldsHistory.historyCreatedAt,
       ])
-      ..where(vaultItemCustomFieldsHistory.snapshotHistoryId.isIn(snapshotHistoryIds))
+      ..where(
+        vaultItemCustomFieldsHistory.snapshotHistoryId.isIn(snapshotHistoryIds),
+      )
       ..orderBy([OrderingTerm.asc(vaultItemCustomFieldsHistory.sortOrder)]);
 
     final rows = await query.get();
@@ -81,19 +82,25 @@ class VaultItemCustomFieldsHistoryDao extends DatabaseAccessor<MainStore>
     final map = <String, List<VaultItemCustomFieldHistoryCardDataDto>>{};
 
     for (final row in rows) {
-      final snapshotHistoryId = row.read(vaultItemCustomFieldsHistory.snapshotHistoryId)!;
+      final snapshotHistoryId = row.read(
+        vaultItemCustomFieldsHistory.snapshotHistoryId,
+      )!;
       final dto = VaultItemCustomFieldHistoryCardDataDto(
         id: row.read(vaultItemCustomFieldsHistory.id)!,
         snapshotHistoryId: snapshotHistoryId,
         originalFieldId: row.read(vaultItemCustomFieldsHistory.originalFieldId),
         label: row.read(vaultItemCustomFieldsHistory.label)!,
-        fieldType: row.readWithConverter<CustomFieldType, String>(vaultItemCustomFieldsHistory.fieldType)!,
+        fieldType: row.readWithConverter<CustomFieldType, String>(
+          vaultItemCustomFieldsHistory.fieldType,
+        )!,
         isSecret: row.read(vaultItemCustomFieldsHistory.isSecret)!,
         sortOrder: row.read(vaultItemCustomFieldsHistory.sortOrder)!,
         hasValue: row.read(hasValueExpr) ?? false,
         createdAt: row.read(vaultItemCustomFieldsHistory.createdAt)!,
         modifiedAt: row.read(vaultItemCustomFieldsHistory.modifiedAt)!,
-        historyCreatedAt: row.read(vaultItemCustomFieldsHistory.historyCreatedAt)!,
+        historyCreatedAt: row.read(
+          vaultItemCustomFieldsHistory.historyCreatedAt,
+        )!,
       );
       map.putIfAbsent(snapshotHistoryId, () => []).add(dto);
     }
@@ -102,10 +109,11 @@ class VaultItemCustomFieldsHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<String?> getCustomFieldHistoryValueById(String id) async {
-    final row = await (selectOnly(vaultItemCustomFieldsHistory)
-          ..addColumns([vaultItemCustomFieldsHistory.value])
-          ..where(vaultItemCustomFieldsHistory.id.equals(id)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(vaultItemCustomFieldsHistory)
+              ..addColumns([vaultItemCustomFieldsHistory.value])
+              ..where(vaultItemCustomFieldsHistory.id.equals(id)))
+            .getSingleOrNull();
 
     return row?.read(vaultItemCustomFieldsHistory.value);
   }

@@ -14,27 +14,33 @@ class ItemLinkHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<ItemLinkHistoryData?> getItemLinkHistoryById(String id) {
-    return (select(itemLinkHistory)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (select(
+      itemLinkHistory,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Future<List<ItemLinkHistoryData>> getLinksBySnapshotHistoryId(
     String historyId,
   ) {
-    return (select(itemLinkHistory)..where((t) => t.historyId.equals(historyId)))
-        .get();
+    return (select(
+      itemLinkHistory,
+    )..where((t) => t.historyId.equals(historyId))).get();
   }
 
-  Future<List<ItemLinkHistoryData>> getLinksBySourceItemId(String sourceItemId) {
-    return (select(itemLinkHistory)
-          ..where((t) => t.sourceItemId.equals(sourceItemId)))
-        .get();
+  Future<List<ItemLinkHistoryData>> getLinksBySourceItemId(
+    String sourceItemId,
+  ) {
+    return (select(
+      itemLinkHistory,
+    )..where((t) => t.sourceItemId.equals(sourceItemId))).get();
   }
 
-  Future<List<ItemLinkHistoryData>> getLinksByTargetItemId(String targetItemId) {
-    return (select(itemLinkHistory)
-          ..where((t) => t.targetItemId.equals(targetItemId)))
-        .get();
+  Future<List<ItemLinkHistoryData>> getLinksByTargetItemId(
+    String targetItemId,
+  ) {
+    return (select(
+      itemLinkHistory,
+    )..where((t) => t.targetItemId.equals(targetItemId))).get();
   }
 
   Future<int> deleteItemLinkHistoryById(String id) {
@@ -42,8 +48,8 @@ class ItemLinkHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<int> deleteLinksBySnapshotHistoryId(String snapshotHistoryId) {
-    return (delete(itemLinkHistory)
-          ..where((t) => t.historyId.equals(snapshotHistoryId)))
-        .go();
+    return (delete(
+      itemLinkHistory,
+    )..where((t) => t.historyId.equals(snapshotHistoryId))).go();
   }
 }

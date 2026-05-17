@@ -18,7 +18,9 @@ class BankCardRepository {
       final now = DateTime.now();
       final itemId = const Uuid().v4();
 
-      await db.into(db.vaultItems).insert(
+      await db
+          .into(db.vaultItems)
+          .insert(
             VaultItemsCompanion.insert(
               id: Value(itemId),
               type: VaultItemType.bankCard,
@@ -33,7 +35,9 @@ class BankCardRepository {
             ),
           );
 
-      await db.into(db.bankCardItems).insert(
+      await db
+          .into(db.bankCardItems)
+          .insert(
             BankCardItemsCompanion.insert(
               itemId: itemId,
               cardholderName: Value(dto.bankCard.cardholderName),
@@ -60,8 +64,9 @@ class BankCardRepository {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
 
-      await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-          .write(
+      await (db.update(
+        db.vaultItems,
+      )..where((tbl) => tbl.id.equals(itemId))).write(
         VaultItemsCompanion(
           name: dto.item.name.toRequiredValue(),
           description: dto.item.description.toNullableValue(),
@@ -73,9 +78,9 @@ class BankCardRepository {
         ),
       );
 
-      await (db.update(db.bankCardItems)
-            ..where((tbl) => tbl.itemId.equals(itemId)))
-          .write(
+      await (db.update(
+        db.bankCardItems,
+      )..where((tbl) => tbl.itemId.equals(itemId))).write(
         BankCardItemsCompanion(
           cardholderName: dto.bankCard.cardholderName.toNullableValue(),
           cardNumber: dto.bankCard.cardNumber.toRequiredValue(),
@@ -103,14 +108,15 @@ class BankCardRepository {
   }
 
   Future<BankCardViewDto?> getViewById(String itemId) async {
-    final query = db.select(db.vaultItems).join([
-      innerJoin(
-        db.bankCardItems,
-        db.bankCardItems.itemId.equalsExp(db.vaultItems.id),
-      ),
-    ])
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.bankCard));
+    final query =
+        db.select(db.vaultItems).join([
+            innerJoin(
+              db.bankCardItems,
+              db.bankCardItems.itemId.equalsExp(db.vaultItems.id),
+            ),
+          ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.bankCard));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
@@ -151,8 +157,9 @@ class BankCardRepository {
   }
 
   Future<void> deletePermanently(String itemId) {
-    return (db.delete(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-        .go();
+    return (db.delete(
+      db.vaultItems,
+    )..where((tbl) => tbl.id.equals(itemId))).go();
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery(
@@ -163,33 +170,32 @@ class BankCardRepository {
         db.bankCardItems,
         db.bankCardItems.itemId.equalsExp(db.vaultItems.id),
       ),
-    ])
-      ..addColumns([
-        db.vaultItems.id,
-        db.vaultItems.type,
-        db.vaultItems.name,
-        db.vaultItems.description,
-        db.vaultItems.categoryId,
-        db.vaultItems.iconRefId,
-        db.vaultItems.isFavorite,
-        db.vaultItems.isArchived,
-        db.vaultItems.isPinned,
-        db.vaultItems.isDeleted,
-        db.vaultItems.createdAt,
-        db.vaultItems.modifiedAt,
-        db.vaultItems.lastUsedAt,
-        db.vaultItems.archivedAt,
-        db.vaultItems.deletedAt,
-        db.vaultItems.recentScore,
-        db.bankCardItems.cardholderName,
-        db.bankCardItems.cardType,
-        db.bankCardItems.cardNetwork,
-        db.bankCardItems.expiryMonth,
-        db.bankCardItems.expiryYear,
-        db.bankCardItems.bankName,
-        expr.hasCardNumber,
-        expr.hasCvv,
-      ]);
+    ])..addColumns([
+      db.vaultItems.id,
+      db.vaultItems.type,
+      db.vaultItems.name,
+      db.vaultItems.description,
+      db.vaultItems.categoryId,
+      db.vaultItems.iconRefId,
+      db.vaultItems.isFavorite,
+      db.vaultItems.isArchived,
+      db.vaultItems.isPinned,
+      db.vaultItems.isDeleted,
+      db.vaultItems.createdAt,
+      db.vaultItems.modifiedAt,
+      db.vaultItems.lastUsedAt,
+      db.vaultItems.archivedAt,
+      db.vaultItems.deletedAt,
+      db.vaultItems.recentScore,
+      db.bankCardItems.cardholderName,
+      db.bankCardItems.cardType,
+      db.bankCardItems.cardNetwork,
+      db.bankCardItems.expiryMonth,
+      db.bankCardItems.expiryYear,
+      db.bankCardItems.bankName,
+      expr.hasCardNumber,
+      expr.hasCvv,
+    ]);
   }
 
   BankCardCardDto _mapRowToCardDto(
@@ -235,8 +241,8 @@ class BankCardRepository {
 
 class _BankCardCardExpressions {
   _BankCardCardExpressions(this.db)
-      : hasCardNumber = db.bankCardItems.cardNumber.isNotNull(),
-        hasCvv = db.bankCardItems.cvv.isNotNull();
+    : hasCardNumber = db.bankCardItems.cardNumber.isNotNull(),
+      hasCvv = db.bankCardItems.cvv.isNotNull();
 
   final MainStore db;
   final Expression<bool> hasCardNumber;

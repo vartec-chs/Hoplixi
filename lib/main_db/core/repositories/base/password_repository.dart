@@ -17,7 +17,9 @@ class PasswordRepository {
       final now = DateTime.now();
       final itemId = const Uuid().v4();
 
-      await db.into(db.vaultItems).insert(
+      await db
+          .into(db.vaultItems)
+          .insert(
             VaultItemsCompanion.insert(
               id: Value(itemId),
               type: VaultItemType.password,
@@ -32,7 +34,9 @@ class PasswordRepository {
             ),
           );
 
-      await db.into(db.passwordItems).insert(
+      await db
+          .into(db.passwordItems)
+          .insert(
             PasswordItemsCompanion.insert(
               itemId: itemId,
               login: Value(dto.password.login),
@@ -52,8 +56,9 @@ class PasswordRepository {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
 
-      await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-          .write(
+      await (db.update(
+        db.vaultItems,
+      )..where((tbl) => tbl.id.equals(itemId))).write(
         VaultItemsCompanion(
           name: dto.item.name.toRequiredValue(),
           description: dto.item.description.toNullableValue(),
@@ -65,9 +70,9 @@ class PasswordRepository {
         ),
       );
 
-      await (db.update(db.passwordItems)
-            ..where((tbl) => tbl.itemId.equals(itemId)))
-          .write(
+      await (db.update(
+        db.passwordItems,
+      )..where((tbl) => tbl.itemId.equals(itemId))).write(
         PasswordItemsCompanion(
           login: dto.password.login.toNullableValue(),
           email: dto.password.email.toNullableValue(),
@@ -80,14 +85,15 @@ class PasswordRepository {
   }
 
   Future<PasswordViewDto?> getViewById(String itemId) async {
-    final query = db.select(db.vaultItems).join([
-      innerJoin(
-        db.passwordItems,
-        db.passwordItems.itemId.equalsExp(db.vaultItems.id),
-      ),
-    ])
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.password));
+    final query =
+        db.select(db.vaultItems).join([
+            innerJoin(
+              db.passwordItems,
+              db.passwordItems.itemId.equalsExp(db.vaultItems.id),
+            ),
+          ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.password));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
@@ -128,8 +134,9 @@ class PasswordRepository {
   }
 
   Future<void> deletePermanently(String itemId) {
-    return (db.delete(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-        .go();
+    return (db.delete(
+      db.vaultItems,
+    )..where((tbl) => tbl.id.equals(itemId))).go();
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery(
@@ -140,30 +147,29 @@ class PasswordRepository {
         db.passwordItems,
         db.passwordItems.itemId.equalsExp(db.vaultItems.id),
       ),
-    ])
-      ..addColumns([
-        db.vaultItems.id,
-        db.vaultItems.type,
-        db.vaultItems.name,
-        db.vaultItems.description,
-        db.vaultItems.categoryId,
-        db.vaultItems.iconRefId,
-        db.vaultItems.isFavorite,
-        db.vaultItems.isArchived,
-        db.vaultItems.isPinned,
-        db.vaultItems.isDeleted,
-        db.vaultItems.createdAt,
-        db.vaultItems.modifiedAt,
-        db.vaultItems.lastUsedAt,
-        db.vaultItems.archivedAt,
-        db.vaultItems.deletedAt,
-        db.vaultItems.recentScore,
-        db.passwordItems.login,
-        db.passwordItems.email,
-        db.passwordItems.url,
-        db.passwordItems.expiresAt,
-        expr.hasPassword,
-      ]);
+    ])..addColumns([
+      db.vaultItems.id,
+      db.vaultItems.type,
+      db.vaultItems.name,
+      db.vaultItems.description,
+      db.vaultItems.categoryId,
+      db.vaultItems.iconRefId,
+      db.vaultItems.isFavorite,
+      db.vaultItems.isArchived,
+      db.vaultItems.isPinned,
+      db.vaultItems.isDeleted,
+      db.vaultItems.createdAt,
+      db.vaultItems.modifiedAt,
+      db.vaultItems.lastUsedAt,
+      db.vaultItems.archivedAt,
+      db.vaultItems.deletedAt,
+      db.vaultItems.recentScore,
+      db.passwordItems.login,
+      db.passwordItems.email,
+      db.passwordItems.url,
+      db.passwordItems.expiresAt,
+      expr.hasPassword,
+    ]);
   }
 
   PasswordCardDto _mapRowToCardDto(
@@ -202,7 +208,7 @@ class PasswordRepository {
 
 class _PasswordCardExpressions {
   _PasswordCardExpressions(this.db)
-      : hasPassword = db.passwordItems.password.isNotNull();
+    : hasPassword = db.passwordItems.password.isNotNull();
 
   final MainStore db;
   final Expression<bool> hasPassword;

@@ -7,7 +7,8 @@ part 'loyalty_card_history_card_dto.freezed.dart';
 part 'loyalty_card_history_card_dto.g.dart';
 
 @freezed
-sealed class LoyaltyCardHistoryCardDataDto with _$LoyaltyCardHistoryCardDataDto {
+sealed class LoyaltyCardHistoryCardDataDto
+    with _$LoyaltyCardHistoryCardDataDto {
   const factory LoyaltyCardHistoryCardDataDto({
     String? programName,
     LoyaltyBarcodeType? barcodeType,
@@ -22,15 +23,19 @@ sealed class LoyaltyCardHistoryCardDataDto with _$LoyaltyCardHistoryCardDataDto 
     @Default(false) bool hasPassword,
   }) = _LoyaltyCardHistoryCardDataDto;
 
-  factory LoyaltyCardHistoryCardDataDto.fromJson(Map<String, dynamic> json) => _$LoyaltyCardHistoryCardDataDtoFromJson(json);
+  factory LoyaltyCardHistoryCardDataDto.fromJson(Map<String, dynamic> json) =>
+      _$LoyaltyCardHistoryCardDataDtoFromJson(json);
 }
 
 @freezed
-sealed class LoyaltyCardHistoryCardDto with _$LoyaltyCardHistoryCardDto implements VaultHistoryCardDto {
+sealed class LoyaltyCardHistoryCardDto
+    with _$LoyaltyCardHistoryCardDto
+    implements VaultHistoryCardDto {
   const factory LoyaltyCardHistoryCardDto({
     required VaultSnapshotCardDto snapshot,
     required LoyaltyCardHistoryCardDataDto loyaltycard,
   }) = _LoyaltyCardHistoryCardDto;
 
-  factory LoyaltyCardHistoryCardDto.fromJson(Map<String, dynamic> json) => _$LoyaltyCardHistoryCardDtoFromJson(json);
+  factory LoyaltyCardHistoryCardDto.fromJson(Map<String, dynamic> json) =>
+      _$LoyaltyCardHistoryCardDtoFromJson(json);
 }

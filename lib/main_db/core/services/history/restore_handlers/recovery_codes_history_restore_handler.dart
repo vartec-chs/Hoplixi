@@ -49,7 +49,8 @@ class RecoveryCodesHistoryRestoreHandler implements VaultHistoryRestoreHandler {
       return const Failure(
         DBCoreError.conflict(
           code: 'history.restore.missing_recovery_code_value',
-          message: 'Нельзя восстановить recovery codes: в снимке отсутствуют значения кодов',
+          message:
+              'Нельзя восстановить recovery codes: в снимке отсутствуют значения кодов',
           entity: 'recoveryCodes',
         ),
       );
@@ -59,7 +60,8 @@ class RecoveryCodesHistoryRestoreHandler implements VaultHistoryRestoreHandler {
       return const Failure(
         DBCoreError.conflict(
           code: 'history.restore.missing_recovery_code_value',
-          message: 'Нельзя восстановить recovery codes: в снимке отсутствуют значения кодов',
+          message:
+              'Нельзя восстановить recovery codes: в снимке отсутствуют значения кодов',
           entity: 'recoveryCodes',
         ),
       );

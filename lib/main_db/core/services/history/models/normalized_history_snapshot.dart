@@ -18,10 +18,7 @@ class NormalizedHistorySnapshot<TPayload extends HistoryPayload> {
   final List<String> restoreWarnings;
 
   List<HistoryFieldSnapshot<Object?>> diffFields() {
-    return [
-      ...base.diffFields(),
-      ...payload.diffFields(),
-    ];
+    return [...base.diffFields(), ...payload.diffFields()];
   }
 
   NormalizedHistorySnapshot<TPayload> copyWith({
@@ -39,4 +36,5 @@ class NormalizedHistorySnapshot<TPayload extends HistoryPayload> {
   }
 }
 
-typedef AnyNormalizedHistorySnapshot = NormalizedHistorySnapshot<HistoryPayload>;
+typedef AnyNormalizedHistorySnapshot =
+    NormalizedHistorySnapshot<HistoryPayload>;

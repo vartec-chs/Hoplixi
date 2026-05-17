@@ -4,11 +4,7 @@ import '../models/history_payload.dart';
 abstract interface class VaultHistoryTypeNormalizer {
   VaultItemType get type;
 
-  Future<HistoryPayload?> normalizeHistory({
-    required String historyId,
-  });
+  Future<HistoryPayload?> normalizeHistory({required String historyId});
 
-  Future<HistoryPayload?> normalizeCurrent({
-    required String itemId,
-  });
+  Future<HistoryPayload?> normalizeCurrent({required String itemId});
 }

@@ -1,10 +1,12 @@
-import 'package:hoplixi/main_db/core/services/history/history_services.dart';
 import 'package:result_dart/result_dart.dart';
 import '../../errors/db_result.dart';
 import '../../errors/db_error.dart';
 import '../../models/dto_history/cards/vault_history_revision_detail_dto.dart';
-import 'vault_history_normalized_loader.dart';
+import '../../models/mappers/history/vault_item_base_history_payload_mapper.dart';
+import 'models/normalized_history_snapshot.dart';
+import 'payloads/empty_history_payload.dart';
 import 'vault_history_diff_service.dart';
+import 'vault_history_normalized_loader.dart';
 import 'vault_history_restore_policy_service.dart';
 
 class VaultHistoryDetailService {
@@ -30,7 +32,6 @@ class VaultHistoryDetailService {
       }
 
       // Load compare target (newer revision or current live)
-      // For now, we only have comparison with current live as a concept
       final current = await loader.loadCurrentSnapshot(
         itemId: selected.base.itemId,
         type: selected.base.type,
@@ -57,11 +58,10 @@ class VaultHistoryDetailService {
 
       return Success(
         VaultHistoryRevisionDetailDto(
-          selected: selected.base.historyId, // Changed to string historyId
-          compareTargetKind:
-              current != null
-                  ? HistoryCompareTargetKind.currentLive
-                  : HistoryCompareTargetKind.none,
+          selected: selected.base.toVaultSnapshotCardDto(),
+          compareTargetKind: current != null
+              ? HistoryCompareTargetKind.currentLive
+              : HistoryCompareTargetKind.deletedState,
           fieldDiffs: fieldDiffs,
           customFieldDiffs: customFieldDiffs,
           isRestorable: restorePolicy.isRestorable(selected),

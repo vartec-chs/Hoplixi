@@ -100,5 +100,3 @@ sealed class PatchOtpDto with _$PatchOtpDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchOtpDto;
 }
-
-

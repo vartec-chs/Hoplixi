@@ -21,15 +21,19 @@ sealed class BankCardHistoryCardDataDto with _$BankCardHistoryCardDataDto {
     @Default(false) bool hasRoutingNumber,
   }) = _BankCardHistoryCardDataDto;
 
-  factory BankCardHistoryCardDataDto.fromJson(Map<String, dynamic> json) => _$BankCardHistoryCardDataDtoFromJson(json);
+  factory BankCardHistoryCardDataDto.fromJson(Map<String, dynamic> json) =>
+      _$BankCardHistoryCardDataDtoFromJson(json);
 }
 
 @freezed
-sealed class BankCardHistoryCardDto with _$BankCardHistoryCardDto implements VaultHistoryCardDto {
+sealed class BankCardHistoryCardDto
+    with _$BankCardHistoryCardDto
+    implements VaultHistoryCardDto {
   const factory BankCardHistoryCardDto({
     required VaultSnapshotCardDto snapshot,
     required BankCardHistoryCardDataDto bankcard,
   }) = _BankCardHistoryCardDto;
 
-  factory BankCardHistoryCardDto.fromJson(Map<String, dynamic> json) => _$BankCardHistoryCardDtoFromJson(json);
+  factory BankCardHistoryCardDto.fromJson(Map<String, dynamic> json) =>
+      _$BankCardHistoryCardDtoFromJson(json);
 }

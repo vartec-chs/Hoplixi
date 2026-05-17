@@ -63,7 +63,9 @@ sealed class CreateLicenseKeyDto with _$CreateLicenseKeyDto {
 }
 
 @freezed
-sealed class LicenseKeyViewDto with _$LicenseKeyViewDto implements VaultEntityViewDto {
+sealed class LicenseKeyViewDto
+    with _$LicenseKeyViewDto
+    implements VaultEntityViewDto {
   const factory LicenseKeyViewDto({
     required VaultItemViewDto item,
     required LicenseKeyDataDto licenseKey,
@@ -74,7 +76,9 @@ sealed class LicenseKeyViewDto with _$LicenseKeyViewDto implements VaultEntityVi
 }
 
 @freezed
-sealed class LicenseKeyCardDto with _$LicenseKeyCardDto implements VaultEntityCardDto {
+sealed class LicenseKeyCardDto
+    with _$LicenseKeyCardDto
+    implements VaultEntityCardDto {
   const factory LicenseKeyCardDto({
     required VaultItemCardDto item,
     required LicenseKeyCardDataDto licenseKey,
@@ -83,6 +87,7 @@ sealed class LicenseKeyCardDto with _$LicenseKeyCardDto implements VaultEntityCa
   factory LicenseKeyCardDto.fromJson(Map<String, dynamic> json) =>
       _$LicenseKeyCardDtoFromJson(json);
 }
+
 @freezed
 sealed class PatchLicenseKeyDataDto with _$PatchLicenseKeyDataDto {
   const factory PatchLicenseKeyDataDto({
@@ -115,5 +120,3 @@ sealed class PatchLicenseKeyDto with _$PatchLicenseKeyDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchLicenseKeyDto;
 }
-
-

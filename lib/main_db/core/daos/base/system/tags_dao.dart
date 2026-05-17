@@ -25,7 +25,9 @@ class TagsDao extends DatabaseAccessor<MainStore> with _$TagsDaoMixin {
   }
 
   Future<bool> existsTag(String id) async {
-    final query = selectOnly(tags)..addColumns([tags.id])..where(tags.id.equals(id));
+    final query = selectOnly(tags)
+      ..addColumns([tags.id])
+      ..where(tags.id.equals(id));
     final result = await query.get();
     return result.isNotEmpty;
   }

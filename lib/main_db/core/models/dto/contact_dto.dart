@@ -55,7 +55,9 @@ sealed class CreateContactDto with _$CreateContactDto {
 }
 
 @freezed
-sealed class ContactViewDto with _$ContactViewDto implements VaultEntityViewDto {
+sealed class ContactViewDto
+    with _$ContactViewDto
+    implements VaultEntityViewDto {
   const factory ContactViewDto({
     required VaultItemViewDto item,
     required ContactDataDto contact,
@@ -66,7 +68,9 @@ sealed class ContactViewDto with _$ContactViewDto implements VaultEntityViewDto 
 }
 
 @freezed
-sealed class ContactCardDto with _$ContactCardDto implements VaultEntityCardDto {
+sealed class ContactCardDto
+    with _$ContactCardDto
+    implements VaultEntityCardDto {
   const factory ContactCardDto({
     required VaultItemCardDto item,
     required ContactCardDataDto contact,
@@ -101,5 +105,3 @@ sealed class PatchContactDto with _$PatchContactDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchContactDto;
 }
-
-

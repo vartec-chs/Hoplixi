@@ -18,7 +18,9 @@ class OtpRepository {
       final now = DateTime.now();
       final itemId = const Uuid().v4();
 
-      await db.into(db.vaultItems).insert(
+      await db
+          .into(db.vaultItems)
+          .insert(
             VaultItemsCompanion.insert(
               id: Value(itemId),
               type: VaultItemType.otp,
@@ -33,7 +35,9 @@ class OtpRepository {
             ),
           );
 
-      await db.into(db.otpItems).insert(
+      await db
+          .into(db.otpItems)
+          .insert(
             OtpItemsCompanion.insert(
               itemId: itemId,
               type: Value(dto.otp.type),
@@ -56,8 +60,9 @@ class OtpRepository {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
 
-      await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-          .write(
+      await (db.update(
+        db.vaultItems,
+      )..where((tbl) => tbl.id.equals(itemId))).write(
         VaultItemsCompanion(
           name: dto.item.name.toRequiredValue(),
           description: dto.item.description.toNullableValue(),
@@ -69,8 +74,9 @@ class OtpRepository {
         ),
       );
 
-      await (db.update(db.otpItems)..where((tbl) => tbl.itemId.equals(itemId)))
-          .write(
+      await (db.update(
+        db.otpItems,
+      )..where((tbl) => tbl.itemId.equals(itemId))).write(
         OtpItemsCompanion(
           type: dto.otp.type.toRequiredValue(),
           issuer: dto.otp.issuer.toNullableValue(),
@@ -86,14 +92,15 @@ class OtpRepository {
   }
 
   Future<OtpViewDto?> getViewById(String itemId) async {
-    final query = db.select(db.vaultItems).join([
-      innerJoin(
-        db.otpItems,
-        db.otpItems.itemId.equalsExp(db.vaultItems.id),
-      ),
-    ])
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.otp));
+    final query =
+        db.select(db.vaultItems).join([
+            innerJoin(
+              db.otpItems,
+              db.otpItems.itemId.equalsExp(db.vaultItems.id),
+            ),
+          ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.otp));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
@@ -101,10 +108,7 @@ class OtpRepository {
     final item = row.readTable(db.vaultItems);
     final otp = row.readTable(db.otpItems);
 
-    return OtpViewDto(
-      item: item.toVaultItemViewDto(),
-      otp: otp.toOtpDataDto(),
-    );
+    return OtpViewDto(item: item.toVaultItemViewDto(), otp: otp.toOtpDataDto());
   }
 
   Future<OtpCardDto?> getCardById(String itemId) async {
@@ -119,10 +123,7 @@ class OtpRepository {
     return _mapRowToCardDto(row, expr);
   }
 
-  Future<List<OtpCardDto>> getCards({
-    int limit = 50,
-    int offset = 0,
-  }) async {
+  Future<List<OtpCardDto>> getCards({int limit = 50, int offset = 0}) async {
     final expr = _OtpCardExpressions(db);
     final query = _buildCardQuery(expr)
       ..where(db.vaultItems.type.equalsValue(VaultItemType.otp))
@@ -134,45 +135,42 @@ class OtpRepository {
   }
 
   Future<void> deletePermanently(String itemId) {
-    return (db.delete(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-        .go();
+    return (db.delete(
+      db.vaultItems,
+    )..where((tbl) => tbl.id.equals(itemId))).go();
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery(
     _OtpCardExpressions expr,
   ) {
     return db.selectOnly(db.vaultItems).join([
-      innerJoin(
-        db.otpItems,
-        db.otpItems.itemId.equalsExp(db.vaultItems.id),
-      ),
-    ])
-      ..addColumns([
-        db.vaultItems.id,
-        db.vaultItems.type,
-        db.vaultItems.name,
-        db.vaultItems.description,
-        db.vaultItems.categoryId,
-        db.vaultItems.iconRefId,
-        db.vaultItems.isFavorite,
-        db.vaultItems.isArchived,
-        db.vaultItems.isPinned,
-        db.vaultItems.isDeleted,
-        db.vaultItems.createdAt,
-        db.vaultItems.modifiedAt,
-        db.vaultItems.lastUsedAt,
-        db.vaultItems.archivedAt,
-        db.vaultItems.deletedAt,
-        db.vaultItems.recentScore,
-        db.otpItems.type,
-        db.otpItems.issuer,
-        db.otpItems.accountName,
-        db.otpItems.algorithm,
-        db.otpItems.digits,
-        db.otpItems.period,
-        db.otpItems.counter,
-        expr.hasSecret,
-      ]);
+      innerJoin(db.otpItems, db.otpItems.itemId.equalsExp(db.vaultItems.id)),
+    ])..addColumns([
+      db.vaultItems.id,
+      db.vaultItems.type,
+      db.vaultItems.name,
+      db.vaultItems.description,
+      db.vaultItems.categoryId,
+      db.vaultItems.iconRefId,
+      db.vaultItems.isFavorite,
+      db.vaultItems.isArchived,
+      db.vaultItems.isPinned,
+      db.vaultItems.isDeleted,
+      db.vaultItems.createdAt,
+      db.vaultItems.modifiedAt,
+      db.vaultItems.lastUsedAt,
+      db.vaultItems.archivedAt,
+      db.vaultItems.deletedAt,
+      db.vaultItems.recentScore,
+      db.otpItems.type,
+      db.otpItems.issuer,
+      db.otpItems.accountName,
+      db.otpItems.algorithm,
+      db.otpItems.digits,
+      db.otpItems.period,
+      db.otpItems.counter,
+      expr.hasSecret,
+    ]);
   }
 
   OtpCardDto _mapRowToCardDto(TypedResult row, _OtpCardExpressions expr) {
@@ -200,7 +198,8 @@ class OtpRepository {
         issuer: row.read(db.otpItems.issuer),
         accountName: row.read(db.otpItems.accountName),
         algorithm: row.readWithConverter<OtpHashAlgorithm, String>(
-            db.otpItems.algorithm)!,
+          db.otpItems.algorithm,
+        )!,
         digits: row.read(db.otpItems.digits)!,
         period: row.read(db.otpItems.period),
         counter: row.read(db.otpItems.counter),

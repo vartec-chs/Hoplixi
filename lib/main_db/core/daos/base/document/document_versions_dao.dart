@@ -17,27 +17,36 @@ class DocumentVersionsDao extends DatabaseAccessor<MainStore>
     String id,
     DocumentVersionsCompanion companion,
   ) {
-    return (update(documentVersions)..where((t) => t.id.equals(id)))
-        .write(companion);
+    return (update(
+      documentVersions,
+    )..where((t) => t.id.equals(id))).write(companion);
   }
 
   Future<DocumentVersionsData?> getDocumentVersionById(String id) {
-    return (select(documentVersions)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (select(
+      documentVersions,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
-  Future<List<DocumentVersionsData>> getVersionsByDocumentId(String documentId) {
+  Future<List<DocumentVersionsData>> getVersionsByDocumentId(
+    String documentId,
+  ) {
     return (select(documentVersions)
           ..where((t) => t.documentId.equals(documentId))
           ..orderBy([(t) => OrderingTerm(expression: t.versionNumber)]))
         .get();
   }
 
-  Future<DocumentVersionsData?> getLatestVersionByDocumentId(String documentId) {
+  Future<DocumentVersionsData?> getLatestVersionByDocumentId(
+    String documentId,
+  ) {
     return (select(documentVersions)
           ..where((t) => t.documentId.equals(documentId))
           ..orderBy([
-            (t) => OrderingTerm(expression: t.versionNumber, mode: OrderingMode.desc)
+            (t) => OrderingTerm(
+              expression: t.versionNumber,
+              mode: OrderingMode.desc,
+            ),
           ])
           ..limit(1))
         .getSingleOrNull();
@@ -47,10 +56,11 @@ class DocumentVersionsDao extends DatabaseAccessor<MainStore>
     required String documentId,
     required int versionNumber,
   }) {
-    return (select(documentVersions)
-          ..where((t) =>
+    return (select(documentVersions)..where(
+          (t) =>
               t.documentId.equals(documentId) &
-              t.versionNumber.equals(versionNumber)))
+              t.versionNumber.equals(versionNumber),
+        ))
         .getSingleOrNull();
   }
 
@@ -58,7 +68,9 @@ class DocumentVersionsDao extends DatabaseAccessor<MainStore>
     final query = selectOnly(documentVersions)
       ..addColumns([documentVersions.versionNumber.max()])
       ..where(documentVersions.documentId.equals(documentId));
-    final result = await query.map((row) => row.read(documentVersions.versionNumber.max())).getSingle();
+    final result = await query
+        .map((row) => row.read(documentVersions.versionNumber.max()))
+        .getSingle();
     return (result ?? 0) + 1;
   }
 
@@ -67,8 +79,8 @@ class DocumentVersionsDao extends DatabaseAccessor<MainStore>
   }
 
   Future<int> deleteVersionsByDocumentId(String documentId) {
-    return (delete(documentVersions)
-          ..where((t) => t.documentId.equals(documentId)))
-        .go();
+    return (delete(
+      documentVersions,
+    )..where((t) => t.documentId.equals(documentId))).go();
   }
 }

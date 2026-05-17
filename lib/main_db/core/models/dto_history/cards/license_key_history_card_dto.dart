@@ -28,15 +28,19 @@ sealed class LicenseKeyHistoryCardDataDto with _$LicenseKeyHistoryCardDataDto {
     @Default(false) bool hasLicenseKey,
   }) = _LicenseKeyHistoryCardDataDto;
 
-  factory LicenseKeyHistoryCardDataDto.fromJson(Map<String, dynamic> json) => _$LicenseKeyHistoryCardDataDtoFromJson(json);
+  factory LicenseKeyHistoryCardDataDto.fromJson(Map<String, dynamic> json) =>
+      _$LicenseKeyHistoryCardDataDtoFromJson(json);
 }
 
 @freezed
-sealed class LicenseKeyHistoryCardDto with _$LicenseKeyHistoryCardDto implements VaultHistoryCardDto {
+sealed class LicenseKeyHistoryCardDto
+    with _$LicenseKeyHistoryCardDto
+    implements VaultHistoryCardDto {
   const factory LicenseKeyHistoryCardDto({
     required VaultSnapshotCardDto snapshot,
     required LicenseKeyHistoryCardDataDto licensekey,
   }) = _LicenseKeyHistoryCardDto;
 
-  factory LicenseKeyHistoryCardDto.fromJson(Map<String, dynamic> json) => _$LicenseKeyHistoryCardDtoFromJson(json);
+  factory LicenseKeyHistoryCardDto.fromJson(Map<String, dynamic> json) =>
+      _$LicenseKeyHistoryCardDtoFromJson(json);
 }

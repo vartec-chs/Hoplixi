@@ -12,7 +12,7 @@ sealed class TagDto with _$TagDto {
     String? id,
     required String name,
     @Default('FFFFFFFF') String color,
-     required TagType type,
+    required TagType type,
     DateTime? createdAt,
     DateTime? modifiedAt,
   }) = _TagDto;
@@ -29,5 +29,3 @@ sealed class PatchTagDto with _$PatchTagDto {
     @Default(FieldUpdate.keep()) FieldUpdate<TagType> type,
   }) = _PatchTagDto;
 }
-
-

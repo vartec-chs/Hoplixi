@@ -19,10 +19,10 @@ class ContactHistoryNormalizer implements VaultHistoryTypeNormalizer {
   VaultItemType get type => VaultItemType.contact;
 
   @override
-  Future<HistoryPayload?> normalizeHistory({
-    required String historyId,
-  }) async {
-    final rows = await contactHistoryDao.getContactHistoryByHistoryIds([historyId]);
+  Future<HistoryPayload?> normalizeHistory({required String historyId}) async {
+    final rows = await contactHistoryDao.getContactHistoryByHistoryIds([
+      historyId,
+    ]);
     if (rows.isEmpty) return null;
 
     final item = rows.first;
@@ -43,9 +43,7 @@ class ContactHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }
 
   @override
-  Future<HistoryPayload?> normalizeCurrent({
-    required String itemId,
-  }) async {
+  Future<HistoryPayload?> normalizeCurrent({required String itemId}) async {
     final view = await contactRepository.getViewById(itemId);
     if (view == null) return null;
 

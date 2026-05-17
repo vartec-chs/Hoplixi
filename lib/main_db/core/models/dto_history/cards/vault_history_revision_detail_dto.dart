@@ -4,17 +4,9 @@ import 'vault_snapshot_card_dto.dart';
 part 'vault_history_revision_detail_dto.freezed.dart';
 part 'vault_history_revision_detail_dto.g.dart';
 
-enum HistoryCompareTargetKind {
-  newerRevision,
-  currentLive,
-  deletedState,
-}
+enum HistoryCompareTargetKind { newerRevision, currentLive, deletedState }
 
-enum HistoryFieldChangeType {
-  added,
-  removed,
-  changed,
-}
+enum HistoryFieldChangeType { added, removed, changed }
 
 @freezed
 sealed class VaultHistoryFieldDiffDto with _$VaultHistoryFieldDiffDto {
@@ -32,7 +24,8 @@ sealed class VaultHistoryFieldDiffDto with _$VaultHistoryFieldDiffDto {
 }
 
 @freezed
-sealed class VaultHistoryRevisionDetailDto with _$VaultHistoryRevisionDetailDto {
+sealed class VaultHistoryRevisionDetailDto
+    with _$VaultHistoryRevisionDetailDto {
   const factory VaultHistoryRevisionDetailDto({
     required VaultSnapshotCardDto selected,
     required HistoryCompareTargetKind compareTargetKind,

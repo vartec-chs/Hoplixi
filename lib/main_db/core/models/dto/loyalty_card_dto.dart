@@ -75,7 +75,9 @@ sealed class CreateLoyaltyCardDto with _$CreateLoyaltyCardDto {
 }
 
 @freezed
-sealed class LoyaltyCardViewDto with _$LoyaltyCardViewDto implements VaultEntityViewDto {
+sealed class LoyaltyCardViewDto
+    with _$LoyaltyCardViewDto
+    implements VaultEntityViewDto {
   const factory LoyaltyCardViewDto({
     required VaultItemViewDto item,
     required LoyaltyCardDataDto loyaltyCard,
@@ -86,7 +88,9 @@ sealed class LoyaltyCardViewDto with _$LoyaltyCardViewDto implements VaultEntity
 }
 
 @freezed
-sealed class LoyaltyCardCardDto with _$LoyaltyCardCardDto implements VaultEntityCardDto {
+sealed class LoyaltyCardCardDto
+    with _$LoyaltyCardCardDto
+    implements VaultEntityCardDto {
   const factory LoyaltyCardCardDto({
     required VaultItemCardDto item,
     required LoyaltyCardCardDataDto loyaltyCard,
@@ -122,5 +126,3 @@ sealed class PatchLoyaltyCardDto with _$PatchLoyaltyCardDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchLoyaltyCardDto;
 }
-
-

@@ -18,58 +18,66 @@ class BankCardItemsDao extends DatabaseAccessor<MainStore>
     String itemId,
     BankCardItemsCompanion companion,
   ) {
-    return (update(bankCardItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .write(companion);
+    return (update(
+      bankCardItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).write(companion);
   }
 
   Future<BankCardItemsData?> getBankCardByItemId(String itemId) {
-    return (select(bankCardItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .getSingleOrNull();
+    return (select(
+      bankCardItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).getSingleOrNull();
   }
 
   Future<bool> existsBankCardByItemId(String itemId) async {
-    final row = await (selectOnly(bankCardItems)
-          ..addColumns([bankCardItems.itemId])
-          ..where(bankCardItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(bankCardItems)
+              ..addColumns([bankCardItems.itemId])
+              ..where(bankCardItems.itemId.equals(itemId)))
+            .getSingleOrNull();
 
     return row != null;
   }
 
   Future<int> deleteBankCardByItemId(String itemId) {
-    return (delete(bankCardItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .go();
+    return (delete(
+      bankCardItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).go();
   }
 
   Future<String?> getCardNumberByItemId(String itemId) async {
-    final row = await (selectOnly(bankCardItems)
-          ..addColumns([bankCardItems.cardNumber])
-          ..where(bankCardItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(bankCardItems)
+              ..addColumns([bankCardItems.cardNumber])
+              ..where(bankCardItems.itemId.equals(itemId)))
+            .getSingleOrNull();
     return row?.read(bankCardItems.cardNumber);
   }
 
   Future<String?> getCvvByItemId(String itemId) async {
-    final row = await (selectOnly(bankCardItems)
-          ..addColumns([bankCardItems.cvv])
-          ..where(bankCardItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(bankCardItems)
+              ..addColumns([bankCardItems.cvv])
+              ..where(bankCardItems.itemId.equals(itemId)))
+            .getSingleOrNull();
     return row?.read(bankCardItems.cvv);
   }
 
   Future<String?> getAccountNumberByItemId(String itemId) async {
-    final row = await (selectOnly(bankCardItems)
-          ..addColumns([bankCardItems.accountNumber])
-          ..where(bankCardItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(bankCardItems)
+              ..addColumns([bankCardItems.accountNumber])
+              ..where(bankCardItems.itemId.equals(itemId)))
+            .getSingleOrNull();
     return row?.read(bankCardItems.accountNumber);
   }
 
   Future<String?> getRoutingNumberByItemId(String itemId) async {
-    final row = await (selectOnly(bankCardItems)
-          ..addColumns([bankCardItems.routingNumber])
-          ..where(bankCardItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(bankCardItems)
+              ..addColumns([bankCardItems.routingNumber])
+              ..where(bankCardItems.itemId.equals(itemId)))
+            .getSingleOrNull();
     return row?.read(bankCardItems.routingNumber);
   }
 

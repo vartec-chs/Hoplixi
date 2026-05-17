@@ -8,7 +8,8 @@ part 'certificate_history_card_dto.freezed.dart';
 part 'certificate_history_card_dto.g.dart';
 
 @freezed
-sealed class CertificateHistoryCardDataDto with _$CertificateHistoryCardDataDto {
+sealed class CertificateHistoryCardDataDto
+    with _$CertificateHistoryCardDataDto {
   const factory CertificateHistoryCardDataDto({
     CertificateFormat? certificateFormat,
     CertificateKeyAlgorithm? keyAlgorithm,
@@ -25,15 +26,19 @@ sealed class CertificateHistoryCardDataDto with _$CertificateHistoryCardDataDto 
     @Default(false) bool hasPasswordForPfx,
   }) = _CertificateHistoryCardDataDto;
 
-  factory CertificateHistoryCardDataDto.fromJson(Map<String, dynamic> json) => _$CertificateHistoryCardDataDtoFromJson(json);
+  factory CertificateHistoryCardDataDto.fromJson(Map<String, dynamic> json) =>
+      _$CertificateHistoryCardDataDtoFromJson(json);
 }
 
 @freezed
-sealed class CertificateHistoryCardDto with _$CertificateHistoryCardDto implements VaultHistoryCardDto {
+sealed class CertificateHistoryCardDto
+    with _$CertificateHistoryCardDto
+    implements VaultHistoryCardDto {
   const factory CertificateHistoryCardDto({
     required VaultSnapshotCardDto snapshot,
     required CertificateHistoryCardDataDto certificate,
   }) = _CertificateHistoryCardDto;
 
-  factory CertificateHistoryCardDto.fromJson(Map<String, dynamic> json) => _$CertificateHistoryCardDtoFromJson(json);
+  factory CertificateHistoryCardDto.fromJson(Map<String, dynamic> json) =>
+      _$CertificateHistoryCardDtoFromJson(json);
 }

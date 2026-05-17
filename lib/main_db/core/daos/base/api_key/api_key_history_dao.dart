@@ -16,34 +16,39 @@ class ApiKeyHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<ApiKeyHistoryData?> getApiKeyHistoryByHistoryId(String historyId) {
-    return (select(apiKeyHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .getSingleOrNull();
+    return (select(
+      apiKeyHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).getSingleOrNull();
   }
 
   Future<bool> existsApiKeyHistoryByHistoryId(String historyId) async {
-    final row = await (selectOnly(apiKeyHistory)
-          ..addColumns([apiKeyHistory.historyId])
-          ..where(apiKeyHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(apiKeyHistory)
+              ..addColumns([apiKeyHistory.historyId])
+              ..where(apiKeyHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
 
     return row != null;
   }
 
   Future<int> deleteApiKeyHistoryByHistoryId(String historyId) {
-    return (delete(apiKeyHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .go();
+    return (delete(
+      apiKeyHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).go();
   }
-
 
   // --- HISTORY CARD BATCH METHODS ---
-  Future<List<ApiKeyHistoryData>> getApiKeyHistoryByHistoryIds(List<String> historyIds) {
+  Future<List<ApiKeyHistoryData>> getApiKeyHistoryByHistoryIds(
+    List<String> historyIds,
+  ) {
     if (historyIds.isEmpty) return Future.value(const []);
-    return (select(apiKeyHistory)..where((tbl) => tbl.historyId.isIn(historyIds))).get();
+    return (select(
+      apiKeyHistory,
+    )..where((tbl) => tbl.historyId.isIn(historyIds))).get();
   }
 
-  Future<Map<String, ApiKeyHistoryCardDataDto>> getApiKeyHistoryCardDataByHistoryIds(List<String> historyIds) async {
+  Future<Map<String, ApiKeyHistoryCardDataDto>>
+  getApiKeyHistoryCardDataByHistoryIds(List<String> historyIds) async {
     if (historyIds.isEmpty) return const {};
 
     final hasKeyExpr = apiKeyHistory.key.isNotNull();
@@ -69,8 +74,12 @@ class ApiKeyHistoryDao extends DatabaseAccessor<MainStore>
       for (final row in rows)
         row.read(apiKeyHistory.historyId)!: ApiKeyHistoryCardDataDto(
           service: row.read(apiKeyHistory.service),
-          tokenType: row.readWithConverter<ApiKeyTokenType?, String>(apiKeyHistory.tokenType),
-          environment: row.readWithConverter<ApiKeyEnvironment?, String>(apiKeyHistory.environment),
+          tokenType: row.readWithConverter<ApiKeyTokenType?, String>(
+            apiKeyHistory.tokenType,
+          ),
+          environment: row.readWithConverter<ApiKeyEnvironment?, String>(
+            apiKeyHistory.environment,
+          ),
           expiresAt: row.read(apiKeyHistory.expiresAt),
           revokedAt: row.read(apiKeyHistory.revokedAt),
           rotationPeriodDays: row.read(apiKeyHistory.rotationPeriodDays),
@@ -83,11 +92,11 @@ class ApiKeyHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<String?> getKeyByHistoryId(String historyId) async {
-    final row = await (selectOnly(apiKeyHistory)
-          ..addColumns([apiKeyHistory.key])
-          ..where(apiKeyHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(apiKeyHistory)
+              ..addColumns([apiKeyHistory.key])
+              ..where(apiKeyHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
     return row?.read(apiKeyHistory.key);
   }
-
 }

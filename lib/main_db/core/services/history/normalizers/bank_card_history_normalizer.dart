@@ -19,10 +19,10 @@ class BankCardHistoryNormalizer implements VaultHistoryTypeNormalizer {
   VaultItemType get type => VaultItemType.bankCard;
 
   @override
-  Future<HistoryPayload?> normalizeHistory({
-    required String historyId,
-  }) async {
-    final rows = await bankCardHistoryDao.getBankCardHistoryByHistoryIds([historyId]);
+  Future<HistoryPayload?> normalizeHistory({required String historyId}) async {
+    final rows = await bankCardHistoryDao.getBankCardHistoryByHistoryIds([
+      historyId,
+    ]);
     if (rows.isEmpty) return null;
 
     final item = rows.first;
@@ -44,9 +44,7 @@ class BankCardHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }
 
   @override
-  Future<HistoryPayload?> normalizeCurrent({
-    required String itemId,
-  }) async {
+  Future<HistoryPayload?> normalizeCurrent({required String itemId}) async {
     final view = await bankCardRepository.getViewById(itemId);
     if (view == null) return null;
 

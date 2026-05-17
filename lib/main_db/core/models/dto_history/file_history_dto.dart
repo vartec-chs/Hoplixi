@@ -37,9 +37,8 @@ sealed class FileMetadataHistoryDto with _$FileMetadataHistoryDto {
 
 @freezed
 sealed class FileHistoryDataDto with _$FileHistoryDataDto {
-  const factory FileHistoryDataDto({
-    String? metadataHistoryId,
-  }) = _FileHistoryDataDto;
+  const factory FileHistoryDataDto({String? metadataHistoryId}) =
+      _FileHistoryDataDto;
 
   factory FileHistoryDataDto.fromJson(Map<String, dynamic> json) =>
       _$FileHistoryDataDtoFromJson(json);

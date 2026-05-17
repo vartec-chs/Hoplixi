@@ -12,9 +12,7 @@ import '../payloads/api_key_history_payload.dart';
 import 'vault_history_restore_handler.dart';
 
 class ApiKeyHistoryRestoreHandler implements VaultHistoryRestoreHandler {
-  ApiKeyHistoryRestoreHandler({
-    required this.apiKeyItemsDao,
-  });
+  ApiKeyHistoryRestoreHandler({required this.apiKeyItemsDao});
 
   final ApiKeyItemsDao apiKeyItemsDao;
 

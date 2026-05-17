@@ -18,7 +18,9 @@ class ApiKeyRepository {
       final now = DateTime.now();
       final itemId = const Uuid().v4();
 
-      await db.into(db.vaultItems).insert(
+      await db
+          .into(db.vaultItems)
+          .insert(
             VaultItemsCompanion.insert(
               id: Value(itemId),
               type: VaultItemType.apiKey,
@@ -33,7 +35,9 @@ class ApiKeyRepository {
             ),
           );
 
-      await db.into(db.apiKeyItems).insert(
+      await db
+          .into(db.apiKeyItems)
+          .insert(
             ApiKeyItemsCompanion.insert(
               itemId: itemId,
               service: dto.apiKey.service,
@@ -62,8 +66,9 @@ class ApiKeyRepository {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
 
-      await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-          .write(
+      await (db.update(
+        db.vaultItems,
+      )..where((tbl) => tbl.id.equals(itemId))).write(
         VaultItemsCompanion(
           name: dto.item.name.toRequiredValue(),
           description: dto.item.description.toNullableValue(),
@@ -81,8 +86,9 @@ class ApiKeyRepository {
         revokedUpdate = Value(revokedAtUpdate.value != null);
       }
 
-      await (db.update(db.apiKeyItems)..where((tbl) => tbl.itemId.equals(itemId)))
-          .write(
+      await (db.update(
+        db.apiKeyItems,
+      )..where((tbl) => tbl.itemId.equals(itemId))).write(
         ApiKeyItemsCompanion(
           service: dto.apiKey.service.toRequiredValue(),
           key: dto.apiKey.key.toRequiredValue(),
@@ -112,14 +118,15 @@ class ApiKeyRepository {
   }
 
   Future<ApiKeyViewDto?> getViewById(String itemId) async {
-    final query = db.select(db.vaultItems).join([
-      innerJoin(
-        db.apiKeyItems,
-        db.apiKeyItems.itemId.equalsExp(db.vaultItems.id),
-      ),
-    ])
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.apiKey));
+    final query =
+        db.select(db.vaultItems).join([
+            innerJoin(
+              db.apiKeyItems,
+              db.apiKeyItems.itemId.equalsExp(db.vaultItems.id),
+            ),
+          ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.apiKey));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
@@ -145,10 +152,7 @@ class ApiKeyRepository {
     return _mapRowToCardDto(row, expr);
   }
 
-  Future<List<ApiKeyCardDto>> getCards({
-    int limit = 50,
-    int offset = 0,
-  }) async {
+  Future<List<ApiKeyCardDto>> getCards({int limit = 50, int offset = 0}) async {
     final expr = _ApiKeyCardExpressions(db);
     final query = _buildCardQuery(expr)
       ..where(db.vaultItems.type.equalsValue(VaultItemType.apiKey))
@@ -160,8 +164,9 @@ class ApiKeyRepository {
   }
 
   Future<void> deletePermanently(String itemId) {
-    return (db.delete(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-        .go();
+    return (db.delete(
+      db.vaultItems,
+    )..where((tbl) => tbl.id.equals(itemId))).go();
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery(
@@ -172,36 +177,35 @@ class ApiKeyRepository {
         db.apiKeyItems,
         db.apiKeyItems.itemId.equalsExp(db.vaultItems.id),
       ),
-    ])
-      ..addColumns([
-        db.vaultItems.id,
-        db.vaultItems.type,
-        db.vaultItems.name,
-        db.vaultItems.description,
-        db.vaultItems.categoryId,
-        db.vaultItems.iconRefId,
-        db.vaultItems.isFavorite,
-        db.vaultItems.isArchived,
-        db.vaultItems.isPinned,
-        db.vaultItems.isDeleted,
-        db.vaultItems.createdAt,
-        db.vaultItems.modifiedAt,
-        db.vaultItems.lastUsedAt,
-        db.vaultItems.archivedAt,
-        db.vaultItems.deletedAt,
-        db.vaultItems.recentScore,
+    ])..addColumns([
+      db.vaultItems.id,
+      db.vaultItems.type,
+      db.vaultItems.name,
+      db.vaultItems.description,
+      db.vaultItems.categoryId,
+      db.vaultItems.iconRefId,
+      db.vaultItems.isFavorite,
+      db.vaultItems.isArchived,
+      db.vaultItems.isPinned,
+      db.vaultItems.isDeleted,
+      db.vaultItems.createdAt,
+      db.vaultItems.modifiedAt,
+      db.vaultItems.lastUsedAt,
+      db.vaultItems.archivedAt,
+      db.vaultItems.deletedAt,
+      db.vaultItems.recentScore,
 
-        db.apiKeyItems.service,
-        db.apiKeyItems.tokenType,
-        db.apiKeyItems.environment,
-        db.apiKeyItems.expiresAt,
-        db.apiKeyItems.revokedAt,
-        db.apiKeyItems.rotationPeriodDays,
-        db.apiKeyItems.lastRotatedAt,
-        db.apiKeyItems.owner,
-        db.apiKeyItems.baseUrl,
-        expr.hasKey,
-      ]);
+      db.apiKeyItems.service,
+      db.apiKeyItems.tokenType,
+      db.apiKeyItems.environment,
+      db.apiKeyItems.expiresAt,
+      db.apiKeyItems.revokedAt,
+      db.apiKeyItems.rotationPeriodDays,
+      db.apiKeyItems.lastRotatedAt,
+      db.apiKeyItems.owner,
+      db.apiKeyItems.baseUrl,
+      expr.hasKey,
+    ]);
   }
 
   ApiKeyCardDto _mapRowToCardDto(TypedResult row, _ApiKeyCardExpressions expr) {

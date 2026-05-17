@@ -23,6 +23,7 @@ sealed class ItemLinkDto with _$ItemLinkDto {
   factory ItemLinkDto.fromJson(Map<String, dynamic> json) =>
       _$ItemLinkDtoFromJson(json);
 }
+
 @freezed
 sealed class PatchItemLinkDto with _$PatchItemLinkDto {
   const factory PatchItemLinkDto({
@@ -33,5 +34,3 @@ sealed class PatchItemLinkDto with _$PatchItemLinkDto {
     @Default(FieldUpdate.keep()) FieldUpdate<int> sortOrder,
   }) = _PatchItemLinkDto;
 }
-
-

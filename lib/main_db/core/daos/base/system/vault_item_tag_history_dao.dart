@@ -16,13 +16,15 @@ class VaultItemTagHistoryDao extends DatabaseAccessor<MainStore>
   Future<List<VaultItemTagHistoryData>> getTagsBySnapshotHistoryId(
     String historyId,
   ) {
-    return (select(vaultItemTagHistory)..where((t) => t.historyId.equals(historyId)))
-        .get();
+    return (select(
+      vaultItemTagHistory,
+    )..where((t) => t.historyId.equals(historyId))).get();
   }
 
   Future<VaultItemTagHistoryData?> getTagHistoryById(String id) {
-    return (select(vaultItemTagHistory)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (select(
+      vaultItemTagHistory,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Future<int> deleteTagHistoryById(String id) {
@@ -30,8 +32,8 @@ class VaultItemTagHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<int> deleteTagsBySnapshotHistoryId(String snapshotHistoryId) {
-    return (delete(vaultItemTagHistory)
-          ..where((t) => t.historyId.equals(snapshotHistoryId)))
-        .go();
+    return (delete(
+      vaultItemTagHistory,
+    )..where((t) => t.historyId.equals(snapshotHistoryId))).go();
   }
 }

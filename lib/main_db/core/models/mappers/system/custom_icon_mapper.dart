@@ -14,10 +14,6 @@ extension CustomIconDataMapper on CustomIconsData {
   }
 
   CustomIconCardDto toCustomIconCardDto() {
-    return CustomIconCardDto(
-      id: id,
-      name: name,
-      format: format,
-    );
+    return CustomIconCardDto(id: id, name: name, format: format);
   }
 }

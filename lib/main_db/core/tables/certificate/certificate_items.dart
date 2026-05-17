@@ -34,12 +34,12 @@ class CertificateItems extends Table {
   TextColumn get privateKey => text().nullable()();
 
   /// Пароль от privateKey, если он есть.
-  /// 
+  ///
   /// Secret!!!.
   TextColumn get privateKeyPassword => text().nullable()();
 
   /// Пароль от PFX/PKCS#12.
-  /// 
+  ///
   /// Secret!!!.
   TextColumn get passwordForPfx => text().nullable()();
 

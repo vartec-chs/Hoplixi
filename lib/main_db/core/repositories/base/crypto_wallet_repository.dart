@@ -18,7 +18,9 @@ class CryptoWalletRepository {
       final now = DateTime.now();
       final itemId = const Uuid().v4();
 
-      await db.into(db.vaultItems).insert(
+      await db
+          .into(db.vaultItems)
+          .insert(
             VaultItemsCompanion.insert(
               id: Value(itemId),
               type: VaultItemType.cryptoWallet,
@@ -33,7 +35,9 @@ class CryptoWalletRepository {
             ),
           );
 
-      await db.into(db.cryptoWalletItems).insert(
+      await db
+          .into(db.cryptoWalletItems)
+          .insert(
             CryptoWalletItemsCompanion.insert(
               itemId: itemId,
               walletType: Value(dto.cryptoWallet.walletType),
@@ -44,8 +48,9 @@ class CryptoWalletRepository {
               privateKey: Value(dto.cryptoWallet.privateKey),
               derivationPath: Value(dto.cryptoWallet.derivationPath),
               derivationScheme: Value(dto.cryptoWallet.derivationScheme),
-              derivationSchemeOther:
-                  Value(dto.cryptoWallet.derivationSchemeOther),
+              derivationSchemeOther: Value(
+                dto.cryptoWallet.derivationSchemeOther,
+              ),
               addresses: Value(dto.cryptoWallet.addresses),
               xpub: Value(dto.cryptoWallet.xpub),
               xprv: Value(dto.cryptoWallet.xprv),
@@ -63,8 +68,9 @@ class CryptoWalletRepository {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
 
-      await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-          .write(
+      await (db.update(
+        db.vaultItems,
+      )..where((tbl) => tbl.id.equals(itemId))).write(
         VaultItemsCompanion(
           name: dto.item.name.toRequiredValue(),
           description: dto.item.description.toNullableValue(),
@@ -76,9 +82,9 @@ class CryptoWalletRepository {
         ),
       );
 
-      await (db.update(db.cryptoWalletItems)
-            ..where((tbl) => tbl.itemId.equals(itemId)))
-          .write(
+      await (db.update(
+        db.cryptoWalletItems,
+      )..where((tbl) => tbl.itemId.equals(itemId))).write(
         CryptoWalletItemsCompanion(
           walletType: dto.cryptoWallet.walletType.toNullableValue(),
           walletTypeOther: dto.cryptoWallet.walletTypeOther.toNullableValue(),
@@ -88,8 +94,8 @@ class CryptoWalletRepository {
           privateKey: dto.cryptoWallet.privateKey.toNullableValue(),
           derivationPath: dto.cryptoWallet.derivationPath.toNullableValue(),
           derivationScheme: dto.cryptoWallet.derivationScheme.toNullableValue(),
-          derivationSchemeOther:
-              dto.cryptoWallet.derivationSchemeOther.toNullableValue(),
+          derivationSchemeOther: dto.cryptoWallet.derivationSchemeOther
+              .toNullableValue(),
           addresses: dto.cryptoWallet.addresses.toNullableValue(),
           xpub: dto.cryptoWallet.xpub.toNullableValue(),
           xprv: dto.cryptoWallet.xprv.toNullableValue(),
@@ -109,14 +115,15 @@ class CryptoWalletRepository {
   }
 
   Future<CryptoWalletViewDto?> getViewById(String itemId) async {
-    final query = db.select(db.vaultItems).join([
-      innerJoin(
-        db.cryptoWalletItems,
-        db.cryptoWalletItems.itemId.equalsExp(db.vaultItems.id),
-      ),
-    ])
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.cryptoWallet));
+    final query =
+        db.select(db.vaultItems).join([
+            innerJoin(
+              db.cryptoWalletItems,
+              db.cryptoWalletItems.itemId.equalsExp(db.vaultItems.id),
+            ),
+          ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.cryptoWallet));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
@@ -157,8 +164,9 @@ class CryptoWalletRepository {
   }
 
   Future<void> deletePermanently(String itemId) {
-    return (db.delete(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-        .go();
+    return (db.delete(
+      db.vaultItems,
+    )..where((tbl) => tbl.id.equals(itemId))).go();
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery(
@@ -169,34 +177,33 @@ class CryptoWalletRepository {
         db.cryptoWalletItems,
         db.cryptoWalletItems.itemId.equalsExp(db.vaultItems.id),
       ),
-    ])
-      ..addColumns([
-        db.vaultItems.id,
-        db.vaultItems.type,
-        db.vaultItems.name,
-        db.vaultItems.description,
-        db.vaultItems.categoryId,
-        db.vaultItems.iconRefId,
-        db.vaultItems.isFavorite,
-        db.vaultItems.isArchived,
-        db.vaultItems.isPinned,
-        db.vaultItems.isDeleted,
-        db.vaultItems.createdAt,
-        db.vaultItems.modifiedAt,
-        db.vaultItems.lastUsedAt,
-        db.vaultItems.archivedAt,
-        db.vaultItems.deletedAt,
-        db.vaultItems.recentScore,
-        db.cryptoWalletItems.walletType,
-        db.cryptoWalletItems.network,
-        db.cryptoWalletItems.addresses,
-        db.cryptoWalletItems.xpub,
-        db.cryptoWalletItems.hardwareDevice,
-        db.cryptoWalletItems.watchOnly,
-        expr.hasMnemonic,
-        expr.hasPrivateKey,
-        expr.hasXprv,
-      ]);
+    ])..addColumns([
+      db.vaultItems.id,
+      db.vaultItems.type,
+      db.vaultItems.name,
+      db.vaultItems.description,
+      db.vaultItems.categoryId,
+      db.vaultItems.iconRefId,
+      db.vaultItems.isFavorite,
+      db.vaultItems.isArchived,
+      db.vaultItems.isPinned,
+      db.vaultItems.isDeleted,
+      db.vaultItems.createdAt,
+      db.vaultItems.modifiedAt,
+      db.vaultItems.lastUsedAt,
+      db.vaultItems.archivedAt,
+      db.vaultItems.deletedAt,
+      db.vaultItems.recentScore,
+      db.cryptoWalletItems.walletType,
+      db.cryptoWalletItems.network,
+      db.cryptoWalletItems.addresses,
+      db.cryptoWalletItems.xpub,
+      db.cryptoWalletItems.hardwareDevice,
+      db.cryptoWalletItems.watchOnly,
+      expr.hasMnemonic,
+      expr.hasPrivateKey,
+      expr.hasXprv,
+    ]);
   }
 
   CryptoWalletCardDto _mapRowToCardDto(
@@ -243,9 +250,9 @@ class CryptoWalletRepository {
 
 class _CryptoWalletCardExpressions {
   _CryptoWalletCardExpressions(this.db)
-      : hasMnemonic = db.cryptoWalletItems.mnemonic.isNotNull(),
-        hasPrivateKey = db.cryptoWalletItems.privateKey.isNotNull(),
-        hasXprv = db.cryptoWalletItems.xprv.isNotNull();
+    : hasMnemonic = db.cryptoWalletItems.mnemonic.isNotNull(),
+      hasPrivateKey = db.cryptoWalletItems.privateKey.isNotNull(),
+      hasXprv = db.cryptoWalletItems.xprv.isNotNull();
 
   final MainStore db;
   final Expression<bool> hasMnemonic;

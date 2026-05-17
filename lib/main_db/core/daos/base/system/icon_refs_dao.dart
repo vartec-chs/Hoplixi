@@ -37,12 +37,14 @@ class IconRefsDao extends DatabaseAccessor<MainStore> with _$IconRefsDaoMixin {
   }
 
   Future<List<IconRefsData>> getIconRefsByCustomIconId(String customIconId) {
-    return (select(iconRefs)..where((t) => t.customIconId.equals(customIconId)))
-        .get();
+    return (select(
+      iconRefs,
+    )..where((t) => t.customIconId.equals(customIconId))).get();
   }
 
   Future<List<IconRefsData>> getIconRefsByType(IconSourceType type) {
-    return (select(iconRefs)..where((t) => t.iconSourceType.equals(type.name)))
-        .get();
+    return (select(
+      iconRefs,
+    )..where((t) => t.iconSourceType.equals(type.name))).get();
   }
 }

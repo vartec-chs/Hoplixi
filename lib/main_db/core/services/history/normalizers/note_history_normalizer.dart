@@ -19,32 +19,22 @@ class NoteHistoryNormalizer implements VaultHistoryTypeNormalizer {
   VaultItemType get type => VaultItemType.note;
 
   @override
-  Future<HistoryPayload?> normalizeHistory({
-    required String historyId,
-  }) async {
+  Future<HistoryPayload?> normalizeHistory({required String historyId}) async {
     final rows = await noteHistoryDao.getNoteHistoryByHistoryIds([historyId]);
     if (rows.isEmpty) return null;
 
     final item = rows.first;
 
-    return NoteHistoryPayload(
-      deltaJson: item.deltaJson,
-      content: item.content,
-    );
+    return NoteHistoryPayload(deltaJson: item.deltaJson, content: item.content);
   }
 
   @override
-  Future<HistoryPayload?> normalizeCurrent({
-    required String itemId,
-  }) async {
+  Future<HistoryPayload?> normalizeCurrent({required String itemId}) async {
     final view = await noteRepository.getViewById(itemId);
     if (view == null) return null;
 
     final item = view.note;
 
-    return NoteHistoryPayload(
-      deltaJson: item.deltaJson,
-      content: item.content,
-    );
+    return NoteHistoryPayload(deltaJson: item.deltaJson, content: item.content);
   }
 }

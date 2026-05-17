@@ -17,7 +17,9 @@ class ContactRepository {
       final now = DateTime.now();
       final itemId = const Uuid().v4();
 
-      await db.into(db.vaultItems).insert(
+      await db
+          .into(db.vaultItems)
+          .insert(
             VaultItemsCompanion.insert(
               id: Value(itemId),
               type: VaultItemType.contact,
@@ -32,7 +34,9 @@ class ContactRepository {
             ),
           );
 
-      await db.into(db.contactItems).insert(
+      await db
+          .into(db.contactItems)
+          .insert(
             ContactItemsCompanion.insert(
               itemId: itemId,
               firstName: dto.contact.firstName,
@@ -101,14 +105,15 @@ class ContactRepository {
   }
 
   Future<ContactViewDto?> getViewById(String itemId) async {
-    final query = db.select(db.vaultItems).join([
-      innerJoin(
-        db.contactItems,
-        db.contactItems.itemId.equalsExp(db.vaultItems.id),
-      ),
-    ])
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.contact));
+    final query =
+        db.select(db.vaultItems).join([
+            innerJoin(
+              db.contactItems,
+              db.contactItems.itemId.equalsExp(db.vaultItems.id),
+            ),
+          ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.contact));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
@@ -147,8 +152,9 @@ class ContactRepository {
   }
 
   Future<void> deletePermanently(String itemId) {
-    return (db.delete(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-        .go();
+    return (db.delete(
+      db.vaultItems,
+    )..where((tbl) => tbl.id.equals(itemId))).go();
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery() {
@@ -157,32 +163,31 @@ class ContactRepository {
         db.contactItems,
         db.contactItems.itemId.equalsExp(db.vaultItems.id),
       ),
-    ])
-      ..addColumns([
-        db.vaultItems.id,
-        db.vaultItems.type,
-        db.vaultItems.name,
-        db.vaultItems.description,
-        db.vaultItems.categoryId,
-        db.vaultItems.iconRefId,
-        db.vaultItems.isFavorite,
-        db.vaultItems.isArchived,
-        db.vaultItems.isPinned,
-        db.vaultItems.isDeleted,
-        db.vaultItems.createdAt,
-        db.vaultItems.modifiedAt,
-        db.vaultItems.lastUsedAt,
-        db.vaultItems.archivedAt,
-        db.vaultItems.deletedAt,
-        db.vaultItems.recentScore,
-        db.contactItems.firstName,
-        db.contactItems.middleName,
-        db.contactItems.lastName,
-        db.contactItems.company,
-        db.contactItems.email,
-        db.contactItems.phone,
-        db.contactItems.isEmergencyContact,
-      ]);
+    ])..addColumns([
+      db.vaultItems.id,
+      db.vaultItems.type,
+      db.vaultItems.name,
+      db.vaultItems.description,
+      db.vaultItems.categoryId,
+      db.vaultItems.iconRefId,
+      db.vaultItems.isFavorite,
+      db.vaultItems.isArchived,
+      db.vaultItems.isPinned,
+      db.vaultItems.isDeleted,
+      db.vaultItems.createdAt,
+      db.vaultItems.modifiedAt,
+      db.vaultItems.lastUsedAt,
+      db.vaultItems.archivedAt,
+      db.vaultItems.deletedAt,
+      db.vaultItems.recentScore,
+      db.contactItems.firstName,
+      db.contactItems.middleName,
+      db.contactItems.lastName,
+      db.contactItems.company,
+      db.contactItems.email,
+      db.contactItems.phone,
+      db.contactItems.isEmergencyContact,
+    ]);
   }
 
   ContactCardDto _mapRowToCardDto(TypedResult row) {

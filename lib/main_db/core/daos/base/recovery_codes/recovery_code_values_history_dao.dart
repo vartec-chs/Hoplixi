@@ -4,7 +4,6 @@ import '../../../models/dto_history/cards/recovery_codes_history_card_dto.dart';
 import '../../../main_store.dart';
 import '../../../tables/recovery_codes/recovery_code_values_history.dart';
 
-
 part 'recovery_code_values_history_dao.g.dart';
 
 @DriftAccessor(tables: [RecoveryCodeValuesHistory])
@@ -29,8 +28,9 @@ class RecoveryCodeValuesHistoryDao extends DatabaseAccessor<MainStore>
   Future<RecoveryCodeValuesHistoryData?> getRecoveryCodeValueHistoryById(
     int id,
   ) {
-    return (select(recoveryCodeValuesHistory)..where((tbl) => tbl.id.equals(id)))
-        .getSingleOrNull();
+    return (select(
+      recoveryCodeValuesHistory,
+    )..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
   }
 
   Future<List<RecoveryCodeValuesHistoryData>> getRecoveryCodeValuesByHistoryId(
@@ -43,9 +43,7 @@ class RecoveryCodeValuesHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<List<RecoveryCodeValuesHistoryData>>
-      getUsedRecoveryCodeValuesByHistoryId(
-    String historyId,
-  ) {
+  getUsedRecoveryCodeValuesByHistoryId(String historyId) {
     return (select(recoveryCodeValuesHistory)
           ..where((tbl) => tbl.historyId.equals(historyId))
           ..where((tbl) => tbl.used.equals(true))
@@ -54,9 +52,7 @@ class RecoveryCodeValuesHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<List<RecoveryCodeValuesHistoryData>>
-      getUnusedRecoveryCodeValuesByHistoryId(
-    String historyId,
-  ) {
+  getUnusedRecoveryCodeValuesByHistoryId(String historyId) {
     return (select(recoveryCodeValuesHistory)
           ..where((tbl) => tbl.historyId.equals(historyId))
           ..where((tbl) => tbl.used.equals(false))
@@ -65,32 +61,35 @@ class RecoveryCodeValuesHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<int> deleteRecoveryCodeValueHistoryById(int id) {
-    return (delete(recoveryCodeValuesHistory)..where((tbl) => tbl.id.equals(id)))
-        .go();
+    return (delete(
+      recoveryCodeValuesHistory,
+    )..where((tbl) => tbl.id.equals(id))).go();
   }
 
   Future<int> deleteRecoveryCodeValuesHistoryByHistoryId(String historyId) {
-    return (delete(recoveryCodeValuesHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .go();
+    return (delete(
+      recoveryCodeValuesHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).go();
   }
 
-  Future<List<RecoveryCodeValueHistorySecretDto>> getRecoveryCodeSecretsByHistoryId(
-    String historyId,
-  ) async {
-    final rows = await (select(recoveryCodeValuesHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId))
-          ..orderBy([(tbl) => OrderingTerm.asc(tbl.position)]))
-        .get();
+  Future<List<RecoveryCodeValueHistorySecretDto>>
+  getRecoveryCodeSecretsByHistoryId(String historyId) async {
+    final rows =
+        await (select(recoveryCodeValuesHistory)
+              ..where((tbl) => tbl.historyId.equals(historyId))
+              ..orderBy([(tbl) => OrderingTerm.asc(tbl.position)]))
+            .get();
 
     return rows
-        .map((r) => RecoveryCodeValueHistorySecretDto(
-              id: r.id,
-              code: r.code ?? '',
-              used: r.used,
-              usedAt: r.usedAt,
-              position: r.position,
-            ))
+        .map(
+          (r) => RecoveryCodeValueHistorySecretDto(
+            id: r.id,
+            code: r.code ?? '',
+            used: r.used,
+            usedAt: r.usedAt,
+            position: r.position,
+          ),
+        )
         .toList();
   }
 }

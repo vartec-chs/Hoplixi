@@ -3,10 +3,7 @@ import '../models/history_field_snapshot.dart';
 import '../models/history_payload.dart';
 
 class NoteHistoryPayload extends HistoryPayload {
-  const NoteHistoryPayload({
-    this.deltaJson,
-    this.content,
-  });
+  const NoteHistoryPayload({this.deltaJson, this.content});
 
   final String? deltaJson;
   final String? content;

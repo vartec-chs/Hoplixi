@@ -1,3 +1,4 @@
+import '../../../tables/vault_items/vault_events_history.dart';
 import '../../../tables/vault_items/vault_items.dart';
 import 'history_field_snapshot.dart';
 
@@ -6,6 +7,7 @@ class VaultItemBaseHistoryPayload {
     required this.historyId,
     required this.itemId,
     required this.type,
+    required this.action,
     required this.name,
     this.description,
     this.categoryId,
@@ -28,6 +30,7 @@ class VaultItemBaseHistoryPayload {
   final String historyId;
   final String itemId;
   final VaultItemType type;
+  final VaultEventHistoryAction action;
   final String name;
   final String? description;
   final String? categoryId;
@@ -48,11 +51,7 @@ class VaultItemBaseHistoryPayload {
 
   List<HistoryFieldSnapshot<Object?>> diffFields() {
     return [
-      HistoryFieldSnapshot<String>(
-        key: 'name',
-        label: 'Name',
-        value: name,
-      ),
+      HistoryFieldSnapshot<String>(key: 'name', label: 'Name', value: name),
       HistoryFieldSnapshot<String>(
         key: 'description',
         label: 'Description',

@@ -25,13 +25,12 @@ sealed class StoreMetaDto with _$StoreMetaDto {
       _$StoreMetaDtoFromJson(json);
 }
 
-@freezed 
+@freezed
 sealed class StoreSettingDto with _$StoreSettingDto {
   const factory StoreSettingDto({
     required String key,
     required String value,
-    @Default(StoreSettingValueType.string)
-    StoreSettingValueType valueType,
+    @Default(StoreSettingValueType.string) StoreSettingValueType valueType,
     String? description,
     DateTime? createdAt,
     DateTime? modifiedAt,
@@ -62,5 +61,3 @@ sealed class PatchStoreSettingDto with _$PatchStoreSettingDto {
     @Default(FieldUpdate.keep()) FieldUpdate<String> description,
   }) = _PatchStoreSettingDto;
 }
-
-

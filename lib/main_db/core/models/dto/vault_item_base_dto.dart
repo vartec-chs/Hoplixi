@@ -41,7 +41,9 @@ abstract interface class VaultEntityViewDto {
 }
 
 @freezed
-sealed class VaultItemViewDto with _$VaultItemViewDto implements VaultEntityViewDto {
+sealed class VaultItemViewDto
+    with _$VaultItemViewDto
+    implements VaultEntityViewDto {
   const factory VaultItemViewDto({
     required String itemId,
     required VaultItemType type,
@@ -82,7 +84,9 @@ abstract interface class VaultEntityCardDto {
 }
 
 @freezed
-sealed class VaultItemCardDto with _$VaultItemCardDto implements VaultEntityCardDto {
+sealed class VaultItemCardDto
+    with _$VaultItemCardDto
+    implements VaultEntityCardDto {
   const factory VaultItemCardDto({
     required String itemId,
     required VaultItemType type,

@@ -70,7 +70,9 @@ class CategoryRepository {
           if (currentParentId == dto.id) {
             throw ArgumentError('Category tree cycle detected');
           }
-          final parent = await db.categoriesDao.getCategoryById(currentParentId);
+          final parent = await db.categoriesDao.getCategoryById(
+            currentParentId,
+          );
           currentParentId = parent?.parentId;
         }
       }

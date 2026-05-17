@@ -45,7 +45,8 @@ sealed class CertificateHistoryViewDto with _$CertificateHistoryViewDto {
 }
 
 @freezed
-sealed class CertificateHistoryCardDataDto with _$CertificateHistoryCardDataDto {
+sealed class CertificateHistoryCardDataDto
+    with _$CertificateHistoryCardDataDto {
   const factory CertificateHistoryCardDataDto({
     CertificateFormat? certificateFormat,
     String? certificateFormatOther,

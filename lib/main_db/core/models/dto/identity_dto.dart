@@ -62,7 +62,9 @@ sealed class CreateIdentityDto with _$CreateIdentityDto {
 }
 
 @freezed
-sealed class IdentityViewDto with _$IdentityViewDto implements VaultEntityViewDto {
+sealed class IdentityViewDto
+    with _$IdentityViewDto
+    implements VaultEntityViewDto {
   const factory IdentityViewDto({
     required VaultItemViewDto item,
     required IdentityDataDto identity,
@@ -73,7 +75,9 @@ sealed class IdentityViewDto with _$IdentityViewDto implements VaultEntityViewDt
 }
 
 @freezed
-sealed class IdentityCardDto with _$IdentityCardDto implements VaultEntityCardDto {
+sealed class IdentityCardDto
+    with _$IdentityCardDto
+    implements VaultEntityCardDto {
   const factory IdentityCardDto({
     required VaultItemCardDto item,
     required IdentityCardDataDto identity,
@@ -113,5 +117,3 @@ sealed class PatchIdentityDto with _$PatchIdentityDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchIdentityDto;
 }
-
-

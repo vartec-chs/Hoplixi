@@ -21,6 +21,7 @@ sealed class VaultItemCustomFieldHistoryCardDataDto
     required DateTime historyCreatedAt,
   }) = _VaultItemCustomFieldHistoryCardDataDto;
 
-  factory VaultItemCustomFieldHistoryCardDataDto.fromJson(Map<String, dynamic> json) =>
-      _$VaultItemCustomFieldHistoryCardDataDtoFromJson(json);
+  factory VaultItemCustomFieldHistoryCardDataDto.fromJson(
+    Map<String, dynamic> json,
+  ) => _$VaultItemCustomFieldHistoryCardDataDtoFromJson(json);
 }

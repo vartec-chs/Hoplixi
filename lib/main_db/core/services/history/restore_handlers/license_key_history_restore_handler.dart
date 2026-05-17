@@ -12,9 +12,7 @@ import '../payloads/license_key_history_payload.dart';
 import 'vault_history_restore_handler.dart';
 
 class LicenseKeyHistoryRestoreHandler implements VaultHistoryRestoreHandler {
-  LicenseKeyHistoryRestoreHandler({
-    required this.licenseKeyItemsDao,
-  });
+  LicenseKeyHistoryRestoreHandler({required this.licenseKeyItemsDao});
 
   final LicenseKeyItemsDao licenseKeyItemsDao;
 

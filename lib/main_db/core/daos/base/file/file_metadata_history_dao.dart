@@ -18,50 +18,57 @@ class FileMetadataHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<FileMetadataHistoryData?> getFileMetadataHistoryById(String id) {
-    return (select(fileMetadataHistory)..where((tbl) => tbl.id.equals(id)))
-        .getSingleOrNull();
+    return (select(
+      fileMetadataHistory,
+    )..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
   }
 
   Future<List<FileMetadataHistoryData>> getFileMetadataHistoryByHistoryId(
     String historyId,
   ) {
-    return (select(fileMetadataHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .get();
+    return (select(
+      fileMetadataHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).get();
   }
 
   Future<List<FileMetadataHistoryData>> getFileMetadataHistoryByOwner({
     required FileMetadataHistoryOwnerKind ownerKind,
     required String? ownerId,
   }) {
-    return (select(fileMetadataHistory)
-          ..where((tbl) {
-            final kindMatch = tbl.ownerKind.equalsValue(ownerKind);
-            final idMatch =
-                ownerId == null ? tbl.ownerId.isNull() : tbl.ownerId.equals(ownerId);
-            return kindMatch & idMatch;
-          }))
+    return (select(fileMetadataHistory)..where((tbl) {
+          final kindMatch = tbl.ownerKind.equalsValue(ownerKind);
+          final idMatch = ownerId == null
+              ? tbl.ownerId.isNull()
+              : tbl.ownerId.equals(ownerId);
+          return kindMatch & idMatch;
+        }))
         .get();
   }
 
   Future<int> deleteFileMetadataHistoryById(String id) {
-    return (delete(fileMetadataHistory)..where((tbl) => tbl.id.equals(id))).go();
+    return (delete(
+      fileMetadataHistory,
+    )..where((tbl) => tbl.id.equals(id))).go();
   }
 
   Future<int> deleteFileMetadataHistoryByHistoryId(String historyId) {
-    return (delete(fileMetadataHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .go();
+    return (delete(
+      fileMetadataHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).go();
   }
-
 
   // --- HISTORY CARD BATCH METHODS ---
-  Future<List<FileMetadataHistoryData>> getFileHistoryByHistoryIds(List<String> historyIds) {
+  Future<List<FileMetadataHistoryData>> getFileHistoryByHistoryIds(
+    List<String> historyIds,
+  ) {
     if (historyIds.isEmpty) return Future.value(const []);
-    return (select(fileMetadataHistory)..where((tbl) => tbl.historyId.isIn(historyIds))).get();
+    return (select(
+      fileMetadataHistory,
+    )..where((tbl) => tbl.historyId.isIn(historyIds))).get();
   }
 
-  Future<Map<String, FileHistoryCardDataDto>> getFileHistoryCardDataByHistoryIds(List<String> historyIds) async {
+  Future<Map<String, FileHistoryCardDataDto>>
+  getFileHistoryCardDataByHistoryIds(List<String> historyIds) async {
     if (historyIds.isEmpty) return const {};
 
     final hasFilePathExpr = fileMetadataHistory.filePath.isNotNull();
@@ -93,11 +100,18 @@ class FileMetadataHistoryDao extends DatabaseAccessor<MainStore>
           mimeType: row.read(fileMetadataHistory.mimeType),
           fileSize: row.read(fileMetadataHistory.fileSize),
           sha256: row.read(fileMetadataHistory.sha256),
-          availabilityStatus: row.readWithConverter<FileAvailabilityStatus?, String>(fileMetadataHistory.availabilityStatus),
-          integrityStatus: row.readWithConverter<FileIntegrityStatus?, String>(fileMetadataHistory.integrityStatus),
+          availabilityStatus: row
+              .readWithConverter<FileAvailabilityStatus?, String>(
+                fileMetadataHistory.availabilityStatus,
+              ),
+          integrityStatus: row.readWithConverter<FileIntegrityStatus?, String>(
+            fileMetadataHistory.integrityStatus,
+          ),
           missingDetectedAt: row.read(fileMetadataHistory.missingDetectedAt),
           deletedAt: row.read(fileMetadataHistory.deletedAt),
-          lastIntegrityCheckAt: row.read(fileMetadataHistory.lastIntegrityCheckAt),
+          lastIntegrityCheckAt: row.read(
+            fileMetadataHistory.lastIntegrityCheckAt,
+          ),
           snapshotCreatedAt: row.read(fileMetadataHistory.snapshotCreatedAt),
           hasFilePath: row.read(hasFilePathExpr) ?? false,
         ),
@@ -105,11 +119,11 @@ class FileMetadataHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<String?> getFilePathByHistoryId(String historyId) async {
-    final row = await (selectOnly(fileMetadataHistory)
-          ..addColumns([fileMetadataHistory.filePath])
-          ..where(fileMetadataHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(fileMetadataHistory)
+              ..addColumns([fileMetadataHistory.filePath])
+              ..where(fileMetadataHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
     return row?.read(fileMetadataHistory.filePath);
   }
-
 }

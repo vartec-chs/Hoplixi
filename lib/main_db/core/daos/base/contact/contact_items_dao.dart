@@ -18,26 +18,31 @@ class ContactItemsDao extends DatabaseAccessor<MainStore>
     String itemId,
     ContactItemsCompanion companion,
   ) {
-    return (update(contactItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .write(companion);
+    return (update(
+      contactItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).write(companion);
   }
 
   Future<ContactItemsData?> getContactByItemId(String itemId) {
-    return (select(contactItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .getSingleOrNull();
+    return (select(
+      contactItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).getSingleOrNull();
   }
 
   Future<bool> existsContactByItemId(String itemId) async {
-    final row = await (selectOnly(contactItems)
-          ..addColumns([contactItems.itemId])
-          ..where(contactItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(contactItems)
+              ..addColumns([contactItems.itemId])
+              ..where(contactItems.itemId.equals(itemId)))
+            .getSingleOrNull();
 
     return row != null;
   }
 
   Future<int> deleteContactByItemId(String itemId) {
-    return (delete(contactItems)..where((tbl) => tbl.itemId.equals(itemId))).go();
+    return (delete(
+      contactItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).go();
   }
 
   Future<void> upsertContactItem(ContactItemsCompanion companion) {

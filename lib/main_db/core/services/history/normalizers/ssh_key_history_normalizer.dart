@@ -19,10 +19,10 @@ class SshKeyHistoryNormalizer implements VaultHistoryTypeNormalizer {
   VaultItemType get type => VaultItemType.sshKey;
 
   @override
-  Future<HistoryPayload?> normalizeHistory({
-    required String historyId,
-  }) async {
-    final rows = await sshKeyHistoryDao.getSshKeyHistoryByHistoryIds([historyId]);
+  Future<HistoryPayload?> normalizeHistory({required String historyId}) async {
+    final rows = await sshKeyHistoryDao.getSshKeyHistoryByHistoryIds([
+      historyId,
+    ]);
     if (rows.isEmpty) return null;
 
     final item = rows.first;
@@ -37,9 +37,7 @@ class SshKeyHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }
 
   @override
-  Future<HistoryPayload?> normalizeCurrent({
-    required String itemId,
-  }) async {
+  Future<HistoryPayload?> normalizeCurrent({required String itemId}) async {
     final view = await sshKeyRepository.getViewById(itemId);
     if (view == null) return null;
 

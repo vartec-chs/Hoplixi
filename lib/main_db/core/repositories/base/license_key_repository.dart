@@ -18,7 +18,9 @@ class LicenseKeyRepository {
       final now = DateTime.now();
       final itemId = const Uuid().v4();
 
-      await db.into(db.vaultItems).insert(
+      await db
+          .into(db.vaultItems)
+          .insert(
             VaultItemsCompanion.insert(
               id: Value(itemId),
               type: VaultItemType.licenseKey,
@@ -33,7 +35,9 @@ class LicenseKeyRepository {
             ),
           );
 
-      await db.into(db.licenseKeyItems).insert(
+      await db
+          .into(db.licenseKeyItems)
+          .insert(
             LicenseKeyItemsCompanion.insert(
               itemId: itemId,
               productName: dto.licenseKey.productName,
@@ -66,8 +70,9 @@ class LicenseKeyRepository {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
 
-      await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-          .write(
+      await (db.update(
+        db.vaultItems,
+      )..where((tbl) => tbl.id.equals(itemId))).write(
         VaultItemsCompanion(
           name: dto.item.name.toRequiredValue(),
           description: dto.item.description.toNullableValue(),
@@ -79,9 +84,9 @@ class LicenseKeyRepository {
         ),
       );
 
-      await (db.update(db.licenseKeyItems)
-            ..where((tbl) => tbl.itemId.equals(itemId)))
-          .write(
+      await (db.update(
+        db.licenseKeyItems,
+      )..where((tbl) => tbl.itemId.equals(itemId))).write(
         LicenseKeyItemsCompanion(
           productName: dto.licenseKey.productName.toRequiredValue(),
           vendor: dto.licenseKey.vendor.toNullableValue(),
@@ -115,14 +120,15 @@ class LicenseKeyRepository {
   }
 
   Future<LicenseKeyViewDto?> getViewById(String itemId) async {
-    final query = db.select(db.vaultItems).join([
-      innerJoin(
-        db.licenseKeyItems,
-        db.licenseKeyItems.itemId.equalsExp(db.vaultItems.id),
-      ),
-    ])
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.licenseKey));
+    final query =
+        db.select(db.vaultItems).join([
+            innerJoin(
+              db.licenseKeyItems,
+              db.licenseKeyItems.itemId.equalsExp(db.vaultItems.id),
+            ),
+          ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.licenseKey));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
@@ -163,8 +169,9 @@ class LicenseKeyRepository {
   }
 
   Future<void> deletePermanently(String itemId) {
-    return (db.delete(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-        .go();
+    return (db.delete(
+      db.vaultItems,
+    )..where((tbl) => tbl.id.equals(itemId))).go();
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery(
@@ -175,32 +182,31 @@ class LicenseKeyRepository {
         db.licenseKeyItems,
         db.licenseKeyItems.itemId.equalsExp(db.vaultItems.id),
       ),
-    ])
-      ..addColumns([
-        db.vaultItems.id,
-        db.vaultItems.type,
-        db.vaultItems.name,
-        db.vaultItems.description,
-        db.vaultItems.categoryId,
-        db.vaultItems.iconRefId,
-        db.vaultItems.isFavorite,
-        db.vaultItems.isArchived,
-        db.vaultItems.isPinned,
-        db.vaultItems.isDeleted,
-        db.vaultItems.createdAt,
-        db.vaultItems.modifiedAt,
-        db.vaultItems.lastUsedAt,
-        db.vaultItems.archivedAt,
-        db.vaultItems.deletedAt,
-        db.vaultItems.recentScore,
-        db.licenseKeyItems.productName,
-        db.licenseKeyItems.vendor,
-        db.licenseKeyItems.licenseType,
-        db.licenseKeyItems.accountEmail,
-        db.licenseKeyItems.accountUsername,
-        db.licenseKeyItems.validTo,
-        expr.hasKey,
-      ]);
+    ])..addColumns([
+      db.vaultItems.id,
+      db.vaultItems.type,
+      db.vaultItems.name,
+      db.vaultItems.description,
+      db.vaultItems.categoryId,
+      db.vaultItems.iconRefId,
+      db.vaultItems.isFavorite,
+      db.vaultItems.isArchived,
+      db.vaultItems.isPinned,
+      db.vaultItems.isDeleted,
+      db.vaultItems.createdAt,
+      db.vaultItems.modifiedAt,
+      db.vaultItems.lastUsedAt,
+      db.vaultItems.archivedAt,
+      db.vaultItems.deletedAt,
+      db.vaultItems.recentScore,
+      db.licenseKeyItems.productName,
+      db.licenseKeyItems.vendor,
+      db.licenseKeyItems.licenseType,
+      db.licenseKeyItems.accountEmail,
+      db.licenseKeyItems.accountUsername,
+      db.licenseKeyItems.validTo,
+      expr.hasKey,
+    ]);
   }
 
   LicenseKeyCardDto _mapRowToCardDto(
@@ -243,7 +249,7 @@ class LicenseKeyRepository {
 
 class _LicenseKeyCardExpressions {
   _LicenseKeyCardExpressions(this.db)
-      : hasKey = db.licenseKeyItems.licenseKey.isNotNull();
+    : hasKey = db.licenseKeyItems.licenseKey.isNotNull();
 
   final MainStore db;
   final Expression<bool> hasKey;

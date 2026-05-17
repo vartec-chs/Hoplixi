@@ -18,33 +18,39 @@ class SshKeyItemsDao extends DatabaseAccessor<MainStore>
     String itemId,
     SshKeyItemsCompanion companion,
   ) {
-    return (update(sshKeyItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .write(companion);
+    return (update(
+      sshKeyItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).write(companion);
   }
 
   Future<SshKeyItemsData?> getSshKeyByItemId(String itemId) {
-    return (select(sshKeyItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .getSingleOrNull();
+    return (select(
+      sshKeyItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).getSingleOrNull();
   }
 
   Future<bool> existsSshKeyByItemId(String itemId) async {
-    final row = await (selectOnly(sshKeyItems)
-          ..addColumns([sshKeyItems.itemId])
-          ..where(sshKeyItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(sshKeyItems)
+              ..addColumns([sshKeyItems.itemId])
+              ..where(sshKeyItems.itemId.equals(itemId)))
+            .getSingleOrNull();
 
     return row != null;
   }
 
   Future<int> deleteSshKeyByItemId(String itemId) {
-    return (delete(sshKeyItems)..where((tbl) => tbl.itemId.equals(itemId))).go();
+    return (delete(
+      sshKeyItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).go();
   }
 
   Future<String?> getPrivateKeyByItemId(String itemId) async {
-    final row = await (selectOnly(sshKeyItems)
-          ..addColumns([sshKeyItems.privateKey])
-          ..where(sshKeyItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(sshKeyItems)
+              ..addColumns([sshKeyItems.privateKey])
+              ..where(sshKeyItems.itemId.equals(itemId)))
+            .getSingleOrNull();
     return row?.read(sshKeyItems.privateKey);
   }
 

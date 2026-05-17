@@ -17,8 +17,7 @@ class NullableUint8ListBase64Converter
   const NullableUint8ListBase64Converter();
 
   @override
-  Uint8List? fromJson(String? json) =>
-      json != null ? base64Decode(json) : null;
+  Uint8List? fromJson(String? json) => json != null ? base64Decode(json) : null;
 
   @override
   String? toJson(Uint8List? object) =>

@@ -21,24 +21,22 @@ class FileHistoryNormalizer implements VaultHistoryTypeNormalizer {
   VaultItemType get type => VaultItemType.file;
 
   @override
-  Future<HistoryPayload?> normalizeHistory({
-    required String historyId,
-  }) async {
-    final historyList = await fileHistoryDao.getFileHistoryByHistoryIds([historyId]);
+  Future<HistoryPayload?> normalizeHistory({required String historyId}) async {
+    final historyList = await fileHistoryDao.getFileHistoryByHistoryIds([
+      historyId,
+    ]);
     if (historyList.isEmpty) return null;
 
     final history = historyList.first;
     if (history.metadataHistoryId == null) {
-      return FileHistoryPayload(
-        metadataHistoryId: null,
-      );
+      return FileHistoryPayload(metadataHistoryId: null);
     }
 
-    final metaHistory = await fileMetadataHistoryDao.getFileMetadataHistoryById(history.metadataHistoryId!);
+    final metaHistory = await fileMetadataHistoryDao.getFileMetadataHistoryById(
+      history.metadataHistoryId!,
+    );
     if (metaHistory == null) {
-      return FileHistoryPayload(
-        metadataHistoryId: history.metadataHistoryId,
-      );
+      return FileHistoryPayload(metadataHistoryId: history.metadataHistoryId);
     }
 
     return FileHistoryPayload(
@@ -60,9 +58,7 @@ class FileHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }
 
   @override
-  Future<HistoryPayload?> normalizeCurrent({
-    required String itemId,
-  }) async {
+  Future<HistoryPayload?> normalizeCurrent({required String itemId}) async {
     final view = await fileRepository.getViewById(itemId);
     if (view == null) return null;
 

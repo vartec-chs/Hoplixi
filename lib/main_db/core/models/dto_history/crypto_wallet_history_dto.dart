@@ -41,7 +41,8 @@ sealed class CryptoWalletHistoryViewDto with _$CryptoWalletHistoryViewDto {
 }
 
 @freezed
-sealed class CryptoWalletHistoryCardDataDto with _$CryptoWalletHistoryCardDataDto {
+sealed class CryptoWalletHistoryCardDataDto
+    with _$CryptoWalletHistoryCardDataDto {
   const factory CryptoWalletHistoryCardDataDto({
     CryptoWalletType? walletType,
     String? walletTypeOther,

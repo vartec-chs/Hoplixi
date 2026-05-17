@@ -22,5 +22,3 @@ sealed class CategoryDto with _$CategoryDto {
   factory CategoryDto.fromJson(Map<String, dynamic> json) =>
       _$CategoryDtoFromJson(json);
 }
-
-

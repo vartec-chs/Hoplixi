@@ -8,9 +8,7 @@ class SnapshotRelationsRepository {
 
   SnapshotRelationsRepository(this.db);
 
-  Future<String?> snapshotCategoryForItem({
-    required String? categoryId,
-  }) async {
+  Future<String?> snapshotCategoryForItem({required String? categoryId}) async {
     if (categoryId == null) return null;
 
     final category = await db.categoriesDao.getCategoryById(categoryId);

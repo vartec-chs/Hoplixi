@@ -75,12 +75,20 @@ sealed class LicenseKeyFilter with _$LicenseKeyFilter {
 
     return LicenseKeyFilter(
       base: base ?? const BaseFilter(),
-      productName: normalizedProduct?.isEmpty == true ? null : normalizedProduct,
+      productName: normalizedProduct?.isEmpty == true
+          ? null
+          : normalizedProduct,
       vendor: normalizedVendor?.isEmpty == true ? null : normalizedVendor,
       licenseType: licenseType,
-      accountEmail: normalizedAccountEmail?.isEmpty == true ? null : normalizedAccountEmail,
-      accountUsername: normalizedAccountUser?.isEmpty == true ? null : normalizedAccountUser,
-      purchaseEmail: normalizedPurchaseEmail?.isEmpty == true ? null : normalizedPurchaseEmail,
+      accountEmail: normalizedAccountEmail?.isEmpty == true
+          ? null
+          : normalizedAccountEmail,
+      accountUsername: normalizedAccountUser?.isEmpty == true
+          ? null
+          : normalizedAccountUser,
+      purchaseEmail: normalizedPurchaseEmail?.isEmpty == true
+          ? null
+          : normalizedPurchaseEmail,
       orderNumber: normalizedOrder?.isEmpty == true ? null : normalizedOrder,
       purchaseDateAfter: purchaseDateAfter,
       purchaseDateBefore: purchaseDateBefore,

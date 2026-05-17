@@ -15,15 +15,19 @@ sealed class SshKeyHistoryCardDataDto with _$SshKeyHistoryCardDataDto {
     @Default(false) bool hasPrivateKey,
   }) = _SshKeyHistoryCardDataDto;
 
-  factory SshKeyHistoryCardDataDto.fromJson(Map<String, dynamic> json) => _$SshKeyHistoryCardDataDtoFromJson(json);
+  factory SshKeyHistoryCardDataDto.fromJson(Map<String, dynamic> json) =>
+      _$SshKeyHistoryCardDataDtoFromJson(json);
 }
 
 @freezed
-sealed class SshKeyHistoryCardDto with _$SshKeyHistoryCardDto implements VaultHistoryCardDto {
+sealed class SshKeyHistoryCardDto
+    with _$SshKeyHistoryCardDto
+    implements VaultHistoryCardDto {
   const factory SshKeyHistoryCardDto({
     required VaultSnapshotCardDto snapshot,
     required SshKeyHistoryCardDataDto sshkey,
   }) = _SshKeyHistoryCardDto;
 
-  factory SshKeyHistoryCardDto.fromJson(Map<String, dynamic> json) => _$SshKeyHistoryCardDtoFromJson(json);
+  factory SshKeyHistoryCardDto.fromJson(Map<String, dynamic> json) =>
+      _$SshKeyHistoryCardDtoFromJson(json);
 }

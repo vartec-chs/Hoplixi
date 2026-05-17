@@ -97,14 +97,15 @@ class RecoveryCodesRepository {
   }
 
   Future<RecoveryCodesViewDto?> getViewById(String itemId) async {
-    final query = db.select(db.vaultItems).join([
-      innerJoin(
-        db.recoveryCodesItems,
-        db.recoveryCodesItems.itemId.equalsExp(db.vaultItems.id),
-      ),
-    ])
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.recoveryCodes));
+    final query =
+        db.select(db.vaultItems).join([
+            innerJoin(
+              db.recoveryCodesItems,
+              db.recoveryCodesItems.itemId.equalsExp(db.vaultItems.id),
+            ),
+          ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.recoveryCodes));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
@@ -112,7 +113,9 @@ class RecoveryCodesRepository {
     final item = row.readTable(db.vaultItems);
     final recoveryCodesItem = row.readTable(db.recoveryCodesItems);
 
-    final codesData = await db.recoveryCodesDao.getRecoveryCodesByItemId(itemId);
+    final codesData = await db.recoveryCodesDao.getRecoveryCodesByItemId(
+      itemId,
+    );
 
     return RecoveryCodesViewDto(
       item: item.toVaultItemViewDto(),
@@ -146,8 +149,9 @@ class RecoveryCodesRepository {
   }
 
   Future<void> deletePermanently(String itemId) {
-    return (db.delete(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-        .go();
+    return (db.delete(
+      db.vaultItems,
+    )..where((tbl) => tbl.id.equals(itemId))).go();
   }
 
   // --- Методы управления кодами ---
@@ -178,13 +182,15 @@ class RecoveryCodesRepository {
     await db.transaction(() async {
       await db.recoveryCodesDao.insertRecoveryCodesBatch(
         codes
-            .map((c) => RecoveryCodesCompanion.insert(
-                  itemId: itemId,
-                  code: c.code,
-                  used: Value(c.used),
-                  usedAt: Value(c.usedAt),
-                  position: Value(c.position),
-                ))
+            .map(
+              (c) => RecoveryCodesCompanion.insert(
+                itemId: itemId,
+                code: c.code,
+                used: Value(c.used),
+                usedAt: Value(c.usedAt),
+                position: Value(c.position),
+              ),
+            )
             .toList(),
       );
       await _updateModifiedAt(itemId);
@@ -208,9 +214,7 @@ class RecoveryCodesRepository {
     });
   }
 
-  Future<int> markCodeUnused({
-    required int codeId,
-  }) async {
+  Future<int> markCodeUnused({required int codeId}) async {
     return db.transaction(() async {
       final code = await db.recoveryCodesDao.getRecoveryCodeById(codeId);
       if (code == null) return 0;
@@ -241,13 +245,15 @@ class RecoveryCodesRepository {
       if (codes.isNotEmpty) {
         await db.recoveryCodesDao.insertRecoveryCodesBatch(
           codes
-              .map((c) => RecoveryCodesCompanion.insert(
-                    itemId: itemId,
-                    code: c.code,
-                    used: Value(c.used),
-                    usedAt: Value(c.usedAt),
-                    position: Value(c.position),
-                  ))
+              .map(
+                (c) => RecoveryCodesCompanion.insert(
+                  itemId: itemId,
+                  code: c.code,
+                  used: Value(c.used),
+                  usedAt: Value(c.usedAt),
+                  position: Value(c.position),
+                ),
+              )
               .toList(),
         );
       }
@@ -265,29 +271,28 @@ class RecoveryCodesRepository {
         db.recoveryCodesItems,
         db.recoveryCodesItems.itemId.equalsExp(db.vaultItems.id),
       ),
-    ])
-      ..addColumns([
-        db.vaultItems.id,
-        db.vaultItems.type,
-        db.vaultItems.name,
-        db.vaultItems.description,
-        db.vaultItems.categoryId,
-        db.vaultItems.iconRefId,
-        db.vaultItems.isFavorite,
-        db.vaultItems.isArchived,
-        db.vaultItems.isPinned,
-        db.vaultItems.isDeleted,
-        db.vaultItems.createdAt,
-        db.vaultItems.modifiedAt,
-        db.vaultItems.lastUsedAt,
-        db.vaultItems.archivedAt,
-        db.vaultItems.deletedAt,
-        db.vaultItems.recentScore,
-        db.recoveryCodesItems.codesCount,
-        db.recoveryCodesItems.usedCount,
-        db.recoveryCodesItems.generatedAt,
-        db.recoveryCodesItems.oneTime,
-      ]);
+    ])..addColumns([
+      db.vaultItems.id,
+      db.vaultItems.type,
+      db.vaultItems.name,
+      db.vaultItems.description,
+      db.vaultItems.categoryId,
+      db.vaultItems.iconRefId,
+      db.vaultItems.isFavorite,
+      db.vaultItems.isArchived,
+      db.vaultItems.isPinned,
+      db.vaultItems.isDeleted,
+      db.vaultItems.createdAt,
+      db.vaultItems.modifiedAt,
+      db.vaultItems.lastUsedAt,
+      db.vaultItems.archivedAt,
+      db.vaultItems.deletedAt,
+      db.vaultItems.recentScore,
+      db.recoveryCodesItems.codesCount,
+      db.recoveryCodesItems.usedCount,
+      db.recoveryCodesItems.generatedAt,
+      db.recoveryCodesItems.oneTime,
+    ]);
   }
 
   RecoveryCodesCardDto _mapRowToCardDto(TypedResult row) {

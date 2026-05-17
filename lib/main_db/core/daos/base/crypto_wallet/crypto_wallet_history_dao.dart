@@ -11,40 +11,48 @@ class CryptoWalletHistoryDao extends DatabaseAccessor<MainStore>
     with _$CryptoWalletHistoryDaoMixin {
   CryptoWalletHistoryDao(super.db);
 
-  Future<void> insertCryptoWalletHistory(CryptoWalletHistoryCompanion companion) {
+  Future<void> insertCryptoWalletHistory(
+    CryptoWalletHistoryCompanion companion,
+  ) {
     return into(cryptoWalletHistory).insert(companion);
   }
 
   Future<CryptoWalletHistoryData?> getCryptoWalletHistoryByHistoryId(
-      String historyId) {
-    return (select(cryptoWalletHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .getSingleOrNull();
+    String historyId,
+  ) {
+    return (select(
+      cryptoWalletHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).getSingleOrNull();
   }
 
   Future<bool> existsCryptoWalletHistoryByHistoryId(String historyId) async {
-    final row = await (selectOnly(cryptoWalletHistory)
-          ..addColumns([cryptoWalletHistory.historyId])
-          ..where(cryptoWalletHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(cryptoWalletHistory)
+              ..addColumns([cryptoWalletHistory.historyId])
+              ..where(cryptoWalletHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
 
     return row != null;
   }
 
   Future<int> deleteCryptoWalletHistoryByHistoryId(String historyId) {
-    return (delete(cryptoWalletHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .go();
+    return (delete(
+      cryptoWalletHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).go();
   }
-
 
   // --- HISTORY CARD BATCH METHODS ---
-  Future<List<CryptoWalletHistoryData>> getCryptoWalletHistoryByHistoryIds(List<String> historyIds) {
+  Future<List<CryptoWalletHistoryData>> getCryptoWalletHistoryByHistoryIds(
+    List<String> historyIds,
+  ) {
     if (historyIds.isEmpty) return Future.value(const []);
-    return (select(cryptoWalletHistory)..where((tbl) => tbl.historyId.isIn(historyIds))).get();
+    return (select(
+      cryptoWalletHistory,
+    )..where((tbl) => tbl.historyId.isIn(historyIds))).get();
   }
 
-  Future<Map<String, CryptoWalletHistoryCardDataDto>> getCryptoWalletHistoryCardDataByHistoryIds(List<String> historyIds) async {
+  Future<Map<String, CryptoWalletHistoryCardDataDto>>
+  getCryptoWalletHistoryCardDataByHistoryIds(List<String> historyIds) async {
     if (historyIds.isEmpty) return const {};
 
     final hasMnemonicExpr = cryptoWalletHistory.mnemonic.isNotNull();
@@ -71,11 +79,20 @@ class CryptoWalletHistoryDao extends DatabaseAccessor<MainStore>
 
     return {
       for (final row in rows)
-        row.read(cryptoWalletHistory.historyId)!: CryptoWalletHistoryCardDataDto(
-          walletType: row.readWithConverter<CryptoWalletType?, String>(cryptoWalletHistory.walletType),
-          network: row.readWithConverter<CryptoNetwork?, String>(cryptoWalletHistory.network),
+        row.read(
+          cryptoWalletHistory.historyId,
+        )!: CryptoWalletHistoryCardDataDto(
+          walletType: row.readWithConverter<CryptoWalletType?, String>(
+            cryptoWalletHistory.walletType,
+          ),
+          network: row.readWithConverter<CryptoNetwork?, String>(
+            cryptoWalletHistory.network,
+          ),
           derivationPath: row.read(cryptoWalletHistory.derivationPath),
-          derivationScheme: row.readWithConverter<CryptoDerivationScheme?, String>(cryptoWalletHistory.derivationScheme),
+          derivationScheme: row
+              .readWithConverter<CryptoDerivationScheme?, String>(
+                cryptoWalletHistory.derivationScheme,
+              ),
           addresses: row.read(cryptoWalletHistory.addresses),
           xpub: row.read(cryptoWalletHistory.xpub),
           hardwareDevice: row.read(cryptoWalletHistory.hardwareDevice),
@@ -88,27 +105,29 @@ class CryptoWalletHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<String?> getMnemonicByHistoryId(String historyId) async {
-    final row = await (selectOnly(cryptoWalletHistory)
-          ..addColumns([cryptoWalletHistory.mnemonic])
-          ..where(cryptoWalletHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(cryptoWalletHistory)
+              ..addColumns([cryptoWalletHistory.mnemonic])
+              ..where(cryptoWalletHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
     return row?.read(cryptoWalletHistory.mnemonic);
   }
 
   Future<String?> getPrivateKeyByHistoryId(String historyId) async {
-    final row = await (selectOnly(cryptoWalletHistory)
-          ..addColumns([cryptoWalletHistory.privateKey])
-          ..where(cryptoWalletHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(cryptoWalletHistory)
+              ..addColumns([cryptoWalletHistory.privateKey])
+              ..where(cryptoWalletHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
     return row?.read(cryptoWalletHistory.privateKey);
   }
 
   Future<String?> getXprvByHistoryId(String historyId) async {
-    final row = await (selectOnly(cryptoWalletHistory)
-          ..addColumns([cryptoWalletHistory.xprv])
-          ..where(cryptoWalletHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(cryptoWalletHistory)
+              ..addColumns([cryptoWalletHistory.xprv])
+              ..where(cryptoWalletHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
     return row?.read(cryptoWalletHistory.xprv);
   }
-
 }

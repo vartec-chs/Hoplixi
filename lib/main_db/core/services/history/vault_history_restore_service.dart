@@ -97,9 +97,9 @@ class VaultHistoryRestoreService {
 
         final customFieldsRes = await customFieldsRestoreService
             .restoreCustomFieldsForSnapshot(
-          itemId: selected.base.itemId,
-          snapshotHistoryId: selected.base.historyId,
-        );
+              itemId: selected.base.itemId,
+              snapshotHistoryId: selected.base.historyId,
+            );
         if (customFieldsRes.isError()) {
           throw _InternalRestoreFailure(customFieldsRes.exceptionOrNull()!);
         }

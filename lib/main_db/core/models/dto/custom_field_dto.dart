@@ -13,8 +13,7 @@ sealed class CustomFieldDto with _$CustomFieldDto {
     String? itemId,
     required String label,
     String? value,
-    @Default(CustomFieldType.text)
-    CustomFieldType fieldType,
+    @Default(CustomFieldType.text) CustomFieldType fieldType,
     @Default(false) bool isSecret,
     @Default(0) int sortOrder,
     DateTime? createdAt,
@@ -26,7 +25,8 @@ sealed class CustomFieldDto with _$CustomFieldDto {
 }
 
 @freezed
-sealed class VaultItemCustomFieldCardDataDto with _$VaultItemCustomFieldCardDataDto {
+sealed class VaultItemCustomFieldCardDataDto
+    with _$VaultItemCustomFieldCardDataDto {
   const factory VaultItemCustomFieldCardDataDto({
     required String id,
     required String itemId,

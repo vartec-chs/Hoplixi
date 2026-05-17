@@ -17,13 +17,15 @@ class DocumentItemsDao extends DatabaseAccessor<MainStore>
     String itemId,
     DocumentItemsCompanion companion,
   ) {
-    return (update(documentItems)..where((t) => t.itemId.equals(itemId)))
-        .write(companion);
+    return (update(
+      documentItems,
+    )..where((t) => t.itemId.equals(itemId))).write(companion);
   }
 
   Future<DocumentItemsData?> getDocumentItemByItemId(String itemId) {
-    return (select(documentItems)..where((t) => t.itemId.equals(itemId)))
-        .getSingleOrNull();
+    return (select(
+      documentItems,
+    )..where((t) => t.itemId.equals(itemId))).getSingleOrNull();
   }
 
   Future<bool> existsDocumentItemByItemId(String itemId) async {
@@ -37,10 +39,9 @@ class DocumentItemsDao extends DatabaseAccessor<MainStore>
     required String itemId,
     required String? currentVersionId,
   }) {
-    return (update(documentItems)..where((t) => t.itemId.equals(itemId)))
-        .write(DocumentItemsCompanion(
-      currentVersionId: Value(currentVersionId),
-    ));
+    return (update(documentItems)..where((t) => t.itemId.equals(itemId))).write(
+      DocumentItemsCompanion(currentVersionId: Value(currentVersionId)),
+    );
   }
 
   Future<int> deleteDocumentItemByItemId(String itemId) {

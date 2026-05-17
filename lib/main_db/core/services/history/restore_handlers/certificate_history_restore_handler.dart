@@ -12,9 +12,7 @@ import '../payloads/certificate_history_payload.dart';
 import 'vault_history_restore_handler.dart';
 
 class CertificateHistoryRestoreHandler implements VaultHistoryRestoreHandler {
-  CertificateHistoryRestoreHandler({
-    required this.certificateItemsDao,
-  });
+  CertificateHistoryRestoreHandler({required this.certificateItemsDao});
 
   final CertificateItemsDao certificateItemsDao;
 

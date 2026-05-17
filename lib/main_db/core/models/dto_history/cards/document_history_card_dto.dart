@@ -6,10 +6,13 @@ part 'document_history_card_dto.freezed.dart';
 part 'document_history_card_dto.g.dart';
 
 @freezed
-sealed class DocumentHistoryCardDto with _$DocumentHistoryCardDto implements VaultHistoryCardDto {
+sealed class DocumentHistoryCardDto
+    with _$DocumentHistoryCardDto
+    implements VaultHistoryCardDto {
   const factory DocumentHistoryCardDto({
     required VaultSnapshotCardDto snapshot,
   }) = _DocumentHistoryCardDto;
 
-  factory DocumentHistoryCardDto.fromJson(Map<String, dynamic> json) => _$DocumentHistoryCardDtoFromJson(json);
+  factory DocumentHistoryCardDto.fromJson(Map<String, dynamic> json) =>
+      _$DocumentHistoryCardDtoFromJson(json);
 }

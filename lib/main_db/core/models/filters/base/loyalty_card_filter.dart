@@ -63,7 +63,9 @@ sealed class LoyaltyCardFilter with _$LoyaltyCardFilter {
 
     return LoyaltyCardFilter(
       base: base ?? const BaseFilter(),
-      programName: normalizedProgram?.isEmpty == true ? null : normalizedProgram,
+      programName: normalizedProgram?.isEmpty == true
+          ? null
+          : normalizedProgram,
       barcodeType: barcodeType,
       issuer: normalizedIssuer?.isEmpty == true ? null : normalizedIssuer,
       website: normalizedWebsite?.isEmpty == true ? null : normalizedWebsite,

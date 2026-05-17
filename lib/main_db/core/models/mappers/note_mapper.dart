@@ -3,15 +3,10 @@ import 'package:hoplixi/main_db/core/main_store.dart';
 
 extension NoteItemsDataMapper on NoteItemsData {
   NoteDataDto toNoteDataDto() {
-    return NoteDataDto(
-      deltaJson: deltaJson,
-      content: content,
-    );
+    return NoteDataDto(deltaJson: deltaJson, content: content);
   }
 
   NoteCardDataDto toNoteCardDataDto() {
-    return NoteCardDataDto(
-      content: content,
-    );
+    return NoteCardDataDto(content: content);
   }
 }

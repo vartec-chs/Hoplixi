@@ -5,7 +5,8 @@ import '../../../tables/system/item_link/item_links.dart';
 part 'item_links_dao.g.dart';
 
 @DriftAccessor(tables: [ItemLinks])
-class ItemLinksDao extends DatabaseAccessor<MainStore> with _$ItemLinksDaoMixin {
+class ItemLinksDao extends DatabaseAccessor<MainStore>
+    with _$ItemLinksDaoMixin {
   ItemLinksDao(super.db);
 
   Future<int> insertItemLink(ItemLinksCompanion companion) {
@@ -21,18 +22,21 @@ class ItemLinksDao extends DatabaseAccessor<MainStore> with _$ItemLinksDaoMixin 
   }
 
   Future<List<ItemLinksData>> getLinksFromItem(String sourceItemId) {
-    return (select(itemLinks)..where((t) => t.sourceItemId.equals(sourceItemId)))
-        .get();
+    return (select(
+      itemLinks,
+    )..where((t) => t.sourceItemId.equals(sourceItemId))).get();
   }
 
   Future<List<ItemLinksData>> getLinksToItem(String targetItemId) {
-    return (select(itemLinks)..where((t) => t.targetItemId.equals(targetItemId)))
-        .get();
+    return (select(
+      itemLinks,
+    )..where((t) => t.targetItemId.equals(targetItemId))).get();
   }
 
   Future<List<ItemLinksData>> getAllLinksForItem(String itemId) {
-    return (select(itemLinks)
-          ..where((t) => t.sourceItemId.equals(itemId) | t.targetItemId.equals(itemId)))
+    return (select(itemLinks)..where(
+          (t) => t.sourceItemId.equals(itemId) | t.targetItemId.equals(itemId),
+        ))
         .get();
   }
 
@@ -41,8 +45,9 @@ class ItemLinksDao extends DatabaseAccessor<MainStore> with _$ItemLinksDaoMixin 
   }
 
   Future<int> deleteLinksForItem(String itemId) {
-    return (delete(itemLinks)
-          ..where((t) => t.sourceItemId.equals(itemId) | t.targetItemId.equals(itemId)))
+    return (delete(itemLinks)..where(
+          (t) => t.sourceItemId.equals(itemId) | t.targetItemId.equals(itemId),
+        ))
         .go();
   }
 
@@ -61,8 +66,8 @@ class ItemLinksDao extends DatabaseAccessor<MainStore> with _$ItemLinksDaoMixin 
   Future<List<ItemLinksData>> getLinksByRelationType(
     ItemLinkType relationType,
   ) {
-    return (select(itemLinks)
-          ..where((t) => t.relationType.equals(relationType.name)))
-        .get();
+    return (select(
+      itemLinks,
+    )..where((t) => t.relationType.equals(relationType.name))).get();
   }
 }

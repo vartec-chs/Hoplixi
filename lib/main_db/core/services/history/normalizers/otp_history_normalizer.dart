@@ -19,9 +19,7 @@ class OtpHistoryNormalizer implements VaultHistoryTypeNormalizer {
   VaultItemType get type => VaultItemType.otp;
 
   @override
-  Future<HistoryPayload?> normalizeHistory({
-    required String historyId,
-  }) async {
+  Future<HistoryPayload?> normalizeHistory({required String historyId}) async {
     final rows = await otpHistoryDao.getOtpHistoryByHistoryIds([historyId]);
     if (rows.isEmpty) return null;
 
@@ -40,9 +38,7 @@ class OtpHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }
 
   @override
-  Future<HistoryPayload?> normalizeCurrent({
-    required String itemId,
-  }) async {
+  Future<HistoryPayload?> normalizeCurrent({required String itemId}) async {
     final view = await otpRepository.getViewById(itemId);
     if (view == null) return null;
 

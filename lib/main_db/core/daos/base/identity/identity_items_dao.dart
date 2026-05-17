@@ -18,57 +18,66 @@ class IdentityItemsDao extends DatabaseAccessor<MainStore>
     String itemId,
     IdentityItemsCompanion companion,
   ) {
-    return (update(identityItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .write(companion);
+    return (update(
+      identityItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).write(companion);
   }
 
   Future<IdentityItemsData?> getIdentityByItemId(String itemId) {
-    return (select(identityItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .getSingleOrNull();
+    return (select(
+      identityItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).getSingleOrNull();
   }
 
   Future<bool> existsIdentityByItemId(String itemId) async {
-    final row = await (selectOnly(identityItems)
-          ..addColumns([identityItems.itemId])
-          ..where(identityItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(identityItems)
+              ..addColumns([identityItems.itemId])
+              ..where(identityItems.itemId.equals(itemId)))
+            .getSingleOrNull();
 
     return row != null;
   }
 
   Future<int> deleteIdentityByItemId(String itemId) {
-    return (delete(identityItems)..where((tbl) => tbl.itemId.equals(itemId))).go();
+    return (delete(
+      identityItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).go();
   }
 
   Future<String?> getTaxIdByItemId(String itemId) async {
-    final row = await (selectOnly(identityItems)
-          ..addColumns([identityItems.taxId])
-          ..where(identityItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(identityItems)
+              ..addColumns([identityItems.taxId])
+              ..where(identityItems.itemId.equals(itemId)))
+            .getSingleOrNull();
     return row?.read(identityItems.taxId);
   }
 
   Future<String?> getNationalIdByItemId(String itemId) async {
-    final row = await (selectOnly(identityItems)
-          ..addColumns([identityItems.nationalId])
-          ..where(identityItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(identityItems)
+              ..addColumns([identityItems.nationalId])
+              ..where(identityItems.itemId.equals(itemId)))
+            .getSingleOrNull();
     return row?.read(identityItems.nationalId);
   }
 
   Future<String?> getPassportNumberByItemId(String itemId) async {
-    final row = await (selectOnly(identityItems)
-          ..addColumns([identityItems.passportNumber])
-          ..where(identityItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(identityItems)
+              ..addColumns([identityItems.passportNumber])
+              ..where(identityItems.itemId.equals(itemId)))
+            .getSingleOrNull();
     return row?.read(identityItems.passportNumber);
   }
 
   Future<String?> getDriverLicenseNumberByItemId(String itemId) async {
-    final row = await (selectOnly(identityItems)
-          ..addColumns([identityItems.driverLicenseNumber])
-          ..where(identityItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(identityItems)
+              ..addColumns([identityItems.driverLicenseNumber])
+              ..where(identityItems.itemId.equals(itemId)))
+            .getSingleOrNull();
     return row?.read(identityItems.driverLicenseNumber);
   }
 

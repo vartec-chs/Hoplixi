@@ -5,7 +5,8 @@ import '../../../tables/system/icons/custom_icons.dart';
 part 'custom_icons_dao.g.dart';
 
 @DriftAccessor(tables: [CustomIcons])
-class CustomIconsDao extends DatabaseAccessor<MainStore> with _$CustomIconsDaoMixin {
+class CustomIconsDao extends DatabaseAccessor<MainStore>
+    with _$CustomIconsDaoMixin {
   CustomIconsDao(super.db);
 
   Future<int> insertCustomIcon(CustomIconsCompanion companion) {
@@ -13,11 +14,15 @@ class CustomIconsDao extends DatabaseAccessor<MainStore> with _$CustomIconsDaoMi
   }
 
   Future<int> updateCustomIconById(String id, CustomIconsCompanion companion) {
-    return (update(customIcons)..where((t) => t.id.equals(id))).write(companion);
+    return (update(
+      customIcons,
+    )..where((t) => t.id.equals(id))).write(companion);
   }
 
   Future<CustomIconsData?> getCustomIconById(String id) {
-    return (select(customIcons)..where((t) => t.id.equals(id))).getSingleOrNull();
+    return (select(
+      customIcons,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Future<List<CustomIconsData>> getAllCustomIcons() {

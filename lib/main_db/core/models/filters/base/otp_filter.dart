@@ -51,7 +51,9 @@ sealed class OtpFilter with _$OtpFilter {
     return OtpFilter(
       base: base ?? const BaseFilter(),
       issuer: normalizedIssuer?.isEmpty == true ? null : normalizedIssuer,
-      accountName: normalizedAccountName?.isEmpty == true ? null : normalizedAccountName,
+      accountName: normalizedAccountName?.isEmpty == true
+          ? null
+          : normalizedAccountName,
       type: type,
       algorithm: algorithm,
       digits: digits,

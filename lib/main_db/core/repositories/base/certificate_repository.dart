@@ -18,7 +18,9 @@ class CertificateRepository {
       final now = DateTime.now();
       final itemId = const Uuid().v4();
 
-      await db.into(db.vaultItems).insert(
+      await db
+          .into(db.vaultItems)
+          .insert(
             VaultItemsCompanion.insert(
               id: Value(itemId),
               type: VaultItemType.certificate,
@@ -33,12 +35,15 @@ class CertificateRepository {
             ),
           );
 
-      await db.into(db.certificateItems).insert(
+      await db
+          .into(db.certificateItems)
+          .insert(
             CertificateItemsCompanion.insert(
               itemId: itemId,
               certificateFormat: Value(dto.certificate.certificateFormat),
-              certificateFormatOther:
-                  Value(dto.certificate.certificateFormatOther),
+              certificateFormatOther: Value(
+                dto.certificate.certificateFormatOther,
+              ),
               certificatePem: Value(dto.certificate.certificatePem),
               certificateBlob: Value(dto.certificate.certificateBlob),
               privateKey: Value(dto.certificate.privateKey),
@@ -82,18 +87,19 @@ class CertificateRepository {
         db.certificateItems,
       )..where((tbl) => tbl.itemId.equals(itemId))).write(
         CertificateItemsCompanion(
-          certificateFormat: dto.certificate.certificateFormat.toNullableValue(),
-          certificateFormatOther:
-              dto.certificate.certificateFormatOther.toNullableValue(),
+          certificateFormat: dto.certificate.certificateFormat
+              .toNullableValue(),
+          certificateFormatOther: dto.certificate.certificateFormatOther
+              .toNullableValue(),
           certificatePem: dto.certificate.certificatePem.toNullableValue(),
           certificateBlob: dto.certificate.certificateBlob.toNullableValue(),
           privateKey: dto.certificate.privateKey.toNullableValue(),
-          privateKeyPassword:
-              dto.certificate.privateKeyPassword.toNullableValue(),
+          privateKeyPassword: dto.certificate.privateKeyPassword
+              .toNullableValue(),
           passwordForPfx: dto.certificate.passwordForPfx.toNullableValue(),
           keyAlgorithm: dto.certificate.keyAlgorithm.toNullableValue(),
-          keyAlgorithmOther:
-              dto.certificate.keyAlgorithmOther.toNullableValue(),
+          keyAlgorithmOther: dto.certificate.keyAlgorithmOther
+              .toNullableValue(),
           keySize: dto.certificate.keySize.toNullableValue(),
           serialNumber: dto.certificate.serialNumber.toNullableValue(),
           issuer: dto.certificate.issuer.toNullableValue(),
@@ -114,14 +120,15 @@ class CertificateRepository {
   }
 
   Future<CertificateViewDto?> getViewById(String itemId) async {
-    final query = db.select(db.vaultItems).join([
-      innerJoin(
-        db.certificateItems,
-        db.certificateItems.itemId.equalsExp(db.vaultItems.id),
-      ),
-    ])
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.certificate));
+    final query =
+        db.select(db.vaultItems).join([
+            innerJoin(
+              db.certificateItems,
+              db.certificateItems.itemId.equalsExp(db.vaultItems.id),
+            ),
+          ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.certificate));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
@@ -162,8 +169,9 @@ class CertificateRepository {
   }
 
   Future<void> deletePermanently(String itemId) {
-    return (db.delete(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-        .go();
+    return (db.delete(
+      db.vaultItems,
+    )..where((tbl) => tbl.id.equals(itemId))).go();
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery(
@@ -174,38 +182,37 @@ class CertificateRepository {
         db.certificateItems,
         db.certificateItems.itemId.equalsExp(db.vaultItems.id),
       ),
-    ])
-      ..addColumns([
-        db.vaultItems.id,
-        db.vaultItems.type,
-        db.vaultItems.name,
-        db.vaultItems.description,
-        db.vaultItems.categoryId,
-        db.vaultItems.iconRefId,
-        db.vaultItems.isFavorite,
-        db.vaultItems.isArchived,
-        db.vaultItems.isPinned,
-        db.vaultItems.isDeleted,
-        db.vaultItems.createdAt,
-        db.vaultItems.modifiedAt,
-        db.vaultItems.lastUsedAt,
-        db.vaultItems.archivedAt,
-        db.vaultItems.deletedAt,
-        db.vaultItems.recentScore,
-        db.certificateItems.certificateFormat,
-        db.certificateItems.keyAlgorithm,
-        db.certificateItems.keySize,
-        db.certificateItems.serialNumber,
-        db.certificateItems.issuer,
-        db.certificateItems.subject,
-        db.certificateItems.validFrom,
-        db.certificateItems.validTo,
-        expr.hasPrivateKey,
-        expr.hasCertificateBlob,
-        expr.hasPrivateKeyPassword,
-        expr.hasPasswordForPfx,
-        expr.hasCertificatePem,
-      ]);
+    ])..addColumns([
+      db.vaultItems.id,
+      db.vaultItems.type,
+      db.vaultItems.name,
+      db.vaultItems.description,
+      db.vaultItems.categoryId,
+      db.vaultItems.iconRefId,
+      db.vaultItems.isFavorite,
+      db.vaultItems.isArchived,
+      db.vaultItems.isPinned,
+      db.vaultItems.isDeleted,
+      db.vaultItems.createdAt,
+      db.vaultItems.modifiedAt,
+      db.vaultItems.lastUsedAt,
+      db.vaultItems.archivedAt,
+      db.vaultItems.deletedAt,
+      db.vaultItems.recentScore,
+      db.certificateItems.certificateFormat,
+      db.certificateItems.keyAlgorithm,
+      db.certificateItems.keySize,
+      db.certificateItems.serialNumber,
+      db.certificateItems.issuer,
+      db.certificateItems.subject,
+      db.certificateItems.validFrom,
+      db.certificateItems.validTo,
+      expr.hasPrivateKey,
+      expr.hasCertificateBlob,
+      expr.hasPrivateKeyPassword,
+      expr.hasPasswordForPfx,
+      expr.hasCertificatePem,
+    ]);
   }
 
   CertificateCardDto _mapRowToCardDto(
@@ -256,12 +263,12 @@ class CertificateRepository {
 
 class _CertificateCardExpressions {
   _CertificateCardExpressions(this.db)
-      : hasPrivateKey = db.certificateItems.privateKey.isNotNull(),
-        hasCertificateBlob = db.certificateItems.certificateBlob.isNotNull(),
-        hasPrivateKeyPassword =
-            db.certificateItems.privateKeyPassword.isNotNull(),
-        hasPasswordForPfx = db.certificateItems.passwordForPfx.isNotNull(),
-        hasCertificatePem = db.certificateItems.certificatePem.isNotNull();
+    : hasPrivateKey = db.certificateItems.privateKey.isNotNull(),
+      hasCertificateBlob = db.certificateItems.certificateBlob.isNotNull(),
+      hasPrivateKeyPassword = db.certificateItems.privateKeyPassword
+          .isNotNull(),
+      hasPasswordForPfx = db.certificateItems.passwordForPfx.isNotNull(),
+      hasCertificatePem = db.certificateItems.certificatePem.isNotNull();
 
   final MainStore db;
 

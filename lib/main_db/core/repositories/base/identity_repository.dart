@@ -17,7 +17,9 @@ class IdentityRepository {
       final now = DateTime.now();
       final itemId = const Uuid().v4();
 
-      await db.into(db.vaultItems).insert(
+      await db
+          .into(db.vaultItems)
+          .insert(
             VaultItemsCompanion.insert(
               id: Value(itemId),
               type: VaultItemType.identity,
@@ -32,7 +34,9 @@ class IdentityRepository {
             ),
           );
 
-      await db.into(db.identityItems).insert(
+      await db
+          .into(db.identityItems)
+          .insert(
             IdentityItemsCompanion.insert(
               itemId: itemId,
               firstName: Value(dto.identity.firstName),
@@ -63,8 +67,9 @@ class IdentityRepository {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
 
-      await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-          .write(
+      await (db.update(
+        db.vaultItems,
+      )..where((tbl) => tbl.id.equals(itemId))).write(
         VaultItemsCompanion(
           name: dto.item.name.toRequiredValue(),
           description: dto.item.description.toNullableValue(),
@@ -76,9 +81,9 @@ class IdentityRepository {
         ),
       );
 
-      await (db.update(db.identityItems)
-            ..where((tbl) => tbl.itemId.equals(itemId)))
-          .write(
+      await (db.update(
+        db.identityItems,
+      )..where((tbl) => tbl.itemId.equals(itemId))).write(
         IdentityItemsCompanion(
           firstName: dto.identity.firstName.toNullableValue(),
           middleName: dto.identity.middleName.toNullableValue(),
@@ -95,22 +100,23 @@ class IdentityRepository {
           taxId: dto.identity.taxId.toNullableValue(),
           nationalId: dto.identity.nationalId.toNullableValue(),
           passportNumber: dto.identity.passportNumber.toNullableValue(),
-          driverLicenseNumber:
-              dto.identity.driverLicenseNumber.toNullableValue(),
+          driverLicenseNumber: dto.identity.driverLicenseNumber
+              .toNullableValue(),
         ),
       );
     });
   }
 
   Future<IdentityViewDto?> getViewById(String itemId) async {
-    final query = db.select(db.vaultItems).join([
-      innerJoin(
-        db.identityItems,
-        db.identityItems.itemId.equalsExp(db.vaultItems.id),
-      ),
-    ])
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.identity));
+    final query =
+        db.select(db.vaultItems).join([
+            innerJoin(
+              db.identityItems,
+              db.identityItems.itemId.equalsExp(db.vaultItems.id),
+            ),
+          ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.identity));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
@@ -149,8 +155,9 @@ class IdentityRepository {
   }
 
   Future<void> deletePermanently(String itemId) {
-    return (db.delete(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-        .go();
+    return (db.delete(
+      db.vaultItems,
+    )..where((tbl) => tbl.id.equals(itemId))).go();
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery() {
@@ -159,30 +166,29 @@ class IdentityRepository {
         db.identityItems,
         db.identityItems.itemId.equalsExp(db.vaultItems.id),
       ),
-    ])
-      ..addColumns([
-        db.vaultItems.id,
-        db.vaultItems.type,
-        db.vaultItems.name,
-        db.vaultItems.description,
-        db.vaultItems.categoryId,
-        db.vaultItems.iconRefId,
-        db.vaultItems.isFavorite,
-        db.vaultItems.isArchived,
-        db.vaultItems.isPinned,
-        db.vaultItems.isDeleted,
-        db.vaultItems.createdAt,
-        db.vaultItems.modifiedAt,
-        db.vaultItems.lastUsedAt,
-        db.vaultItems.archivedAt,
-        db.vaultItems.deletedAt,
-        db.vaultItems.recentScore,
-        db.identityItems.displayName,
-        db.identityItems.username,
-        db.identityItems.email,
-        db.identityItems.phone,
-        db.identityItems.company,
-      ]);
+    ])..addColumns([
+      db.vaultItems.id,
+      db.vaultItems.type,
+      db.vaultItems.name,
+      db.vaultItems.description,
+      db.vaultItems.categoryId,
+      db.vaultItems.iconRefId,
+      db.vaultItems.isFavorite,
+      db.vaultItems.isArchived,
+      db.vaultItems.isPinned,
+      db.vaultItems.isDeleted,
+      db.vaultItems.createdAt,
+      db.vaultItems.modifiedAt,
+      db.vaultItems.lastUsedAt,
+      db.vaultItems.archivedAt,
+      db.vaultItems.deletedAt,
+      db.vaultItems.recentScore,
+      db.identityItems.displayName,
+      db.identityItems.username,
+      db.identityItems.email,
+      db.identityItems.phone,
+      db.identityItems.company,
+    ]);
   }
 
   IdentityCardDto _mapRowToCardDto(TypedResult row) {

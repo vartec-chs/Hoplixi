@@ -26,15 +26,19 @@ sealed class IdentityHistoryCardDataDto with _$IdentityHistoryCardDataDto {
     String? driverLicenseNumber,
   }) = _IdentityHistoryCardDataDto;
 
-  factory IdentityHistoryCardDataDto.fromJson(Map<String, dynamic> json) => _$IdentityHistoryCardDataDtoFromJson(json);
+  factory IdentityHistoryCardDataDto.fromJson(Map<String, dynamic> json) =>
+      _$IdentityHistoryCardDataDtoFromJson(json);
 }
 
 @freezed
-sealed class IdentityHistoryCardDto with _$IdentityHistoryCardDto implements VaultHistoryCardDto {
+sealed class IdentityHistoryCardDto
+    with _$IdentityHistoryCardDto
+    implements VaultHistoryCardDto {
   const factory IdentityHistoryCardDto({
     required VaultSnapshotCardDto snapshot,
     required IdentityHistoryCardDataDto identity,
   }) = _IdentityHistoryCardDto;
 
-  factory IdentityHistoryCardDto.fromJson(Map<String, dynamic> json) => _$IdentityHistoryCardDtoFromJson(json);
+  factory IdentityHistoryCardDto.fromJson(Map<String, dynamic> json) =>
+      _$IdentityHistoryCardDtoFromJson(json);
 }

@@ -18,8 +18,7 @@ sealed class FileMetadataDto with _$FileMetadataDto {
     String? sha256,
     @Default(FileAvailabilityStatus.available)
     FileAvailabilityStatus availabilityStatus,
-    @Default(FileIntegrityStatus.unknown)
-    FileIntegrityStatus integrityStatus,
+    @Default(FileIntegrityStatus.unknown) FileIntegrityStatus integrityStatus,
     DateTime? missingDetectedAt,
     DateTime? deletedAt,
     DateTime? lastIntegrityCheckAt,
@@ -28,6 +27,7 @@ sealed class FileMetadataDto with _$FileMetadataDto {
   factory FileMetadataDto.fromJson(Map<String, dynamic> json) =>
       _$FileMetadataDtoFromJson(json);
 }
+
 @freezed
 sealed class PatchFileMetadataDto with _$PatchFileMetadataDto {
   const factory PatchFileMetadataDto({
@@ -38,12 +38,12 @@ sealed class PatchFileMetadataDto with _$PatchFileMetadataDto {
     @Default(FieldUpdate.keep()) FieldUpdate<String> mimeType,
     @Default(FieldUpdate.keep()) FieldUpdate<int> fileSize,
     @Default(FieldUpdate.keep()) FieldUpdate<String> sha256,
-    @Default(FieldUpdate.keep()) FieldUpdate<FileAvailabilityStatus> availabilityStatus,
-    @Default(FieldUpdate.keep()) FieldUpdate<FileIntegrityStatus> integrityStatus,
+    @Default(FieldUpdate.keep())
+    FieldUpdate<FileAvailabilityStatus> availabilityStatus,
+    @Default(FieldUpdate.keep())
+    FieldUpdate<FileIntegrityStatus> integrityStatus,
     @Default(FieldUpdate.keep()) FieldUpdate<DateTime> missingDetectedAt,
     @Default(FieldUpdate.keep()) FieldUpdate<DateTime> deletedAt,
     @Default(FieldUpdate.keep()) FieldUpdate<DateTime> lastIntegrityCheckAt,
   }) = _PatchFileMetadataDto;
 }
-
-

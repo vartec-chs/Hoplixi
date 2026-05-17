@@ -3,9 +3,7 @@ import 'vault_history_type_normalizer.dart';
 
 class VaultHistoryNormalizerRegistry {
   VaultHistoryNormalizerRegistry(List<VaultHistoryTypeNormalizer> normalizers)
-      : _normalizers = {
-          for (final n in normalizers) n.type: n,
-        };
+    : _normalizers = {for (final n in normalizers) n.type: n};
 
   final Map<VaultItemType, VaultHistoryTypeNormalizer> _normalizers;
 

@@ -8,16 +8,12 @@ class DocumentHistoryNormalizer implements VaultHistoryTypeNormalizer {
   VaultItemType get type => VaultItemType.document;
 
   @override
-  Future<HistoryPayload?> normalizeHistory({
-    required String historyId,
-  }) async {
+  Future<HistoryPayload?> normalizeHistory({required String historyId}) async {
     return const DocumentHistoryPayload();
   }
 
   @override
-  Future<HistoryPayload?> normalizeCurrent({
-    required String itemId,
-  }) async {
+  Future<HistoryPayload?> normalizeCurrent({required String itemId}) async {
     return const DocumentHistoryPayload();
   }
 }

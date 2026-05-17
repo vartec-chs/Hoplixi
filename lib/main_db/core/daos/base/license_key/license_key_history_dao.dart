@@ -16,35 +16,41 @@ class LicenseKeyHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<LicenseKeyHistoryData?> getLicenseKeyHistoryByHistoryId(
-      String historyId) {
-    return (select(licenseKeyHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .getSingleOrNull();
+    String historyId,
+  ) {
+    return (select(
+      licenseKeyHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).getSingleOrNull();
   }
 
   Future<bool> existsLicenseKeyHistoryByHistoryId(String historyId) async {
-    final row = await (selectOnly(licenseKeyHistory)
-          ..addColumns([licenseKeyHistory.historyId])
-          ..where(licenseKeyHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(licenseKeyHistory)
+              ..addColumns([licenseKeyHistory.historyId])
+              ..where(licenseKeyHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
 
     return row != null;
   }
 
   Future<int> deleteLicenseKeyHistoryByHistoryId(String historyId) {
-    return (delete(licenseKeyHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .go();
+    return (delete(
+      licenseKeyHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).go();
   }
-
 
   // --- HISTORY CARD BATCH METHODS ---
-  Future<List<LicenseKeyHistoryData>> getLicenseKeyHistoryByHistoryIds(List<String> historyIds) {
+  Future<List<LicenseKeyHistoryData>> getLicenseKeyHistoryByHistoryIds(
+    List<String> historyIds,
+  ) {
     if (historyIds.isEmpty) return Future.value(const []);
-    return (select(licenseKeyHistory)..where((tbl) => tbl.historyId.isIn(historyIds))).get();
+    return (select(
+      licenseKeyHistory,
+    )..where((tbl) => tbl.historyId.isIn(historyIds))).get();
   }
 
-  Future<Map<String, LicenseKeyHistoryCardDataDto>> getLicenseKeyHistoryCardDataByHistoryIds(List<String> historyIds) async {
+  Future<Map<String, LicenseKeyHistoryCardDataDto>>
+  getLicenseKeyHistoryCardDataByHistoryIds(List<String> historyIds) async {
     if (historyIds.isEmpty) return const {};
 
     final hasLicenseKeyExpr = licenseKeyHistory.licenseKey.isNotNull();
@@ -78,7 +84,9 @@ class LicenseKeyHistoryDao extends DatabaseAccessor<MainStore>
         row.read(licenseKeyHistory.historyId)!: LicenseKeyHistoryCardDataDto(
           productName: row.read(licenseKeyHistory.productName),
           vendor: row.read(licenseKeyHistory.vendor),
-          licenseType: row.readWithConverter<LicenseType?, String>(licenseKeyHistory.licenseType),
+          licenseType: row.readWithConverter<LicenseType?, String>(
+            licenseKeyHistory.licenseType,
+          ),
           accountEmail: row.read(licenseKeyHistory.accountEmail),
           accountUsername: row.read(licenseKeyHistory.accountUsername),
           purchaseEmail: row.read(licenseKeyHistory.purchaseEmail),
@@ -98,11 +106,11 @@ class LicenseKeyHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<String?> getLicenseKeyByHistoryId(String historyId) async {
-    final row = await (selectOnly(licenseKeyHistory)
-          ..addColumns([licenseKeyHistory.licenseKey])
-          ..where(licenseKeyHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(licenseKeyHistory)
+              ..addColumns([licenseKeyHistory.licenseKey])
+              ..where(licenseKeyHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
     return row?.read(licenseKeyHistory.licenseKey);
   }
-
 }

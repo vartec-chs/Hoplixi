@@ -16,34 +16,39 @@ class ContactHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<ContactHistoryData?> getContactHistoryByHistoryId(String historyId) {
-    return (select(contactHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .getSingleOrNull();
+    return (select(
+      contactHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).getSingleOrNull();
   }
 
   Future<bool> existsContactHistoryByHistoryId(String historyId) async {
-    final row = await (selectOnly(contactHistory)
-          ..addColumns([contactHistory.historyId])
-          ..where(contactHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(contactHistory)
+              ..addColumns([contactHistory.historyId])
+              ..where(contactHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
 
     return row != null;
   }
 
   Future<int> deleteContactHistoryByHistoryId(String historyId) {
-    return (delete(contactHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .go();
+    return (delete(
+      contactHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).go();
   }
-
 
   // --- HISTORY CARD BATCH METHODS ---
-  Future<List<ContactHistoryData>> getContactHistoryByHistoryIds(List<String> historyIds) {
+  Future<List<ContactHistoryData>> getContactHistoryByHistoryIds(
+    List<String> historyIds,
+  ) {
     if (historyIds.isEmpty) return Future.value(const []);
-    return (select(contactHistory)..where((tbl) => tbl.historyId.isIn(historyIds))).get();
+    return (select(
+      contactHistory,
+    )..where((tbl) => tbl.historyId.isIn(historyIds))).get();
   }
 
-  Future<Map<String, ContactHistoryCardDataDto>> getContactHistoryCardDataByHistoryIds(List<String> historyIds) async {
+  Future<Map<String, ContactHistoryCardDataDto>>
+  getContactHistoryCardDataByHistoryIds(List<String> historyIds) async {
     if (historyIds.isEmpty) return const {};
 
     final query = selectOnly(contactHistory)
@@ -82,5 +87,4 @@ class ContactHistoryDao extends DatabaseAccessor<MainStore>
         ),
     };
   }
-
 }

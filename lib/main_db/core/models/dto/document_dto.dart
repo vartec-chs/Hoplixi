@@ -8,9 +8,7 @@ part 'document_dto.g.dart';
 
 @freezed
 sealed class DocumentDataDto with _$DocumentDataDto {
-  const factory DocumentDataDto({
-    String? currentVersionId,
-  }) = _DocumentDataDto;
+  const factory DocumentDataDto({String? currentVersionId}) = _DocumentDataDto;
 
   factory DocumentDataDto.fromJson(Map<String, dynamic> json) =>
       _$DocumentDataDtoFromJson(json);
@@ -41,8 +39,9 @@ sealed class DocumentCurrentVersionCardDataDto
     required bool hasCurrentVersion,
   }) = _DocumentCurrentVersionCardDataDto;
 
-  factory DocumentCurrentVersionCardDataDto.fromJson(Map<String, dynamic> json) =>
-      _$DocumentCurrentVersionCardDataDtoFromJson(json);
+  factory DocumentCurrentVersionCardDataDto.fromJson(
+    Map<String, dynamic> json,
+  ) => _$DocumentCurrentVersionCardDataDtoFromJson(json);
 }
 
 @freezed
@@ -58,7 +57,9 @@ sealed class CreateDocumentDto with _$CreateDocumentDto {
 }
 
 @freezed
-sealed class DocumentViewDto with _$DocumentViewDto implements VaultEntityViewDto {
+sealed class DocumentViewDto
+    with _$DocumentViewDto
+    implements VaultEntityViewDto {
   const factory DocumentViewDto({
     required VaultItemViewDto item,
     required DocumentDataDto document,
@@ -69,7 +70,9 @@ sealed class DocumentViewDto with _$DocumentViewDto implements VaultEntityViewDt
 }
 
 @freezed
-sealed class DocumentCardDto with _$DocumentCardDto implements VaultEntityCardDto {
+sealed class DocumentCardDto
+    with _$DocumentCardDto
+    implements VaultEntityCardDto {
   const factory DocumentCardDto({
     required VaultItemCardDto item,
     required DocumentCurrentVersionCardDataDto document,
@@ -282,5 +285,3 @@ sealed class PatchDocumentDto with _$PatchDocumentDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchDocumentDto;
 }
-
-

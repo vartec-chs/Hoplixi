@@ -20,25 +20,23 @@ class RecoveryCodesHistoryDao extends DatabaseAccessor<MainStore>
   Future<RecoveryCodesHistoryData?> getRecoveryCodesHistoryByHistoryId(
     String historyId,
   ) {
-    return (select(recoveryCodesHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .getSingleOrNull();
+    return (select(
+      recoveryCodesHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).getSingleOrNull();
   }
 
   Future<bool> existsRecoveryCodesHistoryByHistoryId(String historyId) async {
-    final row = await (selectOnly(recoveryCodesHistory)
-          ..addColumns([recoveryCodesHistory.historyId])
-          ..where(recoveryCodesHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(recoveryCodesHistory)
+              ..addColumns([recoveryCodesHistory.historyId])
+              ..where(recoveryCodesHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
 
     return row != null;
   }
 
   Future<List<RecoveryCodesHistoryData>>
-      getRecoveryCodesHistoryByGeneratedAtRange({
-    DateTime? from,
-    DateTime? to,
-  }) {
+  getRecoveryCodesHistoryByGeneratedAtRange({DateTime? from, DateTime? to}) {
     final query = select(recoveryCodesHistory);
     if (from != null) {
       query.where((tbl) => tbl.generatedAt.isBiggerOrEqualValue(from));
@@ -50,19 +48,23 @@ class RecoveryCodesHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<int> deleteRecoveryCodesHistoryByHistoryId(String historyId) {
-    return (delete(recoveryCodesHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .go();
+    return (delete(
+      recoveryCodesHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).go();
   }
-
 
   // --- HISTORY CARD BATCH METHODS ---
-  Future<List<RecoveryCodesHistoryData>> getRecoveryCodesHistoryByHistoryIds(List<String> historyIds) {
+  Future<List<RecoveryCodesHistoryData>> getRecoveryCodesHistoryByHistoryIds(
+    List<String> historyIds,
+  ) {
     if (historyIds.isEmpty) return Future.value(const []);
-    return (select(recoveryCodesHistory)..where((tbl) => tbl.historyId.isIn(historyIds))).get();
+    return (select(
+      recoveryCodesHistory,
+    )..where((tbl) => tbl.historyId.isIn(historyIds))).get();
   }
 
-  Future<Map<String, RecoveryCodesHistoryCardDataDto>> getRecoveryCodesHistoryCardDataByHistoryIds(List<String> historyIds) async {
+  Future<Map<String, RecoveryCodesHistoryCardDataDto>>
+  getRecoveryCodesHistoryCardDataByHistoryIds(List<String> historyIds) async {
     if (historyIds.isEmpty) return const {};
 
     // Specialized for RecoveryCodes: no direct secret column, maybe count handled differently
@@ -81,7 +83,9 @@ class RecoveryCodesHistoryDao extends DatabaseAccessor<MainStore>
 
     return {
       for (final row in rows)
-        row.read(recoveryCodesHistory.historyId)!: RecoveryCodesHistoryCardDataDto(
+        row.read(
+          recoveryCodesHistory.historyId,
+        )!: RecoveryCodesHistoryCardDataDto(
           codesCount: row.read(recoveryCodesHistory.codesCount),
           usedCount: row.read(recoveryCodesHistory.usedCount),
           generatedAt: row.read(recoveryCodesHistory.generatedAt),
@@ -91,7 +95,9 @@ class RecoveryCodesHistoryDao extends DatabaseAccessor<MainStore>
     };
   }
 
-  Future<List<int>> getRecoveryCodeValueHistoryIdsByHistoryId(String historyId) async {
+  Future<List<int>> getRecoveryCodeValueHistoryIdsByHistoryId(
+    String historyId,
+  ) async {
     // Needs explicit implementation if using joined table
     return const [];
   }

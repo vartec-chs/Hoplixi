@@ -5,7 +5,8 @@ import '../../../tables/system/categories.dart';
 part 'categories_dao.g.dart';
 
 @DriftAccessor(tables: [Categories])
-class CategoriesDao extends DatabaseAccessor<MainStore> with _$CategoriesDaoMixin {
+class CategoriesDao extends DatabaseAccessor<MainStore>
+    with _$CategoriesDaoMixin {
   CategoriesDao(super.db);
 
   Future<int> insertCategory(CategoriesCompanion companion) {
@@ -17,7 +18,9 @@ class CategoriesDao extends DatabaseAccessor<MainStore> with _$CategoriesDaoMixi
   }
 
   Future<CategoriesData?> getCategoryById(String id) {
-    return (select(categories)..where((t) => t.id.equals(id))).getSingleOrNull();
+    return (select(
+      categories,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Future<List<CategoriesData>> getAllCategories() {
@@ -29,11 +32,15 @@ class CategoriesDao extends DatabaseAccessor<MainStore> with _$CategoriesDaoMixi
   }
 
   Future<List<CategoriesData>> getChildren(String parentId) {
-    return (select(categories)..where((t) => t.parentId.equals(parentId))).get();
+    return (select(
+      categories,
+    )..where((t) => t.parentId.equals(parentId))).get();
   }
 
   Future<bool> existsCategory(String id) async {
-    final query = selectOnly(categories)..addColumns([categories.id])..where(categories.id.equals(id));
+    final query = selectOnly(categories)
+      ..addColumns([categories.id])
+      ..where(categories.id.equals(id));
     final result = await query.get();
     return result.isNotEmpty;
   }
@@ -53,7 +60,7 @@ class CategoriesDao extends DatabaseAccessor<MainStore> with _$CategoriesDaoMixi
     } else {
       query.where((t) => t.parentId.equals(parentId));
     }
-    // В таблице categories нет поля sortOrder в Drift файле, 
+    // В таблице categories нет поля sortOrder в Drift файле,
     // но инструкция просила getChildrenOrdered если есть sortOrder.
     // Сортируем по имени по умолчанию.
     query.orderBy([(t) => OrderingTerm(expression: t.name)]);

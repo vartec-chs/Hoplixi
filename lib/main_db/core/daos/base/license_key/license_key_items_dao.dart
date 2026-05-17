@@ -18,34 +18,39 @@ class LicenseKeyItemsDao extends DatabaseAccessor<MainStore>
     String itemId,
     LicenseKeyItemsCompanion companion,
   ) {
-    return (update(licenseKeyItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .write(companion);
+    return (update(
+      licenseKeyItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).write(companion);
   }
 
   Future<LicenseKeyItemsData?> getLicenseKeyByItemId(String itemId) {
-    return (select(licenseKeyItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .getSingleOrNull();
+    return (select(
+      licenseKeyItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).getSingleOrNull();
   }
 
   Future<bool> existsLicenseKeyByItemId(String itemId) async {
-    final row = await (selectOnly(licenseKeyItems)
-          ..addColumns([licenseKeyItems.itemId])
-          ..where(licenseKeyItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(licenseKeyItems)
+              ..addColumns([licenseKeyItems.itemId])
+              ..where(licenseKeyItems.itemId.equals(itemId)))
+            .getSingleOrNull();
 
     return row != null;
   }
 
   Future<int> deleteLicenseKeyByItemId(String itemId) {
-    return (delete(licenseKeyItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .go();
+    return (delete(
+      licenseKeyItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).go();
   }
 
   Future<String?> getLicenseKeySecretByItemId(String itemId) async {
-    final row = await (selectOnly(licenseKeyItems)
-          ..addColumns([licenseKeyItems.licenseKey])
-          ..where(licenseKeyItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(licenseKeyItems)
+              ..addColumns([licenseKeyItems.licenseKey])
+              ..where(licenseKeyItems.itemId.equals(itemId)))
+            .getSingleOrNull();
     return row?.read(licenseKeyItems.licenseKey);
   }
 

@@ -12,9 +12,7 @@ import '../payloads/ssh_key_history_payload.dart';
 import 'vault_history_restore_handler.dart';
 
 class SshKeyHistoryRestoreHandler implements VaultHistoryRestoreHandler {
-  SshKeyHistoryRestoreHandler({
-    required this.sshKeyItemsDao,
-  });
+  SshKeyHistoryRestoreHandler({required this.sshKeyItemsDao});
 
   final SshKeyItemsDao sshKeyItemsDao;
 
@@ -40,7 +38,8 @@ class SshKeyHistoryRestoreHandler implements VaultHistoryRestoreHandler {
       return const Failure(
         DBCoreError.conflict(
           code: 'history.restore.missing_field',
-          message: 'Нельзя восстановить запись: в снимке отсутствует обязательное поле "privateKey"',
+          message:
+              'Нельзя восстановить запись: в снимке отсутствует обязательное поле "privateKey"',
           entity: 'sshKey',
         ),
       );

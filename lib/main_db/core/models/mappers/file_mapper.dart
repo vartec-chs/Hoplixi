@@ -3,9 +3,7 @@ import '../dto/file_dto.dart';
 
 extension FileItemsDataMapper on FileItemsData {
   FileDataDto toFileDataDto() {
-    return FileDataDto(
-      metadataId: metadataId,
-    );
+    return FileDataDto(metadataId: metadataId);
   }
 }
 

@@ -18,33 +18,39 @@ class PasswordItemsDao extends DatabaseAccessor<MainStore>
     String itemId,
     PasswordItemsCompanion companion,
   ) {
-    return (update(passwordItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .write(companion);
+    return (update(
+      passwordItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).write(companion);
   }
 
   Future<PasswordItemsData?> getPasswordByItemId(String itemId) {
-    return (select(passwordItems)..where((tbl) => tbl.itemId.equals(itemId)))
-        .getSingleOrNull();
+    return (select(
+      passwordItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).getSingleOrNull();
   }
 
   Future<bool> existsPasswordByItemId(String itemId) async {
-    final row = await (selectOnly(passwordItems)
-          ..addColumns([passwordItems.itemId])
-          ..where(passwordItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(passwordItems)
+              ..addColumns([passwordItems.itemId])
+              ..where(passwordItems.itemId.equals(itemId)))
+            .getSingleOrNull();
 
     return row != null;
   }
 
   Future<int> deletePasswordByItemId(String itemId) {
-    return (delete(passwordItems)..where((tbl) => tbl.itemId.equals(itemId))).go();
+    return (delete(
+      passwordItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).go();
   }
 
   Future<String?> getPasswordSecretByItemId(String itemId) async {
-    final row = await (selectOnly(passwordItems)
-          ..addColumns([passwordItems.password])
-          ..where(passwordItems.itemId.equals(itemId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(passwordItems)
+              ..addColumns([passwordItems.password])
+              ..where(passwordItems.itemId.equals(itemId)))
+            .getSingleOrNull();
     return row?.read(passwordItems.password);
   }
 

@@ -79,9 +79,7 @@ class FileMetadataRepository {
     );
   }
 
-  Future<void> markAvailable({
-    required String metadataId,
-  }) async {
+  Future<void> markAvailable({required String metadataId}) async {
     await db.fileMetadataDao.updateAvailabilityStatus(
       id: metadataId,
       availabilityStatus: FileAvailabilityStatus.available,

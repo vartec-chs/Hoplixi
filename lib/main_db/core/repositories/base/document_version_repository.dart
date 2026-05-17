@@ -16,7 +16,9 @@ class DocumentVersionRepository {
       final versionId = const Uuid().v4();
 
       // 1. Определяем номер версии
-      final nextNumber = await db.documentVersionsDao.getNextVersionNumber(dto.documentId);
+      final nextNumber = await db.documentVersionsDao.getNextVersionNumber(
+        dto.documentId,
+      );
 
       // 2. Вставляем версию
       await db.documentVersionsDao.insertDocumentVersion(
@@ -57,7 +59,8 @@ class DocumentVersionRepository {
       }
 
       // 5. Обновляем modifiedAt в vault_items
-      await (db.update(db.vaultItems)..where((t) => t.id.equals(dto.documentId)))
+      await (db.update(db.vaultItems)
+            ..where((t) => t.id.equals(dto.documentId)))
           .write(VaultItemsCompanion(modifiedAt: Value(now)));
 
       return versionId;
@@ -70,13 +73,17 @@ class DocumentVersionRepository {
   }
 
   Future<List<DocumentVersionCardDto>> getVersionsByDocumentId(
-      String documentId) async {
-    final list = await db.documentVersionsDao.getVersionsByDocumentId(documentId);
+    String documentId,
+  ) async {
+    final list = await db.documentVersionsDao.getVersionsByDocumentId(
+      documentId,
+    );
     return list.map((e) => e.toDocumentVersionCardDto()).toList();
   }
 
   Future<DocumentVersionViewDto?> getCurrentVersionByDocumentId(
-      String documentId) async {
+    String documentId,
+  ) async {
     final item = await db.documentItemsDao.getDocumentItemByItemId(documentId);
     if (item?.currentVersionId == null) return null;
     return getVersionById(item!.currentVersionId!);

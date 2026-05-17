@@ -13,10 +13,7 @@ class ItemTagsDao extends DatabaseAccessor<MainStore> with _$ItemTagsDaoMixin {
     required String tagId,
   }) {
     return into(itemTags).insert(
-      ItemTagsCompanion.insert(
-        itemId: itemId,
-        tagId: tagId,
-      ),
+      ItemTagsCompanion.insert(itemId: itemId, tagId: tagId),
       mode: InsertMode.insertOrIgnore,
     );
   }
@@ -25,9 +22,9 @@ class ItemTagsDao extends DatabaseAccessor<MainStore> with _$ItemTagsDaoMixin {
     required String itemId,
     required String tagId,
   }) {
-    return (delete(itemTags)
-          ..where((t) => t.itemId.equals(itemId) & t.tagId.equals(tagId)))
-        .go();
+    return (delete(
+      itemTags,
+    )..where((t) => t.itemId.equals(itemId) & t.tagId.equals(tagId))).go();
   }
 
   Future<List<ItemTagsData>> getTagsForItem(String itemId) {

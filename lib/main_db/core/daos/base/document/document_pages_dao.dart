@@ -17,18 +17,21 @@ class DocumentPagesDao extends DatabaseAccessor<MainStore>
     String id,
     DocumentPagesCompanion companion,
   ) {
-    return (update(documentPages)..where((t) => t.id.equals(id)))
-        .write(companion);
+    return (update(
+      documentPages,
+    )..where((t) => t.id.equals(id))).write(companion);
   }
 
   Future<DocumentPagesData?> getDocumentPageById(String id) {
-    return (select(documentPages)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (select(
+      documentPages,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Future<List<DocumentPagesData>> getPagesByDocumentId(String documentId) {
-    return (select(documentPages)..where((t) => t.documentId.equals(documentId)))
-        .get();
+    return (select(
+      documentPages,
+    )..where((t) => t.documentId.equals(documentId))).get();
   }
 
   Future<int> setCurrentVersionPageId({
@@ -36,9 +39,7 @@ class DocumentPagesDao extends DatabaseAccessor<MainStore>
     required String? currentVersionPageId,
   }) {
     return (update(documentPages)..where((t) => t.id.equals(pageId))).write(
-      DocumentPagesCompanion(
-        currentVersionPageId: Value(currentVersionPageId),
-      ),
+      DocumentPagesCompanion(currentVersionPageId: Value(currentVersionPageId)),
     );
   }
 
@@ -47,8 +48,8 @@ class DocumentPagesDao extends DatabaseAccessor<MainStore>
   }
 
   Future<int> deletePagesByDocumentId(String documentId) {
-    return (delete(documentPages)
-          ..where((t) => t.documentId.equals(documentId)))
-        .go();
+    return (delete(
+      documentPages,
+    )..where((t) => t.documentId.equals(documentId))).go();
   }
 }

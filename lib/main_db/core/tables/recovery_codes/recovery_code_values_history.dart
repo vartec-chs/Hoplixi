@@ -85,7 +85,9 @@ enum RecoveryCodeValuesHistoryConstraint {
 
   positionNonNegative('chk_recovery_code_values_history_position_non_negative'),
 
-  uniqueHistoryPosition('chk_recovery_code_values_history_unique_history_position');
+  uniqueHistoryPosition(
+    'chk_recovery_code_values_history_unique_history_position',
+  );
 
   const RecoveryCodeValuesHistoryConstraint(this.constraintName);
 

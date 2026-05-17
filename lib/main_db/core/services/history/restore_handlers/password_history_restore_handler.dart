@@ -12,9 +12,7 @@ import '../payloads/password_history_payload.dart';
 import 'vault_history_restore_handler.dart';
 
 class PasswordHistoryRestoreHandler implements VaultHistoryRestoreHandler {
-  PasswordHistoryRestoreHandler({
-    required this.passwordItemsDao,
-  });
+  PasswordHistoryRestoreHandler({required this.passwordItemsDao});
 
   final PasswordItemsDao passwordItemsDao;
 
@@ -40,7 +38,8 @@ class PasswordHistoryRestoreHandler implements VaultHistoryRestoreHandler {
       return const Failure(
         DBCoreError.conflict(
           code: 'history.restore.missing_field',
-          message: 'Нельзя восстановить пароль: в снимке отсутствует обязательное поле "password"',
+          message:
+              'Нельзя восстановить пароль: в снимке отсутствует обязательное поле "password"',
           entity: 'password',
         ),
       );

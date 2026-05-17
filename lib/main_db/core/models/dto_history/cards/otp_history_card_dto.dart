@@ -20,15 +20,19 @@ sealed class OtpHistoryCardDataDto with _$OtpHistoryCardDataDto {
     @Default(false) bool hasSecret,
   }) = _OtpHistoryCardDataDto;
 
-  factory OtpHistoryCardDataDto.fromJson(Map<String, dynamic> json) => _$OtpHistoryCardDataDtoFromJson(json);
+  factory OtpHistoryCardDataDto.fromJson(Map<String, dynamic> json) =>
+      _$OtpHistoryCardDataDtoFromJson(json);
 }
 
 @freezed
-sealed class OtpHistoryCardDto with _$OtpHistoryCardDto implements VaultHistoryCardDto {
+sealed class OtpHistoryCardDto
+    with _$OtpHistoryCardDto
+    implements VaultHistoryCardDto {
   const factory OtpHistoryCardDto({
     required VaultSnapshotCardDto snapshot,
     required OtpHistoryCardDataDto otp,
   }) = _OtpHistoryCardDto;
 
-  factory OtpHistoryCardDto.fromJson(Map<String, dynamic> json) => _$OtpHistoryCardDtoFromJson(json);
+  factory OtpHistoryCardDto.fromJson(Map<String, dynamic> json) =>
+      _$OtpHistoryCardDtoFromJson(json);
 }

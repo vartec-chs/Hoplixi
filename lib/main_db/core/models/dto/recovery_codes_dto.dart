@@ -80,7 +80,9 @@ sealed class CreateRecoveryCodesDto with _$CreateRecoveryCodesDto {
 }
 
 @freezed
-sealed class RecoveryCodesViewDto with _$RecoveryCodesViewDto implements VaultEntityViewDto {
+sealed class RecoveryCodesViewDto
+    with _$RecoveryCodesViewDto
+    implements VaultEntityViewDto {
   const factory RecoveryCodesViewDto({
     required VaultItemViewDto item,
     required RecoveryCodesDataDto recoveryCodes,
@@ -94,7 +96,9 @@ sealed class RecoveryCodesViewDto with _$RecoveryCodesViewDto implements VaultEn
 }
 
 @freezed
-sealed class RecoveryCodesCardDto with _$RecoveryCodesCardDto implements VaultEntityCardDto {
+sealed class RecoveryCodesCardDto
+    with _$RecoveryCodesCardDto
+    implements VaultEntityCardDto {
   const factory RecoveryCodesCardDto({
     required VaultItemCardDto item,
     required RecoveryCodesCardDataDto recoveryCodes,
@@ -103,6 +107,7 @@ sealed class RecoveryCodesCardDto with _$RecoveryCodesCardDto implements VaultEn
   factory RecoveryCodesCardDto.fromJson(Map<String, dynamic> json) =>
       _$RecoveryCodesCardDtoFromJson(json);
 }
+
 @freezed
 sealed class PatchRecoveryCodesDataDto with _$PatchRecoveryCodesDataDto {
   const factory PatchRecoveryCodesDataDto({
@@ -119,5 +124,3 @@ sealed class PatchRecoveryCodesDto with _$PatchRecoveryCodesDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchRecoveryCodesDto;
 }
-
-

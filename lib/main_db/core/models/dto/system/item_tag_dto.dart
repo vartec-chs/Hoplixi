@@ -17,10 +17,8 @@ sealed class ItemTagDto with _$ItemTagDto {
 
 @freezed
 sealed class AssignTagDto with _$AssignTagDto {
-  const factory AssignTagDto({
-    required String itemId,
-    required String tagId,
-  }) = _AssignTagDto;
+  const factory AssignTagDto({required String itemId, required String tagId}) =
+      _AssignTagDto;
 
   factory AssignTagDto.fromJson(Map<String, dynamic> json) =>
       _$AssignTagDtoFromJson(json);
@@ -28,10 +26,8 @@ sealed class AssignTagDto with _$AssignTagDto {
 
 @freezed
 sealed class RemoveTagDto with _$RemoveTagDto {
-  const factory RemoveTagDto({
-    required String itemId,
-    required String tagId,
-  }) = _RemoveTagDto;
+  const factory RemoveTagDto({required String itemId, required String tagId}) =
+      _RemoveTagDto;
 
   factory RemoveTagDto.fromJson(Map<String, dynamic> json) =>
       _$RemoveTagDtoFromJson(json);

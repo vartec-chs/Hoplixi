@@ -14,11 +14,6 @@ extension TagDataMapper on TagsData {
   }
 
   TagCardDto toTagCardDto() {
-    return TagCardDto(
-      id: id,
-      name: name,
-      color: color,
-      type: type,
-    );
+    return TagCardDto(id: id, name: name, color: color, type: type);
   }
 }

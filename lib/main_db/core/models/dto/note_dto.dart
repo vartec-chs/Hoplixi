@@ -19,9 +19,7 @@ sealed class NoteDataDto with _$NoteDataDto {
 
 @freezed
 sealed class NoteCardDataDto with _$NoteCardDataDto {
-  const factory NoteCardDataDto({
-    required String content,
-  }) = _NoteCardDataDto;
+  const factory NoteCardDataDto({required String content}) = _NoteCardDataDto;
 
   factory NoteCardDataDto.fromJson(Map<String, dynamic> json) =>
       _$NoteCardDataDtoFromJson(json);
@@ -77,5 +75,3 @@ sealed class PatchNoteDto with _$PatchNoteDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchNoteDto;
 }
-
-

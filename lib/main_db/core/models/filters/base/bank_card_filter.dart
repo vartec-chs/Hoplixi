@@ -55,7 +55,9 @@ sealed class BankCardFilter with _$BankCardFilter {
 
     return BankCardFilter(
       base: base ?? const BaseFilter(),
-      cardholderName: normalizedCardholder?.isEmpty == true ? null : normalizedCardholder,
+      cardholderName: normalizedCardholder?.isEmpty == true
+          ? null
+          : normalizedCardholder,
       cardType: cardType,
       cardNetwork: cardNetwork,
       bankName: normalizedBankName?.isEmpty == true ? null : normalizedBankName,

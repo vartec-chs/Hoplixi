@@ -16,34 +16,39 @@ class PasswordHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<PasswordHistoryData?> getPasswordHistoryByHistoryId(String historyId) {
-    return (select(passwordHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .getSingleOrNull();
+    return (select(
+      passwordHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).getSingleOrNull();
   }
 
   Future<bool> existsPasswordHistoryByHistoryId(String historyId) async {
-    final row = await (selectOnly(passwordHistory)
-          ..addColumns([passwordHistory.historyId])
-          ..where(passwordHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(passwordHistory)
+              ..addColumns([passwordHistory.historyId])
+              ..where(passwordHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
 
     return row != null;
   }
 
   Future<int> deletePasswordHistoryByHistoryId(String historyId) {
-    return (delete(passwordHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .go();
+    return (delete(
+      passwordHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).go();
   }
-
 
   // --- HISTORY CARD BATCH METHODS ---
-  Future<List<PasswordHistoryData>> getPasswordHistoryByHistoryIds(List<String> historyIds) {
+  Future<List<PasswordHistoryData>> getPasswordHistoryByHistoryIds(
+    List<String> historyIds,
+  ) {
     if (historyIds.isEmpty) return Future.value(const []);
-    return (select(passwordHistory)..where((tbl) => tbl.historyId.isIn(historyIds))).get();
+    return (select(
+      passwordHistory,
+    )..where((tbl) => tbl.historyId.isIn(historyIds))).get();
   }
 
-  Future<Map<String, PasswordHistoryCardDataDto>> getPasswordHistoryCardDataByHistoryIds(List<String> historyIds) async {
+  Future<Map<String, PasswordHistoryCardDataDto>>
+  getPasswordHistoryCardDataByHistoryIds(List<String> historyIds) async {
     if (historyIds.isEmpty) return const {};
 
     final hasPasswordExpr = passwordHistory.password.isNotNull();
@@ -73,11 +78,11 @@ class PasswordHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<String?> getPasswordByHistoryId(String historyId) async {
-    final row = await (selectOnly(passwordHistory)
-          ..addColumns([passwordHistory.password])
-          ..where(passwordHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(passwordHistory)
+              ..addColumns([passwordHistory.password])
+              ..where(passwordHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
     return row?.read(passwordHistory.password);
   }
-
 }

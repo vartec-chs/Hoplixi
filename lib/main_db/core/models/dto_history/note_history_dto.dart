@@ -7,10 +7,8 @@ part 'note_history_dto.g.dart';
 
 @freezed
 sealed class NoteHistoryDataDto with _$NoteHistoryDataDto {
-  const factory NoteHistoryDataDto({
-    String? deltaJson,
-    String? content,
-  }) = _NoteHistoryDataDto;
+  const factory NoteHistoryDataDto({String? deltaJson, String? content}) =
+      _NoteHistoryDataDto;
 
   factory NoteHistoryDataDto.fromJson(Map<String, dynamic> json) =>
       _$NoteHistoryDataDtoFromJson(json);

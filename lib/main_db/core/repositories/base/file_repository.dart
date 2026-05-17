@@ -43,7 +43,9 @@ class FileRepository {
         );
       }
 
-      await db.into(db.vaultItems).insert(
+      await db
+          .into(db.vaultItems)
+          .insert(
             VaultItemsCompanion.insert(
               id: Value(itemId),
               type: VaultItemType.file,
@@ -74,8 +76,9 @@ class FileRepository {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
 
-      await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-          .write(
+      await (db.update(
+        db.vaultItems,
+      )..where((tbl) => tbl.id.equals(itemId))).write(
         VaultItemsCompanion(
           name: dto.item.name.toRequiredValue(),
           description: dto.item.description.toNullableValue(),
@@ -89,9 +92,7 @@ class FileRepository {
 
       await db.fileItemsDao.updateFileItemByItemId(
         itemId,
-        FileItemsCompanion(
-          metadataId: dto.file.metadataId.toNullableValue(),
-        ),
+        FileItemsCompanion(metadataId: dto.file.metadataId.toNullableValue()),
       );
 
       final tagsUpdate = dto.tags;
@@ -123,12 +124,13 @@ class FileRepository {
             mimeType: metadataDto.mimeType.toRequiredValue(),
             fileSize: metadataDto.fileSize.toRequiredValue(),
             sha256: metadataDto.sha256.toNullableValue(),
-            availabilityStatus: metadataDto.availabilityStatus.toRequiredValue(),
+            availabilityStatus: metadataDto.availabilityStatus
+                .toRequiredValue(),
             integrityStatus: metadataDto.integrityStatus.toRequiredValue(),
             missingDetectedAt: metadataDto.missingDetectedAt.toNullableValue(),
             deletedAt: metadataDto.deletedAt.toNullableValue(),
-            lastIntegrityCheckAt:
-                metadataDto.lastIntegrityCheckAt.toNullableValue(),
+            lastIntegrityCheckAt: metadataDto.lastIntegrityCheckAt
+                .toNullableValue(),
           ),
         );
       }
@@ -136,18 +138,19 @@ class FileRepository {
   }
 
   Future<FileViewDto?> getViewById(String itemId) async {
-    final query = db.select(db.vaultItems).join([
-      innerJoin(
-        db.fileItems,
-        db.fileItems.itemId.equalsExp(db.vaultItems.id),
-      ),
-      leftOuterJoin(
-        db.fileMetadata,
-        db.fileMetadata.id.equalsExp(db.fileItems.metadataId),
-      ),
-    ])
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.file));
+    final query =
+        db.select(db.vaultItems).join([
+            innerJoin(
+              db.fileItems,
+              db.fileItems.itemId.equalsExp(db.vaultItems.id),
+            ),
+            leftOuterJoin(
+              db.fileMetadata,
+              db.fileMetadata.id.equalsExp(db.fileItems.metadataId),
+            ),
+          ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.file));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
@@ -174,10 +177,7 @@ class FileRepository {
     return _mapRowToCardDto(row);
   }
 
-  Future<List<FileCardDto>> getCards({
-    int limit = 50,
-    int offset = 0,
-  }) async {
+  Future<List<FileCardDto>> getCards({int limit = 50, int offset = 0}) async {
     final query = _buildCardQuery()
       ..where(db.vaultItems.type.equalsValue(VaultItemType.file))
       ..where(db.vaultItems.isDeleted.equals(false))
@@ -190,51 +190,48 @@ class FileRepository {
   Future<void> deletePermanently(String itemId) {
     // Note: file_items will be deleted by cascade.
     // metadata is NOT deleted automatically as it might be shared.
-    return (db.delete(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-        .go();
+    return (db.delete(
+      db.vaultItems,
+    )..where((tbl) => tbl.id.equals(itemId))).go();
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery() {
     return db.selectOnly(db.vaultItems).join([
-      innerJoin(
-        db.fileItems,
-        db.fileItems.itemId.equalsExp(db.vaultItems.id),
-      ),
+      innerJoin(db.fileItems, db.fileItems.itemId.equalsExp(db.vaultItems.id)),
       leftOuterJoin(
         db.fileMetadata,
         db.fileMetadata.id.equalsExp(db.fileItems.metadataId),
       ),
-    ])
-      ..addColumns([
-        db.vaultItems.id,
-        db.vaultItems.type,
-        db.vaultItems.name,
-        db.vaultItems.description,
-        db.vaultItems.categoryId,
-        db.vaultItems.iconRefId,
-        db.vaultItems.isFavorite,
-        db.vaultItems.isArchived,
-        db.vaultItems.isPinned,
-        db.vaultItems.isDeleted,
-        db.vaultItems.createdAt,
-        db.vaultItems.modifiedAt,
-        db.vaultItems.lastUsedAt,
-        db.vaultItems.archivedAt,
-        db.vaultItems.deletedAt,
-        db.vaultItems.recentScore,
+    ])..addColumns([
+      db.vaultItems.id,
+      db.vaultItems.type,
+      db.vaultItems.name,
+      db.vaultItems.description,
+      db.vaultItems.categoryId,
+      db.vaultItems.iconRefId,
+      db.vaultItems.isFavorite,
+      db.vaultItems.isArchived,
+      db.vaultItems.isPinned,
+      db.vaultItems.isDeleted,
+      db.vaultItems.createdAt,
+      db.vaultItems.modifiedAt,
+      db.vaultItems.lastUsedAt,
+      db.vaultItems.archivedAt,
+      db.vaultItems.deletedAt,
+      db.vaultItems.recentScore,
 
-        db.fileItems.metadataId,
-        db.fileMetadata.fileName,
-        db.fileMetadata.fileExtension,
-        db.fileMetadata.mimeType,
-        db.fileMetadata.fileSize,
-        db.fileMetadata.availabilityStatus,
-        db.fileMetadata.integrityStatus,
-        db.fileMetadata.missingDetectedAt,
-        db.fileMetadata.deletedAt,
-        db.fileMetadata.lastIntegrityCheckAt,
-        db.fileMetadata.sha256,
-      ]);
+      db.fileItems.metadataId,
+      db.fileMetadata.fileName,
+      db.fileMetadata.fileExtension,
+      db.fileMetadata.mimeType,
+      db.fileMetadata.fileSize,
+      db.fileMetadata.availabilityStatus,
+      db.fileMetadata.integrityStatus,
+      db.fileMetadata.missingDetectedAt,
+      db.fileMetadata.deletedAt,
+      db.fileMetadata.lastIntegrityCheckAt,
+      db.fileMetadata.sha256,
+    ]);
   }
 
   FileCardDto _mapRowToCardDto(TypedResult row) {
@@ -263,9 +260,10 @@ class FileRepository {
         fileExtension: row.read(db.fileMetadata.fileExtension),
         mimeType: row.read(db.fileMetadata.mimeType),
         fileSize: row.read(db.fileMetadata.fileSize),
-        availabilityStatus: row.readWithConverter<FileAvailabilityStatus?, String>(
-          db.fileMetadata.availabilityStatus,
-        ),
+        availabilityStatus: row
+            .readWithConverter<FileAvailabilityStatus?, String>(
+              db.fileMetadata.availabilityStatus,
+            ),
         integrityStatus: row.readWithConverter<FileIntegrityStatus?, String>(
           db.fileMetadata.integrityStatus,
         ),

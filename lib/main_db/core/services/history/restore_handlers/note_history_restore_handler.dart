@@ -12,9 +12,7 @@ import '../payloads/note_history_payload.dart';
 import 'vault_history_restore_handler.dart';
 
 class NoteHistoryRestoreHandler implements VaultHistoryRestoreHandler {
-  NoteHistoryRestoreHandler({
-    required this.noteItemsDao,
-  });
+  NoteHistoryRestoreHandler({required this.noteItemsDao});
 
   final NoteItemsDao noteItemsDao;
 

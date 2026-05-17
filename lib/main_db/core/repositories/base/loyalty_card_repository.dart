@@ -101,14 +101,15 @@ class LoyaltyCardRepository {
   }
 
   Future<LoyaltyCardViewDto?> getViewById(String itemId) async {
-    final query = db.select(db.vaultItems).join([
-      innerJoin(
-        db.loyaltyCardItems,
-        db.loyaltyCardItems.itemId.equalsExp(db.vaultItems.id),
-      ),
-    ])
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.loyaltyCard));
+    final query =
+        db.select(db.vaultItems).join([
+            innerJoin(
+              db.loyaltyCardItems,
+              db.loyaltyCardItems.itemId.equalsExp(db.vaultItems.id),
+            ),
+          ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.loyaltyCard));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
@@ -147,8 +148,9 @@ class LoyaltyCardRepository {
   }
 
   Future<void> deletePermanently(String itemId) {
-    return (db.delete(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-        .go();
+    return (db.delete(
+      db.vaultItems,
+    )..where((tbl) => tbl.id.equals(itemId))).go();
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery() {
@@ -161,37 +163,36 @@ class LoyaltyCardRepository {
         db.loyaltyCardItems,
         db.loyaltyCardItems.itemId.equalsExp(db.vaultItems.id),
       ),
-    ])
-      ..addColumns([
-        db.vaultItems.id,
-        db.vaultItems.type,
-        db.vaultItems.name,
-        db.vaultItems.description,
-        db.vaultItems.categoryId,
-        db.vaultItems.iconRefId,
-        db.vaultItems.isFavorite,
-        db.vaultItems.isArchived,
-        db.vaultItems.isPinned,
-        db.vaultItems.isDeleted,
-        db.vaultItems.createdAt,
-        db.vaultItems.modifiedAt,
-        db.vaultItems.lastUsedAt,
-        db.vaultItems.archivedAt,
-        db.vaultItems.deletedAt,
-        db.vaultItems.recentScore,
-        db.loyaltyCardItems.programName,
-        db.loyaltyCardItems.barcodeType,
-        db.loyaltyCardItems.barcodeTypeOther,
-        db.loyaltyCardItems.issuer,
-        db.loyaltyCardItems.website,
-        db.loyaltyCardItems.phone,
-        db.loyaltyCardItems.email,
-        db.loyaltyCardItems.validFrom,
-        db.loyaltyCardItems.validTo,
-        hasCardNumberExpr,
-        hasBarcodeValueExpr,
-        hasPasswordExpr,
-      ]);
+    ])..addColumns([
+      db.vaultItems.id,
+      db.vaultItems.type,
+      db.vaultItems.name,
+      db.vaultItems.description,
+      db.vaultItems.categoryId,
+      db.vaultItems.iconRefId,
+      db.vaultItems.isFavorite,
+      db.vaultItems.isArchived,
+      db.vaultItems.isPinned,
+      db.vaultItems.isDeleted,
+      db.vaultItems.createdAt,
+      db.vaultItems.modifiedAt,
+      db.vaultItems.lastUsedAt,
+      db.vaultItems.archivedAt,
+      db.vaultItems.deletedAt,
+      db.vaultItems.recentScore,
+      db.loyaltyCardItems.programName,
+      db.loyaltyCardItems.barcodeType,
+      db.loyaltyCardItems.barcodeTypeOther,
+      db.loyaltyCardItems.issuer,
+      db.loyaltyCardItems.website,
+      db.loyaltyCardItems.phone,
+      db.loyaltyCardItems.email,
+      db.loyaltyCardItems.validFrom,
+      db.loyaltyCardItems.validTo,
+      hasCardNumberExpr,
+      hasBarcodeValueExpr,
+      hasPasswordExpr,
+    ]);
   }
 
   LoyaltyCardCardDto _mapRowToCardDto(TypedResult row) {

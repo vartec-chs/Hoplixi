@@ -10,7 +10,8 @@ class DocumentVersionPagesDao extends DatabaseAccessor<MainStore>
   DocumentVersionPagesDao(super.db);
 
   Future<void> insertDocumentVersionPage(
-      DocumentVersionPagesCompanion companion) {
+    DocumentVersionPagesCompanion companion,
+  ) {
     return into(documentVersionPages).insert(companion);
   }
 
@@ -20,13 +21,15 @@ class DocumentVersionPagesDao extends DatabaseAccessor<MainStore>
     String id,
     DocumentVersionPagesCompanion companion,
   ) {
-    return (update(documentVersionPages)..where((t) => t.id.equals(id)))
-        .write(companion);
+    return (update(
+      documentVersionPages,
+    )..where((t) => t.id.equals(id))).write(companion);
   }
 
   Future<DocumentVersionPagesData?> getDocumentVersionPageById(String id) {
-    return (select(documentVersionPages)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (select(
+      documentVersionPages,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Future<List<DocumentVersionPagesData>> getPagesByVersionId(String versionId) {
@@ -36,9 +39,12 @@ class DocumentVersionPagesDao extends DatabaseAccessor<MainStore>
         .get();
   }
 
-  Future<DocumentVersionPagesData?> getPrimaryPageByVersionId(String versionId) {
-    return (select(documentVersionPages)
-          ..where((t) => t.versionId.equals(versionId) & t.isPrimary.equals(true)))
+  Future<DocumentVersionPagesData?> getPrimaryPageByVersionId(
+    String versionId,
+  ) {
+    return (select(documentVersionPages)..where(
+          (t) => t.versionId.equals(versionId) & t.isPrimary.equals(true),
+        ))
         .getSingleOrNull();
   }
 
@@ -47,8 +53,8 @@ class DocumentVersionPagesDao extends DatabaseAccessor<MainStore>
   }
 
   Future<int> deletePagesByVersionId(String versionId) {
-    return (delete(documentVersionPages)
-          ..where((t) => t.versionId.equals(versionId)))
-        .go();
+    return (delete(
+      documentVersionPages,
+    )..where((t) => t.versionId.equals(versionId))).go();
   }
 }

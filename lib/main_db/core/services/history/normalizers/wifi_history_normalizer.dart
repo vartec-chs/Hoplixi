@@ -19,9 +19,7 @@ class WifiHistoryNormalizer implements VaultHistoryTypeNormalizer {
   VaultItemType get type => VaultItemType.wifi;
 
   @override
-  Future<HistoryPayload?> normalizeHistory({
-    required String historyId,
-  }) async {
+  Future<HistoryPayload?> normalizeHistory({required String historyId}) async {
     final rows = await wifiHistoryDao.getWifiHistoryByHistoryIds([historyId]);
     if (rows.isEmpty) return null;
 
@@ -39,9 +37,7 @@ class WifiHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }
 
   @override
-  Future<HistoryPayload?> normalizeCurrent({
-    required String itemId,
-  }) async {
+  Future<HistoryPayload?> normalizeCurrent({required String itemId}) async {
     final view = await wifiRepository.getViewById(itemId);
     if (view == null) return null;
 

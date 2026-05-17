@@ -61,7 +61,9 @@ sealed class CreateCryptoWalletDto with _$CreateCryptoWalletDto {
 }
 
 @freezed
-sealed class CryptoWalletViewDto with _$CryptoWalletViewDto implements VaultEntityViewDto {
+sealed class CryptoWalletViewDto
+    with _$CryptoWalletViewDto
+    implements VaultEntityViewDto {
   const factory CryptoWalletViewDto({
     required VaultItemViewDto item,
     required CryptoWalletDataDto cryptoWallet,
@@ -72,7 +74,9 @@ sealed class CryptoWalletViewDto with _$CryptoWalletViewDto implements VaultEnti
 }
 
 @freezed
-sealed class CryptoWalletCardDto with _$CryptoWalletCardDto implements VaultEntityCardDto {
+sealed class CryptoWalletCardDto
+    with _$CryptoWalletCardDto
+    implements VaultEntityCardDto {
   const factory CryptoWalletCardDto({
     required VaultItemCardDto item,
     required CryptoWalletCardDataDto cryptoWallet,
@@ -92,7 +96,8 @@ sealed class PatchCryptoWalletDataDto with _$PatchCryptoWalletDataDto {
     @Default(FieldUpdate.keep()) FieldUpdate<String> mnemonic,
     @Default(FieldUpdate.keep()) FieldUpdate<String> privateKey,
     @Default(FieldUpdate.keep()) FieldUpdate<String> derivationPath,
-    @Default(FieldUpdate.keep()) FieldUpdate<CryptoDerivationScheme> derivationScheme,
+    @Default(FieldUpdate.keep())
+    FieldUpdate<CryptoDerivationScheme> derivationScheme,
     @Default(FieldUpdate.keep()) FieldUpdate<String> derivationSchemeOther,
     @Default(FieldUpdate.keep()) FieldUpdate<String> addresses,
     @Default(FieldUpdate.keep()) FieldUpdate<String> xpub,
@@ -110,5 +115,3 @@ sealed class PatchCryptoWalletDto with _$PatchCryptoWalletDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchCryptoWalletDto;
 }
-
-

@@ -39,7 +39,9 @@ sealed class NoteFilter with _$NoteFilter {
     return NoteFilter(
       base: base ?? const BaseFilter(),
       name: normalizedName?.isEmpty == true ? null : normalizedName,
-      contentQuery: normalizedContentQuery?.isEmpty == true ? null : normalizedContentQuery,
+      contentQuery: normalizedContentQuery?.isEmpty == true
+          ? null
+          : normalizedContentQuery,
       hasContent: hasContent,
       sortField: sortField,
     );

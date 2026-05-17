@@ -18,7 +18,6 @@ class VaultItemsDao extends DatabaseAccessor<MainStore>
     return into(vaultItems).insertOnConflictUpdate(companion);
   }
 
-
   Future<int> updateVaultItemById(
     String itemId,
     VaultItemsCompanion companion,

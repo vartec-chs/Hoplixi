@@ -39,7 +39,8 @@ sealed class LoyaltyCardHistoryViewDto with _$LoyaltyCardHistoryViewDto {
 }
 
 @freezed
-sealed class LoyaltyCardHistoryCardDataDto with _$LoyaltyCardHistoryCardDataDto {
+sealed class LoyaltyCardHistoryCardDataDto
+    with _$LoyaltyCardHistoryCardDataDto {
   const factory LoyaltyCardHistoryCardDataDto({
     required String programName,
     LoyaltyBarcodeType? barcodeType,
@@ -66,4 +67,3 @@ sealed class LoyaltyCardHistoryCardDto with _$LoyaltyCardHistoryCardDto {
   factory LoyaltyCardHistoryCardDto.fromJson(Map<String, dynamic> json) =>
       _$LoyaltyCardHistoryCardDtoFromJson(json);
 }
-

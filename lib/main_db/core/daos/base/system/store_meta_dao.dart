@@ -5,7 +5,8 @@ import '../../../tables/system/store/store_meta_table.dart';
 part 'store_meta_dao.g.dart';
 
 @DriftAccessor(tables: [StoreMetaTable])
-class StoreMetaDao extends DatabaseAccessor<MainStore> with _$StoreMetaDaoMixin {
+class StoreMetaDao extends DatabaseAccessor<MainStore>
+    with _$StoreMetaDaoMixin {
   StoreMetaDao(super.db);
 
   Future<StoreMetaData?> getStoreMeta() {

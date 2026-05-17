@@ -14,16 +14,17 @@ class ItemCategoryHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<ItemCategoryHistoryData?> getCategoryHistoryById(String id) {
-    return (select(itemCategoryHistory)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (select(
+      itemCategoryHistory,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Future<List<ItemCategoryHistoryData>> getCategoryHistoryByOriginalCategoryId(
     String originalCategoryId,
   ) {
-    return (select(itemCategoryHistory)
-          ..where((t) => t.categoryId.equals(originalCategoryId)))
-        .get();
+    return (select(
+      itemCategoryHistory,
+    )..where((t) => t.categoryId.equals(originalCategoryId))).get();
   }
 
   Future<int> deleteCategoryHistoryById(String id) {

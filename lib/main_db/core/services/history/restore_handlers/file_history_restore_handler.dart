@@ -63,12 +63,12 @@ class FileHistoryRestoreHandler implements VaultHistoryRestoreHandler {
           mimeType: Value(payload.mimeType!),
           fileSize: Value(payload.fileSize!),
           sha256: Value(payload.sha256),
-          availabilityStatus:
-              Value(
-                payload.availabilityStatus ?? FileAvailabilityStatus.available,
-              ),
-          integrityStatus:
-              Value(payload.integrityStatus ?? FileIntegrityStatus.unknown),
+          availabilityStatus: Value(
+            payload.availabilityStatus ?? FileAvailabilityStatus.available,
+          ),
+          integrityStatus: Value(
+            payload.integrityStatus ?? FileIntegrityStatus.unknown,
+          ),
           missingDetectedAt: Value(payload.missingDetectedAt),
           deletedAt: Value(payload.deletedAt),
           lastIntegrityCheckAt: Value(payload.lastIntegrityCheckAt),

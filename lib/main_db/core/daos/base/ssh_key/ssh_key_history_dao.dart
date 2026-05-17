@@ -16,34 +16,39 @@ class SshKeyHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<SshKeyHistoryData?> getSshKeyHistoryByHistoryId(String historyId) {
-    return (select(sshKeyHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .getSingleOrNull();
+    return (select(
+      sshKeyHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).getSingleOrNull();
   }
 
   Future<bool> existsSshKeyHistoryByHistoryId(String historyId) async {
-    final row = await (selectOnly(sshKeyHistory)
-          ..addColumns([sshKeyHistory.historyId])
-          ..where(sshKeyHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(sshKeyHistory)
+              ..addColumns([sshKeyHistory.historyId])
+              ..where(sshKeyHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
 
     return row != null;
   }
 
   Future<int> deleteSshKeyHistoryByHistoryId(String historyId) {
-    return (delete(sshKeyHistory)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .go();
+    return (delete(
+      sshKeyHistory,
+    )..where((tbl) => tbl.historyId.equals(historyId))).go();
   }
-
 
   // --- HISTORY CARD BATCH METHODS ---
-  Future<List<SshKeyHistoryData>> getSshKeyHistoryByHistoryIds(List<String> historyIds) {
+  Future<List<SshKeyHistoryData>> getSshKeyHistoryByHistoryIds(
+    List<String> historyIds,
+  ) {
     if (historyIds.isEmpty) return Future.value(const []);
-    return (select(sshKeyHistory)..where((tbl) => tbl.historyId.isIn(historyIds))).get();
+    return (select(
+      sshKeyHistory,
+    )..where((tbl) => tbl.historyId.isIn(historyIds))).get();
   }
 
-  Future<Map<String, SshKeyHistoryCardDataDto>> getSshKeyHistoryCardDataByHistoryIds(List<String> historyIds) async {
+  Future<Map<String, SshKeyHistoryCardDataDto>>
+  getSshKeyHistoryCardDataByHistoryIds(List<String> historyIds) async {
     if (historyIds.isEmpty) return const {};
 
     final hasPrivateKeyExpr = sshKeyHistory.privateKey.isNotNull();
@@ -63,7 +68,9 @@ class SshKeyHistoryDao extends DatabaseAccessor<MainStore>
       for (final row in rows)
         row.read(sshKeyHistory.historyId)!: SshKeyHistoryCardDataDto(
           publicKey: row.read(sshKeyHistory.publicKey),
-          keyType: row.readWithConverter<SshKeyType?, String>(sshKeyHistory.keyType),
+          keyType: row.readWithConverter<SshKeyType?, String>(
+            sshKeyHistory.keyType,
+          ),
           keySize: row.read(sshKeyHistory.keySize),
           hasPrivateKey: row.read(hasPrivateKeyExpr) ?? false,
         ),
@@ -71,11 +78,11 @@ class SshKeyHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<String?> getPrivateKeyByHistoryId(String historyId) async {
-    final row = await (selectOnly(sshKeyHistory)
-          ..addColumns([sshKeyHistory.privateKey])
-          ..where(sshKeyHistory.historyId.equals(historyId)))
-        .getSingleOrNull();
+    final row =
+        await (selectOnly(sshKeyHistory)
+              ..addColumns([sshKeyHistory.privateKey])
+              ..where(sshKeyHistory.historyId.equals(historyId)))
+            .getSingleOrNull();
     return row?.read(sshKeyHistory.privateKey);
   }
-
 }

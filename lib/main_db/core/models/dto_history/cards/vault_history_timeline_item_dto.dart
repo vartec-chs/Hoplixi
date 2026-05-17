@@ -2,7 +2,6 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../../tables/vault_items/vault_events_history.dart';
 import '../../../tables/vault_items/vault_items.dart';
 
-
 part 'vault_history_timeline_item_dto.freezed.dart';
 part 'vault_history_timeline_item_dto.g.dart';
 

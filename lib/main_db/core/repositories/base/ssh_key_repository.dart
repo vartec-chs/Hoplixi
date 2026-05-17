@@ -18,7 +18,9 @@ class SshKeyRepository {
       final now = DateTime.now();
       final itemId = const Uuid().v4();
 
-      await db.into(db.vaultItems).insert(
+      await db
+          .into(db.vaultItems)
+          .insert(
             VaultItemsCompanion.insert(
               id: Value(itemId),
               type: VaultItemType.sshKey,
@@ -33,7 +35,9 @@ class SshKeyRepository {
             ),
           );
 
-      await db.into(db.sshKeyItems).insert(
+      await db
+          .into(db.sshKeyItems)
+          .insert(
             SshKeyItemsCompanion.insert(
               itemId: itemId,
               publicKey: Value(dto.sshKey.publicKey),
@@ -53,8 +57,9 @@ class SshKeyRepository {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
 
-      await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-          .write(
+      await (db.update(
+        db.vaultItems,
+      )..where((tbl) => tbl.id.equals(itemId))).write(
         VaultItemsCompanion(
           name: dto.item.name.toRequiredValue(),
           description: dto.item.description.toNullableValue(),
@@ -66,9 +71,9 @@ class SshKeyRepository {
         ),
       );
 
-      await (db.update(db.sshKeyItems)
-            ..where((tbl) => tbl.itemId.equals(itemId)))
-          .write(
+      await (db.update(
+        db.sshKeyItems,
+      )..where((tbl) => tbl.itemId.equals(itemId))).write(
         SshKeyItemsCompanion(
           publicKey: dto.sshKey.publicKey.toNullableValue(),
           privateKey: dto.sshKey.privateKey.toNullableValue(),
@@ -81,14 +86,15 @@ class SshKeyRepository {
   }
 
   Future<SshKeyViewDto?> getViewById(String itemId) async {
-    final query = db.select(db.vaultItems).join([
-      innerJoin(
-        db.sshKeyItems,
-        db.sshKeyItems.itemId.equalsExp(db.vaultItems.id),
-      ),
-    ])
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.sshKey));
+    final query =
+        db.select(db.vaultItems).join([
+            innerJoin(
+              db.sshKeyItems,
+              db.sshKeyItems.itemId.equalsExp(db.vaultItems.id),
+            ),
+          ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.sshKey));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
@@ -114,10 +120,7 @@ class SshKeyRepository {
     return _mapRowToCardDto(row, expr);
   }
 
-  Future<List<SshKeyCardDto>> getCards({
-    int limit = 50,
-    int offset = 0,
-  }) async {
+  Future<List<SshKeyCardDto>> getCards({int limit = 50, int offset = 0}) async {
     final expr = _SshKeyCardExpressions(db);
     final query = _buildCardQuery(expr)
       ..where(db.vaultItems.type.equalsValue(VaultItemType.sshKey))
@@ -129,8 +132,9 @@ class SshKeyRepository {
   }
 
   Future<void> deletePermanently(String itemId) {
-    return (db.delete(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-        .go();
+    return (db.delete(
+      db.vaultItems,
+    )..where((tbl) => tbl.id.equals(itemId))).go();
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery(
@@ -141,29 +145,28 @@ class SshKeyRepository {
         db.sshKeyItems,
         db.sshKeyItems.itemId.equalsExp(db.vaultItems.id),
       ),
-    ])
-      ..addColumns([
-        db.vaultItems.id,
-        db.vaultItems.type,
-        db.vaultItems.name,
-        db.vaultItems.description,
-        db.vaultItems.categoryId,
-        db.vaultItems.iconRefId,
-        db.vaultItems.isFavorite,
-        db.vaultItems.isArchived,
-        db.vaultItems.isPinned,
-        db.vaultItems.isDeleted,
-        db.vaultItems.createdAt,
-        db.vaultItems.modifiedAt,
-        db.vaultItems.lastUsedAt,
-        db.vaultItems.archivedAt,
-        db.vaultItems.deletedAt,
-        db.vaultItems.recentScore,
-        db.sshKeyItems.publicKey,
-        db.sshKeyItems.keyType,
-        db.sshKeyItems.keySize,
-        expr.hasPrivateKey,
-      ]);
+    ])..addColumns([
+      db.vaultItems.id,
+      db.vaultItems.type,
+      db.vaultItems.name,
+      db.vaultItems.description,
+      db.vaultItems.categoryId,
+      db.vaultItems.iconRefId,
+      db.vaultItems.isFavorite,
+      db.vaultItems.isArchived,
+      db.vaultItems.isPinned,
+      db.vaultItems.isDeleted,
+      db.vaultItems.createdAt,
+      db.vaultItems.modifiedAt,
+      db.vaultItems.lastUsedAt,
+      db.vaultItems.archivedAt,
+      db.vaultItems.deletedAt,
+      db.vaultItems.recentScore,
+      db.sshKeyItems.publicKey,
+      db.sshKeyItems.keyType,
+      db.sshKeyItems.keySize,
+      expr.hasPrivateKey,
+    ]);
   }
 
   SshKeyCardDto _mapRowToCardDto(TypedResult row, _SshKeyCardExpressions expr) {
@@ -200,7 +203,7 @@ class SshKeyRepository {
 
 class _SshKeyCardExpressions {
   _SshKeyCardExpressions(this.db)
-      : hasPrivateKey = db.sshKeyItems.privateKey.isNotNull();
+    : hasPrivateKey = db.sshKeyItems.privateKey.isNotNull();
 
   final MainStore db;
   final Expression<bool> hasPrivateKey;

@@ -21,15 +21,19 @@ sealed class ContactHistoryCardDataDto with _$ContactHistoryCardDataDto {
     bool? isEmergencyContact,
   }) = _ContactHistoryCardDataDto;
 
-  factory ContactHistoryCardDataDto.fromJson(Map<String, dynamic> json) => _$ContactHistoryCardDataDtoFromJson(json);
+  factory ContactHistoryCardDataDto.fromJson(Map<String, dynamic> json) =>
+      _$ContactHistoryCardDataDtoFromJson(json);
 }
 
 @freezed
-sealed class ContactHistoryCardDto with _$ContactHistoryCardDto implements VaultHistoryCardDto {
+sealed class ContactHistoryCardDto
+    with _$ContactHistoryCardDto
+    implements VaultHistoryCardDto {
   const factory ContactHistoryCardDto({
     required VaultSnapshotCardDto snapshot,
     required ContactHistoryCardDataDto contact,
   }) = _ContactHistoryCardDto;
 
-  factory ContactHistoryCardDto.fromJson(Map<String, dynamic> json) => _$ContactHistoryCardDtoFromJson(json);
+  factory ContactHistoryCardDto.fromJson(Map<String, dynamic> json) =>
+      _$ContactHistoryCardDtoFromJson(json);
 }

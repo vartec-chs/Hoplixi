@@ -37,7 +37,8 @@ sealed class CustomFieldHistoryViewDto with _$CustomFieldHistoryViewDto {
 }
 
 @freezed
-sealed class CustomFieldHistoryCardDataDto with _$CustomFieldHistoryCardDataDto {
+sealed class CustomFieldHistoryCardDataDto
+    with _$CustomFieldHistoryCardDataDto {
   const factory CustomFieldHistoryCardDataDto({
     required String label,
     @Default(CustomFieldType.text) CustomFieldType fieldType,

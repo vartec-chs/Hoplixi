@@ -12,9 +12,7 @@ import '../payloads/crypto_wallet_history_payload.dart';
 import 'vault_history_restore_handler.dart';
 
 class CryptoWalletHistoryRestoreHandler implements VaultHistoryRestoreHandler {
-  CryptoWalletHistoryRestoreHandler({
-    required this.cryptoWalletItemsDao,
-  });
+  CryptoWalletHistoryRestoreHandler({required this.cryptoWalletItemsDao});
 
   final CryptoWalletItemsDao cryptoWalletItemsDao;
 

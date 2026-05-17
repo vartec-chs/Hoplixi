@@ -65,7 +65,9 @@ sealed class FileFilter with _$FileFilter {
     return FileFilter(
       base: base ?? const BaseFilter(),
       fileName: normalizedFileName?.isEmpty == true ? null : normalizedFileName,
-      fileExtension: normalizedFileExtension?.isEmpty == true ? null : normalizedFileExtension,
+      fileExtension: normalizedFileExtension?.isEmpty == true
+          ? null
+          : normalizedFileExtension,
       mimeType: normalizedMimeType?.isEmpty == true ? null : normalizedMimeType,
       minFileSize: minFileSize,
       maxFileSize: maxFileSize,
@@ -95,7 +97,8 @@ extension FileFilterHelpers on FileFilter {
     if (integrityStatus != null) return true;
     if (missingDetectedAfter != null) return true;
     if (deletedAfter != null) return true;
-    if (lastIntegrityCheckAfter != null || lastIntegrityCheckBefore != null) return true;
+    if (lastIntegrityCheckAfter != null || lastIntegrityCheckBefore != null)
+      return true;
     if (hasSha256 != null) return true;
     return false;
   }

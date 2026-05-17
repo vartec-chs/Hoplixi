@@ -6,7 +6,9 @@ part 'generic_history_card_dto.freezed.dart';
 part 'generic_history_card_dto.g.dart';
 
 @freezed
-sealed class GenericHistoryCardDto with _$GenericHistoryCardDto implements VaultHistoryCardDto {
+sealed class GenericHistoryCardDto
+    with _$GenericHistoryCardDto
+    implements VaultHistoryCardDto {
   const factory GenericHistoryCardDto({
     required VaultSnapshotCardDto snapshot,
   }) = _GenericHistoryCardDto;

@@ -22,12 +22,10 @@ class VaultEventsHistoryDao extends DatabaseAccessor<MainStore>
   }
 
   Future<int> clearSnapshotReference(String snapshotHistoryId) {
-    return (update(vaultEventsHistory)
-          ..where((tbl) => tbl.snapshotHistoryId.equals(snapshotHistoryId)))
-        .write(
-      const VaultEventsHistoryCompanion(
-        snapshotHistoryId: Value(null),
-      ),
+    return (update(
+      vaultEventsHistory,
+    )..where((tbl) => tbl.snapshotHistoryId.equals(snapshotHistoryId))).write(
+      const VaultEventsHistoryCompanion(snapshotHistoryId: Value(null)),
     );
   }
 }

@@ -87,5 +87,3 @@ sealed class PatchSshKeyDto with _$PatchSshKeyDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchSshKeyDto;
 }
-
-

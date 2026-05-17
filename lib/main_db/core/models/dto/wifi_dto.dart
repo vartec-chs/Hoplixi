@@ -92,5 +92,3 @@ sealed class PatchWifiDto with _$PatchWifiDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchWifiDto;
 }
-
-

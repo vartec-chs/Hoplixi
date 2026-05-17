@@ -3,9 +3,7 @@ import '../dto/document_dto.dart';
 
 extension DocumentItemsDataMapper on DocumentItemsData {
   DocumentDataDto toDocumentDataDto() {
-    return DocumentDataDto(
-      currentVersionId: currentVersionId,
-    );
+    return DocumentDataDto(currentVersionId: currentVersionId);
   }
 
   DocumentCardDataDto toDocumentCardDataDto() {

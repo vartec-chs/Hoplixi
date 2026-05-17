@@ -33,7 +33,8 @@ class VaultHistoryDiffService {
 
       if (oldVal == newVal) continue;
 
-      final isSensitive = (oldF?.isSensitive ?? false) || (newF?.isSensitive ?? false);
+      final isSensitive =
+          (oldF?.isSensitive ?? false) || (newF?.isSensitive ?? false);
       final label = newF?.label ?? oldF?.label ?? key;
 
       diffs.add(
@@ -80,7 +81,8 @@ class VaultHistoryDiffService {
       }
 
       final label = newF?.label ?? oldF?.label ?? identityKey;
-      final isSensitive = (oldF?.isSensitive ?? false) || (newF?.isSensitive ?? false);
+      final isSensitive =
+          (oldF?.isSensitive ?? false) || (newF?.isSensitive ?? false);
 
       diffs.add(
         VaultHistoryFieldDiffDto(

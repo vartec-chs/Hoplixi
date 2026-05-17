@@ -8,9 +8,7 @@ part 'file_dto.g.dart';
 
 @freezed
 sealed class FileDataDto with _$FileDataDto {
-  const factory FileDataDto({
-    String? metadataId,
-  }) = _FileDataDto;
+  const factory FileDataDto({String? metadataId}) = _FileDataDto;
 
   factory FileDataDto.fromJson(Map<String, dynamic> json) =>
       _$FileDataDtoFromJson(json);
@@ -27,8 +25,7 @@ sealed class FileMetadataDataDto with _$FileMetadataDataDto {
     String? sha256,
     @Default(FileAvailabilityStatus.available)
     FileAvailabilityStatus availabilityStatus,
-    @Default(FileIntegrityStatus.unknown)
-    FileIntegrityStatus integrityStatus,
+    @Default(FileIntegrityStatus.unknown) FileIntegrityStatus integrityStatus,
     DateTime? missingDetectedAt,
     DateTime? deletedAt,
     DateTime? lastIntegrityCheckAt,
@@ -115,6 +112,7 @@ sealed class FileCardDto with _$FileCardDto implements VaultEntityCardDto {
   factory FileCardDto.fromJson(Map<String, dynamic> json) =>
       _$FileCardDtoFromJson(json);
 }
+
 @freezed
 sealed class PatchFileDataDto with _$PatchFileDataDto {
   const factory PatchFileDataDto({
@@ -131,8 +129,10 @@ sealed class PatchFileMetadataDataDto with _$PatchFileMetadataDataDto {
     @Default(FieldUpdate.keep()) FieldUpdate<String> mimeType,
     @Default(FieldUpdate.keep()) FieldUpdate<int> fileSize,
     @Default(FieldUpdate.keep()) FieldUpdate<String> sha256,
-    @Default(FieldUpdate.keep()) FieldUpdate<FileAvailabilityStatus> availabilityStatus,
-    @Default(FieldUpdate.keep()) FieldUpdate<FileIntegrityStatus> integrityStatus,
+    @Default(FieldUpdate.keep())
+    FieldUpdate<FileAvailabilityStatus> availabilityStatus,
+    @Default(FieldUpdate.keep())
+    FieldUpdate<FileIntegrityStatus> integrityStatus,
     @Default(FieldUpdate.keep()) FieldUpdate<DateTime> missingDetectedAt,
     @Default(FieldUpdate.keep()) FieldUpdate<DateTime> deletedAt,
     @Default(FieldUpdate.keep()) FieldUpdate<DateTime> lastIntegrityCheckAt,
@@ -148,5 +148,3 @@ sealed class PatchFileDto with _$PatchFileDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchFileDto;
 }
-
-

@@ -16,15 +16,19 @@ sealed class WifiHistoryCardDataDto with _$WifiHistoryCardDataDto {
     @Default(false) bool hasPassword,
   }) = _WifiHistoryCardDataDto;
 
-  factory WifiHistoryCardDataDto.fromJson(Map<String, dynamic> json) => _$WifiHistoryCardDataDtoFromJson(json);
+  factory WifiHistoryCardDataDto.fromJson(Map<String, dynamic> json) =>
+      _$WifiHistoryCardDataDtoFromJson(json);
 }
 
 @freezed
-sealed class WifiHistoryCardDto with _$WifiHistoryCardDto implements VaultHistoryCardDto {
+sealed class WifiHistoryCardDto
+    with _$WifiHistoryCardDto
+    implements VaultHistoryCardDto {
   const factory WifiHistoryCardDto({
     required VaultSnapshotCardDto snapshot,
     required WifiHistoryCardDataDto wifi,
   }) = _WifiHistoryCardDto;
 
-  factory WifiHistoryCardDto.fromJson(Map<String, dynamic> json) => _$WifiHistoryCardDtoFromJson(json);
+  factory WifiHistoryCardDto.fromJson(Map<String, dynamic> json) =>
+      _$WifiHistoryCardDtoFromJson(json);
 }

@@ -17,7 +17,9 @@ class NoteRepository {
       final now = DateTime.now();
       final itemId = const Uuid().v4();
 
-      await db.into(db.vaultItems).insert(
+      await db
+          .into(db.vaultItems)
+          .insert(
             VaultItemsCompanion.insert(
               id: Value(itemId),
               type: VaultItemType.note,
@@ -32,7 +34,9 @@ class NoteRepository {
             ),
           );
 
-      await db.into(db.noteItems).insert(
+      await db
+          .into(db.noteItems)
+          .insert(
             NoteItemsCompanion.insert(
               itemId: itemId,
               deltaJson: dto.note.deltaJson,
@@ -49,8 +53,9 @@ class NoteRepository {
       final now = DateTime.now();
       final itemId = dto.item.itemId;
 
-      await (db.update(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-          .write(
+      await (db.update(
+        db.vaultItems,
+      )..where((tbl) => tbl.id.equals(itemId))).write(
         VaultItemsCompanion(
           name: dto.item.name.toRequiredValue(),
           description: dto.item.description.toNullableValue(),
@@ -62,8 +67,9 @@ class NoteRepository {
         ),
       );
 
-      await (db.update(db.noteItems)..where((tbl) => tbl.itemId.equals(itemId)))
-          .write(
+      await (db.update(
+        db.noteItems,
+      )..where((tbl) => tbl.itemId.equals(itemId))).write(
         NoteItemsCompanion(
           deltaJson: dto.note.deltaJson.toRequiredValue(),
           content: dto.note.content.toRequiredValue(),
@@ -73,14 +79,15 @@ class NoteRepository {
   }
 
   Future<NoteViewDto?> getViewById(String itemId) async {
-    final query = db.select(db.vaultItems).join([
-      innerJoin(
-        db.noteItems,
-        db.noteItems.itemId.equalsExp(db.vaultItems.id),
-      ),
-    ])
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.note));
+    final query =
+        db.select(db.vaultItems).join([
+            innerJoin(
+              db.noteItems,
+              db.noteItems.itemId.equalsExp(db.vaultItems.id),
+            ),
+          ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.note));
 
     final row = await query.getSingleOrNull();
     if (row == null) return null;
@@ -105,10 +112,7 @@ class NoteRepository {
     return _mapRowToCardDto(row);
   }
 
-  Future<List<NoteCardDto>> getCards({
-    int limit = 50,
-    int offset = 0,
-  }) async {
+  Future<List<NoteCardDto>> getCards({int limit = 50, int offset = 0}) async {
     final query = _buildCardQuery()
       ..where(db.vaultItems.type.equalsValue(VaultItemType.note))
       ..where(db.vaultItems.isDeleted.equals(false))
@@ -119,36 +123,33 @@ class NoteRepository {
   }
 
   Future<void> deletePermanently(String itemId) {
-    return (db.delete(db.vaultItems)..where((tbl) => tbl.id.equals(itemId)))
-        .go();
+    return (db.delete(
+      db.vaultItems,
+    )..where((tbl) => tbl.id.equals(itemId))).go();
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery() {
     return db.selectOnly(db.vaultItems).join([
-      innerJoin(
-        db.noteItems,
-        db.noteItems.itemId.equalsExp(db.vaultItems.id),
-      ),
-    ])
-      ..addColumns([
-        db.vaultItems.id,
-        db.vaultItems.type,
-        db.vaultItems.name,
-        db.vaultItems.description,
-        db.vaultItems.categoryId,
-        db.vaultItems.iconRefId,
-        db.vaultItems.isFavorite,
-        db.vaultItems.isArchived,
-        db.vaultItems.isPinned,
-        db.vaultItems.isDeleted,
-        db.vaultItems.createdAt,
-        db.vaultItems.modifiedAt,
-        db.vaultItems.lastUsedAt,
-        db.vaultItems.archivedAt,
-        db.vaultItems.deletedAt,
-        db.vaultItems.recentScore,
-        db.noteItems.content,
-      ]);
+      innerJoin(db.noteItems, db.noteItems.itemId.equalsExp(db.vaultItems.id)),
+    ])..addColumns([
+      db.vaultItems.id,
+      db.vaultItems.type,
+      db.vaultItems.name,
+      db.vaultItems.description,
+      db.vaultItems.categoryId,
+      db.vaultItems.iconRefId,
+      db.vaultItems.isFavorite,
+      db.vaultItems.isArchived,
+      db.vaultItems.isPinned,
+      db.vaultItems.isDeleted,
+      db.vaultItems.createdAt,
+      db.vaultItems.modifiedAt,
+      db.vaultItems.lastUsedAt,
+      db.vaultItems.archivedAt,
+      db.vaultItems.deletedAt,
+      db.vaultItems.recentScore,
+      db.noteItems.content,
+    ]);
   }
 
   NoteCardDto _mapRowToCardDto(TypedResult row) {
@@ -171,9 +172,7 @@ class NoteRepository {
         deletedAt: row.read(db.vaultItems.deletedAt),
         recentScore: row.read(db.vaultItems.recentScore),
       ),
-      note: NoteCardDataDto(
-        content: row.read(db.noteItems.content)!,
-      ),
+      note: NoteCardDataDto(content: row.read(db.noteItems.content)!),
     );
   }
 }

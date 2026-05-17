@@ -12,9 +12,7 @@ import '../payloads/bank_card_history_payload.dart';
 import 'vault_history_restore_handler.dart';
 
 class BankCardHistoryRestoreHandler implements VaultHistoryRestoreHandler {
-  BankCardHistoryRestoreHandler({
-    required this.bankCardItemsDao,
-  });
+  BankCardHistoryRestoreHandler({required this.bankCardItemsDao});
 
   final BankCardItemsDao bankCardItemsDao;
 
@@ -40,7 +38,8 @@ class BankCardHistoryRestoreHandler implements VaultHistoryRestoreHandler {
       return const Failure(
         DBCoreError.conflict(
           code: 'history.restore.missing_field',
-          message: 'Нельзя восстановить карту: в снимке отсутствует обязательное поле "cardNumber"',
+          message:
+              'Нельзя восстановить карту: в снимке отсутствует обязательное поле "cardNumber"',
           entity: 'bankCard',
         ),
       );

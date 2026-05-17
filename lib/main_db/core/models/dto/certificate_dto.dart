@@ -69,7 +69,9 @@ sealed class CreateCertificateDto with _$CreateCertificateDto {
 }
 
 @freezed
-sealed class CertificateViewDto with _$CertificateViewDto implements VaultEntityViewDto {
+sealed class CertificateViewDto
+    with _$CertificateViewDto
+    implements VaultEntityViewDto {
   const factory CertificateViewDto({
     required VaultItemViewDto item,
     required CertificateDataDto certificate,
@@ -80,7 +82,9 @@ sealed class CertificateViewDto with _$CertificateViewDto implements VaultEntity
 }
 
 @freezed
-sealed class CertificateCardDto with _$CertificateCardDto implements VaultEntityCardDto {
+sealed class CertificateCardDto
+    with _$CertificateCardDto
+    implements VaultEntityCardDto {
   const factory CertificateCardDto({
     required VaultItemCardDto item,
     required CertificateCardDataDto certificate,
@@ -93,14 +97,16 @@ sealed class CertificateCardDto with _$CertificateCardDto implements VaultEntity
 @freezed
 sealed class PatchCertificateDataDto with _$PatchCertificateDataDto {
   const factory PatchCertificateDataDto({
-    @Default(FieldUpdate.keep()) FieldUpdate<CertificateFormat> certificateFormat,
+    @Default(FieldUpdate.keep())
+    FieldUpdate<CertificateFormat> certificateFormat,
     @Default(FieldUpdate.keep()) FieldUpdate<String> certificateFormatOther,
     @Default(FieldUpdate.keep()) FieldUpdate<String> certificatePem,
     @Default(FieldUpdate.keep()) FieldUpdate<Uint8List> certificateBlob,
     @Default(FieldUpdate.keep()) FieldUpdate<String> privateKey,
     @Default(FieldUpdate.keep()) FieldUpdate<String> privateKeyPassword,
     @Default(FieldUpdate.keep()) FieldUpdate<String> passwordForPfx,
-    @Default(FieldUpdate.keep()) FieldUpdate<CertificateKeyAlgorithm> keyAlgorithm,
+    @Default(FieldUpdate.keep())
+    FieldUpdate<CertificateKeyAlgorithm> keyAlgorithm,
     @Default(FieldUpdate.keep()) FieldUpdate<String> keyAlgorithmOther,
     @Default(FieldUpdate.keep()) FieldUpdate<int> keySize,
     @Default(FieldUpdate.keep()) FieldUpdate<String> serialNumber,
@@ -119,5 +125,3 @@ sealed class PatchCertificateDto with _$PatchCertificateDto {
     @Default(FieldUpdate.keep()) FieldUpdate<List<String>> tags,
   }) = _PatchCertificateDto;
 }
-
-

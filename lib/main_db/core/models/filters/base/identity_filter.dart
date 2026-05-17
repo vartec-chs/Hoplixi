@@ -70,9 +70,13 @@ sealed class IdentityFilter with _$IdentityFilter {
 
     return IdentityFilter(
       base: base ?? const BaseFilter(),
-      firstName: normalizedFirstName?.isEmpty == true ? null : normalizedFirstName,
+      firstName: normalizedFirstName?.isEmpty == true
+          ? null
+          : normalizedFirstName,
       lastName: normalizedLastName?.isEmpty == true ? null : normalizedLastName,
-      displayName: normalizedDisplayName?.isEmpty == true ? null : normalizedDisplayName,
+      displayName: normalizedDisplayName?.isEmpty == true
+          ? null
+          : normalizedDisplayName,
       username: normalizedUsername?.isEmpty == true ? null : normalizedUsername,
       email: normalizedEmail?.isEmpty == true ? null : normalizedEmail,
       phone: normalizedPhone?.isEmpty == true ? null : normalizedPhone,

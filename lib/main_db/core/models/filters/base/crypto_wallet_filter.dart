@@ -61,7 +61,9 @@ sealed class CryptoWalletFilter with _$CryptoWalletFilter {
       hasPrivateKey: hasPrivateKey,
       hasXpub: hasXpub,
       hasXprv: hasXprv,
-      hardwareDevice: normalizedDevice?.isEmpty == true ? null : normalizedDevice,
+      hardwareDevice: normalizedDevice?.isEmpty == true
+          ? null
+          : normalizedDevice,
       sortField: sortField,
     );
   }
