@@ -1,6 +1,5 @@
 import 'package:result_dart/result_dart.dart';
 
-import '../../../daos/daos.dart';
 import '../../../errors/db_error.dart';
 import '../../../errors/db_result.dart';
 import '../../../main_store.dart';
@@ -16,7 +15,7 @@ class VaultHistoryDeleteService {
       await db.transaction(() async {
         await _deleteRevisionUnsafe(historyId);
       });
-      return Success(unit);
+      return const Success(unit);
     } catch (e, s) {
       return Failure(
         DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),
@@ -135,7 +134,7 @@ class VaultHistoryDeleteService {
         }
       });
 
-      return Success(unit);
+      return const Success(unit);
     } catch (e, s) {
       return Failure(
         DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),

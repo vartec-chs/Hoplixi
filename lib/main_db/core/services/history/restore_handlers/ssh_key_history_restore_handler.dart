@@ -25,7 +25,7 @@ class SshKeyHistoryRestoreHandler implements VaultHistoryRestoreHandler {
     required HistoryPayload payload,
   }) async {
     if (payload is! SshKeyHistoryPayload) {
-      return Failure(
+      return const Failure(
         DBCoreError.conflict(
           code: 'history.restore.invalid_payload',
           message: 'Invalid payload for SshKey restore',

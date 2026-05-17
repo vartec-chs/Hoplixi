@@ -25,7 +25,7 @@ class ApiKeyHistoryRestoreHandler implements VaultHistoryRestoreHandler {
     required HistoryPayload payload,
   }) async {
     if (payload is! ApiKeyHistoryPayload) {
-      return Failure(
+      return const Failure(
         DBCoreError.conflict(
           code: 'history.restore.invalid_payload',
           message: 'Invalid payload for ApiKey restore',

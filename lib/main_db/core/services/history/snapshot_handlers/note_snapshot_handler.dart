@@ -24,7 +24,7 @@ class NoteSnapshotHandler implements VaultSnapshotTypeHandler {
     required bool includeSecrets,
   }) async {
     if (view is! NoteViewDto) {
-      return Failure(
+      return const Failure(
         DBCoreError.conflict(
           code: 'history.snapshot.invalid_view_type',
           message: 'Invalid view type for Note snapshot',

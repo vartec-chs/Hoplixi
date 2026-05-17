@@ -25,21 +25,10 @@ class LoyaltyCardHistoryRestoreHandler implements VaultHistoryRestoreHandler {
     required HistoryPayload payload,
   }) async {
     if (payload is! LoyaltyCardHistoryPayload) {
-      return Failure(
+      return const Failure(
         DBCoreError.conflict(
           code: 'history.restore.invalid_payload',
           message: 'Invalid payload for LoyaltyCard restore',
-          entity: 'loyaltyCard',
-        ),
-      );
-    }
-
-    if (payload.programName == null) {
-      return const Failure(
-        DBCoreError.conflict(
-          code: 'history.restore.missing_field',
-          message:
-              'Нельзя восстановить карту: в снимке отсутствует обязательное поле "programName"',
           entity: 'loyaltyCard',
         ),
       );

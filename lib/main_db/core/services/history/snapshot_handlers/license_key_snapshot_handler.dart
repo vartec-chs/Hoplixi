@@ -24,7 +24,7 @@ class LicenseKeySnapshotHandler implements VaultSnapshotTypeHandler {
     required bool includeSecrets,
   }) async {
     if (view is! LicenseKeyViewDto) {
-      return Failure(
+      return const Failure(
         DBCoreError.conflict(
           code: 'history.snapshot.invalid_view_type',
           message: 'Invalid view type for LicenseKey snapshot',

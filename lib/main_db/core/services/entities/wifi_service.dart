@@ -3,7 +3,7 @@ import 'package:hoplixi/main_db/core/errors/db_exception_mapper.dart';
 import 'package:hoplixi/main_db/core/errors/db_result.dart';
 import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:hoplixi/main_db/core/repositories/base/wifi_repository.dart';
-import 'package:hoplixi/main_db/core/services/history/vault_history_service.dart';
+import 'package:hoplixi/main_db/core/services/history/facades/vault_history_service.dart';
 import 'package:hoplixi/main_db/core/services/vault_items_state_service.dart';
 import 'package:hoplixi/main_db/core/services/relations/vault_item_relations_service.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_events_history.dart';

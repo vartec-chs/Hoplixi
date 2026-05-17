@@ -25,7 +25,7 @@ class IdentityHistoryRestoreHandler implements VaultHistoryRestoreHandler {
     required HistoryPayload payload,
   }) async {
     if (payload is! IdentityHistoryPayload) {
-      return Failure(
+      return const Failure(
         DBCoreError.conflict(
           code: 'history.restore.invalid_payload',
           message: 'Invalid payload for Identity restore',

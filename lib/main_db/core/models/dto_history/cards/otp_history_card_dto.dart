@@ -1,5 +1,4 @@
 import '../../../tables/otp/otp_items.dart';
-import 'dart:typed_data';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'vault_history_card_dto.dart';
 import 'vault_snapshot_card_dto.dart';

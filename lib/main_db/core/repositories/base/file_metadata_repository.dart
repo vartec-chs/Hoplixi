@@ -3,7 +3,6 @@ import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../main_store.dart';
-import '../../models/dto/file_dto.dart';
 import '../../models/mappers/file_mapper.dart';
 import '../../tables/file/file_metadata.dart';
 

@@ -25,7 +25,7 @@ class CryptoWalletHistoryRestoreHandler implements VaultHistoryRestoreHandler {
     required HistoryPayload payload,
   }) async {
     if (payload is! CryptoWalletHistoryPayload) {
-      return Failure(
+      return const Failure(
         DBCoreError.conflict(
           code: 'history.restore.invalid_payload',
           message: 'Invalid payload for CryptoWallet restore',

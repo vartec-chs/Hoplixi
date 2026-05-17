@@ -23,7 +23,7 @@ class CustomFieldsSnapshotService {
   }) async {
     try {
       final fields = await customFieldsDao.getCustomFieldsByItemId(itemId);
-      if (fields.isEmpty) return Success(unit);
+      if (fields.isEmpty) return const Success(unit);
 
       final companions = fields.map((f) {
         final isSecret = f.isSecret || f.fieldType == CustomFieldType.concealed;
@@ -44,7 +44,7 @@ class CustomFieldsSnapshotService {
       }).toList();
 
       await customFieldsHistoryDao.insertCustomFieldsHistoryBatch(companions);
-      return Success(unit);
+      return const Success(unit);
     } catch (e, s) {
       return Failure(
         DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),

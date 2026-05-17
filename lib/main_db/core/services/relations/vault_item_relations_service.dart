@@ -184,7 +184,7 @@ class VaultItemRelationsService {
     try {
       return await db.transaction(() async {
         if (dto.sourceItemId == dto.targetItemId) {
-          throw DBCoreError.validation(
+          throw const DBCoreError.validation(
             code: 'item_link.source_target_same',
             message: 'Source and target item IDs must be different',
           );

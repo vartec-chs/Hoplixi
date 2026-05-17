@@ -79,7 +79,7 @@ class VaultHistoryRestoreService {
             isFavorite: Value(selected.base.isFavorite),
             isArchived: Value(selected.base.isArchived),
             isPinned: Value(selected.base.isPinned),
-            isDeleted: Value(false), // Always restore as active
+            isDeleted: const Value(false), // Always restore as active
             createdAt: Value(selected.base.createdAt),
             modifiedAt: Value(DateTime.now()), // Updated modification time
           ),

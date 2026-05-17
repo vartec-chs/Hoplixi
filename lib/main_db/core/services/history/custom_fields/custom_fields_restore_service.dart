@@ -43,7 +43,7 @@ class CustomFieldsRestoreService {
         fields: companions,
       );
 
-      return Success(unit);
+      return const Success(unit);
     } catch (e, s) {
       return Failure(
         DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),

@@ -42,18 +42,21 @@ void main() {
         expect(view, isNotNull);
 
         final historyId = await service.writeSnapshot(
-          type: VaultItemType.apiKey,
           view: view!,
           action: VaultEventHistoryAction.created,
           includeSecrets: true,
           includeRelations: true,
         );
 
+        if (historyId.isError()) {
+          fail('writeSnapshot failed: ${historyId.exceptionOrNull()}');
+        }
+
         expect(historyId, isNotEmpty);
 
         // Verify vault_snapshots_history
         final snapshot = await db.vaultSnapshotsHistoryDao.getSnapshotById(
-          historyId,
+          historyId.getOrThrow(),
         );
         expect(snapshot, isNotNull);
         expect(snapshot!.itemId, itemId);
@@ -61,7 +64,7 @@ void main() {
 
         // Verify api_key_history
         final apiKeyHistoryRows = await db.apiKeyHistoryDao
-            .getApiKeyHistoryByHistoryId(historyId);
+            .getApiKeyHistoryByHistoryId(historyId.getOrThrow());
         expect(apiKeyHistoryRows, isNotNull);
         expect(apiKeyHistoryRows!.key, 'secret-key');
         expect(apiKeyHistoryRows.service, 'GitHub');
@@ -72,7 +75,7 @@ void main() {
         expect(categoryHistory, isNotNull);
 
         final tagHistoryRows = await db.vaultItemTagHistoryDao
-            .getTagsBySnapshotHistoryId(historyId);
+            .getTagsBySnapshotHistoryId(historyId.getOrThrow());
         expect(tagHistoryRows.length, 1);
         expect(tagHistoryRows.first.name, 'T1');
       },
@@ -87,15 +90,18 @@ void main() {
         );
 
         final historyId = await service.writeSnapshot(
-          type: VaultItemType.apiKey,
           view: view!,
           action: VaultEventHistoryAction.created,
           includeSecrets: false,
           includeRelations: true,
         );
 
+        if (historyId.isError()) {
+          fail('writeSnapshot failed: ${historyId.exceptionOrNull()}');
+        }
+
         final apiKeyHistoryRows = await db.apiKeyHistoryDao
-            .getApiKeyHistoryByHistoryId(historyId);
+            .getApiKeyHistoryByHistoryId(historyId.getOrThrow());
         expect(apiKeyHistoryRows!.key, isNull);
         expect(apiKeyHistoryRows.service, 'GitHub');
       },
@@ -113,7 +119,6 @@ void main() {
         );
 
         final _ = await service.writeSnapshot(
-          type: VaultItemType.apiKey,
           view: view!,
           action: VaultEventHistoryAction.created,
           includeSecrets: true,

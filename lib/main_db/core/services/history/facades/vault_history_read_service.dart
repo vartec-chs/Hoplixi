@@ -28,7 +28,7 @@ class VaultHistoryReadService {
   ) async {
     try {
       final snapshots = await snapshotFilterDao.getFiltered(filter);
-      if (snapshots.isEmpty) return Success(const []);
+      if (snapshots.isEmpty) return const Success([]);
       final cards = await _assembleCards(snapshots);
       return Success(cards);
     } catch (e, s) {

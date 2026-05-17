@@ -97,8 +97,9 @@ extension FileFilterHelpers on FileFilter {
     if (integrityStatus != null) return true;
     if (missingDetectedAfter != null) return true;
     if (deletedAfter != null) return true;
-    if (lastIntegrityCheckAfter != null || lastIntegrityCheckBefore != null)
+    if (lastIntegrityCheckAfter != null || lastIntegrityCheckBefore != null) {
       return true;
+    }
     if (hasSha256 != null) return true;
     return false;
   }

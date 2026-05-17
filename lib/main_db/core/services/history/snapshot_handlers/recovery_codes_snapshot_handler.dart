@@ -28,7 +28,7 @@ class RecoveryCodesSnapshotHandler implements VaultSnapshotTypeHandler {
     required bool includeSecrets,
   }) async {
     if (view is! RecoveryCodesViewDto) {
-      return Failure(
+      return const Failure(
         DBCoreError.conflict(
           code: 'history.snapshot.invalid_view_type',
           message: 'Invalid view type for RecoveryCodes snapshot',

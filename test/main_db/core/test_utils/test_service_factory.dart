@@ -16,25 +16,8 @@ import 'package:hoplixi/main_db/core/repositories/base/recovery_codes_repository
 import 'package:hoplixi/main_db/core/repositories/base/ssh_key_repository.dart';
 import 'package:hoplixi/main_db/core/repositories/base/wifi_repository.dart';
 import 'package:hoplixi/main_db/core/services/entities/api_key_service.dart';
-import 'package:hoplixi/main_db/core/services/entities/bank_card_service.dart';
-import 'package:hoplixi/main_db/core/services/entities/certificate_service.dart';
-import 'package:hoplixi/main_db/core/services/entities/contact_service.dart';
-import 'package:hoplixi/main_db/core/services/entities/crypto_wallet_service.dart';
-import 'package:hoplixi/main_db/core/services/entities/document_service.dart';
-import 'package:hoplixi/main_db/core/services/entities/file_service.dart';
-import 'package:hoplixi/main_db/core/services/entities/identity_service.dart';
-import 'package:hoplixi/main_db/core/services/entities/license_key_service.dart';
-import 'package:hoplixi/main_db/core/services/entities/loyalty_card_service.dart';
-import 'package:hoplixi/main_db/core/services/entities/note_service.dart';
-import 'package:hoplixi/main_db/core/services/entities/otp_service.dart';
 import 'package:hoplixi/main_db/core/services/entities/password_service.dart';
-import 'package:hoplixi/main_db/core/services/entities/recovery_codes_service.dart';
-import 'package:hoplixi/main_db/core/services/entities/ssh_key_service.dart';
-import 'package:hoplixi/main_db/core/services/entities/wifi_service.dart';
-import 'package:hoplixi/main_db/core/services/history/policy/store_history_policy_service.dart';
-import 'package:hoplixi/main_db/core/services/history/vault_event_history_service.dart';
-import 'package:hoplixi/main_db/core/services/history/vault_history_service.dart';
-import 'package:hoplixi/main_db/core/services/history/vault_snapshot_writer.dart';
+import 'package:hoplixi/main_db/core/services/history/history.dart';
 import 'package:hoplixi/main_db/core/services/relations/snapshot_relations_service.dart';
 import 'package:hoplixi/main_db/core/services/relations/vault_item_relations_service.dart';
 import 'package:hoplixi/main_db/core/services/vault_items_state_service.dart';
@@ -69,23 +52,11 @@ class TestServiceFactory {
     return VaultSnapshotWriter(
       vaultSnapshotsHistoryDao: db.vaultSnapshotsHistoryDao,
       snapshotRelationsService: createSnapshotRelationsService(),
-      apiKeyHistoryDao: db.apiKeyHistoryDao,
-      passwordHistoryDao: db.passwordHistoryDao,
-      noteHistoryDao: db.noteHistoryDao,
-      bankCardHistoryDao: db.bankCardHistoryDao,
-      certificateHistoryDao: db.certificateHistoryDao,
-      contactHistoryDao: db.contactHistoryDao,
-      cryptoWalletHistoryDao: db.cryptoWalletHistoryDao,
-      fileHistoryDao: db.fileHistoryDao,
-      fileMetadataHistoryDao: db.fileMetadataHistoryDao,
-      identityHistoryDao: db.identityHistoryDao,
-      licenseKeyHistoryDao: db.licenseKeyHistoryDao,
-      loyaltyCardHistoryDao: db.loyaltyCardHistoryDao,
-      otpHistoryDao: db.otpHistoryDao,
-      recoveryCodesHistoryDao: db.recoveryCodesHistoryDao,
-      recoveryCodeValuesHistoryDao: db.recoveryCodeValuesHistoryDao,
-      sshKeyHistoryDao: db.sshKeyHistoryDao,
-      wifiHistoryDao: db.wifiHistoryDao,
+      customFieldsSnapshotService: CustomFieldsSnapshotService(
+        customFieldsDao: db.vaultItemCustomFieldsDao,
+        customFieldsHistoryDao: db.vaultItemCustomFieldsHistoryDao,
+      ),
+      handlerRegistry: VaultHistoryServiceAssembly(db).snapshotHandlerRegistry,
     );
   }
 

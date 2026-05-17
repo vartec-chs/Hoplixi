@@ -14,11 +14,9 @@ import 'package:hoplixi/main_db/core/repositories/base/recovery_codes_repository
 import 'package:hoplixi/main_db/core/repositories/base/ssh_key_repository.dart';
 import 'package:hoplixi/main_db/core/repositories/base/wifi_repository.dart';
 import 'package:hoplixi/main_db/core/services/history/history.dart';
-import 'package:hoplixi/main_db/core/services/history/snapshot_handlers/note_snapshot_handler.dart';
 
 import '../../main_store.dart';
 import '../relations/snapshot_relations_service.dart';
-import 'snapshot_handlers/snapshot_handlers.dart';
 
 class VaultHistoryServiceAssembly {
   VaultHistoryServiceAssembly(this.db);

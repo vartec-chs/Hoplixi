@@ -29,7 +29,7 @@ class FileHistoryNormalizer implements VaultHistoryTypeNormalizer {
 
     final history = historyList.first;
     if (history.metadataHistoryId == null) {
-      return FileHistoryPayload(metadataHistoryId: null);
+      return const FileHistoryPayload(metadataHistoryId: null);
     }
 
     final metaHistory = await fileMetadataHistoryDao.getFileMetadataHistoryById(

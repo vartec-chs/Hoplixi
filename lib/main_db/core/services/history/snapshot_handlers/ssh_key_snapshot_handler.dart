@@ -24,7 +24,7 @@ class SshKeySnapshotHandler implements VaultSnapshotTypeHandler {
     required bool includeSecrets,
   }) async {
     if (view is! SshKeyViewDto) {
-      return Failure(
+      return const Failure(
         DBCoreError.conflict(
           code: 'history.snapshot.invalid_view_type',
           message: 'Invalid view type for SshKey snapshot',

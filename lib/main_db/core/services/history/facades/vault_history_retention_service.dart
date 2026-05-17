@@ -21,7 +21,7 @@ class VaultHistoryRetentionService {
     try {
       final enabled =
           await settingsDao.getBool(StoreSettingsKey.historyEnabled) ?? true;
-      if (!enabled) return Success(unit);
+      if (!enabled) return const Success(unit);
 
       final intervalDays =
           await settingsDao.getInt(
@@ -37,7 +37,7 @@ class VaultHistoryRetentionService {
         if (lastCleanup != null) {
           final nextCleanup = lastCleanup.add(Duration(days: intervalDays));
           if (DateTime.now().isBefore(nextCleanup)) {
-            return Success(unit);
+            return const Success(unit);
           }
         }
       }
@@ -70,7 +70,7 @@ class VaultHistoryRetentionService {
         DateTime.now().toIso8601String(),
       );
 
-      return Success(unit);
+      return const Success(unit);
     } catch (e, s) {
       return Failure(
         DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),
@@ -90,7 +90,7 @@ class VaultHistoryRetentionService {
       );
 
       if (snapshots.length <= limit) {
-        return Success(unit);
+        return const Success(unit);
       }
 
       final snapshotsToDelete = snapshots.skip(limit).toList();
@@ -102,7 +102,7 @@ class VaultHistoryRetentionService {
         }
       }
 
-      return Success(unit);
+      return const Success(unit);
     } catch (e, s) {
       return Failure(
         DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),
@@ -131,7 +131,7 @@ class VaultHistoryRetentionService {
         }
       }
 
-      return Success(unit);
+      return const Success(unit);
     } catch (e, s) {
       return Failure(
         DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),
