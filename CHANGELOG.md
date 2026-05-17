@@ -8,6 +8,10 @@
   [lib/main_db/core/services/README.md](lib/main_db/core/services/README.md):
   добавлено описание `VaultCardFilterService` и пояснение роли типизированных
   сервисов сущностей в папке `entities`.
+- Обновлён
+  [lib/main_db/core/services/README.md](lib/main_db/core/services/README.md):
+  добавлено описание `DocumentVersionService` как фасада для создания,
+  активации, чтения и удаления версий документов.
 
 ### main_db
 
@@ -541,6 +545,10 @@
 - `HomeScreen` теперь отключает декоративные анимации, когда приложение не
   находится в активном lifecycle-состоянии.
 
+- Обновлён
+  [lib/main_db/core/services/README.md](lib/main_db/core/services/README.md):
+  добавлено описание `DocumentVersionService` как фасада для создания,
+  активации, чтения и удаления версий документов.
 - Окно выбора полей для шеринга переведено на `WoltModalSheet`; список и
   действия теперь живут в корректной sheet-структуре без сломанной вставки.
 - В генератор паролей добавлено редактирование набора символов для каждой

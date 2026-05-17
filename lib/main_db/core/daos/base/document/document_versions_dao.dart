@@ -13,74 +13,48 @@ class DocumentVersionsDao extends DatabaseAccessor<MainStore>
     return into(documentVersions).insert(companion);
   }
 
-  Future<int> updateDocumentVersionById(
-    String id,
-    DocumentVersionsCompanion companion,
-  ) {
-    return (update(
-      documentVersions,
-    )..where((t) => t.id.equals(id))).write(companion);
-  }
-
-  Future<DocumentVersionsData?> getDocumentVersionById(String id) {
+  Future<DocumentVersionsData?> getVersionById(String versionId) {
     return (select(
       documentVersions,
-    )..where((t) => t.id.equals(id))).getSingleOrNull();
+    )..where((t) => t.id.equals(versionId))).getSingleOrNull();
   }
 
   Future<List<DocumentVersionsData>> getVersionsByDocumentId(
-    String documentId,
-  ) {
-    return (select(documentVersions)
-          ..where((t) => t.documentId.equals(documentId))
-          ..orderBy([(t) => OrderingTerm(expression: t.versionNumber)]))
-        .get();
-  }
-
-  Future<DocumentVersionsData?> getLatestVersionByDocumentId(
-    String documentId,
-  ) {
-    return (select(documentVersions)
-          ..where((t) => t.documentId.equals(documentId))
-          ..orderBy([
-            (t) => OrderingTerm(
-              expression: t.versionNumber,
-              mode: OrderingMode.desc,
-            ),
-          ])
-          ..limit(1))
-        .getSingleOrNull();
-  }
-
-  Future<DocumentVersionsData?> getVersionByDocumentIdAndNumber({
-    required String documentId,
-    required int versionNumber,
+    String documentId, {
+    int? limit,
+    int? offset,
   }) {
-    return (select(documentVersions)..where(
-          (t) =>
-              t.documentId.equals(documentId) &
-              t.versionNumber.equals(versionNumber),
-        ))
-        .getSingleOrNull();
+    final query = select(documentVersions)
+      ..where((t) => t.documentId.equals(documentId))
+      ..orderBy([(t) => OrderingTerm(expression: t.versionNumber)]);
+      
+    if (limit != null) {
+      query.limit(limit, offset: offset);
+    }
+    return query.get();
   }
 
-  Future<int> getNextVersionNumber(String documentId) async {
+  Future<int?> getMaxVersionNumber(String documentId) async {
     final query = selectOnly(documentVersions)
       ..addColumns([documentVersions.versionNumber.max()])
       ..where(documentVersions.documentId.equals(documentId));
     final result = await query
         .map((row) => row.read(documentVersions.versionNumber.max()))
-        .getSingle();
-    return (result ?? 0) + 1;
+        .getSingleOrNull();
+    return result;
   }
 
-  Future<int> deleteDocumentVersionById(String id) {
-    return (delete(documentVersions)..where((t) => t.id.equals(id))).go();
+  Future<bool> existsVersionForDocument({
+    required String documentId,
+    required String versionId,
+  }) async {
+    final query = selectOnly(documentVersions)
+      ..where(documentVersions.id.equals(versionId) & documentVersions.documentId.equals(documentId));
+    final result = await query.get();
+    return result.isNotEmpty;
   }
 
-  Future<int> deleteVersionsByDocumentId(String documentId) {
-    return (delete(
-      documentVersions,
-    )..where((t) => t.documentId.equals(documentId))).go();
+  Future<int> deleteVersionById(String versionId) {
+    return (delete(documentVersions)..where((t) => t.id.equals(versionId))).go();
   }
 }

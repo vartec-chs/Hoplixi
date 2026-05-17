@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import '../../../main_store.dart';
-import '../../../tables/document/document_version_pages.dart';
+import '../../../tables/document/document_pages_tables.dart';
 
 part 'document_version_pages_dao.g.dart';
 
@@ -9,27 +9,16 @@ class DocumentVersionPagesDao extends DatabaseAccessor<MainStore>
     with _$DocumentVersionPagesDaoMixin {
   DocumentVersionPagesDao(super.db);
 
-  Future<void> insertDocumentVersionPage(
-    DocumentVersionPagesCompanion companion,
-  ) {
+  Future<void> insertVersionPage(DocumentVersionPagesCompanion companion) {
     return into(documentVersionPages).insert(companion);
   }
 
-  // Version pages are mostly immutable, but we keep the method for specific fields if needed.
-  // Note: document_version_pages has a preventUpdate trigger in Drift file.
-  Future<int> updateDocumentVersionPageById(
-    String id,
-    DocumentVersionPagesCompanion companion,
-  ) {
-    return (update(
-      documentVersionPages,
-    )..where((t) => t.id.equals(id))).write(companion);
-  }
-
-  Future<DocumentVersionPagesData?> getDocumentVersionPageById(String id) {
-    return (select(
-      documentVersionPages,
-    )..where((t) => t.id.equals(id))).getSingleOrNull();
+  Future<void> insertVersionPagesBatch(
+    List<DocumentVersionPagesCompanion> companions,
+  ) async {
+    await batch((batch) {
+      batch.insertAll(documentVersionPages, companions);
+    });
   }
 
   Future<List<DocumentVersionPagesData>> getPagesByVersionId(String versionId) {
@@ -39,6 +28,21 @@ class DocumentVersionPagesDao extends DatabaseAccessor<MainStore>
         .get();
   }
 
+  Future<List<DocumentVersionPagesData>> getPagesByPageId(String pageId) {
+    return (select(documentVersionPages)..where((t) => t.pageId.equals(pageId)))
+        .get();
+  }
+
+  Future<DocumentVersionPagesData?> getVersionPage({
+    required String versionId,
+    required String pageId,
+  }) {
+    return (select(documentVersionPages)..where(
+          (t) => t.versionId.equals(versionId) & t.pageId.equals(pageId),
+        ))
+        .getSingleOrNull();
+  }
+
   Future<DocumentVersionPagesData?> getPrimaryPageByVersionId(
     String versionId,
   ) {
@@ -46,10 +50,6 @@ class DocumentVersionPagesDao extends DatabaseAccessor<MainStore>
           (t) => t.versionId.equals(versionId) & t.isPrimary.equals(true),
         ))
         .getSingleOrNull();
-  }
-
-  Future<int> deleteDocumentVersionPageById(String id) {
-    return (delete(documentVersionPages)..where((t) => t.id.equals(id))).go();
   }
 
   Future<int> deletePagesByVersionId(String versionId) {

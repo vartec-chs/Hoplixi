@@ -38,6 +38,22 @@ snapshot before update и пишет event history. Entity services делеги
 - Используется в системе истории для создания снимков состояния различных типов
   данных.
 
+### [document_version_service.dart](./document_versions/document_version_service.dart)
+
+Сервис для управления версиями документов.
+
+- Создаёт новые версии документа через `createVersion`.
+- Активирует выбранную версию через `activateVersion`.
+- Возвращает список версий документа через `getVersions`.
+- Возвращает детальную карточку версии через `getVersionDetail`.
+- Возвращает текущую версию документа через `getCurrentVersion`.
+- Удаляет неактивную версию через `deleteVersion`.
+
+Сервис использует `DocumentVersionPolicyService` для валидации входных данных,
+`DocumentVersionHashService` для расчёта агрегированного хэша страниц и набор
+DAO из `MainStore` для работы с `document_items`, `document_pages`,
+`document_versions`, `document_version_pages` и `vault_items`.
+
 ---
 
 ## Сущности (папка [entities](./entities/))
@@ -50,8 +66,9 @@ snapshot before update и пишет event history. Entity services делеги
 3. **Автоматическое логирование в историю**: создание snapshot-ов состояния и
    запись событий (created, updated, deleted, archived и т.д.).
 
-Отдельно здесь же находится [VaultCardFilterService](./entities/vault_card_filter_service.dart).
-Это фасад только для чтения, который:
+Отдельно здесь же находится
+[VaultCardFilterService](./entities/vault_card_filter_service.dart). Это фасад
+только для чтения, который:
 
 - получает нужный filter DAO из `MainStore` в момент вызова;
 - предоставляет парные методы `get...` и `count...` для карточных фильтров;

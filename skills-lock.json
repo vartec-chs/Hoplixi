@@ -131,6 +131,12 @@
       "skillPath": "skills/flutter-use-http-package/SKILL.md",
       "computedHash": "a77bb31bb92de79cd731982dc8c066b73e7758f5c9552de9bd3ecfdc18ded5fd"
     },
+    "mockito": {
+      "source": "evanca/flutter-ai-rules",
+      "sourceType": "github",
+      "skillPath": "skills/mockito/SKILL.md",
+      "computedHash": "bb1b9667e710132d4e314de6f361627a8513151e95ed4121ca80b30376c630af"
+    },
     "rust-async-patterns": {
       "source": "wshobson/agents",
       "sourceType": "github",

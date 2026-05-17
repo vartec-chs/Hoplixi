@@ -9,42 +9,30 @@ class DocumentItemsDao extends DatabaseAccessor<MainStore>
     with _$DocumentItemsDaoMixin {
   DocumentItemsDao(super.db);
 
-  Future<void> insertDocumentItem(DocumentItemsCompanion companion) {
-    return into(documentItems).insert(companion);
-  }
-
-  Future<int> updateDocumentItemByItemId(
-    String itemId,
-    DocumentItemsCompanion companion,
-  ) {
-    return (update(
-      documentItems,
-    )..where((t) => t.itemId.equals(itemId))).write(companion);
-  }
-
   Future<DocumentItemsData?> getDocumentItemByItemId(String itemId) {
     return (select(
       documentItems,
     )..where((t) => t.itemId.equals(itemId))).getSingleOrNull();
   }
 
-  Future<bool> existsDocumentItemByItemId(String itemId) async {
-    final query = selectOnly(documentItems)
-      ..where(documentItems.itemId.equals(itemId));
-    final result = await query.get();
-    return result.isNotEmpty;
-  }
-
-  Future<int> setCurrentVersionId({
+  Future<void> upsertDocumentItem({
     required String itemId,
-    required String? currentVersionId,
-  }) {
-    return (update(documentItems)..where((t) => t.itemId.equals(itemId))).write(
-      DocumentItemsCompanion(currentVersionId: Value(currentVersionId)),
+    String? currentVersionId,
+  }) async {
+    await into(documentItems).insertOnConflictUpdate(
+      DocumentItemsCompanion.insert(
+        itemId: itemId,
+        currentVersionId: Value(currentVersionId),
+      ),
     );
   }
 
-  Future<int> deleteDocumentItemByItemId(String itemId) {
-    return (delete(documentItems)..where((t) => t.itemId.equals(itemId))).go();
+  Future<int> updateCurrentVersion({
+    required String documentId,
+    required String? versionId,
+  }) {
+    return (update(documentItems)..where((t) => t.itemId.equals(documentId))).write(
+      DocumentItemsCompanion(currentVersionId: Value(versionId)),
+    );
   }
 }
