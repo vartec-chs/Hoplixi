@@ -4,6 +4,10 @@
 
 ### docs
 
+- Обновлён [lib/main_db/core/README.md](lib/main_db/core/README.md): добавлена
+  точка входа `MainStore`, уточнены публичные поверхности `tables/tables.dart`,
+  `daos/daos.dart` и `models/dto/dto.dart`, а также текущая структура
+  `services/` и `errors/`.
 - Добавлены `VaultSnapshotHistoryFilterDao` и `VaultEventHistoryFilterDao` для
   фильтрации `VaultSnapshotsHistory` и `VaultEventsHistory`; DAO подключены к
   `MainStore`, экспортам и provider-слою.

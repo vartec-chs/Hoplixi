@@ -12,6 +12,17 @@ Flutter-приложении, так и в CLI-утилитах.
 DAOs или сервисов, пожалуйста,обновляйте этот документ, чтобы он отражал текущую
 реализацию.
 
+## Точка входа
+
+### [MainStore](./main_store.dart) — сборка ядра БД
+
+- `main_store.dart` объединяет таблицы, DAOs, индексы и триггеры в единую
+  Drift-конфигурацию.
+- Класс `MainStore` должен оставаться тонким: orchestration и прикладная логика
+  выносятся в `services/`.
+- Публичные поверхности ядра собраны в `tables/tables.dart`, `daos/daos.dart` и
+  `models/dto/dto.dart`.
+
 ## Архитектурные слои
 
 ### 1. [Tables](./tables/) — Определение схемы (DDL)
@@ -32,7 +43,8 @@ DAOs или сервисов, пожалуйста,обновляйте этот
 Объекты доступа к данным, инкапсулирующие конкретные SQL/Drift запросы.
 
 - **Base**: Папка `base/` содержит простые, "тупые" DAOs, которые делают базовые
-  операции чтения и записи без orchestration-логики.
+  операции чтения и записи без orchestration-логики. Внутри она уже разделена по
+  доменам (`api_key/`, `contact/`, `document/`, `system/` и т.д.).
 - **Filters**: Папка `filters/` содержит более "умные" filter DAOs: они собирают
   параметры запроса, применяют фильтрацию, сортировку и поиск по спискам.
 - **Security Policy**: Filter/Card DAOs **запрещено** читать секретные поля. Они
@@ -41,7 +53,8 @@ DAOs или сервисов, пожалуйста,обновляйте этот
 - **Item DAOs**: Содержат CRUD операции и **отдельные явные методы** для
   получения каждого секрета по требованию.
 - **Public surface**: [daos.dart](./daos/daos.dart) агрегирует экспортируемые
-  DAOs и фильтры для удобного импорта.
+  DAOs и фильтры для удобного импорта; отдельный агрегатор
+  [filters/daos.dart](./daos/filters/daos.dart) используется для filter-слоя.
 
 ### 3. [Models](./models/) — Модели данных, DTO и мапперы
 
@@ -133,6 +146,11 @@ final filter = VaultEventHistoryFilter.create(
 
 - Сервисы объединяют repositories и DAOs для выполнения сложных операций.
 - Координируют транзакции, историю изменений и связи.
+- Основные фасады лежат в корне `services/`: `vault_items_state_service.dart`,
+  `vault_item_mutation_service.dart` и `vault_typed_view_resolver.dart`.
+- Папка `entities/` содержит CRUD-сервисы по типам данных, `history/` — запись
+  snapshot/event history и политику истории, `relations/` — текущие и
+  snapshot-связи.
 - **Result Pattern**: Все публичные методы возвращают `DbResult<T, DBCoreError>`
   из пакета `result_dart`.
 - Подробное описание в [README сервисов](./services/README.md).
@@ -141,6 +159,8 @@ final filter = VaultEventHistoryFilter.create(
 
 Независимая от Flutter система обработки исключений.
 
+- [db_result.dart](./errors/db_result.dart) — typed result-обёртка для публичных
+  методов ядра.
 - [db_error.dart](./errors/db_error.dart) — типизированные ошибки базы данных.
 - [db_exception_mapper.dart](./errors/db_exception_mapper.dart) — преобразование
   SQLite-ошибок в `DBCoreError`.
